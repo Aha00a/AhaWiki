@@ -39,7 +39,9 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
                   case Some(directive) =>
                     Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
                   case None =>
-                    val additionalInfo = getSimilarPages(name) + getBacklinks(name)
+                    val similarPages: String = getSimilarPages(name)
+                    val backlinks: String = getBacklinks(name)
+                    val additionalInfo = similarPages + backlinks
 
                     pageContent.interpreter match {
                       case Some("Paper") =>
