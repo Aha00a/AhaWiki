@@ -55,8 +55,8 @@
 
             graphics.node(function(node) {
                 var ui = Viva.Graph.svg('g').attr('class', 'node');
-                ui.append(Viva.Graph.svg('circle').attr('r', 3));
-                ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '5px').attr('y', '5px').text(node.id));
+                ui.append(Viva.Graph.svg('circle').attr('r', 5));
+                ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '7px').attr('y', '5px').text(node.id));
                 $(ui).hover(function() {
                     highlightRelatedNodes(node.id, true);
                 }, function() {
