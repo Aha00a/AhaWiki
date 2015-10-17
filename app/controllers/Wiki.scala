@@ -41,7 +41,13 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
                   case None =>
                     val similarPages = getSimilarPages(name)
                     val relatedPages = getRelatedPages(name)
-                    val additionalInfo = similarPages + relatedPages
+                    val additionalInfo =
+                      s"""
+                         |== See also
+                         |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
+                         |$similarPages
+                         |[[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+                         |""".stripMargin
 
                     pageContent.interpreter match {
                       case Some("Paper") =>
@@ -104,10 +110,7 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
       .mkString("\n")
 
     if (similarPages != "") {
-      s"""
-         |== Similar Pages
-         |$similarPages
-         |""".stripMargin
+      similarPages
     }
     else {
       ""
@@ -125,13 +128,10 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
       .mkString("\n")
 
     if (result != "") {
-      s"""
-         |== Related Pages
-         |{{{#!Graph
+      s"""{{{#!Graph
          |#!enableWikiLink
          |$result
-         |}}}
-         |""".stripMargin
+         |}}}""".stripMargin
     }
     else {
       ""
