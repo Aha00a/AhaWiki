@@ -1,5 +1,5 @@
 = AhaWiki
-AhaWiki is document management system based on [https://en.wikipedia.org/wiki/Wiki Wiki] maintained by [http://aha00a.com Aha00a].
+[https://github.com/Aha00a/AhaWiki AhaWiki] is document management system based on [https://en.wikipedia.org/wiki/Wiki Wiki].
 
 == How to use
  * [wiki:AhaWikiSyntax]
@@ -10,5 +10,4 @@ AhaWiki is document management system based on [https://en.wikipedia.org/wiki/Wi
  * [wiki:AhaWikiInstallation]
  * [wiki:AhaWikiAccessControl]
  * [wiki:AhaWikiCustomizing]
-
 
