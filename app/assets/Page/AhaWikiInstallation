@@ -1,0 +1,14 @@
+= [wiki:AhaWiki] Installation
+
+== Prerequisites
+ * Java 8 or higher
+ * [http://playframework.org] ver 2.4.3
+
+== Checkout
+{{{#!vim sh
+git checkout ....... TODO
+}}}
+
+== `application.prod.conf`
+
+TODO

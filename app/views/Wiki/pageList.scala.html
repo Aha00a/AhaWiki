@@ -1,0 +1,43 @@
+@(listPage: List[models.DirectQuery.PageNameRevisionTimeAuthorRemoteAddressSizeComment])
+<script type="text/javascript">
+    $(function(){
+        $('tr[data-href]').click(function() {
+            document.location = $(this).data('href');
+        }).mouseenter(function () {
+            $(this).css({backgroundColor: '#eee'})
+        }).mouseleave(function () {
+            $(this).css({backgroundColor: 'inherit'})
+        });
+    });
+</script>
+<div class="pageList">
+    <table class="simpleTable">
+        <thead>
+            <tr>
+                <th width="50px">Name</th>
+                <th width="200px">Date</th>
+                <th width="100px">Size</th>
+                <th width="50px">Version</th>
+                <th width="200px">Author</th>
+                <th width="100px">IP</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for(page <- listPage) {
+                <tr data-href="@(page.name)">
+                    <td>
+                        <a href="@(page.name)">@(page.name)</a>
+                    </td>
+                    <td>@(page.isoDateTime)</td>
+                    <td>@(page.size)</td>
+                    <td>@(page.revision)</td>
+                    <td>@(page.author)</td>
+                    <td>@(page.remoteAddress)</td>
+                    <td>@(page.comment)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+

@@ -1,0 +1,23 @@
+@(title: String)(head: Html)(body: Html)(implicit request: play.api.mvc.Request[Any])
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <title>@title - wiki.aha00a.com</title>
+        <link rel="stylesheet" href="@routes.Assets.versioned("less.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("favicon.png")">
+
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/config/TeX-MML-AM_HTMLorMML.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.23.5/js/jquery.tablesorter.min.js"></script>
+        <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>
+        @head
+    </head>
+    <body class="AhaWiki">
+        @body
+        @_googleAnalytics()
+    </body>
+</html>

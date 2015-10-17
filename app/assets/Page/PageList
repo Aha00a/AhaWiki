@@ -1,0 +1,14 @@
+= Page List
+[[PageList]]
+{{{
+#!html
+<script type="text/javascript">
+    $(function(){
+        $(".simpleTable").tablesorter();
+    });
+</script>
+}}}
+
+== See also
+[[Navigation]]
+

@@ -1,0 +1,29 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET         /                             controllers.Home.index
+GET         /r                            controllers.Home.random
+
+GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
+POST        /w/*nameEncoded               controllers.Wiki.save(nameEncoded:String)
+
+
+GET         /login                        controllers.Auth.login
+GET         /logout                       controllers.Auth.logout
+GET         /google/oauth/login           controllers.GoogleOAuth.login
+GET         /google/oauth/callback        controllers.GoogleOAuth.callback(code:String)
+
+POST        /preview                      controllers.Wiki.preview
+
+GET         /unitTest                     controllers.Test.unit
+
+GET         /dev/reindex                  controllers.Dev.reindex
+GET         /dev/reset                    controllers.Dev.reset
+
+GET         /api/pageMap                  controllers.Api.pageMap
+
+# Map static resources from the /public folder to the /assets URL path
+GET         /public/*file                 controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                 controllers.Assets.versioned(path="/public", file: Asset)

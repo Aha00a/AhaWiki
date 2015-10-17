@@ -1,0 +1,402 @@
+@import url(http://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic);
+@import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic,700italic);
+
+html, body {
+	padding: 0;
+	margin: 0;
+	font-family: 'Noto Sans', sans-serif;
+}
+
+
+.AhaWiki {
+	a {
+		color: #00a;
+
+		&[target=_blank] {
+			&:before {
+				//noinspection CssUnknownTarget
+				content: url("/public/img/iconLinkExternal.16x16.png");
+				position: relative;
+				top: 4px;
+			}
+		}
+		&:link{
+
+		}
+		&:visited{
+			color: #004;
+		}
+		&:hover, &:active {
+			background-color: #ddf;
+		}
+	}
+
+	code, kbd, pre, samp, tt {
+		.monospace;
+	}
+
+	tr[data-href] {
+		cursor: pointer;
+	}
+
+	.monospace {
+		font-family: 'Ubuntu Mono', 'Consolas', monospace;
+	}
+
+	.limitWidth {
+		width: 97%;
+		margin: 0 auto;
+	}
+
+	.aspectRatioWrapper {
+		position: relative;
+
+		.ratio_4_3 {
+			padding-bottom: 75%
+		}
+		.ratio_16_9 {
+			padding-bottom: 56.25%
+		}
+		.aspectRatioContent {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
+	}
+
+	.flash {
+		cursor: pointer;
+		.success {
+			@color: #7f7;
+			color: darken(@color, 50%);
+			background-color: lighten(@color, 20%);
+			border: 1px solid darken(@color, 40%);
+			padding: 10px;
+		}
+
+		.error {
+			@color: #f77;
+			color: darken(@color, 50%);
+			background-color: lighten(@color, 20%);
+			border: 1px solid darken(@color, 30%);
+			padding: 10px;
+		}
+	}
+
+	.commonAhaWiki {
+		padding: 0 0 0 25px;
+
+		h1, h2, h3, h4, h5, h6 {
+			margin: 0;
+			text-shadow: 1px 1px 2px #99a;
+		}
+
+		h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #cccccc; padding: 5px; }
+		h4, h5, h6 { margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid #ddd; padding: 3px; }
+
+		h1 { font-size: 2.25em; margin-left: -25px;}
+		h2 { font-size: 2em; margin-left: -20px; }
+		h3 { font-size: 1.75em; margin-left: -15px; }
+		h4 { font-size: 1.5em; margin-left: -10px; }
+		h5 { font-size: 1.25em; margin-left: -5px; }
+		h6 { font-size: 1em; margin-left: 0; }
+
+		hr {
+			padding: 0;
+			border: none;
+			border-bottom: 1px dashed #ccc;
+			margin-left: -25px;
+			height: 0;
+		}
+
+		code {
+			border: 1px solid #99c;
+			background-color: #002;
+			color: #fff;
+			border-radius: 5px;
+			padding: 3px;
+		}
+
+		pre {
+			background-color: #002;
+			border-color: #9999CC;
+			border-style: solid;
+			border-width: 2px;
+			border-left-width: 10px;
+			color: #CCCCCC;
+			padding-bottom: 0.5em;
+			padding-left: 1em;
+			padding-top: 0.5em;
+			margin-top: 1px;
+			margin-bottom: 1px;
+			white-space: pre-wrap;
+		}
+
+		blockquote {
+			position: relative;
+			background-color: #f3f3ff;
+			border-color: #99c;
+			border-style: solid;
+			border-width: 2px 2px 2px 10px;
+			overflow: visible;
+			padding: 10px;
+			margin: 0;
+			margin-bottom: 1px;
+
+			&:before, &:after {
+				position: absolute;
+				opacity: 0.5;
+				overflow: hidden;
+				font-size: 200%;
+				font-family: serif;
+			}
+			&:before { left: 3px; top: 0; content: '“'; }
+			&:after { top: 0; right: 3px; content: '”'; }
+		}
+
+		.toc {
+			float: right;
+			background-color: #eee;
+			border: 1px solid #ccc;
+			padding: 10px;
+			max-width: 50%;
+
+		}
+
+		.wikiSyntax {
+			.simpleTable;
+			width: 100%;
+			&>tbody {
+				&>tr {
+					&>td {
+						width: 50%;
+					}
+				}
+			}
+			.raw {
+				padding: 10px 10px;
+			}
+
+			.preview {
+				padding: 10px 10px 10px 10+25px;
+			}
+		}
+	}
+
+	.wikiContent {
+		.commonAhaWiki;
+	}
+
+	.paperContent {
+
+		padding: 1mm;
+		background-color: #777;
+
+		.page {
+
+			@a4Width: 210mm;
+			@a4Height: 297mm;
+			@a4PaddingLeft: 15mm;
+			@a4PaddingTop: 15mm;
+			@a4PaddingRight: 15mm;
+			@a4PaddingBottom: 15mm;
+
+			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+			height: @a4Height - @a4PaddingTop - @a4PaddingBottom;
+			page-break-after: always;
+			&:last-of-type {
+				page-break-after: auto;
+			}
+			font-size: 12px;
+			position: relative;
+			@media screen {
+				margin: 10mm auto;
+				border: 1px solid #000;
+				-webkit-box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
+				-moz-box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
+				box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
+				background-color: #fff;
+			}
+			padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
+
+			.pageHeader {
+				border-bottom: 1mm solid #000;
+
+				.documentId {
+					text-align:right;
+				}
+			}
+
+			.pageFooter {
+				position: absolute;
+				bottom: @a4PaddingBottom;
+				width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+
+				border-top: 1mm solid #000;
+				padding-top: 3mm;
+
+				.pageNo {
+					float: right;
+				}
+			}
+
+			.pageContent {
+				.commonAhaWiki;
+			}
+			.toc {
+				display: none;
+			}
+
+
+		}
+	}
+
+	.action {
+		text-align: right;
+		padding: 10px;
+		background-color: #eee;
+		.revisionInfo {
+			.monospace;
+			font-style: italic;
+		}
+
+		@media print {
+			display: none;
+		}
+	}
+
+	.simpleTable {
+		border-collapse: collapse;
+		box-shadow: 0 0 1em #eee;
+
+		th, td {
+			padding: 5px 10px;
+		}
+		th {
+			border: 1px solid #ccc;
+			background-color: #ddd;
+		}
+		td {
+			border: 1px solid #ccc;
+		}
+	}
+
+	.wikiHistory {
+		table {
+			.simpleTable;
+			width: 100%;
+			margin-top: 30px;
+			margin-bottom: 30px;
+		}
+	}
+
+	.login {
+		form {
+			width: 500px;
+			margin: 100px auto;
+			padding: 50px;
+			border: 1px solid #ccc;
+			background-color: #eee;
+
+			input {
+				display: block;
+				padding: 10px;
+				margin: 20px;
+				width: 400px;
+				border: 1px solid #ccc;
+			}
+
+			input[type=submit] {
+				display: block;
+				padding: 10px;
+				margin: 20px;
+				width: 424px;
+				background-color: #fff;
+				-webkit-appearance: none;
+				-moz-appearance: none;
+				appearance: none;
+				font-weight: bold;
+			}
+
+			.error {
+				.flash .error;
+			}
+
+			.valid {
+				.flash .success;
+			}
+		}
+	}
+
+	.edit {
+		table.layout {
+			width: 100%;
+			td {
+				width: 50%;
+				padding: 20px;
+				vertical-align: top;
+				textarea {
+					width: 98%;
+					height: 500px;
+				}
+				.previewPane {
+					border: 1px solid #ccc;
+					background: url('/public/img/imageDraftVersion.png');
+				}
+			}
+		}
+		textarea {
+			white-space: pre;
+			word-wrap: normal;
+			overflow-x: scroll;
+			display: block;
+			width: 90%;
+			height: 600px;
+		}
+	}
+
+	.header, .footer {
+		@media print {
+			display: none;
+		}
+	}
+
+	.percentTotal {
+		display: inline-block;
+		width: 50px;
+		height: 0.8em;
+		background-color: #ccc;
+		margin-right: 5px;
+
+		.percentBar {
+			display: block;
+			width: 0;
+			height: 100%;
+			background-color: #000;
+		}
+	}
+
+	.WikiLine {
+		border: 1px solid #ccc;
+		padding: 1px;
+		margin: 1px;
+	}
+
+	svg.graph {
+		border: 1px solid #ccc;
+		g.node {
+			circle {
+				fill: #333;
+			}
+			text.label {
+				pointer-events: none;
+				opacity : 0.5;
+				font-size: 12px;
+			}
+		}
+		path.link {
+		}
+	}
+}

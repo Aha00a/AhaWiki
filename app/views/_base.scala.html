@@ -1,0 +1,45 @@
+@import logics.wikis.Interpreters
+@(title: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_baseSkeleton(title){
+    @head
+    <script type="text/javascript">
+        $(function(){
+            MathJax.Hub.Config({
+                tex2jax: {
+                    inlineMath: [['$$$$','$$$$']],
+                    processEscapes: true
+                },
+                MathML: {
+                    extensions: ["content-mathml.js"]
+                }
+            });
+        });
+    </script>
+} {
+    <div class="header">
+        <div class="limitWidth">
+            @Html(Interpreters(MockDb.selectPageLastRevision(".header").map(_.content).getOrElse("")))
+        </div>
+    </div>
+    @for(f <- Seq("success", "error")) {
+        @if(request.flash.get(f)) {
+            <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
+                <div class="@f">
+                    @Html(request.flash.get(f).getOrElse(""))
+                </div>
+            </div>
+        }
+    }
+    @body
+    <div class="footer">
+        <div class="limitWidth">
+            @if(request.session.get("id")) {
+                <a href="?action=edit">Edit</a>
+                <a href="@(routes.Auth.logout())">Logout</a>
+            } else {
+                <a href="@(routes.Auth.login())">Login</a>
+            }
+            @Html(Interpreters(MockDb.selectPageLastRevision(".footer").map(_.content).getOrElse("")))
+        </div>
+    </div>
+}

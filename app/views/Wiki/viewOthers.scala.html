@@ -1,0 +1,21 @@
+@(title:String, content:String, wikiFirst:models.DirectQuery.Page, wikiLast:models.DirectQuery.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@_base(title) {
+    <script type="text/javascript">
+        $(function(){
+            $(document).bind('keydown', 'f', function () { location.href = '/' });
+            $(document).bind('keydown', 'r', function () { location.href = '/r' });
+            $(document).bind('keydown', 'e', function () { location.href = '?action=edit' });
+        });
+
+    </script>
+} {
+    @Html(content)
+    <div class="action">
+        <div class="limitWidth">
+            <div class="revisionInfo">
+                @Html(new logics.wikis.interpreters.InterpreterWiki().render(
+                  s"created by [wiki:${wikiFirst.author}] at [?action=history ${wikiFirst.isoDateTime}][[Br]]last modified by [wiki:${wikiLast.author}] at [?action=history ${wikiLast.isoDateTime}]"))
+            </div>
+        </div>
+    </div>
+}

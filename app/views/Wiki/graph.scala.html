@@ -1,0 +1,101 @@
+@(links:Array[Array[String]], enableWikiLink:Boolean)
+@for(id <- Seq(utils.UuidUtil.newString)) {
+    <script type="text/javascript" src="/public/js/vivagraph.min.js"></script>
+    <div class="aspectRatioWrapper">
+        <div class="ratio_16_9"></div>
+        <div class="aspectRatioContent">
+            <svg class="graph @(id)" style="width: 100%; height: 100%"></svg>
+            <a href="#" class="pause @(id)" style="position: absolute; bottom: 10px; left: 10px; text-decoration: none;">◼</a>
+            <a href="#" class="resume @(id)" style="position: absolute; bottom: 10px; left: 30px; text-decoration: none;">►</a>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            var graph = Viva.Graph.graph();
+            var graphics = Viva.Graph.View.svgGraphics();
+            var renderer = Viva.Graph.View.renderer(graph, {
+                graphics: graphics,
+                container: $('.graph.@(id)').get(0)
+            });
+
+            $('.pause.@(id)').click(function () { renderer.pause(); return false; });
+            $('.resume.@(id)').click(function () { renderer.resume(); return false; });
+
+            var createMarker = function(id) {
+                return Viva.Graph.svg('marker')
+                    .attr('id', id)
+                    .attr('viewBox', "0 0 20 20")
+                    .attr('refX', "20")
+                    .attr('refY', "10")
+                    .attr('markerUnits', "strokeWidth")
+                    .attr('markerWidth', "20")
+                    .attr('markerHeight', "10")
+                    .attr('orient', "auto")
+                    .attr('fill', '#777')
+                    ;
+            },
+            marker = createMarker('Triangle');
+            marker.append('path').attr('d', 'M 0 0 L 20 10 L 0 20 z');
+            graphics.getSvgRoot().append('defs').append(marker);
+
+
+            var highlightRelatedNodes = function(nodeId, isOn) {
+                graph.forEachLinkedNode(nodeId, function(node, link){
+                    var nodeUI = graphics.getNodeUI(node.id);
+                    var linkUI = graphics.getLinkUI(link.id);
+
+                    if (nodeUI) {
+                        nodeUI.attr('fill', isOn ? '#f00' : '#777');
+                    }
+                    if (linkUI) {
+                        linkUI.attr('stroke', isOn ? 'red' : 'gray');
+                    }
+                });
+            };
+
+            graphics.node(function(node) {
+                var ui = Viva.Graph.svg('g').attr('class', 'node');
+                ui.append(Viva.Graph.svg('circle').attr('r', 3));
+                ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '5px').attr('y', '5px').text(node.id));
+                $(ui).hover(function() {
+                    highlightRelatedNodes(node.id, true);
+                }, function() {
+                    highlightRelatedNodes(node.id, false);
+                });
+                @if(enableWikiLink) {
+                    var timeDown = 0;
+                    $(ui).mousedown(function() {
+                        timeDown = new Date().getTime()
+                    }).mouseup(function() {
+                        var diff = new Date().getTime() - timeDown;
+                        if(diff < 300) {
+                            renderer.pause();
+                            location.href = node.id;
+                        }
+                    });
+                }
+
+                return ui;
+            }).placeNode(function(nodeUI, pos) {
+                nodeUI.attr('transform', 'translate(' + (pos.x) + ',' + (pos.y) +')');
+            });
+
+            graphics.link(function(link){
+                return Viva.Graph.svg('path').attr('stroke', '#777').attr('marker-end', 'url(#Triangle)');
+            }).placeLink(function(linkUI, fromPos, toPos) {
+                linkUI.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
+            });
+
+            @for(link <- links) { @link match {
+                case Array(node)=> {
+            graph.addNode("@(node)"); }
+                case Array(src, dst) => {
+            graph.addLink("@(src)", "@(dst)"); }
+                case _ => {}
+            }}
+
+            renderer.run();
+        });
+    </script>
+
+}

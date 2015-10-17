@@ -1,0 +1,29 @@
+{{{#!comment
+You can use raw html and wiki, freely.
+}}}
+{{{#!html
+<style type="text/css">
+    .AhaWiki .footer {
+        background-color: #000;
+        color: #fff;
+        padding: 20px;
+    }
+    .AhaWiki .footer h1 a {
+        text-decoration: none;
+    }
+    .AhaWiki .footer a {
+        color: #fff;
+    }
+    .AhaWiki .footer a:hover,
+    .AhaWiki .footer a:active {
+        background-color: #333;
+    }
+</style>
+}}}
+{{{#!html
+<h1><a href="/">wiki.aha00a.com</a></h1>
+}}}
+[wiki:FrontPage] [wiki:Aha00a] [wiki:Aha00aResume] [wiki:Donation] [wiki:RecentChanges][[Br]]Recently Visited: [[RecentlyVisited]]
+
+Best viewed with some ALCOHOL. Copyright© 2001-2015 by Aha00a. All rights reserved. [[AhaWikiVersion]]
+

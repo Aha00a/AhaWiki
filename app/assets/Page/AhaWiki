@@ -1,0 +1,13 @@
+= AhaWiki
+AhaWiki is document management system based on [https://en.wikipedia.org/wiki/Wiki Wiki] maintained by [http://aha00a.com Aha00a].
+
+== How to use
+ * [wiki:AhaWikiSyntax]
+ * [wiki:AhaWikiHotKey]
+
+== How to manage
+ * [wiki:AhaWikiInstallation]
+ * [wiki:AhaWikiAccessControl]
+ * [wiki:AhaWikiCustomizing]
+
+

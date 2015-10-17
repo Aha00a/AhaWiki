@@ -1,0 +1,36 @@
+@(title: String, listHistory: List[models.DirectQuery.PageRevisionTimeAuthorRemoteAddressComment])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_base(title) {
+
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>History of <a href="@title">@title</a></h1>
+        </div>
+    </div>
+    <div class="wikiHistory">
+        <div class="limitWidth">
+            <table>
+                <tr>
+                    <th width="50px">revision</th>
+                    <th width="200px">Date</th>
+                    <th width="200px">Author</th>
+                    <th width="100px">IP</th>
+                    <th>Comment</th>
+                </tr>
+                @for(history <- listHistory) {
+                    <tr>
+                        <td>
+                            <a href="?revision=@(history.revision)">
+                                @(history.revision)
+                            </a>
+                        </td>
+                        <td>@(history.isoDateTime)</td>
+                        <td>@(history.author)</td>
+                        <td>@(history.remoteAddress)</td>
+                        <td>@(history.comment)</td>
+                    </tr>
+                }
+            </table>
+        </div>
+    </div>
+}
