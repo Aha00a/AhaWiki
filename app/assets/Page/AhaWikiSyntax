@@ -250,7 +250,7 @@ l,m,n,p
 }}}
 
 == `Graph`
-{{{#!Graph
+{{{#!WikiSyntaxPreview Graph
 a
 b->c
 d->e->f->d
