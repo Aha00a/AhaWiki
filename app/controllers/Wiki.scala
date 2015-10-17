@@ -40,8 +40,8 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
                     Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
                   case None =>
                     val similarPages = getSimilarPages(name)
-                    val backlinks = getBacklinks(name)
-                    val additionalInfo = similarPages + backlinks
+                    val relatedPages = getRelatedPages(name)
+                    val additionalInfo = similarPages + relatedPages
 
                     pageContent.interpreter match {
                       case Some("Paper") =>
@@ -115,7 +115,7 @@ class Wiki @Inject()(system: ActorSystem) extends Controller {
   }
 
 
-  def getBacklinks(name: String): String = {
+  def getRelatedPages(name: String): String = {
     val relationship: List[Link] = DirectQuery.linkSelect(name)
     val back: List[Link] = relationship.flatMap(lm => DirectQuery.linkSelect(lm.src))
     val forward: List[Link] = relationship.flatMap(lm => DirectQuery.linkSelect(lm.dst))
