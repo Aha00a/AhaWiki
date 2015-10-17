@@ -23,8 +23,8 @@ object WikiPermission {
 
   def allowed(directive: Array[String])(implicit request: Request[AnyContent]): Boolean = {
     SessionLogic.getId(request) match {
-      case Some(id) => directive.exists(s => s == "[all]" || s == "[login]" || s == id)
-      case None => directive.contains("[all]")
+      case Some(id) => directive.exists(s => s == "all" || s == "login" || s == id)
+      case None => directive.contains("all")
     }
   }
 }

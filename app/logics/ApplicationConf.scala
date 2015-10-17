@@ -20,8 +20,8 @@ object ApplicationConf {
     object config {
       object permission {
         object default {
-          def read = hocon.getString(fqn).getOrElse("[all]")
-          def write = hocon.getString(fqn).getOrElse("[login]")
+          def read = hocon.getString(fqn).getOrElse("all")
+          def write = hocon.getString(fqn).getOrElse("login")
         }
       }
 

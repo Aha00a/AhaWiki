@@ -52,10 +52,10 @@ class Test @Inject()(system: ActorSystem) extends Controller {
   def testPageContent() = {
     {
       val pageContent: PageContent = new PageContent(
-        """#!read [all]
+        """#!read all
           |#!write aha00a
           |#!redirect FrontPage""".stripMargin)
-      assertEquals(pageContent.read, Some("[all]"))
+      assertEquals(pageContent.read, Some("all"))
       assertEquals(pageContent.write, Some("aha00a"))
       assertEquals(pageContent.redirect, Some("FrontPage"))
       assertEquals(pageContent.shebang, Array[String]().toSeq)
@@ -63,11 +63,11 @@ class Test @Inject()(system: ActorSystem) extends Controller {
     }
     {
       val pageContent: PageContent = new PageContent(
-        """#!read [login]
-          |#!write [login]
+        """#!read login
+          |#!write login
           |something""".stripMargin)
-      assertEquals(pageContent.read, Some("[login]"))
-      assertEquals(pageContent.write, Some("[login]"))
+      assertEquals(pageContent.read, Some("login"))
+      assertEquals(pageContent.write, Some("login"))
       assertEquals(pageContent.redirect, None)
       assertEquals(pageContent.shebang, List())
       assertEquals(pageContent.interpreter, None)
@@ -87,23 +87,23 @@ class Test @Inject()(system: ActorSystem) extends Controller {
     {
       val pageContent: PageContent = new PageContent(
         """#!Paper a b
-          |#!read [login]
-          |#!write [login]
+          |#!read login
+          |#!write login
           |something""".stripMargin)
-      assertEquals(pageContent.read, Some("[login]"))
-      assertEquals(pageContent.write, Some("[login]"))
+      assertEquals(pageContent.read, Some("login"))
+      assertEquals(pageContent.write, Some("login"))
       assertEquals(pageContent.redirect, None)
       assertEquals(pageContent.interpreter, Some("Paper"))
       assertEquals(pageContent.content, "something")
     }
     {
       val pageContent: PageContent = new PageContent(
-        """#!read [login]
-          |#!write [login]
+        """#!read login
+          |#!write login
           |#!Paper a b
           |something""".stripMargin)
-      assertEquals(pageContent.read, Some("[login]"))
-      assertEquals(pageContent.write, Some("[login]"))
+      assertEquals(pageContent.read, Some("login"))
+      assertEquals(pageContent.write, Some("login"))
       assertEquals(pageContent.redirect, None)
       assertEquals(pageContent.interpreter, Some("Paper"))
       assertEquals(pageContent.content, "something")
