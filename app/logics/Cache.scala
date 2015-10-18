@@ -2,6 +2,7 @@ package logics
 
 import logics.wikis.Interpreters
 import models.{DirectQuery, MockDb, WikiContext}
+import play.api.Logger
 
 import scala.concurrent.duration._
 
@@ -9,6 +10,7 @@ object Cache {
   trait CacheEntity {
     val key: String = getClass.getName
     def invalidate()(implicit wikiContext: WikiContext): Unit = {
+      Logger.info(s"Invalidate Cache: $key")
       wikiContext.cacheApi.remove(key)
     }
   }
@@ -20,7 +22,7 @@ object Cache {
 
     override def invalidate()(implicit wikiContext: WikiContext): Unit = {
       super.invalidate()
-      wikiContext.cacheApi.remove(PageNameSet.key)
+      PageNameSet.invalidate()
     }
   }
 

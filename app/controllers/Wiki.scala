@@ -151,7 +151,15 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       if (revision == latestRevision) {
         DirectQuery.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddress, body, comment)
         actorSimilarPage ! Calculate(name)
+
         Cache.PageList.invalidate()
+        name match {
+          case ".header" => Cache.Header.invalidate()
+          case ".footer" => Cache.Footer.invalidate()
+          case ".config" => Cache.Config.invalidate()
+          case _ =>
+        }
+
         Ok("")
       } else {
         Conflict("")
