@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import logics.wikis.{ExtractConvertApplyBackQuote, WikiChunkProcessor, WikiMacroProcessor}
+import logics.wikis.{ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, WikiMacroProcessor}
 import models.DirectQuery.Link
 import models.WikiContext
 import utils.RegexUtil
@@ -8,7 +8,7 @@ import utils.RegexUtil
 import scala.collection.mutable.ArrayBuffer
 
 class InterpreterWiki {
-  val wikiChunkProcessor = new WikiChunkProcessor()
+  val wikiChunkProcessor = new ExtractConvertApplyChunk()
   val wikiMacroProcessor = new WikiMacroProcessor()
   val backQuoteProcessor = new ExtractConvertApplyBackQuote()
 
