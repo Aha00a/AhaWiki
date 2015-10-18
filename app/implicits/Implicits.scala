@@ -27,4 +27,8 @@ object Implicits {
     def tailSafe(): Seq[T] = if(seq.length > 1) { seq.tail } else { Seq[T]() }
     def shuffle(): Seq[T] = Random.shuffle(seq)
   }
+
+  implicit class RichString(s:String) {
+    def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
+  }
 }
