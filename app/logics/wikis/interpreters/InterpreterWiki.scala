@@ -17,12 +17,6 @@ class InterpreterWiki {
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    // extract Chunk - {{{ }}}
-    // extract Macro - [[Macro]], [[Macro(Arg)]]
-    // block processing - heading, paragraph, list, quote
-    //    inline format - bold, italic, underline, strikeout, monospace
-    // apply Macro
-    // apply Chunk
 
     val arrayBuffer = ArrayBuffer[String]()
     val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
