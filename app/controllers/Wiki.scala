@@ -11,13 +11,14 @@ import logics._
 import logics.wikis.{Interpreters, RecentlyVisited, WikiPermission}
 import models.DirectQuery.Link
 import models.{DirectQuery, MockDb, PageContent, WikiContext}
+import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
 import utils._
 
 @Singleton
-class Wiki @Inject()(system: ActorSystem) extends Controller {
+class Wiki @Inject()(cache: CacheApi, system: ActorSystem) extends Controller {
 
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
