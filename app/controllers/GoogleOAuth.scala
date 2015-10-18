@@ -1,6 +1,11 @@
 package controllers
 
+import javax.inject.Inject
+
+import akka.actor.ActorSystem
 import logics.{SessionLogic, ApplicationConf}
+import models.WikiContext
+import play.api.cache.CacheApi
 import play.api.{Routes, Logger}
 import play.api.mvc._
 import utils.{RequestUtil, GoogleApi}
@@ -8,13 +13,14 @@ import utils.{RequestUtil, GoogleApi}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class GoogleOAuth extends Controller {
+class GoogleOAuth @Inject()(implicit cacheApi: CacheApi) extends Controller {
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
   }
 
   def login = Action { implicit request =>
+    implicit val wikiContext = WikiContext("")
     val referer = RequestUtil.refererOrRoot(request)
     Logger.error(referer)
 
@@ -23,6 +29,8 @@ class GoogleOAuth extends Controller {
   }
 
   def callback(code: String) = Action.async { implicit request =>
+    implicit val wikiContext = WikiContext("")
+
     GoogleApi.retrieveEmailWithCode(code, ApplicationConf.AhaWiki.google.api.clientId, ApplicationConf.AhaWiki.google.api.clientSecret, googleApiRedirectUri()).map {
       case Some(email) =>
         Redirect(request.flash.get("redirect").getOrElse("/"))

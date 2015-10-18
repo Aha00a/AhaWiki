@@ -1,4 +1,5 @@
-@for(trackingId <- Seq(logics.ApplicationConf.AhaWiki.config.google.analytics.trackingId)) {
+@()(implicit wikiContext: WikiContext)
+@for(trackingId <- Seq(logics.ApplicationConf.AhaWiki.config.google.analytics.trackingId())) {
     @if(trackingId) {
         <script>
           (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

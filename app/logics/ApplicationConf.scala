@@ -1,6 +1,6 @@
 package logics
 
-import models.MockDb
+import models.WikiContext
 import play.api.Play.current
 
 object ApplicationConf {
@@ -12,28 +12,28 @@ object ApplicationConf {
   object AhaWiki {
     object google {
       object api {
-        def clientId = current.configuration.getString(fqn).getOrElse("")
-        def clientSecret = current.configuration.getString(fqn).getOrElse("")
+        def clientId()(implicit wikiContext: WikiContext) = current.configuration.getString(fqn).getOrElse("")
+        def clientSecret()(implicit wikiContext: WikiContext) = current.configuration.getString(fqn).getOrElse("")
       }
     }
 
     object config {
       object permission {
         object default {
-          def read = hocon.getString(fqn).getOrElse("all")
-          def write = hocon.getString(fqn).getOrElse("login")
+          def read()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("all")
+          def write()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("login")
         }
       }
 
       object google{
         object analytics {
-          def trackingId = hocon.getString(fqn).getOrElse("")
+          def trackingId()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("")
         }
       }
 
 
-      def hocon: Hocon = {
-        new Hocon(MockDb.selectPageLastRevision(".config").map(_.content).getOrElse(""))
+      def hocon()(implicit wikiContext: WikiContext): Hocon = {
+        new Hocon(Cache.Config.get())
       }
 
       private def fqn: String = {

@@ -4,6 +4,7 @@ import java.io.File
 
 import models.DirectQuery.Page
 import play.Play
+import play.api.Logger
 import utils.DateTimeUtil
 
 import scala.io.Codec
@@ -43,6 +44,7 @@ object MockDb {
   }
 
   def selectPageLastRevision(name: String): Option[Page] = {
+    Logger.info("SELECT " + name)
     readAllTextFromFile(name).orElse(DirectQuery.pageSelectLastRevision(name))
   }
 

@@ -41,4 +41,10 @@ object Cache {
       Interpreters.interpret(MockDb.selectPageLastRevision(".footer").map(_.content).getOrElse(""))
     }
   }
+
+  object Config extends CacheEntity {
+    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+      MockDb.selectPageLastRevision(".config").map(_.content).getOrElse("")
+    }
+  }
 }
