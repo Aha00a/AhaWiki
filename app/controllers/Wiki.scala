@@ -18,8 +18,7 @@ import play.api.mvc._
 import utils._
 
 @Singleton
-class Wiki @Inject()(cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
-
+class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded, "UTF-8")

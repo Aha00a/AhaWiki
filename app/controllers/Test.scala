@@ -150,7 +150,7 @@ class Test @Inject()(system: ActorSystem) extends Controller {
 
 
   def testInterpreterTable(): Unit = {
-    implicit val wikiContext = WikiContext("")(null)
+    implicit val wikiContext = WikiContext("")(null, null)
 
     assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
     assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
@@ -160,7 +160,7 @@ class Test @Inject()(system: ActorSystem) extends Controller {
 
 
   def testInterpreterWiki(): Unit = {
-    implicit val wikiContext = WikiContext("")(null)
+    implicit val wikiContext = WikiContext("")(null, null)
     val iw: InterpreterWiki = new InterpreterWiki()
 
     assertEquals(iw.formatInline("""http://a.com"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")

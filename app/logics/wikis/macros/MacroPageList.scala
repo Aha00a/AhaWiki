@@ -1,9 +1,10 @@
 package logics.wikis.macros
 
-import models.DirectQuery
+import logics.Cache
+import models.WikiContext
 
 object MacroPageList {
-  def apply() = {
-    views.html.Wiki.pageList(DirectQuery.pageSelectPageList()).toString()
+  def apply()(implicit wikiContext: WikiContext) = {
+    views.html.Wiki.pageList(Cache.pageSelectPageList()).toString()
   }
 }
