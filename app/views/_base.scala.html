@@ -18,7 +18,7 @@
 } {
     <div class="header">
         <div class="limitWidth">
-            @Html(Interpreters.interpret(MockDb.selectPageLastRevision(".header").map(_.content).getOrElse("")))
+            @Html(logics.Cache.Header.get())
         </div>
     </div>
     @for(f <- Seq("success", "error")) {
@@ -39,7 +39,7 @@
             } else {
                 <a href="@(routes.Auth.login())">Login</a>
             }
-            @Html(Interpreters.interpret(MockDb.selectPageLastRevision(".footer").map(_.content).getOrElse("")))
+            @Html(logics.Cache.Footer.get())
         </div>
     </div>
 }
