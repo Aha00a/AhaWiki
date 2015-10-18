@@ -6,12 +6,13 @@ import scala.collection.mutable
 
 trait ExtractApply {
   val map = new mutable.HashMap[String, String]()
-  def extract(s: String)(implicit wikiContext:WikiContext):String
+  def extract(s: String):String
+  def convert(s:String)(implicit wikiContext:WikiContext):String
 
-  def apply(s:String):String = {
+  def apply(s:String)(implicit wikiContext:WikiContext):String = {
     var result = s
     for((key, value) <- map) {
-      result = result.replace(key, value)
+      result = result.replace(key, convert(value))
     }
     result
   }

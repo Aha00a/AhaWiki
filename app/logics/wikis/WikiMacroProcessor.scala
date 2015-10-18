@@ -5,19 +5,29 @@ import models.WikiContext
 import utils.UuidUtil
 
 import scala.collection.mutable
+import scala.util.matching.Regex.Match
 
 class WikiMacroProcessor() extends ExtractApply {
   val mapVariable = new mutable.HashMap[String, String]()
 
-  def extract(s: String)(implicit wikiContext:WikiContext):String = {
-    val regex = """\[\[(\w+)(?:\(([^)]+)\))?\]\]""".r
+  val regex = """\[\[(\w+)(?:\(([^)]+)\))?\]\]""".r
+
+  def extract(s: String):String = {
     regex.replaceAllIn(s, _ match {
-      case regex(name, argument) =>
+      case a@regex(name, argument) =>
         val uuid = UuidUtil.newString
-        map.put(uuid, execute(name, argument))
+        map.put(uuid, a.group(0))
         uuid
       case _ => "error"
     })
+  }
+
+  def convert(s:String)(implicit wikiContext:WikiContext):String = {
+    val in: Option[Match] = regex.findFirstMatchIn(s)
+    in match {
+      case Some(m) => execute(m.group(1), m.group(2))
+      case _ => "error"
+    }
   }
 
 
