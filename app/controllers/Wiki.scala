@@ -52,13 +52,13 @@ class Wiki @Inject()(cacheApi: CacheApi, actorSystem: ActorSystem) extends Contr
 
                     pageContent.interpreter match {
                       case Some("Paper") =>
-                        val content = Interpreters(page.content)
+                        val content = Interpreters.interpret(page.content)
                         Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
                       case None | Some("Wiki") =>
-                        val content = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters(page.content + additionalInfo) + """</div></div>"""
+                        val content = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
                         Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
                       case _ =>
-                        val content = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters(page.content) + Interpreters(additionalInfo) + """</div></div>"""
+                        val content = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
                         Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
                     }
                 }
@@ -162,7 +162,7 @@ class Wiki @Inject()(cacheApi: CacheApi, actorSystem: ActorSystem) extends Contr
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext = WikiContext(name)
-    Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters(body) + """</div></div>""")
+    Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 
 }

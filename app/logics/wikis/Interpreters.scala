@@ -5,7 +5,7 @@ import models.{PageContent, WikiContext}
 import play.api.Logger
 
 object Interpreters {
-  def apply(s: String)(implicit wikiContext:WikiContext): String = {
+  def interpret(s: String)(implicit wikiContext:WikiContext): String = {
     val pageContent: PageContent = new PageContent(s)
     val body = pageContent.content
     val (interpreter, argument) = (pageContent.interpreter, pageContent.argument.mkString(" "))

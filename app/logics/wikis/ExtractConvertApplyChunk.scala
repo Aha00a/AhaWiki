@@ -17,6 +17,6 @@ class ExtractConvertApplyChunk() extends ExtractConvertApply {
     }
   }
 
-  def convert(s:String)(implicit wikiContext:WikiContext):String = Interpreters(ShebangUtil.addWhenNotExist(s, "text"))
+  def convert(s:String)(implicit wikiContext:WikiContext):String = Interpreters.interpret(ShebangUtil.addWhenNotExist(s, "text"))
 }
 

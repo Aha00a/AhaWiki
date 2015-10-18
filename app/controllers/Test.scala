@@ -152,10 +152,10 @@ class Test @Inject()(system: ActorSystem) extends Controller {
   def testInterpreterTable(): Unit = {
     implicit val wikiContext = WikiContext("")(null)
 
-    assertEquals(Interpreters("#!table tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
-    assertEquals(Interpreters("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
-    assertEquals(Interpreters("#!table tsv 1\na\tb"), <table class="simpleTable"><tr><th>a</th><th>b</th></tr></table>.toString())
-    assertEquals(Interpreters("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tr><th>a</th><td>b</td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable"><tr><th>a</th><th>b</th></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tr><th>a</th><td>b</td></tr></table>.toString())
   }
 
 

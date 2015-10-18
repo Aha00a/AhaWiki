@@ -10,17 +10,17 @@ object InterpreterWikiSyntaxPreview {
     val body = pageContent.content
     if (argument == "") {
       """<table class="wikiSyntax"><tr><td class="raw">""" +
-        Interpreters.apply("#!text\n" + body) +
+        Interpreters.interpret("#!text\n" + body) +
         """</td><td class="preview">""" +
-        Interpreters.apply("#!wiki\n" + body) +
+        Interpreters.interpret("#!wiki\n" + body) +
         """</td></tr></table>"""
     }
     else
     {
       """<table class="wikiSyntax"><tr><td class="raw">""" +
-        Interpreters.apply(s"#!text\n{{{#!$argument\n" + body + "\n}}}") +
+        Interpreters.interpret(s"#!text\n{{{#!$argument\n" + body + "\n}}}") +
         """</td><td class="preview">""" +
-        Interpreters.apply(s"#!$argument\n" + body) +
+        Interpreters.interpret(s"#!$argument\n" + body) +
         """</td></tr></table>"""
     }
   }
