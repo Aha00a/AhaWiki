@@ -29,6 +29,12 @@ html, body {
 		&:hover, &:active {
 			background-color: #ddf;
 		}
+		&.missing {
+			color: #a00;
+			&:after {
+				content: "?"
+			}
+		}
 	}
 
 	code, kbd, pre, samp, tt {

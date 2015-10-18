@@ -1,5 +1,6 @@
 package logics.wikis.interpreters
 
+import logics.Cache
 import logics.wikis.{ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
 import models.DirectQuery.Link
 import models.WikiContext
@@ -112,7 +113,7 @@ class InterpreterWiki {
 
   val urlScheme = "[a-zA-Z][-a-zA-Z0-9+._]+"
   val regexSimple = ("""\[(""" + urlScheme + """://[^]\s]+)\s([^]]+)\]|\[(""" + urlScheme + """://[^]\s]+)\]|(""" + urlScheme + """://[^]\s]+)""").r
-  def formatInline(line: String): String = {
+  def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
     var s = line
     for((regex, replacement) <- List(
       ("""\<""".r, "&lt;"),
@@ -139,12 +140,15 @@ object InterpreterWiki {
 
     def aliasWithDefault = if(alias == null || alias.isEmpty) uriNormalized else alias
 
-    def toRegexReplacement = {
-      val href: String = uriNormalized
-      val attrTarget: String = if (uri.contains("://")) " target=\"_blank\"" else ""
-      val display: String = aliasWithDefault
+    def toRegexReplacement(set: Set[String] = Set[String]()) = {
+      val external: Boolean = uri.contains("://")
 
-      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget>${RegexUtil.escapeDollar(display)}</a>"""
+      val href: String = uriNormalized
+      val attrTarget: String = if (external) " target=\"_blank\"" else ""
+      val display: String = aliasWithDefault
+      val attrCss = if (external || set.contains(uriNormalized)) { "" } else { """ class="missing"""" }
+
+      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
     }
 
     def toLink(src:String) = Link(src, uriNormalized, alias)
@@ -165,11 +169,12 @@ object InterpreterWiki {
                 ((?<!\\)\\)?        \[ ([^\]\s]+) \s+ ([^\]]+) \]
     """.r
 
-  def replaceLink(s:String):String = {
+  def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
+    val set: Set[String] = Cache.PageNameSet.get()
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toRegexReplacement
-      case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toRegexReplacement
-      case regexLink(null, null, null, null, null, uri, alias) => new LinkMarkup(uri, alias).toRegexReplacement
+      case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toRegexReplacement()
+      case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toRegexReplacement(set)
+      case regexLink(null, null, null, null, null, uri, alias) => new LinkMarkup(uri, alias).toRegexReplacement(set)
 
       case regexLink(escape, uri, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
       case regexLink(null, null, escape, uri, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
