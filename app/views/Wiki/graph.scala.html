@@ -1,4 +1,4 @@
-@(links:Array[Array[String]], enableWikiLink:Boolean)
+@(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: WikiContext)
 @for(id <- Seq(utils.UuidUtil.newString)) {
     <script type="text/javascript" src="/public/js/vivagraph.min.js"></script>
     <div class="aspectRatioWrapper">
@@ -13,7 +13,12 @@
         $(function(){
             var graph = Viva.Graph.graph();
             var graphics = Viva.Graph.View.svgGraphics();
+            var layout = Viva.Graph.Layout.forceDirected(graph, {
+                springLength: 80,
+                springCoeff: 0.0002
+            });
             var renderer = Viva.Graph.View.renderer(graph, {
+                layout: layout,
                 graphics: graphics,
                 container: $('.graph.@(id)').get(0)
             });
@@ -94,6 +99,11 @@
                 case _ => {}
             }}
 
+            @if(enableWikiLink) {
+                var node = graph.getNode('@(wikiContext.name)');
+                if(node)
+                    layout.pinNode(node, true);
+            }
             renderer.run();
         });
     </script>

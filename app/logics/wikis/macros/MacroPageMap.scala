@@ -1,10 +1,10 @@
 package logics.wikis.macros
 
 import implicits.Implicits._
-import models.DirectQuery
+import models.{WikiContext, DirectQuery}
 
 object MacroPageMap {
-  def apply() = {
+  def apply()(implicit wikiContext: WikiContext) = {
     views.html.Wiki.graph(
       DirectQuery.linkSelect()
         .filterNot(l => l.src.contains("://"))
