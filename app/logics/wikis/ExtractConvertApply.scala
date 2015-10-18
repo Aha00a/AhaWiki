@@ -4,7 +4,7 @@ import models.WikiContext
 
 import scala.collection.mutable
 
-trait ExtractApply {
+trait ExtractConvertApply {
   val map = new mutable.HashMap[String, String]()
 
   def extract(s: String): String

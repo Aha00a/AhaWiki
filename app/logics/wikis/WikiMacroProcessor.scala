@@ -7,7 +7,7 @@ import utils.UuidUtil
 import scala.collection.mutable
 import scala.util.matching.Regex.Match
 
-class WikiMacroProcessor() extends ExtractApply {
+class WikiMacroProcessor() extends ExtractConvertApply {
   val mapVariable = new mutable.HashMap[String, String]()
 
   val regex = """\[\[(\w+)(?:\(([^)]+)\))?\]\]""".r

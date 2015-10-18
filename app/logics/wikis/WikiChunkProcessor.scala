@@ -3,7 +3,7 @@ package logics.wikis
 import models.WikiContext
 import utils.{ShebangUtil, UuidUtil}
 
-class WikiChunkProcessor() extends ExtractApply {
+class WikiChunkProcessor() extends ExtractConvertApply {
 
   def extract(s: String):String = {
     if (!s.contains("{{{") || !s.contains("}}}")) {
