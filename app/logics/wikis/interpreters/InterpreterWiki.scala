@@ -8,14 +8,14 @@ import utils.RegexUtil
 import scala.collection.mutable.ArrayBuffer
 
 class InterpreterWiki {
-  val wikiChunkProcessor = new ExtractConvertApplyChunk()
-  val wikiMacroProcessor = new ExtractConvertApplyMacro()
-  val backQuoteProcessor = new ExtractConvertApplyBackQuote()
+  val extractConvertApplyChunk = new ExtractConvertApplyChunk()
+  val extractConvertApplyMacro = new ExtractConvertApplyMacro()
+  val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
   def render(wikiText:String)(implicit wikiContext:WikiContext):String = {
-    val chunkExtracted = wikiChunkProcessor.extract(wikiText)
-    val chunkMacroExtracted = wikiMacroProcessor.extract(chunkExtracted)
-    val backQuoteExtracted = backQuoteProcessor.extract(chunkMacroExtracted)
+    val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
+    val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+    val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
     // extract Chunk - {{{ }}}
     // extract Macro - [[Macro]], [[Macro(Arg)]]
@@ -110,7 +110,7 @@ class InterpreterWiki {
     if(arrayBufferHeading.length > 5)
       arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().render(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-    wikiChunkProcessor(wikiMacroProcessor(backQuoteProcessor(arrayBuffer.mkString("\n"))))
+    extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }
 
   var url = """"""
