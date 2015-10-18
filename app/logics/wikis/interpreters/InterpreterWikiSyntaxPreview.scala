@@ -5,7 +5,7 @@ import models.{PageContent, WikiContext}
 
 object InterpreterWikiSyntaxPreview {
 
-  def render(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
+  def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
     val argument = pageContent.argument.mkString(" ")
     val body = pageContent.content
     if (argument == "") {

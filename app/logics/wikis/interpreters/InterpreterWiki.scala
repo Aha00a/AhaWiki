@@ -12,7 +12,7 @@ class InterpreterWiki {
   val extractConvertApplyMacro = new ExtractConvertApplyMacro()
   val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-  def render(wikiText:String)(implicit wikiContext:WikiContext):String = {
+  def interpret(wikiText:String)(implicit wikiContext:WikiContext):String = {
     val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
@@ -102,7 +102,7 @@ class InterpreterWiki {
     closeIndent()
 
     if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().render(arrayBufferHeading.mkString("\n")) + """</div>""")
+      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
 
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }

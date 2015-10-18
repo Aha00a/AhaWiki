@@ -10,7 +10,7 @@ import scala.io.Codec
 import scala.sys.process._
 
 object InterpreterVim {
-  def render(pageContent: PageContent):String = {
+  def interpret(pageContent: PageContent):String = {
     val s = pageContent.s
     val body = pageContent.content
     val shebang = pageContent.argument.mkString(" ")

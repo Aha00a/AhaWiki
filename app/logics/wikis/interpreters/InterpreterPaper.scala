@@ -3,12 +3,12 @@ package logics.wikis.interpreters
 import models.WikiContext
 
 object InterpreterPaper {
-  def render(argument:String, wikiText:String)(implicit wikiContext:WikiContext):String = {
+  def interpret(argument:String, wikiText:String)(implicit wikiContext:WikiContext):String = {
     val arguments = argument.split("""\s+""")
     val wikiPageRenderer = new InterpreterWiki
     s"""<div class="paperContent ${arguments(0)}">""" +
       wikiText.split( """-{4,}""")
-        .map(wikiPageRenderer.render)
+        .map(wikiPageRenderer.interpret)
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">

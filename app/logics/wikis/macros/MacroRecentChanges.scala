@@ -6,7 +6,7 @@ import models.{DirectQuery, WikiContext}
 
 object MacroRecentChanges {
   def apply()(implicit wikiContext: WikiContext): String = {
-    new InterpreterWiki().render(
+    new InterpreterWiki().interpret(
       DirectQuery.pageSelectRecentChanges().groupBy(_.localYearMonth).toList.sortBy(_._1)(Ordering[String].reverse).map {
         case (yearMonth, groupedByYearMonth) =>
           s"== $yearMonth\n" +

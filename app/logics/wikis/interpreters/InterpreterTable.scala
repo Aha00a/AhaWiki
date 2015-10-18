@@ -17,7 +17,7 @@ object InterpreterTable {
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
-  def render(pageContent: PageContent): String = {
+  def interpret(pageContent: PageContent): String = {
 
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {

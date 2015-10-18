@@ -13,7 +13,7 @@
     <div class="action">
         <div class="limitWidth">
             <div class="revisionInfo">
-                @Html(new logics.wikis.interpreters.InterpreterWiki().render(
+                @Html(new logics.wikis.interpreters.InterpreterWiki().interpret(
                   s"created by [wiki:${wikiFirst.author}] at [?action=history ${wikiFirst.isoDateTime}][[Br]]last modified by [wiki:${wikiLast.author}] at [?action=history ${wikiLast.isoDateTime}]"))
             </div>
         </div>

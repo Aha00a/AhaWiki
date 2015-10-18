@@ -16,16 +16,16 @@ object Interpreters {
       case Some("Html") | Some("html") => body
       case Some("Markdown") | Some("markdown") => com.github.rjeschke.txtmark.Processor.process(body)
 
-      case Some("Wiki") | Some("wiki") | None => new InterpreterWiki().render(body)
+      case Some("Wiki") | Some("wiki") | None => new InterpreterWiki().interpret(body)
 
-      case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.render(pageContent)
+      case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
 
-      case Some("Paper") => InterpreterPaper.render(argument, body)
-      case Some("Vim") | Some("vim") | Some("AhaTracVim") => InterpreterVim.render(pageContent)
-      case Some("Table") | Some("table") | Some("AhaTracTable") => InterpreterTable.render(pageContent)
-      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki().render(body) + "</blockquote>"
-      case Some("Math") => InterpreterMath.render(argument, body)
-      case Some("Graph") => InterpreterGraph.render(pageContent)
+      case Some("Paper") => InterpreterPaper.interpret(argument, body)
+      case Some("Vim") | Some("vim") | Some("AhaTracVim") => InterpreterVim.interpret(pageContent)
+      case Some("Table") | Some("table") | Some("AhaTracTable") => InterpreterTable.interpret(pageContent)
+      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki().interpret(body) + "</blockquote>"
+      case Some("Math") => InterpreterMath.interpret(argument, body)
+      case Some("Graph") => InterpreterGraph.interpret(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
         "Error!" + s"$pageContent"
