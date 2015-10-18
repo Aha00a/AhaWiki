@@ -48,20 +48,26 @@
                 graph.forEachLinkedNode(nodeId, function(node, link){
                     var nodeUI = graphics.getNodeUI(node.id);
                     var linkUI = graphics.getLinkUI(link.id);
-
                     if (nodeUI) {
-                        nodeUI.attr('fill', isOn ? '#f00' : '#777');
+                        nodeUI.attr('fill', isOn ? '#f00' : '#333');
                     }
                     if (linkUI) {
-                        linkUI.attr('stroke', isOn ? 'red' : 'gray');
+                        linkUI.attr('stroke', isOn ? '#f00' : '#333');
                     }
                 });
             };
 
             graphics.node(function(node) {
                 var ui = Viva.Graph.svg('g').attr('class', 'node');
-                ui.append(Viva.Graph.svg('circle').attr('r', 5));
-                ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '7px').attr('y', '5px').text(node.id));
+
+                if(layout.isNodePinned(node)) {
+                    ui.append(Viva.Graph.svg('circle').attr('r', 10).attr('fill', '#00a'));
+                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '13px').attr('y', '5px').attr('fill', '#00a').text(node.id));
+                } else {
+                    ui.append(Viva.Graph.svg('circle').attr('r', 5).attr('fill', '#333'));
+                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '8px').attr('y', '5px').attr('fill', '#333').text(node.id));
+                }
+
                 $(ui).hover(function() {
                     highlightRelatedNodes(node.id, true);
                 }, function() {
