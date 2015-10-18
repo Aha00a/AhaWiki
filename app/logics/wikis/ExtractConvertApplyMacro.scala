@@ -11,7 +11,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   val regex = """\[\[(\w+)(?:\(([^)]+)\))?\]\]""".r
 
-  def extract(s: String):String = {
+  override def extract(s: String): String = {
     regex.replaceAllIn(s, _ match {
       case a@regex(name, argument) =>
         val uniqueKey = getUniqueKey
@@ -21,7 +21,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     })
   }
 
-  def convert(s:String)(implicit wikiContext:WikiContext):String = {
+  override def convert(s: String)(implicit wikiContext: WikiContext): String = {
     val in: Option[Match] = regex.findFirstMatchIn(s)
     in match {
       case Some(m) => execute(m.group(1), m.group(2))
@@ -30,7 +30,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   }
 
 
-  def execute(name: String, argument: String)(implicit wikiContext:WikiContext): String = {
+  def execute(name: String, argument: String)(implicit wikiContext: WikiContext): String = {
     name match {
       case "PageOutline" => MacroPageOutline()
       case "Br" => MacroBr()

@@ -4,7 +4,7 @@ import implicits.Implicits._
 import models.WikiContext
 
 class ExtractConvertApplyBackQuote() extends ExtractConvertApply {
-  def extract(s: String):String = {
+  override def extract(s: String): String = {
     val regex = """`(.+?)`""".r
     regex.replaceAllIn(s, _ match {
       case regex(body) =>
@@ -16,5 +16,5 @@ class ExtractConvertApplyBackQuote() extends ExtractConvertApply {
   }
 
 
-  def convert(s:String)(implicit wikiContext:WikiContext):String = s"<code>${s.escapeHtml()}</code>"
+  override def convert(s: String)(implicit wikiContext: WikiContext): String = s"<code>${s.escapeHtml()}</code>"
 }

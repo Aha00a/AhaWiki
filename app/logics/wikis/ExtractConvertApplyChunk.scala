@@ -4,8 +4,7 @@ import models.WikiContext
 import utils.ShebangUtil
 
 class ExtractConvertApplyChunk() extends ExtractConvertApply {
-
-  def extract(s: String):String = {
+  override def extract(s: String): String = {
     if (!s.contains("{{{") || !s.contains("}}}")) {
       s
     } else {
@@ -17,6 +16,6 @@ class ExtractConvertApplyChunk() extends ExtractConvertApply {
     }
   }
 
-  def convert(s:String)(implicit wikiContext:WikiContext):String = Interpreters.interpret(ShebangUtil.addWhenNotExist(s, "text"))
+  override def convert(s: String)(implicit wikiContext: WikiContext): String = Interpreters.interpret(ShebangUtil.addWhenNotExist(s, "text"))
 }
 
