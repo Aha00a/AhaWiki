@@ -4,7 +4,7 @@ import models.WikiContext
 import utils.UuidUtil
 import implicits.Implicits._
 
-class BackQuoteProcessor() extends ExtractConvertApply {
+class ExtractConvertApplyBackQuote() extends ExtractConvertApply {
   def extract(s: String):String = {
     val regex = """`(.+?)`""".r
     regex.replaceAllIn(s, _ match {
