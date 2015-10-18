@@ -18,7 +18,7 @@ import play.api.mvc._
 import utils._
 
 @Singleton
-class Wiki @Inject()(cache: CacheApi, system: ActorSystem) extends Controller {
+class Wiki @Inject()(cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
 
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
@@ -139,7 +139,7 @@ class Wiki @Inject()(cache: CacheApi, system: ActorSystem) extends Controller {
     }
   }
 
-  val actorSimilarPage = system.actorOf(ActorPageProcessor.props)
+  val actorSimilarPage = actorSystem.actorOf(ActorPageProcessor.props)
 
   def save(nameEncoded: String) = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded, "UTF-8")
