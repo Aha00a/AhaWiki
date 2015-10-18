@@ -1,11 +1,16 @@
 package logics.wikis
 
 import models.WikiContext
+import utils.UuidUtil
 
 import scala.collection.mutable
 
 trait ExtractConvertApply {
   val map = new mutable.HashMap[String, String]()
+
+  def getUniqueKey: String = {
+    UuidUtil.newString
+  }
 
   def extract(s: String): String
 

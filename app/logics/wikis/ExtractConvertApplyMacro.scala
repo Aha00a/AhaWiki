@@ -2,7 +2,6 @@ package logics.wikis
 
 import logics.wikis.macros._
 import models.WikiContext
-import utils.UuidUtil
 
 import scala.collection.mutable
 import scala.util.matching.Regex.Match
@@ -15,9 +14,9 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   def extract(s: String):String = {
     regex.replaceAllIn(s, _ match {
       case a@regex(name, argument) =>
-        val uuid = UuidUtil.newString
-        map.put(uuid, a.group(0))
-        uuid
+        val uniqueKey = getUniqueKey
+        map.put(uniqueKey, a.group(0))
+        uniqueKey
       case _ => "error"
     })
   }

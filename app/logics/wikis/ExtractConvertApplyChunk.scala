@@ -1,7 +1,7 @@
 package logics.wikis
 
 import models.WikiContext
-import utils.{ShebangUtil, UuidUtil}
+import utils.ShebangUtil
 
 class ExtractConvertApplyChunk() extends ExtractConvertApply {
 
@@ -11,9 +11,9 @@ class ExtractConvertApplyChunk() extends ExtractConvertApply {
     } else {
       val Array(head, remain) = s.split( """\{\{\{""", 2)
       val Array(body, tail) = remain.split( """\}\}\}""", 2)
-      val uuid = UuidUtil.newString
-      map.put(uuid, body)
-      head + uuid + extract(tail)
+      val uniqueKey = getUniqueKey
+      map.put(uniqueKey, body)
+      head + uniqueKey + extract(tail)
     }
   }
 
