@@ -7,7 +7,7 @@ import scala.concurrent.duration._
 
 object Cache {
   object PageList {
-    val key: String = "pageSelectPageList"
+    val key: String = getClass.getName
 
     def get()(implicit wikiContext: WikiContext) = {
       wikiContext.cacheApi.getOrElse(key, 60.minutes) {
@@ -22,7 +22,7 @@ object Cache {
     }
   }
   object PageNameSet {
-    val key: String = "pageName"
+    val key: String = getClass.getName
 
     def get()(implicit wikiContext: WikiContext)= {
       wikiContext.cacheApi.getOrElse(key, 60.minutes) {
