@@ -1,14 +1,21 @@
 = [wiki:AhaWiki] Installation
 
 == Prerequisites
- * Java 8 or higher
- * [http://playframework.org] ver 2.4.3
+ * [http://playframework.org Play Framework] ver 2.4.x
+ * Java 8 or higher (Play Framework requirement)
+ * MySQL
 
-== Checkout
+== Clone
 {{{#!vim sh
-git checkout ....... TODO
+git clone https://github.com/Aha00a/AhaWiki.git
 }}}
 
-== `application.prod.conf`
-
+== Edit `conf/application.conf`
 TODO
+
+== execute
+TODO
+
+== edit [.config]
+TODO
+
