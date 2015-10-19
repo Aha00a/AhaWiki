@@ -8,7 +8,7 @@ import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor._
 import logics._
-import logics.wikis.{Interpreters, RecentlyVisited, WikiPermission}
+import logics.wikis.{Interpreters, WikiPermission}
 import models.DirectQuery.Link
 import models.{DirectQuery, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
@@ -31,7 +31,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     wikiSpecificRevision match {
       case Some(page) =>
         val pageContent: PageContent = new PageContent(page.content)
-        (action match {
+        action match {
           case "" | "view" =>
             try {
               if (WikiPermission.isReadable(pageContent)) {
@@ -88,7 +88,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
-        }).withCookies(Cookie(RecentlyVisited.cookieKey, RecentlyVisited.valueStr(request, name)))
+        }
       case None =>
         action match {
           case "edit" =>

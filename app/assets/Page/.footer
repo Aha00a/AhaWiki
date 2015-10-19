@@ -23,7 +23,7 @@ You can use raw html and wiki, freely.
 {{{#!html
 <h1><a href="/">ahawiki.aha00a.com</a></h1>
 }}}
-[wiki:FrontPage] [wiki:AhaWiki] [AhaWikiSyntax] [wiki:RecentChanges] [wiki:TitleIndex] [wiki:PageList] [PageMap][[Br]]Recently Visited: [[RecentlyVisited]]
+[wiki:FrontPage] [wiki:AhaWiki] [AhaWikiSyntax] [wiki:RecentChanges] [wiki:TitleIndex] [wiki:PageList] [PageMap]
 
 [[AhaWikiVersion]]
 
