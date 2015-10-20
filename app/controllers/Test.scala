@@ -5,7 +5,7 @@ import javax.inject.{Inject, Singleton}
 import akka.actor.ActorSystem
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.Interpreters
+import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
@@ -48,6 +48,36 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     testInterpreterTable()
     testInterpreterWiki()
     testInterpreterVim()
+
+    val headingNumber: HeadingNumber = new HeadingNumber()
+    assertEquals(headingNumber.incrGet(1), "1.")
+    assertEquals(headingNumber.incrGet(1), "2.")
+    assertEquals(headingNumber.incrGet(1), "3.")
+    assertEquals(headingNumber.incrGet(1), "4.")
+    assertEquals(headingNumber.incrGet(2), "4.1.")
+    assertEquals(headingNumber.incrGet(2), "4.2.")
+    assertEquals(headingNumber.incrGet(2), "4.3.")
+    assertEquals(headingNumber.incrGet(1), "5.")
+    assertEquals(headingNumber.incrGet(2), "5.1.")
+    assertEquals(headingNumber.incrGet(2), "5.2.")
+    assertEquals(headingNumber.incrGet(2), "5.3.")
+    assertEquals(headingNumber.incrGet(3), "5.3.1.")
+    assertEquals(headingNumber.incrGet(3), "5.3.2.")
+    assertEquals(headingNumber.incrGet(3), "5.3.3.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.1.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.2.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.3.")
+    assertEquals(headingNumber.incrGet(1), "6.")
+    assertEquals(headingNumber.incrGet(2), "6.1.")
+    assertEquals(headingNumber.incrGet(2), "6.2.")
+    assertEquals(headingNumber.incrGet(2), "6.3.")
+    assertEquals(headingNumber.incrGet(3), "6.3.1.")
+    assertEquals(headingNumber.incrGet(3), "6.3.2.")
+    assertEquals(headingNumber.incrGet(3), "6.3.3.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.1.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
+
     Ok("Ok.")
   }
 

@@ -1,12 +1,15 @@
 package logics.wikis.interpreters
 
 import logics.Cache
-import logics.wikis.{ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
+import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
 import models.DirectQuery.Link
 import models.WikiContext
 import utils.RegexUtil
 
 import scala.collection.mutable.ArrayBuffer
+
+
+
 
 class InterpreterWiki {
   val extractConvertApplyChunk = new ExtractConvertApplyChunk()
@@ -41,6 +44,7 @@ class InterpreterWiki {
     }
 
     val arrayBufferHeading = ArrayBuffer[String]()
+    val headingNumber = new HeadingNumber()
 
     for(s <- chunkExtractedSplit) {
       s match {
@@ -60,8 +64,7 @@ class InterpreterWiki {
             .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
             .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
           arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-
-          arrayBuffer += s"""<h$headingLength id="$idNotEmpty">${formatInline(title)}</h$headingLength>"""
+          arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
 
         case regexList(indentString, style, _, content) =>
           val indent = indentString.length
