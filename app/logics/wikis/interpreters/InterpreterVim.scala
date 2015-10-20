@@ -11,6 +11,8 @@ import scala.sys.process._
 
 object InterpreterVim {
   def interpret(pageContent: PageContent):String = {
+    implicit val codec:Codec = Codec.UTF8
+
     val raw = pageContent.raw
     val body = pageContent.content
     val shebang = pageContent.argument.mkString(" ")
@@ -32,7 +34,6 @@ object InterpreterVim {
         cacheFileSh.delete()
         cacheFileText.delete()
 
-        implicit val codec:Codec = Codec.UTF8
         cacheFileHtml.writeAll(scala.io.Source.fromFile(cacheFileHtml).getLines().drop(9).mkString("\n")
           .replace("body { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
           .replace("pre { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
@@ -43,7 +44,6 @@ object InterpreterVim {
           .replace("</html>", ""))
       }
 
-      implicit val codec:Codec = Codec.UTF8
       scala.io.Source.fromFile(cacheFileHtml).mkString
     }
   }
