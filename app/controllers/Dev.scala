@@ -51,6 +51,12 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
       result.flashing("error" -> "Reindex Failed")
     }
   }
+
+  def parseAll = Action { implicit request =>
+    Cache.PageList.get()
+    val result = Redirect(RequestUtil.refererOrRoot(request))
+    result
+  }
 }
 
 
