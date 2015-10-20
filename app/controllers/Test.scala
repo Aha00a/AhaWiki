@@ -236,17 +236,17 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     }
 
     test(Parser(""), "", "", true)
-    test(Parser("#!vi"), "", "", true)
-    test(Parser("#!vim"), "", "", false)
-    test(Parser("#!vim c"), "c", "", false)
-    test(Parser("#!vim cpp"), "cpp", "", false)
-    test(Parser("#!vim\n"), "", "", false)
-    test(Parser("#!vim cpp\n"), "cpp", "", false)
-    test(Parser("#!vim cpp\nasdf"), "cpp", "asdf", false)
-    test(Parser("#!vim\n#!cpp\nasdf"), "cpp", "asdf", false)
-    test(Parser("#!vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-    test(Parser("#!vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-    test(Parser("#!vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
+    test(Parser("#!Vi"), "", "", true)
+    test(Parser("#!Vim"), "", "", false)
+    test(Parser("#!Vim c"), "c", "", false)
+    test(Parser("#!Vim cpp"), "cpp", "", false)
+    test(Parser("#!Vim\n"), "", "", false)
+    test(Parser("#!Vim cpp\n"), "cpp", "", false)
+    test(Parser("#!Vim cpp\nasdf"), "cpp", "asdf", false)
+    test(Parser("#!Vim\n#!cpp\nasdf"), "cpp", "asdf", false)
+    test(Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
   }
 
 

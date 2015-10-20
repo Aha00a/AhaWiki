@@ -12,8 +12,8 @@ import scala.sys.process._
 
 object InterpreterVim {
   case class Parser(raw: String) {
-    val (syntax, content, isError) = {
-      if (!raw.startsWith("#!vim")) {
+    val (syntax:String, content:String, isError:Boolean) = {
+      if (!raw.startsWith("#!Vim")) {
         ("", "", true)
       } else {
         val array: Array[String] = raw.split( """\r\n|\n""")
@@ -51,10 +51,12 @@ object InterpreterVim {
     implicit val codec:Codec = Codec.UTF8
 
     val raw = pageContent.raw
-    val body = pageContent.content
-    val shebang = pageContent.argument.mkString(" ")
-    if(shebang.matches("""\W""")) {
-      s"Error $shebang"
+    val parser: Parser = Parser(raw.trim)
+
+    val body = parser.content
+    val syntax = parser.syntax
+    if(parser.isError) {
+      "Error!"
     } else {
       val md5 = MessageDigest.getInstance("MD5").digest(raw.getBytes).map("%02x".format(_)).mkString
       val cacheDir = new File(new File("cache"), "vim")
@@ -65,7 +67,7 @@ object InterpreterVim {
         cacheFileText.writeAll(body)
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$shebang" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtml.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtml.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
         Logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
