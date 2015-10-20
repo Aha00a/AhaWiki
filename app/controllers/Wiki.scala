@@ -26,7 +26,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
     val pageFirstRevision: DirectQuery.Page = MockDb.selectPageFirstRevision(name).getOrElse(new DirectQuery.Page("", ""))
     val pageLastRevision: DirectQuery.Page = MockDb.selectPageLastRevision(name).getOrElse(new DirectQuery.Page("", ""))
-    val pageSpecificRevision: Option[DirectQuery.Page] = MockDb.selectPage(name, revision, pageLastRevision)
+    val pageSpecificRevision: Option[DirectQuery.Page] = MockDb.selectPage(name, revision)
 
     pageSpecificRevision match {
       case Some(page) =>

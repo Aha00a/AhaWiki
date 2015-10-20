@@ -30,12 +30,9 @@ object MockDb {
     }
   }
 
-  def selectPage(name: String, revision: Int, pageLastRevision:Page): Option[DirectQuery.Page] = {
+  def selectPage(name: String, revision: Int): Option[DirectQuery.Page] = {
     if (revision == 0) {
-      if(pageLastRevision == null)
-        MockDb.selectPageLastRevision(name)
-      else
-        Some(pageLastRevision)
+      MockDb.selectPageLastRevision(name)
     } else {
       MockDb.selectPageSpecificRevision(name, revision)
     }
