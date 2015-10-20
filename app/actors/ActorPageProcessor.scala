@@ -4,8 +4,8 @@ import java.time.{Duration, LocalDateTime}
 
 import akka.actor._
 import logics.wikis.Interpreters
+import models.DirectQuery
 import models.DirectQuery.Page
-import models.{DirectQuery, PageContent}
 import play.api.Logger
 
 
@@ -50,14 +50,9 @@ class ActorPageProcessor extends Actor {
   }
 
   def updateLink(page:Page) = {
-    val pageContent: PageContent = new PageContent(page.content)
-    pageContent.interpreter match {
-      case Some("Wiki") | Some("wiki") | None =>
-        val seqLink = Interpreters.extractLink(page.name, pageContent.content)
-        DirectQuery.linkDelete(page.name)
-        DirectQuery.linkInsert(seqLink)
-      case value =>
-    }
+    val seqLink = Interpreters.extractLink(page.name, page.content)
+    DirectQuery.linkDelete(page.name)
+    DirectQuery.linkInsert(seqLink)
   }
 
   //  def normalizeTokenizeStemFilter(text: String): Seq[String] = {
