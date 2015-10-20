@@ -3,14 +3,16 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.ActorSystem
+import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.Interpreters
 import models.{PageContent, WikiContext}
 import play.api.Logger
+import play.api.cache.CacheApi
 import play.api.mvc._
 
 @Singleton
-class Test @Inject()(system: ActorSystem) extends Controller {
+class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
   case class ExceptionEquals[T](actual:T, expect:T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
     Logger.error(actual.toString)
     Logger.error(expect.toString)
@@ -41,10 +43,11 @@ class Test @Inject()(system: ActorSystem) extends Controller {
   }
 
 
-  def unit = Action {
+  def unit = Action { implicit request =>
     testPageContent()
     testInterpreterTable()
     testInterpreterWiki()
+    testInterpreterVim()
     Ok("Ok.")
   }
 
@@ -159,37 +162,37 @@ class Test @Inject()(system: ActorSystem) extends Controller {
   }
 
 
-  def testInterpreterWiki(): Unit = {
-    implicit val wikiContext = WikiContext("")(null, null)
+  def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+    implicit val wikiContext = WikiContext("")
     val iw: InterpreterWiki = new InterpreterWiki()
 
     assertEquals(iw.formatInline("""http://a.com"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(iw.formatInline("""http://a.com$"""), """<a href="http://a.com$" target="_blank">http://a.com$</a>""")
     assertEquals(iw.formatInline("""[http://a.com]"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(iw.formatInline("""[http://a.com a com]"""), """<a href="http://a.com" target="_blank">a com</a>""")
-    assertEquals(iw.formatInline("""[Page]"""), """<a href="Page">Page</a>""")
-    assertEquals(iw.formatInline("""[Page Alias]"""), """<a href="Page">Alias</a>""")
-    assertEquals(iw.formatInline("""[wiki:Page]"""), """<a href="Page">Page</a>""")
-    assertEquals(iw.formatInline("""[wiki:Page Alias]"""), """<a href="Page">Alias</a>""")
+    assertEquals(iw.formatInline("""[FrontPage]"""), """<a href="FrontPage">FrontPage</a>""")
+    assertEquals(iw.formatInline("""[FrontPage Alias]"""), """<a href="FrontPage">Alias</a>""")
+    assertEquals(iw.formatInline("""[wiki:FrontPage]"""), """<a href="FrontPage">FrontPage</a>""")
+    assertEquals(iw.formatInline("""[wiki:FrontPage Alias]"""), """<a href="FrontPage">Alias</a>""")
     assertEquals(iw.formatInline("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank">http://a.com/$</a>   <a href="http://a.com" target="_blank">http://a.com</a>  <a href="http://a.com" target="_blank">a com</a>""")
 
     assertEquals(iw.formatInline("""\http://a.com"""), "http://a.com")
     assertEquals(iw.formatInline("""\http://a.com$"""), "http://a.com$")
     assertEquals(iw.formatInline("""\[http://a.com]"""), "[http://a.com]")
     assertEquals(iw.formatInline("""\[http://a.com a com]"""), "[http://a.com a com]")
-    assertEquals(iw.formatInline("""\[Page]"""), "[Page]")
-    assertEquals(iw.formatInline("""\[Page Alias]"""), "[Page Alias]")
-    assertEquals(iw.formatInline("""\[wiki:Page]"""), "[wiki:Page]")
-    assertEquals(iw.formatInline("""\[wiki:Page Alias]"""), "[wiki:Page Alias]")
+    assertEquals(iw.formatInline("""\[FrontPage]"""), "[FrontPage]")
+    assertEquals(iw.formatInline("""\[FrontPage Alias]"""), "[FrontPage Alias]")
+    assertEquals(iw.formatInline("""\[wiki:FrontPage]"""), "[wiki:FrontPage]")
+    assertEquals(iw.formatInline("""\[wiki:FrontPage Alias]"""), "[wiki:FrontPage Alias]")
 
     assertEquals(iw.formatInline("""\\http://a.com"""), """\\<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(iw.formatInline("""\\http://a.com$"""), """\\<a href="http://a.com$" target="_blank">http://a.com$</a>""")
     assertEquals(iw.formatInline("""\\[http://a.com]"""), """\\<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(iw.formatInline("""\\[http://a.com a com]"""), """\\<a href="http://a.com" target="_blank">a com</a>""")
-    assertEquals(iw.formatInline("""\\[Page]"""), """\\<a href="Page">Page</a>""")
-    assertEquals(iw.formatInline("""\\[Page Alias]"""), """\\<a href="Page">Alias</a>""")
-    assertEquals(iw.formatInline("""\\[wiki:Page]"""), """\\<a href="Page">Page</a>""")
-    assertEquals(iw.formatInline("""\\[wiki:Page Alias]"""), """\\<a href="Page">Alias</a>""")
+    assertEquals(iw.formatInline("""\\[FrontPage]"""), """\\<a href="FrontPage">FrontPage</a>""")
+    assertEquals(iw.formatInline("""\\[FrontPage Alias]"""), """\\<a href="FrontPage">Alias</a>""")
+    assertEquals(iw.formatInline("""\\[wiki:FrontPage]"""), """\\<a href="FrontPage">FrontPage</a>""")
+    assertEquals(iw.formatInline("""\\[wiki:FrontPage Alias]"""), """\\<a href="FrontPage">Alias</a>""")
     
     
     
@@ -197,30 +200,51 @@ class Test @Inject()(system: ActorSystem) extends Controller {
     InterpreterWiki.extractLink("Src", """http://a.com$""")
     InterpreterWiki.extractLink("Src", """[http://a.com]""")
     InterpreterWiki.extractLink("Src", """[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """[Page]""")
-    InterpreterWiki.extractLink("Src", """[Page Alias]""")
-    InterpreterWiki.extractLink("Src", """[wiki:Page]""")
-    InterpreterWiki.extractLink("Src", """[wiki:Page Alias]""")
+    InterpreterWiki.extractLink("Src", """[FrontPage]""")
+    InterpreterWiki.extractLink("Src", """[FrontPage Alias]""")
+    InterpreterWiki.extractLink("Src", """[wiki:FrontPage]""")
+    InterpreterWiki.extractLink("Src", """[wiki:FrontPage Alias]""")
     InterpreterWiki.extractLink("Src", """http://a.com/$   [http://a.com]  [http://a.com a com]""")
 
     InterpreterWiki.extractLink("Src", """\http://a.com""")
     InterpreterWiki.extractLink("Src", """\http://a.com$""")
     InterpreterWiki.extractLink("Src", """\[http://a.com]""")
     InterpreterWiki.extractLink("Src", """\[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """\[Page]""")
-    InterpreterWiki.extractLink("Src", """\[Page Alias]""")
-    InterpreterWiki.extractLink("Src", """\[wiki:Page]""")
-    InterpreterWiki.extractLink("Src", """\[wiki:Page Alias]""")
+    InterpreterWiki.extractLink("Src", """\[FrontPage]""")
+    InterpreterWiki.extractLink("Src", """\[FrontPage Alias]""")
+    InterpreterWiki.extractLink("Src", """\[wiki:FrontPage]""")
+    InterpreterWiki.extractLink("Src", """\[wiki:FrontPage Alias]""")
 
     InterpreterWiki.extractLink("Src", """\\http://a.com""")
     InterpreterWiki.extractLink("Src", """\\http://a.com$""")
     InterpreterWiki.extractLink("Src", """\\[http://a.com]""")
     InterpreterWiki.extractLink("Src", """\\[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """\\[Page]""")
-    InterpreterWiki.extractLink("Src", """\\[Page Alias]""")
-    InterpreterWiki.extractLink("Src", """\\[wiki:Page]""")
-    InterpreterWiki.extractLink("Src", """\\[wiki:Page Alias]""")
+    InterpreterWiki.extractLink("Src", """\\[FrontPage]""")
+    InterpreterWiki.extractLink("Src", """\\[FrontPage Alias]""")
+    InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage]""")
+    InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage Alias]""")
 
+  }
+
+
+  def testInterpreterVim(): Unit = {
+    def test(p: Parser, syntax: String, content: String) = {
+      assertEquals(p.syntax, syntax)
+      assertEquals(p.content, content)
+    }
+
+    test(Parser(""), "Error!", "Error!")
+    test(Parser("#!vi"), "Error!", "Error!")
+    test(Parser("#!vim"), "", "")
+    test(Parser("#!vim c"), "c", "")
+    test(Parser("#!vim cpp"), "cpp", "")
+    test(Parser("#!vim\n"), "", "")
+    test(Parser("#!vim cpp\n"), "cpp", "")
+    test(Parser("#!vim cpp\nasdf"), "cpp", "asdf")
+    test(Parser("#!vim\n#!cpp\nasdf"), "cpp", "asdf")
+    test(Parser("#!vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf")
+    test(Parser("#!vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf")
+    test(Parser("#!vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf")
   }
 
 

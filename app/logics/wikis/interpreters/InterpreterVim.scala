@@ -11,6 +11,42 @@ import scala.io.Codec
 import scala.sys.process._
 
 object InterpreterVim {
+  case class Parser(raw: String) {
+    val (syntax, content) = {
+      if (!raw.startsWith("#!vim")) {
+        ("Error!", "Error!")
+      } else {
+        val array: Array[String] = raw.split( """\r\n|\n""")
+        if (array.length == 0) {
+          ("Error!", "Error!")
+        }
+        else {
+          val l1 = array.head
+          if (array.length == 1) {
+            if (l1.length <= 6) {
+              ("", "")
+            }
+            else if (l1.length > 6) {
+              (l1.substring(6), "")
+            }
+          }
+          else {
+            if (l1.length > 6) {
+              (l1.substring(6), array.slice(1, array.length).mkString("\n"))
+            } else {
+              val l2: String = array(1)
+              if (l2.startsWith("#!")) {
+                (l2.substring(2), array.slice(2, array.length).mkString("\n"))
+              } else {
+                ("", "")
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   def interpret(pageContent: PageContent):String = {
     implicit val codec:Codec = Codec.UTF8
 
