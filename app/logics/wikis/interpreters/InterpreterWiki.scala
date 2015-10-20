@@ -149,7 +149,7 @@ object InterpreterWiki {
       val href: String = uriNormalized
       val attrTarget: String = if (external) " target=\"_blank\"" else ""
       val display: String = aliasWithDefault
-      val attrCss = if (external || set.contains(uriNormalized)) { "" } else { """ class="missing"""" }
+      val attrCss = if (external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?") || set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))) { "" } else { """ class="missing"""" }
 
       s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
     }
