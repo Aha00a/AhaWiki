@@ -2,8 +2,8 @@ package models
 
 import implicits.Implicits._
 
-case class PageContent(s: String) {
-  private val split: Array[String] = s.trim.split("""(\n|\r\n)+""")
+case class PageContent(raw: String) {
+  private val split: Array[String] = raw.trim.split("""(\n|\r\n)+""")
 
   val directives = split.toIterator.takeWhile(_.startsWith("#!")).map(_.substring(2)).toSeq
   val content = split.toIterator.dropWhile(_.startsWith("#!")).mkString("\n")

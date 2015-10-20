@@ -11,13 +11,13 @@ import scala.sys.process._
 
 object InterpreterVim {
   def interpret(pageContent: PageContent):String = {
-    val s = pageContent.s
+    val raw = pageContent.raw
     val body = pageContent.content
     val shebang = pageContent.argument.mkString(" ")
     if(shebang.matches("""\W""")) {
       s"Error $shebang"
     } else {
-      val md5 = MessageDigest.getInstance("MD5").digest(s.getBytes).map("%02x".format(_)).mkString
+      val md5 = MessageDigest.getInstance("MD5").digest(raw.getBytes).map("%02x".format(_)).mkString
       val cacheDir = new File(new File("cache"), "vim")
       val cacheFileHtml = new File(cacheDir, md5 + ".html")
       if (!cacheFileHtml.exists()) {
