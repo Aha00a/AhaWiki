@@ -6,7 +6,7 @@
  * MySQL
 
 == Clone
-{{{#!vim sh
+{{{#!Vim sh
 git clone https://github.com/Aha00a/AhaWiki.git
 }}}
 

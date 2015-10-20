@@ -59,7 +59,7 @@ object InterpreterVim {
       "Error!"
     } else {
       val md5 = MessageDigest.getInstance("MD5").digest(raw.getBytes).map("%02x".format(_)).mkString
-      val cacheDir = new File(new File("cache"), "vim")
+      val cacheDir = new File(new File("cache"), "Vim")
       val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
       val cacheFileHtml = new File(cacheDir, md5 + ".html")
       if (!cacheFileHtml.exists()) {
