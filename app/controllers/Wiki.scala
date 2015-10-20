@@ -24,11 +24,11 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val name = URLDecoder.decode(nameEncoded, "UTF-8")
     implicit val wikiContext = WikiContext(name)
 
-    val wikiFirstRevision: DirectQuery.Page = MockDb.selectPageFirstRevision(name).getOrElse(new DirectQuery.Page("", ""))
-    val wikiLastRevision: DirectQuery.Page = MockDb.selectPageLastRevision(name).getOrElse(new DirectQuery.Page("", ""))
-    val wikiSpecificRevision: Option[DirectQuery.Page] = MockDb.selectPage(name, revision, wikiLastRevision)
+    val pageFirstRevision: DirectQuery.Page = MockDb.selectPageFirstRevision(name).getOrElse(new DirectQuery.Page("", ""))
+    val pageLastRevision: DirectQuery.Page = MockDb.selectPageLastRevision(name).getOrElse(new DirectQuery.Page("", ""))
+    val pageSpecificRevision: Option[DirectQuery.Page] = MockDb.selectPage(name, revision, pageLastRevision)
 
-    wikiSpecificRevision match {
+    pageSpecificRevision match {
       case Some(page) =>
         val pageContent: PageContent = new PageContent(page.content)
         action match {
@@ -52,13 +52,13 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                     pageContent.interpreter match {
                       case Some("Paper") =>
                         val content = Interpreters.interpret(page.content)
-                        Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
+                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
                       case None | Some("Wiki") =>
                         val content = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
+                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
                       case _ =>
                         val content = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.viewOthers(name, content, wikiFirstRevision, wikiLastRevision))
+                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
                     }
                 }
               } else {
