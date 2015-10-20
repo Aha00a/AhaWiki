@@ -112,8 +112,8 @@ class InterpreterWiki {
   }
 
 
-  def extractLink(name:String, wikiText:String):Seq[Link] = {
-    val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
+  def extractLink(name:String, content:String):Seq[Link] = {
+    val chunkExtracted = extractConvertApplyChunk.extract(content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
