@@ -21,7 +21,6 @@ GET         /unitTest                     controllers.Test.unit
 
 GET         /dev/reindex                  controllers.Dev.reindex
 GET         /dev/reset                    controllers.Dev.reset
-GET         /dev/parseAll                 controllers.Dev.parseAll
 
 GET         /api/pageMap                  controllers.Api.pageMap
 
