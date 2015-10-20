@@ -111,8 +111,6 @@ class InterpreterWiki {
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }
 
-  val urlScheme = "[a-zA-Z][-a-zA-Z0-9+._]+"
-  val regexSimple = ("""\[(""" + urlScheme + """://[^]\s]+)\s([^]]+)\]|\[(""" + urlScheme + """://[^]\s]+)\]|(""" + urlScheme + """://[^]\s]+)""").r
   def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
     var s = line
     for((regex, replacement) <- List(
