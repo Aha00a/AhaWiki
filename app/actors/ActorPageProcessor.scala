@@ -1,12 +1,10 @@
 package actors
 
-import java.time.{Duration, LocalDateTime}
-
 import akka.actor._
 import logics.wikis.Interpreters
 import models.DirectQuery
 import models.DirectQuery.Page
-import play.api.Logger
+import utils.StopWatch
 
 
 object ActorPageProcessor {
@@ -22,13 +20,12 @@ class ActorPageProcessor extends Actor {
 
   def receive = {
     case Calculate(name: String) =>
-      val now = LocalDateTime.now()
-      Logger.info(s"Start - $name")
-      DirectQuery.pageSelectLastRevision(name).foreach(page => {
-        updateCosineSimilarity(name, page)
-        updateLink(page)
-      })
-      Logger.info(s"Done - $name - ${Duration.between(LocalDateTime.now(), now)}")
+      StopWatch(name) { n =>
+        DirectQuery.pageSelectLastRevision(name) foreach { page =>
+          updateCosineSimilarity(name, page)
+          updateLink(page)
+        }
+      }
   }
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
