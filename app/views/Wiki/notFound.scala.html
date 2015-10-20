@@ -1,13 +1,10 @@
-@(title:String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(title:String, additionalInfo:String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_base(title) {
 
 } {
     <div class="wikiContent">
         <div class="limitWidth">
-            <h1>@title</h1>
-            <p>
-                This page does not exist. You can <a href="?action=edit">create</a> it here.
-            </p>
+            @Html(additionalInfo)
         </div>
     </div>
 }

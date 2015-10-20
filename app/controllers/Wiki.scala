@@ -98,7 +98,16 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Ok(views.html.Wiki.permissionDenied(name))
             }
           case _ =>
-            NotFound(views.html.Wiki.notFound(name))
+            val relatedPages = getRelatedPages(name)
+            val additionalInfo =
+              s"""= $name
+                 |This page does not exist. You can [?action=edit create] it here.
+                 |= See also
+                 |[[Html(<table class="seeAlso"><tr><th>Related Pages</th></tr><tr><td class="">)]]
+                 |$relatedPages[[Html(</td></tr></table>)]]
+                 |""".stripMargin
+
+            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
         }
     }
   }
