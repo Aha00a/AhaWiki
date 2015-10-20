@@ -227,24 +227,26 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
   }
 
 
+  //noinspection NameBooleanParameters
   def testInterpreterVim(): Unit = {
-    def test(p: Parser, syntax: String, content: String) = {
+    def test(p: Parser, syntax: String, content: String, isError:Boolean) = {
       assertEquals(p.syntax, syntax)
       assertEquals(p.content, content)
+      assertEquals(p.isError, isError)
     }
 
-    test(Parser(""), "Error!", "Error!")
-    test(Parser("#!vi"), "Error!", "Error!")
-    test(Parser("#!vim"), "", "")
-    test(Parser("#!vim c"), "c", "")
-    test(Parser("#!vim cpp"), "cpp", "")
-    test(Parser("#!vim\n"), "", "")
-    test(Parser("#!vim cpp\n"), "cpp", "")
-    test(Parser("#!vim cpp\nasdf"), "cpp", "asdf")
-    test(Parser("#!vim\n#!cpp\nasdf"), "cpp", "asdf")
-    test(Parser("#!vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf")
-    test(Parser("#!vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf")
-    test(Parser("#!vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf")
+    test(Parser(""), "", "", true)
+    test(Parser("#!vi"), "", "", true)
+    test(Parser("#!vim"), "", "", false)
+    test(Parser("#!vim c"), "c", "", false)
+    test(Parser("#!vim cpp"), "cpp", "", false)
+    test(Parser("#!vim\n"), "", "", false)
+    test(Parser("#!vim cpp\n"), "cpp", "", false)
+    test(Parser("#!vim cpp\nasdf"), "cpp", "asdf", false)
+    test(Parser("#!vim\n#!cpp\nasdf"), "cpp", "asdf", false)
+    test(Parser("#!vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(Parser("#!vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(Parser("#!vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
   }
 
 

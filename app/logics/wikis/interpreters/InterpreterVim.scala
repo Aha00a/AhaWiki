@@ -12,33 +12,33 @@ import scala.sys.process._
 
 object InterpreterVim {
   case class Parser(raw: String) {
-    val (syntax, content) = {
+    val (syntax, content, isError) = {
       if (!raw.startsWith("#!vim")) {
-        ("Error!", "Error!")
+        ("", "", true)
       } else {
         val array: Array[String] = raw.split( """\r\n|\n""")
         if (array.length == 0) {
-          ("Error!", "Error!")
+          ("", "", true)
         }
         else {
           val l1 = array.head
           if (array.length == 1) {
             if (l1.length <= 6) {
-              ("", "")
+              ("", "", false)
             }
             else if (l1.length > 6) {
-              (l1.substring(6), "")
+              (l1.substring(6), "", false)
             }
           }
           else {
             if (l1.length > 6) {
-              (l1.substring(6), array.slice(1, array.length).mkString("\n"))
+              (l1.substring(6), array.slice(1, array.length).mkString("\n"), false)
             } else {
               val l2: String = array(1)
               if (l2.startsWith("#!")) {
-                (l2.substring(2), array.slice(2, array.length).mkString("\n"))
+                (l2.substring(2), array.slice(2, array.length).mkString("\n"), false)
               } else {
-                ("", "")
+                ("", "", false)
               }
             }
           }
