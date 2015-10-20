@@ -60,6 +60,7 @@ object InterpreterVim {
     } else {
       val md5 = MessageDigest.getInstance("MD5").digest(raw.getBytes).map("%02x".format(_)).mkString
       val cacheDir = new File(new File("cache"), "vim")
+      val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
       val cacheFileHtml = new File(cacheDir, md5 + ".html")
       if (!cacheFileHtml.exists()) {
         cacheDir.mkdirs()
@@ -67,15 +68,17 @@ object InterpreterVim {
         cacheFileText.writeAll(body)
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtml.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
         Logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
-        Seq("sh", cacheFileSh.getPath) !!;
-        cacheFileSh.delete()
-        cacheFileText.delete()
-
-        cacheFileHtml.writeAll(scala.io.Source.fromFile(cacheFileHtml).getLines().drop(9).mkString("\n")
+        try {
+          Seq("sh", cacheFileSh.getPath) !!
+        }
+        catch {
+          case e:RuntimeException => Logger.error(e.toString)
+        }
+        cacheFileHtml.writeAll(scala.io.Source.fromFile(cacheFileHtmlRaw).getLines().drop(9).mkString("\n")
           .replace("body { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
           .replace("pre { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
           .replace("<head>", "")
@@ -83,6 +86,10 @@ object InterpreterVim {
           .replace("<body>", "")
           .replace("</body>", "")
           .replace("</html>", ""))
+
+        cacheFileHtmlRaw.delete()
+        cacheFileSh.delete()
+        cacheFileText.delete()
       }
 
       scala.io.Source.fromFile(cacheFileHtml).mkString
