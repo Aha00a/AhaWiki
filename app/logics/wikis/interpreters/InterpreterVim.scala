@@ -5,6 +5,7 @@ import java.security.MessageDigest
 
 import implicits.Implicits._
 import models.PageContent
+import play.api.Logger
 
 import scala.io.Codec
 import scala.sys.process._
@@ -28,7 +29,9 @@ object InterpreterVim {
         cacheFileText.writeAll(body)
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        cacheFileSh.writeAll( s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$shebang" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtml.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null""")
+        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$shebang" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtml.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        Logger.info(shellScript)
+        cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
         Seq("sh", cacheFileSh.getPath) !!;
         cacheFileSh.delete()
