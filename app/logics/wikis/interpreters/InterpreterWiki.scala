@@ -111,6 +111,16 @@ class InterpreterWiki {
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }
 
+
+  def extractLink(name:String, wikiText:String):Seq[Link] = {
+    val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
+    val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+    val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+
+    InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
+  }
+
+
   def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
     var s = line
     for((regex, replacement) <- List(
