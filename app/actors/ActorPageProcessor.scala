@@ -3,7 +3,7 @@ package actors
 import java.time.{Duration, LocalDateTime}
 
 import akka.actor._
-import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.Interpreters
 import models.DirectQuery.Page
 import models.{DirectQuery, PageContent}
 import play.api.Logger
@@ -53,7 +53,7 @@ class ActorPageProcessor extends Actor {
     val pageContent: PageContent = new PageContent(page.content)
     pageContent.interpreter match {
       case Some("Wiki") | Some("wiki") | None =>
-        val seqLink = InterpreterWiki.extractLink(page.name, pageContent.content).toSeq
+        val seqLink = Interpreters.extractLink(page.name, pageContent.content)
         DirectQuery.linkDelete(page.name)
         DirectQuery.linkInsert(seqLink)
       case value =>
