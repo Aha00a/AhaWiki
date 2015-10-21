@@ -60,13 +60,13 @@ class InterpreterWiki {
     for(s <- chunkExtractedSplit) {
       s match {
         case "" =>
-          variableHolder.set(State.Normal)
+          variableHolder := State.Normal
         case regexHr() =>
-          variableHolder.set(State.Hr)
+          variableHolder := State.Hr
           arrayBuffer += """<hr/>"""
 
         case regexHeading(heading, title, _, _, id) =>
-          variableHolder.set(State.Heading)
+          variableHolder := State.Heading
 
           val headingLength = heading.length
           val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
@@ -78,7 +78,7 @@ class InterpreterWiki {
           arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
 
         case regexList(indentString, style, _, content) =>
-          variableHolder.set(State.List)
+          variableHolder := State.List
 
           val indent = indentString.length
 
@@ -111,12 +111,12 @@ class InterpreterWiki {
 
           oldIndent = indent
         case _ =>
-          variableHolder.set(State.Normal)
+          variableHolder := State.Normal
           arrayBuffer += s"<p>${formatInline(s)}</p>".toString
       }
     }
 
-    variableHolder.set(State.Normal)
+    variableHolder := State.Normal
 
     if(arrayBufferHeading.length > 5)
       arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
