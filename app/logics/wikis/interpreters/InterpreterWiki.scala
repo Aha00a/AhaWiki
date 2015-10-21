@@ -12,6 +12,11 @@ import scala.collection.mutable.ArrayBuffer
 
 
 class InterpreterWiki {
+  object State extends Enumeration {
+    type State = Value
+    val Normal, Hr, Heading, List = Value
+  }
+
   val extractConvertApplyChunk = new ExtractConvertApplyChunk()
   val extractConvertApplyMacro = new ExtractConvertApplyMacro()
   val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
@@ -48,10 +53,6 @@ class InterpreterWiki {
     val arrayBufferHeading = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
 
-    object State extends Enumeration {
-      type State = Value
-      val Normal, Hr, Heading, List = Value
-    }
 
     val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
       if(after != State.List)
