@@ -161,7 +161,7 @@ page3
 == Interpreters
 모든 페이지의 최상단에 [https://en.wikipedia.org/wiki/Shebang_(Unix) Shebang](`#!`)을 이용하여 Interpreter를 지정할 수 있습니다. `Wiki`가 default입니다.
 
-Wiki의 경우 `&#123;&#123;&#123;` and `&#125;&#125;&#125;` 사이의 내용을 다른 Interpreter로 전달하여 해석하게 됩니다. 이때는 `Text`가 default입니다.
+Wiki의 경우 `&#91;&#91;&#91;` and `&#93;&#93;&#93;` 사이의 내용을 다른 Interpreter로 전달하여 해석하게 됩니다. 이때는 `Text`가 default입니다.
 
 [[[#!WikiSyntaxPreview Text
 some text
