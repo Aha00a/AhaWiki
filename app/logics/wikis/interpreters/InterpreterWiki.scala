@@ -4,7 +4,7 @@ import logics.Cache
 import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
 import models.DirectQuery.Link
 import models.WikiContext
-import utils.RegexUtil
+import utils.{VariableHolder, RegexUtil}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -34,18 +34,6 @@ class InterpreterWiki {
     val regexListUpperAlpha = """[A-Z]+\.""".r
     val regexListLowerRoman = """[ivx]+\.""".r
     val regexListUpperRoman = """[IVX]+\.""".r
-
-    class VariableHolder[T](t:T, changed: (T, T) => Unit = (before:T, after:T) => {}, changing:(T, T) => Boolean = (before:T, after:T) => true) {
-      private var variable:T = t
-      def set(t:T) = {
-        if(changing(variable, t)) {
-          var before = variable
-          variable = t
-          changed(before, variable)
-        }
-        variable
-      }
-    }
 
 
 
@@ -227,3 +215,5 @@ object InterpreterWiki {
     }.filter(_ != null).filterNot(_.dst.startsWith("[")) // TODO: Macro
   }
 }
+
+
