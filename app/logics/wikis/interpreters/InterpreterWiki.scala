@@ -42,21 +42,19 @@ class InterpreterWiki {
 
 
 
-    var oldIndent = 0
-    def closeIndent() = {
-      while(0 < oldIndent) {
-        arrayBuffer += "</ul>"
-        oldIndent -= 1
-      }
-    }
 
     val arrayBufferHeading = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
 
 
+    var oldIndent = 0
     val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
-      if(after != State.List)
-        closeIndent()
+      if(after != State.List) {
+        while (0 < oldIndent) {
+          arrayBuffer += "</ul>"
+          oldIndent -= 1
+        }
+      }
     })
 
     for(s <- chunkExtractedSplit) {
