@@ -1,9 +1,10 @@
 = [wiki:AhaWiki] HotKey
-[wiki:AhaWiki] supports some hotkeys.
+[wiki:AhaWiki] supports some hot keys.
 
  * `f` - Navigate to [FrontPage]
  * `e` - Edit
  * `h` - History
  * `r` - Navigate to random page
+ * `l` - Navigate to [PageList]
  * `m` - Navigate to [PageMap]
 
