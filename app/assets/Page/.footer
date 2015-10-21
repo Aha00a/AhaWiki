@@ -1,7 +1,7 @@
-{{{#!comment
+[[[#!comment
 You can use raw html and wiki, freely.
-}}}
-{{{#!html
+]]]
+[[[#!html
 <style type="text/css">
     .AhaWiki .footer {
         background-color: #000;
@@ -19,10 +19,10 @@ You can use raw html and wiki, freely.
         background-color: #333;
     }
 </style>
-}}}
-{{{#!html
+]]]
+[[[#!html
 <h1><a href="/">ahawiki.aha00a.com</a></h1>
-}}}
+]]]
 [wiki:FrontPage] [wiki:AhaWiki] [AhaWikiSyntax] [wiki:RecentChanges] [wiki:TitleIndex] [wiki:PageList] [PageMap]
 
 [[AhaWikiVersion]]

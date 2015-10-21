@@ -6,9 +6,9 @@
  * MySQL
 
 == Clone
-{{{#!Vim sh
+[[[#!Vim sh
 git clone https://github.com/Aha00a/AhaWiki.git
-}}}
+]]]
 
 == Edit `conf/application.conf`
 TODO

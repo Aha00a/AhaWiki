@@ -18,7 +18,7 @@ object InterpreterWikiSyntaxPreview {
     else
     {
       """<table class="wikiSyntax"><tr><td class="raw">""" +
-        Interpreters.interpret(s"#!text\n{{{#!$argument\n" + body + "\n}}}") +
+        Interpreters.interpret(s"#!text\n[[[#!$argument\n" + body + "\n]]]") +
         """</td><td class="preview">""" +
         Interpreters.interpret(s"#!$argument\n" + body) +
         """</td></tr></table>"""

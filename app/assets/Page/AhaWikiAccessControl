@@ -15,47 +15,47 @@ You can specify default permission at [wiki:.config?action=edit .config]
 === Examples
 ==== Public Wiki
 Anyone can read and write this wiki.
-{{{#!Vim hocon
+[[[#!Vim hocon
 permission {
     default {
         read = "all"
         write = "all"
     }
 }
-}}}
+]]]
 
 ==== Open Wiki
 Anyone can read, but logged user can write this wiki.
-{{{#!Vim hocon
+[[[#!Vim hocon
 permission {
     default {
         read = "all"
         write = "login"
     }
 }
-}}}
+]]]
 
 ==== Closed Wiki
 Logged user only
-{{{#!Vim hocon
+[[[#!Vim hocon
 permission {
     default {
         read = "login"
         write = "login"
     }
 }
-}}}
+]]]
 
 ==== Private Wiki
 Only specified user can use
-{{{#!Vim hocon
+[[[#!Vim hocon
 permission {
     default {
         read = "aha00a@gmail.com,somebody@example.com"
         write = "aha00a@gmail.com"
     }
 }
-}}}
+]]]
 
 
 == Page Level Access Control
@@ -63,22 +63,22 @@ You can insert ACL declaration at the top of the specific page.
 
 === Examples
 All users can read, but some users who logged in can edit.
-{{{
+[[[
 ...
 #!read all
 #!write login
 = Page Title
 Page description
 ...
-}}}
+]]]
 
 Some users who logged in can see, but only `aha00a` and `aha00b` can edit.
-{{{
+[[[
 ...
 #!read login
 #!write aha00a@gmail.com,aha00b@gmail.com
 = Page Title
 Page description
 ...
-}}}
+]]]
 

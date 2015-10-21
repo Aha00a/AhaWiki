@@ -137,10 +137,10 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       .mkString("\n")
 
     if (result != "") {
-      s"""{{{#!Graph
+      s"""[[[#!Graph
          |#!enableWikiLink
          |$result
-         |}}}""".stripMargin
+         |]]]""".stripMargin
     }
     else {
       ""
