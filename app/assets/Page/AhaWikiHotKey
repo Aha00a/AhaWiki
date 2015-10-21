@@ -2,9 +2,13 @@
 [wiki:AhaWiki] supports some hot keys.
 
  * `f` - Navigate to [FrontPage]
- * `e` - Edit
- * `h` - History
- * `r` - Navigate to random page
+ * `a` - Navigate to [AhaWiki]
+ * `s` - Navigate to [AhaWikiSyntax]
+ * `c` - Navigate to [RecentChanges]
+ * `t` - Navigate to [TitleIndex]
  * `l` - Navigate to [PageList]
  * `m` - Navigate to [PageMap]
 
+ * `r` - Navigate to random page
+ * `e` - Edit
+ * `h` - History

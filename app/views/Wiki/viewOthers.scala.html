@@ -3,9 +3,14 @@
     <script type="text/javascript">
         $(function(){
             $(document).bind('keydown', 'f', function () { location.href = '/' });
-            $(document).bind('keydown', 'r', function () { location.href = '/r' });
+            $(document).bind('keydown', 'a', function () { location.href = '/w/AhaWiki' });
+            $(document).bind('keydown', 's', function () { location.href = '/w/AhaWikiSyntax' });
+            $(document).bind('keydown', 'c', function () { location.href = '/w/RecentChanges' });
+            $(document).bind('keydown', 't', function () { location.href = '/w/TitleIndex' });
             $(document).bind('keydown', 'l', function () { location.href = '/w/PageList' });
             $(document).bind('keydown', 'm', function () { location.href = '/w/PageMap' });
+
+            $(document).bind('keydown', 'r', function () { location.href = '/r' });
             $(document).bind('keydown', 'e', function () { location.href = '?action=edit' });
             $(document).bind('keydown', 'h', function () { location.href = '?action=history' });
         });
