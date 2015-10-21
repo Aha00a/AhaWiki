@@ -6,9 +6,9 @@ object InterpreterPaper {
   def interpret(argument:String, wikiText:String)(implicit wikiContext:WikiContext):String = {
     val arguments = argument.split("""\s+""")
     val wikiPageRenderer = new InterpreterWiki
+
     s"""<div class="paperContent ${arguments(0)}">""" +
-      wikiText.split( """-{4,}""")
-        .map(wikiPageRenderer.interpret)
+      wikiPageRenderer.interpret(wikiText).split( """<hr/>""")
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">
@@ -24,5 +24,6 @@ object InterpreterPaper {
              |</div>""".stripMargin
         }.mkString("\n") +
     """</div>"""
+
   }
 }
