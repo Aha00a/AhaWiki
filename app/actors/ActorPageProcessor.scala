@@ -20,7 +20,7 @@ class ActorPageProcessor extends Actor {
 
   def receive = {
     case Calculate(name: String) =>
-      StopWatch(name) { n =>
+      StopWatch(name) {
         DirectQuery.pageSelectLastRevision(name) foreach { page =>
           updateCosineSimilarity(name, page)
           updateLink(page)
