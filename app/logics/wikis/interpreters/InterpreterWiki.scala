@@ -35,6 +35,20 @@ class InterpreterWiki {
     val regexListLowerRoman = """[ivx]+\.""".r
     val regexListUpperRoman = """[IVX]+\.""".r
 
+    class VariableHolder[T](t:T, changed: (T, T) => Unit = (before:T, after:T) => {}, changing:(T, T) => Boolean = (before:T, after:T) => true) {
+      private var variable:T = t
+      def set(t:T) = {
+        if(changing(variable, t)) {
+          var before = variable
+          variable = t
+          changed(before, variable)
+        }
+        variable
+      }
+    }
+
+
+
     var oldIndent = 0
     def closeIndent() = {
       while(0 < oldIndent) {
@@ -46,16 +60,26 @@ class InterpreterWiki {
     val arrayBufferHeading = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
 
+    object State extends Enumeration {
+      type State = Value
+      val Normal, Hr, Heading, List = Value
+    }
+
+    val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
+      if(after != State.List)
+        closeIndent()
+    })
+
     for(s <- chunkExtractedSplit) {
       s match {
         case "" =>
-          closeIndent()
+          variableHolder.set(State.Normal)
         case regexHr() =>
-          closeIndent()
+          variableHolder.set(State.Hr)
           arrayBuffer += """<hr/>"""
 
         case regexHeading(heading, title, _, _, id) =>
-          closeIndent()
+          variableHolder.set(State.Heading)
 
           val headingLength = heading.length
           val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
@@ -67,6 +91,8 @@ class InterpreterWiki {
           arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
 
         case regexList(indentString, style, _, content) =>
+          variableHolder.set(State.List)
+
           val indent = indentString.length
 
 
@@ -98,12 +124,12 @@ class InterpreterWiki {
 
           oldIndent = indent
         case _ =>
-          closeIndent()
+          variableHolder.set(State.Normal)
           arrayBuffer += s"<p>${formatInline(s)}</p>".toString
       }
     }
 
-    closeIndent()
+    variableHolder.set(State.Normal)
 
     if(arrayBufferHeading.length > 5)
       arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
