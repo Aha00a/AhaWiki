@@ -1,14 +1,9 @@
 @(listPage: List[models.DirectQuery.PageNameRevisionTimeAuthorRemoteAddressSizeComment])
 <script type="text/javascript">
     $(function(){
-        $('tr[data-href]').click(function() {
-            document.location = $(this).data('href');
-        }).mouseenter(function () {
-            $(this).css({backgroundColor: '#eee'})
-        }).mouseleave(function () {
-            $(this).css({backgroundColor: 'inherit'})
-        });
+        $(".simpleTable").tablesorter();
     });
+
 </script>
 <div class="pageList">
     <table class="simpleTable">
@@ -25,7 +20,7 @@
         </thead>
         <tbody>
             @for(page <- listPage) {
-                <tr data-href="@(page.name)">
+                <tr>
                     <td>
                         <a href="@(page.name)">@(page.name)</a>
                     </td>
