@@ -3,10 +3,10 @@ package logics.wikis
 import models.WikiContext
 import utils.UuidUtil
 
-import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 trait ExtractConvertApply {
-  val map = new mutable.HashMap[String, String]()
+  val arrayBuffer = new ArrayBuffer[(String, String)]()
 
   def getUniqueKey: String = {
     UuidUtil.newString
@@ -18,7 +18,7 @@ trait ExtractConvertApply {
 
   def apply(s: String)(implicit wikiContext: WikiContext): String = {
     var result = s
-    for ((key, value) <- map) {
+    for ((key, value) <- arrayBuffer) {
       result = result.replace(key, convert(value))
     }
     result

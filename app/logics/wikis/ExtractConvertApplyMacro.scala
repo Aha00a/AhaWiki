@@ -15,7 +15,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     regex.replaceAllIn(s, _ match {
       case a@regex(name, argument) =>
         val uniqueKey = getUniqueKey
-        map.put(uniqueKey, a.group(0))
+        arrayBuffer += uniqueKey -> a.group(0)
         uniqueKey
       case _ => "error"
     })

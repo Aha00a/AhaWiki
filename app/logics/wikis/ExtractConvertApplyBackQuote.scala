@@ -9,7 +9,7 @@ class ExtractConvertApplyBackQuote() extends ExtractConvertApply {
     regex.replaceAllIn(s, _ match {
       case regex(body) =>
         val uniqueKey = getUniqueKey
-        map.put(uniqueKey, body)
+        arrayBuffer += uniqueKey -> body
         uniqueKey
       case _ => "error"
     })

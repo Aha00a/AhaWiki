@@ -11,7 +11,7 @@ class ExtractConvertApplyChunk() extends ExtractConvertApply {
       val Array(head, remain) = s.split( """\[\[\[""", 2)
       val Array(body, tail) = remain.split( """\]\]\]""", 2)
       val uniqueKey = getUniqueKey
-      map.put(uniqueKey, body)
+      arrayBuffer += uniqueKey -> body
       head + uniqueKey + extract(tail)
     }
   }
