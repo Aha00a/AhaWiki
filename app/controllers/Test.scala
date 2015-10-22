@@ -178,6 +178,24 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.shebang, List("WikiSyntaxPreview", "Vim", "java"))
       assertEquals(pageContent.content, "class C {\n    private String s = \"Hello, java!\";\n}")
     }
+    {
+      assertEquals("a:b:::c:".split(":", -1).toList, List("a", "b", "", "", "c", ""))
+      val pageContent: PageContent = new PageContent(
+        """aaa
+          |[[[#!Vim java
+          |a
+          |
+          |b
+          |
+          |c
+          |]]]
+          |""".stripMargin)
+      assertEquals(pageContent.read, None)
+      assertEquals(pageContent.write, None)
+      assertEquals(pageContent.redirect, None)
+      assertEquals(pageContent.shebang, List[String]())
+      assertEquals(pageContent.content, "aaa\n[[[#!Vim java\na\n\nb\n\nc\n]]]")
+    }
 
   }
 
@@ -277,6 +295,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     test(Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
     test(Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
     test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
+    test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
   }
 
 
