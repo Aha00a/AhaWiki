@@ -44,9 +44,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                     val additionalInfo =
                       s"""
                          |== See also
-                         |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
+                         |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Backlinks</th><th>Related Pages</th></tr><tr><td class="">)]]
                          |$similarPages
-                         |[[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+                         |[[Html(</td><td class="">)]][[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
                          |""".stripMargin
 
                     pageContent.interpreter match {

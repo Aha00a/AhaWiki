@@ -42,6 +42,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       case "TitleIndex" => MacroTitleIndex()
       case "RecentChanges" => MacroRecentChanges()
       case "PageMap" => MacroPageMap()
+      case "Backlinks" => MacroBacklinks()
 
       case "Set" => MacroSet(argument)
       case "Get" => MacroGet(argument)
