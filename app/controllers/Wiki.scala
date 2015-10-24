@@ -55,17 +55,17 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                          |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
                          |""".stripMargin
 
-                    pageContent.interpreter match {
+                    Ok(pageContent.interpreter match {
                       case Some("Paper") =>
                         val contentInterpreted = Interpreters.interpret(page.content)
-                        Ok(views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                       case None | Some("Wiki") =>
                         val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                       case _ =>
                         val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-                    }
+                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                    })
                 }
               } else {
                 Forbidden(views.html.Wiki.permissionDenied(name))
