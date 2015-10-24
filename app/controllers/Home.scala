@@ -6,7 +6,7 @@ import actors.{ActorPageProcessor}
 import actors.ActorPageProcessor.Calculate
 import akka.util.Timeout
 import logics.OnApplicationStart
-import models.{PageContent, MockDb, DirectQuery}
+import models.{PageContent, MockDb, Database}
 import play.api.mvc._
 import akka.actor._
 import javax.inject._
@@ -21,7 +21,7 @@ class Home @Inject() (on:OnApplicationStart) extends Controller {
   }
 
   def random = Action { implicit request =>
-    Redirect(routes.Wiki.view(URLEncoder.encode(DirectQuery.pageSelectNameRandom(), "UTF-8"), 0, "")).flashing(request.flash)
+    Redirect(routes.Wiki.view(URLEncoder.encode(Database.pageSelectNameRandom(), "UTF-8"), 0, "")).flashing(request.flash)
   }
 
   def robotsTxt = Action { implicit request =>

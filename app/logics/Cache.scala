@@ -1,7 +1,7 @@
 package logics
 
 import logics.wikis.Interpreters
-import models.{DirectQuery, MockDb, WikiContext}
+import models.{Database, MockDb, WikiContext}
 import play.api.Logger
 
 import scala.concurrent.duration._
@@ -17,7 +17,7 @@ object Cache {
 
   object PageList extends CacheEntity {
     def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      DirectQuery.pageSelectPageList()
+      Database.pageSelectPageList()
     }
 
     override def invalidate()(implicit wikiContext: WikiContext): Unit = {

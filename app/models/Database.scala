@@ -11,7 +11,7 @@ import utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 
 import scala.language.postfixOps
 
-object DirectQuery {
+object Database {
 
   trait WithTime {
     val time:Long

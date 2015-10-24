@@ -1,7 +1,7 @@
 package logics.wikis
 
 import logics.wikis.interpreters._
-import models.DirectQuery.Link
+import models.Database.Link
 import models.{PageContent, WikiContext}
 import play.api.Logger
 

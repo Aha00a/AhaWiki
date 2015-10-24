@@ -1,12 +1,12 @@
 package logics.wikis.macros
 
 import implicits.Implicits._
-import models.{WikiContext, DirectQuery}
+import models.{WikiContext, Database}
 
 object MacroPageMap {
   def apply()(implicit wikiContext: WikiContext) = {
     views.html.Wiki.graph(
-      DirectQuery.linkSelect()
+      Database.linkSelect()
         .filterNot(l => l.src.contains("://"))
         .filterNot(l => l.dst.contains("://"))
         .shuffle()

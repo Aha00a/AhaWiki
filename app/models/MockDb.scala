@@ -2,7 +2,7 @@ package models
 
 import java.io.File
 
-import models.DirectQuery.Page
+import models.Database.Page
 import play.Play
 import play.api.Logger
 import utils.DateTimeUtil
@@ -31,7 +31,7 @@ object MockDb {
     }
   }
 
-  def selectPage(name: String, revision: Int): Option[DirectQuery.Page] = {
+  def selectPage(name: String, revision: Int): Option[Database.Page] = {
     if (revision == 0) {
       MockDb.selectPageLastRevision(name)
     } else {
@@ -41,15 +41,15 @@ object MockDb {
 
 
   def selectPageFirstRevision(name: String):Option[Page] = {
-    readAllTextFromFile(name).orElse(DirectQuery.pageSelectFirstRevision(name))
+    readAllTextFromFile(name).orElse(Database.pageSelectFirstRevision(name))
   }
 
   def selectPageLastRevision(name: String): Option[Page] = {
     Logger.info("SELECT " + name)
-    readAllTextFromFile(name).orElse(DirectQuery.pageSelectLastRevision(name))
+    readAllTextFromFile(name).orElse(Database.pageSelectLastRevision(name))
   }
 
   def selectPageSpecificRevision(name: String, revision:Int):Option[Page] = {
-    readAllTextFromFile(name).orElse(DirectQuery.pageSelectSpecificRevision(name, revision))
+    readAllTextFromFile(name).orElse(Database.pageSelectSpecificRevision(name, revision))
   }
 }

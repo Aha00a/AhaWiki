@@ -9,8 +9,8 @@ import actors.ActorPageProcessor.Calculate
 import akka.actor._
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
-import models.DirectQuery.Link
-import models.{DirectQuery, MockDb, PageContent, WikiContext}
+import models.Database.Link
+import models.{Database, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -24,9 +24,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val name = URLDecoder.decode(nameEncoded, "UTF-8")
     implicit val wikiContext = WikiContext(name)
 
-    val pageFirstRevision: DirectQuery.Page = MockDb.selectPageFirstRevision(name).getOrElse(new DirectQuery.Page("", ""))
-    val pageLastRevision: DirectQuery.Page = MockDb.selectPageLastRevision(name).getOrElse(new DirectQuery.Page("", ""))
-    val pageSpecificRevision: Option[DirectQuery.Page] = MockDb.selectPage(name, revision)
+    val pageFirstRevision: Database.Page = MockDb.selectPageFirstRevision(name).getOrElse(new Database.Page("", ""))
+    val pageLastRevision: Database.Page = MockDb.selectPageLastRevision(name).getOrElse(new Database.Page("", ""))
+    val pageSpecificRevision: Option[Database.Page] = MockDb.selectPage(name, revision)
 
     pageSpecificRevision match {
       case Some(page) =>
@@ -86,7 +86,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             }
           case "history" =>
             if (WikiPermission.isReadable(pageContent)) {
-              Ok(views.html.Wiki.history(name, DirectQuery.pageSelectHistory(name)))
+              Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
@@ -95,7 +95,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         action match {
           case "edit" =>
             if (WikiPermission.isWritable(new PageContent(""))) {
-              Ok(views.html.Wiki.edit(new models.DirectQuery.Page(name, s"""= $name\ndescribe $name here.""")))
+              Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
@@ -116,7 +116,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
 
   def getSimilarPages(name: String): String = {
-    val similarPages = DirectQuery.cosineSimilaritySelect(name)
+    val similarPages = Database.cosineSimilaritySelect(name)
       .map(c => s" * [[LinkWithPercent(${c.name2},${"%2.2f".format(c.similarity * 100)}%)]]")
       .mkString("\n")
 
@@ -130,9 +130,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
 
   def getRelatedPages(name: String): String = {
-    val relationship: List[Link] = DirectQuery.linkSelect(name)
-    val back: List[Link] = relationship.flatMap(lm => DirectQuery.linkSelect(lm.src))
-    val forward: List[Link] = relationship.flatMap(lm => DirectQuery.linkSelect(lm.dst))
+    val relationship: List[Link] = Database.linkSelect(name)
+    val back: List[Link] = relationship.flatMap(lm => Database.linkSelect(lm.src))
+    val forward: List[Link] = relationship.flatMap(lm => Database.linkSelect(lm.dst))
 
     val result = (relationship ++ back ++ forward)
       .map(l => s"${l.src}->${l.dst}")
@@ -160,7 +160,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
     if (WikiPermission.isWritable(new PageContent(latestText))) {
       if (revision == latestRevision) {
-        DirectQuery.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddress, body, comment)
+        Database.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddress, body, comment)
         actorSimilarPage ! Calculate(name)
 
         Cache.PageList.invalidate()

@@ -5,7 +5,7 @@ import javax.inject.{Inject, Singleton}
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
-import models.{MockDb, DirectQuery}
+import models.{MockDb, Database}
 import play.api.{Logger, Application}
 import play.libs.Akka
 
@@ -17,9 +17,9 @@ import scala.concurrent.duration._
 class OnApplicationStart @Inject()(val app: Application, system: ActorSystem) {
   val actorSimilarPage = system.actorOf(ActorPageProcessor.props)
 
-  if(0 == DirectQuery.pageSelectCount()) {
+  if(0 == Database.pageSelectCount()) {
     MockDb.pageFromFile().foreach(p => {
-      DirectQuery.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+      Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
       actorSimilarPage ! Calculate(p.name)
     })
   }
@@ -32,7 +32,7 @@ class OnApplicationStart @Inject()(val app: Application, system: ActorSystem) {
   })
 
   def updateCosineSimilarity(): Unit = {
-    DirectQuery.pageSelectNameWhereNoCosineSimilarity() match {
+    Database.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorSimilarPage ! Calculate(s)
       case None => Logger.info("None")
     }

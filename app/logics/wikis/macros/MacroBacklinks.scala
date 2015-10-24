@@ -1,11 +1,11 @@
 package logics.wikis.macros
 
 import logics.wikis.interpreters.InterpreterWiki
-import models.{DirectQuery, WikiContext}
+import models.{Database, WikiContext}
 
 object MacroBacklinks {
   def apply()(implicit wikiContext: WikiContext) = {
-    new InterpreterWiki().interpret(DirectQuery.linkSelect(wikiContext.name)
+    new InterpreterWiki().interpret(Database.linkSelect(wikiContext.name)
       .filterNot(_.or(_.contains("://")))
       .filter(_.dst == wikiContext.name)
       .map(l => s" * [${l.src}]")

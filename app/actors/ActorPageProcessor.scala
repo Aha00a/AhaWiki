@@ -2,8 +2,8 @@ package actors
 
 import akka.actor._
 import logics.wikis.Interpreters
-import models.DirectQuery
-import models.DirectQuery.Page
+import models.Database
+import models.Database.Page
 import utils.StopWatch
 
 
@@ -21,7 +21,7 @@ class ActorPageProcessor extends Actor {
   def receive = {
     case Calculate(name: String) =>
       StopWatch(name) {
-        DirectQuery.pageSelectLastRevision(name) foreach { page =>
+        Database.pageSelectLastRevision(name) foreach { page =>
           updateCosineSimilarity(name, page)
           updateLink(page)
         }
@@ -30,9 +30,9 @@ class ActorPageProcessor extends Actor {
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
     val wordCount = calcWordCount(page.content)
-    DirectQuery.termFrequencyDelete(name)
-    DirectQuery.termFrequencyInsert(name, wordCount)
-    DirectQuery.cosineSimilarityUpdate(name)
+    Database.termFrequencyDelete(name)
+    Database.termFrequencyInsert(name, wordCount)
+    Database.cosineSimilarityUpdate(name)
   }
 
   def calcWordCount(s: String): Map[String, Int] = {
@@ -48,8 +48,8 @@ class ActorPageProcessor extends Actor {
 
   def updateLink(page:Page) = {
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    DirectQuery.linkDelete(page.name)
-    DirectQuery.linkInsert(seqLink)
+    Database.linkDelete(page.name)
+    Database.linkInsert(seqLink)
   }
 
   //  def normalizeTokenizeStemFilter(text: String): Seq[String] = {

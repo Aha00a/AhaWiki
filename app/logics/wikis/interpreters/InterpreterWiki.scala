@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import logics.Cache
 import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
-import models.DirectQuery.Link
+import models.Database.Link
 import models.WikiContext
 import utils.{VariableHolder, RegexUtil}
 

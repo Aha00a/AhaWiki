@@ -6,7 +6,7 @@ import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
 import logics.Cache
-import models.{WikiContext, DirectQuery, MockDb}
+import models.{WikiContext, Database, MockDb}
 import play.api.cache.CacheApi
 import play.api.mvc._
 import utils.RequestUtil
@@ -21,8 +21,8 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
     val result = Redirect(RequestUtil.refererOrRoot(request))
     if(request.headers.get("Host").getOrElse("").startsWith("localhost")) {
       MockDb.pageFromFile().foreach(p => {
-        DirectQuery.pageDelete(p.name)
-        DirectQuery.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+        Database.pageDelete(p.name)
+        Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
         actorSimilarPage ! Calculate(p.name)
       })
 
@@ -43,7 +43,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
   def reindex = Action { implicit request =>
     val result = Redirect(RequestUtil.refererOrRoot(request))
     if(request.headers.get("Host").getOrElse("").startsWith("localhost")) {
-      Random.shuffle(DirectQuery.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
+      Random.shuffle(Database.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
     }
     else
