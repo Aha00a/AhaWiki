@@ -28,13 +28,17 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val pageLastRevision: Database.Page = MockDb.selectPageLastRevision(name).getOrElse(new Database.Page("", ""))
     val pageSpecificRevision: Option[Database.Page] = MockDb.selectPage(name, revision)
 
+    val pageLastRevisionContent: PageContent = new PageContent(pageLastRevision.content)
+    val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
+    val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
+
     pageSpecificRevision match {
       case Some(page) =>
         val pageContent: PageContent = new PageContent(page.content)
         action match {
           case "" | "view" =>
             try {
-              if (WikiPermission.isReadable(pageContent)) {
+              if (isReadable) {
                 pageContent.redirect match {
                   case Some(directive) =>
                     Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
@@ -51,16 +55,18 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                          |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
                          |""".stripMargin
 
+
+                    isWritable
                     pageContent.interpreter match {
                       case Some("Paper") =>
-                        val content = Interpreters.interpret(page.content)
-                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
+                        val contentInterpreted = Interpreters.interpret(page.content)
+                        Ok(views.html.Wiki.viewOthers(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                       case None | Some("Wiki") =>
-                        val content = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
+                        val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
+                        Ok(views.html.Wiki.viewOthers(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                       case _ =>
-                        val content = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
-                        Ok(views.html.Wiki.viewOthers(name, content, pageFirstRevision, pageLastRevision))
+                        val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
+                        Ok(views.html.Wiki.viewOthers(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                     }
                 }
               } else {
@@ -72,20 +78,20 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                 actorSimilarPage ! Calculate(name)
             }
           case "raw" =>
-            if (WikiPermission.isReadable(pageContent)) {
+            if (isReadable) {
               Ok(page.content)
             } else {
               Forbidden(s"= $name\nPermission denied\n\n")
             }
 
           case "edit" =>
-            if (WikiPermission.isWritable(pageContent)) {
+            if (isWritable) {
               Ok(views.html.Wiki.edit(page))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
           case "history" =>
-            if (WikiPermission.isReadable(pageContent)) {
+            if (isReadable) {
               Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
