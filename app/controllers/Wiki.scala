@@ -97,6 +97,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Ok(views.html.Wiki.permissionDenied(name))
             }
           }
+          case _ => {
+            Forbidden("")
+          }
         }
       case None =>
         action match {
