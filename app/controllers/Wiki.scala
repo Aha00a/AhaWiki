@@ -16,6 +16,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
 import utils._
+import implicits.Implicits._
 
 @Singleton
 class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
@@ -72,7 +73,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               }
             }
             finally {
-              if (play.Play.isDev)
+              if (play.Play.isDev && request.isLocalhost)
                 actorSimilarPage ! Calculate(name)
             }
           }
