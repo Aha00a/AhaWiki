@@ -36,7 +36,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       case Some(page) =>
         val pageContent: PageContent = new PageContent(page.content)
         action match {
-          case "" | "view" =>
+          case "" | "view" => {
             try {
               if (isReadable) {
                 pageContent.redirect match {
@@ -75,35 +75,39 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               if (play.Play.isDev)
                 actorSimilarPage ! Calculate(name)
             }
-          case "raw" =>
+          }
+          case "raw" => {
             if (isReadable) {
               Ok(page.content)
             } else {
               Forbidden(s"= $name\nPermission denied\n\n")
             }
-
-          case "edit" =>
+          }
+          case "edit" => {
             if (isWritable) {
               Ok(views.html.Wiki.edit(page))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
-          case "history" =>
+          }
+          case "history" => {
             if (isReadable) {
               Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
+          }
         }
       case None =>
         action match {
-          case "edit" =>
+          case "edit" => {
             if (WikiPermission.isWritable(new PageContent(""))) {
               Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
-          case _ =>
+          }
+          case _ => {
             val relatedPages = getRelatedPages(name)
             val additionalInfo =
               s"""= $name
@@ -114,6 +118,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                  |""".stripMargin
 
             NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
+          }
         }
     }
   }
