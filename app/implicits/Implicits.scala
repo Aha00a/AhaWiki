@@ -3,6 +3,7 @@ package implicits
 import java.io.{PrintWriter, File}
 import java.time.LocalDateTime
 
+import play.api.mvc.Request
 import utils.{Using, DateTimeFormatterHolder}
 
 import scala.util.Random
@@ -30,5 +31,9 @@ object Implicits {
 
   implicit class RichString(s:String) {
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
+  }
+
+  implicit class RichRequest(request:Request[Any]) {
+    def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
   }
 }

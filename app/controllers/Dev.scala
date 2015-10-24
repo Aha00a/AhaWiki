@@ -12,6 +12,7 @@ import play.api.mvc._
 import utils.RequestUtil
 
 import scala.util.Random
+import implicits.Implicits._
 
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
@@ -50,10 +51,6 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
     {
       result.flashing("error" -> "Reindex Failed")
     }
-  }
-
-  implicit class RichRequest(request:Request[Any]) {
-    def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
   }
 }
 
