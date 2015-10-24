@@ -19,6 +19,7 @@ object MockDb {
     })
   }
 
+  //noinspection ScalaUnreachableCode
   def readAllTextFromFile(name: String):Option[Page] = {
     return None
     val file = new File(Play.application().getFile("app/assets/Page"), name)
