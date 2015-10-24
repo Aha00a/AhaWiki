@@ -206,7 +206,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
         if(WikiPermission.isWritable(new PageContent(page.content))) {
-          Database.pageDeleteWithRelativeData(name)
+          Database.pageDeleteWithRelatedData(name)
           Cache.PageList.invalidate()
           Ok("")
         } else {

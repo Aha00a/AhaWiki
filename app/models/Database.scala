@@ -44,11 +44,13 @@ object Database {
 
   case class CosineSimilarity(name1: String, name2: String, similarity: Double)
 
-
-  def pageSelectCount(): Long = DB.withConnection { implicit connection =>
-    SQL("SELECT COUNT(*) cnt FROM Page")
-      .as(long("cnt") single)
+  object PageTable {
+    def selectCount(): Long = DB.withConnection { implicit connection =>
+      SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
+    }
   }
+
+  def pageSelectCount() = PageTable.selectCount()
 
   def pageSelectLastRevision(name: String): Option[Page] = DB.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
@@ -199,7 +201,7 @@ object Database {
     SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
   }
 
-  def pageDeleteWithRelativeData(name:String): Int = DB.withConnection { implicit connection => // TODO: transaction, FK
+  def pageDeleteWithRelatedData(name:String): Int = DB.withConnection { implicit connection => // TODO: transaction, FK
     SQL"DELETE FROM Link WHERE src = $name OR dst = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
