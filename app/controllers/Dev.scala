@@ -19,7 +19,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
 
   def reset = Action { implicit request =>
     val result = Redirect(RequestUtil.refererOrRoot(request))
-    if(request.headers.get("Host").getOrElse("").startsWith("localhost")) {
+    if(request.isLocalhost) {
       MockDb.pageFromFile().foreach(p => {
         Database.pageDelete(p.name)
         Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
@@ -42,7 +42,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
 
   def reindex = Action { implicit request =>
     val result = Redirect(RequestUtil.refererOrRoot(request))
-    if(request.headers.get("Host").getOrElse("").startsWith("localhost")) {
+    if(request.isLocalhost) {
       Random.shuffle(Database.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
     }
@@ -50,6 +50,10 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
     {
       result.flashing("error" -> "Reindex Failed")
     }
+  }
+
+  implicit class RichRequest(request:Request[Any]) {
+    def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
   }
 }
 
