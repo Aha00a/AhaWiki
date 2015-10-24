@@ -1,0 +1,32 @@
+@(page: models.Database.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@import helper._
+@_base(page.name) {
+    <script type="text/javascript">
+        var timer;
+        $(function(){
+            var $form = $(".form");
+            $form.ajaxForm({
+                success: function(result) {
+                    location.href = "?"
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.statusText);
+                }
+            });
+        });
+    </script>
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Delete - <a href="?">@page.name</a></h1>
+            <p>Are you sure you want to completely delete this page?</p>
+            <p><b>This is an irreversible operation!</b></p>
+
+            @form(routes.Wiki.delete(), 'class -> "form") {
+                @CSRF.formField
+                <input type="hidden" name="name" value="@(page.name)"/>
+                <input type="submit" value="Delete"/>
+            }
+        </div>
+    </div>
+}

@@ -98,6 +98,13 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Forbidden(views.html.Wiki.error(name, "Permission denied."))
             }
           }
+          case "delete" => {
+            if (isWritable) {
+              Ok(views.html.Wiki.delete(page))
+            } else {
+              Forbidden(views.html.Wiki.error(name, "Permission denied."))
+            }
+          }
           case _ => {
             Forbidden(views.html.Wiki.error(name, "Permission denied."))
           }
@@ -190,6 +197,23 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       }
     } else {
       Forbidden("")
+    }
+  }
+
+  def delete() = PostAction { implicit request =>
+    val name = Form("name" -> text).bindFromRequest.get
+    implicit val wikiContext: WikiContext = WikiContext(name)
+    MockDb.selectPageLastRevision(name) match {
+      case Some(page) =>
+        if(WikiPermission.isWritable(new PageContent(page.content))) {
+          Database.pageDeleteWithRelativeData(name)
+          Cache.PageList.invalidate()
+          Ok("")
+        } else {
+          Forbidden("")
+        }
+      case None =>
+        Forbidden("")
     }
   }
 
