@@ -83,16 +83,16 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Forbidden(s"= $name\nPermission denied\n\n")
             }
           }
-          case "edit" => {
-            if (isWritable) {
-              Ok(views.html.Wiki.edit(page))
+          case "history" => {
+            if (isReadable) {
+              Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
           }
-          case "history" => {
-            if (isReadable) {
-              Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
+          case "edit" => {
+            if (isWritable) {
+              Ok(views.html.Wiki.edit(page))
             } else {
               Ok(views.html.Wiki.permissionDenied(name))
             }
