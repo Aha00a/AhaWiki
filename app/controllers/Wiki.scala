@@ -55,8 +55,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                          |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
                          |""".stripMargin
 
-
-                    isWritable
                     pageContent.interpreter match {
                       case Some("Paper") =>
                         val contentInterpreted = Interpreters.interpret(page.content)
