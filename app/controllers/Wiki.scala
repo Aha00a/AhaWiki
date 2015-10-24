@@ -125,7 +125,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                  |This page does not exist. You can [?action=edit create] it here.
                  |= See also
                  |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
-                 |[[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+                 |'''Backlinks'''
+                 |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
                  |""".stripMargin
 
             NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
