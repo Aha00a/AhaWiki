@@ -7,7 +7,7 @@
             var $form = $(".form");
             $form.ajaxForm({
                 success: function(result) {
-                    location.href = "/"
+                    location.href = "/w/@(page.name)"
                 },
                 error: function (jqXHR) {
                     alert(jqXHR.statusText);
