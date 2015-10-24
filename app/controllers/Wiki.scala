@@ -68,7 +68,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
                     })
                 }
               } else {
-                Forbidden(views.html.Wiki.permissionDenied(name))
+                Forbidden(views.html.Wiki.error(name, "Permission denied."))
               }
             }
             finally {
@@ -80,25 +80,25 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             if (isReadable) {
               Ok(page.content)
             } else {
-              Forbidden(s"= $name\nPermission denied\n\n")
+              Forbidden(s"= $name\nPermission denied.\n\n")
             }
           }
           case "history" => {
             if (isReadable) {
               Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
             } else {
-              Ok(views.html.Wiki.permissionDenied(name))
+              Ok(views.html.Wiki.error(name, "Permission denied."))
             }
           }
           case "edit" => {
             if (isWritable) {
               Ok(views.html.Wiki.edit(page))
             } else {
-              Ok(views.html.Wiki.permissionDenied(name))
+              Ok(views.html.Wiki.error(name, "Permission denied."))
             }
           }
           case _ => {
-            Forbidden("")
+            Ok(views.html.Wiki.error(name, "Permission denied."))
           }
         }
       case None =>
@@ -107,7 +107,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             if (WikiPermission.isWritable(new PageContent(""))) {
               Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
             } else {
-              Ok(views.html.Wiki.permissionDenied(name))
+              Ok(views.html.Wiki.error(name, "Permission denied."))
             }
           }
           case _ => {

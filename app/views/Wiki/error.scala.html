@@ -1,0 +1,11 @@
+@(title:String, message:String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_base(title) {
+
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>@title</h1>
+            <p>@(message)</p>
+        </div>
+    </div>
+}
