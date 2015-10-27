@@ -9,6 +9,6 @@ ALTER TABLE CosineSimilarity ADD CONSTRAINT fkCosineSimilarityName2 FOREIGN KEY 
 
 # --- !Downs
 
-ALTER TABLE TermFrequency DROP FOREIGN KEY fkTermFrequencyName;
-ALTER TABLE CosineSimilarity DROP FOREIGN KEY fkCosineSimilarityName1;
 ALTER TABLE CosineSimilarity DROP FOREIGN KEY fkCosineSimilarityName2;
+ALTER TABLE CosineSimilarity DROP FOREIGN KEY fkCosineSimilarityName1;
+ALTER TABLE TermFrequency DROP FOREIGN KEY fkTermFrequencyName;
