@@ -4,8 +4,12 @@
 
 # Home page
 GET         /                             controllers.Home.index
+GET         /w                            controllers.Home.index
+GET         /w/                           controllers.Home.index
+
 GET         /r                            controllers.Home.random
-GET         /robots.txt                     controllers.Home.robotsTxt
+
+GET         /robots.txt                   controllers.Home.robotsTxt
 
 GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
 POST        /w/*nameEncoded               controllers.Wiki.save(nameEncoded:String)
