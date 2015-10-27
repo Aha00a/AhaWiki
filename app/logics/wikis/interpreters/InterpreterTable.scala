@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import java.io.StringReader
 
-import models.PageContent
+import models.{WikiContext, PageContent}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Logger
@@ -17,7 +17,7 @@ object InterpreterTable {
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
-  def interpret(pageContent: PageContent): String = {
+  def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
 
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
@@ -32,8 +32,8 @@ object InterpreterTable {
                 .map(s => s"<tr>$s</tr>").mkString("\n") +
               "</table>"
           }
-
-          arrayBuffer += asScalaBuffer(javaListString).toArray
+          val wiki: InterpreterWiki = new InterpreterWiki()
+          arrayBuffer += javaListString.map(s => if(s == null) "" else s).map(s => {wiki.interpret(s)}).toArray
         }
         Logger.error("")
         "Error"
