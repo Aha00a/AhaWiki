@@ -27,6 +27,9 @@ object Implicits {
   implicit class RichSeq[T](seq:Seq[T]) {
     def tailSafe(): Seq[T] = if(seq.length > 1) { seq.tail } else { Seq[T]() }
     def shuffle(): Seq[T] = Random.shuffle(seq)
+    def groupByCount(): Map[T, Int] = seq.foldLeft(Map[T, Int]()) {
+      (map, word) => map + (word -> (map.getOrElse(word, 0) + 1))
+    }
   }
 
   implicit class RichString(s:String) {

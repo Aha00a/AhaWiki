@@ -1,11 +1,12 @@
 package actors
 
 import akka.actor._
+import com.twitter.penguin.korean.TwitterKoreanProcessor
 import logics.wikis.Interpreters
 import models.Database
 import models.Database.Page
 import utils.StopWatch
-
+import implicits.Implicits._
 
 object ActorPageProcessor {
   def props = Props[ActorPageProcessor]
@@ -29,7 +30,7 @@ class ActorPageProcessor extends Actor {
   }
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
-    val wordCount = calcWordCount(page.content)
+    val wordCount = normalizeTokenizeStemFilter(page.content)
     Database.termFrequencyDelete(name)
     Database.termFrequencyInsert(name, wordCount)
     Database.cosineSimilarityUpdate(name)
@@ -41,7 +42,10 @@ class ActorPageProcessor extends Actor {
       case regexNumber() => false
       case string if 10 < string.length => false
       case _ => true
-    }.foldLeft(Map[String, Int]()) {
+    }.toSeq.groupByCount()
+  }
+  def toCountMap(a: Seq[String]): Map[String, Int] = {
+    a.foldLeft(Map[String, Int]()) {
       (map, word) => map + (word -> (map.getOrElse(word, 0) + 1))
     }
   }
@@ -52,11 +56,12 @@ class ActorPageProcessor extends Actor {
     Database.linkInsert(seqLink)
   }
 
-  //  def normalizeTokenizeStemFilter(text: String): Seq[String] = {
-  //    val nts = TwitterKoreanProcessor.stem(TwitterKoreanProcessor.tokenize(TwitterKoreanProcessor.normalize(text)))
-  //    val ntfs = nts.filter(a => Seq(Noun, Adjective, Verb).contains(a.pos)).map(_.text)
-  //    ntfs
-  //  }
+  def normalizeTokenizeStemFilter(text: String): Map[String, Int] = {
+    val nts = TwitterKoreanProcessor.stem(TwitterKoreanProcessor.tokenize(TwitterKoreanProcessor.normalize(text)))
+    import com.twitter.penguin.korean.util.KoreanPos._
+    val ntfs = nts.filter(a => Seq(Noun, Adjective, Verb).contains(a.pos)).map(_.text)
+    ntfs.groupByCount()
+  }
 
 }
 
