@@ -55,6 +55,17 @@
         });
     </script>
     <script type="text/javascript">
+        function preview() {
+            $.post('/preview', {
+                csrfToken: $('[name=csrfToken]').val(),
+                name: '@(page.name)',
+                text: $('textarea[name=text]').val()
+            }, function (data, textStatus, jqXHR) {
+                $('.previewPane').html(data);
+                $("[name=text]").css({ height: $('.previewPane').height()});
+            });
+        }
+
         var timer;
         $(function(){
             var $form = $(".form");
@@ -77,17 +88,9 @@
                     timer = null;
                 }
 
-                timer = setTimeout(function () {
-                    $.post('/preview', {
-                        csrfToken: $('[name=csrfToken]').val(),
-                        name: '@(page.name)',
-                        text: $('textarea[name=text]').val()
-                    }, function (data, textStatus, jqXHR) {
-                        $('.previewPane').html(data);
-                        $("[name=text]").css({ height: $('.previewPane').height()});
-                    });
-                }, 3000)
-            }).keyup();
+                timer = setTimeout(preview, 2000)
+            });
+            preview();
         });
     </script>
 } {
