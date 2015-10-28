@@ -6,6 +6,7 @@ import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
 import logics.Cache
+import models.Database.Page
 import models.{WikiContext, Database, MockDb}
 import play.api.cache.CacheApi
 import play.api.mvc._
@@ -21,10 +22,10 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
   def reset = Action { implicit request =>
     val result = Redirect(RequestUtil.refererOrRoot(request))
     if(request.isLocalhost) {
-      MockDb.pageFromFile().foreach(p => {
-        Database.pageDelete(p.name)
+      val pageFromFile: Array[Page] = MockDb.pageFromFile()
+      pageFromFile.foreach(p => {
+        Database.pageDeleteWithRelatedData(p.name)
         Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
-        actorSimilarPage ! Calculate(p.name)
       })
 
       implicit val wikiContext = WikiContext("")
@@ -32,6 +33,10 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
       Cache.Header.invalidate()
       Cache.Footer.invalidate()
       Cache.Config.invalidate()
+
+      pageFromFile.foreach(p => {
+        actorSimilarPage ! Calculate(p.name)
+      })
 
       result.flashing("success" -> "Reset Succeed.")
     }

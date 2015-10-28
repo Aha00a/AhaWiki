@@ -197,10 +197,6 @@ object Database {
     }
   }
 
-  def pageDelete(name:String): Int = DB.withConnection { implicit connection =>
-    SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
-  }
-
   def pageDeleteWithRelatedData(name:String): Int = DB.withConnection { implicit connection => // TODO: transaction, FK
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
