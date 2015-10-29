@@ -28,7 +28,7 @@ class ActorPageProcessor extends Actor {
   }
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
-    val wordCount = Stemmer.stem(page.content).groupByCount()
+    val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
     Database.termFrequencyDelete(name)
     Database.termFrequencyInsert(name, wordCount)
     Database.cosineSimilarityUpdate(name)

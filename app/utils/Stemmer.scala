@@ -1,7 +1,6 @@
 package utils
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
-import implicits.Implicits._
 
 object Stemmer {
   def stem(s: String): Seq[String] = {
@@ -14,13 +13,13 @@ object Stemmer {
 
   val regexNumber = """\d{1,3}""".r
 
-  def calcWordCount(s: String): Map[String, Int] = {
-    s.replaceAll( """[^\w가-힣\s]+""", " ").split( """\s+""").filter {
+  def removeStopWord(seq:Seq[String]): Seq[String] = {
+    seq.filter {
       case "" | "wiki" | "http" | "com" | "www" | "the" | "to" | "of" | "for" | "is" | "a" | "in" | "and" | "be" | "or" => false
       case regexNumber() => false
       case string if 10 < string.length => false
       case _ => true
-    }.toSeq.groupByCount()
+    }
   }
 
   def normalizeTokenizeStemFilter(text: String): Seq[String] = {
