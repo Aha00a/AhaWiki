@@ -1,13 +1,14 @@
 package utils
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
+import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
 
 object Stemmer {
   def stem(s: String): Seq[String] = {
     val english = s.replaceAll( """[^\w\s]""", " ")
-    val korean = s.replaceAll( """[^가-힣]""", " ")
+    val korean = s.replaceAll( """[^가-힣\s]""", " ")
     val englishStemmed = english.split("""\s+""").map(porterStem)
-    val koreanStemmed = normalizeTokenizeStemFilter(korean)
+    val koreanStemmed = korean.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter)
     englishStemmed ++ koreanStemmed
   }
 
@@ -22,11 +23,13 @@ object Stemmer {
     }
   }
 
-  def normalizeTokenizeStemFilter(text: String): Seq[String] = {
-    val nts = TwitterKoreanProcessor.stem(TwitterKoreanProcessor.tokenize(TwitterKoreanProcessor.normalize(text)))
+  def normalizeTokenizeStemFilter(s: String): Seq[String] = {
+    val n: CharSequence = TwitterKoreanProcessor.normalize(s)
+    val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
+    val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
     import com.twitter.penguin.korean.util.KoreanPos._
-    val ntfs: Seq[String] = nts.filter(a => Seq(Noun, Adjective, Verb).contains(a.pos)).map(_.text)
-    ntfs
+    val ntsf: Seq[String] = nts.filter(a => Seq(Noun, Adjective, Verb).contains(a.pos)).map(_.text)
+    ntsf
   }
 
   def porterStem(s: String) = {
