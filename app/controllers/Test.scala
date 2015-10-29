@@ -10,6 +10,7 @@ import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.mvc._
+import utils.Stemmer
 
 @Singleton
 class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
@@ -49,6 +50,9 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     testInterpreterWiki()
     testInterpreterVim()
     testHeadingNumber()
+
+    assertEquals(Stemmer.stem("ABC 가나다"), List("ABC", "가나다"))
+    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "좋아하다"))
 
     Ok("Ok.")
   }
