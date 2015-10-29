@@ -173,13 +173,13 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
   }
 
 
-  def testInterpreterTable(): Unit = {
-    implicit val wikiContext = WikiContext("")(null, null)
+  def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+    implicit val wikiContext = WikiContext("")
 
-    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
-    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td>a</td><td>b</td></tr></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable"><tr><th>a</th><th>b</th></tr></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tr><th>a</th><td>b</td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tr><td><p>a</p></td><td><p>b</p></td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td><p>a</p></td><td><p>b</p></td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable"><tr><th><p>a</p></th><th><p>b</p></th></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tr><th><p>a</p></th><td><p>b</p></td></tr></table>.toString())
   }
 
 
