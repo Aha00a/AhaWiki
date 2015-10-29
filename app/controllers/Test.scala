@@ -48,38 +48,11 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     testInterpreterTable()
     testInterpreterWiki()
     testInterpreterVim()
-
-    val headingNumber: HeadingNumber = new HeadingNumber()
-    assertEquals(headingNumber.incrGet(1), "1.")
-    assertEquals(headingNumber.incrGet(1), "2.")
-    assertEquals(headingNumber.incrGet(1), "3.")
-    assertEquals(headingNumber.incrGet(1), "4.")
-    assertEquals(headingNumber.incrGet(2), "4.1.")
-    assertEquals(headingNumber.incrGet(2), "4.2.")
-    assertEquals(headingNumber.incrGet(2), "4.3.")
-    assertEquals(headingNumber.incrGet(1), "5.")
-    assertEquals(headingNumber.incrGet(2), "5.1.")
-    assertEquals(headingNumber.incrGet(2), "5.2.")
-    assertEquals(headingNumber.incrGet(2), "5.3.")
-    assertEquals(headingNumber.incrGet(3), "5.3.1.")
-    assertEquals(headingNumber.incrGet(3), "5.3.2.")
-    assertEquals(headingNumber.incrGet(3), "5.3.3.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.1.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.2.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.3.")
-    assertEquals(headingNumber.incrGet(1), "6.")
-    assertEquals(headingNumber.incrGet(2), "6.1.")
-    assertEquals(headingNumber.incrGet(2), "6.2.")
-    assertEquals(headingNumber.incrGet(2), "6.3.")
-    assertEquals(headingNumber.incrGet(3), "6.3.1.")
-    assertEquals(headingNumber.incrGet(3), "6.3.2.")
-    assertEquals(headingNumber.incrGet(3), "6.3.3.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.1.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
+    testHeadingNumber()
 
     Ok("Ok.")
   }
+
 
 
   def testPageContent() = {
@@ -296,6 +269,38 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     test(Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
     test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
     test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
+  }
+
+
+  def testHeadingNumber(): Unit = {
+    val headingNumber: HeadingNumber = new HeadingNumber()
+    assertEquals(headingNumber.incrGet(1), "1.")
+    assertEquals(headingNumber.incrGet(1), "2.")
+    assertEquals(headingNumber.incrGet(1), "3.")
+    assertEquals(headingNumber.incrGet(1), "4.")
+    assertEquals(headingNumber.incrGet(2), "4.1.")
+    assertEquals(headingNumber.incrGet(2), "4.2.")
+    assertEquals(headingNumber.incrGet(2), "4.3.")
+    assertEquals(headingNumber.incrGet(1), "5.")
+    assertEquals(headingNumber.incrGet(2), "5.1.")
+    assertEquals(headingNumber.incrGet(2), "5.2.")
+    assertEquals(headingNumber.incrGet(2), "5.3.")
+    assertEquals(headingNumber.incrGet(3), "5.3.1.")
+    assertEquals(headingNumber.incrGet(3), "5.3.2.")
+    assertEquals(headingNumber.incrGet(3), "5.3.3.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.1.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.2.")
+    assertEquals(headingNumber.incrGet(4), "5.3.3.3.")
+    assertEquals(headingNumber.incrGet(1), "6.")
+    assertEquals(headingNumber.incrGet(2), "6.1.")
+    assertEquals(headingNumber.incrGet(2), "6.2.")
+    assertEquals(headingNumber.incrGet(2), "6.3.")
+    assertEquals(headingNumber.incrGet(3), "6.3.1.")
+    assertEquals(headingNumber.incrGet(3), "6.3.2.")
+    assertEquals(headingNumber.incrGet(3), "6.3.3.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.1.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
+    assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
   }
 
 
