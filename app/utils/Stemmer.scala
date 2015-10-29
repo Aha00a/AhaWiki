@@ -5,8 +5,8 @@ import implicits.Implicits._
 
 object Stemmer {
   def stem(s: String): Seq[String] = {
-    val english = s.replaceAll( """[^\w\s]""", "")
-    val korean = s.replaceAll( """[^가-힣]""", "")
+    val english = s.replaceAll( """[^\w\s]""", " ")
+    val korean = s.replaceAll( """[^가-힣]""", " ")
     val englishStemmed = english.split("""\s+""").map(porterStem)
     val koreanStemmed = normalizeTokenizeStemFilter(korean)
     englishStemmed ++ koreanStemmed
