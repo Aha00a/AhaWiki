@@ -92,7 +92,7 @@ object InterpreterVim {
         cacheFileText.delete()
       }
 
-      scala.io.Source.fromFile(cacheFileHtml).mkString
+      s"<!-- $md5 -->\n" + scala.io.Source.fromFile(cacheFileHtml).mkString
     }
   }
 
