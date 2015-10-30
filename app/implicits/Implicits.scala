@@ -11,6 +11,8 @@ import scala.util.Random
 object Implicits {
   implicit class LocalDateTimeFormatter(localDateTime:LocalDateTime) {
     def toIsoDateTimeString = localDateTime.format(DateTimeFormatterHolder.isoDateTime)
+    def toIsoDateString = localDateTime.format(DateTimeFormatterHolder.isoDate)
+    def toIsoTimeString = localDateTime.format(DateTimeFormatterHolder.isoTime)
   }
 
   implicit class RichFile(cacheFileSh: File) {
