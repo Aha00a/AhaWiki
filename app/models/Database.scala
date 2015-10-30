@@ -73,16 +73,6 @@ object Database {
       .map(Page.tupled)
   }
 
-  def pageSelectRecentChanges(): List[PageNameRevisionTime] = DB.withConnection { implicit connection =>
-    SQL( """SELECT name, MAX(revision) revision, MAX(time) time
-           |    FROM Page
-           |    GROUP BY name
-           |    ORDER BY MAX(time) DESC
-         """.stripMargin)
-      .as(str("name") ~ int("revision") ~ long("time") *)
-      .map(flatten).map(PageNameRevisionTime.tupled)
-  }
-
   def pageSelectNameGroupByNameOrderByName: List[String] = DB.withConnection { implicit connection =>
     //noinspection LanguageFeature
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
