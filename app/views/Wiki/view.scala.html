@@ -1,19 +1,24 @@
 @(title:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:models.Database.Page, wikiLast:models.Database.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title) {
     <script type="text/javascript">
-        $(function(){
-            $(document).bind('keydown', 'f', function () { location.href = '/' });
-            $(document).bind('keydown', 'a', function () { location.href = '/w/AhaWiki' });
-            $(document).bind('keydown', 's', function () { location.href = '/w/AhaWikiSyntax' });
-            $(document).bind('keydown', 'c', function () { location.href = '/w/RecentChanges' });
-            $(document).bind('keydown', 't', function () { location.href = '/w/TitleIndex' });
-            $(document).bind('keydown', 'l', function () { location.href = '/w/PageList' });
-            $(document).bind('keydown', 'm', function () { location.href = '/w/PageMap' });
-
-            $(document).bind('keydown', 'r', function () { location.href = '/r' });
-            $(document).bind('keydown', 'e', function () { location.href = '?action=edit' });
-            $(document).bind('keydown', 'h', function () { location.href = '?action=history' });
-        });
+        @for(hotkeys <- Seq(Map(
+            "f" -> "/",
+            "a" -> "/w/AhaWiki",
+            "s" -> "/w/AhaWikiSyntax",
+            "c" -> "/w/RecentChanges",
+            "t" -> "/w/TitleIndex",
+            "l" -> "/w/PageList",
+            "m" -> "/w/PageMap",
+            "r" -> "/r",
+            "e" -> "?action=edit",
+            "h" -> "?action=history"
+        ))) {
+            $(function(){
+                @for(key <- hotkeys.keys) {
+                    $(document).bind('keydown', '@key', function () { location.href = '@hotkeys(key)' });
+                }
+            });
+        }
 
     </script>
 } {
