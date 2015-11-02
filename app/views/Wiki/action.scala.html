@@ -16,12 +16,16 @@
                     }
                 </td>
                 <td class="revisionInfo">
-                    <div>
-                        created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoDateTime)</a>
-                    </div>
-                    <div>
-                        last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=history">@(wikiLast.isoDateTime)</a>
-                    </div>
+                    @if(wikiFirst != null) {
+                        <div>
+                            created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoDateTime)</a>
+                        </div>
+                    }
+                    @if(wikiLast != null) {
+                        <div>
+                            last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=history">@(wikiLast.isoDateTime)</a>
+                        </div>
+                    }
                 </td>
             </tr>
         </table>
