@@ -1,0 +1,29 @@
+@(isWritable:Boolean, wikiFirst:models.Database.Page, wikiLast:models.Database.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+<div class="action">
+    <div class="limitWidth">
+        <table>
+            <tr>
+                <td>
+                    @if(request.session.get("id")) {
+                        @(request.session.get("id"))
+                        <a href="@(routes.Auth.logout())">Logout</a>
+                    } else {
+                        <a href="@(routes.Auth.login())">Login</a>
+                    }
+                    @if(isWritable) {
+                        <a href="?action=edit">Edit</a>
+                        <a href="?action=delete">Delete</a>
+                    }
+                </td>
+                <td class="revisionInfo">
+                    <div>
+                        created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoDateTime)</a>
+                    </div>
+                    <div>
+                        last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=history">@(wikiLast.isoDateTime)</a>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
