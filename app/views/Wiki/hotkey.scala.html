@@ -1,0 +1,23 @@
+@(supported:String = "")
+@import implicits.Implicits._
+<script type="text/javascript">
+    @for(hotkeys <- Seq(Map(
+        'f' -> "/",
+        'a' -> "/w/AhaWiki",
+        's' -> "/w/AhaWikiSyntax",
+        'c' -> "/w/RecentChanges",
+        't' -> "/w/TitleIndex",
+        'l' -> "/w/PageList",
+        'm' -> "/w/PageMap",
+        'r' -> "/r",
+        'e' -> "?action=edit",
+        'h' -> "?action=history"
+    ))) {
+        $(function(){
+            @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {
+                $(document).bind('keydown', '@key', function () { location.href = '@hotkeys(key)' });
+            }
+        });
+    }
+
+</script>

@@ -1,26 +1,6 @@
 @(title:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:models.Database.Page, wikiLast:models.Database.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title) {
-    <script type="text/javascript">
-        @for(hotkeys <- Seq(Map(
-            "f" -> "/",
-            "a" -> "/w/AhaWiki",
-            "s" -> "/w/AhaWikiSyntax",
-            "c" -> "/w/RecentChanges",
-            "t" -> "/w/TitleIndex",
-            "l" -> "/w/PageList",
-            "m" -> "/w/PageMap",
-            "r" -> "/r",
-            "e" -> "?action=edit",
-            "h" -> "?action=history"
-        ))) {
-            $(function(){
-                @for(key <- hotkeys.keys) {
-                    $(document).bind('keydown', '@key', function () { location.href = '@hotkeys(key)' });
-                }
-            });
-        }
-
-    </script>
+    @hotkey()
 } {
     @Html(contentInterpreted)
     @action(isWritable, wikiFirst, wikiLast)
