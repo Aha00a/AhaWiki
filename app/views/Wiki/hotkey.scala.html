@@ -2,22 +2,27 @@
 @import implicits.Implicits._
 <script type="text/javascript">
     @for(hotkeys <- Seq(Map(
-        'f' -> "/",
-        'a' -> "/w/AhaWiki",
-        's' -> "/w/AhaWikiSyntax",
-        'c' -> "/w/RecentChanges",
-        't' -> "/w/TitleIndex",
-        'l' -> "/w/PageList",
-        'm' -> "/w/PageMap",
-        'r' -> "/r",
-        'e' -> "?action=edit",
-        'h' -> "?action=history"
+        'f' -> "go('/')",
+        'a' -> "go('/w/AhaWiki')",
+        's' -> "go('/w/AhaWikiSyntax')",
+        'c' -> "go('/w/RecentChanges')",
+        't' -> "go('/w/TitleIndex')",
+        'l' -> "go('/w/PageList')",
+        'm' -> "go('/w/PageMap')",
+        'r' -> "go('/r')",
+        'e' -> "go('?action=edit')",
+        'h' -> "go('?action=history')"
     ))) {
         $(function(){
+            function go(s) {
+                location.href = s;
+            }
             @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {
-                $(document).bind('keydown', '@key', function () { location.href = '@hotkeys(key)' });
+                $(document).bind('keydown', '@key', function () { @Html(hotkeys(key)) });
             }
         });
     }
+
+
 
 </script>
