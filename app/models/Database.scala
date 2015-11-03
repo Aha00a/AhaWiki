@@ -105,6 +105,26 @@ object Database {
     SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
+  case class SearchResult(name:String, content:String)
+
+  def pageSearch(q:String) = DB.withConnection { implicit connection =>
+    SQL("""
+SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comment
+     FROM Page w
+     INNER JOIN (
+         SELECT
+             name, MAX(revision) revision
+             FROM Page
+             GROUP BY name
+             ORDER BY MAX(time) DESC
+     ) NV ON w.name = NV.name AND w.revision = NV.revision
+     WHERE w.name LIKE CONCAT('%', {q}, '%') OR w.content LIKE CONCAT('%', {q}, '%')
+     ORDER BY w.name""")
+      .on('q -> q)
+      .as(str("name") ~ str("content") *).iterator.map(flatten)
+  }
+
+
   def termFrequencyDelete(name: String): Int = DB.withConnection { implicit connection =>
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
