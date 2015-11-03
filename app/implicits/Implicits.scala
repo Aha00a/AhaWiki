@@ -32,6 +32,7 @@ object Implicits {
     def groupByCount(): Map[T, Int] = seq.foldLeft(Map[T, Int]()) {
       (map, word) => map + (word -> (map.getOrElse(word, 0) + 1))
     }
+    def random():T = seq(Random.nextInt(seq.size))
   }
 
   implicit class RichString(s:String) {
