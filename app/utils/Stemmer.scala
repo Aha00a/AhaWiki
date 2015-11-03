@@ -28,7 +28,7 @@ object Stemmer {
     val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
     val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
     import com.twitter.penguin.korean.util.KoreanPos._
-    val ntsf: Seq[String] = nts.filter(a => Seq(Noun, Adjective, Verb).contains(a.pos)).map(_.text)
+    val ntsf: Seq[String] = nts.filter(a => Seq(Noun/*, Adjective, Verb*/).contains(a.pos)).map(_.text)
     ntsf
   }
 
