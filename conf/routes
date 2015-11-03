@@ -8,7 +8,7 @@ GET         /w                            controllers.Home.index
 GET         /w/                           controllers.Home.index
 
 GET         /r                            controllers.Home.random
-
+GET         /search                       controllers.Search.index(q:String)
 GET         /robots.txt                   controllers.Home.robotsTxt
 
 GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
@@ -29,6 +29,7 @@ GET         /dev/reindex                  controllers.Dev.reindex
 GET         /dev/reset                    controllers.Dev.reset
 
 GET         /api/pageMap                  controllers.Api.pageMap
+GET         /api/pageNames                controllers.Api.pageNames
 
 GET         /feed                         controllers.Feed.index
 GET         /feed/atom                    controllers.Feed.atom

@@ -7,7 +7,12 @@ html, body {
 	font-family: 'Noto Sans', sans-serif;
 }
 
+.boxShadow(@s : 0 0 1em #eee) {
+	-webkit-box-shadow: @s;
+	-moz-box-shadow: @s;
+	box-shadow: @s;
 
+}
 .AhaWiki {
 	a {
 		color: #00a;
@@ -219,9 +224,7 @@ html, body {
 			@media screen {
 				margin: 10mm auto;
 				border: 1px solid #000;
-				-webkit-box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
-				-moz-box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
-				box-shadow: 10px 10px 50px 5px rgba(0,0,0,0.75);
+				.boxShadow(10px 10px 50px 5px rgba(0,0,0,0.75));
 				background-color: #fff;
 			}
 			padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
@@ -277,7 +280,7 @@ html, body {
 
 	.simpleTable {
 		border-collapse: collapse;
-		box-shadow: 0 0 1em #eee;
+		.boxShadow;
 
 		th, td {
 			padding: 5px 10px;
@@ -421,4 +424,32 @@ html, body {
 			padding: 20px;
 		}
 	}
+
+	.searchBg {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-color: #000;
+		opacity: .25;
+	}
+	.search {
+		position: fixed;
+		top: 30%;
+		left: 40%;
+		width: 20%;
+		form {
+			.boxShadow;
+			input {
+				width: 100%;
+				padding: 10px;
+				font-size: 25px;
+			}
+		}
+	}
+	.autocomplete-suggestions { border: 1px solid #999; background: #fff; cursor: default; overflow: auto; }
+	.autocomplete-suggestion { padding: 10px 5px; font-size: 1.2em; white-space: nowrap; overflow: hidden; }
+	.autocomplete-selected { background: #f0f0f0; }
+	.autocomplete-suggestions strong { font-weight: normal; color: #3399ff; }
 }
