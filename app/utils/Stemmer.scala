@@ -2,6 +2,7 @@ package utils
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
 import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
+import play.api.Logger
 
 object Stemmer {
   def stem(s: String): Seq[String] = {
@@ -24,12 +25,18 @@ object Stemmer {
   }
 
   def normalizeTokenizeStemFilter(s: String): Seq[String] = {
-    val n: CharSequence = TwitterKoreanProcessor.normalize(s)
-    val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
-    val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
-    import com.twitter.penguin.korean.util.KoreanPos._
-    val ntsf: Seq[String] = nts.filter(a => Seq(Noun/*, Adjective, Verb*/).contains(a.pos)).map(_.text)
-    ntsf
+    try {
+      val n: CharSequence = TwitterKoreanProcessor.normalize(s)
+      val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
+      val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
+      import com.twitter.penguin.korean.util.KoreanPos._
+      val ntsf: Seq[String] = nts.filter(a => Seq(Noun/*, Adjective, Verb*/).contains(a.pos)).map(_.text)
+      ntsf
+    } catch {
+      case e:Exception =>
+        Logger.error(e.toString)
+        Seq[String]()
+    }
   }
 
   def porterStem(s: String) = {
