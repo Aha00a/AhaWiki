@@ -1,14 +1,14 @@
-@(iterator:Iterator[models.Database.SearchResult])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
-@_base("search") {
+@(q:String, iterator:Iterator[models.Database.SearchResult])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@_base("Search " + q) {
     @views.html.Wiki.hotkey()
 } {
     <div class="wikiContent searchResult">
         <div class="limitWidth">
-            <h1>search</h1>
+            <h1>search @q</h1>
             @for(searchResult <- iterator) {
                 <div class="item">
                     <h2 class="pageName"><a href="/w/@(searchResult.name)" >@(searchResult.name)</a></h2>
-                    <p class="pageContent">@(searchResult.content)</p>
+                    <p class="pageContent">@Html(searchResult.content.replaceAll(q, "<b>" + q + "</b>"))</p>
                 </div>
             }
         </div>

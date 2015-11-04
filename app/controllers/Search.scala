@@ -13,7 +13,7 @@ class Search @Inject() (implicit on:OnApplicationStart, cacheApi: CacheApi) exte
   def index(q:String) = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
 
-    Ok(views.html.Search.search(Database.pageSearch(q)
+    Ok(views.html.Search.search(q, Database.pageSearch(q)
       .filter(sr => WikiPermission.isReadable(new PageContent(sr._2)))
       .map(sr => SearchResult(sr._1, sr._2.split( """(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... "))))
     )
