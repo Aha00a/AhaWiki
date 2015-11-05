@@ -36,10 +36,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
     val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
 
-
     (pageSpecificRevision, action, isReadable, isWritable) match {
-      case (None, "edit", _, true) =>
-        Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
+      case (None, "edit", _, true) => Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
@@ -53,7 +51,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
         NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
 
-      case (Some(page), "" | "view", true, _) => {
+      case (Some(page), "" | "view", true, _) =>
         try {
           val pageContent: PageContent = new PageContent(page.content)
           pageContent.redirect match {
@@ -89,13 +87,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
           if (play.Play.isDev && request.isLocalhost)
             actorSimilarPage ! Calculate(name)
         }
-      }
-      case (Some(page), "raw", true, _) => {
-        Ok(page.content)
-      }
-      case (Some(page), "history", true, _) => {
-        Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
-      }
       case (Some(page), "diff", true, _) => {
         val before = request.getQueryString("before").getOrElse("0").toInt
         val after = request.getQueryString("after").getOrElse("0").toInt
@@ -107,15 +98,11 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
         Ok(views.html.Wiki.diff(name, listDiffRow))
       }
-      case (Some(page), "edit", _, true) => {
-        Ok(views.html.Wiki.edit(page))
-      }
-      case (Some(page), "delete", _, true) => {
-        Ok(views.html.Wiki.delete(page))
-      }
-      case _ => {
-        Forbidden(views.html.Wiki.error(name, "Permission denied."))
-      }
+      case (Some(page), "raw", true, _) => Ok(page.content)
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
+      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page))
+      case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page))
+      case _ => Forbidden(views.html.Wiki.error(name, "Permission denied."))
     }
   }
 
