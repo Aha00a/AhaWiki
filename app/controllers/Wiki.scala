@@ -96,16 +96,19 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             }
           }
           case "diff" => {
-            val before = request.getQueryString("before").getOrElse("0").toInt
-            val after = request.getQueryString("after").getOrElse("0").toInt
-            val beforePage: Option[Page] = MockDb.selectPageSpecificRevision(name, before)
-            val afterPage: Option[Page] = MockDb.selectPageSpecificRevision(name, after)
-            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+            if (isReadable) {
+              val before = request.getQueryString("before").getOrElse("0").toInt
+              val after = request.getQueryString("after").getOrElse("0").toInt
+              val beforePage = MockDb.selectPageSpecificRevision(name, before)
+              val afterPage = MockDb.selectPageSpecificRevision(name, after)
+              val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+              val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+              val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
-            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
-
-            Ok(views.html.Wiki.diff(name, listDiffRow))
+              Ok(views.html.Wiki.diff(name, listDiffRow))
+            } else {
+              Forbidden(views.html.Wiki.error(name, "Permission denied."))
+            }
           }
           case "edit" => {
             if (isWritable) {
