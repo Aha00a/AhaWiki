@@ -488,6 +488,9 @@ html, body {
 		.left, .right {
 			.monospace;
 			border: 1px solid #eee;
+			&:before {
+				content: '​'; // zero-width whitespace
+			}
 		}
 
 		.left {

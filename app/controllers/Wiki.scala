@@ -114,10 +114,10 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             val after = request.getQueryString("after").getOrElse("0").toInt
             val beforePage: Option[Page] = MockDb.selectPageSpecificRevision(name, before)
             val afterPage: Option[Page] = MockDb.selectPageSpecificRevision(name, after)
-            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)+""").toSeq
-            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)+""").toSeq
+            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
 
-            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().build().generateDiffRows(beforeContent, afterContent)
+            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
             Ok(views.html.Wiki.diff(name, listDiffRow))
           }
