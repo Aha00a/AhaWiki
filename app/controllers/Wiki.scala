@@ -95,6 +95,18 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Forbidden(views.html.Wiki.error(name, "Permission denied."))
             }
           }
+          case "diff" => {
+            val before = request.getQueryString("before").getOrElse("0").toInt
+            val after = request.getQueryString("after").getOrElse("0").toInt
+            val beforePage: Option[Page] = MockDb.selectPageSpecificRevision(name, before)
+            val afterPage: Option[Page] = MockDb.selectPageSpecificRevision(name, after)
+            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+
+            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
+
+            Ok(views.html.Wiki.diff(name, listDiffRow))
+          }
           case "edit" => {
             if (isWritable) {
               Ok(views.html.Wiki.edit(page))
@@ -108,18 +120,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             } else {
               Forbidden(views.html.Wiki.error(name, "Permission denied."))
             }
-          }
-          case "diff" => {
-            val before = request.getQueryString("before").getOrElse("0").toInt
-            val after = request.getQueryString("after").getOrElse("0").toInt
-            val beforePage: Option[Page] = MockDb.selectPageSpecificRevision(name, before)
-            val afterPage: Option[Page] = MockDb.selectPageSpecificRevision(name, after)
-            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-
-            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
-
-            Ok(views.html.Wiki.diff(name, listDiffRow))
           }
           case _ => {
             Forbidden(views.html.Wiki.error(name, "Permission denied."))
