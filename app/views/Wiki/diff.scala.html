@@ -27,8 +27,8 @@
                     </tr>
                     @for(diffRow <- list) {
                         <tr>
-                            <td class="left @(diffRow.getTag)">@(diffRow.getOldLine)</td>
-                            <td class="right @(diffRow.getTag)">@(diffRow.getNewLine)</td>
+                            <td class="left @(diffRow.getTag) @(if(diffRow.getOldLine.isEmpty) {"empty"} else {})">@(diffRow.getOldLine)</td>
+                            <td class="right @(diffRow.getTag) @(if(diffRow.getNewLine.isEmpty) {"empty"} else {})">@(diffRow.getNewLine)</td>
                         </tr>
                     }
                 </table>

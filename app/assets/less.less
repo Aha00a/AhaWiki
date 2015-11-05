@@ -488,6 +488,7 @@ html, body {
 			}
 			td {
 				width: 50%;
+				padding: 5px;
 			}
 		}
 		.left, .right {
@@ -499,16 +500,32 @@ html, body {
 		}
 
 		.left {
+			&.INSERT {
+				background-color: #eee;
+				border: 1px solid #eee;
+			}
 			&.CHANGE {
+				background-color: #ffd;
+				border: 1px solid #ee2;
+			}
+			&.DELETE {
 				background-color: #fee;
 				border: 1px solid #fbb;
 			}
 		}
 
 		.right {
-			&.CHANGE, &.INSERT {
+			&.INSERT {
 				background-color: #efe;
 				border: 1px solid #bfb;
+			}
+			&.CHANGE{
+				background-color: #ffd;
+				border: 1px solid #ee2;
+			}
+			&.DELETE {
+				background-color: #eee;
+				border: 1px solid #eee;
 			}
 		}
 	}
