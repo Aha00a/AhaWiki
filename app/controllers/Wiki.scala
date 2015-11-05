@@ -96,7 +96,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
-        Ok(views.html.Wiki.diff(name, listDiffRow))
+        Ok(views.html.Wiki.diff(name, before, after, listDiffRow))
       }
       case (Some(page), "raw", true, _) => Ok(page.content)
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))

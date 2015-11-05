@@ -479,15 +479,20 @@ html, body {
 
 	.diff {
 		table {
+			margin: 20px 0px;
 			border-collapse: collapse;
-			width: 100%;
+
+			th {
+				border: 1px solid #ccc;
+				background-color: #ddd;
+			}
 			td {
 				width: 50%;
 			}
 		}
 		.left, .right {
 			.monospace;
-			border: 1px solid #eee;
+			border: 1px solid #ccc;
 			&:before {
 				content: '​'; // zero-width whitespace
 			}
@@ -496,14 +501,14 @@ html, body {
 		.left {
 			&.CHANGE {
 				background-color: #fee;
-				border: 1px solid #fcc;
+				border: 1px solid #fbb;
 			}
 		}
 
 		.right {
 			&.CHANGE, &.INSERT {
 				background-color: #efe;
-				border: 1px solid #cfc;
+				border: 1px solid #bfb;
 			}
 		}
 	}

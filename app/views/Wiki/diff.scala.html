@@ -1,5 +1,5 @@
-@(title: String, list:java.util.List[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
-@_base(title) {
+@(name: String, before:Int, after:Int, list:java.util.List[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_base(name) {
     @hotkey()
     <script type="text/javascript">
         $(function(){
@@ -10,17 +10,20 @@
 } {
     <div class="wikiContent">
         <div class="limitWidth">
-            <h1>History of <a href="@title">@title</a></h1>
+            <h1>Diff of <a href="@name">@name</a></h1>
+            Changes between <a href="?revision=@before">revision @before</a> and <a href="?revision=@after">revision @after</a>
         </div>
     </div>
     <div class="diff">
+        <div class="wikiContent">
+
         <div class="limitWidth">
             <form>
                 <input type="hidden" name="action" value="diff"/>
                 <table>
                     <tr>
-                        <th width="200px">V1</th>
-                        <th width="100px">V2</th>
+                        <th width="200px"><a href="?revision=@before">revision @before</a></th>
+                        <th width="100px"><a href="?revision=@after">revision @after</a></th>
                     </tr>
                     @for(diffRow <- list) {
                         <tr>
@@ -31,5 +34,6 @@
                 </table>
             </form>
         </div>
+    </div>
     </div>
 }
