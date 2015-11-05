@@ -1,0 +1,35 @@
+@(title: String, list:java.util.List[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_base(title) {
+    @hotkey()
+    <script type="text/javascript">
+        $(function(){
+            $('[name=before]').eq(1).click()
+            $('[name=after]').eq(0).click()
+        });
+    </script>
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>History of <a href="@title">@title</a></h1>
+        </div>
+    </div>
+    <div class="diff">
+        <div class="limitWidth">
+            <form>
+                <input type="hidden" name="action" value="diff"/>
+                <table>
+                    <tr>
+                        <th width="200px">V1</th>
+                        <th width="100px">V2</th>
+                    </tr>
+                    @for(diffRow <- list) {
+                        <tr>
+                            <td class="left @(diffRow.getTag)">@(diffRow.getOldLine)</td>
+                            <td class="right @(diffRow.getTag)">@(diffRow.getNewLine)</td>
+                        </tr>
+                    }
+                </table>
+            </form>
+        </div>
+    </div>
+}

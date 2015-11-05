@@ -1,6 +1,12 @@
 @(title: String, listHistory: List[models.Database.PageRevisionTimeAuthorRemoteAddressComment])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_base(title) {
     @hotkey()
+    <script type="text/javascript">
+        $(function(){
+            $('[name=before]').eq(1).click()
+            $('[name=after]').eq(0).click()
+        });
+    </script>
 } {
     <div class="wikiContent">
         <div class="limitWidth">
@@ -9,28 +15,34 @@
     </div>
     <div class="wikiHistory">
         <div class="limitWidth">
-            <table>
-                <tr>
-                    <th width="50px">revision</th>
-                    <th width="200px">Date</th>
-                    <th width="200px">Author</th>
-                    <th width="100px">IP</th>
-                    <th>Comment</th>
-                </tr>
-                @for(history <- listHistory) {
+            <form>
+                <input type="hidden" name="action" value="diff"/>
+                <table>
                     <tr>
-                        <td>
-                            <a href="?revision=@(history.revision)">
-                                @(history.revision)
-                            </a>
-                        </td>
-                        <td>@(history.isoDateTime)</td>
-                        <td>@(history.author)</td>
-                        <td>@(history.remoteAddress)</td>
-                        <td>@(history.comment)</td>
+                        <th colspan="2"><input type="submit" value="Diff"/></th>
+                        <th width="50px">revision</th>
+                        <th width="200px">Date</th>
+                        <th width="200px">Author</th>
+                        <th width="100px">IP</th>
+                        <th>Comment</th>
                     </tr>
-                }
-            </table>
+                    @for(history <- listHistory) {
+                        <tr>
+                            <td><input type="radio" name="before" value="@(history.revision)"/></td>
+                            <td><input type="radio" name="after" value="@(history.revision)"/></td>
+                            <td>
+                                <a href="?revision=@(history.revision)">
+                                    @(history.revision)
+                                </a>
+                            </td>
+                            <td>@(history.isoDateTime)</td>
+                            <td>@(history.author)</td>
+                            <td>@(history.remoteAddress)</td>
+                            <td>@(history.comment)</td>
+                        </tr>
+                    }
+                </table>
+            </form>
         </div>
     </div>
 }

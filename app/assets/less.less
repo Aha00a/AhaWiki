@@ -476,4 +476,32 @@ html, body {
 			}
 		}
 	}
+
+	.diff {
+		table {
+			border-collapse: collapse;
+			width: 100%;
+			td {
+				width: 50%;
+			}
+		}
+		.left, .right {
+			.monospace;
+			border: 1px solid #eee;
+		}
+
+		.left {
+			&.CHANGE {
+				background-color: #fee;
+				border: 1px solid #fcc;
+			}
+		}
+
+		.right {
+			&.CHANGE, &.INSERT {
+				background-color: #efe;
+				border: 1px solid #cfc;
+			}
+		}
+	}
 }

@@ -1,22 +1,26 @@
 package controllers
 
 import java.net.URLDecoder
+import java.util
 import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor._
+import difflib.{DiffRow, DiffRowGenerator}
+import implicits.Implicits._
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
-import models.Database.Link
+import models.Database.{Link, Page}
 import models.{Database, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
 import utils._
-import implicits.Implicits._
+
+import scala.collection.JavaConversions._
 
 @Singleton
 class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
@@ -104,6 +108,18 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             } else {
               Forbidden(views.html.Wiki.error(name, "Permission denied."))
             }
+          }
+          case "diff" => {
+            val before = request.getQueryString("before").getOrElse("0").toInt
+            val after = request.getQueryString("after").getOrElse("0").toInt
+            val beforePage: Option[Page] = MockDb.selectPageSpecificRevision(name, before)
+            val afterPage: Option[Page] = MockDb.selectPageSpecificRevision(name, after)
+            val beforeContent: util.List[String] = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)+""").toSeq
+            val afterContent: util.List[String] = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)+""").toSeq
+
+            val listDiffRow: util.List[DiffRow] = new DiffRowGenerator.Builder().build().generateDiffRows(beforeContent, afterContent)
+
+            Ok(views.html.Wiki.diff(name, listDiffRow))
           }
           case _ => {
             Forbidden(views.html.Wiki.error(name, "Permission denied."))
