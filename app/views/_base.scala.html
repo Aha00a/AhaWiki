@@ -2,19 +2,6 @@
 @(title: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_baseSkeleton(title){
     @head
-    <script type="text/javascript">
-        $(function(){
-            MathJax.Hub.Config({
-                tex2jax: {
-                    inlineMath: [['$$$$','$$$$']],
-                    processEscapes: true
-                },
-                MathML: {
-                    extensions: ["content-mathml.js"]
-                }
-            });
-        });
-    </script>
 } {
     <div class="header">
         <div class="limitWidth">
