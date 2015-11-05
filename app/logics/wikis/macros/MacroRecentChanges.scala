@@ -13,9 +13,9 @@ object MacroRecentChanges {
           s"== $yearMonth\n" +
             groupedByYearMonth.groupBy(_.localDateTime.toLocalDate).toList.sortWith((a, b) => a._1.isAfter(b._1)).map {
               case (yearMonthDate, v) =>
-                s"=== $yearMonthDate\n[[[#!Table tsv 1\nPage\tat\tby\tcomment\n" +
+                s"=== $yearMonthDate\n[[[#!Table tsv 1\nPage\tRevision\tat\tby\tcomment\n" +
                   v.sortBy(_.time)(Ordering[Long].reverse).map(t => {
-                    s"'''[wiki:${t.name}]'''\t${t.localDateTime.toIsoTimeString}\t[${t.author}]\t${t.comment.getOrElse(" ")}"
+                    s"'''[${t.name}]'''\t[${t.name}?action=diff&after=${t.revision} ${t.revision}]\t${t.localDateTime.toIsoTimeString}\t[${t.author}]\t${t.comment.getOrElse(" ")}"
                   }).mkString("\n") + "\n]]]"
             }.mkString("\n")
       }.mkString("\n")

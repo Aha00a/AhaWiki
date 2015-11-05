@@ -88,12 +88,15 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             actorSimilarPage ! Calculate(name)
         }
       case (Some(page), "diff", true, _) => {
-        val before = request.getQueryString("before").getOrElse("0").toInt
         val after = request.getQueryString("after").getOrElse("0").toInt
-        val beforePage = MockDb.selectPageSpecificRevision(name, before)
+        val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
+
         val afterPage = MockDb.selectPageSpecificRevision(name, after)
-        val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val beforePage = MockDb.selectPageSpecificRevision(name, before)
+
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+
         val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
         Ok(views.html.Wiki.diff(name, before, after, listDiffRow))
