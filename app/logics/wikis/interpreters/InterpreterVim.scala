@@ -49,6 +49,8 @@ object InterpreterVim {
 
   def interpret(pageContent: PageContent):String = {
     implicit val codec:Codec = Codec.UTF8
+    codec.onMalformedInput(CodingErrorAction.REPLACE)
+    codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
 
     val raw = pageContent.raw
     val parser: Parser = Parser(raw.trim)
@@ -68,7 +70,7 @@ object InterpreterVim {
         cacheFileText.writeAll(body)
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        val shellScript = s"""vi -T xterm +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
         Logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
