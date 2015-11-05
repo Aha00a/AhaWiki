@@ -1,6 +1,7 @@
 package logics.wikis.interpreters
 
 import java.io.File
+import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
 import implicits.Implicits._
