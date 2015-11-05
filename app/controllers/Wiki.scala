@@ -1,18 +1,17 @@
 package controllers
 
 import java.net.URLDecoder
-import java.util
 import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor._
-import difflib.{DiffRow, DiffRowGenerator}
+import difflib.DiffRowGenerator
 import implicits.Implicits._
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
-import models.Database.{Link, Page}
+import models.Database.Link
 import models.{Database, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -29,128 +28,94 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val name = URLDecoder.decode(nameEncoded, "UTF-8")
     implicit val wikiContext = WikiContext(name)
 
-    val pageFirstRevision: Database.Page = MockDb.selectPageFirstRevision(name).getOrElse(new Database.Page("", ""))
-    val pageLastRevision: Database.Page = MockDb.selectPageLastRevision(name).getOrElse(new Database.Page("", ""))
+    val pageFirstRevision = MockDb.selectPageFirstRevision(name)
+    val pageLastRevision = MockDb.selectPageLastRevision(name)
     val pageSpecificRevision: Option[Database.Page] = MockDb.selectPage(name, revision)
 
-    val pageLastRevisionContent: PageContent = new PageContent(pageLastRevision.content)
+    val pageLastRevisionContent = pageLastRevision.map(s => new PageContent(s.content))
     val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
     val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
 
-    pageSpecificRevision match {
-      case Some(page) =>
-        val pageContent: PageContent = new PageContent(page.content)
-        action match {
-          case "" | "view" => {
-            try {
-              if (isReadable) {
-                pageContent.redirect match {
-                  case Some(directive) =>
-                    Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
-                  case None =>
-                    val similarPages = getSimilarPages(name)
-                    val relatedPages = getRelatedPages(name)
-                    val additionalInfo =
-                      s"""
-                         |== See also
-                         |[[Html(<table class="seeAlso"><tr><th>Page Suggestion</th><th>Related Pages</th></tr><tr><td class="">)]]
-                         |'''SimilarPages'''
-                         |$similarPages
-                         |'''Backlinks'''
-                         |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
-                         |""".stripMargin
 
-                    Ok(pageContent.interpreter match {
-                      case Some("Paper") =>
-                        val contentInterpreted = Interpreters.interpret(page.content)
-                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                      case None | Some("Wiki") =>
-                        val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
-                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                      case _ =>
-                        val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
-                        views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                    })
-                }
-              } else {
-                Forbidden(views.html.Wiki.error(name, "Permission denied."))
-              }
-            }
-            finally {
-              if (play.Play.isDev && request.isLocalhost)
-                actorSimilarPage ! Calculate(name)
-            }
-          }
-          case "raw" => {
-            if (isReadable) {
-              Ok(page.content)
-            } else {
-              Forbidden(s"= $name\nPermission denied.\n\n")
-            }
-          }
-          case "history" => {
-            if (isReadable) {
-              Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
-            } else {
-              Forbidden(views.html.Wiki.error(name, "Permission denied."))
-            }
-          }
-          case "diff" => {
-            if (isReadable) {
-              val before = request.getQueryString("before").getOrElse("0").toInt
-              val after = request.getQueryString("after").getOrElse("0").toInt
-              val beforePage = MockDb.selectPageSpecificRevision(name, before)
-              val afterPage = MockDb.selectPageSpecificRevision(name, after)
-              val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-              val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-              val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
+    (pageSpecificRevision, action, isReadable, isWritable) match {
+      case (None, "edit", _, true) =>
+        Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
+      case (None, _, _, _) =>
+        val relatedPages = getRelatedPages(name)
+        val additionalInfo =
+          s"""= $name
+             |This page does not exist. You can [?action=edit create] it here.
+             |= See also
+             |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
+             |'''Backlinks'''
+             |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+             |""".stripMargin
 
-              Ok(views.html.Wiki.diff(name, listDiffRow))
-            } else {
-              Forbidden(views.html.Wiki.error(name, "Permission denied."))
-            }
-          }
-          case "edit" => {
-            if (isWritable) {
-              Ok(views.html.Wiki.edit(page))
-            } else {
-              Forbidden(views.html.Wiki.error(name, "Permission denied."))
-            }
-          }
-          case "delete" => {
-            if (isWritable) {
-              Ok(views.html.Wiki.delete(page))
-            } else {
-              Forbidden(views.html.Wiki.error(name, "Permission denied."))
-            }
-          }
-          case _ => {
-            Forbidden(views.html.Wiki.error(name, "Permission denied."))
+        NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
+
+      case (Some(page), "" | "view", true, _) => {
+        try {
+          val pageContent: PageContent = new PageContent(page.content)
+          pageContent.redirect match {
+            case Some(directive) =>
+              Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
+            case None =>
+              val similarPages = getSimilarPages(name)
+              val relatedPages = getRelatedPages(name)
+              val additionalInfo =
+                s"""
+                   |== See also
+                   |[[Html(<table class="seeAlso"><tr><th>Page Suggestion</th><th>Related Pages</th></tr><tr><td class="">)]]
+                   |'''SimilarPages'''
+                   |$similarPages
+                   |'''Backlinks'''
+                   |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+                   |""".stripMargin
+
+              Ok(pageContent.interpreter match {
+                case Some("Paper") =>
+                  val contentInterpreted = Interpreters.interpret(page.content)
+                  views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                case None | Some("Wiki") =>
+                  val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
+                  views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                case _ =>
+                  val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
+                  views.html.Wiki.view(name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+              })
           }
         }
-      case None =>
-        action match {
-          case "edit" => {
-            if (WikiPermission.isWritable(new PageContent(""))) {
-              Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
-            } else {
-              Ok(views.html.Wiki.error(name, "Permission denied."))
-            }
-          }
-          case _ => {
-            val relatedPages = getRelatedPages(name)
-            val additionalInfo =
-              s"""= $name
-                 |This page does not exist. You can [?action=edit create] it here.
-                 |= See also
-                 |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
-                 |'''Backlinks'''
-                 |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
-                 |""".stripMargin
-
-            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
-          }
+        finally {
+          if (play.Play.isDev && request.isLocalhost)
+            actorSimilarPage ! Calculate(name)
         }
+      }
+      case (Some(page), "raw", true, _) => {
+        Ok(page.content)
+      }
+      case (Some(page), "history", true, _) => {
+        Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
+      }
+      case (Some(page), "diff", true, _) => {
+        val before = request.getQueryString("before").getOrElse("0").toInt
+        val after = request.getQueryString("after").getOrElse("0").toInt
+        val beforePage = MockDb.selectPageSpecificRevision(name, before)
+        val afterPage = MockDb.selectPageSpecificRevision(name, after)
+        val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
+
+        Ok(views.html.Wiki.diff(name, listDiffRow))
+      }
+      case (Some(page), "edit", _, true) => {
+        Ok(views.html.Wiki.edit(page))
+      }
+      case (Some(page), "delete", _, true) => {
+        Ok(views.html.Wiki.delete(page))
+      }
+      case _ => {
+        Forbidden(views.html.Wiki.error(name, "Permission denied."))
+      }
     }
   }
 
@@ -225,7 +190,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     implicit val wikiContext: WikiContext = WikiContext(name)
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
-        if(WikiPermission.isWritable(new PageContent(page.content))) {
+        if (WikiPermission.isWritable(new PageContent(page.content))) {
           Database.pageDeleteWithRelatedData(name)
           Cache.PageList.invalidate()
           Ok("")
@@ -240,7 +205,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext = WikiContext(name)
-    Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
+    Ok( """<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 
 }

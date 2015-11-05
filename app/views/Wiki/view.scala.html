@@ -1,7 +1,7 @@
-@(title:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:models.Database.Page, wikiLast:models.Database.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(title:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Database.Page], wikiLast:Option[models.Database.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title) {
     @hotkey()
 } {
     @Html(contentInterpreted)
-    @action(isWritable, wikiFirst, wikiLast)
+    @action(isWritable, wikiFirst.orNull, wikiLast.orNull)
 }
