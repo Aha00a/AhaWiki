@@ -1,5 +1,7 @@
 package logics.wikis.interpreters
 
+import java.net.URLEncoder
+
 import logics.Cache
 import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
 import models.Database.Link
@@ -169,7 +171,7 @@ object InterpreterWiki {
       val display: String = aliasWithDefault
       val attrCss = if (external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?") || set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))) { "" } else { """ class="missing"""" }
 
-      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
+      s"""<a href="${RegexUtil.escapeDollar(URLEncoder.encode(href, "utf-8"))}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
     }
 
     def toLink(src:String) = Link(src, uriNormalized, alias)
