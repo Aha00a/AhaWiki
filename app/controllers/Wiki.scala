@@ -155,7 +155,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
     if (WikiPermission.isWritable(new PageContent(latestText))) {
       if (revision == latestRevision) {
-        Database.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddress, body, comment)
+        Database.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
         actorSimilarPage ! Calculate(name)
 
         Cache.PageList.invalidate()

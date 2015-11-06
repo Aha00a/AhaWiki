@@ -43,5 +43,6 @@ object Implicits {
 
   implicit class RichRequest(request:Request[Any]) {
     def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
+    def remoteAddressWithXRealIp: String = request.headers.get("X-Real-IP").getOrElse(request.remoteAddress)
   }
 }
