@@ -5,7 +5,7 @@
         $(function(){
             $('a[target=_blank]').hover(function () {
                 var href = $(this).attr('href');
-                var div = $('<div class="crawlerPreview" />')
+                var div = $('<div class="crawlerPreview"><img src="/public/img/ajax-loader.gif"/></div>')
                     .attr('data-href', href)
                     .css({
                         position: 'absolute',
@@ -20,13 +20,12 @@
                     data: { q: href },
                     dataType: "jsonp",
                     success: function(data) {
-                        $(document).data(href).append(
+                        $(document).data(href).html('').append(
                             $('<div></div>')
-                                .append($('<img>').attr('src', data.image))
-                                .append($('<h5>').text(data.title))
-                                .append($('<p>').text(data.description))
+                                .append($('<img class="preview"/>').attr('src', data.image))
+                                .append($('<h5/>').text(data.title))
+                                .append($('<p/>').text(data.description))
                         );
-                        console.log(data);
                     }
                 });
             }, function () {
