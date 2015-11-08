@@ -87,7 +87,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
           if (play.Play.isDev && request.isLocalhost)
             actorSimilarPage ! Calculate(name)
         }
-      case (Some(page), "diff", true, _) => {
+      case (Some(page), "diff", true, _) =>
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
 
@@ -100,7 +100,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
         Ok(views.html.Wiki.diff(name, before, after, listDiffRow))
-      }
       case (Some(page), "raw", true, _) => Ok(page.content)
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page))
