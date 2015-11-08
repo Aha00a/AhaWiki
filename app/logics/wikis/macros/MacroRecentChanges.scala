@@ -15,7 +15,13 @@ object MacroRecentChanges {
               case (yearMonthDate, v) =>
                 s"=== $yearMonthDate\n[[[#!Table tsv 1\nPage\tRevision\tat\tby\tcomment\n" +
                   v.sortBy(_.time)(Ordering[Long].reverse).map(t => {
-                    s"'''[${t.name}]'''\t[${t.name}?action=diff&after=${t.revision} ${t.revision}]\t${t.localDateTime.toIsoTimeString}\t[${t.author}]\t${t.comment.getOrElse(" ")}"
+                    Seq(
+                      s"'''[${t.name}]'''",
+                      s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
+                      s"${t.localDateTime.toIsoTimeString}",
+                      s"[${t.author}]",
+                      s"${t.comment.getOrElse(" ")}"
+                    ).mkString("\t")
                   }).mkString("\n") + "\n]]]"
             }.mkString("\n")
       }.mkString("\n")
