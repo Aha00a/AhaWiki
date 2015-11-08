@@ -42,7 +42,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
           s"""= $name
-             |This page does not exist. You can [?action=edit create] it here.
+             |This page does not exist. You can [[Html(<a href="?action=edit">create</a>)]] it here.
              |= See also
              |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
              |'''Backlinks'''
