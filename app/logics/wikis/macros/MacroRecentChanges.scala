@@ -13,13 +13,13 @@ object MacroRecentChanges {
           s"== $yearMonth\n" +
             groupedByYearMonth.groupBy(_.localDateTime.toLocalDate).toList.sortWith((a, b) => a._1.isAfter(b._1)).map {
               case (yearMonthDate, v) =>
-                s"=== $yearMonthDate\n[[[#!Table tsv 1\nPage\tRevision\tat\tby\tcomment\n" +
+                s"=== $yearMonthDate\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
                   v.sortBy(_.time)(Ordering[Long].reverse).map(t => {
                     Seq(
                       s"'''[${t.name}]'''",
                       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
                       s"${t.localDateTime.toIsoTimeString}",
-                      s"[${t.author}]",
+                      s"[${t.author}](${t.remoteAddress})",
                       s"${t.comment.getOrElse(" ")}"
                     ).mkString("\t")
                   }).mkString("\n") + "\n]]]"
