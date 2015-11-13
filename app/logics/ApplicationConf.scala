@@ -25,9 +25,15 @@ object ApplicationConf {
         }
       }
 
-      object google{
+      object google {
         object analytics {
           def trackingId()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("")
+        }
+      }
+
+      object interpreter {
+        object Vim {
+          def colorscheme()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("elflord")
         }
       }
 

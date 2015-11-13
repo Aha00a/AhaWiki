@@ -5,7 +5,8 @@ import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
 import implicits.Implicits._
-import models.PageContent
+import logics.ApplicationConf
+import models.{PageContent, WikiContext}
 import play.api.Logger
 
 import scala.io.Codec
@@ -48,7 +49,7 @@ object InterpreterVim {
     }
   }
 
-  def interpret(pageContent: PageContent):String = {
+  def interpret(pageContent: PageContent)(implicit wikiContext: WikiContext):String = {
     implicit val codec:Codec = Codec.UTF8
     codec.onMalformedInput(CodingErrorAction.REPLACE)
     codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
@@ -56,12 +57,14 @@ object InterpreterVim {
     val raw = pageContent.raw
     val parser: Parser = Parser(raw.trim)
 
+
     val body = parser.content
     val syntax = parser.syntax
     if(parser.isError) {
       "Error!"
     } else {
-      val md5 = MessageDigest.getInstance("MD5").digest(raw.getBytes).map("%02x".format(_)).mkString
+      val colorscheme: String = ApplicationConf.AhaWiki.config.interpreter.Vim.colorscheme()
+      val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir = new File(play.Play.application().getFile("cache"), "Vim")
       val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
       val cacheFileHtml = new File(cacheDir, md5 + ".html")
@@ -70,8 +73,9 @@ object InterpreterVim {
         val cacheFileText = new File(cacheDir, md5 + ".txt")
         cacheFileText.writeAll(body)
 
+
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme elflord" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme $colorscheme" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
         Logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
@@ -81,21 +85,18 @@ object InterpreterVim {
         catch {
           case e:RuntimeException => Logger.error(e.toString)
         }
-        cacheFileHtml.writeAll(scala.io.Source.fromFile(cacheFileHtmlRaw).getLines().drop(9).mkString("\n")
-          .replace("body { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
-          .replace("pre { font-family: monospace; color: #ffffff; background-color: #000000; }", "")
-          .replace("<head>", "")
-          .replace("</head>", "")
-          .replace("<body>", "")
-          .replace("</body>", "")
-          .replace("</html>", ""))
+        val lines = scala.io.Source.fromFile(cacheFileHtmlRaw).getLines()
+        val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
+        val pre = lines.dropWhile(!_.startsWith("<pre>")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
+
+        cacheFileHtml.writeAll(style + pre)
 
         cacheFileHtmlRaw.delete()
         cacheFileSh.delete()
         cacheFileText.delete()
       }
 
-      s"<!-- $md5 -->\n" + scala.io.Source.fromFile(cacheFileHtml).mkString
+      s"""<div data-md5="$md5" class="class_$md5">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
     }
   }
 
