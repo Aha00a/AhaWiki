@@ -5,7 +5,7 @@ import java.io.File
 import models.Database.Page
 import play.Play
 import play.api.Logger
-import utils.DateTimeUtil
+import com.aha00a.commons.utils.DateTimeUtil
 
 import scala.io.Codec
 

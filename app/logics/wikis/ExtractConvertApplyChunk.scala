@@ -1,7 +1,7 @@
 package logics.wikis
 
 import models.WikiContext
-import utils.ShebangUtil
+import com.aha00a.commons.utils.ShebangUtil
 
 class ExtractConvertApplyChunk() extends ExtractConvertApply {
   override def extract(s: String): String = {

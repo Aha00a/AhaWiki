@@ -1,4 +1,4 @@
-package utils
+package com.aha00a.commons.utils
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
 import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken

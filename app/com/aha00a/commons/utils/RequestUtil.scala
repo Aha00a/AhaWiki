@@ -1,4 +1,4 @@
-package utils
+package com.aha00a.commons.utils
 
 import play.api.mvc.{AnyContent, Request}
 

@@ -1,4 +1,4 @@
-package utils
+package com.aha00a.commons.utils
 
 import play.api.Logger
 import play.api.libs.json.JsValue

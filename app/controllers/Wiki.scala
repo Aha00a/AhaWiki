@@ -18,7 +18,7 @@ import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import utils._
+import com.aha00a.commons.utils._
 
 import scala.collection.JavaConversions._
 

@@ -5,7 +5,7 @@ import com.aha00a.commons.implicits.Implicits
 import logics.wikis.Interpreters
 import models.Database
 import models.Database.Page
-import utils.{Stemmer, StopWatch}
+import com.aha00a.commons.utils.{Stemmer, StopWatch}
 import Implicits._
 
 object ActorPageProcessor {

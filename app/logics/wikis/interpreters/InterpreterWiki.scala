@@ -6,7 +6,7 @@ import logics.Cache
 import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
 import models.Database.Link
 import models.WikiContext
-import utils.{VariableHolder, RegexUtil}
+import com.aha00a.commons.utils.{VariableHolder, RegexUtil}
 
 import scala.collection.mutable.ArrayBuffer
 

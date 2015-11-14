@@ -1,4 +1,4 @@
-package utils
+package com.aha00a.commons.utils
 
 object ShebangUtil {
   def has(s: String):Boolean = {

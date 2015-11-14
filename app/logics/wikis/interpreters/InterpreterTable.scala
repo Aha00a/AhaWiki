@@ -6,7 +6,7 @@ import models.{WikiContext, PageContent}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Logger
-import utils.Using
+import com.aha00a.commons.utils.Using
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer

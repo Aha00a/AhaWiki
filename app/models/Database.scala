@@ -8,7 +8,7 @@ import com.aha00a.commons.implicits.Implicits
 import Implicits.LocalDateTimeFormatter
 import play.api.Play.current
 import play.api.db.DB
-import utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
+import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 
 import scala.language.postfixOps
 

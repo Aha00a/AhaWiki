@@ -10,7 +10,7 @@ import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.mvc._
-import utils.Stemmer
+import com.aha00a.commons.utils.Stemmer
 
 @Singleton
 class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {

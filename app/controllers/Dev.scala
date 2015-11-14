@@ -11,7 +11,7 @@ import models.Database.Page
 import models.{WikiContext, Database, MockDb}
 import play.api.cache.CacheApi
 import play.api.mvc._
-import utils.RequestUtil
+import com.aha00a.commons.utils.RequestUtil
 
 import scala.util.Random
 import Implicits._

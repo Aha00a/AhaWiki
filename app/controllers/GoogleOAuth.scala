@@ -8,7 +8,7 @@ import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.{Routes, Logger}
 import play.api.mvc._
-import utils.{RequestUtil, GoogleApi}
+import com.aha00a.commons.utils.{RequestUtil, GoogleApi}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 

@@ -6,7 +6,7 @@ import play.api.Routes
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import utils.RequestUtil
+import com.aha00a.commons.utils.RequestUtil
 
 
 class Auth extends Controller {
