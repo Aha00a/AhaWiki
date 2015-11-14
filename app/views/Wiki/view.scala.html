@@ -20,12 +20,16 @@
                     data: { q: href },
                     dataType: "jsonp",
                     success: function(data) {
-                        $(document).data(href).html('').append(
-                            $('<div></div>')
-                                .append($('<img class="preview"/>').attr('src', data.image))
-                                .append($('<h5/>').text(data.title))
-                                .append($('<p/>').text(data.description))
-                        );
+                        if(data.success) {
+                            $(document).data(href).html('').append(
+                                $('<div></div>')
+                                    .append($('<img class="preview"/>').attr('src', data.image))
+                                    .append($('<h5/>').text(data.title))
+                                    .append($('<p/>').text(data.description))
+                            );
+                        } else {
+                            $(document).data(href).remove();
+                        }
                     }
                 });
             }, function () {
