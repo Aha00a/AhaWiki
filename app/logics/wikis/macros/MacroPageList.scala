@@ -1,9 +1,10 @@
 package logics.wikis.macros
 
+import com.aha00a.commons.implicits.Implicits
 import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
-import implicits.Implicits._
+import Implicits._
 
 object MacroPageList {
   def apply()(implicit wikiContext: WikiContext) = {

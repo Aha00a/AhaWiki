@@ -4,7 +4,8 @@ import java.io.File
 import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
-import implicits.Implicits._
+import com.aha00a.commons.implicits.Implicits
+import Implicits._
 import logics.ApplicationConf
 import models.{PageContent, WikiContext}
 import play.api.Logger

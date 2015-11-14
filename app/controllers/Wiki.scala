@@ -7,8 +7,9 @@ import actionCompositions.PostAction
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor._
+import com.aha00a.commons.implicits.Implicits
 import difflib.DiffRowGenerator
-import implicits.Implicits._
+import Implicits._
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
 import models.Database.Link

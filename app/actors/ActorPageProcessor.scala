@@ -1,11 +1,12 @@
 package actors
 
 import akka.actor._
+import com.aha00a.commons.implicits.Implicits
 import logics.wikis.Interpreters
 import models.Database
 import models.Database.Page
 import utils.{Stemmer, StopWatch}
-import implicits.Implicits._
+import Implicits._
 
 object ActorPageProcessor {
   def props = Props[ActorPageProcessor]

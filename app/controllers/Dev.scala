@@ -5,6 +5,7 @@ import javax.inject.{Inject, Singleton}
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
+import com.aha00a.commons.implicits.Implicits
 import logics.Cache
 import models.Database.Page
 import models.{WikiContext, Database, MockDb}
@@ -13,7 +14,7 @@ import play.api.mvc._
 import utils.RequestUtil
 
 import scala.util.Random
-import implicits.Implicits._
+import Implicits._
 
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {

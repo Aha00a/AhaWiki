@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
-import implicits.Implicits._
+import com.aha00a.commons.implicits.Implicits
+import Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext

@@ -3,7 +3,8 @@ package controllers
 import java.net.URLEncoder
 import javax.inject._
 
-import implicits.Implicits._
+import com.aha00a.commons.implicits.Implicits
+import Implicits._
 import logics.{Cache, OnApplicationStart}
 import models.{MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
