@@ -5,11 +5,18 @@ import com.typesafe.config.{Config, ConfigFactory}
 class Hocon(body: String) {
   val config: Config = ConfigFactory.parseString(body)
 
-  def getString(path: String): Option[String] = {
+  def getOrElse(path:String, default:String) = {
     if (config.hasPath(path)) {
-      Option(config.getString(path))
+      config.getString(path)
     } else {
-      None
+      default
+    }
+  }
+  def getOrElse(path:String, default:Boolean) = {
+    if (config.hasPath(path)) {
+      config.getBoolean(path)
+    } else {
+      default
     }
   }
 }

@@ -20,20 +20,21 @@ object ApplicationConf {
     object config {
       object permission {
         object default {
-          def read()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("all")
-          def write()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("login")
+          def read()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "all")
+          def write()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "login")
         }
       }
 
       object google {
         object analytics {
-          def trackingId()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("")
+          def trackingId()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "")
         }
       }
 
       object interpreter {
         object Vim {
-          def colorscheme()(implicit wikiContext: WikiContext) = hocon.getString(fqn).getOrElse("elflord")
+          def debug()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, false)
+          def colorscheme()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "elflord")
         }
       }
 

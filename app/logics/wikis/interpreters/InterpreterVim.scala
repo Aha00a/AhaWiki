@@ -92,9 +92,11 @@ object InterpreterVim {
 
         cacheFileHtml.writeAll(style + pre)
 
-        cacheFileHtmlRaw.delete()
-        cacheFileSh.delete()
-        cacheFileText.delete()
+        if(!ApplicationConf.AhaWiki.config.interpreter.Vim.debug) {
+          cacheFileHtmlRaw.delete()
+          cacheFileSh.delete()
+          cacheFileText.delete()
+        }
       }
 
       s"""<div data-md5="$md5" class="class_$md5">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
