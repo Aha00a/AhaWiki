@@ -114,7 +114,11 @@ class InterpreterWiki {
           oldIndent = indent
         case _ =>
           variableHolder := State.Normal
-          arrayBuffer += s"<p>${formatInline(s)}</p>".toString
+          if(Seq(extractConvertApplyChunk, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+            arrayBuffer += s"<p>${formatInline(s)}</p>"
+          } else {
+            arrayBuffer += formatInline(s)
+          }
       }
     }
 

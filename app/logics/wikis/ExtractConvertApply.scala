@@ -23,5 +23,7 @@ trait ExtractConvertApply {
     }
     result
   }
+
+  def contains(s:String) = arrayBuffer.exists(_._1 == s)
 }
 
