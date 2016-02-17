@@ -2,11 +2,11 @@ package logics.wikis.interpreters
 
 import java.net.URLEncoder
 
+import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.Cache
-import logics.wikis.{HeadingNumber, ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro}
+import logics.wikis.{ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro, HeadingNumber}
 import models.Database.Link
 import models.WikiContext
-import com.aha00a.commons.utils.{VariableHolder, RegexUtil}
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -170,7 +170,7 @@ object InterpreterWiki {
     def toRegexReplacement(set: Set[String] = Set[String]()) = {
       val external: Boolean = uri.contains("://")
 
-      val href: String = if(external) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
+      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
       val attrTarget: String = if (external) " target=\"_blank\"" else ""
       val display: String = aliasWithDefault
       val attrCss = if (external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?") || set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))) { "" } else { """ class="missing"""" }
