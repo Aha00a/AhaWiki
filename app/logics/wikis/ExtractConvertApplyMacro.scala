@@ -9,7 +9,15 @@ import scala.util.matching.Regex.Match
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapVariable = new mutable.HashMap[String, String]()
 
-  val regex = """\[\[(\w+)(?:\(([^)]+)\))?\]\]""".r
+  val regex = """(?x)
+      \[\[
+        (\w+)
+        (?:
+          \(
+            (.+?)
+          \)
+        )?
+      \]\]""".r
 
   override def extract(s: String): String = {
     regex.replaceAllIn(s, _ match {
@@ -51,7 +59,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
       case "LinkWithPercent" => MacroLinkWithPercent(argument)
       case "Include" => MacroInclude(argument)
-      case _ => name + argument
+      case _ => "Error" + name + argument
     }
   }
 
