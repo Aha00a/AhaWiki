@@ -17,7 +17,7 @@ object Interpreters {
       case Some("Html") | Some("html") => body
       case Some("Markdown") | Some("markdown") => com.github.rjeschke.txtmark.Processor.process(body)
 
-      case Some("Wiki") | Some("wiki") | None => new InterpreterWiki().apply(body)
+      case Some("Wiki") | Some("wiki") | None => (new InterpreterWiki())(body)
 
       case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
 
