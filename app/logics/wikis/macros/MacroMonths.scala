@@ -9,8 +9,8 @@ object MacroMonths {
   def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
-    case regexIncr(y) => new InterpreterWiki().interpret((1 to 12).map(m => f" * [$y-$m%02d]").mkString("\n"))
-    case regexDecr(y) => new InterpreterWiki().interpret((1 to 12).reverse.map(m => f" * [$y-$m%02d]").mkString("\n"))
+    case regexIncr(y) => new InterpreterWiki().apply((1 to 12).map(m => f" * [$y-$m%02d]").mkString("\n"))
+    case regexDecr(y) => new InterpreterWiki().apply((1 to 12).reverse.map(m => f" * [$y-$m%02d]").mkString("\n"))
     case _ => s"Argument Error:($argument)"
   }
 }

@@ -6,7 +6,7 @@ import models.{Database, WikiContext}
 object MacroTitleIndex {
   def apply()(implicit wikiContext: WikiContext): String = {
     val listPageName = Database.pageSelectNameGroupByNameOrderByName
-    new InterpreterWiki().interpret {
+    new InterpreterWiki().apply {
       listPageName.groupBy(_.charAt(0)).toList.sortBy(_._1).map {
         case (k, v) => s"== $k\n" + v.map(s => s" * [wiki:$s]").mkString("\n")
       }.mkString("\n")

@@ -8,7 +8,7 @@ object InterpreterPaper {
     val wikiPageRenderer = new InterpreterWiki
 
     s"""<div class="paperContent ${arguments(0)}">""" +
-      wikiPageRenderer.interpret(wikiText).split( """<hr/>""")
+      wikiPageRenderer.apply(wikiText).split( """<hr/>""")
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">

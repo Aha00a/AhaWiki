@@ -8,7 +8,7 @@ import Implicits._
 
 object MacroPageList {
   def apply()(implicit wikiContext: WikiContext) = {
-    new InterpreterWiki().interpret(
+    new InterpreterWiki().apply(
       "[[[#!Table tsv 1\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
       Cache.PageList.get().map { t =>
         Seq(

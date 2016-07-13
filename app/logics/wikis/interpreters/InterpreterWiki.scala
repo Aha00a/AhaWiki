@@ -4,7 +4,7 @@ import java.net.URLEncoder
 
 import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.Cache
-import logics.wikis.{ExtractConvertApplyBackQuote, ExtractConvertApplyChunk, ExtractConvertApplyMacro, HeadingNumber}
+import logics.wikis._
 import models.Database.Link
 import models.WikiContext
 
@@ -23,7 +23,7 @@ class InterpreterWiki {
   val extractConvertApplyMacro = new ExtractConvertApplyMacro()
   val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-  def interpret(wikiText:String)(implicit wikiContext:WikiContext):String = {
+  def apply(wikiText:String)(implicit wikiContext:WikiContext):String = {
     val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
@@ -125,7 +125,7 @@ class InterpreterWiki {
     variableHolder := State.Normal
 
     if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
+      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().apply(arrayBufferHeading.mkString("\n")) + """</div>""")
 
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }

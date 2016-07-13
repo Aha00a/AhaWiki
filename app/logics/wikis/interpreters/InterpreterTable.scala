@@ -33,7 +33,7 @@ object InterpreterTable {
               "</table>"
           }
           val wiki: InterpreterWiki = new InterpreterWiki()
-          arrayBuffer += javaListString.map(s => if(s == null) "" else s).map(s => {wiki.interpret(s)}).toArray
+          arrayBuffer += javaListString.map(s => if(s == null) "" else s).map(s => {wiki.apply(s)}).toArray
         }
         Logger.error("")
         "Error"

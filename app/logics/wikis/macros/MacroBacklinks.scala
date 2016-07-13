@@ -5,7 +5,7 @@ import models.{Database, WikiContext}
 
 object MacroBacklinks {
   def apply()(implicit wikiContext: WikiContext) = {
-    new InterpreterWiki().interpret(Database.linkSelect(wikiContext.name)
+    new InterpreterWiki().apply(Database.linkSelect(wikiContext.name)
       .filterNot(_.or(_.contains("://")))
       .filter(_.dst == wikiContext.name)
       .map(l => s" * [${l.src}]")
