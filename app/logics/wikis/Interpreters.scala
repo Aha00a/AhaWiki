@@ -15,7 +15,7 @@ object Interpreters {
       case Some("Comment") | Some("comment") => ""
       case Some("Text") | Some("text") | Some("txt") => "<pre>" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
       case Some("Html") | Some("html") => body
-      case Some("Markdown") | Some("markdown") => com.github.rjeschke.txtmark.Processor.process(body)
+      case Some("Markdown") | Some("markdown") => InterpreterMarkdown(body)
 
       case Some("Wiki") | Some("wiki") | None => (new InterpreterWiki())(body)
 
@@ -32,6 +32,7 @@ object Interpreters {
         "Error!" + s"$pageContent"
     }
   }
+
 
   def extractLink(name:String, content: String): Seq[Link] = {
     val pageContent: PageContent = new PageContent(content)
