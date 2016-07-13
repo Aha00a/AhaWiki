@@ -26,7 +26,7 @@ object Interpreters {
       case Some("Table") | Some("table") | Some("AhaTracTable") => InterpreterTable.interpret(pageContent)
       case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki().apply(body) + "</blockquote>"
       case Some("Math") => InterpreterMath.interpret(argument, body)
-      case Some("Graph") => InterpreterGraph.interpret(pageContent)
+      case Some("Graph") => InterpreterGraph(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
         "Error!" + s"$pageContent"
