@@ -59,6 +59,8 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
       case "LinkWithPercent" => MacroLinkWithPercent(argument)
       case "Include" => MacroInclude(argument)
+      case "Months" => MacroMonths(argument)
+      case "Days" => MacroDays(argument)
       case _ => "Error" + name + argument
     }
   }
