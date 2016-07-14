@@ -3,14 +3,15 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.ActorSystem
+import com.aha00a.commons.utils.Stemmer
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.macros.MacroBr
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.mvc._
-import com.aha00a.commons.utils.Stemmer
 
 @Singleton
 class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
@@ -55,6 +56,9 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     val s: String = "aaa\nbbb\nabc\ndef"
     val q = "b"
     assertEquals(s.split("""(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... "), "bbb ... abc")
+
+    implicit val wikiContext = WikiContext("")
+    assertEquals(MacroBr(""), "<br/>")
     Ok("Ok.")
   }
 

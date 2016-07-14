@@ -1,5 +1,8 @@
 package logics.wikis.macros
 
-object MacroBr {
-  def apply(): String = "<br/>"
+import logics.wikis.WikiFormattable
+import models.WikiContext
+
+object MacroBr extends WikiFormattable {
+  override def apply(body: String)(implicit wikiContext: WikiContext): String = "<br/>"
 }
