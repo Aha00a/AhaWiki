@@ -3,7 +3,7 @@ package logics.wikis.macros
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 
-object MacroMonths extends WikiFormattable{
+object MacroMonths extends TraitMacro{
   val regexIncr = """^(\d{4})$""".r
   val regexDecr = """^(\d{4}),-$""".r
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
