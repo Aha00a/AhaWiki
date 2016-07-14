@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.utils.Stemmer
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.macros.{MacroPageOutline, MacroBr}
+import logics.wikis.macros.{MacroMonths, MacroPageOutline, MacroBr}
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
@@ -53,7 +53,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     testHeadingNumber()
     testStemmer()
 
-    implicit val wikiContext = WikiContext("")
+    implicit val wikiContext = WikiContext("SandBox")
 
     val empty = ""
     val dummy = "aaaa"
@@ -71,6 +71,24 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     assertEquals(MacroBr.calcLength(dummy), 1)
     assertEquals(MacroBr.extractLink(empty), Seq())
     assertEquals(MacroBr.extractLink(dummy), Seq())
+    
+    assertEquals(MacroMonths("1000"),
+      """<ul style="list-style-type: ;">
+        |<li><a href="1000-01" class="missing">1000-01</a></li>
+        |<li><a href="1000-02" class="missing">1000-02</a></li>
+        |<li><a href="1000-03" class="missing">1000-03</a></li>
+        |<li><a href="1000-04" class="missing">1000-04</a></li>
+        |<li><a href="1000-05" class="missing">1000-05</a></li>
+        |<li><a href="1000-06" class="missing">1000-06</a></li>
+        |<li><a href="1000-07" class="missing">1000-07</a></li>
+        |<li><a href="1000-08" class="missing">1000-08</a></li>
+        |<li><a href="1000-09" class="missing">1000-09</a></li>
+        |<li><a href="1000-10" class="missing">1000-10</a></li>
+        |<li><a href="1000-11" class="missing">1000-11</a></li>
+        |<li><a href="1000-12" class="missing">1000-12</a></li>
+        |</ul>""".stripMargin)
+    assertEquals(MacroMonths.calcLength("1000"), 95)
+    assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
     Ok("Ok.")
   }
 
