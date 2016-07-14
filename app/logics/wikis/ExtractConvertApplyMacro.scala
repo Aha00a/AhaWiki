@@ -40,7 +40,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   def execute(name: String, argument: String)(implicit wikiContext: WikiContext): String = {
     name match {
-      case "PageOutline" => MacroPageOutline()
+      case "PageOutline" => MacroPageOutline(argument)
       case "Br" => MacroBr(argument)
       case "Html" => MacroHtml(argument)
       case "Image" => MacroImage(argument)

@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.utils.Stemmer
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.macros.MacroBr
+import logics.wikis.macros.{MacroPageOutline, MacroBr}
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
@@ -58,6 +58,13 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     assertEquals(s.split("""(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... "), "bbb ... abc")
 
     implicit val wikiContext = WikiContext("")
+    assertEquals(MacroPageOutline(""), "")
+    assertEquals(MacroPageOutline("aaa"), "")
+    assertEquals(MacroPageOutline.calcLength(""), 0)
+    assertEquals(MacroPageOutline.calcLength("aaaa"), 0)
+    assertEquals(MacroPageOutline.extractLink(""), Seq())
+    assertEquals(MacroPageOutline.extractLink("aaaa"), Seq())
+
     assertEquals(MacroBr(""), "<br/>")
     Ok("Ok.")
   }
