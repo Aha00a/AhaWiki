@@ -1,4 +1,4 @@
-package logics.wikis
+package logics.wikis.macros
 
 import models.WikiContext
 

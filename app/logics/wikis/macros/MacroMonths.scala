@@ -1,6 +1,5 @@
 package logics.wikis.macros
 
-import logics.wikis.WikiFormattable
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 

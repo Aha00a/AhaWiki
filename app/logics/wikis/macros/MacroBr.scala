@@ -1,6 +1,5 @@
 package logics.wikis.macros
 
-import logics.wikis.WikiFormattable
 import models.WikiContext
 
 object MacroBr extends WikiFormattable {
