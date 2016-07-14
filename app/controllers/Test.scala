@@ -58,14 +58,23 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     assertEquals(s.split("""(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... "), "bbb ... abc")
 
     implicit val wikiContext = WikiContext("")
-    assertEquals(MacroPageOutline(""), "")
-    assertEquals(MacroPageOutline("aaa"), "")
-    assertEquals(MacroPageOutline.calcLength(""), 0)
-    assertEquals(MacroPageOutline.calcLength("aaaa"), 0)
-    assertEquals(MacroPageOutline.extractLink(""), Seq())
-    assertEquals(MacroPageOutline.extractLink("aaaa"), Seq())
 
-    assertEquals(MacroBr(""), "<br/>")
+    val empty = ""
+    val dummy = "aaaa"
+
+    assertEquals(MacroPageOutline(empty), "")
+    assertEquals(MacroPageOutline(dummy), "")
+    assertEquals(MacroPageOutline.calcLength(empty), 0)
+    assertEquals(MacroPageOutline.calcLength(dummy), 0)
+    assertEquals(MacroPageOutline.extractLink(""), Seq())
+    assertEquals(MacroPageOutline.extractLink(dummy), Seq())
+
+    assertEquals(MacroBr(empty), "<br/>")
+    assertEquals(MacroBr(dummy), "<br/>")
+    assertEquals(MacroBr.calcLength(empty), 1)
+    assertEquals(MacroBr.calcLength(dummy), 1)
+    assertEquals(MacroBr.extractLink(empty), Seq())
+    assertEquals(MacroBr.extractLink(dummy), Seq())
     Ok("Ok.")
   }
 
