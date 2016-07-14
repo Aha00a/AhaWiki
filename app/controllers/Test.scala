@@ -53,10 +53,6 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     testHeadingNumber()
     testStemmer()
 
-    val s: String = "aaa\nbbb\nabc\ndef"
-    val q = "b"
-    assertEquals(s.split("""(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... "), "bbb ... abc")
-
     implicit val wikiContext = WikiContext("")
 
     val empty = ""
