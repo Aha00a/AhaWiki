@@ -70,6 +70,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       regex.findFirstMatchIn(item._2) match {
         case Some(m) => m.group(1) match {
           case "Months" => MacroMonths.extractLink(m.group(2))
+          case "Days" => MacroDays.extractLink(m.group(2))
           case _ => Seq()
         }
         case _ => Seq()
