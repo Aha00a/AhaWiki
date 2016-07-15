@@ -9,7 +9,8 @@ import scala.util.matching.Regex.Match
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapVariable = new mutable.HashMap[String, String]()
 
-  val regex = """(?x)
+  val regex =
+    """(?x)
       \[\[
         (\w+)
         (?:
@@ -67,17 +68,11 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   }
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
-    arrayBuffer.flatMap(item => {
-      regex.findFirstMatchIn(item._2) match {
-        case Some(m) => m.group(1) match {
-          case "Months" => MacroMonths.extractLink(m.group(2))
-          case "Days" => MacroDays.extractLink(m.group(2))
-          case "Calendar" => MacroCalendar.extractLink(m.group(2))
-          case _ => Seq()
-        }
-        case _ => Seq()
-      }
-    })
+    val map = Seq(MacroCalendar, MacroDays, MacroMonths).map(m => m.name -> m).toMap
+    arrayBuffer.map(_._2).flatMap{
+      case regex(name, argument) => map.get(name).map(_.extractLink(argument)).getOrElse(Seq())
+      case _ => Seq()
+    }
   }
 
   def MacroSet(argument: String): String = {
