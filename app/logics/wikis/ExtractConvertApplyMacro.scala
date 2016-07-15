@@ -7,6 +7,28 @@ import scala.collection.mutable
 import scala.util.matching.Regex.Match
 
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
+  val mapMacros = Seq(
+    MacroPageOutline,
+
+    MacroBr,
+    MacroHtml,
+    MacroImage,
+
+    MacroNavigation,
+    MacroPageList,
+    MacroTitleIndex,
+    MacroRecentChanges,
+    MacroPageMap,
+    MacroBacklinks,
+
+    MacroEmbed,
+    MacroLinkWithPercent,
+    MacroInclude,
+    MacroMonths,
+    MacroDays,
+    MacroCalendar
+  ).map(m => m.name -> m).toMap
+
   val mapVariable = new mutable.HashMap[String, String]()
 
   val regex =
@@ -39,27 +61,6 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   }
 
 
-  val mapMacros = Seq(
-    MacroPageOutline,
-
-    MacroBr,
-    MacroHtml,
-    MacroImage,
-
-    MacroNavigation,
-    MacroPageList,
-    MacroTitleIndex,
-    MacroRecentChanges,
-    MacroPageMap,
-    MacroBacklinks,
-
-    MacroEmbed,
-    MacroLinkWithPercent,
-    MacroInclude,
-    MacroMonths,
-    MacroDays,
-    MacroCalendar
-  ).map(m => m.name -> m).toMap
 
   def execute(name: String, argument: String)(implicit wikiContext: WikiContext): String = {
     mapMacros.get(name).map(_.apply(argument)).getOrElse {
