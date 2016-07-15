@@ -18,13 +18,13 @@ object MacroDays extends TraitMacro {
     case _ => s"Argument Error:($argument)"
   }
 
-  override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).map(_.dst).mkString("\n").length
+  override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).mkString("\n").length
 
-  override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[Link] = body match {
+  override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
-    case regexIncr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d").map(LinkMarkup(_, "").toLink(wikiContext.name))
-    case regexDecr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).reverse.map(d => f"$y-${m.toInt}%02d-$d%02d").map(LinkMarkup(_, "").toLink(wikiContext.name))
+    case regexIncr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
+    case regexDecr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).reverse.map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }
 }
