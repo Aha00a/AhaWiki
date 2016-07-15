@@ -39,59 +39,42 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   }
 
 
+  val mapMacros = Seq(
+    MacroPageOutline,
+
+    MacroBr,
+    MacroHtml,
+    MacroImage,
+
+    MacroNavigation,
+    MacroPageList,
+    MacroTitleIndex,
+    MacroRecentChanges,
+    MacroPageMap,
+    MacroBacklinks,
+
+    MacroEmbed,
+    MacroLinkWithPercent,
+    MacroInclude,
+    MacroMonths,
+    MacroDays,
+    MacroCalendar
+  ).map(m => m.name -> m).toMap
+
   def execute(name: String, argument: String)(implicit wikiContext: WikiContext): String = {
-    name match {
-      case "PageOutline" => MacroPageOutline(argument)
-      case "Br" => MacroBr(argument)
-      case "Html" => MacroHtml(argument)
-      case "Image" => MacroImage(argument)
-
-      case "Navigation" => MacroNavigation(argument)
-      case "PageList" => MacroPageList(argument)
-      case "TitleIndex" => MacroTitleIndex(argument)
-      case "RecentChanges" => MacroRecentChanges(argument)
-      case "PageMap" => MacroPageMap(argument)
-      case "Backlinks" => MacroBacklinks(argument)
-
-      case "Set" => MacroSet(argument)
-      case "Get" => MacroGet(argument)
-
-      case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
-
-      case "Embed" => MacroEmbed(argument)
-      case "LinkWithPercent" => MacroLinkWithPercent(argument)
-      case "Include" => MacroInclude(argument)
-      case "Months" => MacroMonths(argument)
-      case "Days" => MacroDays(argument)
-      case "Calendar" => MacroCalendar(argument)
-      case _ => "Error" + name + argument
+    mapMacros.get(name).map(_.apply(argument)).getOrElse {
+      name match {
+        case "Set" => MacroSet(argument)
+        case "Get" => MacroGet(argument)
+        case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
+        case _ => "Error" + name + argument
+      }
     }
   }
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
-    val map = Seq(
-      MacroPageOutline,
-
-      MacroBr,
-      MacroHtml,
-      MacroImage,
-
-      MacroNavigation,
-      MacroPageList,
-      MacroTitleIndex,
-      MacroRecentChanges,
-      MacroPageMap,
-      MacroBacklinks,
-
-      MacroEmbed,
-      MacroLinkWithPercent,
-      MacroInclude,
-      MacroMonths,
-      MacroDays,
-      MacroCalendar
-    ).map(m => m.name -> m).toMap
     arrayBuffer.map(_._2).flatMap{
-      case regex(name, argument) => map.get(name).map(_.extractLink(argument)).getOrElse(Seq())
+      case regex(name, argument) => mapMacros.get(name).map(_.extractLink(argument)).getOrElse(Seq())
       case _ => Seq()
     }
   }
