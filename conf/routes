@@ -23,17 +23,17 @@ GET         /google/oauth/callback        controllers.GoogleOAuth.callback(code:
 
 POST        /preview                      controllers.Wiki.preview
 
-GET         /unitTest                     controllers.Test.unit
-
-GET         /dev/reindex                  controllers.Dev.reindex
-GET         /dev/reset                    controllers.Dev.reset
-
 GET         /api/pageMap                  controllers.Api.pageMap
 GET         /api/pageNames                controllers.Api.pageNames
 
 GET         /feed                         controllers.Feed.index
 GET         /feed/atom                    controllers.Feed.atom
 GET         /feed/rss                     controllers.Feed.rss
+
+GET         /test/unit                     controllers.Test.unit
+
+GET         /dev/reindex                  controllers.Dev.reindex
+GET         /dev/reset                    controllers.Dev.reset
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /public/*file                 controllers.Assets.versioned(path="/public", file: Asset)
