@@ -5,6 +5,7 @@ import java.net.URLEncoder
 import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.Cache
 import logics.wikis._
+import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.Database.Link
 import models.WikiContext
 
@@ -131,12 +132,12 @@ class InterpreterWiki {
   }
 
 
-  def extractLink(name:String, content:String):Seq[Link] = {
+  def extractLink(name:String, content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
     val chunkExtracted = extractConvertApplyChunk.extract(content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
+    extractConvertApplyMacro.extractLink().map(LinkMarkup(_, "").toLink(wikiContext.name)) ++ InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
   }
 
 

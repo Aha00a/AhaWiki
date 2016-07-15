@@ -34,7 +34,7 @@ object Interpreters {
   }
 
 
-  def extractLink(name:String, content: String): Seq[Link] = {
+  def extractLink(name:String, content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = new PageContent(content)
     val body = pageContent.content
     val (interpreter, argument) = (pageContent.interpreter, pageContent.argument.mkString(" "))

@@ -17,6 +17,7 @@ object Cache {
 
   object PageList extends CacheEntity {
     def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+
       Database.pageSelectPageList()
     }
 
