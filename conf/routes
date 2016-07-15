@@ -15,13 +15,13 @@ GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:Stri
 POST        /w/*nameEncoded               controllers.Wiki.save(nameEncoded:String)
 
 POST        /actions/delete               controllers.Wiki.delete()
+POST        /preview                      controllers.Wiki.preview
 
 GET         /login                        controllers.Auth.login
 GET         /logout                       controllers.Auth.logout
 GET         /google/oauth/login           controllers.GoogleOAuth.login
 GET         /google/oauth/callback        controllers.GoogleOAuth.callback(code:String)
 
-POST        /preview                      controllers.Wiki.preview
 
 GET         /api/pageMap                  controllers.Api.pageMap
 GET         /api/pageNames                controllers.Api.pageNames
