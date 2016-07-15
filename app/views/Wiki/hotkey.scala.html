@@ -1,4 +1,5 @@
-@(supported:String = "")
+@(supported:String = "")(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@import helper._
 @import com.aha00a.commons.implicits.Implicits._
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js"></script>
 <script type="text/javascript">
@@ -14,8 +15,8 @@
         'e' -> "go('?action=edit')",
         'h' -> "go('?action=history')",
         'g' -> "showSearch()",
-        '/' -> "showSearch()"
-
+        '/' -> "showSearch()",
+        'w' -> "showWrite()"
     ))) {
         $(function(){
             function go(s) {
@@ -52,6 +53,27 @@
             }
             function hideSearch() {
                 $('.search, .searchBg').remove();
+            }
+
+            function showWrite() {
+                $.get(
+                        '@routes.Api.pageNames()',
+                        {},
+                        function (data, textStatus, jqXHR) {
+                            $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
+                            $('.searchBg').click(function () {
+                                hideSearch();
+                            });
+                            $('[name=q]').keydown(function (e) {
+                                if (e.keyCode == 27) {
+                                    hideSearch();
+                                }
+                            }).focus();
+                        }
+                ).error(function (jqXHR, textStatue, httpStatus) {
+                    alert(jqXHR.responseJSON.message);
+                });
+                return false;
             }
 
             @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {

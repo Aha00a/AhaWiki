@@ -9,6 +9,7 @@ GET         /w/                           controllers.Home.index
 
 GET         /r                            controllers.Home.random
 GET         /search                       controllers.Search.index(q:String)
+POST        /diary                        controllers.Diary.write()
 GET         /robots.txt                   controllers.Home.robotsTxt
 
 GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")

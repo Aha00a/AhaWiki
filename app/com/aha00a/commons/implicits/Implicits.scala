@@ -13,6 +13,7 @@ object Implicits {
     def toIsoDateTimeString = localDateTime.format(DateTimeFormatterHolder.isoDateTime)
     def toIsoDateString = localDateTime.format(DateTimeFormatterHolder.isoDate)
     def toIsoTimeString = localDateTime.format(DateTimeFormatterHolder.isoTime)
+    def toYearDashMonth = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
   implicit class RichFile(cacheFileSh: File) {
