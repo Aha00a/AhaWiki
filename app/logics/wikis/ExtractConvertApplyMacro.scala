@@ -4,7 +4,6 @@ import logics.wikis.macros._
 import models.WikiContext
 
 import scala.collection.mutable
-import scala.util.matching.Regex.Match
 
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapMacros = Seq(
@@ -52,29 +51,21 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     })
   }
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = {
-    val in: Option[Match] = regex.findFirstMatchIn(s)
-    in match {
-      case Some(m) => execute(m.group(1), m.group(2))
-      case _ => "error"
-    }
-  }
-
-
-
-  def execute(name: String, argument: String)(implicit wikiContext: WikiContext): String = {
-    mapMacros.get(name).map(_.apply(argument)).getOrElse {
-      name match {
-        case "Set" => MacroSet(argument)
-        case "Get" => MacroGet(argument)
-        case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
-        case _ => "Error" + name + argument
+  override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
+    case regex(name, argument) =>
+      mapMacros.get(name).map(_.apply(argument)).getOrElse {
+        name match {
+          case "Set" => MacroSet(argument)
+          case "Get" => MacroGet(argument)
+          case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
+          case _ => "Error" + name + argument
+        }
       }
-    }
+    case _ => "error"
   }
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
-    arrayBuffer.map(_._2).flatMap{
+    arrayBuffer.map(_._2).flatMap {
       case regex(name, argument) => mapMacros.get(name).map(_.extractLink(argument)).getOrElse(Seq())
       case _ => Seq()
     }
