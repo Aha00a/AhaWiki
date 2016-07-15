@@ -61,6 +61,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       case "Include" => MacroInclude(argument)
       case "Months" => MacroMonths(argument)
       case "Days" => MacroDays(argument)
+      case "Calendar" => MacroCalendar(argument)
       case _ => "Error" + name + argument
     }
   }
@@ -71,6 +72,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
         case Some(m) => m.group(1) match {
           case "Months" => MacroMonths.extractLink(m.group(2))
           case "Days" => MacroDays.extractLink(m.group(2))
+          case "Calendar" => MacroCalendar.extractLink(m.group(2))
           case _ => Seq()
         }
         case _ => Seq()
