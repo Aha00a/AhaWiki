@@ -19,8 +19,8 @@ object MacroMonths extends TraitMacro {
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
-    case regexIncr(y) => (1 to 12).map(m => f"$y-$m%02d")
-    case regexDecr(y) => (1 to 12).reverse.map(m => f"$y-$m%02d")
+    case regexIncr(y) => (1 to 12).map(m => f"$y-$m%02d").filter(existsInPageName)
+    case regexDecr(y) => (1 to 12).reverse.map(m => f"$y-$m%02d").filter(existsInPageName)
     case _ => Seq()
   }
 }

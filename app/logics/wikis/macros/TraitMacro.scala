@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import logics.Cache
 import models.WikiContext
 
 trait TraitMacro {
@@ -7,4 +8,7 @@ trait TraitMacro {
   def apply(argument:String)(implicit wikiContext: WikiContext): String = argument
   def calcLength(argument:String)(implicit wikiContext: WikiContext):Long = argument.length
   def extractLink(argument:String)(implicit wikiContext: WikiContext):Seq[String] = Seq()
+  def existsInPageName(implicit wikiContext: WikiContext): (String) => Boolean = {
+    Cache.PageNameSet.get().contains
+  }
 }
