@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.utils.Stemmer
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.macros.{MacroBr, MacroDays, MacroMonths, MacroPageOutline}
+import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
@@ -123,6 +123,10 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
         |</ul>""".stripMargin)
     assertEquals(MacroDays.calcLength("1000-02"), 307)
     assertEquals(MacroDays.extractLink("1000-02"), "1000-02-01,1000-02-02,1000-02-03,1000-02-04,1000-02-05,1000-02-06,1000-02-07,1000-02-08,1000-02-09,1000-02-10,1000-02-11,1000-02-12,1000-02-13,1000-02-14,1000-02-15,1000-02-16,1000-02-17,1000-02-18,1000-02-19,1000-02-20,1000-02-21,1000-02-22,1000-02-23,1000-02-24,1000-02-25,1000-02-26,1000-02-27,1000-02-28".split(',').toSeq)
+
+    assertEquals(MacroMonths.name, "Months")
+    assertEquals(MacroDays.name, "Days")
+    assertEquals(MacroCalendar.name, "Calendar")
 
     Ok("Ok.")
   }
