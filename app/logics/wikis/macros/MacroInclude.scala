@@ -3,8 +3,8 @@ package logics.wikis.macros
 import logics.wikis.{Interpreters, WikiPermission}
 import models.{MockDb, PageContent, WikiContext}
 
-object MacroInclude {
-  def apply(argument: String)(implicit wikiContext: WikiContext): String = {
+object MacroInclude extends TraitMacro {
+  override def apply(argument: String)(implicit wikiContext: WikiContext): String = {
     val pageLastRevision = MockDb.selectPageLastRevision(argument)
     if (WikiPermission.isReadable(pageLastRevision.map(s => new PageContent(s.content)))) {
       pageLastRevision.map(w => Interpreters.interpret(w.content)).getOrElse("Error: " + argument)
@@ -12,4 +12,6 @@ object MacroInclude {
       s"Failed to include $argument. Permission Denied"
     }
   }
+
+  override def extractLink(argument: String)(implicit wikiContext: WikiContext): Seq[String] = Seq(argument)
 }

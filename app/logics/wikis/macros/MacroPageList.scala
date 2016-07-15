@@ -6,8 +6,8 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 import Implicits._
 
-object MacroPageList {
-  def apply()(implicit wikiContext: WikiContext) = {
+object MacroPageList extends TraitMacro {
+  override def apply(argument:String)(implicit wikiContext: WikiContext) = {
     new InterpreterWiki().apply(
       "[[[#!Table tsv 1\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
       Cache.PageList.get().map { t =>

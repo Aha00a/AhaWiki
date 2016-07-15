@@ -3,7 +3,7 @@ package logics.wikis.macros
 import models.WikiContext
 
 object MacroBr extends TraitMacro {
-  override def apply(body: String)(implicit wikiContext: WikiContext): String = "<br/>"
+  override def apply(argument: String)(implicit wikiContext: WikiContext): String = "<br/>"
 
-  override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = 1
+  override def calcLength(argument: String)(implicit wikiContext: WikiContext): Long = 1
 }

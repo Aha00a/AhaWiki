@@ -1,5 +1,7 @@
 package logics.wikis.macros
 
-object MacroHtml {
-  def apply(argument: String): String = argument
+import models.WikiContext
+
+object MacroHtml extends TraitMacro {
+  override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument
 }

@@ -3,8 +3,8 @@ package logics.wikis.macros
 import logics.wikis.interpreters.InterpreterWiki
 import models.{Database, WikiContext}
 
-object MacroTitleIndex {
-  def apply()(implicit wikiContext: WikiContext): String = {
+object MacroTitleIndex extends TraitMacro {
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     val listPageName = Database.pageSelectNameGroupByNameOrderByName
     new InterpreterWiki().apply {
       listPageName.groupBy(_.charAt(0)).toList.sortBy(_._1).map {

@@ -2,14 +2,12 @@ package logics.wikis.macros
 
 import models.{Database, WikiContext}
 
-object MacroPageMap {
-  def apply()(implicit wikiContext: WikiContext) = {
+object MacroPageMap extends TraitMacro {
+  override def apply(argument:String)(implicit wikiContext: WikiContext) = {
     views.html.Wiki.graph(
       Database.linkSelect()
         .filterNot(l => l.src.contains("://"))
         .filterNot(l => l.dst.contains("://"))
-//        .shuffle()
-//        .take(100)
         .map(link => Array(link.src, link.dst))
         .toArray,
       true

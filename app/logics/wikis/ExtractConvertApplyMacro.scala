@@ -46,18 +46,19 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       case "Html" => MacroHtml(argument)
       case "Image" => MacroImage(argument)
 
-      case "Navigation" => MacroNavigation()
-      case "PageList" => MacroPageList()
-      case "TitleIndex" => MacroTitleIndex()
-      case "RecentChanges" => MacroRecentChanges()
-      case "PageMap" => MacroPageMap()
-      case "Backlinks" => MacroBacklinks()
+      case "Navigation" => MacroNavigation(argument)
+      case "PageList" => MacroPageList(argument)
+      case "TitleIndex" => MacroTitleIndex(argument)
+      case "RecentChanges" => MacroRecentChanges(argument)
+      case "PageMap" => MacroPageMap(argument)
+      case "Backlinks" => MacroBacklinks(argument)
 
       case "Set" => MacroSet(argument)
       case "Get" => MacroGet(argument)
 
-      case "Embed" => MacroEmbed(argument)
       case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
+
+      case "Embed" => MacroEmbed(argument)
       case "LinkWithPercent" => MacroLinkWithPercent(argument)
       case "Include" => MacroInclude(argument)
       case "Months" => MacroMonths(argument)
@@ -68,7 +69,27 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   }
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
-    val map = Seq(MacroCalendar, MacroDays, MacroMonths).map(m => m.name -> m).toMap
+    val map = Seq(
+      MacroPageOutline,
+
+      MacroBr,
+      MacroHtml,
+      MacroImage,
+
+      MacroNavigation,
+      MacroPageList,
+      MacroTitleIndex,
+      MacroRecentChanges,
+      MacroPageMap,
+      MacroBacklinks,
+
+      MacroEmbed,
+      MacroLinkWithPercent,
+      MacroInclude,
+      MacroMonths,
+      MacroDays,
+      MacroCalendar
+    ).map(m => m.name -> m).toMap
     arrayBuffer.map(_._2).flatMap{
       case regex(name, argument) => map.get(name).map(_.extractLink(argument)).getOrElse(Seq())
       case _ => Seq()

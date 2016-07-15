@@ -6,8 +6,8 @@ import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 
-object MacroRecentChanges {
-  def apply()(implicit wikiContext: WikiContext): String = {
+object MacroRecentChanges extends TraitMacro {
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     new InterpreterWiki().apply(
       Cache.PageList.get().groupBy(_.localYearMonth).toList.sortBy(_._1)(Ordering[String].reverse).map {
         case (yearMonth, groupedByYearMonth) =>
