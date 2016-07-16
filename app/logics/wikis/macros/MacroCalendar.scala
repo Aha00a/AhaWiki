@@ -28,8 +28,7 @@ object MacroCalendar extends TraitMacro {
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
-    case regex(y, m) =>
-      (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d").filter(existsInPageName)
+    case regex(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }
 

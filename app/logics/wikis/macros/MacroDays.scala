@@ -21,8 +21,8 @@ object MacroDays extends TraitMacro {
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
-    case regexIncr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d").filter(existsInPageName)
-    case regexDecr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).reverse.map(d => f"$y-${m.toInt}%02d-$d%02d").filter(existsInPageName)
+    case regexIncr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
+    case regexDecr(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).reverse.map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }
 }

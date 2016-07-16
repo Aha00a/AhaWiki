@@ -321,9 +321,6 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     InterpreterWiki.extractLink("Src", """\\[FrontPage Alias]""")
     InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage]""")
     InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage Alias]""")
-
-    assertEquals(Interpreters.extractLink("Src", """[[Months(2015)]]""").length, 12)
-
   }
 
 

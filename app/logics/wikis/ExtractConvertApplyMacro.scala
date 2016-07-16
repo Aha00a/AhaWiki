@@ -66,7 +66,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
-      case regex(name, argument) => mapMacros.get(name).map(_.extractLink(argument)).getOrElse(Seq())
+      case regex(name, argument) => mapMacros.get(name).map(_.extractLinkExistsOnly(argument)).getOrElse(Seq())
       case _ => Seq()
     }
   }
