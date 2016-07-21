@@ -26,6 +26,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroMonths,
     MacroDays,
     MacroCalendar,
+    MacroIncludeDays,
     // TODO: MacroIncludeStartsWith
 
     MacroError
