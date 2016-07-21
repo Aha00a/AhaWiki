@@ -25,8 +25,10 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroInclude,
     MacroMonths,
     MacroDays,
-    MacroCalendar
+    MacroCalendar,
     // TODO: MacroIncludeStartsWith
+
+    MacroError
   ).map(m => m.name -> m).toMap
 
   val mapVariable = new mutable.HashMap[String, String]()
