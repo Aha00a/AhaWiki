@@ -10,7 +10,10 @@ object MacroIncludeDays extends TraitMacro {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
     case regex(y, m) => MacroDays.extractLinkExistsOnly(argument).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
-      content.replaceFirst("= .+", s"== [$pageName]")
+      content.split("\n")
+        .map(_.replaceAll("^(=+ )", "=$1"))
+        .map(_.replaceAll("^== (.+)", s"== [$pageName]"))
+        .mkString("\n")
     })).mkString("\n")
     case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
   }
