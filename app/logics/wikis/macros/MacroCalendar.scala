@@ -20,7 +20,7 @@ object MacroCalendar extends TraitMacro {
       val lastPadding = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
       val dates = (1 to yearMonth.lengthOfMonth()).map(d => s"[$argument-$d $d]")
       InterpreterTable.interpret(new PageContent("#!Table tsv 1\n"+ (header ++ firstPadding ++ dates ++ lastPadding).grouped(7).map(_.mkString("\t")).mkString("\n")))
-    case _ => s"Argument Error:($argument)"
+    case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
   }
 
   override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).mkString("\n").length

@@ -11,7 +11,7 @@ object MacroMonths extends TraitMacro {
     case "-" => apply(wikiContext.name + ",-")
     case regexIncr(y) => new InterpreterWiki().apply((1 to 12).map(m => f" * [$y-$m%02d]").mkString("\n"))
     case regexDecr(y) => new InterpreterWiki().apply((1 to 12).reverse.map(m => f" * [$y-$m%02d]").mkString("\n"))
-    case _ => s"Argument Error:($argument)"
+    case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
   }
 
   override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).mkString("\n").length

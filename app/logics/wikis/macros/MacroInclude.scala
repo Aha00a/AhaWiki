@@ -9,7 +9,7 @@ object MacroInclude extends TraitMacro {
     if (WikiPermission.isReadable(pageLastRevision.map(s => new PageContent(s.content)))) {
       pageLastRevision.map(w => Interpreters.interpret(w.content)).getOrElse("Error: " + argument)
     } else {
-      s"Failed to include $argument. Permission Denied"
+      MacroError.apply(s"Permission Denied - [[$name($argument)]]")
     }
   }
 

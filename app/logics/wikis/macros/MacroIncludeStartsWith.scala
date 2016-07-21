@@ -5,7 +5,7 @@ import logics.wikis.{Interpreters, WikiPermission}
 import models.Database.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.{MockDb, PageContent, WikiContext}
 
-object MacroIncludeStartsWith extends TraitMacro {
+object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case _ =>
@@ -15,7 +15,7 @@ object MacroIncludeStartsWith extends TraitMacro {
         if (WikiPermission.isReadable(pageLastRevision.map(s => new PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {
-          s"Failed to include $argument. Permission Denied" // TODO: add MacroError
+          MacroError.apply(s"Permission Denied - [[$name($argument)]]")
         }
       }).mkString("\n")
   }
