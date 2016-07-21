@@ -61,7 +61,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
           case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
-          case _ => "Error" + name + argument
+          case _ => MacroError.apply(s"Macro not found. - [[$name($argument)]]")
         }
       }
     case _ => "error"
