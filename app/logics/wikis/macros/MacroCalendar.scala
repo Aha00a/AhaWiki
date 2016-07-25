@@ -18,7 +18,7 @@ object MacroCalendar extends TraitMacro {
       val header = DayOfWeek.values().map(_.getDisplayName(TextStyle.SHORT, Locale.getDefault))
       val firstPadding = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
-      val dates = (1 to yearMonth.lengthOfMonth()).map(d => s"[$argument-$d $d]")
+      val dates = (1 to yearMonth.lengthOfMonth()).map(d => f"[$argument-$d%02d $d%02d]")
       InterpreterTable.interpret(new PageContent("#!Table tsv 1\n"+ (header ++ firstPadding ++ dates ++ lastPadding).grouped(7).map(_.mkString("\t")).mkString("\n")))
     case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
   }
