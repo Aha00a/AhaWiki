@@ -1,7 +1,11 @@
 package logics.wikis.macros
 
-import java.time.YearMonth
+import java.text.SimpleDateFormat
+import java.time.format.TextStyle
+import java.time.{LocalDateTime, YearMonth}
+import java.util.Locale
 
+import com.aha00a.commons.utils.LocalDateTimeUtil
 import models.WikiContext
 
 object MacroIncludeDays extends TraitMacro {
@@ -10,9 +14,11 @@ object MacroIncludeDays extends TraitMacro {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
     case regex(y, m) => MacroDays.extractLinkExistsOnly(argument).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
-      content.split("\n")
+      val ldt: LocalDateTime = LocalDateTimeUtil.convert(new SimpleDateFormat("yyyy-MM-dd").parse(pageName))
+      content
+        .split("\n")
         .map(_.replaceAll("^(=+ )", "=$1"))
-        .map(_.replaceAll("^== (.+)", s"== [$pageName]"))
+        .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREA)))
         .mkString("\n")
     })).mkString("\n")
     case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
