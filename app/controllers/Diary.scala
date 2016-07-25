@@ -1,6 +1,8 @@
 package controllers
 
 import java.time.LocalDateTime
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject._
 
 import actionCompositions.PostAction
@@ -28,13 +30,13 @@ class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actor
     val name: String = now.toIsoDateString
     val yearDashMonth: String = now.toYearDashMonth
     val day = now.getDayOfMonth
-
+    val weekdayName = now.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (latestText: String, latestRevision: Long) = MockDb.selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
     if (WikiPermission.isWritable(new PageContent(latestText))) {
-      val body = if(latestText == "") s"= [$yearDashMonth]-$day\n * " + q else latestText + "\n * " + q
+      val body = if(latestText == "") s"= [$yearDashMonth]-$day $weekdayName\n * " + q else latestText + "\n * " + q
       Database.pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorSimilarPage ! Calculate(name)
       Cache.PageList.invalidate()
