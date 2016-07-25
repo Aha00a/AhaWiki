@@ -75,7 +75,7 @@
             });
             $form.ajaxForm({
                 success: function(result) {
-                    location.href = "?action=view"
+                    location.href = location.pathname;
                 },
                 error: function (jqXHR) {
                     alert(jqXHR.statusText);
