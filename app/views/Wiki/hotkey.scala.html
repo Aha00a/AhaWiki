@@ -71,12 +71,12 @@
             return false;
         }
 
-        $(function(){
-            function go(s) {
-                location.href = s;
-                return true;
-            }
+        function go(s) {
+            location.href = s;
+            return true;
+        }
 
+        $(function(){
 
             @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {
                 $(document).bind('keydown', '@key', function () { return @Html(hotkeys(key)) });
