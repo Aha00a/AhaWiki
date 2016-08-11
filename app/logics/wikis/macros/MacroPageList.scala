@@ -1,27 +1,23 @@
 package logics.wikis.macros
 
-import com.aha00a.commons.implicits.Implicits
+import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
-import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
-import Implicits._
+import logics.wikis.interpreters.InterpreterTable
+import models.{PageContent, WikiContext}
 
 object MacroPageList extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext) = {
-    new InterpreterWiki().apply(
-      "[[[#!Table tsv 1\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
-      Cache.PageList.get().map { t =>
-        Seq(
-          s"'''[${t.name}]'''",
-          s"${t.localDateTime.toIsoDateTimeString}",
-          s"${t.size}",
-          s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
-          s"[${t.author}]",
-          s"${t.remoteAddress}",
-          s"${t.comment.getOrElse(" ")}"
-        ).mkString("\t")
-      }.mkString("\n") +
-      "\n]]]"
-    )
-  }
+  override def apply(argument: String)(implicit wikiContext: WikiContext) = InterpreterTable.interpret(new PageContent(
+    "#!Table tsv 1\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
+    Cache.PageList.get().map { t =>
+      Seq(
+        s"'''[${t.name}]'''",
+        s"${t.localDateTime.toIsoDateTimeString}",
+        s"${t.size}",
+        s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
+        s"[${t.author}]",
+        s"${t.remoteAddress}",
+        s"${t.comment.getOrElse(" ")}"
+      ).mkString("\t")
+    }.mkString("\n")
+  ))
 }
