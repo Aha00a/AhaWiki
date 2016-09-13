@@ -17,6 +17,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroPageList,
     MacroTitleIndex,
     MacroRecentChanges,
+    MacroRecentChangesList,
     MacroPageMap,
     MacroPageCount,
     MacroBacklinks,
