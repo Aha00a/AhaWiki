@@ -77,6 +77,7 @@ class InterpreterWiki {
           val titleForToc = title
             .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
             .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
+            .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
           arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
           arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
 
