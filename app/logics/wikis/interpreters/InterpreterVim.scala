@@ -66,9 +66,9 @@ object InterpreterVim {
     } else {
       val colorscheme: String = ApplicationConf.AhaWiki.config.interpreter.Vim.colorscheme()
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
-      val cacheDir = new File(play.Play.application().getFile("cache"), "Vim")
-      val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
-      val cacheFileHtml = new File(cacheDir, md5 + ".html")
+      val cacheDir: File = getCacheDir
+      val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
+      val cacheFileHtml: File = getCacheFileHtml(cacheDir, md5)
       if (!cacheFileHtml.exists()) {
         cacheDir.mkdirs()
         val cacheFileText = new File(cacheDir, md5 + ".txt")
@@ -99,8 +99,21 @@ object InterpreterVim {
         }
       }
 
-      s"""<div data-md5="$md5" class="class_$md5">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
+      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
     }
   }
 
+  def getCacheDir: File = {
+    new File(play.Play.application().getFile("cache"), "Vim")
+  }
+
+  def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = {
+    val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
+    cacheFileHtmlRaw
+  }
+
+  def getCacheFileHtml(cacheDir: File, md5: String): File = {
+    val cacheFileHtml = new File(cacheDir, md5 + ".html")
+    cacheFileHtml
+  }
 }

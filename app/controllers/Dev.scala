@@ -7,6 +7,7 @@ import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
 import com.aha00a.commons.implicits.Implicits
 import logics.Cache
+import logics.wikis.interpreters.InterpreterVim
 import models.Database.Page
 import models.{WikiContext, Database, MockDb}
 import play.api.cache.CacheApi
@@ -51,6 +52,19 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
     val result = Redirect(RequestUtil.refererOrRoot(request))
     if(request.isLocalhost) {
       Random.shuffle(Database.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
+      result.flashing("success" -> "Reindex Succeed.")
+    }
+    else
+    {
+      result.flashing("error" -> "Reindex Failed")
+    }
+  }
+
+  def deleteVimCache(md5:String) = Action { implicit request =>
+    val result = Redirect(RequestUtil.refererOrRoot(request))
+
+    if(InterpreterVim.getCacheFileHtml(InterpreterVim.getCacheDir, md5).delete())
+    {
       result.flashing("success" -> "Reindex Succeed.")
     }
     else

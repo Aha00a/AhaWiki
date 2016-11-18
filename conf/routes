@@ -31,10 +31,11 @@ GET         /feed                         controllers.Feed.index
 GET         /feed/atom                    controllers.Feed.atom
 GET         /feed/rss                     controllers.Feed.rss
 
-GET         /test/unit                     controllers.Test.unit
+GET         /test/unit                    controllers.Test.unit
 
 GET         /dev/reindex                  controllers.Dev.reindex
 GET         /dev/reset                    controllers.Dev.reset
+GET         /dev/deleteVimCache           controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /public/*file                 controllers.Assets.versioned(path="/public", file: Asset)
