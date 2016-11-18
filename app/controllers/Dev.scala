@@ -5,24 +5,22 @@ import javax.inject.{Inject, Singleton}
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
-import com.aha00a.commons.implicits.Implicits
+import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterVim
 import models.Database.Page
-import models.{WikiContext, Database, MockDb}
+import models.{Database, MockDb, WikiContext}
 import play.api.cache.CacheApi
 import play.api.mvc._
-import com.aha00a.commons.utils.RequestUtil
 
 import scala.util.Random
-import Implicits._
 
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
   val actorSimilarPage = system.actorOf(ActorPageProcessor.props)
 
   def reset = Action { implicit request =>
-    val result = Redirect(RequestUtil.refererOrRoot(request))
+    val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
       val pageFromFile: Array[Page] = MockDb.pageFromFile()
       pageFromFile.foreach(p => {
@@ -49,7 +47,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
   }
 
   def reindex = Action { implicit request =>
-    val result = Redirect(RequestUtil.refererOrRoot(request))
+    val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
       Random.shuffle(Database.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
@@ -61,7 +59,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Co
   }
 
   def deleteVimCache(md5:String) = Action { implicit request =>
-    val result = Redirect(RequestUtil.refererOrRoot(request))
+    val result = Redirect(request.refererOrRoot)
 
     if(InterpreterVim.getCacheFileHtml(InterpreterVim.getCacheDir, md5).delete())
     {

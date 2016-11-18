@@ -10,7 +10,7 @@ import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.ActorSystem
 import com.aha00a.commons.implicits.Implicits._
-import com.aha00a.commons.utils.{RequestUtil, DateTimeUtil}
+import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.WikiPermission
 import logics.{Cache, OnApplicationStart, SessionLogic}
 import models.{WikiContext, Database, MockDb, PageContent}
@@ -42,7 +42,7 @@ class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actor
       Cache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
     } else {
-      Redirect(RequestUtil.referer(request).getOrElse("/")).flashing("error" -> "forbidden.")
+      Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
     }
   }
 

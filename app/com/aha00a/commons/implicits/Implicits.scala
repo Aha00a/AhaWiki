@@ -3,8 +3,8 @@ package com.aha00a.commons.implicits
 import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
 
-import play.api.mvc.Request
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
+import play.api.mvc.Request
 
 import scala.util.Random
 
@@ -45,5 +45,8 @@ object Implicits {
   implicit class RichRequest(request:Request[Any]) {
     def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
     def remoteAddressWithXRealIp: String = request.headers.get("X-Real-IP").getOrElse(request.remoteAddress)
+    def header(key: String): Option[String] = request.headers.get(key)
+    def referer = header("referer")
+    def refererOrRoot =  referer.getOrElse("/")
   }
 }
