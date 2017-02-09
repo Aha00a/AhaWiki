@@ -99,7 +99,7 @@ object InterpreterVim {
         }
       }
 
-      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
+      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5 vim" data-lang="$syntax">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
     }
   }
 

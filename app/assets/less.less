@@ -130,20 +130,42 @@ html, body {
 			word-break: break-all;
 		}
 
+		.vim {
+			position: relative;
+			padding-left:1em;
+			margin-top: 1px;
+			margin-bottom: 1px;
+			&[data-lang] { @color: #99c; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=scala] { @color: #DC322F; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=perl] { @color: #004065; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=python] { @color: #75A8D3; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=javascript] { @color: #F0DB4F; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=css] { @color: #FF6600; border: 2px solid @color; &:before { background: @color; } }
+			&[data-lang=html] { @color: #E44D26; border: 2px solid @color; &:before { background: @color; } }
+			&::before {
+				background: #f00;
+				content: attr(data-lang);
+				-webkit-writing-mode: vertical-lr;
+				-ms-writing-mode: tb-lr;
+				writing-mode: vertical-lr;
+				color: #fff;
+				position: absolute;
+				top: 0;
+				left: 0;
+				bottom:0;
+				padding: 5px 1px;
+				overflow: hidden;
+			}
+		}
 		pre {
-			background-color: #002;
-			border-color: #9999CC;
-			border-style: solid;
-			border-width: 2px;
 			border-left-width: 10px;
 			color: #CCCCCC;
 			padding-bottom: 0.5em;
 			padding-left: 1em;
 			padding-top: 0.5em;
-			margin-top: 1px;
-			margin-bottom: 1px;
 			white-space: pre-wrap;
 			word-break: break-all;
+			margin: 0;
 			a {
 				color: #3399ff;
 			    &:link {
@@ -153,8 +175,8 @@ html, body {
 
 				}
 			}
-
 		}
+
 
 		blockquote {
 			position: relative;
