@@ -26,7 +26,7 @@ import scala.collection.JavaConversions._
 class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
-    val name = URLDecoder.decode(nameEncoded, "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
     implicit val wikiContext = WikiContext(name)
 
     val pageFirstRevision = MockDb.selectPageFirstRevision(name)
