@@ -147,7 +147,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
   val actorSimilarPage = actorSystem.actorOf(ActorPageProcessor.props)
 
   def save(nameEncoded: String) = PostAction { implicit request =>
-    val name = URLDecoder.decode(nameEncoded, "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
     implicit val wikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
