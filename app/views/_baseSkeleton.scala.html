@@ -1,9 +1,20 @@
-@(title: String)(head: Html)(body: Html)(implicit wikiContext: WikiContext)
+@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: WikiContext)
 <!DOCTYPE html>
 
 <html lang="en">
     <head>
         <title>@title - wiki.aha00a.com</title>
+
+        <title>@(title)</title>
+        <meta itemprop="name" content="@(title)">
+        <meta property="og:title" content="@(title)" />
+        <meta name="twitter:title" content="@(title)">
+
+        <meta name="description" content="@(description)" />
+        <meta itemprop="description" content="@(description)">
+        <meta property="og:description" content="@(description)" />
+        <meta name="twitter:description" content="@(description)">
+
         <link rel="stylesheet" href="@routes.Assets.versioned("less.css")">
         <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("favicon.png")">
 

@@ -1,6 +1,6 @@
 @(page: models.Database.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @import helper._
-@_base(page.name) {
+@_base(page.name, "") {
     <script type="text/javascript">
         var timer;
         $(function(){

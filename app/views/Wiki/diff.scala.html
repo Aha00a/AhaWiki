@@ -1,5 +1,5 @@
 @(name: String, before:Int, after:Int, list:java.util.List[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
-@_base(name) {
+@_base(name, s"Diff of $name") {
     @hotkey()
     <script type="text/javascript">
         $(function(){

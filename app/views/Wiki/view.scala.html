@@ -1,5 +1,5 @@
-@(title:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Database.Page], wikiLast:Option[models.Database.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
-@_base(title) {
+@(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Database.Page], wikiLast:Option[models.Database.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@_base(title, description) {
     @hotkey()
     <script type="text/javascript">
         $(function(){

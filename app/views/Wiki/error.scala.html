@@ -1,5 +1,5 @@
 @(title:String, message:String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
-@_base(title) {
+@_base(title, message) {
     @hotkey()
 } {
     <div class="wikiContent">

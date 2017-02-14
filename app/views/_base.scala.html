@@ -1,6 +1,6 @@
 @import logics.wikis.Interpreters
-@(title: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
-@_baseSkeleton(title){
+@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@_baseSkeleton(title, description){
     @head
 } {
     <div class="header">
