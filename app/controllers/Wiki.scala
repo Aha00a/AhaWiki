@@ -7,9 +7,9 @@ import actionCompositions.PostAction
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor._
-import com.aha00a.commons.implicits.Implicits
+import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.utils._
 import difflib.DiffRowGenerator
-import Implicits._
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
 import models.Database.Link
@@ -18,7 +18,6 @@ import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import com.aha00a.commons.utils._
 
 import scala.collection.JavaConversions._
 
