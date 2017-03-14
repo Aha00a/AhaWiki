@@ -1,6 +1,9 @@
 package controllers
 
 import java.net.URLDecoder
+import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
@@ -37,7 +40,16 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
 
     (pageSpecificRevision, action, isReadable, isWritable) match {
-      case (None, "edit", _, true) => Ok(views.html.Wiki.edit(new models.Database.Page(name, s"""= $name\ndescribe $name here.""")))
+      case (None, "edit", _, true) =>
+        val regexYmd = """^(\d{4})-(\d{2})-(\d{2})$""".r
+        val content = name match {
+          case regexYmd(y, m, d) =>
+            val localDate = LocalDate.parse(name)
+            val weekdayName = localDate.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
+            s"= [$y-$m]-$d $weekdayName\n * "
+          case _ => s"""= $name\ndescribe $name here."""
+        }
+        Ok(views.html.Wiki.edit(new models.Database.Page(name, content)))
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
