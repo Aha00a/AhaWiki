@@ -11,7 +11,7 @@ class AccessLog @Inject()(implicit ec: ExecutionContext) extends Filter {
     nextFilter(requestHeader).map(result => {
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
-      Logger.info(Seq(getRemoteAddress(requestHeader), result.header.status, requestHeader.method, requestHeader.uri, duration + "ms").mkString("\t"))
+      Logger.info(Seq(getRemoteAddress(requestHeader).padTo(15, " ").mkString, result.header.status, requestHeader.method, requestHeader.uri, duration + "ms").mkString("\t"))
       result.withHeaders("Request-Time" -> duration.toString)
     })
   }
