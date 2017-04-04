@@ -49,7 +49,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             s"= [$y-$m]-$d $weekdayName\n * "
           case _ => s"""= $name\ndescribe $name here."""
         }
-        Ok(views.html.Wiki.edit(new models.Database.Page(name, content)))
+        Ok(views.html.Wiki.edit(new models.Database.Page(name, content))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
@@ -111,12 +111,12 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
         val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
 
-        Ok(views.html.Wiki.diff(name, before, after, listDiffRow))
-      case (Some(page), "raw", true, _) => Ok(page.content)
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name)))
-      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page))
-      case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page))
-      case _ => Forbidden(views.html.Wiki.error(name, "Permission denied."))
+        Ok(views.html.Wiki.diff(name, before, after, listDiffRow)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
     }
   }
 
