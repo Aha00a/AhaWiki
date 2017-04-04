@@ -45,7 +45,6 @@ object MockDb {
   }
 
   def selectPageLastRevision(name: String): Option[Page] = {
-    Logger.info("SELECT " + name)
     readAllTextFromFile(name).orElse(Database.pageSelectLastRevision(name))
   }
 
