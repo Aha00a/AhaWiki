@@ -215,6 +215,13 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
   }
 
+  def pageDeleteRevisionWithRelatedData(name:String, revision:Long): Int = DB.withConnection { implicit connection =>
+    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
+    SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
+    SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
+  }
+
   def linkDelete(name: String): Int = DB.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
   }

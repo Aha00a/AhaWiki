@@ -16,6 +16,7 @@ GET         /w/*nameEncoded               controllers.Wiki.view(nameEncoded:Stri
 POST        /w/*nameEncoded               controllers.Wiki.save(nameEncoded:String)
 
 POST        /actions/delete               controllers.Wiki.delete()
+POST        /actions/deleteLastRevision   controllers.Wiki.deleteLastRevision()
 POST        /preview                      controllers.Wiki.preview
 
 GET         /login                        controllers.Auth.login

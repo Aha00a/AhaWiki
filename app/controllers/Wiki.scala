@@ -203,6 +203,22 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     }
   }
 
+  def deleteLastRevision() = PostAction { implicit request =>
+    val name = Form("name" -> text).bindFromRequest.get
+    implicit val wikiContext: WikiContext = WikiContext(name)
+    MockDb.selectPageLastRevision(name) match {
+      case Some(page) =>
+        if (WikiPermission.isWritable(new PageContent(page.content))) {
+          Database.pageDeleteRevisionWithRelatedData(name, page.revision)
+          Ok("")
+        } else {
+          Forbidden("")
+        }
+      case None =>
+        Forbidden("")
+    }
+  }
+
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext = WikiContext(name)

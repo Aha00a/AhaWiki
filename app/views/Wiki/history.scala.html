@@ -3,8 +3,27 @@
     @hotkey()
     <script type="text/javascript">
         $(function(){
-            $('[name=before]').eq(1).click()
-            $('[name=after]').eq(0).click()
+            $('[name=before]').eq(1).click();
+            $('[name=after]').eq(0).click();
+            $('.buttonDeleteLastRevision').click(function () {
+                if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
+                    return;
+                
+                $.ajax({
+                    url: '@routes.Wiki.deleteLastRevision()',
+                    method: 'post',
+                    data: {
+                        name: '@title'
+                    },
+                    success: function (data, textStatus, jqXHR) {
+                        location.reload();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        debugger;
+                    }
+                });
+                return false;
+            });
         });
     </script>
 } {
@@ -15,6 +34,7 @@
     </div>
     <div class="wikiHistory">
         <div class="limitWidth">
+            <button class="buttonDeleteLastRevision">Delete Last Revision</button>
             <form>
                 <input type="hidden" name="action" value="diff"/>
                 <table>
