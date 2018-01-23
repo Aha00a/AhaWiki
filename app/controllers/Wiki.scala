@@ -210,6 +210,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       case Some(page) =>
         if (WikiPermission.isWritable(new PageContent(page.content))) {
           Database.pageDeleteRevisionWithRelatedData(name, page.revision)
+          Cache.PageList.invalidate()
+          actorSimilarPage ! Calculate(name)
           Ok("")
         } else {
           Forbidden("")
