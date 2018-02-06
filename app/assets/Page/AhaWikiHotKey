@@ -4,6 +4,7 @@
  * `f` - Navigate to [FrontPage]
  * `a` - Navigate to [AhaWiki]
  * `s` - Navigate to [AhaWikiSyntax]
+ * `k` - Navigate to [AhaWikiHotKey]
  * `c` - Navigate to [RecentChanges]
  * `t` - Navigate to [TitleIndex]
  * `l` - Navigate to [PageList]
@@ -12,4 +13,4 @@
  * `r` - Navigate to random page
  * `e` - Edit
  * `h` - History
- * `g`, '/' - Search
+ * `g`, `/` - Search
