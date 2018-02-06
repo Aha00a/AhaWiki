@@ -13,7 +13,7 @@ object Interpreters {
     pageContent.interpreter match {
 
       case Some("Comment") | Some("comment") => ""
-      case Some("Text") | Some("text") | Some("txt") => "<pre>" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
+      case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
       case Some("Html") | Some("html") => body
       case Some("Markdown") | Some("markdown") => InterpreterMarkdown(body)
 
