@@ -12,29 +12,29 @@ object ApplicationConf {
   object AhaWiki {
     object google {
       object api {
-        def clientId()(implicit wikiContext: WikiContext) = current.configuration.getString(fqn).getOrElse("")
-        def clientSecret()(implicit wikiContext: WikiContext) = current.configuration.getString(fqn).getOrElse("")
+        def clientId()(implicit wikiContext: WikiContext): String = current.configuration.getString(fqn).getOrElse("")
+        def clientSecret()(implicit wikiContext: WikiContext): String = current.configuration.getString(fqn).getOrElse("")
       }
     }
 
     object config {
       object permission {
         object default {
-          def read()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "all")
-          def write()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "login")
+          def read()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "all")
+          def write()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "login")
         }
       }
 
       object google {
         object analytics {
-          def trackingId()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "")
+          def trackingId()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "")
         }
       }
 
       object interpreter {
         object Vim {
-          def debug()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, false)
-          def colorscheme()(implicit wikiContext: WikiContext) = hocon.getOrElse(fqn, "elflord")
+          def debug()(implicit wikiContext: WikiContext): Boolean = hocon.getOrElse(fqn, default = false)
+          def colorscheme()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "elflord")
         }
       }
 
