@@ -11,6 +11,9 @@
                     <p class="pageContent">@Html(searchResult.content.replaceAll(q, "<b>" + q + "</b>"))</p>
                 </div>
             }
+            @if(iterator.isEmpty) {
+                There's no result. Go to <a href="@routes.Wiki.view(q)">@q</a>
+            }
         </div>
     </div>
     @views.html.Wiki.action(false, null, null)
