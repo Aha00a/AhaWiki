@@ -8,7 +8,7 @@ GET         /w                                 controllers.Home.index
 GET         /w/                                controllers.Home.index
 
 GET         /r                                 controllers.Home.random
-GET         /search                            controllers.Search.index(q:String)
+GET         /search                            controllers.Search.index(q:String?="")
 POST        /diary                             controllers.Diary.write()
 GET         /robots.txt                        controllers.Home.robotsTxt
 
