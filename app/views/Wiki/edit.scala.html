@@ -4,6 +4,10 @@
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript">
         $(function(){
+            $('.checkboxWrap').change(function () {
+                $('textarea[name=text]').css('white-space', $(this).prop('checked') ? 'inherit' : 'pre')
+            });
+
             $.fn.insertAtCaret = function(myValue) {
                 return this.each(function() {
                     var me = this;
@@ -100,6 +104,9 @@
         </div>
         <div class="limitWidth">
             <div class="edit">
+                <label>
+                    <input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap
+                </label>
                 <table class="layout">
                     <tr>
                         <td>
