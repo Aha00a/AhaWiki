@@ -33,11 +33,11 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
     val pageFirstRevision = MockDb.selectPageFirstRevision(name)
     val pageLastRevision = MockDb.selectPageLastRevision(name)
-    val pageSpecificRevision: Option[Database.Page] = MockDb.selectPage(name, revision)
+    val pageSpecificRevision = MockDb.selectPage(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
-    val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
-    val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
+    val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
+    val isReadable = WikiPermission.isReadable(pageLastRevisionContent)
 
     //noinspection ScalaUnusedSymbol
     (pageSpecificRevision, action, isReadable, isWritable) match {
