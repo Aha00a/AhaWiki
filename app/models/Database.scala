@@ -1,6 +1,6 @@
 package models
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, LocalDateTime}
 
 import anorm.SqlParser._
 import anorm._
@@ -18,11 +18,11 @@ object Database {
   trait WithTime {
     val time:Long
 
-    lazy val localDateTime = LocalDateTimeUtil.fromEpochNano(time)
-    lazy val localDate = localDateTime.toLocalDate
-    lazy val localYearMonth = localDate.format(DateTimeFormatterHolder.yearDashMonth)
+    lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
+    lazy val localDate: LocalDate = localDateTime.toLocalDate
+    lazy val localYearMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
 
-    lazy val isoDateTime = localDateTime.toIsoDateTimeString
+    lazy val isoDateTime: String = localDateTime.toIsoDateTimeString
   }
 
   case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime {
@@ -52,7 +52,7 @@ object Database {
     }
   }
 
-  def pageSelectCount() = PageTable.selectCount()
+  def pageSelectCount(): Long = PageTable.selectCount()
 
   def pageSelectLastRevision(name: String): Option[Page] = DB.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
@@ -61,14 +61,14 @@ object Database {
       .map(Page.tupled)
   }
 
-  def pageSelectFirstRevision(name: String) = DB.withConnection { implicit connection =>
+  def pageSelectFirstRevision(name: String): Option[Page] = DB.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on('name -> name)
       .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def pageSelectSpecificRevision(name: String, revision: Int) = DB.withConnection { implicit connection =>
+  def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = DB.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on('name -> name, 'revision -> revision)
       .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
@@ -80,14 +80,14 @@ object Database {
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
   }
 
-  def pageSelectHistory(name: String) = DB.withConnection { implicit connection =>
+  def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = DB.withConnection { implicit connection =>
     SQL("SELECT revision, time, author, remoteAddress, comment FROM Page WHERE name = {name} ORDER BY revision DESC")
       .on('name -> name)
       .as(long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("comment").? *).map(flatten)
       .map(PageRevisionTimeAuthorRemoteAddressComment.tupled)
   }
 
-  def pageSelectPageList() = DB.withConnection { implicit connection =>
+  def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = DB.withConnection { implicit connection =>
     SQL( """SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, LENGTH(content) size, w.comment
            |    FROM Page w
            |    INNER JOIN (
@@ -103,13 +103,13 @@ object Database {
       .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
   }
 
-  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String) = DB.withConnection { implicit connection =>
+  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Nothing = DB.withConnection { implicit connection =>
     SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
   case class SearchResult(name:String, content:String)
 
-  def pageSearch(q:String) = DB.withConnection { implicit connection =>
+  def pageSearch(q:String): Iterator[(String, String)] = DB.withConnection { implicit connection =>
     SQL("""
 SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comment
      FROM Page w
@@ -131,7 +131,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
 
-  def termFrequencyInsert(name: String, term: String, frequency: Long) = DB.withConnection { implicit connection =>
+  def termFrequencyInsert(name: String, term: String, frequency: Long): Nothing = DB.withConnection { implicit connection =>
     SQL"INSERT INTO TermFrequency (name, term, frequency) values ($name, $term, $frequency)".executeInsert()
   }
 
@@ -146,7 +146,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     }
   }
 
-  def cosineSimilarityUpdate(name: String) = DB.withConnection { implicit connection =>
+  def cosineSimilarityUpdate(name: String): Int = DB.withConnection { implicit connection =>
     SQL"""REPLACE INTO CosineSimilarity (name1, name2, similarity)
           SELECT
              TF3.name,
@@ -164,7 +164,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
        SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name""".executeUpdate()
   }
 
-  def cosineSimilaritySelect(name: String) = DB.withConnection { implicit connection =>
+  def cosineSimilaritySelect(name: String): List[CosineSimilarity] = DB.withConnection { implicit connection =>
     SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
       .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
       .map(CosineSimilarity.tupled)
@@ -227,7 +227,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
   }
 
-  def pageRename(name: String, newName: String) = DB.withConnection { implicit connection =>
+  def pageRename(name: String, newName: String): Int = DB.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
@@ -244,7 +244,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
   }
 
 
-  def linkSelect(name: String) = DB.withConnection { implicit connection =>
+  def linkSelect(name: String): List[Link] = DB.withConnection { implicit connection =>
     SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(Link.tupled)
