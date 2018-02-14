@@ -8,12 +8,12 @@ import javax.inject._
 import actionCompositions.PostAction
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.WikiPermission
 import logics.{Cache, OnApplicationStart, SessionLogic}
-import models.{WikiContext, Database, MockDb, PageContent}
+import models.{Database, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -22,7 +22,7 @@ import play.api.mvc._
 @Singleton
 class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
 
-  val actorSimilarPage = actorSystem.actorOf(ActorPageProcessor.props)
+  val actorSimilarPage: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
