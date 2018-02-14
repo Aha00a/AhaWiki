@@ -35,7 +35,7 @@ class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actor
 
     val (latestText: String, latestRevision: Long) = MockDb.selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
-    if (WikiPermission.isWritable(new PageContent(latestText))) {
+    if (WikiPermission.isWritable(PageContent(latestText))) {
       val body = if(latestText == "") f"= [$yearDashMonth]-$day%02d $weekdayName\n * " + q else latestText + "\n * " + q
       Database.pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorSimilarPage ! Calculate(name)

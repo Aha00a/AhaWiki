@@ -134,7 +134,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
 
   def testPageContent() = {
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!read all
           |#!write aha00a
           |#!redirect FrontPage""".stripMargin)
@@ -145,7 +145,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!read login
           |#!write login
           |something""".stripMargin)
@@ -157,7 +157,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "something")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!Wiki
           |#!Html
           |something""".stripMargin)
@@ -168,7 +168,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "something")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!Paper a b
           |#!read login
           |#!write login
@@ -180,7 +180,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "something")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!read login
           |#!write login
           |#!Paper a b
@@ -192,7 +192,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "something")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!WikiSyntaxPreview Text
           |some text
           |""".stripMargin)
@@ -203,7 +203,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "some text")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!WikiSyntaxPreview Html
           |<h1>h1</h1>
           |<p>paragraph</p>
@@ -215,7 +215,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       assertEquals(pageContent.content, "<h1>h1</h1>\n<p>paragraph</p>")
     }
     {
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """#!WikiSyntaxPreview Vim
           |#!java
           |class C {
@@ -230,7 +230,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     }
     {
       assertEquals("a:b:::c:".split(":", -1).toList, List("a", "b", "", "", "c", ""))
-      val pageContent: PageContent = new PageContent(
+      val pageContent: PageContent = PageContent(
         """aaa
           |[[[#!Vim java
           |a

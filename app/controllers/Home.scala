@@ -22,6 +22,6 @@ class Home @Inject() (implicit on:OnApplicationStart, cacheApi: CacheApi) extend
   }
 
   def robotsTxt = Action { implicit request =>
-    Ok(MockDb.selectPageLastRevision(".robots.txt").map(p => new PageContent(p.content).content).getOrElse(""))
+    Ok(MockDb.selectPageLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
   }
 }

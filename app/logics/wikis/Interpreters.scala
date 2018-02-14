@@ -7,7 +7,7 @@ import play.api.Logger
 
 object Interpreters {
   def interpret(s: String)(implicit wikiContext: WikiContext): String = {
-    val pageContent: PageContent = new PageContent(s)
+    val pageContent: PageContent = PageContent(s)
     val body = pageContent.content
     val (interpreter, argument) = (pageContent.interpreter, pageContent.argument.mkString(" "))
     pageContent.interpreter match {
@@ -35,7 +35,7 @@ object Interpreters {
 
 
   def extractLink(name:String, content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
-    val pageContent: PageContent = new PageContent(content)
+    val pageContent: PageContent = PageContent(content)
     val body = pageContent.content
     val (interpreter, argument) = (pageContent.interpreter, pageContent.argument.mkString(" "))
     pageContent.interpreter match {

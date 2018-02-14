@@ -35,7 +35,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val pageLastRevision = MockDb.selectPageLastRevision(name)
     val pageSpecificRevision: Option[Database.Page] = MockDb.selectPage(name, revision)
 
-    val pageLastRevisionContent = pageLastRevision.map(s => new PageContent(s.content))
+    val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
     val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
 
@@ -65,7 +65,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
       case (Some(page), "" | "view", true, _) =>
         try {
-          val pageContent: PageContent = new PageContent(page.content)
+          val pageContent: PageContent = PageContent(page.content)
           pageContent.redirect match {
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
@@ -165,7 +165,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
     val (latestText, latestRevision) = MockDb.selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
 
-    if (WikiPermission.isWritable(new PageContent(latestText))) {
+    if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         Database.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
         actorSimilarPage ! Calculate(name)
@@ -192,7 +192,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     implicit val wikiContext: WikiContext = WikiContext(name)
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
-        if (WikiPermission.isWritable(new PageContent(page.content))) {
+        if (WikiPermission.isWritable(PageContent(page.content))) {
           Database.pageDeleteWithRelatedData(name)
           Cache.PageList.invalidate()
           Ok("")
@@ -209,7 +209,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     implicit val wikiContext: WikiContext = WikiContext(name)
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
-        if (WikiPermission.isWritable(new PageContent(page.content))) {
+        if (WikiPermission.isWritable(PageContent(page.content))) {
           Database.pageDeleteRevisionWithRelatedData(name, page.revision)
           Cache.PageList.invalidate()
           actorSimilarPage ! Calculate(name)
