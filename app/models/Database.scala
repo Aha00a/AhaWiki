@@ -103,7 +103,7 @@ object Database {
       .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
   }
 
-  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Nothing = DB.withConnection { implicit connection =>
+  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = DB.withConnection { implicit connection =>
     SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
@@ -131,7 +131,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
 
-  def termFrequencyInsert(name: String, term: String, frequency: Long): Nothing = DB.withConnection { implicit connection =>
+  def termFrequencyInsert(name: String, term: String, frequency: Long): Option[Long] = DB.withConnection { implicit connection =>
     SQL"INSERT INTO TermFrequency (name, term, frequency) values ($name, $term, $frequency)".executeInsert()
   }
 
