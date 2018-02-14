@@ -1,15 +1,15 @@
 package com.aha00a.commons.utils
 
-import com.twitter.penguin.korean.TwitterKoreanProcessor
-import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
-import play.api.Logger
+import org.bitbucket.eunjeon.seunjeon.{Analyzer, Pos}
 
 object Stemmer {
   def stem(s: String): Seq[String] = {
     val english = s.replaceAll( """[^\w\s]""", " ")
     val korean = s.replaceAll( """[^가-힣\s]""", " ")
+
     val englishStemmed = english.split("""\s+""").map(porterStem)
-    val koreanStemmed = korean.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter)
+    val koreanStemmed = Analyzer.parse(korean).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface)
+
     englishStemmed ++ koreanStemmed
   }
 
@@ -23,23 +23,8 @@ object Stemmer {
       case _ => true
     }
   }
-
-  def normalizeTokenizeStemFilter(s: String): Seq[String] = {
-    try {
-      val n: CharSequence = TwitterKoreanProcessor.normalize(s)
-      val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
-      val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
-      import com.twitter.penguin.korean.util.KoreanPos._
-      val ntsf: Seq[String] = nts.filter(a => Seq(ProperNoun, Noun, Adjective, Verb).contains(a.pos)).map(_.text)
-      ntsf
-    } catch {
-      case e:Exception =>
-        Logger.error(e.toString)
-        Seq[String]()
-    }
-  }
-
-  def porterStem(s: String) = {
+  
+  def porterStem(s: String): String = {
     val stemmer: PorterStemmer = new PorterStemmer
     stemmer.add(s)
     stemmer.step1()
@@ -51,7 +36,7 @@ object Stemmer {
     stemmer.b
   }
 
-
+  //noinspection TypeAnnotation,RemoveRedundantReturn,ScalaUnnecessarySemicolon,ReplaceToWithUntil,ScalaUnnecessaryParentheses,ScalaUnusedSymbol,VarCouldBeVal
   // http://tartarus.org/~martin/PorterStemmer/scala.txt
   class PorterStemmer {
 

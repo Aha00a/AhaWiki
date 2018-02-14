@@ -20,7 +20,6 @@ libraryDependencies ++= Seq(
   "com.github.rjeschke" % "txtmark" % "0.13",
   "com.google.oauth-client" % "google-oauth-client" % "1.20.0",
   "com.googlecode.java-diff-utils" % "diffutils" % "1.3.0",
-  "com.twitter.penguin" % "korean-text" % "4.1.2",
   "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
 )
 
