@@ -39,6 +39,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
     val isWritable: Boolean = WikiPermission.isWritable(pageLastRevisionContent)
     val isReadable: Boolean = WikiPermission.isReadable(pageLastRevisionContent)
 
+    //noinspection ScalaUnusedSymbol
     (pageSpecificRevision, action, isReadable, isWritable) match {
       case (None, "edit", _, true) =>
         val regexYmd = """^(\d{4})-(\d{2})-(\d{2})$""".r
