@@ -8,7 +8,8 @@ import com.aha00a.commons.implicits.Implicits
 import Implicits.LocalDateTimeFormatter
 import play.api.Play.current
 import play.api.db.DB
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
+import com.aha00a.commons.utils.{DateTimeFormatterHolder, DateTimeUtil, LocalDateTimeUtil}
+import logics.SessionLogic
 
 import scala.language.postfixOps
 
@@ -224,6 +225,13 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
 
   def linkDelete(name: String): Int = DB.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+  }
+
+  def pageRename(name: String, newName: String) = DB.withConnection { implicit connection =>
+    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
+    SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
+    SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
   }
 
   def linkInsert(seq: Seq[Link]): Array[Int] = DB.withConnection { implicit connection =>

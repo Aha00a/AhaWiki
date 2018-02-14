@@ -1,0 +1,35 @@
+@(page: models.Database.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@import helper._
+@_base(page.name, "") {
+    <script type="text/javascript">
+        var timer;
+        $(function(){
+            var $form = $(".form");
+            $form.ajaxForm({
+                success: function(result) {
+                    location.href = "/w/@(page.name)"
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.statusText);
+                }
+            });
+        });
+    </script>
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Delete - <a href="?">@page.name</a></h1>
+            <p>
+                Renaming the page will rename all existing versions of the page in place.
+                The complete history of the page will be moved to the new location.
+            </p>
+
+            @form(routes.Wiki.rename(), 'class -> "form") {
+                @CSRF.formField
+                <input type="hidden" name="name" value="@(page.name)"/>
+                <input type="text" name="newName" value="@(page.name)"/>
+                <input type="submit" value="Rename" style="margin-bottom: 20px;"/>
+            }
+        </div>
+    </div>
+}

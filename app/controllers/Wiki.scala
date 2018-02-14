@@ -115,6 +115,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
     }
@@ -220,6 +221,26 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         Forbidden("")
     }
   }
+
+  def rename() = PostAction { implicit request =>
+    val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
+    implicit val wikiContext: WikiContext = WikiContext(name)
+    (MockDb.selectPageLastRevision(name), MockDb.selectPageLastRevision(newName)) match {
+      case (Some(page), None) =>
+        if (WikiPermission.isWritable(PageContent(page.content))) {
+          Database.pageRename(name, newName)
+          Database.pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          Cache.PageList.invalidate()
+          actorSimilarPage ! Calculate(newName)
+          Ok("")
+        } else {
+          Forbidden("")
+        }
+      case (Some(page), Some(newPage)) => Conflict("")
+      case _ => Forbidden("")
+    }
+  }
+
 
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
