@@ -13,7 +13,7 @@ object Stemmer {
     englishStemmed ++ koreanStemmed
   }
 
-  val regexNumber = """\d{1,3}""".r
+  private val regexNumber = """\d+""".r
 
   def removeStopWord(seq:Seq[String]): Seq[String] = {
     seq.filter {
