@@ -19,13 +19,13 @@
     <div class="wikiContent">
         <div class="limitWidth">
             <h1>Delete - <a href="?">@page.name</a></h1>
-            <p>Are you sure you want to completely delete this page?</p>
             <p><b>This is an irreversible operation!</b></p>
+            <p>Are you sure you want to completely delete this page?</p>
 
             @form(routes.Wiki.delete(), 'class -> "form") {
                 @CSRF.formField
                 <input type="hidden" name="name" value="@(page.name)"/>
-                <input type="submit" value="Delete"/>
+                <input type="submit" value="Delete" style="margin-bottom: 20px;"/>
             }
         </div>
     </div>
