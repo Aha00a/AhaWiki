@@ -236,7 +236,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
         } else {
           Forbidden("")
         }
-      case (Some(page), Some(newPage)) => Conflict("")
+      case (Some(_), Some(_)) => Conflict("")
       case _ => Forbidden("")
     }
   }
