@@ -21,7 +21,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
   }
 
 
-  def assertEquals[T](actual:T, expect:T) = {
+  def assertEquals[T](actual:T, expect:T): Unit = {
     if(actual == expect) {
 
     } else {
@@ -29,7 +29,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     }
   }
 
-  def assertEquals(actual:String, expect:String) = {
+  def assertEquals(actual:String, expect:String): Unit = {
     if(actual == expect) {
 
     } else if(actual == expect.replaceAllLiterally("\r", "")){
@@ -39,7 +39,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     }
   }
 
-  def assertEquals[T](actual:Seq[T], expect:Seq[T]) = {
+  def assertEquals[T](actual:Seq[T], expect:Seq[T]): Unit = {
     if(actual.isEmpty && expect.isEmpty) {
 
     }
@@ -141,7 +141,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
   }
 
 
-  def testPageContent() = {
+  def testPageContent(): Unit = {
     {
       val pageContent: PageContent = PageContent(
         """#!read all
