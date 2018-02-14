@@ -25,7 +25,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     if(actual == expect) {
 
     } else {
-      throw new ExceptionEquals(actual, expect)
+      throw ExceptionEquals(actual, expect)
     }
   }
 
@@ -35,7 +35,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     } else if(actual == expect.replaceAllLiterally("\r", "")){
 
     }else{
-      throw new ExceptionEquals(actual, expect)
+      throw ExceptionEquals(actual, expect)
     }
   }
 
@@ -48,7 +48,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
       if(actual == expect) {
 
       } else {
-        throw new ExceptionEquals(actual, expect)
+        throw ExceptionEquals(actual, expect)
       }
     }
   }
