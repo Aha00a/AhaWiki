@@ -29,6 +29,15 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends C
     }
   }
 
+  def assertEquals(actual:String, expect:String) = {
+    if(actual == expect) {
+
+    } else if(actual == expect.replaceAllLiterally("\r", "")){
+
+    }else{
+      throw new ExceptionEquals(actual, expect)
+    }
+  }
 
   def assertEquals[T](actual:Seq[T], expect:Seq[T]) = {
     if(actual.isEmpty && expect.isEmpty) {
