@@ -52,23 +52,15 @@
         }
 
         function showWrite() {
-            $.get(
-                    '@routes.Api.pageNames()',
-                    {},
-                    function (data, textStatus, jqXHR) {
-                        $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
-                        $('.searchBg').click(function () {
-                            hideSearch();
-                        });
-                        $('[name=q]').keydown(function (e) {
-                            if (e.keyCode == 27) {
-                                hideSearch();
-                            }
-                        }).focus();
-                    }
-            ).error(function (jqXHR, textStatue, httpStatus) {
-                alert(jqXHR.responseJSON.message);
+            $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
+            $('.searchBg').click(function () {
+                hideSearch();
             });
+            $('[name=q]').keydown(function (e) {
+                if (e.keyCode == 27) {
+                    hideSearch();
+                }
+            }).focus();
             return false;
         }
 
