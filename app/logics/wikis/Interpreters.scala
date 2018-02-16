@@ -1,6 +1,7 @@
 package logics.wikis
 
 import logics.wikis.interpreters._
+import logics.wikis.macros.MacroError
 import models.Database.Link
 import models.{PageContent, WikiContext}
 import play.api.Logger
@@ -29,7 +30,7 @@ object Interpreters {
       case Some("Graph") => InterpreterGraph(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
-        "Error!" + s"$pageContent"
+        MacroError.apply(s"Interpreter not found. - [[[$s]]]")
     }
   }
 
