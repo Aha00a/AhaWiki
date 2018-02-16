@@ -4,9 +4,10 @@ import logics.wikis.macros._
 import models.WikiContext
 
 import scala.collection.mutable
+import scala.util.matching.Regex
 
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
-  val mapMacros = Seq(
+  val mapMacros: Map[String, TraitMacro] = Seq(
     MacroPageOutline,
 
     MacroBr,
@@ -36,7 +37,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   val mapVariable = new mutable.HashMap[String, String]()
 
-  val regex =
+  val regex: Regex =
     """(?x)
       \[\[
         (\w+)
