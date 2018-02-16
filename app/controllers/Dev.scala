@@ -4,7 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterVim
@@ -17,7 +17,7 @@ import scala.util.Random
 
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
-  val actorSimilarPage = system.actorOf(ActorPageProcessor.props)
+  val actorSimilarPage: ActorRef = system.actorOf(ActorPageProcessor.props)
 
   def reset = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
