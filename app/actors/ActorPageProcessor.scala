@@ -12,7 +12,7 @@ import play.api.cache.CacheApi
 import scala.concurrent.duration.Duration
 
 object ActorPageProcessor {
-  def props = Props[ActorPageProcessor]
+  def props: Props = Props[ActorPageProcessor]
 
 
   case class Calculate(name: String)
@@ -21,7 +21,7 @@ object ActorPageProcessor {
 class ActorPageProcessor extends Actor {
   import ActorPageProcessor._
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String) =>
       StopWatch(name) {
         Database.pageSelectLastRevision(name) foreach { page =>
@@ -39,7 +39,7 @@ class ActorPageProcessor extends Actor {
   }
 
 
-  def updateLink(page:Page) = {
+  def updateLink(page:Page): Array[Int] = {
     // TODO: inject CacheApi
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, new CacheApi {
       override def set(key: String, value: Any, expiration: Duration): Unit = {}
