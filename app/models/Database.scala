@@ -34,7 +34,7 @@ object Database {
 
 
   case class TermFrequency(name:String, term:String, frequency:Int) {
-    def this(name:String, kv:Tuple2[String, Int]) = this(name, kv._1, kv._2)
+    def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
   }
 
 
