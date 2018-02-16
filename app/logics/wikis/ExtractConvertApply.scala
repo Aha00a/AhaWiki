@@ -24,6 +24,6 @@ trait ExtractConvertApply {
     result
   }
 
-  def contains(s:String) = arrayBuffer.exists(_._1 == s)
+  def contains(s:String): Boolean = arrayBuffer.exists(_._1 == s)
 }
 
