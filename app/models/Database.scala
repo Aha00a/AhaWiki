@@ -9,7 +9,6 @@ import Implicits.LocalDateTimeFormatter
 import play.api.Play.current
 import play.api.db.DB
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, DateTimeUtil, LocalDateTimeUtil}
-import logics.SessionLogic
 
 import scala.language.postfixOps
 
