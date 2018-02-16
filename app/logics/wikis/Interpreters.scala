@@ -9,7 +9,7 @@ object Interpreters {
   def interpret(s: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(s)
     val body = pageContent.content
-    val (interpreter, argument) = (pageContent.interpreter, pageContent.argument.mkString(" "))
+    val argument = pageContent.argument.mkString(" ")
     pageContent.interpreter match {
 
       case Some("Comment") | Some("comment") => ""
