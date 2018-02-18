@@ -4,7 +4,7 @@
 } {
     <div class="wikiContent searchResult">
         <div class="limitWidth">
-            <h1>search <a href="@routes.Wiki.view(q)">@q</a></h1>
+            <h1>search <a href="@routes.Wiki.view(q.replaceAll("""\s""", ""))">@q</a></h1>
             @for(searchResult <- iterator) {
                 <div class="item">
                     <h2 class="pageName"><a href="/w/@(searchResult.name)" >@(searchResult.name)</a></h2>
@@ -13,5 +13,5 @@
             }
         </div>
     </div>
-    @views.html.Wiki.action(false, null, null)
+    @views.html.Wiki.action(isWritable = false, null, null)
 }
