@@ -4,16 +4,16 @@ import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
 
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
-import play.api.mvc.{Request, RequestHeader}
+import play.api.mvc.RequestHeader
 
 import scala.util.Random
 
 object Implicits {
   implicit class LocalDateTimeFormatter(localDateTime:LocalDateTime) {
-    def toIsoDateTimeString = localDateTime.format(DateTimeFormatterHolder.isoDateTime)
-    def toIsoDateString = localDateTime.format(DateTimeFormatterHolder.isoDate)
-    def toIsoTimeString = localDateTime.format(DateTimeFormatterHolder.isoTime)
-    def toYearDashMonth = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
+    def toIsoDateTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoDateTime)
+    def toIsoDateString: String = localDateTime.format(DateTimeFormatterHolder.isoDate)
+    def toIsoTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoTime)
+    def toYearDashMonth: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
   implicit class RichFile(cacheFileSh: File) {
@@ -49,7 +49,7 @@ object Implicits {
     def remoteAddressWithXRealIp: String = request.headers.get("X-Real-IP").getOrElse(request.remoteAddress)
     def header(key: String): Option[String] = request.headers.get(key)
     def userAgent: Option[String] = header("User-Agent")
-    def referer = header("referer")
-    def refererOrRoot =  referer.getOrElse("/")
+    def referer: Option[String] = header("referer")
+    def refererOrRoot: String =  referer.getOrElse("/")
   }
 }
