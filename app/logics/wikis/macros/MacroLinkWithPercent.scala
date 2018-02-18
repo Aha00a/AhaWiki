@@ -6,7 +6,13 @@ object MacroLinkWithPercent extends TraitMacro {
   val regexLinkWithPercent = """(.+),\s*([\d\.]+%)""".r
 
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
-    case regexLinkWithPercent(link, percent) => s"""<a href="$link"><span class="percentTotal"><span class="percentBar" style="width:$percent"></span></span>$link ($percent)</a>"""
+    case regexLinkWithPercent(link, percent) =>
+      s"""<a href="$link">
+         |  <span class="percentTotal">
+         |    <span class="percentBar" style="width:$percent"></span>
+         |    <span class="percentLabel">$percent</span>
+         |  </span>$link
+         |</a>""".stripMargin
     case _ => s"Error($argument)"
   }
 
