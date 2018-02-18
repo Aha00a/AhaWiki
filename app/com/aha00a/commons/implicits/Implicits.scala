@@ -4,7 +4,7 @@ import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
 
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
-import play.api.mvc.Request
+import play.api.mvc.{Request, RequestHeader}
 
 import scala.util.Random
 
@@ -40,12 +40,15 @@ object Implicits {
     def toOption: Option[String] = if (s != null && s != "") Some(s) else None
     def getOrElse(s:String): String = toOption.getOrElse(s)
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
+    def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
+    def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
   }
 
-  implicit class RichRequest(request:Request[Any]) {
+  implicit class RichRequest(request:RequestHeader) {
     def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
     def remoteAddressWithXRealIp: String = request.headers.get("X-Real-IP").getOrElse(request.remoteAddress)
     def header(key: String): Option[String] = request.headers.get(key)
+    def userAgent: Option[String] = header("User-Agent")
     def referer = header("referer")
     def refererOrRoot =  referer.getOrElse("/")
   }

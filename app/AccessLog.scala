@@ -2,6 +2,7 @@ import javax.inject.Inject
 
 import play.api.Logger
 import play.api.mvc._
+import com.aha00a.commons.implicits.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -11,7 +12,7 @@ class AccessLog @Inject()(implicit ec: ExecutionContext) extends Filter {
     nextFilter(requestHeader).map(result => {
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
-      Logger.info(Seq(getRemoteAddress(requestHeader).padTo(15, " ").mkString, result.header.status, requestHeader.method, requestHeader.uri, duration + "ms").mkString("\t"))
+      Logger.info(Seq(getRemoteAddress(requestHeader).padRight(15), s"${duration}ms".padLeft(7), result.header.status, requestHeader.method, requestHeader.uri, requestHeader.userAgent.getOrElse("")).mkString("\t"))
       result.withHeaders("Request-Time" -> duration.toString)
     })
   }
