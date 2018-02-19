@@ -23,6 +23,7 @@ import play.api.data.Forms._
 import play.api.mvc._
 
 import scala.collection.JavaConversions._
+import scala.collection.immutable
 
 @Singleton
 class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
@@ -71,7 +72,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val similarPages = getSimilarPages(name)
+              val cosineSimilarities: immutable.Seq[Database.CosineSimilarity] = Database.cosineSimilaritySelect(name)
+              val similarPages = cosineSimilarities.map(c => s" * [[LinkWithPercent(${c.name2},${"%2.2f".format(c.similarity * 100)}%)]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
                 s"""
@@ -121,21 +123,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
     }
   }
-
-
-  def getSimilarPages(name: String): String = {
-    val similarPages = Database.cosineSimilaritySelect(name)
-      .map(c => s" * [[LinkWithPercent(${c.name2},${"%2.2f".format(c.similarity * 100)}%)]]")
-      .mkString("\n")
-
-    if (similarPages != "") {
-      similarPages
-    }
-    else {
-      ""
-    }
-  }
-
 
   def getRelatedPages(name: String): String = {
     val relationship: List[Link] = Database.linkSelect(name)
