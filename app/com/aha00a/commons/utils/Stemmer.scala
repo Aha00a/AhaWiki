@@ -20,7 +20,12 @@ object Stemmer {
 
   def removeStopWord(seq:Seq[String]): Seq[String] = {
     seq.filter {
-      case "" | "wiki" | "http" | "com" | "www" | "the" | "to" | "of" | "for" | "is" | "a" | "in" | "and" | "be" | "or" => false
+      case "" |
+           "wiki" |
+           "http" | "www" | "com" | "kr" |
+           "the" | "to" | "of" | "for" | "is" | "a" | "in" | "and" | "be" | "or" | "i" | "you" |
+           "Vim" => false
+      case "것" | "수" | "일" | "를" | "에서" => false
       case regexNumber() => false
       case string if 10 < string.length => false
       case _ => true
