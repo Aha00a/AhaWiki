@@ -10,6 +10,7 @@ import models.Database.Link
 import models.WikiContext
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 
 
@@ -51,6 +52,7 @@ class InterpreterWiki {
 
 
     var oldIndent = 0
+    //noinspection ScalaUnusedSymbol
     val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
       if(after != State.List) {
         while (0 < oldIndent) {
@@ -97,12 +99,12 @@ class InterpreterWiki {
               case regexListUpperAlpha() => "upper-alpha"
               case _ => ""
             }
-            for(i <- 0 until indent - oldIndent) {
+            for(_ <- 0 until indent - oldIndent) {
               arrayBuffer += "<ul style=\"list-style-type: " + listType + ";\">"
             }
           }
           if(oldIndent > indent) {
-            for(i <- 0 until oldIndent - indent) {
+            for(_ <- 0 until oldIndent - indent) {
               arrayBuffer += s"</ul>"
             }
           }
@@ -167,9 +169,9 @@ object InterpreterWiki {
 
     def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
 
-    def aliasWithDefault = if(alias == null || alias.isEmpty) uriNormalized else alias
+    def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
 
-    def toRegexReplacement(set: Set[String] = Set[String]()) = {
+    def toRegexReplacement(set: Set[String] = Set[String]()): String = {
       val external: Boolean = uri.contains("://")
 
       val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
@@ -182,16 +184,16 @@ object InterpreterWiki {
 
     def toLink(src:String) = Link(src, uriNormalized, alias)
 
-    def toDisplay = {
+    def toDisplay: String = {
       if(alias == null || alias.isEmpty) {
-        s"[${uri}]"
+        s"[$uri]"
       } else {
-        s"[${uri}] aliased by ${alias}"
+        s"[$uri] aliased by $alias"
       }
     }
   }
 
-  val regexLink =
+  val regexLink: Regex =
     """(?x)
                 ((?<!\\)\\)?        ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
                 ((?<!\\)\\)?        \[ ([^\]\s]+) \]                            |
@@ -200,10 +202,11 @@ object InterpreterWiki {
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
     val set: Set[String] = Cache.PageNameSet.get()
+    //noinspection ScalaUnusedSymbol
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toRegexReplacement()
       case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toRegexReplacement(set)
-      case regexLink(null, null, null, null, null, uri, alias) => new LinkMarkup(uri, alias).toRegexReplacement(set)
+      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
 
       case regexLink(escape, uri, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
       case regexLink(null, null, escape, uri, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
@@ -217,7 +220,7 @@ object InterpreterWiki {
     regexLink.findAllIn(content).map {
       case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toLink(src)
       case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toLink(src)
-      case regexLink(null, null, null, null, null, uri, alias) => new LinkMarkup(uri, alias).toLink(src)
+      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toLink(src)
       case _ => null
     }.filter(_ != null).filterNot(_.dst.startsWith("[")) // TODO: Macro
   }
