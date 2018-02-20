@@ -258,8 +258,12 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     if(seq.isEmpty) {
       Array[Int]()
     } else {
-      val insertQuery = SQL("REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})")
-      (insertQuery.asBatch /: seq)((sql, elem) => sql.addBatchParams(elem.src, elem.dst, elem.alias)).execute()
+      val values = seq.map(s => Seq[NamedParameter]('src -> s.src, 'dst -> s.dst, 'alias -> s.alias))
+      BatchSql(
+        "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
+        values.head,
+        values.tail: _*
+      ).execute()
     }
   }
 
