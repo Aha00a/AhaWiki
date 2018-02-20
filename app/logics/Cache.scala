@@ -16,8 +16,7 @@ object Cache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-
+    def get()(implicit wikiContext: WikiContext): List[Database.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
       Database.pageSelectPageList()
     }
 
@@ -28,25 +27,25 @@ object Cache {
   }
 
   object PageNameSet extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit wikiContext: WikiContext): Set[String] = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
       PageList.get().map(_.name).toSet
     }
   }
 
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
       Interpreters.interpret(MockDb.selectPageLastRevision(".header").map(_.content).getOrElse(""))
     }
   }
 
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
       Interpreters.interpret(MockDb.selectPageLastRevision(".footer").map(_.content).getOrElse(""))
     }
   }
 
   object Config extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext) = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
       MockDb.selectPageLastRevision(".config").map(_.content).getOrElse("")
     }
   }
