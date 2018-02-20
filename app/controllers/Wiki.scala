@@ -127,9 +127,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
   }
 
   def getRelatedPages(name: String): String = {
-    val relationship: List[Link] = Database.linkSelect(name)
-    val back: List[Link] = relationship.flatMap(lm => Database.linkSelect(lm.src))
-    val forward: List[Link] = relationship.flatMap(lm => Database.linkSelect(lm.dst))
+    val relationship = Database.linkSelect(name)
+    val back = relationship.flatMap(lm => Database.linkSelect(lm.src))
+    val forward = relationship.flatMap(lm => Database.linkSelect(lm.dst))
 
     val result = (relationship ++ back ++ forward)
       .map(l => s"${l.src}->${l.dst}")
