@@ -23,8 +23,7 @@ object Stemmer {
       case "" |
            "wiki" |
            "http" | "www" | "com" | "kr" |
-           "the" | "to" | "of" | "for" | "is" | "a" | "in" | "and" | "be" | "or" | "i" | "you" |
-           "Vim" => false
+           "the" | "to" | "of" | "for" | "is" | "a" | "in" | "and" | "be" | "or" | "i" | "you" => false
       case "것" | "수" | "일" | "를" | "에서" => false
       case regexNumber() => false
       case string if 10 < string.length => false
