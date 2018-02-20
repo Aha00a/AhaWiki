@@ -139,7 +139,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
 
   def termFrequencyInsert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = DB.withConnection { implicit connection =>
     if(seqTermFrequency.isEmpty) {
-      Array[Int]()
+      Array()
     } else {
       val insertQuery = SQL("INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})")
       (insertQuery.asBatch /: seqTermFrequency)((sql, elem) => sql.addBatchParams(elem.name, elem.term, elem.frequency)).execute()
