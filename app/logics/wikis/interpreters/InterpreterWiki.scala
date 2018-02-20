@@ -164,9 +164,7 @@ class InterpreterWiki {
 }
 
 object InterpreterWiki {
-  case class LinkMarkup(uri:String, alias:String) {
-    def this(uri:String) = this(uri, "")
-
+  case class LinkMarkup(uri:String, alias:String = "") {
     def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
 
     def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
@@ -204,8 +202,8 @@ object InterpreterWiki {
     val set: Set[String] = Cache.PageNameSet.get()
     //noinspection ScalaUnusedSymbol
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toRegexReplacement()
-      case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toRegexReplacement(set)
+      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()
+      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
       case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
 
       case regexLink(escape, uri, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
@@ -218,8 +216,8 @@ object InterpreterWiki {
   
   def extractLink(src:String, content:String):Iterator[Link] = {
     regexLink.findAllIn(content).map {
-      case regexLink(null, uri, null, null, null, null, null) => new LinkMarkup(uri).toLink(src)
-      case regexLink(null, null, null, uri, null, null, null) => new LinkMarkup(uri).toLink(src)
+      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toLink(src)
+      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri).toLink(src)
       case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toLink(src)
       case _ => null
     }.filter(_ != null).filterNot(_.dst.startsWith("[")) // TODO: Macro
