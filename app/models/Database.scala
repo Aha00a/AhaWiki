@@ -186,16 +186,20 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
   }
 
   def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = DB.withConnection { implicit connection =>
-    SQL("""SELECT
-          |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
-          |    FROM TermFrequency tf1
-          |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
-          |    WHERE
-          |        tf1.name = {name} AND tf2.name IN ({pageNames})
-          |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
-      .on('name -> name, 'pageNames -> similarPageNames)
-      .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
-      .map(HighScoredTerm.tupled)
+    if(similarPageNames.isEmpty) {
+      immutable.Seq()
+    } else {
+      SQL("""SELECT
+            |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
+            |    FROM TermFrequency tf1
+            |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
+            |    WHERE
+            |        tf1.name = {name} AND tf2.name IN ({pageNames})
+            |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
+        .on('name -> name, 'pageNames -> similarPageNames)
+        .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
+        .map(HighScoredTerm.tupled)
+    }
   }
 
   def pageSelectNameRandom():String = DB.withConnection { implicit connection =>
