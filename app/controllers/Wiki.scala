@@ -128,18 +128,15 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
 
   def getRelatedPages(name: String): String = {
     val relationship = Database.linkSelect(name)
-    val back = relationship.flatMap(lm => Database.linkSelect(lm.src))
+    val backward = relationship.flatMap(lm => Database.linkSelect(lm.src))
     val forward = relationship.flatMap(lm => Database.linkSelect(lm.dst))
 
-    val result = (relationship ++ back ++ forward)
+    val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
     if (result != "") {
-      s"""[[[#!Graph
-         |#!enableWikiLink
-         |$result
-         |]]]""".stripMargin
+      s"[[[#!Graph enableWikiLink\n$result\n]]]"
     }
     else {
       ""
