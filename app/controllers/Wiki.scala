@@ -73,7 +73,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
               val cosineSimilarities: immutable.Seq[Database.CosineSimilarity] = Database.cosineSimilaritySelect(name)
-              val similarPages = cosineSimilarities.map(c => s" * [[LinkWithPercent(${c.name2},${"%2.2f".format(c.similarity * 100)}%)]]").mkString("\n")
+              val similarPageNames: immutable.Seq[String] = cosineSimilarities.map(_.name2)
+              val highScoredTerms = Database.selectHighScoredTerm(name, similarPageNames).groupBy(_.name)
+              val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms(c.name2).map(_.term).mkString(", ")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
                 s"""
@@ -143,6 +145,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) exte
       ""
     }
   }
+
+
 
   val actorSimilarPage: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 

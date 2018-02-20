@@ -4,12 +4,12 @@ import java.time.{Instant, LocalDate, LocalDateTime}
 
 import anorm.SqlParser._
 import anorm._
-import com.aha00a.commons.implicits.Implicits
-import Implicits.LocalDateTimeFormatter
+import com.aha00a.commons.implicits.Implicits.LocalDateTimeFormatter
+import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 import play.api.Play.current
 import play.api.db.DB
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 
+import scala.collection.immutable
 import scala.language.postfixOps
 
 object Database {
@@ -44,6 +44,7 @@ object Database {
 
 
   case class CosineSimilarity(name1: String, name2: String, similarity: Double)
+  case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
   object PageTable {
     def selectCount(): Long = DB.withConnection { implicit connection =>
@@ -184,6 +185,18 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
       .as(str("name") singleOpt)
   }
 
+  def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = DB.withConnection { implicit connection =>
+    SQL("""SELECT
+          |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
+          |    FROM TermFrequency tf1
+          |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
+          |    WHERE
+          |        tf1.name = {name} AND tf2.name IN ({pageNames})
+          |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
+      .on('name -> name, 'pageNames -> similarPageNames)
+      .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
+      .map(HighScoredTerm.tupled)
+  }
 
   def pageSelectNameRandom():String = DB.withConnection { implicit connection =>
     connection.getMetaData.getDatabaseProductName match {

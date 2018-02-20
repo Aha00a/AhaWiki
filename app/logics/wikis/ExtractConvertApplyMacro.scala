@@ -24,7 +24,6 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroBacklinks,
 
     MacroEmbed,
-    MacroLinkWithPercent,
     MacroInclude,
     MacroMonths,
     MacroDays,
