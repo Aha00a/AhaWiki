@@ -140,7 +140,7 @@ class InterpreterWiki {
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    extractConvertApplyMacro.extractLink().map(LinkMarkup(_, "").toLink(wikiContext.name)) ++ InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
+    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
   }
 
 
