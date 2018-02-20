@@ -3,13 +3,14 @@ package actors
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits
 import logics.wikis.Interpreters
-import models.{WikiContext, Database}
+import models.{Database, WikiContext}
 import models.Database.Page
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
 import Implicits._
 import play.api.cache.CacheApi
 
 import scala.concurrent.duration.Duration
+import scala.reflect.ClassTag
 
 object ActorPageProcessor {
   def props: Props = Props[ActorPageProcessor]
@@ -44,9 +45,9 @@ class ActorPageProcessor extends Actor {
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, new CacheApi {
       override def set(key: String, value: Any, expiration: Duration): Unit = {}
 
-      override def get[T](key: String)(implicit evidence$2: ClassManifest[T]): Option[T] = None
+      override def get[T: ClassTag](key: String): Option[T] = None
 
-      override def getOrElse[A](key: String, expiration: Duration)(orElse: => A)(implicit evidence$1: ClassManifest[A]): A = orElse
+      override def getOrElse[A:ClassTag](key: String, expiration: Duration)(orElse: => A): A = orElse
 
       override def remove(key: String): Unit = {}
     })
