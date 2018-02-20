@@ -141,8 +141,12 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     if(seqTermFrequency.isEmpty) {
       Array()
     } else {
-      val insertQuery = SQL("INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})")
-      (insertQuery.asBatch /: seqTermFrequency)((sql, elem) => sql.addBatchParams(elem.name, elem.term, elem.frequency)).execute()
+      val values = seqTermFrequency.map(s => Seq[NamedParameter]('name -> s.name, 'term -> s.term, 'frequency -> s.frequency))
+      BatchSql(
+        "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
+        values.head,
+        values.tail: _*
+      ).execute()
     }
   }
 
