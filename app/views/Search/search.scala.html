@@ -8,7 +8,7 @@
             @for(searchResult <- iterator) {
                 <div class="item">
                     <h2 class="pageName"><a href="/w/@(searchResult.name)" >@(searchResult.name)</a></h2>
-                    <p class="pageContent">@Html(searchResult.content.replaceAll(q, "<b>" + q + "</b>"))</p>
+                    <p class="pageContent">@Html(searchResult.content.replaceAll(q, "<mark>" + q + "</mark>"))</p>
                 </div>
             }
         </div>
