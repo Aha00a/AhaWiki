@@ -36,6 +36,11 @@
                 var href = $(this).attr('href');
                 $(document).data(href).remove();
             });
+
+            var match = /\/search\?q=(.+)/.exec(document.referrer);
+            if(match && match[1]) {
+                $('.wikiContent').mark(match[1]);
+            }
         });
     </script>
 } {
