@@ -13,6 +13,10 @@ import com.aha00a.commons.implicits.Implicits._
 class Search @Inject() (implicit on:OnApplicationStart, cacheApi: CacheApi) extends Controller {
   def index(q:String) = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
+    implicit class RichTuple[T](t:(Iterator[T], Iterator[T])) {
+      def concat(): Iterator[T] = t._1 ++ t._2
+    }
+
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
@@ -22,6 +26,8 @@ class Search @Inject() (implicit on:OnApplicationStart, cacheApi: CacheApi) exte
             sr._1,
             sr._2.split( """(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... ")
           ))
+          .partition(_.name == q)
+          .concat()
       ).getOrElse(Iterator.empty)))
   }
 
