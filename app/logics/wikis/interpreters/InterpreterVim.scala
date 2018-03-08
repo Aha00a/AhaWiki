@@ -86,11 +86,17 @@ object InterpreterVim {
         catch {
           case e:RuntimeException => Logger.error(e.toString)
         }
-        val lines = scala.io.Source.fromFile(cacheFileHtmlRaw).getLines()
-        val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
-        val pre = lines.dropWhile(!_.startsWith("<pre")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
 
-        cacheFileHtml.writeAll(style + pre)
+        if(cacheFileHtmlRaw.exists()) {
+          val lines = scala.io.Source.fromFile(cacheFileHtmlRaw).getLines()
+          val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
+          val pre = lines.dropWhile(!_.startsWith("<pre")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
+
+          cacheFileHtml.writeAll(style + pre)
+        } else {
+          val lines = scala.io.Source.fromFile(cacheFileText).getLines()
+          cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
+        }
 
         if(!ApplicationConf.AhaWiki.config.interpreter.Vim.debug()) {
           cacheFileHtmlRaw.delete()
