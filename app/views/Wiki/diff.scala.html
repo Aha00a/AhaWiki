@@ -5,7 +5,7 @@
     <script type="text/javascript">
         $(function(){
             $('html, body').animate({
-                scrollTop: $(" @(Tag.values().filterNot(_ == Tag.EQUAL).map("." + _).mkString(","))").offset().top - 100
+                scrollTop: $(" @(Tag.values().filterNot(_ == Tag.EQUAL).map("." + _).mkString(","))").offset().top - window.innerHeight / 2
             }, 500);
         });
     </script>
