@@ -30,6 +30,8 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroCalendar,
     MacroIncludeDays,
 
+    MacroPeriod,
+
     MacroError
   ).map(m => m.name -> m).toMap
 
