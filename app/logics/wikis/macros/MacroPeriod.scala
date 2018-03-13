@@ -8,8 +8,6 @@ import models.WikiContext
 import scala.util.Try
 
 object MacroPeriod extends TraitMacro {
-  private val regex = """(.+)(?:,(\w+))?""".r
-
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = {
     val array: Array[LocalDate] = argument.split(",").flatMap(t => Try(LocalDate.parse(t.trim, DateTimeFormatterHolder.isoLocalDate)).toOption)
     array match {
