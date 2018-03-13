@@ -22,12 +22,12 @@
                 <td class="revisionInfo">
                     @if(wikiFirst != null) {
                         <div>
-                            created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoDateTime)</a>
+                            created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoLocalDateTime)</a>
                         </div>
                     }
                     @if(wikiLast != null) {
                         <div>
-                            last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=history">@(wikiLast.isoDateTime)</a>
+                            last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=history">@(wikiLast.isoLocalDateTime)</a>
                         </div>
                     }
                 </td>

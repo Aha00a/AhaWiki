@@ -11,7 +11,7 @@ object MacroPageList extends TraitMacro {
     Cache.PageList.get().map { t =>
       Seq(
         s"'''[${t.name}]'''",
-        s"${t.localDateTime.toIsoDateTimeString}",
+        s"${t.localDateTime.toIsoLocalDateTimeString}",
         s"${t.size}",
         s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
         s"[${t.author}]",

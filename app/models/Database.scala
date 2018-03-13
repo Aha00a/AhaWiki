@@ -19,9 +19,9 @@ object Database {
 
     lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
     lazy val localDate: LocalDate = localDateTime.toLocalDate
-    lazy val localYearMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
+    lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
 
-    lazy val isoDateTime: String = localDateTime.toIsoDateTimeString
+    lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
   }
 
   case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime {

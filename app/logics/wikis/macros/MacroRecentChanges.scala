@@ -9,7 +9,7 @@ import models.WikiContext
 object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     new InterpreterWiki().apply(
-      Cache.PageList.get().groupBy(_.localYearMonth).toList.sortBy(_._1)(Ordering[String].reverse).map {
+      Cache.PageList.get().groupBy(_.yearDashMonth).toList.sortBy(_._1)(Ordering[String].reverse).map {
         case (yearMonth, groupedByYearMonth) =>
           s"== $yearMonth\n" +
             groupedByYearMonth.groupBy(_.localDateTime.toLocalDate).toList.sortWith((a, b) => a._1.isAfter(b._1)).map {
@@ -19,7 +19,7 @@ object MacroRecentChanges extends TraitMacro {
                     Seq(
                       s"'''[${t.name}]'''",
                       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
-                      s"${t.localDateTime.toIsoTimeString}",
+                      s"${t.localDateTime.toIsoLocalTimeString}",
                       s"[${t.author}](${t.remoteAddress})",
                       s"${t.comment.getOrElse(" ")}"
                     ).mkString("\t")

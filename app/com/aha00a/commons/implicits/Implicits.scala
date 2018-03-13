@@ -10,10 +10,10 @@ import scala.util.Random
 
 object Implicits {
   implicit class LocalDateTimeFormatter(localDateTime:LocalDateTime) {
-    def toIsoDateTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoDateTime)
-    def toIsoDateString: String = localDateTime.format(DateTimeFormatterHolder.isoDate)
-    def toIsoTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoTime)
-    def toYearDashMonth: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
+    def toIsoLocalDateTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoLocalDateTime)
+    def toIsoLocalDateString: String = localDateTime.format(DateTimeFormatterHolder.isoLocalDate)
+    def toIsoLocalTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoLocalTime)
+    def toYearDashMonthString: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
   implicit class RichFile(cacheFileSh: File) {

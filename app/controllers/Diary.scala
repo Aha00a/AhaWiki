@@ -27,8 +27,8 @@ class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actor
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
-    val name: String = now.toIsoDateString
-    val yearDashMonth: String = now.toYearDashMonth
+    val name: String = now.toIsoLocalDateString
+    val yearDashMonth: String = now.toYearDashMonthString
     val day = now.getDayOfMonth
     val weekdayName = now.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
     implicit val wikiContext: WikiContext = WikiContext(name)
