@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 
 //noinspection LanguageFeature
 @Singleton
-class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: ActorSystem) {
+class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, system: ActorSystem) {
   val actorPageProcessor: ActorRef = system.actorOf(ActorPageProcessor.props)
 
   lifecycle.addStopHook { () =>
