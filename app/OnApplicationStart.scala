@@ -16,7 +16,7 @@ import com.aha00a.commons.implicits.Implicits._
 //noinspection LanguageFeature
 @Singleton
 class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: ActorSystem) {
-  val actorSimilarPage: ActorRef = system.actorOf(ActorPageProcessor.props)
+  val actorPageProcessor: ActorRef = system.actorOf(ActorPageProcessor.props)
 
   lifecycle.addStopHook { () =>
     Logger.info("OnApplicationStop")
@@ -28,14 +28,14 @@ class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: 
     if (0 == Database.pageSelectCount()) {
       MockDb.pageFromFile().foreach(p => {
         Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
-        actorSimilarPage ! Calculate(p.name)
+        actorPageProcessor ! Calculate(p.name)
       })
     }
   })
 
   system.scheduler.schedule(2 seconds, 60 minutes, () => {
     Database.pageSelectNameWhereNoCosineSimilarity() match {
-      case Some(s) => actorSimilarPage ! Calculate(s)
+      case Some(s) => actorPageProcessor ! Calculate(s)
       case None => Logger.info("None")
     }
   })
