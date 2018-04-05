@@ -34,7 +34,7 @@ class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: 
     }
   })
 
-  system.scheduler.schedule(2 second, 60 minutes, () => {
+  system.scheduler.schedule(2 seconds, 60 minutes, () => {
     Database.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorSimilarPage ! Calculate(s)
       case None => Logger.info("None")
