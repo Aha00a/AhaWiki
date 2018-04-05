@@ -1,5 +1,7 @@
 package actors
 
+import javax.inject.Inject
+
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits
 import logics.wikis.Interpreters
@@ -8,6 +10,7 @@ import models.Database.Page
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
 import Implicits._
 import play.api.cache.CacheApi
+import play.api.db.{DB, DBApi, Database}
 
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
@@ -19,7 +22,7 @@ object ActorPageProcessor {
   case class Calculate(name: String)
 }
 
-class ActorPageProcessor extends Actor {
+class ActorPageProcessor @Inject() extends Actor {
   import ActorPageProcessor._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -38,7 +41,6 @@ class ActorPageProcessor extends Actor {
     Database.termFrequencyInsert(name, wordCount)
     Database.cosineSimilarityUpdate(name)
   }
-
 
   def updateLink(page:Page): Array[Int] = {
     // TODO: inject CacheApi

@@ -8,9 +8,10 @@ import Implicits._
 import logics.Cache
 import models.{MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
+import play.api.db.Database
 import play.api.mvc._
 
-class Home @Inject() (implicit cacheApi: CacheApi) extends Controller {
+class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }

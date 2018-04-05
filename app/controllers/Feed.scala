@@ -6,9 +6,10 @@ import javax.inject.Inject
 import logics.Cache
 import models.WikiContext
 import play.api.cache.CacheApi
+import play.api.db.Database
 import play.api.mvc._
 
-class Feed @Inject()(implicit cacheApi: CacheApi) extends Controller {
+class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index = atom
 
   def atom = Action { implicit request =>

@@ -11,10 +11,11 @@ import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
+import play.api.db.Database
 import play.api.mvc._
 
 @Singleton
-class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
+class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
   case class ExceptionEquals[T](actual:T, expect:T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
     Logger.error(actual.toString)
     Logger.error(expect.toString)

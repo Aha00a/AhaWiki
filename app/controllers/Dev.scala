@@ -11,12 +11,13 @@ import logics.wikis.interpreters.InterpreterVim
 import models.Database.Page
 import models.{Database, MockDb, WikiContext}
 import play.api.cache.CacheApi
+import play.api.db.Database
 import play.api.mvc._
 
 import scala.util.Random
 
 @Singleton
-class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem) extends Controller {
+class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
   val actorSimilarPage: ActorRef = system.actorOf(ActorPageProcessor.props)
 
   def reset = Action { implicit request =>

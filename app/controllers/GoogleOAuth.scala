@@ -20,7 +20,6 @@ class GoogleOAuth @Inject()(implicit cacheApi: CacheApi) extends Controller {
   }
 
   def login = Action { implicit request =>
-    implicit val wikiContext = WikiContext("")
     val referer = request.refererOrRoot
     Logger.error(referer)
 
@@ -29,8 +28,6 @@ class GoogleOAuth @Inject()(implicit cacheApi: CacheApi) extends Controller {
   }
 
   def callback(code: String) = Action.async { implicit request =>
-    implicit val wikiContext = WikiContext("")
-
     GoogleApi.retrieveEmailWithCode(code, ApplicationConf.AhaWiki.google.api.clientId, ApplicationConf.AhaWiki.google.api.clientSecret, googleApiRedirectUri()).map {
       case Some(email) =>
         Redirect(request.flash.get("redirect").getOrElse("/"))
