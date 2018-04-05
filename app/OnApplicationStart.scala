@@ -23,8 +23,10 @@ class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: 
     Future.successful(())
   }
 
+  Logger.info("OnApplicationStart")
+
   system.scheduler.scheduleOnce(1 second, () => {
-    Logger.info("OnApplicationStart")
+    Logger.info("OnApplicationStarted")
     if (0 == Database.pageSelectCount()) {
       MockDb.pageFromFile().foreach(p => {
         Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
