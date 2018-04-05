@@ -5,12 +5,12 @@ import javax.inject._
 
 import com.aha00a.commons.implicits.Implicits
 import Implicits._
-import logics.{Cache, OnApplicationStart}
+import logics.Cache
 import models.{MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.mvc._
 
-class Home @Inject() (implicit on:OnApplicationStart, cacheApi: CacheApi) extends Controller {
+class Home @Inject() (implicit cacheApi: CacheApi) extends Controller {
   def index = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }

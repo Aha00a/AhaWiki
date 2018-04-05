@@ -12,7 +12,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.WikiPermission
-import logics.{Cache, OnApplicationStart, SessionLogic}
+import logics.{Cache, SessionLogic}
 import models.{Database, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -20,7 +20,7 @@ import play.api.data.Forms._
 import play.api.mvc._
 
 @Singleton
-class Diary @Inject()(implicit on: OnApplicationStart, cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
+class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem) extends Controller {
 
   val actorSimilarPage: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 
