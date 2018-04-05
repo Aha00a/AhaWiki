@@ -52,4 +52,6 @@ object Implicits {
     def referer: Option[String] = header("referer")
     def refererOrRoot: String =  referer.getOrElse("/")
   }
+
+  implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }
 }

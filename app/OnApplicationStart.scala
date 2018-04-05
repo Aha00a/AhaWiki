@@ -11,6 +11,7 @@ import play.libs.Akka
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import com.aha00a.commons.implicits.Implicits._
 
 //noinspection LanguageFeature
 @Singleton
@@ -21,8 +22,6 @@ class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, val system: 
     Logger.info("OnApplicationStop")
     Future.successful(())
   }
-
-  implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }
 
   system.scheduler.scheduleOnce(1 second, () => {
     Logger.info("OnApplicationStart")
