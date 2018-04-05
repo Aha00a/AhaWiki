@@ -12,8 +12,8 @@ object ApplicationConf {
   object AhaWiki {
     object google {
       object api {
-        def clientId()(implicit wikiContext: WikiContext): String = current.configuration.getString(fqn).getOrElse("")
-        def clientSecret()(implicit wikiContext: WikiContext): String = current.configuration.getString(fqn).getOrElse("")
+        def clientId(): String = current.configuration.getString(fqn).getOrElse("")
+        def clientSecret(): String = current.configuration.getString(fqn).getOrElse("")
       }
     }
 
