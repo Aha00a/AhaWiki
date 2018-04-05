@@ -1,17 +1,16 @@
-import scala.concurrent.Future
 import javax.inject._
 
 import actors.ActorPageProcessor
 import actors.ActorPageProcessor.Calculate
 import akka.actor.{ActorRef, ActorSystem}
+import com.aha00a.commons.implicits.Implicits._
 import models.{Database, MockDb}
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
-import play.libs.Akka
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import com.aha00a.commons.implicits.Implicits._
 
 //noinspection LanguageFeature
 @Singleton
