@@ -13,7 +13,7 @@
             @for(searchResult <- iterator) {
                 <div class="item">
                     <h2 class="pageName"><a href="/w/@(searchResult.name)" >@(searchResult.name)</a></h2>
-                    <p class="pageContent">@Html(searchResult.content)</p>
+                    <p class="pageContent">@(searchResult.content)</p>
                 </div>
             }
         </div>

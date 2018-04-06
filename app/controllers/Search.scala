@@ -10,6 +10,8 @@ import play.api.mvc._
 import com.aha00a.commons.implicits.Implicits._
 import play.api.db.Database
 
+import scala.collection.immutable
+
 class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index(q:String) = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
@@ -17,15 +19,38 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
       def concat(): Iterator[T] = t._1 ++ t._2
     }
 
+    def around(i:Int, distance: Int = 2): immutable.Seq[Int] = (i - distance) to (i + distance)
+
+    implicit class RichSeq[T](seq:Seq[T]) {
+      def splitBy(by:(T, T) => Boolean): Iterator[Seq[T]] = {
+        val cutIndice = seq.zipWithIndex.sliding(2).filter(s => by(s.head._1, s.last._1)).map(s => s.head._2).toSeq
+        val ranges = -1 +: cutIndice :+ seq.length - 1
+        ranges.sliding(2).map(i => seq.slice(i.head + 1, i.last + 1))
+      }
+    }
+
+    val regex = s"(?i)$q".r
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
         Database.pageSearch(_)
           .filter(sr => WikiPermission.isReadable(PageContent(sr._2)))
-          .map(sr => SearchResult(
-            sr._1,
-            sr._2.split( """(\r\n|\n)+""").filter(_.contains(q)).mkString(" ... ")
-          ))
+          .map(sr => {
+            val lines = sr._2.split("""(\r\n|\n)+""")
+            SearchResult(
+              sr._1,
+              lines
+                .zipWithIndex
+                .filter(s => regex.findFirstIn(s._1).isDefined)
+                .flatMap(s => around(s._2))
+                .distinct
+                .filter(lines.isDefinedAt(_))
+                .toSeq
+                .splitBy((a, b) => a + 1 != b)
+                .map(_.map(i => i + ": " + lines(i)).mkString("\n"))
+                .mkString("\n\n⋯\n\n")
+            )
+          })
           .partition(_.name == q)
           .concat()
       ).getOrElse(Iterator.empty)))

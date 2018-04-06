@@ -120,7 +120,9 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
              GROUP BY name
              ORDER BY MAX(time) DESC
      ) NV ON w.name = NV.name AND w.revision = NV.revision
-     WHERE w.name LIKE CONCAT('%', {q}, '%') OR w.content LIKE CONCAT('%', {q}, '%')
+     WHERE
+         w.name LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci OR
+         w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
       .on('q -> q)
       .as(str("name") ~ str("content") *).iterator.map(flatten)
