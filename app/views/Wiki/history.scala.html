@@ -12,6 +12,9 @@
                 $.ajax({
                     url: '@routes.Wiki.deleteLastRevision()',
                     method: 'post',
+                    headers: {
+                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
+                    },
                     data: {
                         name: '@title'
                     },
