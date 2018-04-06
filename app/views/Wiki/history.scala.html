@@ -7,7 +7,7 @@
             $('[name=after]').eq(0).click();
             $('.buttonDeleteLastRevision').click(function () {
                 if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
-                    return;
+                    return false;
                 
                 $.ajax({
                     url: '@routes.Wiki.deleteLastRevision()',
