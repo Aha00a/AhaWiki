@@ -15,9 +15,6 @@ import scala.collection.immutable
 class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index(q:String) = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
-    implicit class RichTuple[T](t:(Iterator[T], Iterator[T])) {
-      def concat(): Iterator[T] = t._1 ++ t._2
-    }
 
     def around(i:Int, distance: Int = 2): immutable.Seq[Int] = (i - distance) to (i + distance)
 
