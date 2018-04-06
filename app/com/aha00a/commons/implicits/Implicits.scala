@@ -34,6 +34,11 @@ object Implicits {
       (map, word) => map + (word -> (map.getOrElse(word, 0) + 1))
     }
     def random():T = seq(Random.nextInt(seq.size))
+    def splitBy(by:(T, T) => Boolean): Iterator[Seq[T]] = {
+      val cutIndice = seq.zipWithIndex.sliding(2).filter(s => by(s.head._1, s.last._1)).map(s => s.head._2).toSeq
+      val ranges = -1 +: cutIndice :+ seq.length - 1
+      ranges.sliding(2).map(i => seq.slice(i.head + 1, i.last + 1))
+    }
   }
 
   implicit class RichString(s:String) {

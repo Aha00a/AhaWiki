@@ -21,14 +21,6 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
 
     def around(i:Int, distance: Int = 2): immutable.Seq[Int] = (i - distance) to (i + distance)
 
-    implicit class RichSeq[T](seq:Seq[T]) {
-      def splitBy(by:(T, T) => Boolean): Iterator[Seq[T]] = {
-        val cutIndice = seq.zipWithIndex.sliding(2).filter(s => by(s.head._1, s.last._1)).map(s => s.head._2).toSeq
-        val ranges = -1 +: cutIndice :+ seq.length - 1
-        ranges.sliding(2).map(i => seq.slice(i.head + 1, i.last + 1))
-      }
-    }
-
     val regex = s"(?i)$q".r
     Ok(views.html.Search.search(
       q,
