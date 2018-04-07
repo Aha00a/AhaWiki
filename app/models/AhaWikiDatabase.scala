@@ -52,19 +52,18 @@ object AhaWikiDatabase {
 
   case class SearchResult(name:String, content:String) {
     def summarised(q: String): SearchResult = {
-      def around(i:Int, distance: Int = 2): immutable.Seq[Int] = (i - distance) to (i + distance)
+      def around(i:Int, distance: Int = 2) = (i - distance) to (i + distance)
 
-      val lines = content.split("""(\r\n|\n)+""")
+      val lines = content.split("""(\r\n|\n)+""").toSeq
       SearchResult(
         name,
         lines
           .zipWithIndex
           .filter(s => s"(?i)$q".r.findFirstIn(s._1).isDefined)
           .map(_._2)
-          .flatMap(s => around(s))
+          .flatMap(around(_))
           .distinct
-          .filter(lines.isDefinedAt(_))
-          .toSeq
+          .filter(lines.isDefinedAt)
           .splitBy((a, b) => a + 1 != b)
           .map(_.map(i => s"${i + 1}: ${lines(i)}").mkString("\n"))
           .mkString("\n\n⋯\n\n")
