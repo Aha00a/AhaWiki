@@ -9,7 +9,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AccessLog @Inject()(
+class FilterAccessLog @Inject()(
     implicit val mat: Materializer,
     ec: ExecutionContext) extends Filter {
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
