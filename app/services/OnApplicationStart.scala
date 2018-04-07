@@ -14,7 +14,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-//noinspection LanguageFeature
 @Singleton
 class OnApplicationStart @Inject()(applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem) {
   val actorPageProcessor: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
@@ -26,6 +25,7 @@ class OnApplicationStart @Inject()(applicationLifecycle: ApplicationLifecycle, a
 
   Logger.info("OnApplicationStart")
 
+  //noinspection LanguageFeature
   actorSystem.scheduler.scheduleOnce(1 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == Database.pageSelectCount()) {
@@ -36,6 +36,7 @@ class OnApplicationStart @Inject()(applicationLifecycle: ApplicationLifecycle, a
     }
   })
 
+  //noinspection LanguageFeature
   actorSystem.scheduler.schedule(2 seconds, 60 minutes, () => {
     Database.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorPageProcessor ! Calculate(s)
