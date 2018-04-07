@@ -15,7 +15,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 @Singleton
-class OnApplicationStart @Inject()(applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem) {
+class ApplicationLifecycleHook @Inject()(applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem) {
   val actorPageProcessor: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 
   applicationLifecycle.addStopHook { () =>
