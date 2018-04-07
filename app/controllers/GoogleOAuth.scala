@@ -8,12 +8,13 @@ import logics.{ApplicationConf, SessionLogic}
 import models.WikiContext
 import play.api.Logger
 import play.api.cache.CacheApi
+import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class GoogleOAuth @Inject()(implicit cacheApi: CacheApi) extends Controller {
+class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient) extends Controller {
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
