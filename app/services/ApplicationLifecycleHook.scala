@@ -10,12 +10,11 @@ import models.{Database, MockDb}
 import play.api.Logger
 import play.api.inject.ApplicationLifecycle
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 @Singleton
-class ApplicationLifecycleHook @Inject()(applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem) {
+class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem, executionContext: ExecutionContext) {
   val actorPageProcessor: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 
   applicationLifecycle.addStopHook { () =>
