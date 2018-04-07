@@ -22,7 +22,7 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
-        Database.pageSearch(_)
+        Database().pageSearch(_)
           .filter(sr => WikiPermission.isReadable(PageContent(sr._2)))
           .map(sr => {
             val lines = sr._2.split("""(\r\n|\n)+""")

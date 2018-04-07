@@ -17,7 +17,7 @@ object Cache {
 
   object PageList extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): List[Database.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Database.pageSelectPageList()
+      Database().pageSelectPageList()
     }
 
     override def invalidate()(implicit wikiContext: WikiContext): Unit = {

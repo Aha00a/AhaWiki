@@ -6,6 +6,7 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.implicits.Implicits.LocalDateTimeFormatter
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
+import models.Database._
 import play.api.Play.current
 import play.api.db.DB
 
@@ -13,6 +14,7 @@ import scala.collection.immutable
 import scala.language.postfixOps
 
 object Database {
+  def apply(): Database = new Database()
 
   trait WithTime {
     val time:Long
@@ -29,9 +31,10 @@ object Database {
   }
 
   case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: Option[String]) extends WithTime
-  case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: Option[String]) extends WithTime
-  case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
 
+  case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: Option[String]) extends WithTime
+
+  case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
 
   case class TermFrequency(name:String, term:String, frequency:Int) {
     def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
@@ -42,9 +45,14 @@ object Database {
     def or(a:(String => Boolean)):Boolean = a(src) || a(dst)
   }
 
-
   case class CosineSimilarity(name1: String, name2: String, similarity: Double)
+
   case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
+
+  case class SearchResult(name:String, content:String)
+}
+
+class Database() {
 
   object PageTable {
     def selectCount(): Long = DB.withConnection { implicit connection =>
@@ -107,7 +115,6 @@ object Database {
     SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
-  case class SearchResult(name:String, content:String)
 
   def pageSearch(q:String): Iterator[(String, String)] = DB.withConnection { implicit connection =>
     SQL("""

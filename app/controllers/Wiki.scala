@@ -73,9 +73,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[Database.CosineSimilarity] = Database.cosineSimilaritySelect(name)
+              val cosineSimilarities: immutable.Seq[Database.CosineSimilarity] = Database().cosineSimilaritySelect(name)
               val similarPageNames = cosineSimilarities.map(_.name2)
-              val highScoredTerms = Database.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+              val highScoredTerms = Database().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
@@ -119,7 +119,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
         Ok(views.html.Wiki.diff(name, before, after, listDiffRow)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database.pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Database().pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -128,9 +128,9 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
   }
 
   def getRelatedPages(name: String): String = {
-    val relationship = Database.linkSelect(name)
-    val backward = relationship.flatMap(lm => Database.linkSelect(lm.src))
-    val forward = relationship.flatMap(lm => Database.linkSelect(lm.dst))
+    val relationship = Database().linkSelect(name)
+    val backward = relationship.flatMap(lm => Database().linkSelect(lm.src))
+    val forward = relationship.flatMap(lm => Database().linkSelect(lm.dst))
 
     val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")
@@ -157,7 +157,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        Database.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
+        Database().pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
         actorSimilarPage ! Calculate(name)
 
         Cache.PageList.invalidate()
@@ -183,7 +183,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          Database.pageDeleteWithRelatedData(name)
+          Database().pageDeleteWithRelatedData(name)
           Cache.PageList.invalidate()
           Ok("")
         } else {
@@ -200,7 +200,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
     MockDb.selectPageLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          Database.pageDeleteRevisionWithRelatedData(name, page.revision)
+          Database().pageDeleteRevisionWithRelatedData(name, page.revision)
           Cache.PageList.invalidate()
           actorSimilarPage ! Calculate(name)
           Ok("")
@@ -218,8 +218,8 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
     (MockDb.selectPageLastRevision(name), MockDb.selectPageLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          Database.pageRename(name, newName)
-          Database.pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          Database().pageRename(name, newName)
+          Database().pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           Cache.PageList.invalidate()
           actorSimilarPage ! Calculate(newName)
           Ok("")

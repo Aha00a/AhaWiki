@@ -28,7 +28,7 @@ class ActorPageProcessor @Inject() extends Actor {
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String) =>
       StopWatch(name) {
-        Database.pageSelectLastRevision(name) foreach { page =>
+        Database().pageSelectLastRevision(name) foreach { page =>
           updateCosineSimilarity(name, page)
           updateLink(page)
         }
@@ -37,9 +37,9 @@ class ActorPageProcessor @Inject() extends Actor {
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    Database.termFrequencyDelete(name)
-    Database.termFrequencyInsert(name, wordCount)
-    Database.cosineSimilarityUpdate(name)
+    Database().termFrequencyDelete(name)
+    Database().termFrequencyInsert(name, wordCount)
+    Database().cosineSimilarityUpdate(name)
   }
 
   def updateLink(page:Page): Array[Int] = {
@@ -55,8 +55,8 @@ class ActorPageProcessor @Inject() extends Actor {
     })
 
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    Database.linkDelete(page.name)
-    Database.linkInsert(seqLink)
+    Database().linkDelete(page.name)
+    Database().linkInsert(seqLink)
   }
 
 

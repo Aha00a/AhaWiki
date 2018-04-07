@@ -41,14 +41,14 @@ object MockDb {
 
 
   def selectPageFirstRevision(name: String):Option[Page] = {
-    readAllTextFromFile(name).orElse(Database.pageSelectFirstRevision(name))
+    readAllTextFromFile(name).orElse(Database().pageSelectFirstRevision(name))
   }
 
   def selectPageLastRevision(name: String): Option[Page] = {
-    readAllTextFromFile(name).orElse(Database.pageSelectLastRevision(name))
+    readAllTextFromFile(name).orElse(Database().pageSelectLastRevision(name))
   }
 
   def selectPageSpecificRevision(name: String, revision:Int):Option[Page] = {
-    readAllTextFromFile(name).orElse(Database.pageSelectSpecificRevision(name, revision))
+    readAllTextFromFile(name).orElse(Database().pageSelectSpecificRevision(name, revision))
   }
 }

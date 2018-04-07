@@ -38,7 +38,7 @@ class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, dat
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       val body = if(latestText == "") f"= [$yearDashMonth]-$day%02d $weekdayName\n * " + q else latestText + "\n * " + q
-      Database.pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+      Database().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorSimilarPage ! Calculate(name)
       Cache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")

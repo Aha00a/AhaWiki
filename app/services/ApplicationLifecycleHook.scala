@@ -27,9 +27,9 @@ class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: Applicat
   //noinspection LanguageFeature
   actorSystem.scheduler.scheduleOnce(1 second, () => {
     Logger.info("OnApplicationStarted")
-    if (0 == Database.pageSelectCount()) {
+    if (0 == Database().pageSelectCount()) {
       MockDb.pageFromFile().foreach(p => {
-        Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+        Database().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
         actorPageProcessor ! Calculate(p.name)
       })
     }
@@ -37,7 +37,7 @@ class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: Applicat
 
   //noinspection LanguageFeature
   actorSystem.scheduler.schedule(2 seconds, 60 minutes, () => {
-    Database.pageSelectNameWhereNoCosineSimilarity() match {
+    Database().pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorPageProcessor ! Calculate(s)
       case None => Logger.info("None")
     }

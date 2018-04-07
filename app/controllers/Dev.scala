@@ -25,8 +25,8 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
     if(request.isLocalhost) {
       val pageFromFile: Array[Page] = MockDb.pageFromFile()
       pageFromFile.foreach(p => {
-        Database.pageDeleteWithRelatedData(p.name)
-        Database.pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+        Database().pageDeleteWithRelatedData(p.name)
+        Database().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
       })
 
       implicit val wikiContext = WikiContext("")
@@ -50,7 +50,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
   def reindex = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
-      Random.shuffle(Database.pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
+      Random.shuffle(Database().pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
     }
     else
