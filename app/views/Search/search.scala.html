@@ -1,4 +1,4 @@
-@(q:String, iterator:Iterator[models.AhaWikiDatabase.SearchResult])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(q:String, iterator:Seq[models.AhaWikiDatabase.SearchResult])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Search " + q, "") {
     @views.html.Wiki.hotkey()
     <script type="text/javascript">

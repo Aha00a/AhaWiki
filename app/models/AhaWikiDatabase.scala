@@ -116,7 +116,7 @@ class AhaWikiDatabase() {
   }
 
 
-  def pageSearch(q:String): Iterator[(String, String)] = DB.withConnection { implicit connection =>
+  def pageSearch(q:String): immutable.Seq[SearchResult] = DB.withConnection { implicit connection =>
     SQL("""
 SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comment
      FROM Page w
@@ -132,7 +132,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
          w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
       .on('q -> q)
-      .as(str("name") ~ str("content") *).iterator.map(flatten)
+      .as(str("name") ~ str("content") *).map(flatten).map(SearchResult.tupled)
   }
 
 

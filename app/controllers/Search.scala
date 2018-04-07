@@ -23,11 +23,11 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
       q,
       q.toOption.map(
         AhaWikiDatabase().pageSearch(_)
-          .filter(sr => WikiPermission.isReadable(PageContent(sr._2)))
+          .filter(sr => WikiPermission.isReadable(PageContent(sr.content)))
           .map(sr => {
-            val lines = sr._2.split("""(\r\n|\n)+""")
+            val lines = sr.content.split("""(\r\n|\n)+""")
             SearchResult(
-              sr._1,
+              sr.name,
               lines
                 .zipWithIndex
                 .filter(s => regex.findFirstIn(s._1).isDefined)
@@ -42,7 +42,7 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
           })
           .partition(_.name == q)
           .concat()
-      ).getOrElse(Iterator.empty)))
+      ).getOrElse(Seq.empty)))
   }
 
 }

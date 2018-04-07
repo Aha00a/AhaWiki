@@ -41,10 +41,16 @@ object Implicits {
     }
   }
 
+  // TODO: rename
   implicit class RichTuple[T](t:(Iterator[T], Iterator[T])) {
     def concat(): Iterator[T] = t._1 ++ t._2
   }
-  
+
+  // TODO: rename
+  implicit class RichTuple2[T](t:(Seq[T], Seq[T])) {
+    def concat(): Seq[T] = t._1 ++ t._2
+  }
+
   implicit class RichString(s:String) {
     def toOption: Option[String] = if (s != null && s != "") Some(s) else None
     def getOrElse(s:String): String = toOption.getOrElse(s)
