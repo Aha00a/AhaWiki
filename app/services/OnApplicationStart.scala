@@ -1,3 +1,5 @@
+package services
+
 import javax.inject._
 
 import actors.ActorPageProcessor
