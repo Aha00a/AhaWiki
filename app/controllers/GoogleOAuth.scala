@@ -10,10 +10,9 @@ import play.api.cache.CacheApi
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
-
-class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient) extends Controller {
+class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient, executionContext: ExecutionContext) extends Controller {
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
