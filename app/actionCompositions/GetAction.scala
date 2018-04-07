@@ -10,5 +10,4 @@ object GetAction extends ActionBuilder[Request] {
     // authentication code here
     block(request)
   }
-  override def composeAction[A](action: Action[A]) = CSRFAddToken(action)
 }
