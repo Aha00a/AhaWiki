@@ -4,7 +4,7 @@ import java.time.{Instant, LocalDate, LocalDateTime}
 
 import anorm.SqlParser._
 import anorm._
-import com.aha00a.commons.implicits.Implicits.LocalDateTimeFormatter
+import com.aha00a.commons.implicits.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 import models.AhaWikiDatabase._
 import play.api.Play.current
@@ -12,6 +12,7 @@ import play.api.db.DB
 
 import scala.collection.immutable
 import scala.language.postfixOps
+import scala.util.matching.Regex
 
 object AhaWikiDatabase {
   def apply(): AhaWikiDatabase = new AhaWikiDatabase()
@@ -49,7 +50,26 @@ object AhaWikiDatabase {
 
   case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
-  case class SearchResult(name:String, content:String)
+  case class SearchResult(name:String, content:String) {
+    def summarised(q: String): SearchResult = {
+      def around(i:Int, distance: Int = 2): immutable.Seq[Int] = (i - distance) to (i + distance)
+
+      val lines = content.split("""(\r\n|\n)+""")
+      SearchResult(
+        name,
+        lines
+          .zipWithIndex
+          .filter(s => s"(?i)$q".r.findFirstIn(s._1).isDefined)
+          .flatMap(s => around(s._2))
+          .distinct
+          .filter(lines.isDefinedAt(_))
+          .toSeq
+          .splitBy((a, b) => a + 1 != b)
+          .map(_.map(i => s"${i + 1}: ${lines(i)}").mkString("\n"))
+          .mkString("\n\n⋯\n\n")
+      )
+    }
+  }
 }
 
 class AhaWikiDatabase() {
