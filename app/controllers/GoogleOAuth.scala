@@ -28,8 +28,9 @@ class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient) ext
       .flashing("redirect" -> referer)
   }
 
+  //noinspection TypeAnnotation
   def callback(code: String) = Action.async { implicit request =>
-    GoogleApi.retrieveEmailWithCode(code, ApplicationConf.AhaWiki.google.api.clientId, ApplicationConf.AhaWiki.google.api.clientSecret, googleApiRedirectUri()).map {
+    GoogleApi().retrieveEmailWithCode(code, ApplicationConf.AhaWiki.google.api.clientId, ApplicationConf.AhaWiki.google.api.clientSecret, googleApiRedirectUri()).map {
       case Some(email) =>
         Redirect(request.flash.get("redirect").getOrElse("/"))
           .withSession(SessionLogic.login(request, email))

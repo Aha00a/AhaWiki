@@ -8,24 +8,24 @@ import play.api.Play.current
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object GoogleApi {
+case class GoogleApi()(implicit wsClient: WSClient) {
 
 
-  def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String)(implicit wsClient: WSClient): Future[Option[String]] = {
+  def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[String]] = {
     retrieveMeWithCode(code, googleClientId, googleClientSecret, redirectUri).map {
       case Some(s) => Some(getEmail(s))
       case None => None
     }
   }
 
-  def retrieveMeWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String)(implicit wsClient: WSClient): Future[Option[JsValue]] = {
+  def retrieveMeWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[JsValue]] = {
     requestOAuthToken(code, googleClientId, googleClientSecret, redirectUri) flatMap {
       case Some(oauthTokenJson) => requestMe(getAccessToken(oauthTokenJson))
       case None => Future.successful(None)
     }
   }
 
-  def requestOAuthToken(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String)(implicit wsClient: WSClient): Future[Option[JsValue]] = {
+  def requestOAuthToken(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[JsValue]] = {
     wsClient.url("https://accounts.google.com/o/oauth2/token").post(Map(
       "client_id" -> Seq(googleClientId),
       "client_secret" -> Seq(googleClientSecret),
@@ -43,7 +43,7 @@ object GoogleApi {
     })
   }
 
-  def requestMe(accessToken: String)(implicit wsClient: WSClient): Future[Option[JsValue]] = {
+  def requestMe(accessToken: String): Future[Option[JsValue]] = {
     wsClient.url("https://www.googleapis.com/plus/v1/people/me").withQueryString("access_token" -> accessToken).get().map(response => {
       Logger.info(response.status.toString)
       Logger.info(response.body)
