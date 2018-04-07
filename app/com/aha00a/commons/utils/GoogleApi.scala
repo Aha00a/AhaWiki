@@ -4,10 +4,9 @@ import play.api.Logger
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-case class GoogleApi()(implicit wsClient: WSClient) {
+case class GoogleApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) {
 
 
   def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[String]] = {
