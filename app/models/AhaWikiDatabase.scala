@@ -60,7 +60,8 @@ object AhaWikiDatabase {
         lines
           .zipWithIndex
           .filter(s => s"(?i)$q".r.findFirstIn(s._1).isDefined)
-          .flatMap(s => around(s._2))
+          .map(_._2)
+          .flatMap(s => around(s))
           .distinct
           .filter(lines.isDefinedAt(_))
           .toSeq
