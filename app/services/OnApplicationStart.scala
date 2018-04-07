@@ -16,17 +16,17 @@ import scala.concurrent.duration._
 
 //noinspection LanguageFeature
 @Singleton
-class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, system: ActorSystem) {
-  val actorPageProcessor: ActorRef = system.actorOf(ActorPageProcessor.props)
+class OnApplicationStart @Inject()(applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem) {
+  val actorPageProcessor: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
 
-  lifecycle.addStopHook { () =>
+  applicationLifecycle.addStopHook { () =>
     Logger.info("OnApplicationStop")
     Future.successful(())
   }
 
   Logger.info("OnApplicationStart")
 
-  system.scheduler.scheduleOnce(1 second, () => {
+  actorSystem.scheduler.scheduleOnce(1 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == Database.pageSelectCount()) {
       MockDb.pageFromFile().foreach(p => {
@@ -36,7 +36,7 @@ class OnApplicationStart @Inject()(lifecycle: ApplicationLifecycle, system: Acto
     }
   })
 
-  system.scheduler.schedule(2 seconds, 60 minutes, () => {
+  actorSystem.scheduler.schedule(2 seconds, 60 minutes, () => {
     Database.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorPageProcessor ! Calculate(s)
       case None => Logger.info("None")
