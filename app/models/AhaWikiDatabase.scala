@@ -52,7 +52,7 @@ object AhaWikiDatabase {
 
   case class SearchResult(name:String, content:String) {
     def summarised(q: String): SearchResult = {
-      def around(i:Int, distance: Int = 2) = (i - distance) to (i + distance)
+      def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
 
       val lines = content.split("""(\r\n|\n)+""").toSeq
       SearchResult(
