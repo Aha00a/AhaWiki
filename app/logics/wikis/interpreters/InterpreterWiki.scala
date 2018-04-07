@@ -6,7 +6,7 @@ import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.Cache
 import logics.wikis._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
-import models.Database.Link
+import models.AhaWikiDatabase.Link
 import models.WikiContext
 
 import scala.collection.mutable.ArrayBuffer

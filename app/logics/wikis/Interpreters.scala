@@ -2,7 +2,7 @@ package logics.wikis
 
 import logics.wikis.interpreters._
 import logics.wikis.macros.MacroError
-import models.Database.Link
+import models.AhaWikiDatabase.Link
 import models.{PageContent, WikiContext}
 import play.api.Logger
 

@@ -3,8 +3,8 @@ package controllers
 import javax.inject._
 
 import logics.wikis.WikiPermission
-import models.{Database, PageContent, WikiContext}
-import models.Database.SearchResult
+import models.{AhaWikiDatabase, PageContent, WikiContext}
+import models.AhaWikiDatabase.SearchResult
 import play.api.cache.CacheApi
 import play.api.mvc._
 import com.aha00a.commons.implicits.Implicits._
@@ -22,7 +22,7 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
-        Database().pageSearch(_)
+        AhaWikiDatabase().pageSearch(_)
           .filter(sr => WikiPermission.isReadable(PageContent(sr._2)))
           .map(sr => {
             val lines = sr._2.split("""(\r\n|\n)+""")

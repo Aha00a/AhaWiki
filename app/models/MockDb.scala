@@ -2,7 +2,7 @@ package models
 
 import java.io.File
 
-import models.Database.Page
+import models.AhaWikiDatabase.Page
 import play.Play
 import play.api.Logger
 import com.aha00a.commons.utils.DateTimeUtil
@@ -31,7 +31,7 @@ object MockDb {
     }
   }
 
-  def selectPage(name: String, revision: Int): Option[Database.Page] = {
+  def selectPage(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
     if (revision == 0) {
       MockDb.selectPageLastRevision(name)
     } else {
@@ -41,14 +41,14 @@ object MockDb {
 
 
   def selectPageFirstRevision(name: String):Option[Page] = {
-    readAllTextFromFile(name).orElse(Database().pageSelectFirstRevision(name))
+    readAllTextFromFile(name).orElse(AhaWikiDatabase().pageSelectFirstRevision(name))
   }
 
   def selectPageLastRevision(name: String): Option[Page] = {
-    readAllTextFromFile(name).orElse(Database().pageSelectLastRevision(name))
+    readAllTextFromFile(name).orElse(AhaWikiDatabase().pageSelectLastRevision(name))
   }
 
   def selectPageSpecificRevision(name: String, revision:Int):Option[Page] = {
-    readAllTextFromFile(name).orElse(Database().pageSelectSpecificRevision(name, revision))
+    readAllTextFromFile(name).orElse(AhaWikiDatabase().pageSelectSpecificRevision(name, revision))
   }
 }

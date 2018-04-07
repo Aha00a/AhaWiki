@@ -2,7 +2,7 @@ package logics.wikis.macros
 
 import logics.Cache
 import logics.wikis.{Interpreters, WikiPermission}
-import models.Database.PageNameRevisionTimeAuthorRemoteAddressSizeComment
+import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.{MockDb, PageContent, WikiContext}
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement

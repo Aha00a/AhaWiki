@@ -3,7 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
-import models.Database.PageNameRevisionTimeAuthorRemoteAddressSizeComment
+import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.WikiContext
 
 object MacroRecentChangesList extends TraitMacro {

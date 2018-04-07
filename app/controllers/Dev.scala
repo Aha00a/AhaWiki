@@ -8,8 +8,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterVim
-import models.Database.Page
-import models.{Database, MockDb, WikiContext}
+import models.AhaWikiDatabase.Page
+import models.{AhaWikiDatabase, MockDb, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
@@ -25,8 +25,8 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
     if(request.isLocalhost) {
       val pageFromFile: Array[Page] = MockDb.pageFromFile()
       pageFromFile.foreach(p => {
-        Database().pageDeleteWithRelatedData(p.name)
-        Database().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+        AhaWikiDatabase().pageDeleteWithRelatedData(p.name)
+        AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
       })
 
       implicit val wikiContext = WikiContext("")
@@ -50,7 +50,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
   def reindex = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
-      Random.shuffle(Database().pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
+      Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
     }
     else

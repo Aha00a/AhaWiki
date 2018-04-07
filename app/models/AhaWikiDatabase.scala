@@ -6,15 +6,15 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.implicits.Implicits.LocalDateTimeFormatter
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
-import models.Database._
+import models.AhaWikiDatabase._
 import play.api.Play.current
 import play.api.db.DB
 
 import scala.collection.immutable
 import scala.language.postfixOps
 
-object Database {
-  def apply(): Database = new Database()
+object AhaWikiDatabase {
+  def apply(): AhaWikiDatabase = new AhaWikiDatabase()
 
   trait WithTime {
     val time:Long
@@ -52,7 +52,7 @@ object Database {
   case class SearchResult(name:String, content:String)
 }
 
-class Database() {
+class AhaWikiDatabase() {
 
   object PageTable {
     def selectCount(): Long = DB.withConnection { implicit connection =>

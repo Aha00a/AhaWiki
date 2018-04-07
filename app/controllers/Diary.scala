@@ -13,7 +13,7 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.WikiPermission
 import logics.{Cache, SessionLogic}
-import models.{Database, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -38,7 +38,7 @@ class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, dat
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       val body = if(latestText == "") f"= [$yearDashMonth]-$day%02d $weekdayName\n * " + q else latestText + "\n * " + q
-      Database().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+      AhaWikiDatabase().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorSimilarPage ! Calculate(name)
       Cache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")

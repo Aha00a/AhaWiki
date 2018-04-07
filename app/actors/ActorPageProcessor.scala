@@ -5,8 +5,8 @@ import javax.inject.Inject
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits
 import logics.wikis.Interpreters
-import models.{Database, WikiContext}
-import models.Database.Page
+import models.{AhaWikiDatabase, WikiContext}
+import models.AhaWikiDatabase.Page
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
 import Implicits._
 import play.api.cache.CacheApi
@@ -28,7 +28,7 @@ class ActorPageProcessor @Inject() extends Actor {
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String) =>
       StopWatch(name) {
-        Database().pageSelectLastRevision(name) foreach { page =>
+        AhaWikiDatabase().pageSelectLastRevision(name) foreach { page =>
           updateCosineSimilarity(name, page)
           updateLink(page)
         }
@@ -37,9 +37,9 @@ class ActorPageProcessor @Inject() extends Actor {
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    Database().termFrequencyDelete(name)
-    Database().termFrequencyInsert(name, wordCount)
-    Database().cosineSimilarityUpdate(name)
+    AhaWikiDatabase().termFrequencyDelete(name)
+    AhaWikiDatabase().termFrequencyInsert(name, wordCount)
+    AhaWikiDatabase().cosineSimilarityUpdate(name)
   }
 
   def updateLink(page:Page): Array[Int] = {
@@ -55,8 +55,8 @@ class ActorPageProcessor @Inject() extends Actor {
     })
 
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    Database().linkDelete(page.name)
-    Database().linkInsert(seqLink)
+    AhaWikiDatabase().linkDelete(page.name)
+    AhaWikiDatabase().linkInsert(seqLink)
   }
 
 
