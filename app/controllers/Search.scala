@@ -36,7 +36,7 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
                 .filter(lines.isDefinedAt(_))
                 .toSeq
                 .splitBy((a, b) => a + 1 != b)
-                .map(_.map(i => i + ": " + lines(i)).mkString("\n"))
+                .map(_.map(i => s"${i + 1}: ${lines(i)}").mkString("\n"))
                 .mkString("\n\n⋯\n\n")
             )
           })
