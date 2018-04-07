@@ -5,7 +5,6 @@ import javax.inject.Inject
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.GoogleApi
 import logics.{ApplicationConf, SessionLogic}
-import models.WikiContext
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.libs.ws.WSClient

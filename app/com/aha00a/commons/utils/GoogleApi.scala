@@ -2,11 +2,10 @@ package com.aha00a.commons.utils
 
 import play.api.Logger
 import play.api.libs.json.JsValue
-import play.api.libs.ws.{WS, WSClient}
-import play.api.Play.current
+import play.api.libs.ws.WSClient
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 case class GoogleApi()(implicit wsClient: WSClient) {
 
