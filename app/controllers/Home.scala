@@ -23,6 +23,6 @@ class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database
   }
 
   def robotsTxt = Action { implicit request =>
-    Ok(MockDb.selectPageLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+    Ok(MockDb().selectPageLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
   }
 }

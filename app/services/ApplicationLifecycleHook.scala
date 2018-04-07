@@ -28,7 +28,7 @@ class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: Applicat
   actorSystem.scheduler.scheduleOnce(1 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().pageSelectCount()) {
-      MockDb.pageFromFile().foreach(p => {
+      MockDb().pageFromFile().foreach(p => {
         AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
         actorPageProcessor ! Calculate(p.name)
       })

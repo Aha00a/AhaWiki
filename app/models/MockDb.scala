@@ -9,7 +9,7 @@ import com.aha00a.commons.utils.DateTimeUtil
 
 import scala.io.Codec
 
-object MockDb {
+case class MockDb() {
   def pageFromFile() = {
     Play.application().getFile("app/assets/Page").listFiles().map(file => {
       val name = file.getName
@@ -33,9 +33,9 @@ object MockDb {
 
   def selectPage(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
     if (revision == 0) {
-      MockDb.selectPageLastRevision(name)
+      MockDb().selectPageLastRevision(name)
     } else {
-      MockDb.selectPageSpecificRevision(name, revision)
+      MockDb().selectPageSpecificRevision(name, revision)
     }
   }
 

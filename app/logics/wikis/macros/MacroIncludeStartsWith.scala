@@ -11,7 +11,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
     case _ =>
       val list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = Cache.PageList.get()
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
-        val pageLastRevision = MockDb.selectPageLastRevision(page.name)
+        val pageLastRevision = MockDb().selectPageLastRevision(page.name)
         if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {

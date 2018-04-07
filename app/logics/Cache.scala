@@ -34,19 +34,19 @@ object Cache {
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(MockDb.selectPageLastRevision(".header").map(_.content).getOrElse(""))
+      Interpreters.interpret(MockDb().selectPageLastRevision(".header").map(_.content).getOrElse(""))
     }
   }
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(MockDb.selectPageLastRevision(".footer").map(_.content).getOrElse(""))
+      Interpreters.interpret(MockDb().selectPageLastRevision(".footer").map(_.content).getOrElse(""))
     }
   }
 
   object Config extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      MockDb.selectPageLastRevision(".config").map(_.content).getOrElse("")
+      MockDb().selectPageLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 }

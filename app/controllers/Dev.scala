@@ -23,7 +23,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
   def reset = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
-      val pageFromFile: Array[Page] = MockDb.pageFromFile()
+      val pageFromFile: Array[Page] = MockDb().pageFromFile()
       pageFromFile.foreach(p => {
         AhaWikiDatabase().pageDeleteWithRelatedData(p.name)
         AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
