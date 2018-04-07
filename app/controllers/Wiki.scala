@@ -15,19 +15,18 @@ import com.aha00a.commons.utils._
 import difflib.DiffRowGenerator
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
-import models.AhaWikiDatabase.Link
 import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.db.Database
 import play.api.mvc._
+import play.api.{Environment, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
 
 @Singleton
-class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database) extends Controller {
+class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database, environment: Environment) extends Controller {
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
@@ -102,7 +101,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
           }
         }
         finally {
-          if (play.Play.isDev && request.isLocalhost)
+          if (environment.mode == Mode.Dev && request.isLocalhost)
             actorSimilarPage ! Calculate(name)
         }
       case (Some(page), "diff", true, _) =>
