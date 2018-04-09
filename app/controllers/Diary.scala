@@ -6,8 +6,8 @@ import java.util.Locale
 import javax.inject._
 
 import actionCompositions.PostAction
-import actors.ActorPageProcessor
-import actors.ActorPageProcessor.Calculate
+import actors.ActorAhaWiki
+import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
@@ -17,13 +17,12 @@ import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.db.Database
 import play.api.mvc._
 
 @Singleton
 class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database) extends Controller {
 
-  val actorSimilarPage: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
+  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
 
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
@@ -39,7 +38,7 @@ class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, dat
     if (WikiPermission.isWritable(PageContent(latestText))) {
       val body = if(latestText == "") f"= [$yearDashMonth]-$day%02d $weekdayName\n * " + q else latestText + "\n * " + q
       AhaWikiDatabase().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
-      actorSimilarPage ! Calculate(name)
+      actorAhaWiki ! Calculate(name)
       Cache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
     } else {

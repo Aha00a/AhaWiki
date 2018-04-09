@@ -7,8 +7,8 @@ import java.util.Locale
 import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
-import actors.ActorPageProcessor
-import actors.ActorPageProcessor.Calculate
+import actors.ActorAhaWiki
+import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
@@ -102,7 +102,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
         }
         finally {
           if (environment.mode == Mode.Dev && request.isLocalhost)
-            actorSimilarPage ! Calculate(name)
+            actorAhaWiki ! Calculate(name)
         }
       case (Some(page), "diff", true, _) =>
         val after = request.getQueryString("after").getOrElse("0").toInt
@@ -145,7 +145,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
 
 
-  val actorSimilarPage: ActorRef = actorSystem.actorOf(ActorPageProcessor.props)
+  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
 
   def save(nameEncoded: String) = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
@@ -157,7 +157,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         AhaWikiDatabase().pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
-        actorSimilarPage ! Calculate(name)
+        actorAhaWiki ! Calculate(name)
 
         Cache.PageList.invalidate()
         name match {
@@ -201,7 +201,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
         if (WikiPermission.isWritable(PageContent(page.content))) {
           AhaWikiDatabase().pageDeleteRevisionWithRelatedData(name, page.revision)
           Cache.PageList.invalidate()
-          actorSimilarPage ! Calculate(name)
+          actorAhaWiki ! Calculate(name)
           Ok("")
         } else {
           Forbidden("")
@@ -220,7 +220,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
           AhaWikiDatabase().pageRename(name, newName)
           AhaWikiDatabase().pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           Cache.PageList.invalidate()
-          actorSimilarPage ! Calculate(newName)
+          actorAhaWiki ! Calculate(newName)
           Ok("")
         } else {
           Forbidden("")

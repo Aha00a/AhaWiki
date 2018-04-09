@@ -3,27 +3,25 @@ package actors
 import javax.inject.Inject
 
 import akka.actor._
-import com.aha00a.commons.implicits.Implicits
-import logics.wikis.Interpreters
-import models.{AhaWikiDatabase, WikiContext}
-import models.AhaWikiDatabase.Page
+import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
-import Implicits._
+import logics.wikis.Interpreters
+import models.AhaWikiDatabase.Page
+import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
-import play.api.db.{DB, DBApi, Database}
 
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-object ActorPageProcessor {
-  def props: Props = Props[ActorPageProcessor]
+object ActorAhaWiki {
+  def props: Props = Props[ActorAhaWiki]
 
 
   case class Calculate(name: String)
 }
 
-class ActorPageProcessor @Inject() extends Actor {
-  import ActorPageProcessor._
+class ActorAhaWiki @Inject() extends Actor {
+  import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String) =>

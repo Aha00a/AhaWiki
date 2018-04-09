@@ -2,8 +2,8 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import actors.ActorPageProcessor
-import actors.ActorPageProcessor.Calculate
+import actors.ActorAhaWiki
+import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
@@ -11,14 +11,13 @@ import logics.wikis.interpreters.InterpreterVim
 import models.AhaWikiDatabase.Page
 import models.{AhaWikiDatabase, MockDb, WikiContext}
 import play.api.cache.CacheApi
-import play.api.db.Database
 import play.api.mvc._
 
 import scala.util.Random
 
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
-  val actorSimilarPage: ActorRef = system.actorOf(ActorPageProcessor.props)
+  val actorAhaWiki: ActorRef = system.actorOf(ActorAhaWiki.props)
 
   def reset = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
@@ -36,7 +35,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
       Cache.Config.invalidate()
 
       pageFromFile.foreach(p => {
-        actorSimilarPage ! Calculate(p.name)
+        actorAhaWiki ! Calculate(p.name)
       })
 
       result.flashing("success" -> "Reset Succeed.")
@@ -50,7 +49,7 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
   def reindex = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
-      Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName).foreach(s => actorSimilarPage ! Calculate(s))
+      Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName).foreach(s => actorAhaWiki ! Calculate(s))
       result.flashing("success" -> "Reindex Succeed.")
     }
     else
