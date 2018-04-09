@@ -25,7 +25,7 @@ class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: Applicat
   Logger.info("OnApplicationStart")
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.scheduleOnce(1 second, () => {
+  actorSystem.scheduler.scheduleOnce(2 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().pageSelectCount()) {
       MockDb().pageFromFile().foreach(p => {
@@ -36,7 +36,7 @@ class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: Applicat
   })
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.schedule(2 seconds, 60 minutes, () => {
+  actorSystem.scheduler.schedule(3 seconds, 60 minutes, () => {
     AhaWikiDatabase().pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorPageProcessor ! Calculate(s)
       case None => Logger.info("None")
