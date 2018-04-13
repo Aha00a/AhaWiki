@@ -20,8 +20,6 @@ class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient, exe
 
   def login = Action { implicit request =>
     val referer = request.refererOrRoot
-    Logger.error(referer)
-
     Redirect("https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/userinfo.email&client_id=" + ApplicationConf.AhaWiki.google.api.clientId + "&redirect_uri=" + googleApiRedirectUri)
       .flashing("redirect" -> referer)
   }
