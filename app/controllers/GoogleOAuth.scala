@@ -18,15 +18,17 @@ class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient, exe
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
   }
 
+  private val confApi = ApplicationConf.AhaWiki.google.api
+
   def login = Action { implicit request =>
     val referer = request.refererOrRoot
-    Redirect("https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/userinfo.email&client_id=" + ApplicationConf.AhaWiki.google.api.clientId + "&redirect_uri=" + googleApiRedirectUri)
+    Redirect("https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/userinfo.email&client_id=" + confApi.clientId + "&redirect_uri=" + googleApiRedirectUri)
       .flashing("redirect" -> referer)
   }
 
   //noinspection TypeAnnotation
   def callback(code: String) = Action.async { implicit request =>
-    GoogleApi().retrieveEmailWithCode(code, ApplicationConf.AhaWiki.google.api.clientId(), ApplicationConf.AhaWiki.google.api.clientSecret(), googleApiRedirectUri()).map {
+    GoogleApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
       case Some(email) =>
         Redirect(request.flash.get("redirect").getOrElse("/"))
           .withSession(SessionLogic.login(request, email))
