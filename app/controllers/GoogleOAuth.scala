@@ -13,12 +13,11 @@ import play.api.mvc._
 import scala.concurrent.ExecutionContext
 
 class GoogleOAuth @Inject()(implicit cacheApi: CacheApi, wsClient: WSClient, executionContext: ExecutionContext) extends Controller {
+  private val confApi = ApplicationConf.AhaWiki.google.api
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
   }
-
-  private val confApi = ApplicationConf.AhaWiki.google.api
 
   def login = Action { implicit request =>
     val referer = request.refererOrRoot
