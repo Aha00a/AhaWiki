@@ -65,8 +65,9 @@
                 name: '@(page.name)',
                 text: $('textarea[name=text]').val()
             }, function (data, textStatus, jqXHR) {
-                $('.previewPane').html(data);
-                $("[name=text]").css({ height: $('.previewPane').height()});
+                var $previewPane = $('.previewPane');
+                $previewPane.html(data);
+                $("[name=text]").css({ height: $previewPane.height()});
             });
         }
 
