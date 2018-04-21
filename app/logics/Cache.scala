@@ -3,6 +3,7 @@ package logics
 import logics.wikis.Interpreters
 import models.{AhaWikiDatabase, MockDb, WikiContext}
 import play.api.Logger
+import play.api.cache.CacheApi
 
 import scala.concurrent.duration._
 
@@ -16,7 +17,7 @@ object Cache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): List[AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi): List[AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
       AhaWikiDatabase().pageSelectPageList()
     }
 
@@ -27,7 +28,7 @@ object Cache {
   }
 
   object PageNameSet extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): Set[String] = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
       PageList.get().map(_.name).toSet
     }
   }

@@ -4,5 +4,5 @@ import logics.Cache
 import models.WikiContext
 
 object MacroPageCount extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = Cache.PageList.get().size.toString
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = Cache.PageList.get()(wikiContext.cacheApi).size.toString
 }

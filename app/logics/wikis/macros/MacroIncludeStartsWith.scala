@@ -9,7 +9,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case _ =>
-      val list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = Cache.PageList.get()
+      val list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = Cache.PageList.get()(wikiContext.cacheApi)
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
         val pageLastRevision = MockDb().selectPageLastRevision(page.name)
         if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
