@@ -24,6 +24,14 @@ object Implicits {
     def writeAll(s1: String): Unit = {
       usingPrintWriter(file)(_.write(s1))
     }
+
+    def getSlashBasedPath: String = {
+      if(File.separator != "/") {
+        file.getPath.replaceAllLiterally(File.separator, "/")
+      } else {
+        file.getPath
+      }
+    }
   }
 
   implicit class RichSeq[T](seq:Seq[T]) {

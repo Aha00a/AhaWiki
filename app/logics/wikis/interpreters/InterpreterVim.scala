@@ -76,7 +76,7 @@ object InterpreterVim {
 
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
-        val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme $colorscheme" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getPath}" +q! ${cacheFileText.getPath} 2> /dev/null"""
+        val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme $colorscheme" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getSlashBasedPath}" +q! ${cacheFileText.getSlashBasedPath} 2> /dev/null"""
         Logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
@@ -113,7 +113,9 @@ object InterpreterVim {
     val file = new File(play.Play.application().getFile("cache"), "Vim")
     Logger.info(file.toString)
     Logger.info(new File(".").getCanonicalPath)
+    Logger.info(new File(new File("cache"), "Vim").getCanonicalPath)
     file
+    new File(new File("cache"), "Vim")
   }
 
   def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = {
