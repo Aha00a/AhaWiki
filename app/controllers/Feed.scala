@@ -66,7 +66,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
         <title>{title}</title>
         <description>{description}</description>
         <link>{link}</link>
-        <pubDate>Sun, 06 Sep 2009 16:20:00 +0000</pubDate>
+        <pubDate>{pubDate}</pubDate>
       </item>
     }
 
