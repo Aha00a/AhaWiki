@@ -110,11 +110,6 @@ object InterpreterVim {
   }
 
   def getCacheDir: File = {
-    val file = new File(play.Play.application().getFile("cache"), "Vim")
-    Logger.info(file.toString)
-    Logger.info(new File(".").getCanonicalPath)
-    Logger.info(new File(new File("cache"), "Vim").getCanonicalPath)
-    file
     new File(new File("cache"), "Vim")
   }
 
