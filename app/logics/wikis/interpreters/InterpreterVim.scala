@@ -110,7 +110,10 @@ object InterpreterVim {
   }
 
   def getCacheDir: File = {
-    new File(play.Play.application().getFile("cache"), "Vim")
+    val file = new File(play.Play.application().getFile("cache"), "Vim")
+    Logger.info(file.toString)
+    Logger.info(new File(".").getCanonicalPath)
+    file
   }
 
   def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = {
