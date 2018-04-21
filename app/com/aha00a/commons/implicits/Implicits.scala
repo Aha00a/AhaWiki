@@ -16,14 +16,13 @@ object Implicits {
     def toYearDashMonthString: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
-  implicit class RichFile(cacheFileSh: File) {
-
+  implicit class RichFile(file: File) {
     def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit) {
       Using(new PrintWriter(f))(op)
     }
 
     def writeAll(s1: String): Unit = {
-      usingPrintWriter(cacheFileSh)(_.write(s1))
+      usingPrintWriter(file)(_.write(s1))
     }
   }
 
