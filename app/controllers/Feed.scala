@@ -9,12 +9,14 @@ import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
 
+import scala.xml.{Elem, NodeBuffer}
+
 class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
-  def index = atom
+  def index: Action[AnyContent] = atom
 
   def atom = Action { implicit request =>
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
-      def toXml = <title>{title}</title>
+      def toXml: NodeBuffer = <title>{title}</title>
         <subtitle>{subtitle}</subtitle>
         <link href={linkSelf} rel="self" />
         <link href={link} />
@@ -23,7 +25,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     case class Entry(title:String, link:String, linkAlternate:String, linkEdit:String, id:String, updated:LocalDateTime, summary:String, content:String, author:String) {
-      def toXml = <entry>
+      def toXml: Elem = <entry>
         <title>{title}</title>
         <link href={link} />
         <link rel="alternate" type="text/html" href={linkAlternate} />
@@ -53,7 +55,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
   def rss = Action { implicit request =>
     case class Channel(title:String, description:String, link:String, lastBuildDate:LocalDateTime, pubDate:LocalDateTime, ttl:Int) {
-      def toXml = <title>{title}</title>
+      def toXml: NodeBuffer = <title>{title}</title>
         <description>{description}</description>
         <link>{link}</link>
         <lastBuildDate>{lastBuildDate}</lastBuildDate>
@@ -62,7 +64,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     case class Item(title:String, description:String, link:String, pubDate:LocalDateTime) {
-      def toXml = <item>
+      def toXml: Elem = <item>
         <title>{title}</title>
         <description>{description}</description>
         <link>{link}</link>
