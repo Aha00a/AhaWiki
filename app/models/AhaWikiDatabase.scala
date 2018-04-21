@@ -12,7 +12,6 @@ import play.api.db.DB
 
 import scala.collection.immutable
 import scala.language.postfixOps
-import scala.util.matching.Regex
 
 object AhaWikiDatabase {
   def apply(): AhaWikiDatabase = new AhaWikiDatabase()
