@@ -398,6 +398,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:
 
   case class Dddd()(implicit database2: Database) {
     def selectCount(): Long = database2.withConnection { implicit connection =>
+      //noinspection LanguageFeature
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
   }
