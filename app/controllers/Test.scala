@@ -392,7 +392,7 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:
 
   def testStemmer(): Unit = {
     assertEquals(Stemmer.stem("ABC 가나다"), List("ABC", "가나다"))
-    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "프로그래밍", "좋아하다"))
+    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "프로그래밍"))
   }
 
 
