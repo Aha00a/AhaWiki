@@ -9,9 +9,7 @@ import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class FilterAccessLog @Inject()(
-    implicit val mat: Materializer,
-    ec: ExecutionContext) extends Filter {
+class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionContext) extends Filter {
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     nextFilter(requestHeader).map(result => {
