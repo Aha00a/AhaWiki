@@ -8,14 +8,13 @@ object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi = wikiContext.cacheApi
     def desc[T : Ordering] = implicitly[Ordering[T]].reverse
-    new InterpreterWiki().apply(
+    new InterpreterWiki()(
       Cache.PageList.get().groupBy(_.year).toList.sortBy(_._1)(desc).map {
         case (year, groupedByYear) =>
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
               case (yearMonth, groupedByYearMonth) =>
-                (
-                  s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +:
+                s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
                   groupedByYearMonth.sortBy(_.time)(desc).map(t => {
                     Seq(
                       s"'''[${t.name}]'''",
@@ -24,9 +23,8 @@ object MacroRecentChanges extends TraitMacro {
                       s"[${t.author}](${t.remoteAddress})",
                       s"${t.comment.getOrElse(" ")}"
                     ).mkString("\t")
-                  }) :+
+                  }).mkString("\n") +
                   "\n]]]"
-                ).mkString("\n")
             }.mkString("\n")
       }.mkString("\n")
     )
