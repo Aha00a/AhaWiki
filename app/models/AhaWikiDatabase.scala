@@ -21,6 +21,7 @@ object AhaWikiDatabase {
 
     lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
     lazy val localDate: LocalDate = localDateTime.toLocalDate
+    lazy val year: Int = localDate.getYear
     lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
 
     lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
