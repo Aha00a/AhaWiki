@@ -119,17 +119,9 @@ object InterpreterVim {
     s.endsWith("</style><pre>\n</pre>") || s.endsWith("</style><pre id='vimCodeElement'>\n</pre>")
   }
 
-  def getCacheDir: File = {
-    new File(new File("cache"), "Vim")
-  }
+  def getCacheDir: File = new File(new File("cache"), "Vim")
 
-  def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = {
-    val cacheFileHtmlRaw = new File(cacheDir, md5 + ".raw.html")
-    cacheFileHtmlRaw
-  }
+  def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".raw.html")
 
-  def getCacheFileHtml(cacheDir: File, md5: String): File = {
-    val cacheFileHtml = new File(cacheDir, md5 + ".html")
-    cacheFileHtml
-  }
+  def getCacheFileHtml(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".html")
 }
