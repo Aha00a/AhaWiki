@@ -4,8 +4,7 @@ import java.io.File
 import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
-import com.aha00a.commons.implicits.Implicits
-import Implicits._
+import com.aha00a.commons.implicits.Implicits._
 import logics.ApplicationConf
 import models.{PageContent, WikiContext}
 import play.api.Logger
@@ -69,7 +68,7 @@ object InterpreterVim {
       val cacheDir: File = getCacheDir
       val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
       val cacheFileHtml: File = getCacheFileHtml(cacheDir, md5)
-      if (!cacheFileHtml.exists()) {
+      if (isCacheFileHtmlValid(cacheFileHtml)) {
         cacheDir.mkdirs()
         val cacheFileText = new File(cacheDir, md5 + ".txt")
         cacheFileText.writeAll(body)
@@ -107,6 +106,10 @@ object InterpreterVim {
 
       s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5 vim" data-lang="$syntax">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
     }
+  }
+
+  private def isCacheFileHtmlValid(cacheFileHtml: File) = {
+    !cacheFileHtml.exists() || (cacheFileHtml.length() < 300 && scala.io.Source.fromFile(cacheFileHtml).mkString.endsWith("</style><pre>\n</pre>"))
   }
 
   def getCacheDir: File = {

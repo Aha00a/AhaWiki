@@ -265,42 +265,10 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:
   def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
     implicit val wikiContext = WikiContext("")
 
-    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable">
-      <tr>
-        <td>
-          <p>a</p>
-        </td> <td>
-        <p>b</p>
-      </td>
-      </tr>
-    </table>.toString())
-    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable">
-      <tr>
-        <td>
-          <p>a</p>
-        </td> <td>
-        <p>b</p>
-      </td>
-      </tr>
-    </table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable">
-      <tr>
-        <th>
-          <p>a</p>
-        </th> <th>
-        <p>b</p>
-      </th>
-      </tr>
-    </table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable">
-      <tr>
-        <th>
-          <p>a</p>
-        </th> <td>
-        <p>b</p>
-      </td>
-      </tr>
-    </table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tr><td><p>a</p></td><td><p>b</p></td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tr><td><p>a</p></td><td><p>b</p></td></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable"><tr><th><p>a</p></th><th><p>b</p></th></tr></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tr><th><p>a</p></th><td><p>b</p></td></tr></table>.toString())
   }
 
 
@@ -424,12 +392,13 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:
 
   def testStemmer(): Unit = {
     assertEquals(Stemmer.stem("ABC 가나다"), List("ABC", "가나다"))
-    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "프로그래밍", "좋아하다"))
+    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "프로그래밍"))
   }
 
 
   case class Dddd()(implicit database2: Database) {
     def selectCount(): Long = database2.withConnection { implicit connection =>
+      //noinspection LanguageFeature
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
   }
