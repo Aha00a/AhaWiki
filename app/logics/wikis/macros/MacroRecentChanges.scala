@@ -14,7 +14,8 @@ object MacroRecentChanges extends TraitMacro {
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
               case (yearMonth, groupedByYearMonth) =>
-                s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
+                (
+                  s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +:
                   groupedByYearMonth.sortBy(_.time)(desc).map(t => {
                     Seq(
                       s"'''[${t.name}]'''",
@@ -23,7 +24,9 @@ object MacroRecentChanges extends TraitMacro {
                       s"[${t.author}](${t.remoteAddress})",
                       s"${t.comment.getOrElse(" ")}"
                     ).mkString("\t")
-                  }).mkString("\n") + "\n]]]"
+                  }) :+
+                  "\n]]]"
+                ).mkString("\n")
             }.mkString("\n")
       }.mkString("\n")
     )
