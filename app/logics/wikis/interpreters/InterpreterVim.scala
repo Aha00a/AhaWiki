@@ -68,7 +68,7 @@ object InterpreterVim {
       val cacheDir: File = getCacheDir
       val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
       val cacheFileHtml: File = getCacheFileHtml(cacheDir, md5)
-      if (isCacheFileHtmlValid(cacheFileHtml)) {
+      if (isCacheFileHtmlInvalid(cacheFileHtml)) {
         cacheDir.mkdirs()
         val cacheFileText = new File(cacheDir, md5 + ".txt")
         cacheFileText.writeAll(body)
@@ -108,8 +108,15 @@ object InterpreterVim {
     }
   }
 
-  private def isCacheFileHtmlValid(cacheFileHtml: File) = {
-    !cacheFileHtml.exists() || (cacheFileHtml.length() < 300 && scala.io.Source.fromFile(cacheFileHtml).mkString.endsWith("</style><pre>\n</pre>"))
+  private def isCacheFileHtmlInvalid(cacheFileHtml: File): Boolean = {
+    if(!cacheFileHtml.exists())
+      return true
+
+    if(cacheFileHtml.length() > 310)
+      return false
+
+    val s = scala.io.Source.fromFile(cacheFileHtml).mkString
+    s.endsWith("</style><pre>\n</pre>") || s.endsWith("</style><pre id='vimCodeElement'>\n</pre>")
   }
 
   def getCacheDir: File = {
