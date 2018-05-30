@@ -1,29 +1,30 @@
 package logics.wikis.macros
 
-import com.aha00a.commons.implicits.Implicits
-import Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 
 object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
-    new InterpreterWiki().apply(
-      Cache.PageList.get()(wikiContext.cacheApi).groupBy(_.yearDashMonth).toList.sortBy(_._1)(Ordering[String].reverse).map {
-        case (yearMonth, groupedByYearMonth) =>
-          s"== $yearMonth\n" +
-            groupedByYearMonth.groupBy(_.localDateTime.toLocalDate).toList.sortWith((a, b) => a._1.isAfter(b._1)).map {
-              case (yearMonthDate, v) =>
-                s"=== $yearMonthDate\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
-                  v.sortBy(_.time)(Ordering[Long].reverse).map(t => {
+    implicit val cacheApi = wikiContext.cacheApi
+    def desc[T : Ordering] = implicitly[Ordering[T]].reverse
+    new InterpreterWiki()(
+      Cache.PageList.get().groupBy(_.year).toList.sortBy(_._1)(desc).map {
+        case (year, groupedByYear) =>
+          s"== $year\n" +
+            groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
+              case (yearMonth, groupedByYearMonth) =>
+                s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
+                  groupedByYearMonth.sortBy(_.time)(desc).map(t => {
                     Seq(
                       s"'''[${t.name}]'''",
                       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
-                      s"${t.localDateTime.toIsoLocalTimeString}",
+                      s"${t.isoLocalDateTime}",
                       s"[${t.author}](${t.remoteAddress})",
                       s"${t.comment.getOrElse(" ")}"
                     ).mkString("\t")
-                  }).mkString("\n") + "\n]]]"
+                  }).mkString("\n") +
+                  "\n]]]"
             }.mkString("\n")
       }.mkString("\n")
     )
