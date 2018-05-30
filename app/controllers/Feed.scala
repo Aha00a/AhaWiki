@@ -68,7 +68,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
       def toXml = <item>
         <title>{title}</title>
         <description>{description}</description>
-        <link>{link}</link>
+        <link>/w/{link}</link>
         <pubDate>{pubDate}</pubDate>
       </item>
     }
