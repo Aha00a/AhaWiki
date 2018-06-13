@@ -27,8 +27,17 @@ object InterpreterTable {
           val javaListString = listReader.read()
           if (null == javaListString) {
             return s"""<table class="simpleTable">""" +
-              arrayBuffer.zipWithIndex.map(_.swap).map(row => row._2.zipWithIndex.map(col => (row._1, col._2, col._1)))
-                .map(_.map(s => if (shebang.thRow <= s._1 && shebang.thColumn <= s._2) s"<td>${s._3}</td>" else s"<th>${s._3}</th>").mkString)
+              arrayBuffer
+                .zipWithIndex
+                .map(_.swap)
+                .map(row => row._2.zipWithIndex.map(col => (row._1, col._2, col._1)))
+                .map(_
+                  .map(s =>
+                    if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
+                      s"<td>${s._3}</td>"
+                    else s"<th>${s._3}</th>"
+                  ).mkString
+                )
                 .map(s => s"<tr>$s</tr>").mkString("\n") +
               "</table>"
           }
