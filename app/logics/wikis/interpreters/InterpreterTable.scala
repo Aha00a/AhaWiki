@@ -49,9 +49,9 @@ object InterpreterTable {
     val arrayBuffer = ArrayBuffer[util.List[String]]()
     while (true) {
       val javaListString = reader.read()
-      if (null == javaListString) {
+      if (null == javaListString)
         return arrayBuffer
-      }
+      
       arrayBuffer += javaListString
     }
     throw new Exception()
