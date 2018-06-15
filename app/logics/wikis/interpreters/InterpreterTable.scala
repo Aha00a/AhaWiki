@@ -25,19 +25,21 @@ object InterpreterTable {
         while (true) {
           val javaListString = listReader.read()
           if (null == javaListString) {
+            val rowColumnData: ArrayBuffer[Array[(Int, Int, String)]] = arrayBuffer
+              .zipWithIndex
+              .map(row => row._1.zipWithIndex.map(col => (row._2, col._2, col._1)))
+            val tbody = rowColumnData
+              .map(_
+                .map(s =>
+                  if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
+                    s"<td>${s._3}</td>"
+                  else
+                    s"<th>${s._3}</th>"
+                ).mkString
+              )
+              .map(s => s"<tr>$s</tr>").mkString("\n")
             return s"""<table class="simpleTable">""" +
-              arrayBuffer
-                .zipWithIndex
-                .map(row => row._1.zipWithIndex.map(col => (row._2, col._2, col._1)))
-                .map(_
-                  .map(s =>
-                    if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
-                      s"<td>${s._3}</td>"
-                    else
-                      s"<th>${s._3}</th>"
-                  ).mkString
-                )
-                .map(s => s"<tr>$s</tr>").mkString("\n") +
+              tbody +
               "</table>"
           }
           val wiki: InterpreterWiki = new InterpreterWiki()
