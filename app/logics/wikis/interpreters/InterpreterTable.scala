@@ -31,7 +31,9 @@ object InterpreterTable {
           )
           .zipWithIndex
 
-        val tbody = rowColumnData
+//        val (thead, tbodies) = rowColumnData.partition(r => r._2 < shebang.thRow)
+        
+        val tableInner = rowColumnData
           .map(tuple => tuple._1
             .map(s =>
               if (shebang.thRow <= tuple._2 && shebang.thColumn <= s._2)
@@ -41,7 +43,7 @@ object InterpreterTable {
             ).mkString
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
-        s"""<table class="simpleTable">$tbody</table>"""
+        s"""<table class="simpleTable">$tableInner</table>"""
       }
     }).getOrElse("Error!")
   }
