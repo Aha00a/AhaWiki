@@ -48,7 +48,7 @@ object InterpreterTable {
   def convert(reader: CsvListReader): mutable.Seq[util.List[String]] = {
     val arrayBuffer = ArrayBuffer[util.List[String]]()
     while (true) {
-      val javaListString: util.List[String] = reader.read()
+      val javaListString = reader.read()
       if (null == javaListString) {
         return arrayBuffer
       }
