@@ -18,7 +18,7 @@ object InterpreterTable {
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {
-    def getClasses = classes.toOption match {
+    def getClasses: String = classes.toOption match {
       case Some(s) => s"simpleTable $s"
       case None => "simpleTable"
     }
