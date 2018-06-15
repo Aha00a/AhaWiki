@@ -3,11 +3,10 @@ package logics.wikis.interpreters
 import java.io.StringReader
 import java.util
 
+import com.aha00a.commons.utils.Using
 import models.{PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
-import play.api.Logger
-import com.aha00a.commons.utils.Using
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable
@@ -15,7 +14,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 object InterpreterTable {
-  val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?""".r
+  val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+([a-zA-Z]\w*))?""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
