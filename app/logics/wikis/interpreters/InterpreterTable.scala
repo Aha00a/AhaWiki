@@ -18,6 +18,16 @@ object InterpreterTable {
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
+  def parseShebang(argument:Seq[String]): Option[Shebang] = argument match {
+    case Seq("tsv") => Some(Shebang(CsvPreference.TAB_PREFERENCE, 0, 0))
+    case Seq("tsv", i) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, 0))
+    case Seq("tsv", i, j) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, j.toInt))
+    case Seq("csv") => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, 0, 0))
+    case Seq("csv", i) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, 0))
+    case Seq("csv", i, j) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, j.toInt))
+    case _ => None
+  }
+
   def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
@@ -60,13 +70,4 @@ object InterpreterTable {
     throw new Exception()
   }
 
-  def parseShebang(argument:Seq[String]): Option[Shebang] = argument match {
-    case Seq("tsv") => Some(Shebang(CsvPreference.TAB_PREFERENCE, 0, 0))
-    case Seq("tsv", i) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, 0))
-    case Seq("tsv", i, j) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, j.toInt))
-    case Seq("csv") => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, 0, 0))
-    case Seq("csv", i) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, 0))
-    case Seq("csv", i, j) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, j.toInt))
-    case _ => None
-  }
 }
