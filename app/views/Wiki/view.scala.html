@@ -37,6 +37,8 @@
                 $(document).data(href).remove();
             });
 
+            $('.tablesorter').tablesorter();
+
             var match = /\/search\?q=(.+)/.exec(document.referrer);
             if(match && match[1]) {
                 $('.wikiContent').mark(match[1]);
