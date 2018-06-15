@@ -36,10 +36,11 @@ object InterpreterTable {
         val tableInner = rowColumnData
           .map(tuple => tuple._1
             .map(s =>
-              if (shebang.thRow <= tuple._2 && shebang.thColumn <= s._2)
-                s"<td>${s._1}</td>"
-              else
+              if (tuple._2 < shebang.thRow || s._2 < shebang.thColumn) {
                 s"<th>${s._1}</th>"
+              } else {
+                s"<td>${s._1}</td>"
+              }
             ).mkString
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
