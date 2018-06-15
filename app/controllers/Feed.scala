@@ -16,7 +16,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
   def atom = Action { implicit request =>
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
-      def toXml: NodeBuffer = <title>{title}</title>
+      def toXml = <title>{title}</title>
         <subtitle>{subtitle}</subtitle>
         <link href={linkSelf} rel="self" />
         <link href={link} />
@@ -24,8 +24,9 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
         <updated>{updated}</updated>
     }
 
-    case class Entry(title:String, link:String, linkAlternate:String, linkEdit:String, id:String, updated:LocalDateTime, summary:String, content:String, author:String) {
-      def toXml: Elem = <entry>
+    case class Entry(title:String, link:String, linkAlternate:String, id:String, updated:LocalDateTime, summary:String, content:String, author:String) {
+      def linkEdit = s"${link}?action=edit"
+      def toXml = <entry>
         <title>{title}</title>
         <link href={link} />
         <link rel="alternate" type="text/html" href={linkAlternate} />
@@ -44,7 +45,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
     implicit val wikiContext: WikiContext = WikiContext("")
     val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", LocalDateTime.now()) // TODO
-    val entries = Cache.PageList.get().take(15).map(p => Entry(p.name, p.name, p.name, p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
+    val entries = Cache.PageList.get().sortBy(_.time).reverse.take(15).map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}
@@ -55,26 +56,26 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
   def rss = Action { implicit request =>
     case class Channel(title:String, description:String, link:String, lastBuildDate:LocalDateTime, pubDate:LocalDateTime, ttl:Int) {
-      def toXml: NodeBuffer = <title>{title}</title>
+      def toXml = <title>{title}</title>
         <description>{description}</description>
-        <link>{link}</link>
+        <link>/w/{link}</link>
         <lastBuildDate>{lastBuildDate}</lastBuildDate>
         <pubDate>{pubDate}</pubDate>
         <ttl>{ttl}</ttl>
     }
 
     case class Item(title:String, description:String, link:String, pubDate:LocalDateTime) {
-      def toXml: Elem = <item>
+      def toXml = <item>
         <title>{title}</title>
         <description>{description}</description>
-        <link>{link}</link>
+        <link>/w/{link}</link>
         <pubDate>{pubDate}</pubDate>
       </item>
     }
 
     implicit val wikiContext: WikiContext = WikiContext("")
     val channel = Channel("title", "description", "link", LocalDateTime.now(), LocalDateTime.now(), 180) // TODO
-    val items = Cache.PageList.get.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
+    val items = Cache.PageList.get.sortBy(_.time).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
 
     Ok(<rss version="2.0">
       <channel>

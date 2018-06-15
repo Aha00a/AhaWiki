@@ -1,14 +1,16 @@
 package logics.wikis.interpreters
 
 import java.io.StringReader
+import java.util
 
-import models.{WikiContext, PageContent}
+import models.{PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Logger
 import com.aha00a.commons.utils.Using
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
@@ -18,27 +20,45 @@ object InterpreterTable {
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
   def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
-
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
       val arrayBuffer = ArrayBuffer[Array[String]]()
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
-        while (true) {
-          val javaListString = listReader.read()
-          if (null == javaListString) {
-            return s"""<table class="simpleTable">""" +
-              arrayBuffer.zipWithIndex.map(_.swap).map(row => row._2.zipWithIndex.map(col => (row._1, col._2, col._1)))
-                .map(_.map(s => if (shebang.thRow <= s._1 && shebang.thColumn <= s._2) s"<td>${s._3}</td>" else s"<th>${s._3}</th>").mkString)
-                .map(s => s"<tr>$s</tr>").mkString("\n") +
-              "</table>"
-          }
-          val wiki: InterpreterWiki = new InterpreterWiki()
-          arrayBuffer += javaListString.map(s => if(s == null) "" else s).map(s => {wiki.apply(s)}).toArray
-        }
-        Logger.error("")
-        "Error"
+        val rowColumnData = convert(listReader)
+          .map(row => row
+            .map(s => if(s == null) "" else new InterpreterWiki().apply(s))
+            .zipWithIndex
+          )
+          .zipWithIndex
+        val (head, body) = rowColumnData.partition(r => r._2 < shebang.thRow)
+        val thead = head
+          .map(_._1
+            .map(col => s"<th>${col._1}</th>")
+            .mkString
+          )
+          .map(s => s"<tr>$s</tr>")
+          .mkString("\n")
+        val tbody = body
+          .map(_._1
+            .map(col => if (col._2 < shebang.thColumn) s"<th>${col._1}</th>" else s"<td>${col._1}</td>")
+            .mkString
+          )
+          .map(s => s"<tr>$s</tr>").mkString("\n")
+        s"""<table class="simpleTable"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
     }).getOrElse("Error!")
+  }
+
+  def convert(reader: CsvListReader): mutable.Seq[util.List[String]] = {
+    val arrayBuffer = ArrayBuffer[util.List[String]]()
+    while (true) {
+      val javaListString = reader.read()
+      if (null == javaListString)
+        return arrayBuffer
+      
+      arrayBuffer += javaListString
+    }
+    throw new Exception()
   }
 
   def parseShebang(argument:Seq[String]): Option[Shebang] = argument match {
