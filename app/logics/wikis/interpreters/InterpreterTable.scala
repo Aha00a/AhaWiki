@@ -53,7 +53,10 @@ object InterpreterTable {
             .mkString
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
-        s"""<table class="simpleTable"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
+        if(thead.isEmpty)
+          s"""<table class="simpleTable"><tbody>$tbody</tbody></table>"""
+        else
+          s"""<table class="simpleTable"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
     }).getOrElse("Error!")
   }
