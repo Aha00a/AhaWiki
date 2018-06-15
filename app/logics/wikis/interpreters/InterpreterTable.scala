@@ -24,8 +24,7 @@ object InterpreterTable {
     shebang.map(shebang => {
       val arrayBuffer = ArrayBuffer[Array[String]]()
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
-        val seqList = convert(listReader)
-        val rowColumnData = seqList
+        val rowColumnData = convert(listReader)
           .zipWithIndex
           .map(row => row._1
             .map(s => if(s == null) "" else new InterpreterWiki().apply(s))
