@@ -18,7 +18,6 @@ object InterpreterTable {
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
 
   def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
-
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
       val arrayBuffer = ArrayBuffer[Array[String]]()
