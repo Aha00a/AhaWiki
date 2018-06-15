@@ -3,6 +3,7 @@ package logics.wikis.interpreters
 import java.io.StringReader
 import java.util
 
+import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.Using
 import models.{PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
@@ -14,17 +15,18 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 object InterpreterTable {
-  val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+([a-zA-Z]\w*))?""".r
+  val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
-  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int)
+  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {
+    def getClasses = classes.toOption match {
+      case Some(s) => s"simpleTable $s"
+      case None => "simpleTable"
+    }
+  }
 
-  def parseShebang(argument:Seq[String]): Option[Shebang] = argument match {
-    case Seq("tsv") => Some(Shebang(CsvPreference.TAB_PREFERENCE, 0, 0))
-    case Seq("tsv", i) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, 0))
-    case Seq("tsv", i, j) => Some(Shebang(CsvPreference.TAB_PREFERENCE, i.toInt, j.toInt))
-    case Seq("csv") => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, 0, 0))
-    case Seq("csv", i) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, 0))
-    case Seq("csv", i, j) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, i.toInt, j.toInt))
+  def parseShebang(argument:Seq[String]): Option[Shebang] = argument.mkString(" ") match {
+    case regexShebang("tsv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.TAB_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, classes))
+    case regexShebang("csv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, classes))
     case _ => None
   }
 
@@ -54,9 +56,9 @@ object InterpreterTable {
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
         if(thead.isEmpty)
-          s"""<table class="simpleTable"><tbody>$tbody</tbody></table>"""
+          s"""<table class="${shebang.getClasses}"><tbody>$tbody</tbody></table>"""
         else
-          s"""<table class="simpleTable"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
+          s"""<table class="${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
     }).getOrElse("Error!")
   }

@@ -269,6 +269,10 @@ class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:
     assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
     assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="simpleTable"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
     assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="simpleTable"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
+
+    assertEquals(Interpreters.interpret("#!table tsv some classes\na\tb"), <table class="simpleTable some classes"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 1 some classes\na\tb"), <table class="simpleTable some classes"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
+    assertEquals(Interpreters.interpret("#!table tsv 0 1 some classes\na\tb"), <table class="simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
   }
 
 

@@ -62,6 +62,7 @@ object Implicits {
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
+    def toIntOrZero = if(s == null || s == "") 0 else s.toInt
   }
 
   implicit class RichRequest(request:RequestHeader) {
