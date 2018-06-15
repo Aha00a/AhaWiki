@@ -35,7 +35,8 @@ object InterpreterTable {
                   .map(s =>
                     if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
                       s"<td>${s._3}</td>"
-                    else s"<th>${s._3}</th>"
+                    else
+                      s"<th>${s._3}</th>"
                   ).mkString
                 )
                 .map(s => s"<tr>$s</tr>").mkString("\n") +
