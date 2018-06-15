@@ -24,19 +24,20 @@ object InterpreterTable {
     shebang.map(shebang => {
       val arrayBuffer = ArrayBuffer[Array[String]]()
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
-        val rowColumnData = convert(listReader)
-          .zipWithIndex
-          .map(row => row._1
+        val rowColumnData: mutable.Seq[(mutable.Buffer[(String, Int)], Int)] = convert(listReader)
+          .map(row => row
             .map(s => if(s == null) "" else new InterpreterWiki().apply(s))
-            .zipWithIndex.map(col => (row._2, col._2, col._1))
+            .zipWithIndex
           )
+          .zipWithIndex
+
         val tbody = rowColumnData
-          .map(_
+          .map(tuple => tuple._1
             .map(s =>
-              if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
-                s"<td>${s._3}</td>"
+              if (shebang.thRow <= tuple._2 && shebang.thColumn <= s._2)
+                s"<td>${s._1}</td>"
               else
-                s"<th>${s._3}</th>"
+                s"<th>${s._1}</th>"
             ).mkString
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
