@@ -29,8 +29,7 @@ object InterpreterTable {
             return s"""<table class="simpleTable">""" +
               arrayBuffer
                 .zipWithIndex
-                .map(_.swap)
-                .map(row => row._2.zipWithIndex.map(col => (row._1, col._2, col._1)))
+                .map(row => row._1.zipWithIndex.map(col => (row._2, col._2, col._1)))
                 .map(_
                   .map(s =>
                     if (shebang.thRow <= s._1 && shebang.thColumn <= s._2)
