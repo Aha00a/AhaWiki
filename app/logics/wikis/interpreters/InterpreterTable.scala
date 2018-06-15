@@ -30,21 +30,21 @@ object InterpreterTable {
             .zipWithIndex
           )
           .zipWithIndex
-
-//        val (thead, tbodies) = rowColumnData.partition(r => r._2 < shebang.thRow)
-        
-        val tableInner = rowColumnData
-          .map(tuple => tuple._1
-            .map(s =>
-              if (tuple._2 < shebang.thRow || s._2 < shebang.thColumn) {
-                s"<th>${s._1}</th>"
-              } else {
-                s"<td>${s._1}</td>"
-              }
-            ).mkString
+        val (head, body) = rowColumnData.partition(r => r._2 < shebang.thRow)
+        val thead = head
+          .map(_._1
+            .map(col => s"<th>${col._1}</th>")
+            .mkString
+          )
+          .map(s => s"<tr>$s</tr>")
+          .mkString("\n")
+        val tbody = body
+          .map(_._1
+            .map(col => if (col._2 < shebang.thColumn) s"<th>${col._1}</th>" else s"<td>${col._1}</td>")
+            .mkString
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
-        s"""<table class="simpleTable">$tableInner</table>"""
+        s"""<table class="simpleTable"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
     }).getOrElse("Error!")
   }
