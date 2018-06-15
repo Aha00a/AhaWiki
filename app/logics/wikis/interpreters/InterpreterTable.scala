@@ -33,7 +33,6 @@ object InterpreterTable {
   def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
-      val arrayBuffer = ArrayBuffer[Array[String]]()
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
         val rowColumnData = convert(listReader)
           .map(row => row
