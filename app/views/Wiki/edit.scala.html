@@ -87,7 +87,7 @@
                 }
             });
 
-            $('textarea[name=text]').bind('input cut paste keydown keyup keypress blur', function () {
+            $('textarea[name=text]').bind('input cut paste keydown keyup keypress blur change', function () {
                 if(timer) {
                     clearTimeout(timer);
                     timer = null;
