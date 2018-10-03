@@ -114,7 +114,12 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
 
-        val listDiffRow = new DiffRowGenerator.Builder().ignoreBlankLines(false).ignoreWhiteSpaces(false).build().generateDiffRows(beforeContent, afterContent)
+        val listDiffRow = new DiffRowGenerator.Builder()
+          .ignoreBlankLines(false)
+          .ignoreWhiteSpaces(false)
+          .columnWidth(Int.MaxValue)
+          .build()
+          .generateDiffRows(beforeContent, afterContent)
 
         Ok(views.html.Wiki.diff(name, before, after, listDiffRow)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")

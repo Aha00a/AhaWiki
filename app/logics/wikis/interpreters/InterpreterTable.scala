@@ -18,7 +18,7 @@ object InterpreterTable {
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {
-    def getClasses = classes.toOption match {
+    def getClasses: String = classes.toOption match {
       case Some(s) => s"simpleTable $s"
       case None => "simpleTable"
     }
@@ -33,7 +33,6 @@ object InterpreterTable {
   def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
-      val arrayBuffer = ArrayBuffer[Array[String]]()
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
         val rowColumnData = convert(listReader)
           .map(row => row

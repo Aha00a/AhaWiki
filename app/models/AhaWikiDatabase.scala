@@ -50,7 +50,7 @@ object AhaWikiDatabase {
 
   case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
-  case class SearchResult(name:String, content:String) {
+  case class SearchResult(name:String, content:String, time:Long) {
     def summarised(q: String): SearchResult = {
       def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
 
@@ -66,7 +66,8 @@ object AhaWikiDatabase {
           .filter(lines.isDefinedAt)
           .splitBy((a, b) => a + 1 != b)
           .map(_.map(i => s"${i + 1}: ${lines(i)}").mkString("\n"))
-          .mkString("\n\n⋯\n\n")
+          .mkString("\n\n⋯\n\n"),
+        time
       )
     }
   }
@@ -145,14 +146,13 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
              name, MAX(revision) revision
              FROM Page
              GROUP BY name
-             ORDER BY MAX(time) DESC
      ) NV ON w.name = NV.name AND w.revision = NV.revision
      WHERE
          w.name LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
       .on('q -> q)
-      .as(str("name") ~ str("content") *).map(flatten).map(SearchResult.tupled)
+      .as(str("name") ~ str("content") ~ long("time") *).map(flatten).map(SearchResult.tupled)
   }
 
 
