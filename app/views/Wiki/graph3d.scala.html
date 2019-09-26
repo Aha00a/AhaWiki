@@ -1,0 +1,45 @@
+@(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: WikiContext)
+@*TODO*@
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+    <script src="//unpkg.com/3d-force-graph"></script>
+    <div class="aspectRatioWrapper">
+        <div class="ratio_16_9"></div>
+        <div class="aspectRatioContent" id="@id">
+        </div>
+    </div>
+    <div id="@id"></div>
+    <script type="text/javascript">
+            var elem = document.getElementById('@id');
+            var Graph = ForceGraph3D()(elem)
+                    .width(elem.clientWidth)
+                    .height(elem.clientHeight)
+                    // .backgroundColor('#ffffff')
+                    // .linkDirectionalParticles(2)
+                    .nodeLabel(function (node) {
+                        return node.id;
+                    })
+                    .onNodeHover(function (node) {
+                        return elem.style.cursor = node ? 'pointer' : null;
+                    })
+                    .onNodeClick(function (node) {
+                        window.open('https://aha00a.com', '_blank');
+                    })
+                    .graphData({
+                        nodes: [
+                            @for(l <- links.flatten.toSeq.sortWith(_ > _).distinct) {{ id: '@l' },
+            }
+            ],
+            links: [
+                @for(l <- links) {{source: '@(l(0))', target: '@(l(1))'},
+            }
+            ],
+            });
+
+    </script>
+    <script type="text/javascript">
+        $(function(){
+
+        });
+    </script>
+
+}
