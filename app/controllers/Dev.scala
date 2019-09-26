@@ -15,6 +15,7 @@ import play.api.mvc._
 
 import scala.util.Random
 
+//noinspection TypeAnnotation
 @Singleton
 class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
   val actorAhaWiki: ActorRef = system.actorOf(ActorAhaWiki.props)
@@ -69,6 +70,36 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
     {
       result.flashing("error" -> "Reindex Failed")
     }
+  }
+
+  def peg = Action { implicit request =>
+    import org.parboiled2._
+
+    class Calculator(val input: ParserInput) extends Parser {
+      def InputLine = rule { Expression ~ EOI }
+
+      def Expression: Rule1[Int] = rule {
+        Term ~ zeroOrMore(
+          '+' ~ Term ~> ((_: Int) + _)
+            | '-' ~ Term ~> ((_: Int) - _))
+      }
+
+      def Term = rule {
+        Factor ~ zeroOrMore(
+          '*' ~ Factor ~> ((_: Int) * _)
+            | '/' ~ Factor ~> ((_: Int) / _))
+      }
+
+      def Factor = rule { Number | Parens }
+
+      def Parens = rule { '(' ~ Expression ~ ')' }
+
+      def Number = rule { capture(Digits) ~> (_.toInt) }
+
+      def Digits = rule { oneOrMore(CharPredicate.Digit) }
+    }
+
+    Ok(new Calculator("1+1").InputLine.run().toString)
   }
 }
 

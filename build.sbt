@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
   "com.twitter.penguin" % "korean-text" % "4.1.2"
 //  "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
 )
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.8"
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
