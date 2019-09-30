@@ -56,8 +56,15 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
           s"""= $name
-             |This page does not exist. You can [[Html(<a href="?action=edit">create</a>)]] it here.
-             |= See also
+             |This page does not exist.
+             |== Possible actions
+             | * [[Html(<a href="?action=edit">create page</a>)]]
+             | * Search [https://google.com/search?q=$name $name] on Google
+             | * Search [https://google.com/search?q=$name+wiki $name wiki] on Google
+             | * Search [https://duckduckgo.com/?q=$name $name] on DuckDuckGo
+             | * Search [https://duckduckgo.com/?q=$name+wiki $name wiki] on DuckDuckGo
+             |
+             |== See also
              |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
              |'''Backlinks'''
              |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
