@@ -50,7 +50,9 @@ class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:p
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
       val listPageName: List[String] = Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName)
-      listPageName.zipWithIndex.foreach(v => actorAhaWiki ! Calculate(v._1, v._2, listPageName.length))
+      for((v, i) <- listPageName.zipWithIndex) {
+        actorAhaWiki ! Calculate(v, i, listPageName.length)
+      }
       result.flashing("success" -> "Reindex Succeed.")
     }
     else
