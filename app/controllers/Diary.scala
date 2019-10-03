@@ -19,6 +19,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
 
+//noinspection TypeAnnotation
 @Singleton
 class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database) extends Controller {
 
