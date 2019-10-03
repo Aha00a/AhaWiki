@@ -37,7 +37,12 @@ class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, dat
     val (latestText: String, latestRevision: Long) = MockDb().selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
-      val body = if(latestText == "") f"= [$yearDashMonth]-$day%02d $weekdayName\n * " + q else latestText + "\n * " + q
+      val body =
+        if(latestText == "")
+          f"= [$yearDashMonth]-$day%02d $weekdayName\n * $q"
+        else
+          s"$latestText\n * $q"
+
       AhaWikiDatabase().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorAhaWiki ! Calculate(name)
       Cache.PageList.invalidate()
