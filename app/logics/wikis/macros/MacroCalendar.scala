@@ -7,8 +7,10 @@ import java.util.Locale
 import logics.wikis.interpreters.InterpreterTable
 import models.{PageContent, WikiContext}
 
+import scala.util.matching.Regex
+
 object MacroCalendar extends TraitMacro {
-  val regex = """^(\d{4})-(\d{2})$""".r
+  val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
