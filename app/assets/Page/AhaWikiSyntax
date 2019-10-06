@@ -4,9 +4,6 @@ Brief descriptions of AhaWiki Syntax.
 Left sides represent markup, right sides are rendered.
 
 == Heading ==
-Heading is start with `=`.
-You can add trailing `=` if you want to.
-You can assign anchor name manually, use `#`. 
 [[[#!WikiSyntaxPreview
 = h1
 == h2 with closing ==
@@ -72,11 +69,9 @@ The link notation uses `[]`.
   1. http://aha00a.com
   1. [http://aha00a.com]
   1. [http://aha00a.com aha00a.com Alias]
- * Wiki Page
+ * Page
   1. [Page1]
-  1. [wiki:Page1]
   1. [Page1 Alias For Page1]
-  1. [wiki:Page1 Alias For Page1]
  * Anchor
   1. [#Anchor]
   1. [#Anchor Anchor Alias]
@@ -92,11 +87,9 @@ use `\` for escaping
   1. \http://aha00a.com
   1. \[http://aha00a.com]
   1. \[http://aha00a.com aha00a.com Alias]
- * Wiki Page
+ * Page
   1. \[Page1]
-  1. \[wiki:Page1]
   1. \[Page1 Alias For Page1]
-  1. \[wiki:Page1 Alias For Page1]
  * Anchor
   1. \[#Anchor]
   1. \[#Anchor Anchor Alias]
@@ -111,102 +104,21 @@ use `\` for escaping
 page1
 ----
 page2
--------------------------
+------------------------------------
 page3
 ]]]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 == Macro
 
-=== `Br`, `Html`, `Image`
+=== `Br`, `Html`, `Image`, `Ruby`
 [[[#!WikiSyntaxPreview
  * aaa[[Br]]bbb[[Br]]ccc
  * [[Html(<div style="border: 1px solid #f00">red border</div>)]]
  * [[Image(/public/favicon.png)]] [[Image(/public/favicon.png,16px)]]
+ * [[Ruby(漢字,かんじ)]]
 ]]]
 
 === `Embed`
-You can embed youtube video using `Embed`
 [[[#!WikiSyntaxPreview
 [[Embed(https://www.youtube.com/watch?v=2wKqfk8pESE&feature=youtu.be)]]
 ]]]
@@ -219,84 +131,10 @@ You can embed youtube video using `Embed`
 [[Embed(https://youtu.be/2wKqfk8pESE)]]
 ]]]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 === `Get`, `Set`
-You can use variable.
 [[[#!WikiSyntaxPreview
 [[Set(A,VAR_A)]]
-[[Set(B,VARIABLE B)]]
-[[Get(A)]] 
-[[Get(B)]]
+[[Get(A)]] [[Get(A)]]
 ]]]
 
 === `AhaWikiVersion`
@@ -304,8 +142,20 @@ You can use variable.
 [[AhaWikiVersion]]
 ]]]
 
+
+=== `Period`
+[[[#!WikiSyntaxPreview
+ * [[Period(2015-10-17)]]
+ * [[Period(2000-01-01)]]
+ * [[Period(2100-01-01)]]
+ * [[Period(2000-01-01, 2001-01-01)]]
+ * [[Period(2001-01-01, 2000-01-01)]]
+ * [[Period(2000-01-01, 2001-01-05)]]
+ * [[Period(2000-01-01, 2001-05-01)]]
+ * [[Period(2000-01-01, 2001-05-05)]]
+]]]
+
 === `Include`
-You can include content of other page.
 [[[#!WikiSyntaxPreview
 [[Include(ExampleText)]]
 ]]]
