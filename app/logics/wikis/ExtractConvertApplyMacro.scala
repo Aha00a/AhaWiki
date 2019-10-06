@@ -13,6 +13,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroBr,
     MacroHtml,
     MacroImage,
+    MacroRuby,
 
     MacroNavigation,
     MacroPageList,
