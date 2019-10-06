@@ -13,6 +13,4 @@ object MacroRuby extends TraitMacro {
       case _ => MacroError(s"Argument Error - [[$name($argument)]]")
     }
   }
-
-  override def calcLength(argument: String)(implicit wikiContext: WikiContext): Long = argument.length * 3 / 4
 }
