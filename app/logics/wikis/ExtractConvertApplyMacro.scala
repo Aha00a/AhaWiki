@@ -50,6 +50,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       \]\]""".r
 
   override def extract(s: String): String = {
+    //noinspection ScalaUnusedSymbol
     regex.replaceAllIn(s, _ match {
       case a@regex(name, argument) =>
         val uniqueKey = getUniqueKey
