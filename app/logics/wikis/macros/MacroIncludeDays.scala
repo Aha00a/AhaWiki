@@ -8,8 +8,10 @@ import java.util.Locale
 import com.aha00a.commons.utils.LocalDateTimeUtil
 import models.WikiContext
 
+import scala.util.matching.Regex
+
 object MacroIncludeDays extends TraitMacro {
-  val regex = """^(\d{4})-(\d{2})$""".r
+  val regex: Regex = """^(\d{4})-(\d{2})$""".r
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
