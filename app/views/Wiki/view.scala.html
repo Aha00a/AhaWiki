@@ -1,6 +1,6 @@
 @(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.AhaWikiDatabase.Page], wikiLast:Option[models.AhaWikiDatabase.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title, description) {
-    @hotkey()
+    @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){
             $('a[target=_blank]').hover(function () {
@@ -47,5 +47,5 @@
     </script>
 } {
     @Html(contentInterpreted)
-    @action(isWritable, wikiFirst.orNull, wikiLast.orNull)
+    @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
 }
