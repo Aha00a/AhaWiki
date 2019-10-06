@@ -1,7 +1,7 @@
 @import difflib.DiffRow.Tag
-@(name: String, before:Int, after:Int, list:java.util.List[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(name: String, before:Int, after:Int, list:Seq[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_base(name, s"Diff of $name") {
-    @hotkey()
+    @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){
             $('html, body').animate({
@@ -24,8 +24,8 @@
                 <input type="hidden" name="action" value="diff"/>
                 <table>
                     <tr>
-                        <th width="200px"><a href="?revision=@before">revision @before</a></th>
-                        <th width="100px"><a href="?revision=@after">revision @after</a></th>
+                        <th><a href="?revision=@before">revision @before</a></th>
+                        <th><a href="?revision=@after">revision @after</a></th>
                     </tr>
                     @for(diffRow <- list) {
                         <tr>

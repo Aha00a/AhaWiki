@@ -4,7 +4,6 @@ import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
-import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
 import actors.ActorAhaWiki
@@ -12,7 +11,8 @@ import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
-import difflib.DiffRowGenerator
+import difflib.{DiffRow, DiffRowGenerator}
+import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
 import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
@@ -122,7 +122,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
 
-        val listDiffRow = new DiffRowGenerator.Builder()
+        val listDiffRow: Seq[DiffRow] = new DiffRowGenerator.Builder()
           .ignoreBlankLines(false)
           .ignoreWhiteSpaces(false)
           .columnWidth(Int.MaxValue)
