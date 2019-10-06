@@ -4,7 +4,7 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.{AhaWikiDatabase, WikiContext}
 
 object MacroBacklinks extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext) = {
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     new InterpreterWiki().apply(AhaWikiDatabase().linkSelect(wikiContext.name)
       .filterNot(_.or(_.contains("://")))
       .filter(_.dst == wikiContext.name)
