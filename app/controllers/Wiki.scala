@@ -25,12 +25,13 @@ import play.api.{Environment, Mode}
 import scala.collection.JavaConversions._
 import scala.collection.immutable
 
+//noinspection TypeAnnotation
 @Singleton
 class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database, environment: Environment) extends Controller {
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
 
     val pageFirstRevision = MockDb().selectPageFirstRevision(name)
     val pageLastRevision = MockDb().selectPageLastRevision(name)
@@ -161,7 +162,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
   def save(nameEncoded: String) = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
     val (latestText, latestRevision) = MockDb().selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
@@ -245,7 +246,7 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
     Ok( """<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 
