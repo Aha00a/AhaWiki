@@ -20,17 +20,17 @@
                     data: { q: href },
                     dataType: "jsonp",
                     success: function(data) {
-                        if(data.success) {
-                            $(document).data(href).html('').append(
-                                $('<div></div>')
-                                    .append($('<img class="preview"/>').attr('src', data.image))
-                                    .append($('<h5/>').text(data.title))
-                                    .append($('<p/>').text(data.description))
-                            );
-                        } else {
-                            $(document).data(href).remove();
-                        }
-                    }
+                        $(document).data(href).html('').append(
+                            $('<div></div>')
+                                .append($('<img class="preview"/>').attr('src', data.image))
+                                .append($('<h5/>').text(data.title))
+                                .append($('<p/>').text(data.description))
+                        );
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR, textStatus, errorThrown);
+                        $(document).data(href).remove();
+                    }
                 });
             }, function () {
                 var href = $(this).attr('href');
