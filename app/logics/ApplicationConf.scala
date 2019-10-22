@@ -1,7 +1,7 @@
 package logics
 
 import models.WikiContext
-import play.api.Play.current
+import play.api.Configuration
 
 object ApplicationConf {
   private def fqn: String = {
@@ -12,8 +12,8 @@ object ApplicationConf {
   object AhaWiki {
     object google {
       object api {
-        def clientId(): String = current.configuration.getString(fqn).getOrElse("")
-        def clientSecret(): String = current.configuration.getString(fqn).getOrElse("")
+        def clientId()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
+        def clientSecret()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
       }
     }
 
