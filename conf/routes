@@ -35,6 +35,7 @@ GET         /feed/rss                          controllers.Feed.rss
 
 GET         /test/unit                         controllers.Test.unit
 GET         /test/dbtest                       controllers.Test.dbtest
+GET         /test/filetest                     controllers.Test.filetest
 
 GET         /dev/reindex                       controllers.Dev.reindex
 GET         /dev/reset                         controllers.Dev.reset

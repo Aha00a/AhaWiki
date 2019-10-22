@@ -1,7 +1,8 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
+import java.io.File
 
+import javax.inject.{Inject, Singleton}
 import akka.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
@@ -11,9 +12,10 @@ import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
-import play.api.Logger
+import play.api.{Application, Logger}
 import play.api.cache.CacheApi
 import play.api.db.Database
+import play.api.libs.json.Json
 import play.api.mvc._
 
 @Singleton
@@ -414,6 +416,20 @@ class Test @Inject()(
 
   def dbtest = Action { implicit request =>
     Ok(Dddd().selectCount().toString + "aa")
+  }
+
+  def filetest = Action { implicit request =>
+//    val fromFile = scala.io.Source.fromFile
+    val f1 = play.Play.application().getFile("app/assets/Page/FrontPage")
+    val f2 = new File("app/assets/Page/FrontPage")
+    val p1 = f1.getAbsolutePath
+    val p2 = f2.getAbsolutePath
+    Ok(Json.toJson(Map(
+      "f1" -> f1.toString,
+      "f2" -> f2.toString,
+      "p1" -> p1,
+      "p2" -> p2
+    )))
   }
 }
 
