@@ -1,22 +1,27 @@
 package services
 
 import javax.inject._
-
 import actors.ActorAhaWiki
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import models.{AhaWikiDatabase, MockDb}
 import play.api.Logger
+import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 @Singleton
-class ApplicationLifecycleHook @Inject()(implicit applicationLifecycle: ApplicationLifecycle, actorSystem: ActorSystem, executionContext: ExecutionContext) {
-  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
-
+class ApplicationLifecycleHook @Inject()(
+  implicit applicationLifecycle: ApplicationLifecycle,
+  actorSystem: ActorSystem,
+  executionContext: ExecutionContext,
+  db: Database,
+  @Named("db-actor") actorAhaWiki: ActorRef
+) {
+//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
   applicationLifecycle.addStopHook { () =>
     Logger.info("OnApplicationStop")
     Future.successful(())

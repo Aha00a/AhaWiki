@@ -1,7 +1,6 @@
 package controllers
 
-import javax.inject.{Inject, Singleton}
-
+import javax.inject.{Inject, Named, Singleton}
 import actors.ActorAhaWiki
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
@@ -16,8 +15,13 @@ import play.api.mvc._
 import scala.util.Random
 
 @Singleton
-class Dev @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
-  val actorAhaWiki: ActorRef = system.actorOf(ActorAhaWiki.props)
+class Dev @Inject()(
+  implicit cacheApi: CacheApi,
+  system: ActorSystem,
+  database:play.api.db.Database,
+  @Named("db-actor") actorAhaWiki: ActorRef
+) extends Controller {
+//  val actorAhaWiki: ActorRef = system.actorOf(ActorAhaWiki.props)
 
   def reset = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)

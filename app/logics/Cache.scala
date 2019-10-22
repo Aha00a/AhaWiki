@@ -4,6 +4,7 @@ import logics.wikis.Interpreters
 import models.{AhaWikiDatabase, MockDb, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.concurrent.duration._
 
@@ -17,7 +18,7 @@ object Cache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi): List[AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, db:Database): List[AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
       AhaWikiDatabase().pageSelectPageList()
     }
 
@@ -28,26 +29,26 @@ object Cache {
   }
 
   object PageNameSet extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, db:Database): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
       PageList.get().map(_.name).toSet
     }
   }
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(MockDb().selectPageLastRevision(".header").map(_.content).getOrElse(""))
+      Interpreters.interpret(MockDb()(wikiContext.db).selectPageLastRevision(".header").map(_.content).getOrElse(""))
     }
   }
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(MockDb().selectPageLastRevision(".footer").map(_.content).getOrElse(""))
+      Interpreters.interpret(MockDb()(wikiContext.db).selectPageLastRevision(".footer").map(_.content).getOrElse(""))
     }
   }
 
   object Config extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      MockDb().selectPageLastRevision(".config").map(_.content).getOrElse("")
+      MockDb()(wikiContext.db).selectPageLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 }

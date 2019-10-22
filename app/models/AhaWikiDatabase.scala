@@ -8,13 +8,13 @@ import com.aha00a.commons.implicits.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 import models.AhaWikiDatabase._
 import play.api.Play.current
-import play.api.db.DB
+import play.api.db.{DB, Database}
 
 import scala.collection.immutable
 import scala.language.postfixOps
 
 object AhaWikiDatabase {
-  def apply(): AhaWikiDatabase = new AhaWikiDatabase()
+  def apply()(implicit db:Database): AhaWikiDatabase = new AhaWikiDatabase()
 
   trait WithTime {
     val time:Long
@@ -73,50 +73,50 @@ object AhaWikiDatabase {
   }
 }
 
-class AhaWikiDatabase() {
+class AhaWikiDatabase()(implicit db:Database) {
 
   object PageTable {
-    def selectCount(): Long = DB.withConnection { implicit connection =>
+    def selectCount(): Long = db.withConnection { implicit connection =>
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
   }
 
   def pageSelectCount(): Long = PageTable.selectCount()
 
-  def pageSelectLastRevision(name: String): Option[Page] = DB.withConnection { implicit connection =>
+  def pageSelectLastRevision(name: String): Option[Page] = db.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on('name -> name)
       .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def pageSelectFirstRevision(name: String): Option[Page] = DB.withConnection { implicit connection =>
+  def pageSelectFirstRevision(name: String): Option[Page] = db.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on('name -> name)
       .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = DB.withConnection { implicit connection =>
+  def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = db.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on('name -> name, 'revision -> revision)
       .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def pageSelectNameGroupByNameOrderByName: List[String] = DB.withConnection { implicit connection =>
+  def pageSelectNameGroupByNameOrderByName: List[String] = db.withConnection { implicit connection =>
     //noinspection LanguageFeature
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
   }
 
-  def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = DB.withConnection { implicit connection =>
+  def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = db.withConnection { implicit connection =>
     SQL("SELECT revision, time, author, remoteAddress, comment FROM Page WHERE name = {name} ORDER BY revision DESC")
       .on('name -> name)
       .as(long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("comment").? *).map(flatten)
       .map(PageRevisionTimeAuthorRemoteAddressComment.tupled)
   }
 
-  def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = DB.withConnection { implicit connection =>
+  def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = db.withConnection { implicit connection =>
     SQL( """SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, LENGTH(content) size, w.comment
            |    FROM Page w
            |    INNER JOIN (
@@ -132,12 +132,12 @@ class AhaWikiDatabase() {
       .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
   }
 
-  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = DB.withConnection { implicit connection =>
+  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = db.withConnection { implicit connection =>
     SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
 
-  def pageSearch(q:String): immutable.Seq[SearchResult] = DB.withConnection { implicit connection =>
+  def pageSearch(q:String): immutable.Seq[SearchResult] = db.withConnection { implicit connection =>
     SQL("""
 SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comment
      FROM Page w
@@ -156,17 +156,17 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
   }
 
 
-  def termFrequencyDelete(name: String): Int = DB.withConnection { implicit connection =>
+  def termFrequencyDelete(name: String): Int = db.withConnection { implicit connection =>
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
 
-  def termFrequencyInsert(name: String, term: String, frequency: Long): Option[Long] = DB.withConnection { implicit connection =>
+  def termFrequencyInsert(name: String, term: String, frequency: Long): Option[Long] = db.withConnection { implicit connection =>
     SQL"INSERT INTO TermFrequency (name, term, frequency) values ($name, $term, $frequency)".executeInsert()
   }
 
   def termFrequencyInsert(name: String, map:Map[String, Int]): Array[Int] = termFrequencyInsert(map.map(kv => new TermFrequency(name, kv)).toSeq)
 
-  def termFrequencyInsert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = DB.withConnection { implicit connection =>
+  def termFrequencyInsert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = db.withConnection { implicit connection =>
     if(seqTermFrequency.isEmpty) {
       Array()
     } else {
@@ -179,7 +179,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     }
   }
 
-  def cosineSimilarityUpdate(name: String): Int = DB.withConnection { implicit connection =>
+  def cosineSimilarityUpdate(name: String): Int = db.withConnection { implicit connection =>
     SQL"""REPLACE INTO CosineSimilarity (name1, name2, similarity)
           SELECT
              TF3.name,
@@ -197,13 +197,13 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
        SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name""".executeUpdate()
   }
 
-  def cosineSimilaritySelect(name: String): List[CosineSimilarity] = DB.withConnection { implicit connection =>
+  def cosineSimilaritySelect(name: String): List[CosineSimilarity] = db.withConnection { implicit connection =>
     SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
       .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
       .map(CosineSimilarity.tupled)
   }
 
-  def pageSelectNameWhereNoCosineSimilarity(): Option[String] = DB.withConnection { implicit connection =>
+  def pageSelectNameWhereNoCosineSimilarity(): Option[String] = db.withConnection { implicit connection =>
     SQL( """SELECT
            |    name
            |    FROM (
@@ -218,7 +218,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
       .as(str("name") singleOpt)
   }
 
-  def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = DB.withConnection { implicit connection =>
+  def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = db.withConnection { implicit connection =>
     if(similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
@@ -235,7 +235,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     }
   }
 
-  def pageSelectNameRandom():String = DB.withConnection { implicit connection =>
+  def pageSelectNameRandom():String = db.withConnection { implicit connection =>
     connection.getMetaData.getDatabaseProductName match {
       case "H2" => // TODO
         SQL( """SELECT
@@ -258,32 +258,32 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     }
   }
 
-  def pageDeleteWithRelatedData(name:String): Int = DB.withConnection { implicit connection => // TODO: transaction, FK
+  def pageDeleteWithRelatedData(name:String): Int = db.withConnection { implicit connection => // TODO: transaction, FK
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
   }
 
-  def pageDeleteRevisionWithRelatedData(name:String, revision:Long): Int = DB.withConnection { implicit connection =>
+  def pageDeleteRevisionWithRelatedData(name:String, revision:Long): Int = db.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
   }
 
-  def linkDelete(name: String): Int = DB.withConnection { implicit connection =>
+  def linkDelete(name: String): Int = db.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
   }
 
-  def pageRename(name: String, newName: String): Int = DB.withConnection { implicit connection =>
+  def pageRename(name: String, newName: String): Int = db.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
   }
 
-  def linkInsert(seq: Seq[Link]): Array[Int] = DB.withConnection { implicit connection =>
+  def linkInsert(seq: Seq[Link]): Array[Int] = db.withConnection { implicit connection =>
     if(seq.isEmpty) {
       Array[Int]()
     } else {
@@ -297,7 +297,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
   }
 
 
-  def linkSelect(name: String): List[Link] = DB.withConnection { implicit connection =>
+  def linkSelect(name: String): List[Link] = db.withConnection { implicit connection =>
     SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(Link.tupled)
@@ -305,7 +305,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
       .filterNot(_.or(_.contains("://")))
   }
 
-  def linkSelect(): List[Link] = DB.withConnection { implicit connection =>
+  def linkSelect(): List[Link] = db.withConnection { implicit connection =>
     SQL"SELECT src, dst, alias FROM Link"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(Link.tupled)

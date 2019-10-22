@@ -8,7 +8,7 @@ import models.{PageContent, WikiContext}
 object MacroPageList extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext) = InterpreterTable.interpret(PageContent(
     "#!Table tsv 1 tablesorter\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
-    Cache.PageList.get()(wikiContext.cacheApi).map { t =>
+    Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).map { t =>
       Seq(
         s"'''[${t.name}]'''",
         s"${t.localDateTime.toIsoLocalDateTimeString}",

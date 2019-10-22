@@ -1,7 +1,6 @@
 package actors
 
 import javax.inject.Inject
-
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
@@ -9,6 +8,7 @@ import logics.wikis.Interpreters
 import models.AhaWikiDatabase.Page
 import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
@@ -20,7 +20,7 @@ object ActorAhaWiki {
   case class Calculate(name: String)
 }
 
-class ActorAhaWiki @Inject() extends Actor {
+class ActorAhaWiki @Inject()(implicit db: Database) extends Actor {
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -50,8 +50,8 @@ class ActorAhaWiki @Inject() extends Actor {
       override def getOrElse[A:ClassTag](key: String, expiration: Duration)(orElse: => A): A = orElse
 
       override def remove(key: String): Unit = {}
-    })
-
+    }, db)
+    
     val seqLink = Interpreters.extractLink(page.name, page.content)
     AhaWikiDatabase().linkDelete(page.name)
     AhaWikiDatabase().linkInsert(seqLink)

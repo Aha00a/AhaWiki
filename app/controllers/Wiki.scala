@@ -26,7 +26,14 @@ import scala.collection.JavaConversions._
 import scala.collection.immutable
 
 @Singleton
-class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database, environment: Environment) extends Controller {
+class Wiki @Inject()(
+  implicit cacheApi: CacheApi,
+  actorSystem: ActorSystem,
+  database:play.api.db.Database,
+  environment: Environment,
+  @Named("db-actor") actorAhaWiki: ActorRef
+) extends Controller {
+//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
@@ -157,7 +164,6 @@ class Wiki @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, data
 
 
 
-  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
 
   def save(nameEncoded: String) = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")

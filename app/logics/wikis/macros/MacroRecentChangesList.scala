@@ -9,8 +9,8 @@ import models.WikiContext
 object MacroRecentChangesList extends TraitMacro {
   val regexDigits = """^(\d+)$""".r
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => interpret(Cache.PageList.get()(wikiContext.cacheApi).sortBy(_.time).reverse)
-    case regexDigits(i) => interpret(Cache.PageList.get()(wikiContext.cacheApi).sortBy(_.time).reverse.take(i.toInt))
+    case "" | null => interpret(Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).sortBy(_.time).reverse)
+    case regexDigits(i) => interpret(Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).sortBy(_.time).reverse.take(i.toInt))
     case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
   }
 

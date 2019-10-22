@@ -6,10 +6,12 @@ import models.AhaWikiDatabase.Page
 import play.Play
 import play.api.Logger
 import com.aha00a.commons.utils.DateTimeUtil
+import com.google.inject.Inject
+import play.api.db.Database
 
 import scala.io.Codec
 
-case class MockDb() {
+case class MockDb @Inject()(implicit db:Database) {
   def pageFromFile() = {
     Play.application().getFile("app/assets/Page").listFiles().map(file => {
       val name = file.getName

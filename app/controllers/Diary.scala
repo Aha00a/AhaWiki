@@ -20,9 +20,13 @@ import play.api.data.Forms._
 import play.api.mvc._
 
 @Singleton
-class Diary @Inject()(implicit cacheApi: CacheApi, actorSystem: ActorSystem, database:play.api.db.Database) extends Controller {
-
-  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
+class Diary @Inject()(
+  implicit cacheApi: CacheApi,
+  actorSystem: ActorSystem,
+  database:play.api.db.Database,
+  @Named("db-actor") actorAhaWiki: ActorRef
+) extends Controller {
+//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
 
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
