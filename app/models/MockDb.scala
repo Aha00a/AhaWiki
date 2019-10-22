@@ -2,18 +2,16 @@ package models
 
 import java.io.File
 
-import models.AhaWikiDatabase.Page
-import play.Play
-import play.api.Logger
 import com.aha00a.commons.utils.DateTimeUtil
 import com.google.inject.Inject
+import models.AhaWikiDatabase.Page
 import play.api.db.Database
 
 import scala.io.Codec
 
 case class MockDb @Inject()(implicit db:Database) {
   def pageFromFile() = {
-    Play.application().getFile("app/assets/Page").listFiles().map(file => {
+    new File("app/assets/Page").listFiles().map(file => {
       val name = file.getName
       implicit val codec:Codec = Codec.UTF8
       val body = scala.io.Source.fromFile(file).mkString
@@ -24,7 +22,7 @@ case class MockDb @Inject()(implicit db:Database) {
   //noinspection ScalaUnreachableCode
   def readAllTextFromFile(name: String):Option[Page] = {
     return None
-    val file = new File(Play.application().getFile("app/assets/Page"), name)
+    val file = new File(new File("app/assets/Page"), name)
     if(file.exists()) {
       implicit val codec:Codec = Codec.UTF8
       Some(new Page(name, scala.io.Source.fromFile(file).mkString))

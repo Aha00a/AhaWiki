@@ -419,17 +419,7 @@ class Test @Inject()(
   }
 
   def filetest = Action { implicit request =>
-//    val fromFile = scala.io.Source.fromFile
-    val f1 = play.Play.application().getFile("app/assets/Page/FrontPage")
-    val f2 = new File("app/assets/Page/FrontPage")
-    val p1 = f1.getAbsolutePath
-    val p2 = f2.getAbsolutePath
-    Ok(Json.toJson(Map(
-      "f1" -> f1.toString,
-      "f2" -> f2.toString,
-      "p1" -> p1,
-      "p2" -> p2
-    )))
+    Ok("Ok.")
   }
 }
 
