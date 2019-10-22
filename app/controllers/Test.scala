@@ -17,7 +17,11 @@ import play.api.db.Database
 import play.api.mvc._
 
 @Singleton
-class Test @Inject()(implicit cacheApi: CacheApi, system: ActorSystem, database:play.api.db.Database) extends Controller {
+class Test @Inject()(
+  implicit cacheApi: CacheApi,
+  system: ActorSystem,
+  database: play.api.db.Database
+) extends Controller {
 
   case class ExceptionEquals[T](actual: T, expect: T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
     Logger.error(actual.toString)
