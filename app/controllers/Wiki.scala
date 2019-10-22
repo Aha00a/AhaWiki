@@ -4,7 +4,6 @@ import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
-import javax.inject.{Singleton, _}
 
 import actionCompositions.PostAction
 import actors.ActorAhaWiki
@@ -12,7 +11,8 @@ import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
-import difflib.DiffRowGenerator
+import difflib.{DiffRow, DiffRowGenerator}
+import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
 import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
@@ -25,6 +25,7 @@ import play.api.{Environment, Mode}
 import scala.collection.JavaConversions._
 import scala.collection.immutable
 
+//noinspection TypeAnnotation
 @Singleton
 class Wiki @Inject()(
   implicit cacheApi: CacheApi,
@@ -37,7 +38,7 @@ class Wiki @Inject()(
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
 
     val pageFirstRevision = MockDb().selectPageFirstRevision(name)
     val pageLastRevision = MockDb().selectPageLastRevision(name)
@@ -128,7 +129,7 @@ class Wiki @Inject()(
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
 
-        val listDiffRow = new DiffRowGenerator.Builder()
+        val listDiffRow: Seq[DiffRow] = new DiffRowGenerator.Builder()
           .ignoreBlankLines(false)
           .ignoreWhiteSpaces(false)
           .columnWidth(Int.MaxValue)
@@ -167,7 +168,7 @@ class Wiki @Inject()(
 
   def save(nameEncoded: String) = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
     val (latestText, latestRevision) = MockDb().selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
@@ -251,7 +252,7 @@ class Wiki @Inject()(
 
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
-    implicit val wikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name)
     Ok( """<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 

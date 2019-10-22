@@ -17,15 +17,15 @@ object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
 
-  case class Calculate(name: String)
+  case class Calculate(name: String, i:Int = 1, length: Int = 1)
 }
 
 class ActorAhaWiki @Inject()(implicit db: Database) extends Actor {
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(name: String) =>
-      StopWatch(name) {
+    case Calculate(name: String, i:Int, length:Int) =>
+      StopWatch(s"$name - ($i/$length)") {
         AhaWikiDatabase().pageSelectLastRevision(name) foreach { page =>
           updateCosineSimilarity(name, page)
           updateLink(page)

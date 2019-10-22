@@ -1,6 +1,6 @@
 @(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.AhaWikiDatabase.Page], wikiLast:Option[models.AhaWikiDatabase.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title, description) {
-    @hotkey()
+    @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){
             $('a[target=_blank]').hover(function () {
@@ -16,21 +16,21 @@
 
                 $(document).data(href, div);
                 $.ajax({
-                    url: "http://crawler.aha00a.com/get",
+                    url: "https://crawler.aha00a.com/get",
                     data: { q: href },
                     dataType: "jsonp",
                     success: function(data) {
-                        if(data.success) {
-                            $(document).data(href).html('').append(
-                                $('<div></div>')
-                                    .append($('<img class="preview"/>').attr('src', data.image))
-                                    .append($('<h5/>').text(data.title))
-                                    .append($('<p/>').text(data.description))
-                            );
-                        } else {
-                            $(document).data(href).remove();
-                        }
-                    }
+                        $(document).data(href).html('').append(
+                            $('<div></div>')
+                                .append($('<img class="preview"/>').attr('src', data.image))
+                                .append($('<h5/>').text(data.title))
+                                .append($('<p/>').text(data.description))
+                        );
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.log(jqXHR, textStatus, errorThrown);
+                        $(document).data(href).remove();
+                    }
                 });
             }, function () {
                 var href = $(this).attr('href');
@@ -47,5 +47,5 @@
     </script>
 } {
     @Html(contentInterpreted)
-    @action(isWritable, wikiFirst.orNull, wikiLast.orNull)
+    @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
 }

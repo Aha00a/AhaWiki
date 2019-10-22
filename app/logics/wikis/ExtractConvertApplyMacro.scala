@@ -13,6 +13,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroBr,
     MacroHtml,
     MacroImage,
+    MacroRuby,
 
     MacroNavigation,
     MacroPageList,
@@ -49,6 +50,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
       \]\]""".r
 
   override def extract(s: String): String = {
+    //noinspection ScalaUnusedSymbol
     regex.replaceAllIn(s, _ match {
       case a@regex(name, argument) =>
         val uniqueKey = getUniqueKey
@@ -64,7 +66,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
-          case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, playframework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
+          case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
           case _ => MacroError.apply(s"Macro not found. - [[$name($argument)]]")
         }
       }
