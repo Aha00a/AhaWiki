@@ -2,7 +2,7 @@ package models
 
 import java.io.File
 
-import com.aha00a.commons.utils.DateTimeUtil
+import com.aha00a.commons.utils.{DateTimeUtil, Using}
 import com.google.inject.Inject
 import models.AhaWikiDatabase.Page
 import play.api.db.Database
@@ -10,11 +10,11 @@ import play.api.db.Database
 import scala.io.Codec
 
 case class MockDb @Inject()(implicit db:Database) {
-  def pageFromFile() = {
+  def pageFromFile(): Array[Page] = {
     new File("app/assets/Page").listFiles().map(file => {
       val name = file.getName
       implicit val codec:Codec = Codec.UTF8
-      val body = scala.io.Source.fromFile(file).mkString
+      val body = Using(scala.io.Source.fromFile(file))(_.mkString)
       Page(name, 1, DateTimeUtil.nowEpochNano, "AhaWiki", "0:0:0:0:0:0:0:1", body, Some("initial"))
     })
   }
@@ -25,7 +25,7 @@ case class MockDb @Inject()(implicit db:Database) {
     val file = new File(new File("app/assets/Page"), name)
     if(file.exists()) {
       implicit val codec:Codec = Codec.UTF8
-      Some(new Page(name, scala.io.Source.fromFile(file).mkString))
+      Some(new Page(name, Using(scala.io.Source.fromFile(file))(_.mkString)))
     } else {
       None
     }
