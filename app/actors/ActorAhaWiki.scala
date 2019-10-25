@@ -20,7 +20,7 @@ object ActorAhaWiki {
   case class Calculate(name: String, i:Int = 1, length: Int = 1)
 }
 
-class ActorAhaWiki @Inject()(implicit db: Database) extends Actor {
+class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database) extends Actor {
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -41,16 +41,7 @@ class ActorAhaWiki @Inject()(implicit db: Database) extends Actor {
   }
 
   def updateLink(page:Page): Array[Int] = {
-    // TODO: inject CacheApi
-    implicit val wikiContext: WikiContext = WikiContext(page.name)(null, new CacheApi {
-      override def set(key: String, value: Any, expiration: Duration): Unit = {}
-
-      override def get[T: ClassTag](key: String): Option[T] = None
-
-      override def getOrElse[A:ClassTag](key: String, expiration: Duration)(orElse: => A): A = orElse
-
-      override def remove(key: String): Unit = {}
-    }, db)
+    implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db)
     
     val seqLink = Interpreters.extractLink(page.name, page.content)
     AhaWikiDatabase().linkDelete(page.name)
