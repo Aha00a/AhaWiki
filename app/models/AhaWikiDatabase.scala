@@ -7,8 +7,7 @@ import anorm._
 import com.aha00a.commons.implicits.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 import models.AhaWikiDatabase._
-import play.api.Play.current
-import play.api.db.{DB, Database}
+import play.api.db.Database
 
 import scala.collection.immutable
 import scala.language.postfixOps
@@ -44,7 +43,7 @@ object AhaWikiDatabase {
 
 
   case class Link(src:String, dst:String, alias:String) {
-    def or(a:(String => Boolean)):Boolean = a(src) || a(dst)
+    def or(a: String => Boolean):Boolean = a(src) || a(dst)
   }
 
   case class CosineSimilarity(name1: String, name2: String, similarity: Double)
