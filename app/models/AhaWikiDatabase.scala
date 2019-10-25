@@ -12,6 +12,7 @@ import play.api.db.{DB, Database}
 
 import scala.collection.immutable
 import scala.language.postfixOps
+import scala.util.matching.Regex
 
 object AhaWikiDatabase {
   def apply()(implicit db:Database): AhaWikiDatabase = new AhaWikiDatabase()
@@ -59,7 +60,7 @@ object AhaWikiDatabase {
         name,
         lines
           .zipWithIndex
-          .filter(s => s"(?i)$q".r.findFirstIn(s._1).isDefined)
+          .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
           .map(_._2)
           .flatMap(around(_))
           .distinct
