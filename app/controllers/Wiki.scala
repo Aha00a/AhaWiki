@@ -34,8 +34,6 @@ class Wiki @Inject()(
   environment: Environment,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
-//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
-
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)

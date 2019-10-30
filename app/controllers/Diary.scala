@@ -27,8 +27,6 @@ class Diary @Inject()(
   database:play.api.db.Database,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
-//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
-
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now

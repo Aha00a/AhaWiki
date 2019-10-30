@@ -21,7 +21,6 @@ class ApplicationLifecycleHook @Inject()(
   db: Database,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) {
-//  val actorAhaWiki: ActorRef = actorSystem.actorOf(ActorAhaWiki.props)
   applicationLifecycle.addStopHook { () =>
     Logger.info("OnApplicationStop")
     Future.successful(())

@@ -21,8 +21,6 @@ class Dev @Inject()(
   database:play.api.db.Database,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
-//  val actorAhaWiki: ActorRef = system.actorOf(ActorAhaWiki.props)
-
   def reset = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
