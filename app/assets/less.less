@@ -523,58 +523,21 @@ html, body {
 	}
 
 	.diff {
-		table {
-			margin: 20px 0px;
-			border-collapse: collapse;
-			width: 100%;
-
-			th {
-				border: 1px solid #ccc;
-				background-color: #ddd;
+		.d2h-wrapper {
+			.d2h-file-header {
+				height: inherit;
+				.d2h-file-name-wrapper {
+					font-size: inherit;
+					font-family: inherit;
+				}
 			}
-			td {
-				width: 50%;
-				padding: 5px;
-			}
-		}
-		.left, .right {
-			.monospace;
-			white-space: pre-wrap;
-			word-break: break-all;
-			border: 1px solid #ccc;
-			&:before {
-				content: '​'; // zero-width whitespace
+			.d2h-diff-table {
+				font-size: inherit;
+				font-family: inherit;
 			}
 		}
-
-		.left {
-			&.INSERT {
-				background-color: #eee;
-				border: 1px solid #eee;
-			}
-			&.CHANGE {
-				background-color: #ffd;
-				border: 1px solid #ee2;
-			}
-			&.DELETE {
-				background-color: #fee;
-				border: 1px solid #fbb;
-			}
-		}
-
-		.right {
-			&.INSERT {
-				background-color: #efe;
-				border: 1px solid #bfb;
-			}
-			&.CHANGE{
-				background-color: #ffd;
-				border: 1px solid #ee2;
-			}
-			&.DELETE {
-				background-color: #eee;
-				border: 1px solid #eee;
-			}
+		.unifiedDiff {
+			display: none;
 		}
 	}
 	.crawlerPreview {

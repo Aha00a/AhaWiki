@@ -11,7 +11,8 @@ import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
-import difflib.{DiffRow, DiffRowGenerator}
+import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
+import com.github.difflib.text.{DiffRow, DiffRowGenerator}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
@@ -121,20 +122,16 @@ class Wiki @Inject()(
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
 
-        val afterPage = MockDb().selectPageSpecificRevision(name, after)
         val beforePage = MockDb().selectPageSpecificRevision(name, before)
+        val afterPage = MockDb().selectPageSpecificRevision(name, after)
 
-        val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
 
-        val listDiffRow: Seq[DiffRow] = new DiffRowGenerator.Builder()
-          .ignoreBlankLines(false)
-          .ignoreWhiteSpaces(false)
-          .columnWidth(Int.MaxValue)
-          .build()
-          .generateDiffRows(beforeContent, afterContent)
+        val diff = DiffUtils.diff(beforeContent, afterContent)
+        val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent, diff, 10).mkString("\n")
+        Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
-        Ok(views.html.Wiki.diff(name, before, after, listDiffRow)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiDatabase().pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")

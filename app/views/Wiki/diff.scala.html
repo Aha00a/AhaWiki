@@ -1,41 +1,33 @@
-@import difflib.DiffRow.Tag
-@(name: String, before:Int, after:Int, list:Seq[difflib.DiffRow])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(name: String, before:Int, after:Int, unifiedDiff: String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_base(name, s"Diff of $name") {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html.min.css" integrity="sha256-g/AR0iN639QFgl5CwIQoH9JOlWFuPJ2L9kRi+sKOmxA=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html-ui.min.js" integrity="sha256-08hEwaeqghdW6TAaEo1EGHDC/mrLMaWl6gRlMqV+54I=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html.min.js" integrity="sha256-cTH7epla2XtsxlSV0eHjVwQ8WLbvbs57MPtOh4K7DjM=" crossorigin="anonymous"></script>
+
     @views.html.Wiki.hotkey()
+
     <script type="text/javascript">
         $(function(){
-            $('html, body').animate({
-                scrollTop: $(" @(Tag.values().filterNot(_ == Tag.EQUAL).map("." + _).mkString(","))").offset().top - window.innerHeight / 2
-            }, 500);
+            $('.selectOutputFormat').change(function () {
+                var diff2htmlUi = new Diff2HtmlUI({diff: $('.unifiedDiff').html()});
+                diff2htmlUi.draw('.diff2HtmlResult', { outputFormat: $(this).val() });
+            }).change();
         });
     </script>
 } {
-    <div class="wikiContent">
+    <div class="wikiContent diff">
         <div class="limitWidth">
             <h1>Diff of <a href="@name">@name</a></h1>
             Changes between <a href="?revision=@before">revision @before</a> and <a href="?revision=@after">revision @after</a>
-        </div>
-    </div>
-    <div class="diff">
-        <div class="wikiContent">
 
-        <div class="limitWidth">
-            <form>
-                <input type="hidden" name="action" value="diff"/>
-                <table>
-                    <tr>
-                        <th><a href="?revision=@before">revision @before</a></th>
-                        <th><a href="?revision=@after">revision @after</a></th>
-                    </tr>
-                    @for(diffRow <- list) {
-                        <tr>
-                            <td class="left @(diffRow.getTag) @(if(diffRow.getOldLine.isEmpty) {"empty"} else {})">@(diffRow.getOldLine)</td>
-                            <td class="right @(diffRow.getTag) @(if(diffRow.getNewLine.isEmpty) {"empty"} else {})">@(diffRow.getNewLine)</td>
-                        </tr>
-                    }
-                </table>
-            </form>
+            <div>
+                <select class="selectOutputFormat" name="outputFormat">
+                    <option value="line-by-line" >Line by Line</option>
+                    <option value="side-by-side" selected="selected">Side by Side</option>
+                </select>
+            </div>
+            <div class="diff2HtmlResult"></div>
+            <pre class="unifiedDiff">@unifiedDiff</pre>
         </div>
-    </div>
     </div>
 }
