@@ -50,12 +50,13 @@ object AhaWikiDatabase {
 
   case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
-  case class SearchResult(name:String, content:String, time:Long) {
-    def summarised(q: String): SearchResult = {
-      def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
+  case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
 
+  case class SearchResult(name:String, content:String, time:Long) {
+    def summarise(q: String): SearchResultSummary = {
+      def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
       val lines = content.split("""(\r\n|\n)+""").toSeq
-      SearchResult(
+      SearchResultSummary(
         name,
         lines
           .zipWithIndex
@@ -65,10 +66,8 @@ object AhaWikiDatabase {
           .distinct
           .filter(lines.isDefinedAt)
           .splitBy((a, b) => a + 1 != b)
-          .map(_.map(i => s"${i + 1}: ${lines(i)}").mkString("\n"))
-          .mkString("\n\n⋯\n\n"),
-        time
-      )
+          .map(_.map(i => (i + 1, lines(i)))).toSeq
+        )
     }
   }
 }

@@ -1,4 +1,4 @@
-@(q:String, seq:Seq[models.AhaWikiDatabase.SearchResult])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(q:String, seq:Seq[models.AhaWikiDatabase.SearchResultSummary])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Search " + q, "") {
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
@@ -11,10 +11,24 @@
         <div class="limitWidth">
             <h1>search <a href="@routes.Wiki.view(q.replaceAll("""\s""", ""))">@q</a></h1>
             @(seq.size) results.
-            @for(searchResult <- seq) {
+            @for(searchResultSummary <- seq) {
                 <div class="item">
-                    <h2 class="pageName"><a href="/w/@(searchResult.name)" >@(searchResult.name)</a></h2>
-                    <p class="pageContent">@(searchResult.content)</p>
+                    <h2 class="pageName"><a href="/w/@(searchResultSummary.name)" >@(searchResultSummary.name)</a></h2>
+                    <table class="tableSearchResult">
+                        <tbody>
+                            @for(seq2 <- searchResultSummary.summary) {
+                                <tr>
+                                    <td colspan="2" class="empty"></td>
+                                </tr>
+                                @for((i, line) <- seq2) {
+                                    <tr>
+                                        <td class="lineNumber">@i</td>
+                                        <td class="lineContent">@line</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
                 </div>
             }
         </div>

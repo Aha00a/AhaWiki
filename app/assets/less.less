@@ -11,8 +11,18 @@ html, body {
 	-webkit-box-shadow: @s;
 	-moz-box-shadow: @s;
 	box-shadow: @s;
-
 }
+
+.userSelect(@v: none) {
+	-webkit-touch-callout: @v; // iOS Safari
+	-webkit-user-select: @v; // Safari
+	//noinspection CssUnknownProperty
+	-khtml-user-select: @v; // Konqueror HTML
+	-moz-user-select: @v; // Old versions of Firefox
+	-ms-user-select: @v; // Internet Explorer/Edge
+	user-select: @v; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
+}
+
 .AhaWiki {
 	a {
 		color: #00a;
@@ -512,12 +522,38 @@ html, body {
 	.searchResult {
 		.item {
 			padding: 10px;
-			.pageName {
-			}
-			.pageContent {
-				.monospace;
-				white-space: pre-wrap;
-				word-break: break-word;
+			table.tableSearchResult {
+				width: 100%;
+				border-collapse: collapse;
+				border: 1px solid #ccc;
+				td {
+					border: 1px solid #ccc;
+					border-bottom: 1px solid #eee;
+
+					.monospace;
+					white-space: pre-wrap;
+					word-break: break-word;
+
+					&.empty {
+						border: 1px solid #ccc;
+						background-color: #eee;
+						height: 12px;
+					}
+					&.lineNumber {
+						width: 50px;
+						padding: 5px 10px;
+						text-align: right;
+						.userSelect(none);
+					}
+					&.lineContent {
+						padding: 5px;
+					}
+				}
+				tr:last-of-type {
+					> td {
+						border-bottom: 1px solid #ccc;
+					}
+				}
 			}
 		}
 	}

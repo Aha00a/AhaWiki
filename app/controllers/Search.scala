@@ -17,10 +17,10 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
       q.toOption.map(
         AhaWikiDatabase().pageSearch(_)
           .filter(sr => WikiPermission.isReadable(PageContent(sr.content)))
-          .map(_.summarised(q))
           .sortBy(-_.time)
           .partition(_.name == q)
           .concat()
+          .map(_.summarise(q))
       ).getOrElse(Seq.empty)
     ))
   }
