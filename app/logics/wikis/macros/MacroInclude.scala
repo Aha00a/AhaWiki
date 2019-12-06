@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import logics.wikis.{Interpreters, WikiPermission}
-import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, PageContent, WikiContext}
 
 object MacroInclude extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = doApply(argument, s => s)

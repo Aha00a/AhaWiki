@@ -3,7 +3,7 @@ package logics.wikis.macros
 import logics.Cache
 import logics.wikis.{Interpreters, WikiPermission}
 import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
-import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, PageContent, WikiContext}
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {

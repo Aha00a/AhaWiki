@@ -6,7 +6,7 @@ import javax.inject._
 import com.aha00a.commons.implicits.Implicits
 import Implicits._
 import logics.Cache
-import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._

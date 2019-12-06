@@ -13,7 +13,7 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.WikiPermission
 import logics.{Cache, SessionLogic}
-import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._

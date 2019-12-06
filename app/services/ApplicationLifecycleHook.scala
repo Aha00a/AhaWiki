@@ -9,7 +9,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, Using}
 import models.AhaWikiDatabase.Page
-import models.{AhaWikiDatabase, MockDb}
+import models.AhaWikiDatabase
 import play.api.Logger
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle

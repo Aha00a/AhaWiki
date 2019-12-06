@@ -8,7 +8,7 @@ import com.aha00a.commons.implicits.Implicits._
 import logics.Cache
 import logics.wikis.interpreters.InterpreterVim
 import models.AhaWikiDatabase.Page
-import models.{AhaWikiDatabase, MockDb, WikiContext}
+import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
 import play.api.mvc._
 

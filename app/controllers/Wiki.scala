@@ -16,7 +16,7 @@ import com.github.difflib.text.{DiffRow, DiffRowGenerator}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}
-import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._

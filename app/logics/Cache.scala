@@ -1,7 +1,7 @@
 package logics
 
 import logics.wikis.Interpreters
-import models.{AhaWikiDatabase, MockDb, WikiContext}
+import models.{AhaWikiDatabase, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
