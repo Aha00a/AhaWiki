@@ -9,8 +9,8 @@ import play.api.db.Database
 
 import scala.io.Codec
 
-case class MockDb @Inject()(implicit db:Database) {
-  def pageFromFile(): Array[Page] = {
+case class MockDb() {
+  def getArrayPageFromFile(): Array[Page] = {
     new File("app/assets/Page").listFiles().map(file => {
       val name = file.getName
       implicit val codec:Codec = Codec.UTF8

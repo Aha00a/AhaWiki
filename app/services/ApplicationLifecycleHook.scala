@@ -32,7 +32,7 @@ class ApplicationLifecycleHook @Inject()(
   actorSystem.scheduler.scheduleOnce(2 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().pageSelectCount()) {
-      MockDb().pageFromFile().foreach(p => {
+      MockDb().getArrayPageFromFile().foreach(p => {
         AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
         actorAhaWiki ! Calculate(p.name)
       })
