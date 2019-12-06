@@ -33,13 +33,15 @@ class Wiki @Inject()(
   environment: Environment,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
+  private val ahaWikiDatabase = AhaWikiDatabase()
+
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val pageFirstRevision = AhaWikiDatabase().pageSelectFirstRevision(name)
-    val pageLastRevision = AhaWikiDatabase().pageSelectLastRevision(name)
-    val pageSpecificRevision = AhaWikiDatabase().pageSelect(name, revision)
+    val pageFirstRevision = ahaWikiDatabase.pageSelectFirstRevision(name)
+    val pageLastRevision = ahaWikiDatabase.pageSelectLastRevision(name)
+    val pageSpecificRevision = ahaWikiDatabase.pageSelect(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
@@ -84,9 +86,9 @@ class Wiki @Inject()(
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[AhaWikiDatabase.CosineSimilarity] = AhaWikiDatabase().cosineSimilaritySelect(name)
+              val cosineSimilarities: immutable.Seq[AhaWikiDatabase.CosineSimilarity] = ahaWikiDatabase.cosineSimilaritySelect(name)
               val similarPageNames = cosineSimilarities.map(_.name2)
-              val highScoredTerms = AhaWikiDatabase().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+              val highScoredTerms = ahaWikiDatabase.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
@@ -120,8 +122,8 @@ class Wiki @Inject()(
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
 
-        val beforePage = AhaWikiDatabase().pageSelectSpecificRevision(name, before)
-        val afterPage = AhaWikiDatabase().pageSelectSpecificRevision(name, after)
+        val beforePage = ahaWikiDatabase.pageSelectSpecificRevision(name, before)
+        val afterPage = ahaWikiDatabase.pageSelectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
@@ -131,7 +133,7 @@ class Wiki @Inject()(
         Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiDatabase().pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiDatabase.pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -140,9 +142,9 @@ class Wiki @Inject()(
   }
 
   def getRelatedPages(name: String): String = {
-    val relationship = AhaWikiDatabase().linkSelect(name)
-    val backward = relationship.flatMap(lm => AhaWikiDatabase().linkSelect(lm.src))
-    val forward = relationship.flatMap(lm => AhaWikiDatabase().linkSelect(lm.dst))
+    val relationship = ahaWikiDatabase.linkSelect(name)
+    val backward = relationship.flatMap(lm => ahaWikiDatabase.linkSelect(lm.src))
+    val forward = relationship.flatMap(lm => ahaWikiDatabase.linkSelect(lm.dst))
 
     val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")
@@ -164,11 +166,11 @@ class Wiki @Inject()(
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
-    val (latestText, latestRevision) = AhaWikiDatabase().pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
+    val (latestText, latestRevision) = ahaWikiDatabase.pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        AhaWikiDatabase().pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
+        ahaWikiDatabase.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
         actorAhaWiki ! Calculate(name)
 
         Cache.PageList.invalidate()
@@ -191,10 +193,10 @@ class Wiki @Inject()(
   def delete() = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiDatabase().pageSelectLastRevision(name) match {
+    ahaWikiDatabase.pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().pageDeleteWithRelatedData(name)
+          ahaWikiDatabase.pageDeleteWithRelatedData(name)
           Cache.PageList.invalidate()
           Ok("")
         } else {
@@ -208,10 +210,10 @@ class Wiki @Inject()(
   def deleteLastRevision() = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiDatabase().pageSelectLastRevision(name) match {
+    ahaWikiDatabase.pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().pageDeleteRevisionWithRelatedData(name, page.revision)
+          ahaWikiDatabase.pageDeleteRevisionWithRelatedData(name, page.revision)
           Cache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
           Ok("")
@@ -226,11 +228,11 @@ class Wiki @Inject()(
   def rename() = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    (AhaWikiDatabase().pageSelectLastRevision(name), AhaWikiDatabase().pageSelectLastRevision(newName)) match {
+    (ahaWikiDatabase.pageSelectLastRevision(name), ahaWikiDatabase.pageSelectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().pageRename(name, newName)
-          AhaWikiDatabase().pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          ahaWikiDatabase.pageRename(name, newName)
+          ahaWikiDatabase.pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           Cache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")
