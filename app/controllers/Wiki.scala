@@ -39,8 +39,8 @@ class Wiki @Inject()(
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val pageFirstRevision = MockDb().selectPageFirstRevision(name)
-    val pageLastRevision = MockDb().selectPageLastRevision(name)
+    val pageFirstRevision = AhaWikiDatabase().pageSelectFirstRevision(name)
+    val pageLastRevision = AhaWikiDatabase().pageSelectLastRevision(name)
     val pageSpecificRevision = MockDb().selectPage(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
@@ -122,8 +122,8 @@ class Wiki @Inject()(
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
 
-        val beforePage = MockDb().selectPageSpecificRevision(name, before)
-        val afterPage = MockDb().selectPageSpecificRevision(name, after)
+        val beforePage = AhaWikiDatabase().pageSelectSpecificRevision(name, before)
+        val afterPage = AhaWikiDatabase().pageSelectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
@@ -166,7 +166,7 @@ class Wiki @Inject()(
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
-    val (latestText, latestRevision) = MockDb().selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
+    val (latestText, latestRevision) = AhaWikiDatabase().pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
@@ -193,7 +193,7 @@ class Wiki @Inject()(
   def delete() = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    MockDb().selectPageLastRevision(name) match {
+    AhaWikiDatabase().pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           AhaWikiDatabase().pageDeleteWithRelatedData(name)
@@ -210,7 +210,7 @@ class Wiki @Inject()(
   def deleteLastRevision() = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    MockDb().selectPageLastRevision(name) match {
+    AhaWikiDatabase().pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           AhaWikiDatabase().pageDeleteRevisionWithRelatedData(name, page.revision)
@@ -228,7 +228,7 @@ class Wiki @Inject()(
   def rename() = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    (MockDb().selectPageLastRevision(name), MockDb().selectPageLastRevision(newName)) match {
+    (AhaWikiDatabase().pageSelectLastRevision(name), AhaWikiDatabase().pageSelectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           AhaWikiDatabase().pageRename(name, newName)

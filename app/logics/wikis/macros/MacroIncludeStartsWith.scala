@@ -3,7 +3,7 @@ package logics.wikis.macros
 import logics.Cache
 import logics.wikis.{Interpreters, WikiPermission}
 import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
-import models.{MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
@@ -11,7 +11,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
     case _ =>
       val list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db)
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
-        val pageLastRevision = MockDb()(wikiContext.db).selectPageLastRevision(page.name)
+        val pageLastRevision = AhaWikiDatabase()(wikiContext.db).pageSelectLastRevision(page.name)
         if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {

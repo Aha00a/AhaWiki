@@ -1,12 +1,12 @@
 package controllers
 
 import java.net.URLEncoder
-import javax.inject._
 
+import javax.inject._
 import com.aha00a.commons.implicits.Implicits
 import Implicits._
 import logics.Cache
-import models.{MockDb, PageContent, WikiContext}
+import models.{AhaWikiDatabase, MockDb, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
@@ -23,6 +23,6 @@ class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database
   }
 
   def robotsTxt = Action { implicit request =>
-    Ok(MockDb().selectPageLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+    Ok(AhaWikiDatabase().pageSelectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
   }
 }

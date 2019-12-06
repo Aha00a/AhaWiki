@@ -36,7 +36,7 @@ class Diary @Inject()(
     val weekdayName = now.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val (latestText: String, latestRevision: Long) = MockDb().selectPageLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+    val (latestText: String, latestRevision: Long) = AhaWikiDatabase().pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       val body =
