@@ -1,13 +1,16 @@
 = AhaWiki
-[https://github.com/Aha00a/AhaWiki AhaWiki] is document management system based on [https://en.wikipedia.org/wiki/Wiki Wiki].
+[https://wiki.aha00a.com/w/AhaWiki AhaWiki] is document management system based on [Wiki].
+
+== Repository
+ * https://github.com/Aha00a/AhaWiki
 
 == How to use
- * [wiki:AhaWikiSyntax]
- * [wiki:AhaWikiHotKey]
- * [wiki:AhaWikiInterpreterExamples]
+ * [https://wiki.aha00a.com/w/AhaWikiSyntax AhaWikiSyntax]
+ * [https://wiki.aha00a.com/w/AhaWikiHotKey AhaWikiHotKey]
+ * [https://wiki.aha00a.com/w/AhaWikiInterpreterExamples AhaWikiInterpreterExamples]
 
 == How to manage
- * [wiki:AhaWikiInstallation]
- * [wiki:AhaWikiAccessControl]
- * [wiki:AhaWikiCustomizing]
+ * [https://wiki.aha00a.com/w/AhaWikiInstallation AhaWikiInstallation]
+ * [https://wiki.aha00a.com/w/AhaWikiAccessControl AhaWikiAccessControl]
+ * [https://wiki.aha00a.com/w/AhaWikiCustomizing AhaWikiCustomizing]
 
