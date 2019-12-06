@@ -5,15 +5,21 @@ import logics.Cache
 import logics.wikis.interpreters.InterpreterWiki
 import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.WikiContext
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.util.matching.Regex
 
 object MacroRecentChangesList extends TraitMacro {
   val regexDigits: Regex = """^(\d+)$""".r
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => interpret(Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).sortBy(_.time).reverse)
-    case regexDigits(i) => interpret(Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).sortBy(_.time).reverse.take(i.toInt))
-    case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
+    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val db: Database = wikiContext.db
+    argument match {
+      case "" | null => interpret(Cache.PageList.get().sortBy(_.time).reverse)
+      case regexDigits(i) => interpret(Cache.PageList.get().sortBy(_.time).reverse.take(i.toInt))
+      case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
+    }
   }
 
   def interpret(list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment])(implicit wikiContext: WikiContext): String = {
