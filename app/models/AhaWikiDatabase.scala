@@ -27,9 +27,7 @@ object AhaWikiDatabase {
     lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
   }
 
-  case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime {
-    def this(name: String, content: String) = this(name, 0L, Instant.now().toEpochMilli * 1000, "aha00a", "0.0.0.0", content, Some("")) // TODO: remove
-  }
+  case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime
 
   case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: Option[String]) extends WithTime
 

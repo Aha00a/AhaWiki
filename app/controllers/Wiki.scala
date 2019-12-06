@@ -58,7 +58,7 @@ class Wiki @Inject()(
             s"= [$y-$m]-$d $weekdayName\n * "
           case _ => s"""= $name\ndescribe $name here."""
         }
-        Ok(views.html.Wiki.edit(new models.AhaWikiDatabase.Page(name, content))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.edit(new models.AhaWikiDatabase.Page(name, 0, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", content, None))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
