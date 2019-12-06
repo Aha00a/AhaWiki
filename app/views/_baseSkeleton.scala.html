@@ -1,11 +1,12 @@
-@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: WikiContext)
+@import play.api.cache.CacheApi
+@import play.api.db.Database
+@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], cacheApi: CacheApi, db:Database)
 <!DOCTYPE html>
 
 <html lang="en">
     <head>
-        <title>@title - @wikiContext.request.host</title>
+        <title>@title - @request.host</title>
 
-        <title>@(title)</title>
         <meta itemprop="name" content="@(title)">
         <meta property="og:title" content="@(title)" />
         <meta name="twitter:title" content="@(title)">

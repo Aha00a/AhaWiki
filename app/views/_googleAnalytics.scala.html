@@ -1,4 +1,6 @@
-@()(implicit wikiContext: WikiContext)
+@import play.api.cache.CacheApi
+@import play.api.db.Database
+@()(implicit cacheApi: CacheApi, db:Database)
 @for(trackingId <- Seq(logics.ApplicationConf.AhaWiki.config.google.analytics.trackingId())) {
     @if(trackingId) {
         <script>

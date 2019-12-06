@@ -1,7 +1,8 @@
 package logics
 
-import models.WikiContext
 import play.api.Configuration
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 object ApplicationConf {
   private def fqn: String = {
@@ -20,26 +21,26 @@ object ApplicationConf {
     object config {
       object permission {
         object default {
-          def read()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "all")
-          def write()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "login")
+          def read()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "all")
+          def write()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "login")
         }
       }
 
       object google {
         object analytics {
-          def trackingId()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "")
+          def trackingId()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "")
         }
       }
 
       object interpreter {
         object Vim {
-          def debug()(implicit wikiContext: WikiContext): Boolean = hocon.getOrElse(fqn, default = false)
-          def colorscheme()(implicit wikiContext: WikiContext): String = hocon.getOrElse(fqn, "elflord")
+          def debug()(implicit cacheApi: CacheApi, db:Database): Boolean = hocon.getOrElse(fqn, default = false)
+          def colorscheme()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "elflord")
         }
       }
 
 
-      def hocon()(implicit wikiContext: WikiContext): Hocon = {
+      def hocon()(implicit cacheApi: CacheApi, db:Database): Hocon = {
         new Hocon(Cache.Config.get())
       }
 

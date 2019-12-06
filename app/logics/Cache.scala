@@ -47,8 +47,8 @@ object Cache {
   }
 
   object Config extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      AhaWikiDatabase()(wikiContext.db).pageSelectLastRevision(".config").map(_.content).getOrElse("")
+    def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) {
+      AhaWikiDatabase().pageSelectLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 }

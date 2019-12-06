@@ -63,7 +63,7 @@ object InterpreterVim {
     if(parser.isError) {
       "Error!"
     } else {
-      val colorscheme: String = ApplicationConf.AhaWiki.config.interpreter.Vim.colorscheme()
+      val colorscheme: String = ApplicationConf.AhaWiki.config.interpreter.Vim.colorscheme()(wikiContext.cacheApi, wikiContext.db)
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir: File = getCacheDir
       val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
@@ -97,7 +97,7 @@ object InterpreterVim {
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
         }
 
-        if(!ApplicationConf.AhaWiki.config.interpreter.Vim.debug()) {
+        if(!ApplicationConf.AhaWiki.config.interpreter.Vim.debug()(wikiContext.cacheApi, wikiContext.db)) {
           cacheFileHtmlRaw.delete()
           cacheFileSh.delete()
           cacheFileText.delete()
