@@ -3,14 +3,13 @@ package controllers
 import java.time.LocalDateTime
 import java.time.format.TextStyle
 import java.util.Locale
-import javax.inject._
 
 import actionCompositions.PostAction
-import actors.ActorAhaWiki
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
+import javax.inject._
 import logics.wikis.WikiPermission
 import logics.{Cache, SessionLogic}
 import models.{AhaWikiDatabase, PageContent, WikiContext}

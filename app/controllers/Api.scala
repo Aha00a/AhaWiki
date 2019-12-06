@@ -1,11 +1,9 @@
 package controllers
 
 import javax.inject._
-
 import logics.Cache
 import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
-import play.api.db.Database
 import play.api.libs.json._
 import play.api.mvc._
 

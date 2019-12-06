@@ -6,13 +6,11 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 import actionCompositions.PostAction
-import actors.ActorAhaWiki
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
-import com.github.difflib.text.{DiffRow, DiffRowGenerator}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{Interpreters, WikiPermission}

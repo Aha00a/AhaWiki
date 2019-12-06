@@ -1,6 +1,5 @@
 import actors.ActorAhaWiki
 import com.google.inject.AbstractModule
-import com.google.inject.name.Names
 import play.api.libs.concurrent.AkkaGuiceSupport
 import services.ApplicationLifecycleHook
 

@@ -1,14 +1,11 @@
 package controllers
 
-import javax.inject.{Inject, Named, Singleton}
-import actors.ActorAhaWiki
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.implicits.Implicits._
-import logics.Cache
+import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim
-import models.AhaWikiDatabase.Page
-import models.{AhaWikiDatabase, WikiContext}
+import models.AhaWikiDatabase
 import play.api.cache.CacheApi
 import play.api.mvc._
 

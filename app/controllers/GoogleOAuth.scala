@@ -1,8 +1,8 @@
 package controllers
 
-import javax.inject.Inject
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.GoogleApi
+import javax.inject.Inject
 import logics.{ApplicationConf, SessionLogic}
 import play.api.Configuration
 import play.api.cache.CacheApi

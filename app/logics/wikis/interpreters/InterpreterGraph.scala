@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import models.{WikiContext, PageContent}
+import models.{PageContent, WikiContext}
 
 object InterpreterGraph {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {

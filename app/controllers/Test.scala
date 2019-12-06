@@ -1,21 +1,18 @@
 package controllers
 
-import java.io.File
-
-import javax.inject.{Inject, Singleton}
 import akka.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.utils.Stemmer
+import javax.inject.{Inject, Singleton}
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
-import play.api.{Application, Logger}
+import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
-import play.api.libs.json.Json
 import play.api.mvc._
 
 @Singleton

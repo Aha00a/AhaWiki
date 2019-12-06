@@ -1,7 +1,7 @@
 package models
 
 import com.aha00a.commons.implicits.Implicits
-import Implicits._
+import com.aha00a.commons.implicits.Implicits._
 
 case class PageContent(raw: String) {
   private val split: Array[String] = raw.replaceAll("""^\n#!""", "#!").split("""(\n|\r\n)""")

@@ -3,7 +3,6 @@ package logics.wikis.macros
 import java.time.YearMonth
 
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.macros.MacroCalendar._
 import models.WikiContext
 
 object MacroDays extends TraitMacro {

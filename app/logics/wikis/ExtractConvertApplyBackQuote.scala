@@ -1,7 +1,7 @@
 package logics.wikis
 
 import com.aha00a.commons.implicits.Implicits
-import Implicits._
+import com.aha00a.commons.implicits.Implicits._
 import models.WikiContext
 
 class ExtractConvertApplyBackQuote() extends ExtractConvertApply {

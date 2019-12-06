@@ -1,15 +1,12 @@
 package controllers
 
 import java.time.LocalDateTime
-import javax.inject.Inject
 
+import javax.inject.Inject
 import logics.Cache
 import models.WikiContext
 import play.api.cache.CacheApi
-import play.api.db.Database
 import play.api.mvc._
-
-import scala.xml.{Elem, NodeBuffer}
 
 class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index: Action[AnyContent] = atom

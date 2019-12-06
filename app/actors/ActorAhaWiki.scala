@@ -1,17 +1,14 @@
 package actors
 
-import javax.inject.Inject
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
+import javax.inject.Inject
 import logics.wikis.Interpreters
 import models.AhaWikiDatabase.Page
 import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
-
-import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
 
 object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]

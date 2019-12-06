@@ -1,7 +1,7 @@
 package logics.wikis
 
-import models.WikiContext
 import com.aha00a.commons.utils.UuidUtil
+import models.WikiContext
 
 import scala.collection.mutable.ArrayBuffer
 
