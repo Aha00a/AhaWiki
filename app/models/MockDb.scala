@@ -21,9 +21,9 @@ case class MockDb @Inject()(implicit db:Database) {
   
   def selectPage(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
     if (revision == 0) {
-      MockDb().selectPageLastRevision(name)
+      selectPageLastRevision(name)
     } else {
-      MockDb().selectPageSpecificRevision(name, revision)
+      selectPageSpecificRevision(name, revision)
     }
   }
 
