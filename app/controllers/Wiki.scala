@@ -41,7 +41,7 @@ class Wiki @Inject()(
 
     val pageFirstRevision = AhaWikiDatabase().pageSelectFirstRevision(name)
     val pageLastRevision = AhaWikiDatabase().pageSelectLastRevision(name)
-    val pageSpecificRevision = MockDb().selectPage(name, revision)
+    val pageSpecificRevision = AhaWikiDatabase().pageSelect(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable = WikiPermission.isWritable(pageLastRevisionContent)

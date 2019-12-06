@@ -80,6 +80,14 @@ class AhaWikiDatabase()(implicit db:Database) {
 
   def pageSelectCount(): Long = PageTable.selectCount()
 
+  def pageSelect(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
+    if (revision == 0) {
+      pageSelectLastRevision(name)
+    } else {
+      pageSelectSpecificRevision(name, revision)
+    }
+  }
+
   def pageSelectLastRevision(name: String): Option[Page] = db.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on('name -> name)
