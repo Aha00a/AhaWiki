@@ -38,7 +38,6 @@ GET         /test/dbtest                       controllers.Test.dbtest
 GET         /test/filetest                     controllers.Test.filetest
 
 GET         /dev/reindex                       controllers.Dev.reindex
-GET         /dev/reset                         controllers.Dev.reset
 GET         /dev/deleteVimCache                controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path

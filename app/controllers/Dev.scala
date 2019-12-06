@@ -21,33 +21,6 @@ class Dev @Inject()(
   database:play.api.db.Database,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
-  def reset = Action { implicit request =>
-    val result = Redirect(request.refererOrRoot)
-    if(request.isLocalhost) {
-      val pageFromFile: Array[Page] = MockDb().pageFromFile()
-      pageFromFile.foreach(p => {
-        AhaWikiDatabase().pageDeleteWithRelatedData(p.name)
-        AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
-      })
-
-      implicit val wikiContext = WikiContext("")
-      Cache.PageList.invalidate()
-      Cache.Header.invalidate()
-      Cache.Footer.invalidate()
-      Cache.Config.invalidate()
-
-      pageFromFile.foreach(p => {
-        actorAhaWiki ! Calculate(p.name)
-      })
-
-      result.flashing("success" -> "Reset Succeed.")
-    }
-    else
-    {
-      result.flashing("error" -> "Reset Failed")
-    }
-  }
-
   def reindex = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
