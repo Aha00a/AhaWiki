@@ -4,7 +4,7 @@
 } {
     <div class="header">
         <div class="limitWidth">
-            @Html(logics.Cache.Header.get())
+            @Html(logics.AhaWikiCache.Header.get())
         </div>
     </div>
     @for(f <- Seq("success", "error")) {
@@ -19,7 +19,7 @@
     @body
     <div class="footer">
         <div class="limitWidth">
-            @Html(logics.Cache.Footer.get())
+            @Html(logics.AhaWikiCache.Footer.get())
         </div>
     </div>
 }(wikiContext.request, wikiContext.cacheApi, wikiContext.db)

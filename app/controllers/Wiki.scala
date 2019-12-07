@@ -173,11 +173,11 @@ class Wiki @Inject()(
         ahaWikiDatabase.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
         actorAhaWiki ! Calculate(name)
 
-        Cache.PageList.invalidate()
+        AhaWikiCache.PageList.invalidate()
         name match {
-          case ".header" => Cache.Header.invalidate()
-          case ".footer" => Cache.Footer.invalidate()
-          case ".config" => Cache.Config.invalidate()
+          case ".header" => AhaWikiCache.Header.invalidate()
+          case ".footer" => AhaWikiCache.Footer.invalidate()
+          case ".config" => AhaWikiCache.Config.invalidate()
           case _ =>
         }
 
@@ -197,7 +197,7 @@ class Wiki @Inject()(
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageDeleteWithRelatedData(name)
-          Cache.PageList.invalidate()
+          AhaWikiCache.PageList.invalidate()
           Ok("")
         } else {
           Forbidden("")
@@ -214,7 +214,7 @@ class Wiki @Inject()(
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageDeleteRevisionWithRelatedData(name, page.revision)
-          Cache.PageList.invalidate()
+          AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
           Ok("")
         } else {
@@ -233,7 +233,7 @@ class Wiki @Inject()(
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageRename(name, newName)
           ahaWikiDatabase.pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
-          Cache.PageList.invalidate()
+          AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")
         } else {

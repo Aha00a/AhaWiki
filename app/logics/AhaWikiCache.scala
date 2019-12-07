@@ -8,7 +8,7 @@ import play.api.db.Database
 
 import scala.concurrent.duration._
 
-object Cache {
+object AhaWikiCache {
   trait CacheEntity {
     val key: String = getClass.getName
     def invalidate()(implicit wikiContext: WikiContext): Unit = {

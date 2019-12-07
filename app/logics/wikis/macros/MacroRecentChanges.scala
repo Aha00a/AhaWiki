@@ -1,6 +1,6 @@
 package logics.wikis.macros
 
-import logics.Cache
+import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 
@@ -8,7 +8,7 @@ object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     def desc[T : Ordering] = implicitly[Ordering[T]].reverse
     new InterpreterWiki()(
-      Cache.PageList.get()(wikiContext.cacheApi, wikiContext.db).groupBy(_.year).toList.sortBy(_._1)(desc).map {
+      AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.db).groupBy(_.year).toList.sortBy(_._1)(desc).map {
         case (year, groupedByYear) =>
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {

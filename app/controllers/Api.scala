@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import logics.Cache
+import logics.AhaWikiCache
 import models.{AhaWikiDatabase, WikiContext}
 import play.api.cache.CacheApi
 import play.api.libs.json._
@@ -23,6 +23,6 @@ class Api @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) 
   def pageNames = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
 
-    Ok(Json.toJson(Cache.PageNameSet.get()))
+    Ok(Json.toJson(AhaWikiCache.PageNameSet.get()))
   }
 }

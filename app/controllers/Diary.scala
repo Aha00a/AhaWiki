@@ -11,7 +11,7 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import javax.inject._
 import logics.wikis.WikiPermission
-import logics.{Cache, SessionLogic}
+import logics.{AhaWikiCache, SessionLogic}
 import models.{AhaWikiDatabase, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -46,7 +46,7 @@ class Diary @Inject()(
 
       AhaWikiDatabase().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorAhaWiki ! Calculate(name)
-      Cache.PageList.invalidate()
+      AhaWikiCache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
     } else {
       Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")

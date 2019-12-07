@@ -41,7 +41,7 @@ object ApplicationConf {
 
 
       def hocon()(implicit cacheApi: CacheApi, db:Database): Hocon = {
-        new Hocon(Cache.Config.get())
+        new Hocon(AhaWikiCache.Config.get())
       }
 
       private def fqn: String = {

@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.implicits.Implicits._
-import logics.Cache
+import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
 import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.WikiContext
@@ -16,8 +16,8 @@ object MacroRecentChangesList extends TraitMacro {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val db: Database = wikiContext.db
     argument match {
-      case "" | null => interpret(Cache.PageList.get().sortBy(_.time).reverse)
-      case regexDigits(i) => interpret(Cache.PageList.get().sortBy(_.time).reverse.take(i.toInt))
+      case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.time).reverse)
+      case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.time).reverse.take(i.toInt))
       case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
     }
   }

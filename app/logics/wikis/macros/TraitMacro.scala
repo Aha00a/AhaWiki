@@ -1,6 +1,6 @@
 package logics.wikis.macros
 
-import logics.Cache
+import logics.AhaWikiCache
 import models.WikiContext
 
 trait TraitMacro {
@@ -9,5 +9,5 @@ trait TraitMacro {
   def calcLength(argument:String)(implicit wikiContext: WikiContext):Long = argument.length
   def extractLink(argument:String)(implicit wikiContext: WikiContext):Seq[String] = Seq()
   def extractLinkExistsOnly(argument:String)(implicit wikiContext: WikiContext):Seq[String] = extractLink(argument).filter(existsInPageName)
-  def existsInPageName(implicit wikiContext: WikiContext): String => Boolean = Cache.PageNameSet.get()(wikiContext.cacheApi, wikiContext.db).contains
+  def existsInPageName(implicit wikiContext: WikiContext): String => Boolean = AhaWikiCache.PageNameSet.get()(wikiContext.cacheApi, wikiContext.db).contains
 }
