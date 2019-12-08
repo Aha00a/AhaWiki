@@ -20,7 +20,8 @@ object InterpreterMap {
                      )(implicit wikiContext: WikiContext) {
     val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.cacheApi, wikiContext.actorAhaWiki)
     val fillOpacity: Double = score / 10
-    val strokeColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, ${score / 10})"
+    val strokeColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
+    val fillColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, ${score / 10})"
     val labelColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
     val scale:Double = score
   }
