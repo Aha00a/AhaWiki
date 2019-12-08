@@ -35,6 +35,7 @@ object Implicits {
   }
 
   implicit class RichSeq[T](seq:Seq[T]) {
+    def getOrElse(i: Int, t:T): T = if(seq.isDefinedAt(i)) seq(i) else t
     def tailSafe(): Seq[T] = if(seq.length > 1) { seq.tail } else { Seq[T]() }
     def shuffle(): Seq[T] = Random.shuffle(seq)
     def groupByCount(): Map[T, Int] = seq.foldLeft(Map[T, Int]()) {
@@ -57,7 +58,8 @@ object Implicits {
   }
 
   implicit class RichString(s:String) {
-    def toOption: Option[String] = if (s != null && s != "") Some(s) else None
+    def isNullOrEmpty: Boolean = s == null || s.isEmpty
+    def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
     def getOrElse(s:String): String = toOption.getOrElse(s)
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString

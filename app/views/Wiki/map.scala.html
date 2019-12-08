@@ -1,4 +1,5 @@
 @import logics.wikis.interpreters.InterpreterMap
+@import com.aha00a.commons.implicits.Implicits._
 @(mapsJavaScriptAPIKey:String, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <div class="aspectRatioWrapper">
@@ -8,11 +9,6 @@
         </div>
     </div>
     <script type="text/javascript">
-        $(function(){
-            var id = '@(id)';
-            
-        });
-
         function initMap() {
             var map = new google.maps.Map(document.getElementById('@id'), {
                 center: { lat: 37.549521, lng: 126.9157683 },
@@ -22,8 +18,8 @@
                 }
             });
 
-            @for(location <- seqLocation if !location.latLng.lat.isNaN){
-                (function () {
+            @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+                (function() {
                     var latLng = {
                         lat: @location.latLng.lat,
                         lng: @location.latLng.lng
@@ -52,7 +48,7 @@
                     });
                     marker.addListener('click', function() {
                         var infowindow = new google.maps.InfoWindow({
-                            content: marker.title
+                            content: $('#@(id)_@i').html()
                         });
 
                         infowindow.open(marker.get('map'), marker);
@@ -61,5 +57,25 @@
             }
         }
     </script>
+    @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+        <script type="text/html" id="@(id)_@i">
+            <div class="googleMapsInfoWindow">
+                <div class="title">@(location.name)</div>
+                <div class="score">@(location.score)</div>
+                <div class="address">@(location.address)</div>
+                <div class="rest">
+                    @for((k, v) <- location.rest) {
+                        <div class="restItem">@k :
+                            @if(v.startsWith("http")) {
+                                <a href="@v" target="_blank">@v</a>
+                            } else {
+                                @v
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </script>
+    }
     <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(mapsJavaScriptAPIKey)&callback=initMap"></script>
 }

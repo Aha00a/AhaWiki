@@ -5,7 +5,11 @@
 html, body {
 	padding: 0;
 	margin: 0;
-	font-family: 'Noto Sans KR', sans-serif; // TODO: 
+	.defaultFont;
+}
+
+.defaultFont {
+	font-family: 'Noto Sans KR', sans-serif; // TODO:
 	font-family: 'Noto Sans', sans-serif;
 }
 
@@ -601,6 +605,23 @@ html, body {
 			margin-left: 150px;
 			max-height: 400px;
 			overflow: hidden;
+		}
+	}
+
+	.googleMapsInfoWindow {
+		.defaultFont;
+		line-height: 1.5;
+		.title {
+			font-size: 2em;
+		}
+		.score {
+			font-size: 1.5em;
+		}
+		.address {
+		}
+		.rest {
+			.restItem {
+			}
 		}
 	}
 }
