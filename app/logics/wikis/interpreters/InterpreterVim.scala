@@ -5,7 +5,8 @@ import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
 import com.aha00a.commons.implicits.Implicits._
-import logics.{AhaWikiConfig, ApplicationConf}
+import com.aha00a.commons.utils.Using
+import logics.AhaWikiConfig
 import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
@@ -91,13 +92,13 @@ object InterpreterVim {
         }
 
         if(cacheFileHtmlRaw.exists()) {
-          val lines = scala.io.Source.fromFile(cacheFileHtmlRaw).getLines()
+          val lines = Using(scala.io.Source.fromFile(cacheFileHtmlRaw))(_.getLines())
           val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").filterNot(_.startsWith("*")).map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
           val pre = lines.dropWhile(!_.startsWith("<pre")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
 
           cacheFileHtml.writeAll(style + pre)
         } else {
-          val lines = scala.io.Source.fromFile(cacheFileText).getLines()
+          val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines())
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
         }
 
@@ -108,7 +109,7 @@ object InterpreterVim {
         }
       }
 
-      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5 vim" data-lang="$syntax">""" + scala.io.Source.fromFile(cacheFileHtml).mkString + """</div>"""
+      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5).absoluteURL()(wikiContext.request)}" class="class_$md5 vim" data-lang="$syntax">""" + Using(scala.io.Source.fromFile(cacheFileHtml))(_.mkString) + """</div>"""
     }
   }
 
@@ -119,7 +120,7 @@ object InterpreterVim {
     if(cacheFileHtml.length() > 310)
       return false
 
-    val s = scala.io.Source.fromFile(cacheFileHtml).mkString
+    val s = Using(scala.io.Source.fromFile(cacheFileHtml))(_.mkString)
     s.endsWith("</style><pre>\n</pre>") || s.endsWith("</style><pre id='vimCodeElement'>\n</pre>")
   }
 
