@@ -5,16 +5,16 @@ import play.api.cache.CacheApi
 import play.api.db.Database
 
 object ApplicationConf {
-  def apply()(implicit configuration: Configuration) = new ApplicationConf()
+  def apply()(implicit configuration: Configuration) = new ApplicationConf(configuration)
+}
+
+class ApplicationConf(configuration: Configuration) {
   private def fqn: String = {
     val ste = Thread.currentThread.getStackTrace()(2)
     (ste.getClassName.replace(ApplicationConf.getClass.getName, "") + ste.getMethodName).replaceAll("\\$", ".")
   }
-}
 
-class ApplicationConf(implicit configuration: Configuration) {
   object AhaWiki {
-    import ApplicationConf.fqn
     object google {
       @Deprecated
       object api { // TODO: remove. use AhaWiki.google.credentials.oAuth
