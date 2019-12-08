@@ -1,8 +1,6 @@
 package logics
 
 import play.api.Configuration
-import play.api.cache.CacheApi
-import play.api.db.Database
 
 object ApplicationConf {
   def apply()(implicit configuration: Configuration) = new ApplicationConf(configuration)

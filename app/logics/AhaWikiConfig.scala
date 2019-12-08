@@ -1,6 +1,5 @@
 package logics
 
-import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.db.Database
 

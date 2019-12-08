@@ -62,7 +62,7 @@ class Test @Inject()(implicit
   }
 
 
-  def unit = Action { implicit request =>
+  def unit: Action[AnyContent] = Action { implicit request =>
     testPageContent()
     testInterpreterTable()
     testInterpreterWiki()
@@ -70,7 +70,7 @@ class Test @Inject()(implicit
     testHeadingNumber()
     testStemmer()
 
-    implicit val wikiContext = WikiContext("SandBox")
+    implicit val wikiContext: WikiContext = WikiContext("SandBox")
 
     val empty = ""
     val dummy = "aaaa"
@@ -268,7 +268,7 @@ class Test @Inject()(implicit
 
 
   def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
-    implicit val wikiContext = WikiContext("")
+    implicit val wikiContext: WikiContext = WikiContext("")
 
     assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
     assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
@@ -283,7 +283,7 @@ class Test @Inject()(implicit
 
 
   def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
-    implicit val wikiContext = WikiContext("")
+    implicit val wikiContext: WikiContext = WikiContext("")
     val iw: InterpreterWiki = new InterpreterWiki()
 
     assertEquals(iw.formatInline("""http://a.com"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
@@ -347,7 +347,7 @@ class Test @Inject()(implicit
 
   //noinspection NameBooleanParameters
   def testInterpreterVim(): Unit = {
-    def test(p: Parser, syntax: String, content: String, isError: Boolean) = {
+    def test(p: Parser, syntax: String, content: String, isError: Boolean): Unit = {
       assertEquals(p.syntax, syntax)
       assertEquals(p.content, content)
       assertEquals(p.isError, isError)
@@ -413,11 +413,11 @@ class Test @Inject()(implicit
     }
   }
 
-  def dbtest = Action { implicit request =>
+  def dbtest: Action[AnyContent] = Action { implicit request =>
     Ok(Dddd().selectCount().toString + "aa")
   }
 
-  def filetest = Action { implicit request =>
+  def filetest: Action[AnyContent] = Action { implicit request =>
     Ok("Ok.")
   }
 }
