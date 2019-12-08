@@ -9,7 +9,7 @@ import play.api.mvc.Request
 case class WikiContext(name:String)(
   implicit val request:Request[Any],
   val cacheApi: CacheApi,
-  val db: Database,
+  val database: Database,
   val actorAhaWiki: ActorRef,
   val configuration: Configuration
 )

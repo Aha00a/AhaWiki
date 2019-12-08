@@ -199,7 +199,7 @@ object InterpreterWiki {
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
-    val set: Set[String] = AhaWikiCache.PageNameSet.get()(wikiContext.cacheApi, wikiContext.db)
+    val set: Set[String] = AhaWikiCache.PageNameSet.get()(wikiContext.cacheApi, wikiContext.database)
     //noinspection ScalaUnusedSymbol
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()

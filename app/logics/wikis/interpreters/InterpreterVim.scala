@@ -66,7 +66,7 @@ object InterpreterVim {
       "Error!"
     } else {
       implicit val cacheApi: CacheApi = wikiContext.cacheApi
-      implicit val dbApi: Database = wikiContext.db
+      implicit val database: Database = wikiContext.database
       val colorscheme: String = AhaWikiConfig().interpreter.Vim.colorscheme()
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir: File = getCacheDir
