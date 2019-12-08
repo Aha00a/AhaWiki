@@ -8,6 +8,8 @@ import com.aha00a.commons.implicits.Implicits._
 import logics.{AhaWikiConfig, ApplicationConf}
 import models.{PageContent, WikiContext}
 import play.api.Logger
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.io.Codec
 import scala.sys.process._
@@ -63,7 +65,9 @@ object InterpreterVim {
     if(parser.isError) {
       "Error!"
     } else {
-      val colorscheme: String = AhaWikiConfig.interpreter.Vim.colorscheme()(wikiContext.cacheApi, wikiContext.db)
+      implicit val cacheApi: CacheApi = wikiContext.cacheApi
+      implicit val dbApi: Database = wikiContext.db
+      val colorscheme: String = AhaWikiConfig().interpreter.Vim.colorscheme()
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir: File = getCacheDir
       val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
@@ -97,7 +101,7 @@ object InterpreterVim {
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
         }
 
-        if(!AhaWikiConfig.interpreter.Vim.debug()(wikiContext.cacheApi, wikiContext.db)) {
+        if(!AhaWikiConfig().interpreter.Vim.debug()) {
           cacheFileHtmlRaw.delete()
           cacheFileSh.delete()
           cacheFileText.delete()

@@ -1,31 +1,35 @@
 package logics
 
+import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.db.Database
 
 object AhaWikiConfig {
+  def apply()(implicit cacheApi: CacheApi, database:Database) = new AhaWikiConfig()
+}
+
+class AhaWikiConfig(implicit cacheApi: CacheApi, database:Database) {
   object permission {
     object default {
-      def read()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "all")
-      def write()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "login")
+      def read(): String = hocon().getOrElse(fqn, "all")
+      def write(): String = hocon().getOrElse(fqn, "login")
     }
   }
 
   object google {
     object analytics {
-      def trackingId()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "")
+      def trackingId(): String = hocon().getOrElse(fqn, "")
     }
   }
 
   object interpreter {
     object Vim {
-      def debug()(implicit cacheApi: CacheApi, db:Database): Boolean = hocon.getOrElse(fqn, default = false)
-      def colorscheme()(implicit cacheApi: CacheApi, db:Database): String = hocon.getOrElse(fqn, "elflord")
+      def debug(): Boolean = hocon().getOrElse(fqn, default = false)
+      def colorscheme(): String = hocon().getOrElse(fqn, "elflord")
     }
   }
 
-
-  def hocon()(implicit cacheApi: CacheApi, db:Database): Hocon = {
+  def hocon(): Hocon = {
     new Hocon(AhaWikiCache.Config.get())
   }
 

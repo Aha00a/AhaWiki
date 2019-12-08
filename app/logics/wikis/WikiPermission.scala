@@ -8,11 +8,11 @@ import play.api.mvc.Request
 
 object WikiPermission {
   def getReadDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, db:Database): Array[String] = {
-    pageContent.flatMap(_.read).getOrElse(AhaWikiConfig.permission.default.read()).split("""\s*,\s*""")
+    pageContent.flatMap(_.read).getOrElse(AhaWikiConfig().permission.default.read()).split("""\s*,\s*""")
   }
 
   def getWriteDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, db:Database): Array[String] = {
-    pageContent.flatMap(_.write).getOrElse(AhaWikiConfig.permission.default.write()).split("""\s*,\s*""")
+    pageContent.flatMap(_.write).getOrElse(AhaWikiConfig().permission.default.write()).split("""\s*,\s*""")
   }
 
   def isReadable(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, db:Database): Boolean = {
