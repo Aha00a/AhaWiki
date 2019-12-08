@@ -41,7 +41,7 @@ object InterpreterMap {
         Location(
           row.getOrElse(seqFieldIndex(0), ""),
           row.getOrElse(seqFieldIndex(1), ""),
-          row.getOrElse(seqFieldIndex(2), "").toDouble,
+          row.getOrElse(seqFieldIndex(2), "").toOption.map(_.toDouble).getOrElse(0),
           seqIndexRest
             .map(v => (head.getOrElse(v, ""), row.getOrElse(v, "")))
             .filter(s => !s._1.isNullOrEmpty && !s._2.isNullOrEmpty)
