@@ -33,9 +33,11 @@
                         map:map,
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
-                            scale: 3,
-                            strokeColor: '#f00',
-                            strokeWeight: 5,
+                            scale: @(location.scale),
+                            strokeColor: '@(location.strokeColor)',
+                            strokeWeight: 1,
+                            fillColor: '@(location.strokeColor)',
+                            fillOpacity: @(location.fillOpacity)
                         },
                         title: '@location.name - @location.address'
                     });
