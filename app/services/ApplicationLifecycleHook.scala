@@ -18,13 +18,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 
 @Singleton
-class ApplicationLifecycleHook @Inject()(
-  implicit applicationLifecycle: ApplicationLifecycle,
-  actorSystem: ActorSystem,
-  executionContext: ExecutionContext,
-  db: Database,
-  @Named("db-actor") actorAhaWiki: ActorRef
-) {
+class ApplicationLifecycleHook @Inject()(implicit
+                                         applicationLifecycle: ApplicationLifecycle,
+                                         actorSystem: ActorSystem,
+                                         executionContext: ExecutionContext,
+                                         db: Database,
+                                         @Named("db-actor") actorAhaWiki: ActorRef
+                                        ) {
   applicationLifecycle.addStopHook { () =>
     Logger.info("OnApplicationStop")
     Future.successful(())
@@ -36,16 +36,16 @@ class ApplicationLifecycleHook @Inject()(
   actorSystem.scheduler.scheduleOnce(2 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().pageSelectCount()) {
-      def getArrayPageFromFile(): Array[Page] = {
+      def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
           val name = file.getName
-          implicit val codec:Codec = Codec.UTF8
+          implicit val codec: Codec = Codec.UTF8
           val body = Using(scala.io.Source.fromFile(file))(_.mkString)
           Page(name, 1, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", body, Some("initial"))
         })
       }
-      
-      getArrayPageFromFile().foreach(p => {
+
+      getArrayPageFromFile.foreach(p => {
         AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
         actorAhaWiki ! Calculate(p.name)
       })
