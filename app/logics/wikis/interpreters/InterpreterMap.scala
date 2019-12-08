@@ -9,7 +9,7 @@ import logics.{AhaWikiCache, ApplicationConf}
 import models.{LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
-import play.api.{Configuration, Play}
+import play.api.Configuration
 
 object InterpreterMap {
   case class Location(
@@ -32,7 +32,7 @@ object InterpreterMap {
       val head: Seq[String] = rowColumnData.head
       val tail: Seq[Seq[String]] = rowColumnData.tail
 
-      val seqFields: Seq[String] = Seq("Name", "Address", "Score")
+      val seqFields: Seq[String] = Seq("Name", if(wikiContext.request.isLocalhost) "AddressForDev" else "Address", "Score")
       val seqFieldIndex: Seq[Int] = seqFields.map(head.indexOf)
       val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqFields.contains(v._1)).map(_._2)
 
