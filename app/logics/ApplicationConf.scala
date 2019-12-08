@@ -14,11 +14,6 @@ class ApplicationConf(configuration: Configuration) {
 
   object AhaWiki {
     object google {
-      @Deprecated
-      object api { // TODO: remove. use AhaWiki.google.credentials.oAuth
-        def clientId(): String = configuration.getString(fqn).getOrElse("")
-        def clientSecret(): String = configuration.getString(fqn).getOrElse("")
-      }
       object credentials {
         object oAuth {
           def clientId(): String = configuration.getString(fqn).getOrElse("")
