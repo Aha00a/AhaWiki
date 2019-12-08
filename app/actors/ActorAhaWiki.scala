@@ -41,7 +41,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         .url("https://maps.googleapis.com/maps/api/geocode/json")
         .withQueryString(
           "address" -> address,
-          "key" -> ApplicationConf.AhaWiki.google.credentials.api.Geocoding.key()
+          "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
         )
         .get()
         .map(r => {

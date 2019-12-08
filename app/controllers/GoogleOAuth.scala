@@ -18,7 +18,7 @@ class GoogleOAuth @Inject()(
   executionContext: ExecutionContext,
   configuration: Configuration
 ) extends Controller {
-  private val confApi = ApplicationConf.AhaWiki.google.api
+  private val confApi = ApplicationConf().AhaWiki.google.api
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")

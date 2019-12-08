@@ -35,7 +35,7 @@ object InterpreterMap {
       val locations: Seq[Location] = tail.map(row => Location(row(seqFieldIndex(0)), row(seqFieldIndex(1)), seqIndexRest.map(v => row(v))))
 
       implicit val configuration: Configuration = wikiContext.configuration;
-      val resultMap = views.html.Wiki.map(ApplicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key(), locations).toString()
+      val resultMap = views.html.Wiki.map(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key(), locations).toString()
       val resultTable = InterpreterTable.interpret(PageContent("#!Table tsv 1 tablesorter\n" + pageContent.content))
       resultMap + resultTable
     }
