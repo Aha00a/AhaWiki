@@ -21,8 +21,6 @@ class Api @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) 
   }
 
   def pageNames = Action { implicit request =>
-    implicit val wikiContext: WikiContext = WikiContext("")
-
     Ok(Json.toJson(AhaWikiCache.PageNameSet.get()))
   }
 }

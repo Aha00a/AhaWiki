@@ -1,26 +1,28 @@
 package controllers
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.utils.Stemmer
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{PageContent, WikiContext}
-import play.api.Logger
+import play.api.{Configuration, Logger}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
 
 @Singleton
-class Test @Inject()(
-  implicit cacheApi: CacheApi,
-  system: ActorSystem,
-  database: play.api.db.Database
-) extends Controller {
+class Test @Inject()(implicit
+                     cacheApi: CacheApi,
+                     system: ActorSystem,
+                     database: play.api.db.Database,
+                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     configuration: Configuration
+                    ) extends Controller {
 
   case class ExceptionEquals[T](actual: T, expect: T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
     Logger.error(actual.toString)

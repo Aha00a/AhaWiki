@@ -40,7 +40,6 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
     }
 
-    implicit val wikiContext: WikiContext = WikiContext("")
     val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", LocalDateTime.now()) // TODO
     val entries = AhaWikiCache.PageList.get().sortBy(_.time).reverse.take(15).map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
     Ok(
@@ -70,7 +69,6 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
       </item>
     }
 
-    implicit val wikiContext: WikiContext = WikiContext("")
     val channel = Channel("title", "description", "link", LocalDateTime.now(), LocalDateTime.now(), 180) // TODO
     val items = AhaWikiCache.PageList.get.sortBy(_.time).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
 

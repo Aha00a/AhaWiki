@@ -13,6 +13,7 @@ import javax.inject._
 import logics.wikis.WikiPermission
 import logics.{AhaWikiCache, SessionLogic}
 import models.{AhaWikiDatabase, PageContent, WikiContext}
+import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -20,12 +21,13 @@ import play.api.mvc._
 
 //noinspection TypeAnnotation
 @Singleton
-class Diary @Inject()(
-  implicit cacheApi: CacheApi,
-  actorSystem: ActorSystem,
-  database:play.api.db.Database,
-  @Named("db-actor") actorAhaWiki: ActorRef
-) extends Controller {
+class Diary @Inject()(implicit
+                      cacheApi: CacheApi,
+                      actorSystem: ActorSystem,
+                      database: play.api.db.Database,
+                      @Named("db-actor") actorAhaWiki: ActorRef,
+                      configuration: Configuration
+                     ) extends Controller {
   def write() = PostAction { implicit request =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
@@ -39,7 +41,7 @@ class Diary @Inject()(
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       val body =
-        if(latestText == "")
+        if (latestText == "")
           f"= [$yearDashMonth]-$day%02d $weekdayName\n * $q"
         else
           s"$latestText\n * $q"

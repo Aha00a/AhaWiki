@@ -19,24 +19,25 @@ import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import play.api.{Environment, Mode}
+import play.api.{Configuration, Environment, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
 
 //noinspection TypeAnnotation
 @Singleton
-class Wiki @Inject()(
-  implicit cacheApi: CacheApi,
-  actorSystem: ActorSystem,
-  database:play.api.db.Database,
-  environment: Environment,
-  @Named("db-actor") actorAhaWiki: ActorRef
-) extends Controller {
+class Wiki @Inject()(implicit
+                     cacheApi: CacheApi,
+                     actorSystem: ActorSystem,
+                     database: play.api.db.Database,
+                     environment: Environment,
+                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     configuration: Configuration
+                    ) extends Controller {
   private val ahaWikiDatabase = AhaWikiDatabase()
 
   def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val pageFirstRevision = ahaWikiDatabase.pageSelectFirstRevision(name)
@@ -120,13 +121,13 @@ class Wiki @Inject()(
         }
       case (Some(page), "diff", true, _) =>
         val after = request.getQueryString("after").getOrElse("0").toInt
-        val before = request.getQueryString("before").getOrElse((after-1).toString).toInt
+        val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
 
         val beforePage = ahaWikiDatabase.pageSelectSpecificRevision(name, before)
         val afterPage = ahaWikiDatabase.pageSelectSpecificRevision(name, after)
 
-        val beforeContent = beforePage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
-        val afterContent = afterPage.map(_.content).getOrElse("").split( """(\r\n|\n)""").toSeq
+        val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
+        val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
 
         val diff = DiffUtils.diff(beforeContent, afterContent)
         val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent, diff, 10).mkString("\n")
@@ -159,10 +160,8 @@ class Wiki @Inject()(
   }
 
 
-
-
   def save(nameEncoded: String) = PostAction { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+",  "%2B"), "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
@@ -248,7 +247,7 @@ class Wiki @Inject()(
   def preview() = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    Ok( """<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
+    Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 
 }

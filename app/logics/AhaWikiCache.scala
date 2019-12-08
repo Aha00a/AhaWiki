@@ -1,11 +1,16 @@
 package logics
 
+import actors.ActorAhaWiki.{Calculate, Geocode}
+import akka.actor.ActorRef
+import logics.AhaWikiCache.Config.key
 import logics.wikis.Interpreters
-import models.{AhaWikiDatabase, WikiContext}
+import models.{AhaWikiDatabase, LatLng, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
+import play.api.libs.ws.{WSClient, WSResponse}
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 object AhaWikiCache {
@@ -49,6 +54,20 @@ object AhaWikiCache {
   object Config extends CacheEntity {
     def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) {
       AhaWikiDatabase().pageSelectLastRevision(".config").map(_.content).getOrElse("")
+    }
+  }
+
+
+  object AddressToLatLng {
+    def key(address: String): String = "Addr" + address
+    def set(address: String, latLng: LatLng)(implicit cacheApi: CacheApi): Unit = cacheApi.set(key(address), latLng, 365 days)
+    def get(address:String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef): LatLng = {
+      cacheApi.get[LatLng](key(address)) match {
+        case Some(latLng) => latLng
+        case _ =>
+          actorAhaWiki ! Geocode(address)
+          LatLng(Double.NaN, Double.NaN)
+      }
     }
   }
 }

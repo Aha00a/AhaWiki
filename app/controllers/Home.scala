@@ -16,8 +16,6 @@ class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database
   }
 
   def random = Action { implicit request =>
-    implicit val wikiContext: WikiContext = WikiContext("")
-
     Redirect(routes.Wiki.view(URLEncoder.encode(AhaWikiCache.PageNameSet.get.toSeq.random(), "UTF-8"), 0, "")).flashing(request.flash)
   }
 

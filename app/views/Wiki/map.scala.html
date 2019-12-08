@@ -1,0 +1,54 @@
+@import logics.wikis.interpreters.InterpreterMap
+@(mapsJavaScriptAPIKey:String, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext)
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+    <div class="aspectRatioWrapper">
+        <div class="ratio_16_9"></div>
+        <div class="aspectRatioContent">
+            <div id="@(id)" class="map" style="width: 100%; height: 100%"></div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            var id = '@(id)';
+            
+        });
+
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('@id'), {
+                center: { lat: 37.549521, lng: 126.9157683 },
+                zoom: 17,
+                options: {
+                    gestureHandling: 'greedy'
+                }
+            });
+
+            @for(location <- seqLocation if !location.latLng.lat.isNaN){
+                (function () {
+                    var latLng = {
+                        lat: @location.latLng.lat,
+                        lng: @location.latLng.lng
+                    };
+                    var marker = new google.maps.Marker({
+                        position: latLng,
+                        map:map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 3,
+                            strokeColor: '#f00',
+                            strokeWeight: 5,
+                        },
+                        title: '@location.name - @location.address'
+                    });
+                    marker.addListener('click', function() {
+                        var infowindow = new google.maps.InfoWindow({
+                            content: marker.title
+                        });
+
+                        infowindow.open(marker.get('map'), marker);
+                    });
+                })();
+            }
+        }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(mapsJavaScriptAPIKey)&callback=initMap"></script>
+}

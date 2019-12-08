@@ -11,13 +11,30 @@ object ApplicationConf {
   }
 
   object AhaWiki {
+    // TODO: convert to class
     object google {
-      object api {
+      @Deprecated
+      object api { // TODO: remove. use AhaWiki.google.credentials.oAuth
         def clientId()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
         def clientSecret()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
       }
+      object credentials {
+        object oAuth {
+          def clientId()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
+          def clientSecret()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
+        }
+        object api {
+          object Geocoding {
+            def key()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
+          }
+          object MapsJavaScriptAPI {
+            def key()(implicit configuration: Configuration): String = configuration.getString(fqn).getOrElse("")
+          }
+        }
+      }
     }
 
+    // TODO: extract to AhaWikiConfig
     object config {
       object permission {
         object default {

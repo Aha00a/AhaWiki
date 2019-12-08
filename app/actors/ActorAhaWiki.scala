@@ -5,19 +5,26 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.{Stemmer, StopWatch}
 import javax.inject.Inject
 import logics.wikis.Interpreters
+import logics.{AhaWikiCache, ApplicationConf}
 import models.AhaWikiDatabase.Page
-import models.{AhaWikiDatabase, WikiContext}
+import models.{AhaWikiDatabase, LatLng, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
+import play.api.libs.json.Json
+import play.api.libs.ws.WSClient
+import play.api.{Configuration, Logger}
+
+import scala.concurrent.ExecutionContext
 
 object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
 
   case class Calculate(name: String, i:Int = 1, length: Int = 1)
+  case class Geocode(address: String)
 }
 
-class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database) extends Actor {
+class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -28,6 +35,23 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database) extends 
           updateLink(page)
         }
       }
+    case Geocode(address) =>
+      implicit val latLngReads = Json.reads[LatLng]
+      ws
+        .url("https://maps.googleapis.com/maps/api/geocode/json")
+        .withQueryString(
+          "address" -> address,
+          "key" -> ApplicationConf.AhaWiki.google.credentials.api.Geocoding.key()
+        )
+        .get()
+        .map(r => {
+          Logger.info(s"${address} - ${r.json}")
+          (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
+        })
+        .map(latLng => {
+          AhaWikiCache.AddressToLatLng.set(address, latLng)
+          Logger.info(s"${address} - ${latLng}")
+        })
   }
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
@@ -38,8 +62,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database) extends 
   }
 
   def updateLink(page:Page): Array[Int] = {
-    implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db)
-    
+    implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
     AhaWikiDatabase().linkDelete(page.name)
     AhaWikiDatabase().linkInsert(seqLink)

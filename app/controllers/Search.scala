@@ -1,14 +1,21 @@
 package controllers
 
+import akka.actor.ActorRef
 import com.aha00a.commons.implicits.Implicits._
 import javax.inject._
 import logics.wikis.WikiPermission
 import models.{AhaWikiDatabase, PageContent, WikiContext}
+import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.mvc._
 
-class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
-  def index(q:String) = Action { implicit request =>
+class Search @Inject()(implicit
+                       cacheApi: CacheApi,
+                       database: play.api.db.Database,
+                       @Named("db-actor") actorAhaWiki: ActorRef,
+                       configuration: Configuration
+                      ) extends Controller {
+  def index(q: String) = Action { implicit request =>
     implicit val wikiContext: WikiContext = WikiContext("")
 
     Ok(views.html.Search.search(
@@ -23,5 +30,4 @@ class Search @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Databa
       ).getOrElse(Seq.empty)
     ))
   }
-
 }
