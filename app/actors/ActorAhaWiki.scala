@@ -10,7 +10,7 @@ import models.AhaWikiDatabase.Page
 import models.{AhaWikiDatabase, LatLng, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads}
 import play.api.libs.ws.WSClient
 import play.api.{Configuration, Logger}
 
@@ -36,7 +36,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         }
       }
     case Geocode(address) =>
-      implicit val latLngReads = Json.reads[LatLng]
+      implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
       ws
         .url("https://maps.googleapis.com/maps/api/geocode/json")
         .withQueryString(
@@ -45,12 +45,12 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         )
         .get()
         .map(r => {
-          Logger.info(s"${address} - ${r.json}")
+          Logger.info(s"$address - ${r.json}")
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
           AhaWikiCache.AddressToLatLng.set(address, latLng)
-          Logger.info(s"${address} - ${latLng}")
+          Logger.info(s"$address - $latLng")
         })
   }
 
