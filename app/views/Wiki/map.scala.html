@@ -37,9 +37,18 @@
                             strokeColor: '@(location.strokeColor)',
                             strokeWeight: 1,
                             fillColor: '@(location.strokeColor)',
-                            fillOpacity: @(location.fillOpacity)
+                            fillOpacity: @(location.fillOpacity),
+                            labelOrigin: {
+                                x: 0,
+                                y: 2
+                            }
                         },
-                        title: '@location.name - @location.address'
+                        title: '@location.name - @location.address',
+                        label: {
+                            fontWeight: 'bold',
+                            color: '@(location.strokeColor)',
+                            text: '@location.name',
+                        }
                     });
                     marker.addListener('click', function() {
                         var infowindow = new google.maps.InfoWindow({

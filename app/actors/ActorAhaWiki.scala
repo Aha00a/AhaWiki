@@ -52,6 +52,8 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           AhaWikiCache.AddressToLatLng.set(address, latLng)
           Logger.info(s"$address - $latLng")
         })
+    case _ =>
+      Logger.error("Unknown")
   }
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {

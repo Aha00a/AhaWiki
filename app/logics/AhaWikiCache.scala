@@ -65,7 +65,9 @@ object AhaWikiCache {
       cacheApi.get[LatLng](key(address)) match {
         case Some(latLng) => latLng
         case _ =>
-          actorAhaWiki ! Geocode(address)
+          if (!(address == null) && !address.isEmpty)
+            actorAhaWiki ! Geocode(address)
+          
           LatLng(Double.NaN, Double.NaN)
       }
     }

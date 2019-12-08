@@ -15,6 +15,7 @@ object InterpreterMap {
     val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.cacheApi, wikiContext.actorAhaWiki)
     val fillOpacity: Double = score / 10
     val strokeColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, ${score / 10})"
+    val labelColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
     val scale:Double = score
   }
 
@@ -24,16 +25,16 @@ object InterpreterMap {
       val head: Seq[String] = rowColumnData.head
       val tail: Seq[Seq[String]] = rowColumnData.tail
 
-      val seqFields: Seq[String] = Seq("Name", "Address", "Score")
+      val seqFields: Seq[String] = Seq("Name", "Address1", "Score")
       val seqFieldIndex: Seq[Int] = seqFields.map(head.indexOf)
       val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqFields.contains(v._1)).map(_._2)
 
       //noinspection ZeroIndexToHead
       val locations: Seq[Location] = tail.map(row => Location(
-        row(seqFieldIndex(0)),
-        row(seqFieldIndex(1)),
-        row(seqFieldIndex(2)).toDouble,
-        seqIndexRest.map(v => row(v))
+        row.lift(seqFieldIndex(0)).getOrElse(""),
+        row.lift(seqFieldIndex(1)).getOrElse(""),
+        row.lift(seqFieldIndex(2)).getOrElse("").toDouble,
+        seqIndexRest.map(v => row.lift(v).getOrElse(""))
       ))
 
       implicit val configuration: Configuration = wikiContext.configuration
