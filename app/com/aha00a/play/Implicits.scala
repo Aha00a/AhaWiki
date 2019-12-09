@@ -1,4 +1,4 @@
-package com.aha00a.play.implicits
+package com.aha00a.play
 
 import play.api.mvc.RequestHeader
 

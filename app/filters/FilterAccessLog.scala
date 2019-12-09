@@ -2,7 +2,7 @@ package filters
 
 import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
-import com.aha00a.play.implicits.Implicits._
+import com.aha00a.play.Implicits._
 import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc._

@@ -11,7 +11,7 @@ import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils._
-import com.aha00a.play.implicits.Implicits._
+import com.aha00a.play.Implicits._
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
