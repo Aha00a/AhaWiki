@@ -4,7 +4,7 @@ import java.time.{LocalDate, LocalDateTime}
 
 import anorm.SqlParser._
 import anorm._
-import com.aha00a.commons.implicits.Implicits.{LocalDateTimeFormatter, _}
+import com.aha00a.commons.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
 import models.AhaWikiDatabase._
 import play.api.db.Database

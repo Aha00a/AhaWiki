@@ -4,7 +4,7 @@ import java.io.File
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, Using}
 import javax.inject._
 import models.AhaWikiDatabase

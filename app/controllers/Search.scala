@@ -1,7 +1,7 @@
 package controllers
 
 import akka.actor.ActorRef
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.wikis.WikiPermission
 import models.{AhaWikiDatabase, PageContent, WikiContext}

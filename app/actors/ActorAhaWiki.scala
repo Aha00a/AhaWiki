@@ -1,7 +1,7 @@
 package actors
 
 import akka.actor._
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject

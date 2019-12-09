@@ -1,5 +1,5 @@
 @import logics.wikis.interpreters.InterpreterMap
-@import com.aha00a.commons.implicits.Implicits._
+@import com.aha00a.commons.Implicits._
 @(mapsJavaScriptAPIKey:String, url:String, sheetName:String, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div>

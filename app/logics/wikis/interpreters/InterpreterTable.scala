@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import java.io.StringReader
 
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import models.{PageContent, WikiContext}
 import org.supercsv.io.CsvListReader

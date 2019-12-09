@@ -1,6 +1,6 @@
 package logics.wikis.macros
 
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
 import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment

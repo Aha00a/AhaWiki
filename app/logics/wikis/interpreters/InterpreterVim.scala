@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
 
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.AhaWikiConfig
 import models.{PageContent, WikiContext}

@@ -1,4 +1,4 @@
-package com.aha00a.commons.implicits
+package com.aha00a.commons
 
 import java.io.{File, PrintWriter}
 import java.time.LocalDateTime

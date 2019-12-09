@@ -2,7 +2,7 @@ package controllers
 
 import java.net.URLEncoder
 
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.AhaWikiCache
 import models.{AhaWikiDatabase, PageContent}
