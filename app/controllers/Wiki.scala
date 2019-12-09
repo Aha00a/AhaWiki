@@ -264,8 +264,9 @@ class Wiki @Inject()(implicit
             if(url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
+                  val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
                   Await.result(
-                    GoogleSpreadsheetApi.readSpreadSheet(ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key(), id, sheetName).map { seqSeqString =>
+                    GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName).map { seqSeqString =>
                       Using(new StringWriter()) { stringWriter =>
                         Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE))(_.writeSeqSeqString(seqSeqString))
                         s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
