@@ -1,6 +1,5 @@
 package models
 
-import com.aha00a.commons.implicits.Implicits
 import com.aha00a.commons.implicits.Implicits._
 
 case class PageContent(raw: String) {
