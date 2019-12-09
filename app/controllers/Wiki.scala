@@ -2,7 +2,7 @@ package controllers
 
 import java.io.StringWriter
 import java.net.URLDecoder
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -44,6 +44,10 @@ class Wiki @Inject()(implicit
                      executor: ExecutionContext
                     ) extends Controller {
   private val ahaWikiDatabase = AhaWikiDatabase()
+
+  implicit class RichResult(result:Result) {
+    def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+  }
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
@@ -142,12 +146,12 @@ class Wiki @Inject()(implicit
         val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent, diff, 10).mkString("\n")
         Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
-      case (Some(page), "raw", true, _) => Ok(page.content).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiDatabase.pageSelectHistory(name))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
-      case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+      case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiDatabase.pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
+      case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
     }
   }
 
