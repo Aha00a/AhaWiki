@@ -177,23 +177,34 @@ class Wiki @Inject()(implicit
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        ahaWikiDatabase.pageInsert(name, revision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, comment)
-        actorAhaWiki ! Calculate(name)
-
-        AhaWikiCache.PageList.invalidate()
-        name match {
-          case ".header" => AhaWikiCache.Header.invalidate()
-          case ".footer" => AhaWikiCache.Footer.invalidate()
-          case ".config" => AhaWikiCache.Config.invalidate()
-          case _ =>
-        }
-
+        pageInsertLogic(request, name, revision + 1, body, comment)
         Ok("")
       } else {
         Conflict("")
       }
     } else {
       Forbidden("")
+    }
+  }
+
+  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, body: String, comment: String)(implicit wikiContext: WikiContext) = {
+    ahaWikiDatabase.pageInsert(
+      name,
+      revision,
+      DateTimeUtil.nowEpochNano,
+      SessionLogic.getId(request).getOrElse("anonymous"),
+      request.remoteAddressWithXRealIp,
+      body,
+      comment)
+
+    actorAhaWiki ! Calculate(name)
+
+    AhaWikiCache.PageList.invalidate()
+    name match {
+      case ".header" => AhaWikiCache.Header.invalidate()
+      case ".footer" => AhaWikiCache.Footer.invalidate()
+      case ".config" => AhaWikiCache.Config.invalidate()
+      case _ =>
     }
   }
 
@@ -275,25 +286,9 @@ class Wiki @Inject()(implicit
               s
             }
           })
-          val result = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
-          if (pageContent.content != result) {
-            ahaWikiDatabase.pageInsert(
-              pageName,
-              page.revision + 1,
-              DateTimeUtil.nowEpochNano,
-              SessionLogic.getId(request).getOrElse("anonymous"),
-              request.remoteAddressWithXRealIp,
-              result,
-              "Sync Google Spreadsheet")
-
-            actorAhaWiki ! Calculate(pageName)
-            AhaWikiCache.PageList.invalidate()
-            pageName match {
-              case ".header" => AhaWikiCache.Header.invalidate()
-              case ".footer" => AhaWikiCache.Footer.invalidate()
-              case ".config" => AhaWikiCache.Config.invalidate()
-              case _ =>
-            }
+          val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
+          if (pageContent.content != body) {
+            pageInsertLogic(request, pageName, page.revision + 1, body, "Sync Google Spreadsheet")
             Ok("")
           } else {
             Ok("NotChanged")
@@ -305,6 +300,7 @@ class Wiki @Inject()(implicit
         NotFound("")
     }
   }
+
   def rename(): Action[AnyContent] = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
