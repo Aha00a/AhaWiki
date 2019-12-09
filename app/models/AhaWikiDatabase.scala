@@ -27,10 +27,10 @@ object AhaWikiDatabase {
     lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
   }
 
-  // TODO: Option comment?
+  // TODO: Option comment? change db scheme not null
   case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime
 
-  // TODO: Option comment?
+  // TODO: Option comment? change db scheme not null
   case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: Option[String]) extends WithTime
 
   case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: Option[String]) extends WithTime
