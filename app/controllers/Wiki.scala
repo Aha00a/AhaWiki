@@ -310,7 +310,7 @@ class Wiki @Inject()(implicit
 
   def preview(): Action[AnyContent] = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
-    implicit val wikiContext: WikiContext = WikiContext(name)
+    implicit val wikiContext: WikiContext = WikiContext(name, isPreview = true)
     Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 

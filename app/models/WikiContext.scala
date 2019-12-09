@@ -6,12 +6,16 @@ import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
-case class WikiContext(name: String)(implicit
-                                     val request: Request[Any],
-                                     val cacheApi: CacheApi,
-                                     val database: Database,
-                                     val actorAhaWiki: ActorRef,
-                                     val configuration: Configuration
-)
+case class WikiContext(
+                        name: String,
+                        isPreview: Boolean = false
+                      )
+                      (implicit
+                       val request: Request[Any],
+                       val cacheApi: CacheApi,
+                       val database: Database,
+                       val actorAhaWiki: ActorRef,
+                       val configuration: Configuration
+                      )
 
 
