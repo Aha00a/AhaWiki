@@ -4,16 +4,17 @@ import java.time.LocalDateTime
 
 import javax.inject.Inject
 import logics.AhaWikiCache
-import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.mvc._
+
+import scala.xml.{Elem, NodeBuffer}
 
 class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def index: Action[AnyContent] = atom
 
-  def atom = Action { implicit request =>
+  def atom: Action[AnyContent] = Action { implicit request =>
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
-      def toXml = <title>{title}</title>
+      def toXml: NodeBuffer = <title>{title}</title>
         <subtitle>{subtitle}</subtitle>
         <link href={linkSelf} rel="self" />
         <link href={link} />
@@ -22,8 +23,8 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     case class Entry(title:String, link:String, linkAlternate:String, id:String, updated:LocalDateTime, summary:String, content:String, author:String) {
-      def linkEdit = s"${link}?action=edit"
-      def toXml = <entry>
+      def linkEdit = s"$link?action=edit"
+      def toXml: Elem = <entry>
         <title>{title}</title>
         <link href={link} />
         <link rel="alternate" type="text/html" href={linkAlternate} />
@@ -50,9 +51,9 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     )
   }
 
-  def rss = Action { implicit request =>
+  def rss: Action[AnyContent] = Action { implicit request =>
     case class Channel(title:String, description:String, link:String, lastBuildDate:LocalDateTime, pubDate:LocalDateTime, ttl:Int) {
-      def toXml = <title>{title}</title>
+      def toXml: NodeBuffer = <title>{title}</title>
         <description>{description}</description>
         <link>/w/{link}</link>
         <lastBuildDate>{lastBuildDate}</lastBuildDate>
@@ -61,7 +62,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     case class Item(title:String, description:String, link:String, pubDate:LocalDateTime) {
-      def toXml = <item>
+      def toXml: Elem = <item>
         <title>{title}</title>
         <description>{description}</description>
         <link>/w/{link}</link>
