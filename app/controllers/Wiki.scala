@@ -14,6 +14,7 @@ import com.aha00a.commons.utils._
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.supercsv.Implicits._
+import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
@@ -265,12 +266,7 @@ class Wiki @Inject()(implicit
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
                   val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-                  val futureString: Future[String] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName).map { seqSeqString =>
-                    Using(new StringWriter()) { stringWriter =>
-                      Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE))(_.writeSeqSeqString(seqSeqString))
-                      s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
-                    }
-                  }
+                  val futureString: Future[String] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName).map(seqSeqString => s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(seqSeqString)}]]]")
                   Await.result(futureString, 5 seconds)
                 case _ =>
                   s
