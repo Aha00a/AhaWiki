@@ -4,7 +4,6 @@ import java.io.StringWriter
 import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.util
 import java.util.Locale
 
 import actionCompositions.PostAction
@@ -14,6 +13,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils._
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
+import com.aha00a.supercsv.Implicits._
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
@@ -269,7 +269,7 @@ class Wiki @Inject()(implicit
                       .map(seqSeqString => {
                         Using(new StringWriter()) { stringWriter =>
                           Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE)) { csvListWriter =>
-                            writeAll(csvListWriter, seqSeqString)
+                            csvListWriter.writeSeqSeqString(seqSeqString)
                           }
                           s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
                         }
@@ -297,12 +297,6 @@ class Wiki @Inject()(implicit
     }
   }
 
-  private def writeAll(csvListWriter: CsvListWriter, seqSeqString: Seq[Seq[String]]) = {
-    for (row <- seqSeqString) {
-      val list1: util.List[String] = row.toList
-      csvListWriter.write(list1)
-    }
-  }
 
   def rename(): Action[AnyContent] = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
