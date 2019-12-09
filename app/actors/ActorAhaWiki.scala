@@ -21,13 +21,10 @@ object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
   case class Calculate(name: String, i: Int = 1, length: Int = 1)
-
   case class Geocode(address: String)
-
 }
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
-
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -37,7 +34,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         updateLink(page)
       }
     }
-    case Geocode(address) =>
+    case Geocode(address) =>  StopWatch(s"$address") {
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
       ws
         .url("https://maps.googleapis.com/maps/api/geocode/json")
@@ -54,6 +51,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           AhaWikiCache.AddressToLatLng.set(address, latLng)
           Logger.info(s"$address - $latLng")
         })
+    }
     case _ =>
       Logger.error("Unknown")
   }
@@ -71,8 +69,5 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
     AhaWikiDatabase().linkDelete(page.name)
     AhaWikiDatabase().linkInsert(seqLink)
   }
-
-
 }
-
 
