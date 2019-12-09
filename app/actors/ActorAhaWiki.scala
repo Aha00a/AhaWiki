@@ -20,21 +20,23 @@ import scala.concurrent.ExecutionContext
 object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
-  case class Calculate(name: String, i:Int = 1, length: Int = 1)
+  case class Calculate(name: String, i: Int = 1, length: Int = 1)
+
   case class Geocode(address: String)
+
 }
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
+
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(name: String, i:Int, length:Int) =>
-      StopWatch(s"$name - ($i/$length)") {
-        AhaWikiDatabase().pageSelectLastRevision(name) foreach { page =>
-          updateCosineSimilarity(name, page)
-          updateLink(page)
-        }
+    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
+      AhaWikiDatabase().pageSelectLastRevision(name) foreach { page =>
+        updateCosineSimilarity(name, page)
+        updateLink(page)
       }
+    }
     case Geocode(address) =>
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
       ws
@@ -63,7 +65,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
     AhaWikiDatabase().cosineSimilarityUpdate(name)
   }
 
-  def updateLink(page:Page): Array[Int] = {
+  def updateLink(page: Page): Array[Int] = {
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
     AhaWikiDatabase().linkDelete(page.name)
