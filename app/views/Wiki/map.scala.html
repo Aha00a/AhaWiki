@@ -22,7 +22,11 @@
     <script type="text/javascript">
         function initMap() {
             var map = new google.maps.Map(document.getElementById('@id'), {
-                center: { lat: 37.549521, lng: 126.9157683 },
+                @if(seqLocation.nonEmpty) {
+                    center: { lat: @seqLocation.head.latLng.lat, lng: @seqLocation.head.latLng.lng },
+                } else {
+                    center: { lat: 37.549521, lng: 126.9157683 },
+                }
                 zoom: 17,
                 options: {
                     gestureHandling: 'greedy'
