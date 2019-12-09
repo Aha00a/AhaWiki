@@ -26,10 +26,11 @@ object ActorAhaWiki {
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
   import ActorAhaWiki._
+  private val ahaWikiDatabase = AhaWikiDatabase()
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      AhaWikiDatabase().pageSelectLastRevision(name) foreach { page =>
+      ahaWikiDatabase.pageSelectLastRevision(name) foreach { page =>
         updateCosineSimilarity(name, page)
         updateLink(page)
       }
@@ -58,16 +59,16 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    AhaWikiDatabase().termFrequencyDelete(name)
-    AhaWikiDatabase().termFrequencyInsert(name, wordCount)
-    AhaWikiDatabase().cosineSimilarityUpdate(name)
+    ahaWikiDatabase.termFrequencyDelete(name)
+    ahaWikiDatabase.termFrequencyInsert(name, wordCount)
+    ahaWikiDatabase.cosineSimilarityUpdate(name)
   }
 
   def updateLink(page: Page): Array[Int] = {
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    AhaWikiDatabase().linkDelete(page.name)
-    AhaWikiDatabase().linkInsert(seqLink)
+    ahaWikiDatabase.linkDelete(page.name)
+    ahaWikiDatabase.linkInsert(seqLink)
   }
 }
 
