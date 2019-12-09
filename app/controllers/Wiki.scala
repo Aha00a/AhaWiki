@@ -265,15 +265,12 @@ class Wiki @Inject()(implicit
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
                   Await.result(
-                    GoogleSpreadsheetApi.readSpreadSheet(ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key(), id, sheetName)
-                      .map(seqSeqString => {
-                        Using(new StringWriter()) { stringWriter =>
-                          Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE)) { csvListWriter =>
-                            csvListWriter.writeSeqSeqString(seqSeqString)
-                          }
-                          s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
-                        }
-                      }),
+                    GoogleSpreadsheetApi.readSpreadSheet(ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key(), id, sheetName).map { seqSeqString =>
+                      Using(new StringWriter()) { stringWriter =>
+                        Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE))(_.writeSeqSeqString(seqSeqString))
+                        s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
+                      }
+                    },
                     5 seconds)
                 case _ =>
                   s
