@@ -187,7 +187,7 @@ class Wiki @Inject()(implicit
     }
   }
 
-  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, body: String, comment: String)(implicit wikiContext: WikiContext) = {
+  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
     ahaWikiDatabase.pageInsert(
       name,
       revision,
