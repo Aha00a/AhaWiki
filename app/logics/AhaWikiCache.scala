@@ -1,16 +1,13 @@
 package logics
 
-import actors.ActorAhaWiki.{Calculate, Geocode}
+import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
-import logics.AhaWikiCache.Config.key
 import logics.wikis.Interpreters
 import models.{AhaWikiDatabase, LatLng, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
-import play.api.libs.ws.{WSClient, WSResponse}
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 object AhaWikiCache {
