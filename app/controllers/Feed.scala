@@ -80,7 +80,8 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     Ok(
       <rss version="2.0">
         <channel>
-          {channel.toXml}{items.map(_.toXml)}
+          {channel.toXml}
+          {items.map(_.toXml)}
         </channel>
       </rss>
     )
