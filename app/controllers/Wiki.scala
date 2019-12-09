@@ -44,6 +44,7 @@ class Wiki @Inject()(implicit
                      executor: ExecutionContext
                     ) extends Controller {
   private val ahaWikiDatabase = AhaWikiDatabase()
+  private val regexYmd: Regex = """^(\d{4})-(\d{2})-(\d{2})$""".r
 
   implicit class RichResult(result:Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -64,7 +65,6 @@ class Wiki @Inject()(implicit
     //noinspection ScalaUnusedSymbol
     (pageSpecificRevision, action, isReadable, isWritable) match {
       case (None, "edit", _, true) =>
-        val regexYmd = """^(\d{4})-(\d{2})-(\d{2})$""".r
         val content = name match {
           case regexYmd(y, m, d) =>
             val localDate = LocalDate.parse(name)
