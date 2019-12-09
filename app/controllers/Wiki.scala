@@ -31,7 +31,7 @@ import play.api.{Configuration, Environment, Mode}
 import scala.collection.JavaConversions._
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
 // TODO: Why???? Singleton?
@@ -265,14 +265,13 @@ class Wiki @Inject()(implicit
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
                   val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-                  Await.result(
-                    GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName).map { seqSeqString =>
-                      Using(new StringWriter()) { stringWriter =>
-                        Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE))(_.writeSeqSeqString(seqSeqString))
-                        s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
-                      }
-                    },
-                    5 seconds)
+                  val futureString: Future[String] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName).map { seqSeqString =>
+                    Using(new StringWriter()) { stringWriter =>
+                      Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE))(_.writeSeqSeqString(seqSeqString))
+                      s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
+                    }
+                  }
+                  Await.result(futureString, 5 seconds)
                 case _ =>
                   s
               }
