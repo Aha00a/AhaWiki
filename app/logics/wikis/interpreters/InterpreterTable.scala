@@ -1,7 +1,6 @@
 package logics.wikis.interpreters
 
 import java.io.StringReader
-import java.util
 
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.Using
@@ -10,7 +9,6 @@ import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 

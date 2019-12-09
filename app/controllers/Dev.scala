@@ -2,7 +2,7 @@ package controllers
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
-import com.aha00a.commons.implicits.Implicits._
+import com.aha00a.play.implicits.Implicits._
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim
 import models.AhaWikiDatabase

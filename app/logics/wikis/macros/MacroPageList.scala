@@ -6,7 +6,7 @@ import logics.wikis.interpreters.InterpreterTable
 import models.{PageContent, WikiContext}
 
 object MacroPageList extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext) = InterpreterTable.interpret(PageContent(
+  override def apply(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.interpret(PageContent(
     "#!Table tsv 1 tablesorter\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
     AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.database).map { t =>
       Seq(

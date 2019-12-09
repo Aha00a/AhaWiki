@@ -4,6 +4,7 @@ import java.io.StringReader
 
 import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils.Using
+import com.aha00a.play.implicits.Implicits._
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.{AhaWikiCache, ApplicationConf}
 import models.{LatLng, PageContent, WikiContext}

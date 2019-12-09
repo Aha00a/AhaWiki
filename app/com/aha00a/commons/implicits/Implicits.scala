@@ -4,7 +4,6 @@ import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
 
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
-import play.api.mvc.RequestHeader
 
 import scala.util.Random
 
@@ -65,15 +64,6 @@ object Implicits {
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
     def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
-  }
-
-  implicit class RichRequest(request:RequestHeader) {
-    def isLocalhost:Boolean = request.headers.get("Host").getOrElse("").startsWith("localhost")
-    def remoteAddressWithXRealIp: String = request.headers.get("X-Real-IP").getOrElse(request.remoteAddress)
-    def header(key: String): Option[String] = request.headers.get(key)
-    def userAgent: Option[String] = header("User-Agent")
-    def referer: Option[String] = header("referer")
-    def refererOrRoot: String =  referer.getOrElse("/")
   }
 
   implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }
