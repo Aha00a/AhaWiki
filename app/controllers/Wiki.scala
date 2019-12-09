@@ -13,8 +13,6 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
-
-import scala.concurrent.duration._
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
 import models.{AhaWikiDatabase, PageContent, WikiContext}
@@ -29,9 +27,10 @@ import play.api.{Configuration, Environment, Logger, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
+import scala.util.matching.Regex
 
-//noinspection TypeAnnotation
 @Singleton
 class Wiki @Inject()(implicit
                      cacheApi: CacheApi,
@@ -45,7 +44,7 @@ class Wiki @Inject()(implicit
                     ) extends Controller {
   private val ahaWikiDatabase = AhaWikiDatabase()
 
-  def view(nameEncoded: String, revision: Int, action: String) = Action { implicit request =>
+  def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
@@ -169,7 +168,7 @@ class Wiki @Inject()(implicit
   }
 
 
-  def save(nameEncoded: String) = PostAction { implicit request =>
+  def save(nameEncoded: String): Action[AnyContent] = PostAction { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
@@ -198,7 +197,7 @@ class Wiki @Inject()(implicit
     }
   }
 
-  def delete() = PostAction { implicit request =>
+  def delete(): Action[AnyContent] = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     ahaWikiDatabase.pageSelectLastRevision(name) match {
@@ -215,7 +214,7 @@ class Wiki @Inject()(implicit
     }
   }
 
-  def deleteLastRevision() = PostAction { implicit request =>
+  def deleteLastRevision(): Action[AnyContent] = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     ahaWikiDatabase.pageSelectLastRevision(name) match {
@@ -233,8 +232,8 @@ class Wiki @Inject()(implicit
     }
   }
 
-  val regexGoogleSpreadsheetUrl = """https://docs.google.com/spreadsheets/d/([^/]+)(/(edit(#gid=0)?)?)?""".r
-  def syncGoogleSpreadsheet = Action { implicit request =>
+  val regexGoogleSpreadsheetUrl: Regex = """https://docs.google.com/spreadsheets/d/([^/]+)(/(edit(#gid=0)?)?)?""".r
+  def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
     ahaWikiDatabase.pageSelectLastRevision(pageName) match {
       case Some(page) =>
@@ -254,7 +253,7 @@ class Wiki @Inject()(implicit
                       )
                       .get()
                       .map(r => {
-                        Logger.info(s"$id - ${sheetName}")
+                        Logger.info(s"$id - $sheetName")
                         (r.json \ "values").as[Seq[Seq[String]]]
                       })
                       .map(seqSeqString => {
@@ -265,7 +264,7 @@ class Wiki @Inject()(implicit
                               csvListWriter.write(list1)
                             }
                           }
-                          s"[[[#!Map ${url} ${sheetName}\n${stringWriter.toString}]]]"
+                          s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
                         }
                       }),
                     5 seconds)
@@ -306,7 +305,7 @@ class Wiki @Inject()(implicit
         NotFound("")
     }
   }
-  def rename() = PostAction { implicit request =>
+  def rename(): Action[AnyContent] = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     (ahaWikiDatabase.pageSelectLastRevision(name), ahaWikiDatabase.pageSelectLastRevision(newName)) match {
@@ -326,7 +325,7 @@ class Wiki @Inject()(implicit
   }
 
 
-  def preview() = PostAction { implicit request =>
+  def preview(): Action[AnyContent] = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
