@@ -1,6 +1,5 @@
 package logics.wikis
 
-import com.aha00a.commons.implicits.Implicits
 import com.aha00a.commons.implicits.Implicits._
 import models.WikiContext
 
