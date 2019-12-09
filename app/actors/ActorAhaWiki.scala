@@ -2,7 +2,8 @@ package actors
 
 import akka.actor._
 import com.aha00a.commons.implicits.Implicits._
-import com.aha00a.commons.utils.{Stemmer, StopWatch}
+import com.aha00a.commons.utils.StopWatch
+import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}

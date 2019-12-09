@@ -3,7 +3,7 @@ package controllers
 import akka.actor.{ActorRef, ActorSystem}
 import anorm.SQL
 import anorm.SqlParser.long
-import com.aha00a.commons.utils.Stemmer
+import com.aha00a.stemmers.Stemmer
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
