@@ -6,7 +6,7 @@ import play.api.libs.ws.WSClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class GoogleApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) {
+case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) {
 
 
   def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[String]] = {

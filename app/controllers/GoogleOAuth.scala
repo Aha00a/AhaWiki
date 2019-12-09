@@ -1,7 +1,7 @@
 package controllers
 
 import com.aha00a.play.Implicits._
-import com.aha00a.play.utils.GoogleApi
+import com.aha00a.play.utils.GoogleOAuthApi
 import javax.inject.Inject
 import logics.{ApplicationConf, SessionLogic}
 import play.api.Configuration
@@ -32,7 +32,7 @@ class GoogleOAuth @Inject()(
 
   //noinspection TypeAnnotation
   def callback(code: String) = Action.async { implicit request =>
-    GoogleApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
+    GoogleOAuthApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
       case Some(email) =>
         Redirect(request.flash.get("redirect").getOrElse("/"))
           .withSession(SessionLogic.login(request, email))
