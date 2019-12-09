@@ -14,7 +14,8 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
   def atom: Action[AnyContent] = Action { implicit request =>
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
-      def toXml: NodeBuffer = <title>{title}</title>
+      def toXml: NodeBuffer =
+        <title>{title}</title>
         <subtitle>{subtitle}</subtitle>
         <link href={linkSelf} rel="self" />
         <link href={link} />
@@ -24,20 +25,21 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
     case class Entry(title:String, link:String, linkAlternate:String, id:String, updated:LocalDateTime, summary:String, content:String, author:String) {
       def linkEdit = s"$link?action=edit"
-      def toXml: Elem = <entry>
-        <title>{title}</title>
-        <link href={link} />
-        <link rel="alternate" type="text/html" href={linkAlternate} />
-        <link rel="edit" href={linkEdit}/>
-        <id>{id}</id>
-        <updated>{updated}</updated>
-        <summary>{summary}</summary>
-        <content type="xhtml">{content}</content>
-        <author>
-          <name>{author}</name>
-          <email>{author}</email>
-        </author>
-      </entry>
+      def toXml: Elem =
+        <entry>
+          <title>{title}</title>
+          <link href={link} />
+          <link rel="alternate" type="text/html" href={linkAlternate} />
+          <link rel="edit" href={linkEdit}/>
+          <id>{id}</id>
+          <updated>{updated}</updated>
+          <summary>{summary}</summary>
+          <content type="xhtml">{content}</content>
+          <author>
+            <name>{author}</name>
+            <email>{author}</email>
+          </author>
+        </entry>
 
     }
 
@@ -53,7 +55,8 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
   def rss: Action[AnyContent] = Action { implicit request =>
     case class Channel(title:String, description:String, link:String, lastBuildDate:LocalDateTime, pubDate:LocalDateTime, ttl:Int) {
-      def toXml: NodeBuffer = <title>{title}</title>
+      def toXml: NodeBuffer =
+        <title>{title}</title>
         <description>{description}</description>
         <link>/w/{link}</link>
         <lastBuildDate>{lastBuildDate}</lastBuildDate>
@@ -62,22 +65,24 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     case class Item(title:String, description:String, link:String, pubDate:LocalDateTime) {
-      def toXml: Elem = <item>
-        <title>{title}</title>
-        <description>{description}</description>
-        <link>/w/{link}</link>
-        <pubDate>{pubDate}</pubDate>
-      </item>
+      def toXml: Elem =
+        <item>
+          <title>{title}</title>
+          <description>{description}</description>
+          <link>/w/{link}</link>
+          <pubDate>{pubDate}</pubDate>
+        </item>
     }
 
     val channel = Channel("title", "description", "link", LocalDateTime.now(), LocalDateTime.now(), 180) // TODO
     val items = AhaWikiCache.PageList.get.sortBy(_.time).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
 
-    Ok(<rss version="2.0">
-      <channel>
-        {channel.toXml}
-        {items.map(_.toXml)}
-      </channel>
-    </rss>)
+    Ok(
+      <rss version="2.0">
+        <channel>
+          {channel.toXml}{items.map(_.toXml)}
+        </channel>
+      </rss>
+    )
   }
 }
