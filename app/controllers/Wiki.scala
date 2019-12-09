@@ -31,6 +31,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.matching.Regex
 
+// TODO: Why???? Singleton?
 @Singleton
 class Wiki @Inject()(implicit
                      cacheApi: CacheApi,
