@@ -26,6 +26,9 @@ class ApplicationConf(configuration: Configuration) {
           object MapsJavaScriptAPI {
             def key(): String = configuration.getString(fqn).getOrElse("")
           }
+          object GoogleSheetsAPI {
+            def key(): String = configuration.getString(fqn).getOrElse("")
+          }
         }
       }
     }

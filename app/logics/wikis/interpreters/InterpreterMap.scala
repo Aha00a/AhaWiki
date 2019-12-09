@@ -10,6 +10,7 @@ import models.{LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
+import play.api.mvc.Request
 
 object InterpreterMap {
   case class Location(
@@ -32,7 +33,8 @@ object InterpreterMap {
       val head: Seq[String] = rowColumnData.head
       val tail: Seq[Seq[String]] = rowColumnData.tail
 
-      val seqFields: Seq[String] = Seq("Name", if(wikiContext.request.isLocalhost) "AddressForDev" else "Address", "Score")
+      implicit val request: Request[Any] = wikiContext.request
+      val seqFields: Seq[String] = Seq("Name", if(request.isLocalhost) "AddressForDev" else "Address", "Score")
       val seqFieldIndex: Seq[Int] = seqFields.map(head.indexOf)
       val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqFields.contains(v._1)).map(_._2)
 
@@ -49,7 +51,8 @@ object InterpreterMap {
       })
 
       implicit val configuration: Configuration = wikiContext.configuration
-      val resultMap = views.html.Wiki.map(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key(), locations).toString()
+      val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+      val resultMap = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), locations).toString()
       val resultTable = InterpreterTable.interpret(PageContent("#!Table tsv 1 tablesorter\n" + pageContent.content))
       resultMap + resultTable
     }

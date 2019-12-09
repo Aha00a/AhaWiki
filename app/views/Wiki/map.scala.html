@@ -1,12 +1,21 @@
 @import logics.wikis.interpreters.InterpreterMap
 @import com.aha00a.commons.implicits.Implicits._
-@(mapsJavaScriptAPIKey:String, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext)
-@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
-    <div class="aspectRatioWrapper">
-        <div class="ratio_16_9"></div>
-        <div class="aspectRatioContent">
-            <div id="@(id)" class="map" style="width: 100%; height: 100%"></div>
+@(mapsJavaScriptAPIKey:String, url:String, sheetName:String, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
+    <div>
+        <div class="aspectRatioWrapper">
+            <div class="ratio_16_9"></div>
+            <div class="aspectRatioContent">
+                <div id="@(id)" class="map" style="width: 100%; height: 100%"></div>
+            </div>
         </div>
+        @if(url && sheetName) {
+            <div>
+                <a href="@url" target="_blank">Google Spreadsheet</a>
+                <a href="#" id="sync@id" data-url="@url" data-sheet="@sheetName"><i class="fas fa-sync"></i></a>
+            </div>
+        }
+
     </div>
     <script type="text/javascript">
         function initMap() {
@@ -56,6 +65,34 @@
                 })();
             }
         }
+
+        $(function () {
+            $('#sync@id').click(function () {
+                $.ajax({
+                    url: '@routes.Wiki.syncGoogleSpreadsheet()',
+                    method: 'post',
+                    headers: {
+                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
+                    },
+                    data: {
+                        pageName: '@wikiContext.name',
+                        url: '@url',
+                        sheetName: '@sheetName',
+                    },
+                    success: function (data, textStatus, jqXHR) {
+                        if(data == 'NotChanged') {
+                            alert('Content is not changed.');
+                            return;
+                        }
+                        location.reload();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        debugger;
+                    }
+                });
+                return false;
+            });
+        });
     </script>
     @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">

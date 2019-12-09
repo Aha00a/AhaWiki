@@ -19,7 +19,6 @@ import scala.concurrent.ExecutionContext
 object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
-
   case class Calculate(name: String, i:Int = 1, length: Int = 1)
   case class Geocode(address: String)
 }

@@ -1,5 +1,6 @@
 package controllers
 
+import java.io.StringWriter
 import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
@@ -12,17 +13,23 @@ import com.aha00a.commons.implicits.Implicits._
 import com.aha00a.commons.utils._
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
+
+import scala.concurrent.duration._
 import logics._
-import logics.wikis.{Interpreters, WikiPermission}
+import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
 import models.{AhaWikiDatabase, PageContent, WikiContext}
+import org.supercsv.io.CsvListWriter
+import org.supercsv.prefs.CsvPreference
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.api.{Configuration, Environment, Mode}
+import play.api.{Configuration, Environment, Logger, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 //noinspection TypeAnnotation
 @Singleton
@@ -32,7 +39,9 @@ class Wiki @Inject()(implicit
                      database: play.api.db.Database,
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
-                     configuration: Configuration
+                     configuration: Configuration,
+                     ws: WSClient,
+                     executor: ExecutionContext
                     ) extends Controller {
   private val ahaWikiDatabase = AhaWikiDatabase()
 
@@ -220,10 +229,83 @@ class Wiki @Inject()(implicit
           Forbidden("")
         }
       case None =>
-        Forbidden("")
+        NotFound("")
     }
   }
 
+  val regexGoogleSpreadsheetUrl = """https://docs.google.com/spreadsheets/d/([^/]+)(/(edit(#gid=0)?)?)?""".r
+  def syncGoogleSpreadsheet = Action { implicit request =>
+    val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
+    ahaWikiDatabase.pageSelectLastRevision(pageName) match {
+      case Some(page) =>
+        implicit val wikiContext: WikiContext = WikiContext(pageName)
+        val pageContent = PageContent(page.content)
+        if (WikiPermission.isWritable(pageContent)) {
+          val extractConvertApplyChunkRefresh = new ExtractConvertApplyChunkCustom(s => {
+            val pageContentChunk = PageContent(s)
+            if(url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
+              url match {
+                case regexGoogleSpreadsheetUrl(id, _, _, _) =>
+                  Await.result(
+                    ws
+                      .url(s"https://sheets.googleapis.com/v4/spreadsheets/$id/values/$sheetName")
+                      .withQueryString(
+                        "key" -> ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
+                      )
+                      .get()
+                      .map(r => {
+                        Logger.info(s"$id - ${sheetName}")
+                        (r.json \ "values").as[Seq[Seq[String]]]
+                      })
+                      .map(seqSeqString => {
+                        Using(new StringWriter()) { stringWriter =>
+                          Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE)) { csvListWriter =>
+                            for (row <- seqSeqString) {
+                              val list1: java.util.List[String] = row.toList
+                              csvListWriter.write(list1)
+                            }
+                          }
+                          s"[[[#!Map ${url} ${sheetName}\n${stringWriter.toString}]]]"
+                        }
+                      }),
+                    5 seconds)
+                case _ =>
+                  s
+              }
+            } else {
+              s
+            }
+          })
+          val result = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
+          if (pageContent.content != result) {
+            ahaWikiDatabase.pageInsert(
+              pageName,
+              page.revision + 1,
+              DateTimeUtil.nowEpochNano,
+              SessionLogic.getId(request).getOrElse("anonymous"),
+              request.remoteAddressWithXRealIp,
+              result,
+              "Sync Google Spreadsheet")
+
+            actorAhaWiki ! Calculate(pageName)
+            AhaWikiCache.PageList.invalidate()
+            pageName match {
+              case ".header" => AhaWikiCache.Header.invalidate()
+              case ".footer" => AhaWikiCache.Footer.invalidate()
+              case ".config" => AhaWikiCache.Config.invalidate()
+              case _ =>
+            }
+            Ok("")
+          } else {
+            Ok("NotChanged")
+          }
+        } else {
+          Forbidden("")
+        }
+      case None =>
+        NotFound("")
+    }
+  }
   def rename() = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
