@@ -12,7 +12,9 @@
         @if(url && sheetName) {
             <div>
                 <a href="@url" target="_blank">Google Spreadsheet</a>
-                <a href="#" id="sync@id" data-url="@url" data-sheet="@sheetName"><i class="fas fa-sync"></i></a>
+                @if(!wikiContext.isPreview) {
+                    <a href="#" id="sync@id" data-url="@url" data-sheet="@sheetName"><i class="fas fa-sync"></i></a>
+                }
             </div>
         }
 
@@ -65,34 +67,35 @@
                 })();
             }
         }
-
-        $(function () {
-            $('#sync@id').click(function () {
-                $.ajax({
-                    url: '@routes.Wiki.syncGoogleSpreadsheet()',
-                    method: 'post',
-                    headers: {
-                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
-                    },
-                    data: {
-                        pageName: '@wikiContext.name',
-                        url: '@url',
-                        sheetName: '@sheetName',
-                    },
-                    success: function (data, textStatus, jqXHR) {
-                        if(data == 'NotChanged') {
-                            alert('Content is not changed.');
-                            return;
+        @if(!wikiContext.isPreview) {
+            $(function () {
+                $('#sync@id').click(function () {
+                    $.ajax({
+                        url: '@routes.Wiki.syncGoogleSpreadsheet()',
+                        method: 'post',
+                        headers: {
+                            'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
+                        },
+                        data: {
+                            pageName: '@wikiContext.name',
+                            url: '@url',
+                            sheetName: '@sheetName',
+                        },
+                        success: function (data, textStatus, jqXHR) {
+                            if(data == 'NotChanged') {
+                                alert('Content is not changed.');
+                                return;
+                            }
+                            location.reload();
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            debugger;
                         }
-                        location.reload();
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        debugger;
-                    }
+                    });
+                    return false;
                 });
-                return false;
             });
-        });
+        }
     </script>
     @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">
