@@ -241,30 +241,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
         .map(HighScoredTerm.tupled)
     }
   }
-
-  def pageSelectNameRandom():String = db.withConnection { implicit connection =>
-    connection.getMetaData.getDatabaseProductName match {
-      case "H2" => // TODO
-        SQL( """SELECT
-               |    DISTINCT(name)
-               |    FROM Page
-               |    WHERE content <> ''
-               |    ORDER BY RAND()
-               |    LIMIT 1
-               | """.stripMargin)
-          .as(str("name") single)
-      case _ =>
-        SQL( """SELECT
-               |    DISTINCT(name)
-               |    FROM Page
-               |    WHERE content <> ''
-               |    ORDER BY RAND()
-               |    LIMIT 1
-               | """.stripMargin)
-          .as(str("name") single)
-    }
-  }
-
+  
   def pageDeleteWithRelatedData(name:String): Int = db.withConnection { implicit connection => // TODO: transaction, FK
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
