@@ -4,6 +4,7 @@ import java.io.StringWriter
 import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
+import java.util
 import java.util.Locale
 
 import actionCompositions.PostAction
@@ -12,6 +13,7 @@ import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils._
 import com.aha00a.play.Implicits._
+import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
@@ -24,7 +26,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.api.{Configuration, Environment, Logger, Mode}
+import play.api.{Configuration, Environment, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
@@ -263,21 +265,12 @@ class Wiki @Inject()(implicit
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
                   Await.result(
-                    ws
-                      .url(s"https://sheets.googleapis.com/v4/spreadsheets/$id/values/$sheetName")
-                      .withQueryString(
-                        "key" -> ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-                      )
-                      .get()
-                      .map(r => {
-                        Logger.info(s"$id - $sheetName")
-                        (r.json \ "values").as[Seq[Seq[String]]]
-                      })
+                    GoogleSpreadsheetApi.readSpreadSheet(id, sheetName)
                       .map(seqSeqString => {
                         Using(new StringWriter()) { stringWriter =>
                           Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE)) { csvListWriter =>
                             for (row <- seqSeqString) {
-                              val list1: java.util.List[String] = row.toList
+                              val list1: util.List[String] = row.toList
                               csvListWriter.write(list1)
                             }
                           }
