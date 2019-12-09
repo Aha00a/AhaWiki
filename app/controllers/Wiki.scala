@@ -266,9 +266,9 @@ class Wiki @Inject()(implicit
               url match {
                 case regexGoogleSpreadsheetUrl(id, _, _, _) =>
                   val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-                  val spreadsheet = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName)
-                  val futureTsv: Future[String] = spreadsheet.map(seqSeqString => s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(seqSeqString)}]]]")
-                  Await.result(futureTsv, 5 seconds)
+                  val futureSpreadsheet: Future[Seq[Seq[String]]] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName)
+                  val spreadsheet: Seq[Seq[String]] = Await.result(futureSpreadsheet, 5 seconds)
+                  s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(spreadsheet)}]]]"
                 case _ =>
                   s
               }
