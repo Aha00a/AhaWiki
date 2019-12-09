@@ -14,6 +14,35 @@
                 <a href="@url" target="_blank">Google Spreadsheet</a>
                 @if(!wikiContext.isPreview) {
                     <a href="#" id="sync@id" data-url="@url" data-sheet="@sheetName"><i class="fas fa-sync"></i></a>
+                    <script type="text/javascript">
+                        $(function () {
+                            $('#sync@id').click(function () {
+                                $.ajax({
+                                    url: '@routes.Wiki.syncGoogleSpreadsheet()',
+                                    method: 'post',
+                                    headers: {
+                                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
+                                    },
+                                    data: {
+                                        pageName: '@wikiContext.name',
+                                        url: '@url',
+                                        sheetName: '@sheetName',
+                                    },
+                                    success: function (data, textStatus, jqXHR) {
+                                        if(data == 'NotChanged') {
+                                            alert('Content is not changed.');
+                                            return;
+                                        }
+                                        location.reload();
+                                    },
+                                    error: function (jqXHR, textStatus, errorThrown) {
+                                        debugger;
+                                    }
+                                });
+                                return false;
+                            });
+                        });
+                    </script>
                 }
             </div>
         }
@@ -68,35 +97,6 @@
                     });
                 })();
             }
-        }
-        @if(!wikiContext.isPreview) {
-            $(function () {
-                $('#sync@id').click(function () {
-                    $.ajax({
-                        url: '@routes.Wiki.syncGoogleSpreadsheet()',
-                        method: 'post',
-                        headers: {
-                            'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
-                        },
-                        data: {
-                            pageName: '@wikiContext.name',
-                            url: '@url',
-                            sheetName: '@sheetName',
-                        },
-                        success: function (data, textStatus, jqXHR) {
-                            if(data == 'NotChanged') {
-                                alert('Content is not changed.');
-                                return;
-                            }
-                            location.reload();
-                        },
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            debugger;
-                        }
-                    });
-                    return false;
-                });
-            });
         }
     </script>
     @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
