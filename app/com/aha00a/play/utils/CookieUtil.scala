@@ -1,4 +1,4 @@
-package com.aha00a.commons.utils
+package com.aha00a.play.utils
 
 import play.api.mvc.Request
 
