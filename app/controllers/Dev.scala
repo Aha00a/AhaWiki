@@ -18,7 +18,7 @@ class Dev @Inject()(
   database:play.api.db.Database,
   @Named("db-actor") actorAhaWiki: ActorRef
 ) extends Controller {
-  def reindex = Action { implicit request =>
+  def reindex: Action[AnyContent] = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
       val listPageName: List[String] = Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName)
@@ -33,7 +33,7 @@ class Dev @Inject()(
     }
   }
 
-  def deleteVimCache(md5:String) = Action { implicit request =>
+  def deleteVimCache(md5:String): Action[AnyContent] = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
 
     if(InterpreterVim.getCacheFileHtml(InterpreterVim.getCacheDir, md5).delete())
