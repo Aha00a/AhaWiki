@@ -269,10 +269,7 @@ class Wiki @Inject()(implicit
                       .map(seqSeqString => {
                         Using(new StringWriter()) { stringWriter =>
                           Using(new CsvListWriter(stringWriter, CsvPreference.TAB_PREFERENCE)) { csvListWriter =>
-                            for (row <- seqSeqString) {
-                              val list1: util.List[String] = row.toList
-                              csvListWriter.write(list1)
-                            }
+                            writeAll(csvListWriter, seqSeqString)
                           }
                           s"[[[#!Map $url $sheetName\n${stringWriter.toString}]]]"
                         }
@@ -297,6 +294,13 @@ class Wiki @Inject()(implicit
         }
       case None =>
         NotFound("")
+    }
+  }
+
+  private def writeAll(csvListWriter: CsvListWriter, seqSeqString: Seq[Seq[String]]) = {
+    for (row <- seqSeqString) {
+      val list1: util.List[String] = row.toList
+      csvListWriter.write(list1)
     }
   }
 
