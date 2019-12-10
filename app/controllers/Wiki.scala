@@ -249,6 +249,12 @@ class Wiki @Inject()(implicit
   }
 
   val regexGoogleSpreadsheetUrl: Regex = """https://docs.google.com/spreadsheets/d/([^/]+)(/(edit(#gid=0)?)?)?""".r
+
+  def padColumns[T](matrix: Seq[Seq[T]], default:T): Seq[Seq[T]] = {
+    val maxLength = matrix.map(_.length).max
+    matrix.map(_.padTo(maxLength, default))
+  }
+
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
     ahaWikiDatabase.pageSelectLastRevision(pageName) match {
@@ -264,7 +270,7 @@ class Wiki @Inject()(implicit
                   val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
                   val futureSpreadsheet: Future[Seq[Seq[String]]] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName)
                   val spreadsheet: Seq[Seq[String]] = Await.result(futureSpreadsheet, 5 seconds)
-                  s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(spreadsheet)}]]]"
+                  s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))}]]]"
                 case _ =>
                   s
               }
