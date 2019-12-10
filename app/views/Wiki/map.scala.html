@@ -17,6 +17,7 @@
                     <script type="text/javascript">
                         $(function () {
                             $('#sync@id').click(function () {
+                                $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>'))
                                 $.ajax({
                                     url: '@routes.Wiki.syncGoogleSpreadsheet()',
                                     method: 'post',
@@ -29,7 +30,8 @@
                                         sheetName: '@sheetName',
                                     },
                                     success: function (data, textStatus, jqXHR) {
-                                        if(data == 'NotChanged') {
+                                        $('.loader').remove();
+                                        if(data === 'NotChanged') {
                                             alert('Content is not changed.');
                                             return;
                                         }
@@ -37,6 +39,7 @@
                                     },
                                     error: function (jqXHR, textStatus, errorThrown) {
                                         debugger;
+                                        $('.ahaWikiLoader').remove();
                                     }
                                 });
                                 return false;
