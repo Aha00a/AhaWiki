@@ -53,7 +53,8 @@ object InterpreterMap {
 
       implicit val configuration: Configuration = wikiContext.configuration
       val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-      val resultMap = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), locations).toString()
+      val latLng: LatLng = locations.map(_.latLng).find(!_.lat.isNaN).getOrElse(models.LatLng(37.549521, 126.9157683))
+      val resultMap = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), latLng, locations).toString()
       val resultTable = InterpreterTable.interpret(PageContent("#!Table tsv 1 tablesorter\n" + pageContent.content))
       resultMap + resultTable
     }
