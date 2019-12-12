@@ -35,7 +35,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         updateLink(page)
       }
     }
-    case Geocode(address) =>  StopWatch(s"$address") {
+    case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
       ws
         .url("https://maps.googleapis.com/maps/api/geocode/json")
@@ -49,8 +49,8 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
+          ahaWikiDatabase.GeocodeCacheTable.replace(address, latLng)
           AhaWikiCache.AddressToLatLng.set(address, latLng)
-          Logger.info(s"$address - $latLng")
         })
     }
     case _ =>

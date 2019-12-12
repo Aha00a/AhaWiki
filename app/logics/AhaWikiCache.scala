@@ -58,14 +58,23 @@ object AhaWikiCache {
   object AddressToLatLng {
     def key(address: String): String = "Addr" + address
     def set(address: String, latLng: LatLng)(implicit cacheApi: CacheApi): Unit = cacheApi.set(key(address), latLng, 365 days)
-    def get(address:String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef): LatLng = {
+    def get(address:String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef, database: Database): LatLng = {
       cacheApi.get[LatLng](key(address)) match {
         case Some(latLng) => latLng
         case _ =>
-          if (!(address == null) && !address.isEmpty)
-            actorAhaWiki ! Geocode(address)
-          
-          LatLng(Double.NaN, Double.NaN)
+          if (!(address == null) && !address.isEmpty) {
+            AhaWikiDatabase().GeocodeCacheTable.select(address) match {
+              case Some(geocodeCache) =>
+                val latLng = geocodeCache.latLng
+                AhaWikiCache.AddressToLatLng.set(address, latLng)
+                latLng
+              case None =>
+                actorAhaWiki ! Geocode(address)
+                LatLng(Double.NaN, Double.NaN)
+            }
+          } else {
+            LatLng(Double.NaN, Double.NaN)
+          }
       }
     }
   }

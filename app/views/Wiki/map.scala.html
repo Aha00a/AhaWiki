@@ -1,6 +1,13 @@
 @import logics.wikis.interpreters.InterpreterMap
 @import com.aha00a.commons.Implicits._
-@(mapsJavaScriptAPIKey:String, url:String, sheetName:String, latLng: LatLng, seqLocation:Seq[InterpreterMap.Location])(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
+@(
+        mapsJavaScriptAPIKey:String,
+        url:String,
+        sheetName:String,
+        seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited],
+        seqHeaderName: Seq[String],
+        seqHeaderRest: Seq[String]
+)(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div>
         <div class="aspectRatioWrapper">
@@ -49,44 +56,74 @@
                 }
             </div>
         }
-
+        <div>
+            <table class="simpleTable tablesorter">
+                <thead>
+                    <tr>
+                        @for(headerName <- seqHeaderName) {
+                            <th>@headerName</th>
+                        }
+                        <th>LastVisited</th>
+                        <th>FirstVisited</th>
+                        <th>VisitCount</th>
+                        @for(headerName <- seqHeaderRest) {
+                            <th>@headerName</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
+                        <tr>
+                            <td>@(locationLastVisited.location.name)</td>
+                            <td>@(locationLastVisited.location.address)</td>
+                            <td>@(locationLastVisited.location.score)</td>
+                            <td>@(locationLastVisited.listVisited.headOption.getOrElse(""))</td>
+                            <td>@(locationLastVisited.listVisited.lastOption.getOrElse(""))</td>
+                            <td>@(locationLastVisited.listVisited.length)</td>
+                            @for(s <- locationLastVisited.location.rest) {
+                                <td>@(s._2)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
     <script type="text/javascript">
         function initMap() {
             var map = new google.maps.Map(document.getElementById('@id'), {
-                center: { lat: @latLng.lat, lng: @latLng.lng },
-                zoom: 17,
                 options: {
                     gestureHandling: 'greedy'
                 }
             });
 
-            @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+            var markers = [];
+            @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
                 (function() {
                     var latLng = {
-                        lat: @location.latLng.lat,
-                        lng: @location.latLng.lng
+                        lat: @locationLastVisited.location.latLng.lat,
+                        lng: @locationLastVisited.location.latLng.lng
                     };
                     var marker = new google.maps.Marker({
                         position: latLng,
                         map:map,
                         icon: {
                             path: google.maps.SymbolPath.CIRCLE,
-                            scale: @(location.scale),
-                            strokeColor: '@(location.strokeColor)',
+                            scale: @(locationLastVisited.location.scale),
+                            strokeColor: '@(locationLastVisited.location.strokeColor)',
                             strokeWeight: 1,
-                            fillColor: '@(location.fillColor)',
-                            fillOpacity: @(location.fillOpacity),
+                            fillColor: '@(locationLastVisited.location.fillColor)',
+                            fillOpacity: @(locationLastVisited.location.fillOpacity),
                             labelOrigin: {
                                 x: 0,
                                 y: 2
                             }
                         },
-                        title: '@location.name - @location.address',
+                        title: '@locationLastVisited.location.name - @locationLastVisited.location.address',
                         label: {
                             fontWeight: 'bold',
-                            color: '@(location.strokeColor)',
-                            text: '@location.name',
+                            color: '@(locationLastVisited.location.strokeColor)',
+                            text: '@locationLastVisited.location.name',
                         }
                     });
                     marker.addListener('click', function() {
@@ -96,18 +133,26 @@
 
                         infowindow.open(marker.get('map'), marker);
                     });
+                    markers.push(marker);
                 })();
             }
+
+            var bounds = new google.maps.LatLngBounds();
+            for (var i = 0; i < markers.length; i++) {
+                bounds.extend(markers[i].position);
+            }
+
+            map.fitBounds(bounds);
         }
     </script>
-    @for((location, i) <- seqLocation.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">
             <div class="googleMapsInfoWindow">
-                <div class="title">@(location.name)</div>
-                <div class="score">@(location.score)</div>
-                <div class="address">@(location.address)</div>
+                <div class="title">@(locationLastVisited.location.name)</div>
+                <div class="score">@(locationLastVisited.location.score)</div>
+                <div class="address">@(locationLastVisited.location.address)</div>
                 <div class="rest">
-                    @for((k, v) <- location.rest) {
+                    @for((k, v) <- locationLastVisited.location.rest) {
                         <div class="restItem">@k :
                             @if(v.startsWith("http")) {
                                 <a href="@v" target="_blank">@v</a>

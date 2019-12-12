@@ -1,6 +1,7 @@
 package models
 
 import java.time.{LocalDate, LocalDateTime}
+import java.util.Date
 
 import anorm.SqlParser._
 import anorm._
@@ -70,6 +71,10 @@ object AhaWikiDatabase {
         )
     }
   }
+
+  case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
+    lazy val latLng: LatLng = LatLng(lat, lng)
+  }
 }
 
 class AhaWikiDatabase()(implicit db:Database) {
@@ -77,6 +82,32 @@ class AhaWikiDatabase()(implicit db:Database) {
   object PageTable {
     def selectCount(): Long = db.withConnection { implicit connection =>
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
+    }
+  }
+
+  object GeocodeCacheTable {
+    def select(address: String): Option[GeocodeCache] = db.withConnection { implicit connection =>
+      SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address = $address"
+        .as(str("address") ~ double("lat") ~ double("lng") ~ date("created") singleOpt).map(flatten)
+        .map(AhaWikiDatabase.GeocodeCache.tupled)
+    }
+
+    def replace(address: String, latLng: LatLng): Int = db.withConnection { implicit connection =>
+      SQL"""REPLACE INTO GeocodeCache (address, lat, lng) VALUES ($address, ${latLng.lat}, ${latLng.lng})""".executeUpdate()
+    }
+  }
+
+  object LinkTable {
+    def selectBacklink(name: String): List[Link] = db.withConnection { implicit connection =>
+      SQL"SELECT src, dst, alias FROM Link WHERE dst = $name"
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(Link.tupled)
+    }
+
+    def selectBacklinkOfDatePage(name: String): List[Link] = db.withConnection { implicit connection =>
+      SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '\d{4}-(0\d|1[12])-([012]\d|3[01])'"""
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(Link.tupled)
     }
   }
 
@@ -256,6 +287,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
   }
 
+  // TODO: move to LinkTable
   def linkDelete(name: String): Int = db.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
   }
@@ -267,6 +299,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
   }
 
+  // TODO: move to LinkTable
   def linkInsert(seq: Seq[Link]): Array[Int] = db.withConnection { implicit connection =>
     if(seq.isEmpty) {
       Array[Int]()
@@ -281,6 +314,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
   }
 
 
+  // TODO: move to LinkTable
   def linkSelect(name: String): List[Link] = db.withConnection { implicit connection =>
     SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
@@ -289,6 +323,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
       .filterNot(_.or(_.contains("://")))
   }
 
+  // TODO: move to LinkTable
   def linkSelect(): List[Link] = db.withConnection { implicit connection =>
     SQL"SELECT src, dst, alias FROM Link"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
