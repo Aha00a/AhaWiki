@@ -109,6 +109,41 @@ class AhaWikiDatabase()(implicit database:Database) {
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(Link.tupled)
     }
+
+    // TODO: remove filterNot
+    def linkSelectNotUrl(name: String): List[Link] = database.withConnection { implicit connection =>
+      SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(Link.tupled)
+        .filterNot(_.or(_.startsWith(".")))
+        .filterNot(_.or(_.contains("://")))
+    }
+
+    // TODO: remove filterNot
+    def linkSelectNotUrl(): List[Link] = database.withConnection { implicit connection =>
+      SQL"SELECT src, dst, alias FROM Link"
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(Link.tupled)
+        .filterNot(_.or(_.startsWith(".")))
+        .filterNot(_.or(_.contains("://")))
+    }
+
+    def insert(seq: Seq[Link]): Array[Int] = database.withConnection { implicit connection =>
+      if(seq.isEmpty) {
+        Array[Int]()
+      } else {
+        val values = seq.map(s => Seq[NamedParameter]('src -> s.src, 'dst -> s.dst, 'alias -> s.alias))
+        BatchSql(
+          "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
+          values.head,
+          values.tail: _*
+        ).execute()
+      }
+    }
+
+    def delete(name: String): Int = database.withConnection { implicit connection =>
+      SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    }
   }
 
   def pageSelectCount(): Long = PageTable.selectCount()
@@ -287,48 +322,11 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
     SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
   }
 
-  // TODO: move to LinkTable
-  def linkDelete(name: String): Int = database.withConnection { implicit connection =>
-    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
-  }
 
   def pageRename(name: String, newName: String): Int = database.withConnection { implicit connection =>
     SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
-  }
-
-  // TODO: move to LinkTable
-  def linkInsert(seq: Seq[Link]): Array[Int] = database.withConnection { implicit connection =>
-    if(seq.isEmpty) {
-      Array[Int]()
-    } else {
-      val values = seq.map(s => Seq[NamedParameter]('src -> s.src, 'dst -> s.dst, 'alias -> s.alias))
-      BatchSql(
-        "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
-        values.head,
-        values.tail: _*
-      ).execute()
-    }
-  }
-
-
-  // TODO: move to LinkTable
-  def linkSelect(name: String): List[Link] = database.withConnection { implicit connection =>
-    SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
-      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(Link.tupled)
-      .filterNot(_.or(_.startsWith(".")))
-      .filterNot(_.or(_.contains("://")))
-  }
-
-  // TODO: move to LinkTable
-  def linkSelect(): List[Link] = database.withConnection { implicit connection =>
-    SQL"SELECT src, dst, alias FROM Link"
-      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(Link.tupled)
-      .filterNot(_.or(_.startsWith(".")))
-      .filterNot(_.or(_.contains("://")))
   }
 }

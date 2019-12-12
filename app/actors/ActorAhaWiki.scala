@@ -67,8 +67,8 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
   def updateLink(page: Page): Array[Int] = {
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    ahaWikiDatabase.linkDelete(page.name)
-    ahaWikiDatabase.linkInsert(seqLink)
+    ahaWikiDatabase.LinkTable.delete(page.name)
+    ahaWikiDatabase.LinkTable.insert(seqLink)
   }
 }
 
