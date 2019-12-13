@@ -76,7 +76,7 @@ object AhaWikiDatabase {
 
 class AhaWikiDatabase()(implicit database:Database) {
 
-  object PageTable {
+  object Page {
     def selectCount(): Long = database.withConnection { implicit connection =>
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
@@ -158,21 +158,21 @@ class AhaWikiDatabase()(implicit database:Database) {
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on('name -> name)
       .as(rowParserPage singleOpt).map(flatten)
-      .map(Page.tupled)
+      .map(models.Page.tupled)
   }
 
   def pageSelectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on('name -> name)
       .as(rowParserPage singleOpt).map(flatten)
-      .map(Page.tupled)
+      .map(models.Page.tupled)
   }
 
   def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on('name -> name, 'revision -> revision)
       .as(rowParserPage singleOpt).map(flatten)
-      .map(Page.tupled)
+      .map(models.Page.tupled)
   }
 
   def pageSelectNameGroupByNameOrderByName: List[String] = database.withConnection { implicit connection =>

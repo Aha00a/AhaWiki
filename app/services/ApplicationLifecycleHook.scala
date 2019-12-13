@@ -35,7 +35,7 @@ class ApplicationLifecycleHook @Inject()(implicit
   //noinspection LanguageFeature
   actorSystem.scheduler.scheduleOnce(2 second, () => {
     Logger.info("OnApplicationStarted")
-    if (0 == AhaWikiDatabase().PageTable.selectCount()) {
+    if (0 == AhaWikiDatabase().Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
           val name = file.getName
