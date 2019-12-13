@@ -28,6 +28,9 @@
                     <script type="text/javascript">
                         $(function () {
                             $('#sync@id').click(function () {
+                                if(!confirm('Do you want re-fetch data from data source?'))
+                                    return false;
+
                                 $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>'))
                                 $.ajax({
                                     url: '@routes.Wiki.syncGoogleSpreadsheet()',
