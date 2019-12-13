@@ -88,7 +88,13 @@
                             <td>@(locationLastVisited.listVisited.lastOption.getOrElse(""))</td>
                             <td>@(locationLastVisited.listVisited.length)</td>
                             @for(s <- locationLastVisited.location.rest) {
-                                <td>@(s._2)</td>
+                                @if(s._2.startsWith("http")) {
+                                    <td>
+                                        <a href="@(s._2)" target="_blank">Link</a>
+                                    </td>
+                                } else {
+                                    <td>@(s._2)</td>
+                                }
                             }
                         </tr>
                     }
