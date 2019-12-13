@@ -4,14 +4,12 @@ import java.io.StringReader
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import com.aha00a.play.Implicits._
-import com.aha00a.supercsv.SupercsvUtil
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.{AhaWikiCache, ApplicationConf}
 import models.{AhaWikiDatabase, LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
-import play.api.{Configuration, Logger}
+import play.api.Configuration
 import play.api.mvc.Request
 
 object InterpreterMap {
@@ -41,7 +39,7 @@ object InterpreterMap {
       val seqHeaderName: Seq[String] = Seq("Name", "Address", "Score")
       val seqHeaderIndex: Seq[Int] = seqHeaderName.map(head.indexOf)
       val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqHeaderName.contains(v._1)).map(_._2)
-      val seqHeaderRest: Seq[String] = seqIndexRest.map(i => head.getOrElse(i, ""));
+      val seqHeaderRest: Seq[String] = seqIndexRest.map(i => head.getOrElse(i, ""))
 
       //noinspection ZeroIndexToHead
       val locations: Seq[Location] = tail.map(row => {
