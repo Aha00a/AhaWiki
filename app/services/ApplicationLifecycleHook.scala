@@ -32,7 +32,6 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   Logger.info("OnApplicationStart")
 
-  //noinspection LanguageFeature
   actorSystem.scheduler.scheduleOnce(2 second, () => {
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().Page.selectCount()) {
