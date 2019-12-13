@@ -17,7 +17,7 @@ import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
-import models.{AhaWikiDatabase, PageContent, WikiContext}
+import models.{AhaWikiDatabase, CosineSimilarity, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -72,7 +72,7 @@ class Wiki @Inject()(implicit
             s"= [$y-$m]-$d $weekdayName\n * "
           case _ => s"""= $name\ndescribe $name here."""
         }
-        Ok(views.html.Wiki.edit(models.AhaWikiDatabase.Page(name, 0, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.edit(models.Page(name, 0, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
@@ -100,7 +100,7 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[AhaWikiDatabase.CosineSimilarity] = ahaWikiDatabase.cosineSimilaritySelect(name)
+              val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiDatabase.cosineSimilaritySelect(name)
               val similarPageNames = cosineSimilarities.map(_.name2)
               val highScoredTerms = ahaWikiDatabase.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")

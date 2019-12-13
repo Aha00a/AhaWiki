@@ -8,7 +8,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, Using}
 import javax.inject._
 import models.AhaWikiDatabase
-import models.AhaWikiDatabase.Page
+import models.Page
 import play.api.Logger
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle

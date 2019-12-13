@@ -3,7 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
-import models.AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment
+import models.PageNameRevisionTimeAuthorRemoteAddressSizeComment
 import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.db.Database

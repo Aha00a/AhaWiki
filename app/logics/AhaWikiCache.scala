@@ -3,7 +3,7 @@ package logics
 import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
 import logics.wikis.Interpreters
-import models.{AhaWikiDatabase, LatLng, WikiContext}
+import models.{AhaWikiDatabase, LatLng, PageNameRevisionTimeAuthorRemoteAddressSizeComment, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -20,7 +20,7 @@ object AhaWikiCache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): List[AhaWikiDatabase.PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, db:Database): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
       AhaWikiDatabase().pageSelectPageList()
     }
 
@@ -63,7 +63,7 @@ object AhaWikiCache {
         case Some(latLng) => latLng
         case _ =>
           if (!(address == null) && !address.isEmpty) {
-            AhaWikiDatabase().GeocodeCacheTable.select(address) match {
+            AhaWikiDatabase().GeocodeCache.select(address) match {
               case Some(geocodeCache) =>
                 val latLng = geocodeCache.latLng
                 AhaWikiCache.AddressToLatLng.set(address, latLng)

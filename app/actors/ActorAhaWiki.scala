@@ -7,7 +7,7 @@ import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
-import models.AhaWikiDatabase.Page
+import models.Page
 import models.{AhaWikiDatabase, LatLng, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -49,7 +49,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
-          ahaWikiDatabase.GeocodeCacheTable.replace(address, latLng)
+          ahaWikiDatabase.GeocodeCache.replace(address, latLng)
           AhaWikiCache.AddressToLatLng.set(address, latLng)
         })
     }

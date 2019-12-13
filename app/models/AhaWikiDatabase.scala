@@ -7,72 +7,71 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
-import models.AhaWikiDatabase._
 import play.api.db.Database
 
 import scala.collection.immutable
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
+trait WithTime {
+  val time:Long
+
+  lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
+  lazy val localDate: LocalDate = localDateTime.toLocalDate
+  lazy val year: Int = localDate.getYear
+  lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
+
+  lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
+}
+
+case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
+
+case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
+  lazy val latLng: LatLng = LatLng(lat, lng)
+}
+
+case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: String) extends WithTime
+
+case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
+
+case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
+
+case class TermFrequency(name:String, term:String, frequency:Int) {
+  def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
+}
+
+case class Link(src:String, dst:String, alias:String) {
+  def or(a: String => Boolean):Boolean = a(src) || a(dst)
+}
+
+case class CosineSimilarity(name1: String, name2: String, similarity: Double)
+
+case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
+
+case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
+
+case class SearchResult(name:String, content:String, time:Long) {
+  def summarise(q: String): SearchResultSummary = {
+    def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
+    val lines = content.split("""(\r\n|\n)+""").toSeq
+    SearchResultSummary(
+      name,
+      lines
+        .zipWithIndex
+        .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
+        .map(_._2)
+        .flatMap(around(_))
+        .distinct
+        .filter(lines.isDefinedAt)
+        .splitBy((a, b) => a + 1 != b)
+        .map(_.map(i => (i + 1, lines(i)))).toSeq
+    )
+  }
+}
+
+
 object AhaWikiDatabase {
   def apply()(implicit db:Database): AhaWikiDatabase = new AhaWikiDatabase()
-
-  trait WithTime {
-    val time:Long
-
-    lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
-    lazy val localDate: LocalDate = localDateTime.toLocalDate
-    lazy val year: Int = localDate.getYear
-    lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
-
-    lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
-  }
-
-  case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
-
-  case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: String) extends WithTime
-
-  case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
-
-  case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
-
-  case class TermFrequency(name:String, term:String, frequency:Int) {
-    def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
-  }
-
-
-  case class Link(src:String, dst:String, alias:String) {
-    def or(a: String => Boolean):Boolean = a(src) || a(dst)
-  }
-
-  case class CosineSimilarity(name1: String, name2: String, similarity: Double)
-
-  case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
-
-  case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
-
-  case class SearchResult(name:String, content:String, time:Long) {
-    def summarise(q: String): SearchResultSummary = {
-      def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
-      val lines = content.split("""(\r\n|\n)+""").toSeq
-      SearchResultSummary(
-        name,
-        lines
-          .zipWithIndex
-          .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
-          .map(_._2)
-          .flatMap(around(_))
-          .distinct
-          .filter(lines.isDefinedAt)
-          .splitBy((a, b) => a + 1 != b)
-          .map(_.map(i => (i + 1, lines(i)))).toSeq
-        )
-    }
-  }
-
-  case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
-    lazy val latLng: LatLng = LatLng(lat, lng)
-  }
 }
 
 class AhaWikiDatabase()(implicit database:Database) {
@@ -83,11 +82,12 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
-  object GeocodeCacheTable {
+  object GeocodeCache {
+    val rowParser: RowParser[String ~ Double ~ Double ~ Date] = str("address") ~ double("lat") ~ double("lng") ~ date("created")
     def select(address: String): Option[GeocodeCache] = database.withConnection { implicit connection =>
       SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address = $address"
-        .as(str("address") ~ double("lat") ~ double("lng") ~ date("created") singleOpt).map(flatten)
-        .map(AhaWikiDatabase.GeocodeCache.tupled)
+        .as(rowParser singleOpt).map(flatten)
+        .map(models.GeocodeCache.tupled)
     }
 
     def replace(address: String, latLng: LatLng): Int = database.withConnection { implicit connection =>
@@ -144,7 +144,7 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
-  def pageSelect(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
+  def pageSelect(name: String, revision: Int): Option[Page] = {
     if (revision == 0) {
       pageSelectLastRevision(name)
     } else {
@@ -152,24 +152,26 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
+  private val rowParserPage: RowParser[String ~ Long ~ Long ~ String ~ String ~ String ~ String] = str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
+
   def pageSelectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on('name -> name)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def pageSelectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on('name -> name)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on('name -> name, 'revision -> revision)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 

@@ -1,4 +1,4 @@
-@(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.AhaWikiDatabase.Page], wikiLast:Option[models.AhaWikiDatabase.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Page], wikiLast:Option[models.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title, description) {
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
