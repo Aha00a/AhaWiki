@@ -6,7 +6,7 @@ import models.{AhaWikiDatabase, PageContent, WikiContext}
 object MacroInclude extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = doApply(argument, s => s)
   def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: WikiContext): String = {
-    val pageLastRevision = AhaWikiDatabase()(wikiContext.database).pageSelectLastRevision(argument)
+    val pageLastRevision = AhaWikiDatabase()(wikiContext.database).Page.pageSelectLastRevision(argument)
     if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))(wikiContext.request, wikiContext.cacheApi, wikiContext.database)) {
       pageLastRevision.map(w => Interpreters.interpret(preprocessor(w.content))).getOrElse("Error: " + argument)
     } else {

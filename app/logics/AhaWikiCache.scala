@@ -38,19 +38,19 @@ object AhaWikiCache {
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).pageSelectLastRevision(".header").map(_.content).getOrElse(""))
+      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).Page.pageSelectLastRevision(".header").map(_.content).getOrElse(""))
     }
   }
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).pageSelectLastRevision(".footer").map(_.content).getOrElse(""))
+      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).Page.pageSelectLastRevision(".footer").map(_.content).getOrElse(""))
     }
   }
 
   object Config extends CacheEntity {
     def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) {
-      AhaWikiDatabase().pageSelectLastRevision(".config").map(_.content).getOrElse("")
+      AhaWikiDatabase().Page.pageSelectLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 

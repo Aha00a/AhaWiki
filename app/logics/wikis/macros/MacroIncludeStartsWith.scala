@@ -11,7 +11,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
     case _ =>
       val list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.database)
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
-        val pageLastRevision = AhaWikiDatabase()(wikiContext.database).pageSelectLastRevision(page.name)
+        val pageLastRevision = AhaWikiDatabase()(wikiContext.database).Page.pageSelectLastRevision(page.name)
         if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))(wikiContext.request, wikiContext.cacheApi, wikiContext.database)) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {

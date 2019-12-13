@@ -19,6 +19,6 @@ class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
-    Ok(AhaWikiDatabase().pageSelectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+    Ok(AhaWikiDatabase().Page.pageSelectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
   }
 }

@@ -54,9 +54,9 @@ class Wiki @Inject()(implicit
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val pageFirstRevision = ahaWikiDatabase.pageSelectFirstRevision(name)
-    val pageLastRevision = ahaWikiDatabase.pageSelectLastRevision(name)
-    val pageSpecificRevision = ahaWikiDatabase.pageSelect(name, revision)
+    val pageFirstRevision = ahaWikiDatabase.Page.pageSelectFirstRevision(name)
+    val pageLastRevision = ahaWikiDatabase.Page.pageSelectLastRevision(name)
+    val pageSpecificRevision = ahaWikiDatabase.Page.pageSelect(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
@@ -136,8 +136,8 @@ class Wiki @Inject()(implicit
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
 
-        val beforePage = ahaWikiDatabase.pageSelectSpecificRevision(name, before)
-        val afterPage = ahaWikiDatabase.pageSelectSpecificRevision(name, after)
+        val beforePage = ahaWikiDatabase.Page.pageSelectSpecificRevision(name, before)
+        val afterPage = ahaWikiDatabase.Page.pageSelectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
@@ -178,7 +178,7 @@ class Wiki @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
-    val (latestText, latestRevision) = ahaWikiDatabase.pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
+    val (latestText, latestRevision) = ahaWikiDatabase.Page.pageSelectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
@@ -216,7 +216,7 @@ class Wiki @Inject()(implicit
   def delete(): Action[AnyContent] = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    ahaWikiDatabase.pageSelectLastRevision(name) match {
+    ahaWikiDatabase.Page.pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageDeleteWithRelatedData(name)
@@ -233,7 +233,7 @@ class Wiki @Inject()(implicit
   def deleteLastRevision(): Action[AnyContent] = PostAction { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    ahaWikiDatabase.pageSelectLastRevision(name) match {
+    ahaWikiDatabase.Page.pageSelectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageDeleteRevisionWithRelatedData(name, page.revision)
@@ -257,7 +257,7 @@ class Wiki @Inject()(implicit
 
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
-    ahaWikiDatabase.pageSelectLastRevision(pageName) match {
+    ahaWikiDatabase.Page.pageSelectLastRevision(pageName) match {
       case Some(page) =>
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
@@ -297,7 +297,7 @@ class Wiki @Inject()(implicit
   def rename(): Action[AnyContent] = PostAction { implicit request =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    (ahaWikiDatabase.pageSelectLastRevision(name), ahaWikiDatabase.pageSelectLastRevision(newName)) match {
+    (ahaWikiDatabase.Page.pageSelectLastRevision(name), ahaWikiDatabase.Page.pageSelectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageRename(name, newName)
