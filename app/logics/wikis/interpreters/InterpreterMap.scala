@@ -62,9 +62,7 @@ object InterpreterMap {
 
       implicit val configuration: Configuration = wikiContext.configuration
       val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-      val resultMap = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
-      val resultTable = InterpreterTable.interpret(PageContent("#!Table tsv 1 tablesorter\n" + pageContent.content))
-      resultMap + resultTable
+      views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
     }
   }
 }
