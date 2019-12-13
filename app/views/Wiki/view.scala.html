@@ -5,7 +5,7 @@
         $(function(){
             $('a[target=_blank]').hover(function () {
                 var href = $(this).attr('href');
-                var div = $('<div class="crawlerPreview"><img src="/public/img/ajax-loader.gif"/></div>')
+                var div = $('<div class="crawlerPreview"><div class="circle"/></div>')
                     .attr('data-href', href)
                     .css({
                         position: 'absolute',

@@ -582,15 +582,42 @@ html, body {
 			display: none;
 		}
 	}
+
+	.circleWithRotateAnimation(@size, @thickness) {
+		width: @size;
+		height: @size;
+		border-radius: @size * 10;
+		border: @thickness solid rgba(0,0,0, 0.5);
+		border-top: @thickness solid rgba(255, 255, 255, 0.5);
+		color: rgba(0, 0, 0, 0);
+		-webkit-animation: spin 2s linear infinite; /* Safari */
+		animation: spin 2s linear infinite;
+		@-webkit-keyframes spin {
+			0% { -webkit-transform: rotate(0deg); }
+			100% { -webkit-transform: rotate(360deg); }
+		}
+
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+	}
+
 	.crawlerPreview {
 		border: 1px solid #ccc;
 		background-color: #fff;
 		padding: 20px;
 		max-width: 70%;
 		.boxShadow;
+		>.circle {
+			@size: 100px;
+			@thickness: 20px;
+			.circleWithRotateAnimation(@size, @thickness);
+		}
+
 		img.preview {
 			float: left;
-			width: 128px;
+			min-width: 128px;
 			max-width: 128px;
 			max-height: 128px;
 			height: auto;
@@ -660,32 +687,12 @@ html, body {
 		&.circle {
 			@size: 10vmin;
 			@thickness: 5vmin;
+			.circleWithRotateAnimation(@size, @thickness);
 			position: fixed;
 			top: 50%;
 			left: 50%;
 			margin-top: -(@size )/2 - @thickness;
 			margin-left: -(@size)/2 - @thickness;
-
-			width: @size;
-			height: @size;
-
-			border-radius: @size * 10;
-			border: @thickness solid rgba(0,0,0, 0.5);
-			border-top: @thickness solid rgba(255, 255, 255, 0.5);
-
-			color: rgba(0, 0, 0, 0);
-
-			-webkit-animation: spin 2s linear infinite; /* Safari */
-			animation: spin 2s linear infinite;
-			@-webkit-keyframes spin {
-				0% { -webkit-transform: rotate(0deg); }
-				100% { -webkit-transform: rotate(360deg); }
-			}
-
-			@keyframes spin {
-				0% { transform: rotate(0deg); }
-				100% { transform: rotate(360deg); }
-			}
 		}
 	}
 }
