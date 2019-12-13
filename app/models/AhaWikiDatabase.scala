@@ -77,11 +77,11 @@ object AhaWikiDatabase {
 class AhaWikiDatabase()(implicit database:Database) {
 
   object Page {
+    private val rowParser = str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
+
     def selectCount(): Long = database.withConnection { implicit connection =>
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
-
-    private val rowParserPage: RowParser[String ~ Long ~ Long ~ String ~ String ~ String ~ String] = str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
 
     def pageSelect(name: String, revision: Int): Option[Page] = {
       if (revision == 0) {
@@ -94,27 +94,27 @@ class AhaWikiDatabase()(implicit database:Database) {
     def pageSelectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
         .on('name -> name)
-        .as(rowParserPage singleOpt).map(flatten)
+        .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def pageSelectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
         .on('name -> name)
-        .as(rowParserPage singleOpt).map(flatten)
+        .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
         .on('name -> name, 'revision -> revision)
-        .as(rowParserPage singleOpt).map(flatten)
+        .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
   }
 
   object GeocodeCache {
-    val rowParser: RowParser[String ~ Double ~ Double ~ Date] = str("address") ~ double("lat") ~ double("lng") ~ date("created")
+    private val rowParser = str("address") ~ double("lat") ~ double("lng") ~ date("created")
     def select(address: String): Option[GeocodeCache] = database.withConnection { implicit connection =>
       SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address = $address"
         .as(rowParser singleOpt).map(flatten)
