@@ -144,8 +144,6 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
-  def pageSelectCount(): Long = PageTable.selectCount()
-
   def pageSelect(name: String, revision: Int): Option[AhaWikiDatabase.Page] = {
     if (revision == 0) {
       pageSelectLastRevision(name)
