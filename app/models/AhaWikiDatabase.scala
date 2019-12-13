@@ -28,13 +28,11 @@ object AhaWikiDatabase {
     lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
   }
 
-  // TODO: Option comment? change db scheme not null
-  case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: Option[String]) extends WithTime
+  case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
 
-  // TODO: Option comment? change db scheme not null
-  case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: Option[String]) extends WithTime
+  case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: String) extends WithTime
 
-  case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: Option[String]) extends WithTime
+  case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
 
   case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
 
@@ -159,21 +157,21 @@ class AhaWikiDatabase()(implicit database:Database) {
   def pageSelectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on('name -> name)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
+      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def pageSelectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on('name -> name)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
+      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
     SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on('name -> name, 'revision -> revision)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment").? singleOpt).map(flatten)
+      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment") singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
@@ -185,7 +183,7 @@ class AhaWikiDatabase()(implicit database:Database) {
   def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = database.withConnection { implicit connection =>
     SQL("SELECT revision, time, author, remoteAddress, comment FROM Page WHERE name = {name} ORDER BY revision DESC")
       .on('name -> name)
-      .as(long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("comment").? *).map(flatten)
+      .as(long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
       .map(PageRevisionTimeAuthorRemoteAddressComment.tupled)
   }
 
@@ -201,7 +199,7 @@ class AhaWikiDatabase()(implicit database:Database) {
            |    ) NV ON w.name = NV.name AND w.revision = NV.revision
            |    ORDER BY name
            |""".stripMargin)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ long("size") ~ str("comment").? *).map(flatten)
+      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ long("size") ~ str("comment") *).map(flatten)
       .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
   }
 

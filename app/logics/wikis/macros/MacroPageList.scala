@@ -16,7 +16,7 @@ object MacroPageList extends TraitMacro {
         s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
         s"[${t.author}]",
         s"${t.remoteAddress}",
-        s"${t.comment.getOrElse(" ")}"
+        s"${t.comment}"
       ).mkString("\t")
     }.mkString("\n")
   ))

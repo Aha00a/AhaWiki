@@ -41,12 +41,12 @@ class ApplicationLifecycleHook @Inject()(implicit
           val name = file.getName
           implicit val codec: Codec = Codec.UTF8
           val body = Using(scala.io.Source.fromFile(file))(_.mkString)
-          Page(name, 1, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", body, Some("initial"))
+          Page(name, 1, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", body, "initial")
         })
       }
 
       getArrayPageFromFile.foreach(p => {
-        AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment.getOrElse(""))
+        AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment)
         actorAhaWiki ! Calculate(p.name)
       })
     }
