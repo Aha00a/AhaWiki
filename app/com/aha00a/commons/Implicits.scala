@@ -58,6 +58,7 @@ object Implicits {
 
   implicit class RichString(s:String) {
     def isNullOrEmpty: Boolean = s == null || s.isEmpty
+    def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
     def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
     def getOrElse(s:String): String = toOption.getOrElse(s)
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")

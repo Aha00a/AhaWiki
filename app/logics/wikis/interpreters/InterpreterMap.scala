@@ -12,6 +12,8 @@ import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
 import play.api.mvc.Request
 
+import scala.collection.mutable
+
 object InterpreterMap {
   case class Location(
                        name:String,
@@ -58,9 +60,55 @@ object InterpreterMap {
         LocationListVisited(l, listDates)
       })
 
+      val seqAddressLocation: Seq[(Seq[String], LocationListVisited)] = seqLocationLastVisited
+        .filterNot(_.location.address.isNullOrEmpty)
+        .map(l => (l.location.address.split(" ").toSeq.padTo(3, ""), l))
+
+      //noinspection ZeroIndexToHead
+      val mapSeqTuple = seqAddressLocation.groupBy(_._1(0))
+      val mapMapSeqTuple = mapSeqTuple.mapValues(_.groupBy(_._1(1)))
+      val mapMapMapSeqTuple = mapMapSeqTuple.mapValues(_.mapValues(_.groupBy(_._1(2))))
+      val mapMapMapSeq = mapMapMapSeqTuple.mapValues(_.mapValues(_.mapValues(_.map(_._2))))
+
+      val buffer = mutable.Buffer[String]()
+      for ((k1, v1) <- mapMapMapSeq.toList.sortBy(_._1)) {
+        if(!k1.isNullOrEmpty) buffer += s"== $k1"
+        for ((k2, v2) <- v1.toList.sortBy(_._1)) {
+          if(!k2.isNullOrEmpty) buffer += s"=== $k2"
+          for ((k3, v3) <- v2.toList.sortBy(_._1)) {
+            if(!k3.isNullOrEmpty) buffer += s"==== $k3"
+            for (v <- v3) {
+              buffer += s" * ${v.location.name} - ${v.location.score}"
+              buffer += s"  * ${v.location.address}"
+              buffer ++= v.location.rest.filterNot(_._2.isNullOrEmpty).map(v => s"  * ${v._1}: ${v._2}")
+              buffer += ""
+            }
+          }
+        }
+      }
+
       implicit val configuration: Configuration = wikiContext.configuration
       val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-      views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
+      views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString() +
+        new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
     }
   }
+
+//  def test() = {
+//
+//    class VV;
+//    class NestedMap() {
+//      val map:mutable.Map[String, Object] = mutable.Map()
+//      def get(key:Seq[String], vv:VV) = {
+//        val head = key.head
+//        val tail = key.tail
+//        if(tail.length == 0) {
+//          map.getOrElseUpdate(head, () => new mutable.Map[String, Object]())
+//        } else {
+//
+//        }
+//      }
+//    }
+//
+//  }
 }
