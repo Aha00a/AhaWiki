@@ -83,29 +83,29 @@ class AhaWikiDatabase()(implicit database:Database) {
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
     }
 
-    def pageSelect(name: String, revision: Int): Option[Page] = {
+    def select(name: String, revision: Int): Option[Page] = {
       if (revision == 0) {
-        pageSelectLastRevision(name)
+        selectLastRevision(name)
       } else {
-        pageSelectSpecificRevision(name, revision)
+        selectSpecificRevision(name, revision)
       }
     }
 
-    def pageSelectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
+    def selectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
-    def pageSelectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
+    def selectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
-    def pageSelectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
+    def selectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
       SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
         .on('name -> name, 'revision -> revision)
         .as(rowParser singleOpt).map(flatten)

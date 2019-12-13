@@ -30,7 +30,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      ahaWikiDatabase.Page.pageSelectLastRevision(name) foreach { page =>
+      ahaWikiDatabase.Page.selectLastRevision(name) foreach { page =>
         updateCosineSimilarity(name, page)
         updateLink(page)
       }
