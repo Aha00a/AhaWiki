@@ -149,7 +149,7 @@ class InterpreterWiki {
   def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
     var s = line
     for((regex, replacement) <- List(
-      ("""\<""".r, "&lt;"),
+      ("""<""".r, "&lt;"),
       ("""'''(.+?)'''""".r, "<b>$1</b>"),
       ("""''(.+?)''""".r, "<i>$1</i>"),
       ("""__(.+?)__""".r, "<u>$1</u>"),
