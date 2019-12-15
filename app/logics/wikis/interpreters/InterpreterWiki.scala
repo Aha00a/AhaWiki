@@ -177,7 +177,12 @@ object InterpreterWiki {
       val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
       val attrTarget: String = if (external) " target=\"_blank\"" else ""
       val display: String = aliasWithDefault
-      val attrCss = if (external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?") || set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))) { "" } else { """ class="missing"""" }
+      val attrCss = if (
+        external ||
+          uriNormalized.startsWith("#") ||
+          uriNormalized.startsWith("?") ||
+          set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
+      ) { "" } else { """ class="missing"""" }
 
       s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
     }
