@@ -88,7 +88,13 @@
                 <tbody>
                     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
                         <tr>
-                            <td>@(locationLastVisited.location.name)</td>
+                            <td>
+                                @if(locationLastVisited.location.exists) {
+                                    <a href="@(locationLastVisited.location.name)">@(locationLastVisited.location.name)</a>
+                                } else {
+                                    @(locationLastVisited.location.name)
+                                }
+                            </td>
                             <td>
                                 @if(locationLastVisited.location.urlMap){
                                     <a href="@(locationLastVisited.location.urlMap)" target="_blank">@(locationLastVisited.location.address)</a>

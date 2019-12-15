@@ -11,6 +11,8 @@ import models.{AhaWikiDatabase, LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
+import play.api.cache.CacheApi
+import play.api.db.Database
 import play.api.mvc.Request
 
 import scala.collection.mutable
@@ -18,6 +20,7 @@ import scala.collection.mutable
 object InterpreterMap {
   case class Location(
                        name:String,
+                       exists: Boolean,
                        address:String,
                        score:Double,
                        rest:Seq[(String, String)]
@@ -34,6 +37,9 @@ object InterpreterMap {
   case class LocationListVisited(location: Location, listVisited: List[String])
 
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val database: Database = wikiContext.database
+    val setPageName: Set[String] = AhaWikiCache.PageNameSet.get()
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
       val head: Seq[String] = rowColumnData.head
@@ -47,8 +53,10 @@ object InterpreterMap {
 
       //noinspection ZeroIndexToHead
       val locations: Seq[Location] = tail.map(row => {
+        val name = row.getOrElse(seqHeaderIndex(0), "")
         Location(
-          row.getOrElse(seqHeaderIndex(0), ""),
+          name,
+          setPageName.contains(name),
           row.getOrElse(seqHeaderIndex(1), ""),
           row.getOrElse(seqHeaderIndex(2), "").toOption.map(_.toDouble).getOrElse(0),
           seqIndexRest
@@ -80,7 +88,11 @@ object InterpreterMap {
           for ((k3, v3) <- v2.toList.sortBy(_._1)) {
             if(!k3.isNullOrEmpty) buffer += s"==== $k3"
             for (v <- v3) {
-              buffer += s" * ${v.location.name} - ${v.location.score}"
+              if(v.location.exists) {
+                buffer += s" * [${v.location.name}] - ${v.location.score}"
+              } else {
+                buffer += s" * ${v.location.name} - ${v.location.score}"
+              }
               buffer += s"  * ${v.location.address}"
               buffer ++= v.location.rest.filterNot(_._2.isNullOrEmpty).map(v => s"  * ${v._1}: ${v._2}")
               buffer += ""
@@ -96,22 +108,4 @@ object InterpreterMap {
       htmlStringMap + htmlStringWiki
     }
   }
-
-//  def test() = {
-//
-//    class VV;
-//    class NestedMap() {
-//      val map:mutable.Map[String, Object] = mutable.Map()
-//      def get(key:Seq[String], vv:VV) = {
-//        val head = key.head
-//        val tail = key.tail
-//        if(tail.length == 0) {
-//          map.getOrElseUpdate(head, () => new mutable.Map[String, Object]())
-//        } else {
-//
-//        }
-//      }
-//    }
-//
-//  }
 }
