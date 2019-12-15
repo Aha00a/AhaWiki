@@ -9,37 +9,32 @@ object InterpreterWikiSyntaxPreview {
     val argument = pageContent.argument.mkString(" ")
     val body = pageContent.content
     if (argument == "") {
-      s"""<table class="wikiSyntax">
-         |    <thead>
-         |        <tr>
-         |            <th>Raw</th>
-         |            <th>Preview</th>
-         |        </tr>
-         |    </thead>
-         |    <tbody>
-         |        <tr>
-         |            <td class="raw">${Interpreters.interpret("#!text\n" + body)}</td>
-         |            <td class="preview">${Interpreters.interpret("#!wiki\n" + body)}</td>
-         |        </tr>
-         |    </tbody>
-         |</table>""".stripMargin
+      val raw = Interpreters.interpret("#!text\n" + body)
+      val preview = Interpreters.interpret("#!wiki\n" + body)
+      render(raw, preview)
     }
     else
     {
-      s"""<table class="wikiSyntax">
-         |    <thead>
-         |        <tr>
-         |            <th>Row</th>
-         |            <th>Preview</th>
-         |        </tr>
-         |    </thead>
-         |    <tbody>
-         |        <tr>
-         |            <td class="raw">${Interpreters.interpret(s"#!text\n[[[#!$argument\n" + body + "\n]]]")}</td>
-         |            <td class="preview">${Interpreters.interpret(s"#!$argument\n" + body)}</td>
-         |        </tr>
-         |    </tbody>
-         |</table>""".stripMargin
+      val raw = Interpreters.interpret(s"#!text\n[[[#!$argument\n" + body + "\n]]]")
+      val preview = Interpreters.interpret(s"#!$argument\n" + body)
+      render(raw, preview)
     }
+  }
+  
+  private def render(raw: String, preview: String): String = {
+    s"""<table class="wikiSyntax">
+       |    <thead>
+       |        <tr>
+       |            <th>Raw</th>
+       |            <th>Preview</th>
+       |        </tr>
+       |    </thead>
+       |    <tbody>
+       |        <tr>
+       |            <td class="raw">$raw</td>
+       |            <td class="preview">$preview</td>
+       |        </tr>
+       |    </tbody>
+       |</table>""".stripMargin
   }
 }
