@@ -8,6 +8,8 @@ import logics.wikis._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.Link
 import models.WikiContext
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
@@ -199,7 +201,9 @@ object InterpreterWiki {
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
-    val set: Set[String] = AhaWikiCache.PageNameSet.get()(wikiContext.cacheApi, wikiContext.database)
+    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val database: Database = wikiContext.database
+    val set: Set[String] = AhaWikiCache.PageNameSet.get()
     //noinspection ScalaUnusedSymbol
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()
