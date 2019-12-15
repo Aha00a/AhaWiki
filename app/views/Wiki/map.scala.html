@@ -68,21 +68,30 @@
                 <thead>
                     <tr>
                         @for(headerName <- seqHeaderName) {
-                            <th>@headerName</th>
+                            <th rowspan="2">@headerName</th>
                         }
-                        <th>LastVisited</th>
-                        <th>FirstVisited</th>
-                        <th>VisitCount</th>
+                        <th colspan="3">Visited</th>
                         @for(headerName <- seqHeaderRest) {
-                            <th>@headerName</th>
+                            <th rowspan="2">@headerName</th>
                         }
+                    </tr>
+                    <tr>
+                        <th>Last</th>
+                        <th>First</th>
+                        <th>Count</th>
                     </tr>
                 </thead>
                 <tbody>
                     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
                         <tr>
                             <td>@(locationLastVisited.location.name)</td>
-                            <td>@(locationLastVisited.location.address)</td>
+                            <td>
+                                @if(locationLastVisited.location.urlMap){
+                                    <a href="@(locationLastVisited.location.urlMap)" target="_blank">@(locationLastVisited.location.address)</a>
+                                } else {
+                                    @(locationLastVisited.location.address)
+                                }
+                            </td>
                             <td>@(locationLastVisited.location.score)</td>
                             <td>@(locationLastVisited.listVisited.headOption.getOrElse(""))</td>
                             <td>@(locationLastVisited.listVisited.lastOption.getOrElse(""))</td>

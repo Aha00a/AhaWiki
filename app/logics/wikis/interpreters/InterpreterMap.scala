@@ -1,6 +1,7 @@
 package logics.wikis.interpreters
 
 import java.io.StringReader
+import java.net.URLEncoder
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
@@ -27,6 +28,7 @@ object InterpreterMap {
     val fillColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, ${score / 10})"
     val labelColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
     val scale:Double = score
+    val urlMap:String = address.toOption.map(u => s"https://www.google.com/maps/search/${URLEncoder.encode(u, "utf-8")}").getOrElse("")
   }
 
   case class LocationListVisited(location: Location, listVisited: List[String])
