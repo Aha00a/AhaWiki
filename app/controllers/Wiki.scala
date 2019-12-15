@@ -177,12 +177,14 @@ class Wiki @Inject()(implicit
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val (revision, body, comment) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text)).bindFromRequest.get
-    val (latestText, latestRevision) = ahaWikiDatabase.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0))
+    val epochNano = DateTimeUtil.nowEpochNano
+
+    val (revision, body, comment, minorEdit) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean)).bindFromRequest.get
+    val (latestText, latestRevision, latestTime) = ahaWikiDatabase.Page.selectLastRevision(name).map(w => (w.content, w.revision, w.time)).getOrElse(("", 0, epochNano))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        pageInsertLogic(request, name, revision + 1, body, comment)
+        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else epochNano,  body, comment)
         Ok("")
       } else {
         Conflict("")
@@ -192,11 +194,11 @@ class Wiki @Inject()(implicit
     }
   }
 
-  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
+  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, epochNano: Long, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
     ahaWikiDatabase.pageInsert(
       name,
       revision,
-      DateTimeUtil.nowEpochNano,
+      epochNano,
       SessionLogic.getId(request).getOrElse("anonymous"),
       request.remoteAddressWithXRealIp,
       body,
@@ -280,7 +282,7 @@ class Wiki @Inject()(implicit
           })
           val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
-            pageInsertLogic(request, pageName, page.revision + 1, body, "Sync Google Spreadsheet")
+            pageInsertLogic(request, pageName, page.revision + 1, DateTimeUtil.nowEpochNano, body, "Sync Google Spreadsheet")
             Ok("")
           } else {
             Ok("NotChanged")

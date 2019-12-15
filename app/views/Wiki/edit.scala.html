@@ -116,7 +116,12 @@
                             @CSRF.formField
                             <input type="hidden" name="revision" value="@page.revision"/>
                             <textarea name="text" style="min-height: 500px;" autofocus="autofocus">@page.content</textarea>
-                            <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
+                            <div>
+                                <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
+                                @if(page.revision != 0) {
+                                    <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit</label>
+                                }
+                            </div>
                             <input type="submit" value="Save"/>
                         }
                         </td>
