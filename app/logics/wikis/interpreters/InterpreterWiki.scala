@@ -183,14 +183,6 @@ object InterpreterWiki {
     }
 
     def toLink(src:String) = Link(src, uriNormalized, alias)
-
-    def toDisplay: String = {
-      if(alias == null || alias.isEmpty) {
-        s"[$uri]"
-      } else {
-        s"[$uri] aliased by $alias"
-      }
-    }
   }
 
   val regexLink: Regex =
