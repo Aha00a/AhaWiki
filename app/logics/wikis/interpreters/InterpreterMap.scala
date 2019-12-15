@@ -91,8 +91,9 @@ object InterpreterMap {
 
       implicit val configuration: Configuration = wikiContext.configuration
       val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-      views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString() +
-        new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
+      val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
+      val htmlStringWiki: String = new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
+      htmlStringMap + htmlStringWiki
     }
   }
 
