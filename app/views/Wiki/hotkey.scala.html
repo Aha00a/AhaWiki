@@ -1,7 +1,7 @@
 @(supported:String = "")(implicit request: play.api.mvc.Request[Any])
 @import helper._
 @import com.aha00a.commons.Implicits._
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js" integrity="sha256-PsW8RLr/0Hdq8VSZyHHLFxO6t3ltKo3L3ULL1xByhhc=" crossorigin="anonymous"></script>
 <script type="text/javascript">
     @for(hotkeys <- Seq(Map(
         'f' -> "go('/')",
