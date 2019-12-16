@@ -135,8 +135,8 @@
             @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
                 (function() {
                     var latLng = {
-                        lat: @locationLastVisited.location.latLng.lat,
-                        lng: @locationLastVisited.location.latLng.lng
+                        lat: @locationLastVisited.location.latLng.latWithNoise,
+                        lng: @locationLastVisited.location.latLng.lngWithNoise
                     };
                     var marker = new google.maps.Marker({
                         position: latLng,
