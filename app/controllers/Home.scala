@@ -4,12 +4,18 @@ import java.net.URLEncoder
 
 import com.aha00a.commons.Implicits._
 import javax.inject._
-import logics.AhaWikiCache
+import logics.{AhaWikiCache, ApplicationConf}
 import models.{AhaWikiDatabase, PageContent}
+import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.mvc._
 
-class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
+class Home @Inject() (
+                       implicit
+                       cacheApi: CacheApi,
+                       database:play.api.db.Database,
+                       configuration: Configuration
+                     ) extends Controller {
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }
@@ -20,5 +26,11 @@ class Home @Inject() (implicit cacheApi: CacheApi, database:play.api.db.Database
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     Ok(AhaWikiDatabase().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+  }
+
+  def adsTxt: Action[AnyContent] = Action { implicit request =>
+    ApplicationConf().AhaWiki.google.AdSense.adsTxtContent().toOption
+      .map(s => Ok(s))
+      .getOrElse(NotFound(""))
   }
 }

@@ -11,6 +11,7 @@ GET         /r                                 controllers.Home.random
 GET         /search                            controllers.Search.index(q:String?="")
 POST        /diary                             controllers.Diary.write()
 GET         /robots.txt                        controllers.Home.robotsTxt
+GET         /ads.txt                           controllers.Home.adsTxt
 
 GET         /w/*nameEncoded                    controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
 POST        /w/*nameEncoded                    controllers.Wiki.save(nameEncoded:String)

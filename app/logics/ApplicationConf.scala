@@ -31,6 +31,9 @@ class ApplicationConf(configuration: Configuration) {
           }
         }
       }
+      object AdSense {
+        def adsTxtContent(): String = configuration.getString(fqn).getOrElse("")
+      }
     }
   }
 }
