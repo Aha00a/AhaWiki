@@ -1,5 +1,7 @@
 package controllers
 
+import java.util.Date
+
 import akka.actor.ActorRef
 import com.aha00a.commons.Implicits._
 import javax.inject._
@@ -23,7 +25,7 @@ class Search @Inject()(implicit
       q.toOption.map(
         AhaWikiDatabase().pageSearch(_)
           .filter(sr => WikiPermission.isReadable(PageContent(sr.content)))
-          .sortBy(-_.time)
+          .sortBy(_.dateTime)(Ordering[Date].reverse)
           .partition(_.name == q)
           .concat()
           .map(_.summarise(q))

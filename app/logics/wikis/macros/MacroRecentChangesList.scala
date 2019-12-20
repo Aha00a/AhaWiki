@@ -16,8 +16,8 @@ object MacroRecentChangesList extends TraitMacro {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val db: Database = wikiContext.database
     argument match {
-      case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.time).reverse)
-      case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.time).reverse.take(i.toInt))
+      case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse)
+      case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(i.toInt))
       case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
     }
   }

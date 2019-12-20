@@ -3,7 +3,7 @@ package controllers
 import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.util.Locale
+import java.util.{Date, Locale}
 
 import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
@@ -72,7 +72,7 @@ class Wiki @Inject()(implicit
             s"= [$y-$m]-$d $weekdayName\n * "
           case _ => s"""= $name\ndescribe $name here."""
         }
-        Ok(views.html.Wiki.edit(models.Page(name, 0, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val relatedPages = getRelatedPages(name)
         val additionalInfo =
@@ -177,14 +177,12 @@ class Wiki @Inject()(implicit
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val epochNano = DateTimeUtil.nowEpochNano
-
     val (revision, body, comment, minorEdit) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean)).bindFromRequest.get
-    val (latestText, latestRevision, latestTime) = ahaWikiDatabase.Page.selectLastRevision(name).map(w => (w.content, w.revision, w.time)).getOrElse(("", 0, epochNano))
+    val (latestText, latestRevision, latestTime) = ahaWikiDatabase.Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else epochNano,  body, comment)
+        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else new Date(),  body, comment)
         Ok("")
       } else {
         Conflict("")
@@ -194,11 +192,11 @@ class Wiki @Inject()(implicit
     }
   }
 
-  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, epochNano: Long, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
+  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, dateTime: Date, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
     ahaWikiDatabase.pageInsert(
       name,
       revision,
-      epochNano,
+      dateTime,
       SessionLogic.getId(request).getOrElse("anonymous"),
       request.remoteAddressWithXRealIp,
       body,
@@ -282,7 +280,7 @@ class Wiki @Inject()(implicit
           })
           val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
-            pageInsertLogic(request, pageName, page.revision + 1, DateTimeUtil.nowEpochNano, body, "Sync Google Spreadsheet")
+            pageInsertLogic(request, pageName, page.revision + 1, new Date(), body, "Sync Google Spreadsheet")
             Ok("")
           } else {
             Ok("NotChanged")
@@ -303,7 +301,7 @@ class Wiki @Inject()(implicit
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
           ahaWikiDatabase.pageRename(name, newName)
-          ahaWikiDatabase.pageInsert(name, 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          ahaWikiDatabase.pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")

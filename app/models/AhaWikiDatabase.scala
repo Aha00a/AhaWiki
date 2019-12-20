@@ -14,9 +14,9 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 
 trait WithTime {
-  val time:Long
+  val dateTime:Date
 
-  lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.fromEpochNano(time)
+  lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.convert(dateTime)
   lazy val localDate: LocalDate = localDateTime.toLocalDate
   lazy val year: Int = localDate.getYear
   lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
@@ -24,17 +24,17 @@ trait WithTime {
   lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
 }
 
-case class Page(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
+case class Page(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
 
 case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
   lazy val latLng: LatLng = LatLng(lat, lng)
 }
 
-case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, time: Long, author: String, remoteAddress: String, comment: String) extends WithTime
+case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String) extends WithTime
 
-case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, time: Long, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
+case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, dateTime: Date, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
 
-case class PageNameRevisionTime(name: String, revision: Int, time: Long) extends WithTime
+case class PageNameRevisionTime(name: String, revision: Int, dateTime: Date) extends WithTime
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
   def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
@@ -50,7 +50,7 @@ case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2
 
 case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
 
-case class SearchResult(name:String, content:String, time:Long) {
+case class SearchResult(name:String, content:String, dateTime: Date) {
   def summarise(q: String): SearchResultSummary = {
     def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
     val lines = content.split("""(\r\n|\n)+""").toSeq
@@ -77,7 +77,7 @@ object AhaWikiDatabase {
 class AhaWikiDatabase()(implicit database:Database) {
 
   object Page {
-    private val rowParser = str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
+    private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
 
     def selectCount(): Long = database.withConnection { implicit connection =>
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
@@ -92,21 +92,21 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
 
     def selectLastRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
-      SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectFirstRevision(name: String): Option[Page] = database.withConnection { implicit connection =>
-      SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectSpecificRevision(name: String, revision: Int): Option[Page] = database.withConnection { implicit connection =>
-      SQL("SELECT name, revision, time, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
         .on('name -> name, 'revision -> revision)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
@@ -181,36 +181,36 @@ class AhaWikiDatabase()(implicit database:Database) {
   }
 
   def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = database.withConnection { implicit connection =>
-    SQL("SELECT revision, time, author, remoteAddress, comment FROM Page WHERE name = {name} ORDER BY revision DESC")
+    SQL("SELECT revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = {name} ORDER BY revision DESC")
       .on('name -> name)
-      .as(long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
+      .as(long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
       .map(PageRevisionTimeAuthorRemoteAddressComment.tupled)
   }
 
   def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = database.withConnection { implicit connection =>
-    SQL( """SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, LENGTH(content) size, w.comment
+    SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, LENGTH(content) size, w.comment
            |    FROM Page w
            |    INNER JOIN (
            |        SELECT
            |            name, MAX(revision) revision
            |            FROM Page
            |            GROUP BY name
-           |            ORDER BY MAX(time) DESC
+           |            ORDER BY MAX(dateTime) DESC
            |    ) NV ON w.name = NV.name AND w.revision = NV.revision
            |    ORDER BY name
            |""".stripMargin)
-      .as(str("name") ~ long("revision") ~ long("time") ~ str("author") ~ str("remoteAddress") ~ long("size") ~ str("comment") *).map(flatten)
+      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ long("size") ~ str("comment") *).map(flatten)
       .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
   }
 
-  def pageInsert(name: String, revision: Long, time: Long, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = database.withConnection { implicit connection =>
-    SQL"INSERT INTO Page (name, revision, time, author, remoteAddress, content, comment) values ($name, $revision, $time, $author, $remoteAddress, $content, $comment)".executeInsert()
+  def pageInsert(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = database.withConnection { implicit connection =>
+    SQL"INSERT INTO Page (name, revision, dateTime, author, remoteAddress, content, comment) values ($name, $revision, $dateTime, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
 
 
   def pageSearch(q:String): immutable.Seq[SearchResult] = database.withConnection { implicit connection =>
     SQL("""
-SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comment
+SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.comment
      FROM Page w
      INNER JOIN (
          SELECT
@@ -223,7 +223,7 @@ SELECT w.name, w.revision, w.time, w.author, w.remoteAddress, w.content, w.comme
          w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
       .on('q -> q)
-      .as(str("name") ~ str("content") ~ long("time") *).map(flatten).map(SearchResult.tupled)
+      .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
   }
 
 

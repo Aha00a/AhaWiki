@@ -14,7 +14,7 @@ object MacroRecentChanges extends TraitMacro {
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
               case (yearMonth, groupedByYearMonth) =>
                 s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
-                  groupedByYearMonth.sortBy(_.time)(desc).map(t => {
+                  groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => {
                     Seq(
                       s"'''[${t.name}]'''",
                       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",

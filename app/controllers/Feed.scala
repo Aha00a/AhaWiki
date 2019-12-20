@@ -44,7 +44,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", LocalDateTime.now()) // TODO
-    val entries = AhaWikiCache.PageList.get().sortBy(_.time).reverse.take(15).map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
+    val entries = AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(15).map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}
@@ -75,7 +75,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
     }
 
     val channel = Channel("title", "description", "link", LocalDateTime.now(), LocalDateTime.now(), 180) // TODO
-    val items = AhaWikiCache.PageList.get.sortBy(_.time).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
+    val items = AhaWikiCache.PageList.get.sortBy(_.dateTime).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
 
     Ok(
       <rss version="2.0">

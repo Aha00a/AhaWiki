@@ -1,6 +1,7 @@
 package services
 
 import java.io.File
+import java.util.Date
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
@@ -40,12 +41,12 @@ class ApplicationLifecycleHook @Inject()(implicit
           val name = file.getName
           implicit val codec: Codec = Codec.UTF8
           val body = Using(scala.io.Source.fromFile(file))(_.mkString)
-          Page(name, 1, DateTimeUtil.nowEpochNano, "AhaWiki", "127.0.0.1", body, "initial")
+          Page(name, 1, new Date(), "AhaWiki", "127.0.0.1", body, "initial")
         })
       }
 
       getArrayPageFromFile.foreach(p => {
-        AhaWikiDatabase().pageInsert(p.name, p.revision, p.time, p.author, p.remoteAddress, p.content, p.comment)
+        AhaWikiDatabase().pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
         actorAhaWiki ! Calculate(p.name)
       })
     }

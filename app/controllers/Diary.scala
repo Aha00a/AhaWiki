@@ -2,7 +2,7 @@ package controllers
 
 import java.time.LocalDateTime
 import java.time.format.TextStyle
-import java.util.Locale
+import java.util.{Date, Locale}
 
 import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
@@ -47,7 +47,7 @@ class Diary @Inject()(implicit
         else
           s"$latestText\n * $q"
 
-      AhaWikiDatabase().pageInsert(name, latestRevision + 1, DateTimeUtil.nowEpochNano, SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+      AhaWikiDatabase().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
       actorAhaWiki ! Calculate(name)
       AhaWikiCache.PageList.invalidate()
       Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
