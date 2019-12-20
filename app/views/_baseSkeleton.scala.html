@@ -1,6 +1,8 @@
 @import play.api.cache.CacheApi
 @import play.api.db.Database
-@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], cacheApi: CacheApi, db:Database)
+@import play.api.Configuration
+@import logics.ApplicationConf
+@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], cacheApi: CacheApi, db:Database, configuration: Configuration)
 <!DOCTYPE html>
 
 <html lang="en">
@@ -40,6 +42,10 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.30.5/js/jquery.tablesorter.min.js" integrity="sha256-hwBdweUyYRh66ChQYK+o9bSD1fyYShd6oQVwZ6iq7Ww=" crossorigin="anonymous"></script>
         <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>@*TODO: apply cdn*@
         <script type="text/javascript" src="/public/js/vivagraph.min.js"></script>@*TODO: apply cdn*@
+        @if(ApplicationConf().AhaWiki.google.AdSense.adClient()) {
+            <script data-ad-client="@(ApplicationConf().AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        }
+
         @head
     </head>
     <body class="AhaWiki no-mathjax">
