@@ -8,7 +8,6 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
-import play.api.db.Database
 
 import scala.collection.immutable
 import scala.language.postfixOps
