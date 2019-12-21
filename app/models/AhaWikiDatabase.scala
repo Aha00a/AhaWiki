@@ -175,6 +175,12 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
+  object TermFrequency {
+    def delete(name: String): Int = database.withConnection { implicit connection =>
+      SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
+    }
+  }
+
   object CosignSimilarity {
     def recalc(name: String): Int = database.withConnection { implicit connection =>
       SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
@@ -260,9 +266,6 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
   }
 
 
-  def termFrequencyDelete(name: String): Int = database.withConnection { implicit connection =>
-    SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
-  }
 
   def termFrequencyInsert(name: String, map:Map[String, Int]): Array[Int] = termFrequencyInsert(map.map(kv => new TermFrequency(name, kv)).toSeq)
 

@@ -59,7 +59,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def updateCosineSimilarity(name: String, page: Page): Unit = {
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    ahaWikiDatabase.termFrequencyDelete(name)
+    ahaWikiDatabase.TermFrequency.delete(name)
     ahaWikiDatabase.termFrequencyInsert(name, wordCount)
     ahaWikiDatabase.CosignSimilarity.recalc(name)
   }
