@@ -36,3 +36,5 @@ includeFilter in (Assets, LessKeys.less) := "*.less"
 sources in (Compile, doc) := Seq.empty
 publishArtifact in (Compile, packageDoc) := false
 //</editor-fold>
+
+skip in update := true
