@@ -123,8 +123,8 @@ class Wiki @Inject()(implicit
                 case None | Some("Wiki") =>
                   val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
                   if(request.isLocalhost) {
-                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
-                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
+//                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
+//                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
                     Logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
                   }
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)

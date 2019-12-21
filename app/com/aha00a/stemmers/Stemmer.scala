@@ -1,11 +1,5 @@
 package com.aha00a.stemmers
 
-import com.twitter.penguin.korean.TwitterKoreanProcessor
-import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
-import com.twitter.penguin.korean.util.KoreanPos._
-import org.bitbucket.eunjeon.seunjeon.{Analyzer, Pos}
-import play.api.Logger
-
 object Stemmer {
   def stem(s: String): Seq[String] = stemSplit(s)
 
@@ -23,8 +17,11 @@ object Stemmer {
   }
 
   def stemSplit(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => k.split("""\s+"""))
-  def stemTwitter(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => k.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter))
-  def stemSeunjeon(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => Analyzer.parse(k).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface))
+//  def stemTwitter(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => k.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter))
+//  def stemSeunjeon(s: String): Seq[String] = {
+//    import org.bitbucket.eunjeon.seunjeon.{Analyzer, Pos}
+//    stemEnglishPorterKoreanWith(s, k => Analyzer.parse(k).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface))
+//  }
   
   private val regexNumber = """\d+""".r
 
@@ -41,19 +38,22 @@ object Stemmer {
     }
   }
 
-  def normalizeTokenizeStemFilter(s: String): Seq[String] = {
-    try {
-      val n: CharSequence = TwitterKoreanProcessor.normalize(s)
-      val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
-      val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
-      val ntsf: Seq[String] = nts.filter(a => Seq(ProperNoun, Noun).contains(a.pos)).map(_.text)
-      ntsf
-    } catch {
-      case e:Exception =>
-        Logger.error(e.toString)
-        Seq[String]()
-    }
-  }
+//  def normalizeTokenizeStemFilter(s: String): Seq[String] = {
+//    import com.twitter.penguin.korean.TwitterKoreanProcessor
+//    import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
+//    import com.twitter.penguin.korean.util.KoreanPos._
+//    try {
+//      val n: CharSequence = TwitterKoreanProcessor.normalize(s)
+//      val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
+//      val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
+//      val ntsf: Seq[String] = nts.filter(a => Seq(ProperNoun, Noun).contains(a.pos)).map(_.text)
+//      ntsf
+//    } catch {
+//      case e:Exception =>
+//        Logger.error(e.toString)
+//        Seq[String]()
+//    }
+//  }
 
 
   def porterStem(s: String): String = {
