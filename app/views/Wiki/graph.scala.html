@@ -4,8 +4,7 @@
         <div class="ratio_16_9"></div>
         <div class="aspectRatioContent">
             <svg class="graph @(id)" style="width: 100%; height: 100%"></svg>
-            <a href="#" class="pause @(id)" style="position: absolute; bottom: 10px; left: 10px; text-decoration: none;">◼</a>
-            <a href="#" class="resume @(id)" style="position: absolute; bottom: 10px; left: 30px; text-decoration: none;">►</a>
+            <a href="#" class="playPause play @(id)" style="position: absolute; bottom: 10px; left: 15px; text-decoration: none;"><i class="fas fa-stop"></i></a>
         </div>
     </div>
     <script type="text/javascript">
@@ -22,8 +21,19 @@
                 container: $('.graph.@(id)').get(0)
             });
 
-            $('.pause.@(id)').click(function () { renderer.pause(); return false; });
-            $('.resume.@(id)').click(function () { renderer.resume(); return false; });
+            $('.playPause.@(id)').click(function () {
+                var $this = $(this);
+                if($this.hasClass('play')) {
+                    renderer.pause();
+                    $this.removeClass('play');
+                    $this.find('i.fas').removeClass('fa-stop').addClass('fa-play');
+                } else {
+                    renderer.resume();
+                    $this.addClass('play');
+                    $this.find('i.fas').removeClass('fa-play').addClass('fa-stop');
+                }
+                return false;
+            });
 
             var createMarker = function(id) {
                 return Viva.Graph.svg('marker')
@@ -111,9 +121,8 @@
             }
             renderer.run();
             setTimeout(function () {
-                $('.pause.@(id)').click();
-            }, 10000);
-
+                $('.playPause.@(id)').click();
+            }, 5000);
         });
     </script>
 
