@@ -2,18 +2,48 @@ package com.aha00a.stemmers
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
 import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
+import org.bitbucket.eunjeon.seunjeon.{Analyzer, Pos}
 import play.api.Logger
 
 object Stemmer {
-  def stem(s: String): Seq[String] = {
+  def stem(s: String): Seq[String] = stemSplit(s)
+
+  def stemSplit(s: String): Seq[String] = {
     val english = s.replaceAll( """[^\w\s]""", " ")
     val korean = s.replaceAll( """[^가-힣\s]""", " ")
 
     val englishStemmed = english.split("""\s+""").map(porterStem)
-//    val koreanStemmed = Analyzer.parse(korean).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface)
-    val koreanStemmed = korean.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter)
+    val koreanStemmed = korean.split("""\s+""")
 
     englishStemmed ++ koreanStemmed
+  }
+
+  def stemTwitter(s: String): Seq[String] = {
+    val english = s.replaceAll( """[^\w\s]""", " ")
+    val korean = s.replaceAll( """[^가-힣\s]""", " ")
+
+    val englishStemmed = english.split("""\s+""").map(porterStem)
+    val koreanStemmed = stemByTwitterKoreanProcessor(korean)
+
+    englishStemmed ++ koreanStemmed
+  }
+
+  def stemSeunjeon(s: String): Seq[String] = {
+    val english = s.replaceAll( """[^\w\s]""", " ")
+    val korean = s.replaceAll( """[^가-힣\s]""", " ")
+
+    val englishStemmed = english.split("""\s+""").map(porterStem)
+    val koreanStemmed = stemBySenjeon(korean)
+
+    englishStemmed ++ koreanStemmed
+  }
+
+  def stemByTwitterKoreanProcessor(korean: String): Array[String] = {
+    korean.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter)
+  }
+
+  def stemBySenjeon(korean: String): Seq[String] = {
+    Analyzer.parse(korean).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface)
   }
 
   private val regexNumber = """\d+""".r

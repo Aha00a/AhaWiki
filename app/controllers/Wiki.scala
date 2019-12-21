@@ -12,6 +12,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils._
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
+import com.aha00a.stemmers.Stemmer
 import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
@@ -23,7 +24,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.api.{Configuration, Environment, Mode}
+import play.api.{Configuration, Environment, Logger, Mode}
 
 import scala.collection.JavaConversions._
 import scala.collection.immutable
@@ -121,6 +122,11 @@ class Wiki @Inject()(implicit
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case None | Some("Wiki") =>
                   val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
+                  if(request.isLocalhost) {
+                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
+                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
+                    Logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
+                  }
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case _ =>
                   val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
