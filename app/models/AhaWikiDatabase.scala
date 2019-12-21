@@ -112,7 +112,7 @@ class AhaWikiDatabase()(implicit database:Database) {
         .map(models.Page.tupled)
     }
 
-    def deleteLinkCosignSimilarityTermFrequency(name: String) = {
+    def deleteLinkCosignSimilarityTermFrequency(name: String): Int = {
       Link.delete(name)
       CosineSimilarity.delete(name)
       TermFrequency.delete(name)
