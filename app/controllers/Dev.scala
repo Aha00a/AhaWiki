@@ -21,11 +21,13 @@ class Dev @Inject()(
   def reindex: Action[AnyContent] = Action { implicit request =>
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
-      val listPageName: List[String] = Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName)
-      for((v, i) <- listPageName.zipWithIndex) {
-        actorAhaWiki ! Calculate(v, i, listPageName.length)
+      database.withConnection { implicit connection =>
+        val listPageName: List[String] = Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName)
+        for((v, i) <- listPageName.zipWithIndex) {
+          actorAhaWiki ! Calculate(v, i, listPageName.length)
+        }
+        result.flashing("success" -> "Reindex Succeed.")
       }
-      result.flashing("success" -> "Reindex Succeed.")
     }
     else
     {

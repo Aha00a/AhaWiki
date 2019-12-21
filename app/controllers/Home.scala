@@ -25,7 +25,9 @@ class Home @Inject() (
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
-    Ok(AhaWikiDatabase().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+    database.withConnection { implicit connection =>
+      Ok(AhaWikiDatabase().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+    }
   }
 
   def adsTxt: Action[AnyContent] = Action { implicit request =>

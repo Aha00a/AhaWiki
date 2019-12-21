@@ -63,49 +63,49 @@ object InterpreterMap {
             .map(v => (head.getOrElse(v, "").getOrElse(""), row.getOrElse(v, "").getOrElse("")))
         )
       })
+      wikiContext.database.withConnection { implicit connection =>
+        val seqLocationLastVisited = locations.map(l => {
+          val listDates = AhaWikiDatabase().Link.selectBacklink(l.name).map(_.src).sorted(Ordering[String].reverse)
+          LocationListVisited(l, listDates)
+        })
 
-      val ahaWikiDatabase = AhaWikiDatabase()(wikiContext.database)
-      val seqLocationLastVisited = locations.map(l => {
-        val listDates = ahaWikiDatabase.Link.selectBacklink(l.name).map(_.src).sorted(Ordering[String].reverse)
-        LocationListVisited(l, listDates)
-      })
+        val seqAddressLocation: Seq[(Seq[String], LocationListVisited)] = seqLocationLastVisited
+          .filterNot(_.location.address.isNullOrEmpty)
+          .map(l => (l.location.address.split(" ").toSeq.padTo(3, ""), l))
 
-      val seqAddressLocation: Seq[(Seq[String], LocationListVisited)] = seqLocationLastVisited
-        .filterNot(_.location.address.isNullOrEmpty)
-        .map(l => (l.location.address.split(" ").toSeq.padTo(3, ""), l))
+        //noinspection ZeroIndexToHead
+        val mapSeqTuple = seqAddressLocation.groupBy(_._1(0))
+        val mapMapSeqTuple = mapSeqTuple.mapValues(_.groupBy(_._1(1)))
+        val mapMapMapSeqTuple = mapMapSeqTuple.mapValues(_.mapValues(_.groupBy(_._1(2))))
+        val mapMapMapSeq = mapMapMapSeqTuple.mapValues(_.mapValues(_.mapValues(_.map(_._2))))
 
-      //noinspection ZeroIndexToHead
-      val mapSeqTuple = seqAddressLocation.groupBy(_._1(0))
-      val mapMapSeqTuple = mapSeqTuple.mapValues(_.groupBy(_._1(1)))
-      val mapMapMapSeqTuple = mapMapSeqTuple.mapValues(_.mapValues(_.groupBy(_._1(2))))
-      val mapMapMapSeq = mapMapMapSeqTuple.mapValues(_.mapValues(_.mapValues(_.map(_._2))))
-
-      val buffer = mutable.Buffer[String]()
-      for ((k1, v1) <- mapMapMapSeq.toList.sortBy(_._1)) {
-        if(!k1.isNullOrEmpty) buffer += s"== $k1"
-        for ((k2, v2) <- v1.toList.sortBy(_._1)) {
-          if(!k2.isNullOrEmpty) buffer += s"=== $k2"
-          for ((k3, v3) <- v2.toList.sortBy(_._1)) {
-            if(!k3.isNullOrEmpty) buffer += s"==== $k3"
-            for (v <- v3) {
-              if(v.location.exists) {
-                buffer += s" * [${v.location.name}] - ${v.location.score}"
-              } else {
-                buffer += s" * ${v.location.name} - ${v.location.score}"
+        val buffer = mutable.Buffer[String]()
+        for ((k1, v1) <- mapMapMapSeq.toList.sortBy(_._1)) {
+          if (!k1.isNullOrEmpty) buffer += s"== $k1"
+          for ((k2, v2) <- v1.toList.sortBy(_._1)) {
+            if (!k2.isNullOrEmpty) buffer += s"=== $k2"
+            for ((k3, v3) <- v2.toList.sortBy(_._1)) {
+              if (!k3.isNullOrEmpty) buffer += s"==== $k3"
+              for (v <- v3) {
+                if (v.location.exists) {
+                  buffer += s" * [${v.location.name}] - ${v.location.score}"
+                } else {
+                  buffer += s" * ${v.location.name} - ${v.location.score}"
+                }
+                buffer += s"  * ${v.location.address}"
+                buffer ++= v.location.rest.filterNot(_._2.isNullOrEmpty).map(v => s"  * ${v._1}: ${v._2}")
+                buffer += ""
               }
-              buffer += s"  * ${v.location.address}"
-              buffer ++= v.location.rest.filterNot(_._2.isNullOrEmpty).map(v => s"  * ${v._1}: ${v._2}")
-              buffer += ""
             }
           }
         }
-      }
 
-      implicit val configuration: Configuration = wikiContext.configuration
-      val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-      val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
-      val htmlStringWiki: String = new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
-      htmlStringMap + htmlStringWiki
+        implicit val configuration: Configuration = wikiContext.configuration
+        val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+        val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
+        val htmlStringWiki: String = new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
+        htmlStringMap + htmlStringWiki
+      }
     }
   }
 }

@@ -28,9 +28,15 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
   import ActorAhaWiki._
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      AhaWikiDatabase().Page.selectLastRevision(name) foreach { page =>
-        updateCosineSimilarity(name, page)
-        updateLink(page)
+      db.withTransaction { implicit connection =>
+        AhaWikiDatabase().Page.selectLastRevision(name) foreach { page =>
+            val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
+            AhaWikiDatabase().Page.updateSimilarPage(name, wordCount)
+
+            implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
+            val seqLink = Interpreters.extractLink(page.name, page.content)
+            AhaWikiDatabase().Page.updateLink(page.name, seqLink)
+        }
       }
     }
     case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
@@ -47,23 +53,15 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
-          AhaWikiDatabase().GeocodeCache.replace(address, latLng)
-          AhaWikiCache.AddressToLatLng.set(address, latLng)
+          db.withTransaction { implicit connection =>
+            AhaWikiDatabase().GeocodeCache.replace(address, latLng)
+            AhaWikiCache.AddressToLatLng.set(address, latLng)
+          }
         })
     }
     case _ =>
       Logger.error("Unknown")
   }
 
-  def updateCosineSimilarity(name: String, page: Page): Unit = db.withTransaction { implicit connection =>
-    val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    AhaWikiDatabase().Page.updateSimilarPage(name, wordCount)
   }
-
-  def updateLink(page: Page): Array[Int] = db.withTransaction { implicit connection =>
-    implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
-    val seqLink = Interpreters.extractLink(page.name, page.content)
-    AhaWikiDatabase().Page.updateLink(page.name, seqLink)
-  }
-}
 

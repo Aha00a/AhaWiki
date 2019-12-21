@@ -38,21 +38,23 @@ class Diary @Inject()(implicit
     val weekdayName = now.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val (latestText: String, latestRevision: Long) = AhaWikiDatabase().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+    database.withConnection { implicit connection =>
+      val (latestText: String, latestRevision: Long) = AhaWikiDatabase().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
-    if (WikiPermission.isWritable(PageContent(latestText))) {
-      val body =
-        if (latestText == "")
-          f"= [$yearDashMonth]-$day%02d $weekdayName\n * $q"
-        else
-          s"$latestText\n * $q"
+      if (WikiPermission.isWritable(PageContent(latestText))) {
+        val body =
+          if (latestText == "")
+            f"= [$yearDashMonth]-$day%02d $weekdayName\n * $q"
+          else
+            s"$latestText\n * $q"
 
-      AhaWikiDatabase().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
-      actorAhaWiki ! Calculate(name)
-      AhaWikiCache.PageList.invalidate()
-      Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
-    } else {
-      Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
+        AhaWikiDatabase().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+        actorAhaWiki ! Calculate(name)
+        AhaWikiCache.PageList.invalidate()
+        Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
+      } else {
+        Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
+      }
     }
   }
 

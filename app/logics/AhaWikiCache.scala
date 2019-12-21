@@ -21,7 +21,9 @@ object AhaWikiCache {
 
   object PageList extends CacheEntity {
     def get()(implicit cacheApi: CacheApi, db:Database): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
-      AhaWikiDatabase().pageSelectPageList()
+      db.withConnection { implicit connection =>
+        AhaWikiDatabase().pageSelectPageList()
+      }
     }
 
     override def invalidate()(implicit wikiContext: WikiContext): Unit = {
@@ -37,21 +39,21 @@ object AhaWikiCache {
   }
 
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).Page.selectLastRevision(".header").map(_.content).getOrElse(""))
-    }
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
+      Interpreters.interpret(AhaWikiDatabase().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
+    }}
   }
 
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) {
-      Interpreters.interpret(AhaWikiDatabase()(wikiContext.database).Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
-    }
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
+      Interpreters.interpret(AhaWikiDatabase().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
+    }}
   }
 
   object Config extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) { db.withConnection { implicit connection =>
       AhaWikiDatabase().Page.selectLastRevision(".config").map(_.content).getOrElse("")
-    }
+    }}
   }
 
 
@@ -63,14 +65,16 @@ object AhaWikiCache {
         case Some(latLng) => latLng
         case _ =>
           if (!(address == null) && !address.isEmpty) {
-            AhaWikiDatabase().GeocodeCache.select(address) match {
-              case Some(geocodeCache) =>
-                val latLng = geocodeCache.latLng
-                AhaWikiCache.AddressToLatLng.set(address, latLng)
-                latLng
-              case None =>
-                actorAhaWiki ! Geocode(address)
-                LatLng(Double.NaN, Double.NaN)
+            database.withConnection { implicit connection =>
+              AhaWikiDatabase().GeocodeCache.select(address) match {
+                case Some(geocodeCache) =>
+                  val latLng = geocodeCache.latLng
+                  AhaWikiCache.AddressToLatLng.set(address, latLng)
+                  latLng
+                case None =>
+                  actorAhaWiki ! Geocode(address)
+                  LatLng(Double.NaN, Double.NaN)
+              }
             }
           } else {
             LatLng(Double.NaN, Double.NaN)

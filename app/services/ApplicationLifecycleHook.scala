@@ -33,7 +33,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   Logger.info("OnApplicationStart")
 
-  actorSystem.scheduler.scheduleOnce(2 second, () => {
+  actorSystem.scheduler.scheduleOnce(2 second, () => { db.withConnection { implicit connection =>
     Logger.info("OnApplicationStarted")
     if (0 == AhaWikiDatabase().Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
@@ -50,13 +50,13 @@ class ApplicationLifecycleHook @Inject()(implicit
         actorAhaWiki ! Calculate(p.name)
       })
     }
-  })
+  }})
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.schedule(3 seconds, 60 minutes, () => {
+  actorSystem.scheduler.schedule(3 seconds, 60 minutes, () => { db.withConnection { implicit connection =>
     AhaWikiDatabase().pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! Calculate(s)
       case None => Logger.info("None")
     }
-  })
+  }})
 }

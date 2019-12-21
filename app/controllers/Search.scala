@@ -17,7 +17,7 @@ class Search @Inject()(implicit
                        @Named("db-actor") actorAhaWiki: ActorRef,
                        configuration: Configuration
                       ) extends Controller {
-  def index(q: String): Action[AnyContent] = Action { implicit request =>
+  def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     implicit val wikiContext: WikiContext = WikiContext("")
 
     Ok(views.html.Search.search(
@@ -31,5 +31,5 @@ class Search @Inject()(implicit
           .map(_.summarise(q))
       ).getOrElse(Seq.empty)
     ))
-  }
+  }}
 }
