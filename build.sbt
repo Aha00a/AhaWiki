@@ -31,3 +31,8 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 // other, legacy style, accesses its actions statically.
 routesGenerator := InjectedRoutesGenerator
 includeFilter in (Assets, LessKeys.less) := "*.less"
+
+//<editor-fold desc="Prevent to build API document - https://www.playframework.com/documentation/2.5.x/Deploying">
+sources in (Compile, doc) := Seq.empty
+publishArtifact in (Compile, packageDoc) := false
+//</editor-fold>
