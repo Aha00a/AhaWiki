@@ -1,5 +1,6 @@
 package models
 
+import java.sql.Connection
 import java.time.{LocalDate, LocalDateTime}
 import java.util.Date
 
@@ -112,10 +113,11 @@ class AhaWikiDatabase()(implicit database:Database) {
         .map(models.Page.tupled)
     }
 
-    def deleteLinkCosignSimilarityTermFrequency(name: String): Int = {
-      Link.delete(name)
-      CosineSimilarity.delete(name)
-      TermFrequency.delete(name)
+    def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
+      val linkCount = Link.delete(name)
+      val cosineSimilarityCount = CosineSimilarity.delete(name)
+      val termFrequencyCount = TermFrequency.delete(name)
+      linkCount + cosineSimilarityCount + termFrequencyCount
     }
 
     def deleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
@@ -191,7 +193,7 @@ class AhaWikiDatabase()(implicit database:Database) {
       }
     }
 
-    def delete(name: String): Int = database.withConnection { implicit connection =>
+    def delete(name: String)(implicit connection:Connection): Int = {
       SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
     }
   }
@@ -213,7 +215,7 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
 
 
-    def delete(name: String): Int = database.withConnection { implicit connection =>
+    def delete(name: String)(implicit connection:Connection): Int = {
       SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     }
   }
@@ -256,7 +258,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
         .map(models.CosineSimilarity.tupled)
     }
 
-    def delete(name: String): Int = database.withConnection { implicit connection =>
+    def delete(name: String)(implicit connection:Connection): Int = {
       SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
     }
   }
