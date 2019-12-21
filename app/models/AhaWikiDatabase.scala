@@ -112,24 +112,24 @@ class AhaWikiDatabase()(implicit database:Database) {
         .map(models.Page.tupled)
     }
 
-    def deleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
+    def deleteLinkCosignSimilarityTermFrequency(name: String) = {
       Link.delete(name)
       CosineSimilarity.delete(name)
       TermFrequency.delete(name)
+    }
+
+    def deleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
+      deleteLinkCosignSimilarityTermFrequency(name)
       SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
     }
 
     def deleteSpecificRevisionWithRelatedData(name:String, revision:Long): Int = database.withConnection { implicit connection =>
-      Link.delete(name)
-      CosineSimilarity.delete(name)
-      TermFrequency.delete(name)
+      deleteLinkCosignSimilarityTermFrequency(name)
       SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
     }
 
     def rename(name: String, newName: String): Int = database.withConnection { implicit connection =>
-      Link.delete(name)
-      CosineSimilarity.delete(name)
-      TermFrequency.delete(name)
+      deleteLinkCosignSimilarityTermFrequency(name)
       SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
     }
   }
