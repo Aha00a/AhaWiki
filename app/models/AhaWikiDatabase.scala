@@ -197,7 +197,7 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
-  object CosignSimilarity {
+  object CosineSimilarity {
     def recalc(name: String): Int = database.withConnection { implicit connection =>
       SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
 
@@ -227,6 +227,12 @@ SELECT *
 REPLACE INTO CosineSimilarity (name1, name2, similarity)
 SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
       """.executeUpdate()
+    }
+
+    def select(name: String): List[CosineSimilarity] = database.withConnection { implicit connection =>
+      SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
+        .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
+        .map(models.CosineSimilarity.tupled)
     }
   }
 
@@ -281,12 +287,6 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
       .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
   }
 
-
-  def cosineSimilaritySelect(name: String): List[CosineSimilarity] = database.withConnection { implicit connection =>
-    SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
-      .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
-      .map(CosineSimilarity.tupled)
-  }
 
   def pageSelectNameWhereNoCosineSimilarity(): Option[String] = database.withConnection { implicit connection =>
     SQL( """SELECT

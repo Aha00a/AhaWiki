@@ -101,7 +101,7 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiDatabase.cosineSimilaritySelect(name)
+              val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiDatabase.CosineSimilarity.select(name)
               val similarPageNames = cosineSimilarities.map(_.name2)
               val highScoredTerms = ahaWikiDatabase.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
