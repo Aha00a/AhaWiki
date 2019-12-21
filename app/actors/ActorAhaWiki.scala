@@ -61,7 +61,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
     ahaWikiDatabase.termFrequencyDelete(name)
     ahaWikiDatabase.termFrequencyInsert(name, wordCount)
-    ahaWikiDatabase.cosineSimilarityUpdate(name)
+    ahaWikiDatabase.CosignSimilarity.recalc(name)
   }
 
   def updateLink(page: Page): Array[Int] = {

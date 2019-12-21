@@ -175,6 +175,39 @@ class AhaWikiDatabase()(implicit database:Database) {
     }
   }
 
+  object CosignSimilarity {
+    def recalc(name: String): Int = database.withConnection { implicit connection =>
+      SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
+
+      SQL"""
+REPLACE INTO CosineSimilarity (name1, name2, similarity)
+SELECT *
+    FROM (
+        SELECT
+            TF3.name name1,
+            $name name2,
+            IFNULL(
+                ( SELECT SUM(TF1.frequency * TF2.frequency) product FROM TermFrequency TF1 INNER JOIN TermFrequency TF2 ON TF1.term = TF2.term WHERE TF1.name = TF3.name AND TF2.name = $name)
+                /
+                (
+                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = TF3.name)
+                        *
+                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = $name)
+                ),
+                0
+            ) similarity
+            FROM (SELECT DISTINCT name FROM TermFrequency) TF3
+    ) CS1
+    WHERE similarity > 0
+      """.executeUpdate()
+
+      SQL"""
+REPLACE INTO CosineSimilarity (name1, name2, similarity)
+SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
+      """.executeUpdate()
+    }
+  }
+
   def pageSelectNameGroupByNameOrderByName: List[String] = database.withConnection { implicit connection =>
     //noinspection LanguageFeature
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
@@ -250,32 +283,6 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
     }
   }
 
-  def cosineSimilarityUpdate(name: String): Int = database.withConnection { implicit connection =>
-    SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
-    SQL"""
-REPLACE INTO CosineSimilarity (name1, name2, similarity)
-SELECT *
-    FROM (
-        SELECT
-            TF3.name name1,
-            $name name2,
-            IFNULL(
-                ( SELECT SUM(TF1.frequency * TF2.frequency) product FROM TermFrequency TF1 INNER JOIN TermFrequency TF2 ON TF1.term = TF2.term WHERE TF1.name = TF3.name AND TF2.name = $name)
-                /
-                (
-                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = TF3.name)
-                        *
-                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = $name)
-                ),
-            0
-            ) similarity
-            FROM (SELECT DISTINCT name FROM TermFrequency) TF3
-    ) CS1
-    WHERE similarity > 0
-      """.executeUpdate()
-    SQL"""REPLACE INTO CosineSimilarity (name1, name2, similarity)
-       SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name""".executeUpdate()
-  }
 
   def cosineSimilaritySelect(name: String): List[CosineSimilarity] = database.withConnection { implicit connection =>
     SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
