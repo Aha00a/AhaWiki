@@ -111,6 +111,27 @@ class AhaWikiDatabase()(implicit database:Database) {
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
+
+    def deleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
+      Link.delete(name)
+      CosineSimilarity.delete(name)
+      TermFrequency.delete(name)
+      SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
+    }
+
+    def deleteSpecificRevisionWithRelatedData(name:String, revision:Long): Int = database.withConnection { implicit connection =>
+      Link.delete(name)
+      CosineSimilarity.delete(name)
+      TermFrequency.delete(name)
+      SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
+    }
+
+    def rename(name: String, newName: String): Int = database.withConnection { implicit connection =>
+      Link.delete(name)
+      CosineSimilarity.delete(name)
+      TermFrequency.delete(name)
+      SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
+    }
   }
 
   object GeocodeCache {
@@ -322,26 +343,5 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
         .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
     }
-  }
-
-  def pageDeleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
-    Link.delete(name)
-    CosineSimilarity.delete(name)
-    TermFrequency.delete(name)
-    SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
-  }
-
-  def pageDeleteRevisionWithRelatedData(name:String, revision:Long): Int = database.withConnection { implicit connection =>
-    Link.delete(name)
-    CosineSimilarity.delete(name)
-    TermFrequency.delete(name)
-    SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
-  }
-
-  def pageRename(name: String, newName: String): Int = database.withConnection { implicit connection =>
-    Link.delete(name)
-    CosineSimilarity.delete(name)
-    TermFrequency.delete(name)
-    SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
   }
 }

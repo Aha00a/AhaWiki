@@ -225,7 +225,7 @@ class Wiki @Inject()(implicit
     ahaWikiDatabase.Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          ahaWikiDatabase.pageDeleteWithRelatedData(name)
+          ahaWikiDatabase.Page.deleteWithRelatedData(name)
           AhaWikiCache.PageList.invalidate()
           Ok("")
         } else {
@@ -242,7 +242,7 @@ class Wiki @Inject()(implicit
     ahaWikiDatabase.Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          ahaWikiDatabase.pageDeleteRevisionWithRelatedData(name, page.revision)
+          ahaWikiDatabase.Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
           Ok("")
@@ -306,7 +306,7 @@ class Wiki @Inject()(implicit
     (ahaWikiDatabase.Page.selectLastRevision(name), ahaWikiDatabase.Page.selectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          ahaWikiDatabase.pageRename(name, newName)
+          ahaWikiDatabase.Page.rename(name, newName)
           ahaWikiDatabase.pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
