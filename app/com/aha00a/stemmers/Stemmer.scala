@@ -2,50 +2,30 @@ package com.aha00a.stemmers
 
 import com.twitter.penguin.korean.TwitterKoreanProcessor
 import com.twitter.penguin.korean.tokenizer.KoreanTokenizer.KoreanToken
+import com.twitter.penguin.korean.util.KoreanPos._
 import org.bitbucket.eunjeon.seunjeon.{Analyzer, Pos}
 import play.api.Logger
 
 object Stemmer {
   def stem(s: String): Seq[String] = stemSplit(s)
 
-  def stemSplit(s: String): Seq[String] = {
-    val english = s.replaceAll( """[^\w\s]""", " ")
-    val korean = s.replaceAll( """[^가-힣\s]""", " ")
+  private def extractEnglish(s: String): String = s.replaceAll("""[^\w\s]""", " ")
+  private def extractKorean(s: String): String = s.replaceAll("""[^가-힣\s]""", " ")
+
+  def stemEnglishPorterKoreanWith(s: String, koreanStemmer:String => Seq[String]): Seq[String] = {
+    val english: String = extractEnglish(s)
+    val korean = extractKorean(s)
 
     val englishStemmed = english.split("""\s+""").map(porterStem)
-    val koreanStemmed = korean.split("""\s+""")
+    val koreanStemmed = koreanStemmer(korean)
 
     englishStemmed ++ koreanStemmed
   }
 
-  def stemTwitter(s: String): Seq[String] = {
-    val english = s.replaceAll( """[^\w\s]""", " ")
-    val korean = s.replaceAll( """[^가-힣\s]""", " ")
-
-    val englishStemmed = english.split("""\s+""").map(porterStem)
-    val koreanStemmed = stemByTwitterKoreanProcessor(korean)
-
-    englishStemmed ++ koreanStemmed
-  }
-
-  def stemSeunjeon(s: String): Seq[String] = {
-    val english = s.replaceAll( """[^\w\s]""", " ")
-    val korean = s.replaceAll( """[^가-힣\s]""", " ")
-
-    val englishStemmed = english.split("""\s+""").map(porterStem)
-    val koreanStemmed = stemBySenjeon(korean)
-
-    englishStemmed ++ koreanStemmed
-  }
-
-  def stemByTwitterKoreanProcessor(korean: String): Array[String] = {
-    korean.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter)
-  }
-
-  def stemBySenjeon(korean: String): Seq[String] = {
-    Analyzer.parse(korean).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface)
-  }
-
+  def stemSplit(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => k.split("""\s+"""))
+  def stemTwitter(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => k.split("""(\r\n|\n)+""").flatMap(normalizeTokenizeStemFilter))
+  def stemSeunjeon(s: String): Seq[String] = stemEnglishPorterKoreanWith(s, k => Analyzer.parse(k).filter(_.morpheme.poses.contains(Pos.N)).map(_.morpheme.surface))
+  
   private val regexNumber = """\d+""".r
 
   def removeStopWord(seq:Seq[String]): Seq[String] = {
@@ -66,7 +46,6 @@ object Stemmer {
       val n: CharSequence = TwitterKoreanProcessor.normalize(s)
       val nt: Seq[KoreanToken] = TwitterKoreanProcessor.tokenize(n)
       val nts: Seq[KoreanToken] = TwitterKoreanProcessor.stem(nt)
-      import com.twitter.penguin.korean.util.KoreanPos._
       val ntsf: Seq[String] = nts.filter(a => Seq(ProperNoun, Noun).contains(a.pos)).map(_.text)
       ntsf
     } catch {
