@@ -162,9 +162,9 @@ class Wiki @Inject()(implicit
   }
 
   def getRelatedPages(name: String): String = {
-    val relationship = ahaWikiDatabase.LinkTable.linkSelectNotUrl(name)
-    val backward = relationship.flatMap(lm => ahaWikiDatabase.LinkTable.linkSelectNotUrl(lm.src))
-    val forward = relationship.flatMap(lm => ahaWikiDatabase.LinkTable.linkSelectNotUrl(lm.dst))
+    val relationship = ahaWikiDatabase.Link.linkSelectNotUrl(name)
+    val backward = relationship.flatMap(lm => ahaWikiDatabase.Link.linkSelectNotUrl(lm.src))
+    val forward = relationship.flatMap(lm => ahaWikiDatabase.Link.linkSelectNotUrl(lm.dst))
 
     val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")
