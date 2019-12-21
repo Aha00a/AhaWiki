@@ -321,14 +321,14 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
   }
 
   def pageDeleteWithRelatedData(name:String): Int = database.withConnection { implicit connection => // TODO: transaction, FK
-    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    LinkTable.delete(name)
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
   }
 
   def pageDeleteRevisionWithRelatedData(name:String, revision:Long): Int = database.withConnection { implicit connection =>
-    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    LinkTable.delete(name)
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
@@ -336,7 +336,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
 
 
   def pageRename(name: String, newName: String): Int = database.withConnection { implicit connection =>
-    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+    LinkTable.delete(name)
     SQL"DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name".executeUpdate()
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
