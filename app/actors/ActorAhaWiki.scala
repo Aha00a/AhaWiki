@@ -26,11 +26,9 @@ object ActorAhaWiki {
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
   import ActorAhaWiki._
-  private val ahaWikiDatabase = AhaWikiDatabase()
-
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      ahaWikiDatabase.Page.selectLastRevision(name) foreach { page =>
+      AhaWikiDatabase().Page.selectLastRevision(name) foreach { page =>
         updateCosineSimilarity(name, page)
         updateLink(page)
       }
@@ -49,7 +47,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
-          ahaWikiDatabase.GeocodeCache.replace(address, latLng)
+          AhaWikiDatabase().GeocodeCache.replace(address, latLng)
           AhaWikiCache.AddressToLatLng.set(address, latLng)
         })
     }
@@ -59,16 +57,16 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def updateCosineSimilarity(name: String, page: Page): Unit = db.withTransaction { implicit connection =>
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    ahaWikiDatabase.TermFrequency.delete(name)
-    ahaWikiDatabase.TermFrequency.insert(name, wordCount)
-    ahaWikiDatabase.CosineSimilarity.recalc(name)
+    AhaWikiDatabase().TermFrequency.delete(name)
+    AhaWikiDatabase().TermFrequency.insert(name, wordCount)
+    AhaWikiDatabase().CosineSimilarity.recalc(name)
   }
 
   def updateLink(page: Page): Array[Int] = db.withTransaction { implicit connection =>
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    ahaWikiDatabase.Link.delete(page.name)
-    ahaWikiDatabase.Link.insert(seqLink)
+    AhaWikiDatabase().Link.delete(page.name)
+    AhaWikiDatabase().Link.insert(seqLink)
   }
 }
 
