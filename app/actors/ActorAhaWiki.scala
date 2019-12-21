@@ -57,16 +57,13 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def updateCosineSimilarity(name: String, page: Page): Unit = db.withTransaction { implicit connection =>
     val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-    AhaWikiDatabase().TermFrequency.delete(name)
-    AhaWikiDatabase().TermFrequency.insert(name, wordCount)
-    AhaWikiDatabase().CosineSimilarity.recalc(name)
+    AhaWikiDatabase().Page.updateSimilarPage(name, wordCount)
   }
 
   def updateLink(page: Page): Array[Int] = db.withTransaction { implicit connection =>
     implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
     val seqLink = Interpreters.extractLink(page.name, page.content)
-    AhaWikiDatabase().Link.delete(page.name)
-    AhaWikiDatabase().Link.insert(seqLink)
+    AhaWikiDatabase().Page.updateLink(page.name, seqLink)
   }
 }
 

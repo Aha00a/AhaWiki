@@ -134,6 +134,16 @@ class AhaWikiDatabase()(implicit database:Database) {
       deleteLinkCosignSimilarityTermFrequency(name)
       SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
     }
+
+    def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection:Connection): Int = {
+      TermFrequency.delete(name)
+      TermFrequency.insert(name, wordCount)
+      CosineSimilarity.recalc(name)
+    }
+    def updateLink(name: String, seqLink: Seq[Link])(implicit connection:Connection): Array[Int] = {
+      AhaWikiDatabase().Link.delete(name)
+      AhaWikiDatabase().Link.insert(seqLink)
+    }
   }
 
   object GeocodeCache {
