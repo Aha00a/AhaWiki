@@ -264,10 +264,6 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
 
-  def termFrequencyInsert(name: String, term: String, frequency: Long): Option[Long] = database.withConnection { implicit connection =>
-    SQL"INSERT INTO TermFrequency (name, term, frequency) values ($name, $term, $frequency)".executeInsert()
-  }
-
   def termFrequencyInsert(name: String, map:Map[String, Int]): Array[Int] = termFrequencyInsert(map.map(kv => new TermFrequency(name, kv)).toSeq)
 
   def termFrequencyInsert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = database.withConnection { implicit connection =>
