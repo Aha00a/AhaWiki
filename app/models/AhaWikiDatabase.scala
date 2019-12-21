@@ -176,6 +176,22 @@ class AhaWikiDatabase()(implicit database:Database) {
   }
 
   object TermFrequency {
+    def insert(name: String, map:Map[String, Int]): Array[Int] = insert(map.map(kv => new TermFrequency(name, kv)).toSeq)
+
+    def insert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = database.withConnection { implicit connection =>
+      if(seqTermFrequency.isEmpty) {
+        Array()
+      } else {
+        val values = seqTermFrequency.map(s => Seq[NamedParameter]('name -> s.name, 'term -> s.term, 'frequency -> s.frequency))
+        BatchSql(
+          "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
+          values.head,
+          values.tail: _*
+        ).execute()
+      }
+    }
+
+
     def delete(name: String): Int = database.withConnection { implicit connection =>
       SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
     }
@@ -263,23 +279,6 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
      ORDER BY w.name""")
       .on('q -> q)
       .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
-  }
-
-
-
-  def termFrequencyInsert(name: String, map:Map[String, Int]): Array[Int] = termFrequencyInsert(map.map(kv => new TermFrequency(name, kv)).toSeq)
-
-  def termFrequencyInsert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = database.withConnection { implicit connection =>
-    if(seqTermFrequency.isEmpty) {
-      Array()
-    } else {
-      val values = seqTermFrequency.map(s => Seq[NamedParameter]('name -> s.name, 'term -> s.term, 'frequency -> s.frequency))
-      BatchSql(
-        "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
-        values.head,
-        values.tail: _*
-      ).execute()
-    }
   }
 
 
