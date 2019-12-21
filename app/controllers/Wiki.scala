@@ -29,6 +29,7 @@ import scala.collection.JavaConversions._
 import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Random
 import scala.util.matching.Regex
 
 // TODO: Why???? Singleton?
@@ -134,7 +135,7 @@ class Wiki @Inject()(implicit
           }
         }
         finally {
-          if (environment.mode == Mode.Dev && request.isLocalhost)
+          if ((environment.mode == Mode.Dev && request.isLocalhost) || Random.nextDouble() < 0.1)
             actorAhaWiki ! Calculate(name)
         }
       case (Some(page), "diff", true, _) =>
