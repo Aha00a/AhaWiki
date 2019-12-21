@@ -37,4 +37,4 @@ sources in (Compile, doc) := Seq.empty
 publishArtifact in (Compile, packageDoc) := false
 //</editor-fold>
 
-skip in update := true
+//skip in update := true
