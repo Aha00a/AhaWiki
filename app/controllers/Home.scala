@@ -5,7 +5,7 @@ import java.net.URLEncoder
 import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiDatabase, PageContent}
+import models.{AhaWikiQuery, PageContent}
 import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.mvc._
@@ -26,7 +26,7 @@ class Home @Inject() (
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      Ok(AhaWikiDatabase().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+      Ok(AhaWikiQuery().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
     }
   }
 

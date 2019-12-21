@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.play.Implicits._
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim
-import models.AhaWikiDatabase
+import models.AhaWikiQuery
 import play.api.cache.CacheApi
 import play.api.mvc._
 
@@ -22,7 +22,7 @@ class Dev @Inject()(
     val result = Redirect(request.refererOrRoot)
     if(request.isLocalhost) {
       database.withConnection { implicit connection =>
-        val listPageName: List[String] = Random.shuffle(AhaWikiDatabase().pageSelectNameGroupByNameOrderByName)
+        val listPageName: List[String] = Random.shuffle(AhaWikiQuery().pageSelectNameGroupByNameOrderByName)
         for((v, i) <- listPageName.zipWithIndex) {
           actorAhaWiki ! Calculate(v, i, listPageName.length)
         }

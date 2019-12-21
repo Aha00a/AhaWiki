@@ -70,11 +70,11 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
 }
 
 
-object AhaWikiDatabase {
-  def apply()(implicit connection: Connection): AhaWikiDatabase = new AhaWikiDatabase()
+object AhaWikiQuery {
+  def apply()(implicit connection: Connection): AhaWikiQuery = new AhaWikiQuery()
 }
 
-class AhaWikiDatabase()(implicit connection: Connection) {
+class AhaWikiQuery()(implicit connection: Connection) {
 
   object Page {
     private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")

@@ -7,7 +7,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiDatabase, LatLng, PageContent, WikiContext}
+import models.{AhaWikiQuery, LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
@@ -65,7 +65,7 @@ object InterpreterMap {
       })
       wikiContext.database.withConnection { implicit connection =>
         val seqLocationLastVisited = locations.map(l => {
-          val listDates = AhaWikiDatabase().Link.selectBacklink(l.name).map(_.src).sorted(Ordering[String].reverse)
+          val listDates = AhaWikiQuery().Link.selectBacklink(l.name).map(_.src).sorted(Ordering[String].reverse)
           LocationListVisited(l, listDates)
         })
 

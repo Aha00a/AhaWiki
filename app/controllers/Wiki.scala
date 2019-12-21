@@ -18,7 +18,7 @@ import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
-import models.{AhaWikiDatabase, CosineSimilarity, PageContent, WikiContext}
+import models.{AhaWikiQuery, CosineSimilarity, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -55,9 +55,9 @@ class Wiki @Inject()(implicit
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val pageFirstRevision = AhaWikiDatabase().Page.selectFirstRevision(name)
-    val pageLastRevision = AhaWikiDatabase().Page.selectLastRevision(name)
-    val pageSpecificRevision = AhaWikiDatabase().Page.select(name, revision)
+    val pageFirstRevision = AhaWikiQuery().Page.selectFirstRevision(name)
+    val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(name)
+    val pageSpecificRevision = AhaWikiQuery().Page.select(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
@@ -101,9 +101,9 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[CosineSimilarity] = AhaWikiDatabase().CosineSimilarity.select(name)
+              val cosineSimilarities: immutable.Seq[CosineSimilarity] = AhaWikiQuery().CosineSimilarity.select(name)
               val similarPageNames = cosineSimilarities.map(_.name2)
-              val highScoredTerms = AhaWikiDatabase().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+              val highScoredTerms = AhaWikiQuery().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
@@ -142,8 +142,8 @@ class Wiki @Inject()(implicit
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
 
-        val beforePage = AhaWikiDatabase().Page.selectSpecificRevision(name, before)
-        val afterPage = AhaWikiDatabase().Page.selectSpecificRevision(name, after)
+        val beforePage = AhaWikiQuery().Page.selectSpecificRevision(name, before)
+        val afterPage = AhaWikiQuery().Page.selectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
@@ -153,7 +153,7 @@ class Wiki @Inject()(implicit
         Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiDatabase().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiQuery().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
@@ -162,9 +162,9 @@ class Wiki @Inject()(implicit
   }}
 
   def getRelatedPages(name: String)(implicit connection: Connection): String = {
-    val relationship = AhaWikiDatabase().Link.linkSelectNotUrl(name)
-    val backward = relationship.flatMap(lm => AhaWikiDatabase().Link.linkSelectNotUrl(lm.src))
-    val forward = relationship.flatMap(lm => AhaWikiDatabase().Link.linkSelectNotUrl(lm.dst))
+    val relationship = AhaWikiQuery().Link.linkSelectNotUrl(name)
+    val backward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelectNotUrl(lm.src))
+    val forward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelectNotUrl(lm.dst))
 
     val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")
@@ -184,7 +184,7 @@ class Wiki @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment, minorEdit) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean)).bindFromRequest.get
-    val (latestText, latestRevision, latestTime) = AhaWikiDatabase().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
+    val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
 
     if (WikiPermission.isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
@@ -199,7 +199,7 @@ class Wiki @Inject()(implicit
   }}
 
   private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, dateTime: Date, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = { wikiContext.database.withConnection { implicit connection =>
-    AhaWikiDatabase().pageInsert(
+    AhaWikiQuery().pageInsert(
       name,
       revision,
       dateTime,
@@ -222,10 +222,10 @@ class Wiki @Inject()(implicit
   def delete(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiDatabase().Page.selectLastRevision(name) match {
+    AhaWikiQuery().Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().Page.deleteWithRelatedData(name)
+          AhaWikiQuery().Page.deleteWithRelatedData(name)
           AhaWikiCache.PageList.invalidate()
           Ok("")
         } else {
@@ -239,10 +239,10 @@ class Wiki @Inject()(implicit
   def deleteLastRevision(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiDatabase().Page.selectLastRevision(name) match {
+    AhaWikiQuery().Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
+          AhaWikiQuery().Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
           Ok("")
@@ -263,7 +263,7 @@ class Wiki @Inject()(implicit
 
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
-    AhaWikiDatabase().Page.selectLastRevision(pageName) match {
+    AhaWikiQuery().Page.selectLastRevision(pageName) match {
       case Some(page) =>
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
@@ -303,11 +303,11 @@ class Wiki @Inject()(implicit
   def rename(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    (AhaWikiDatabase().Page.selectLastRevision(name), AhaWikiDatabase().Page.selectLastRevision(newName)) match {
+    (AhaWikiQuery().Page.selectLastRevision(name), AhaWikiQuery().Page.selectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission.isWritable(PageContent(page.content))) {
-          AhaWikiDatabase().Page.rename(name, newName)
-          AhaWikiDatabase().pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          AhaWikiQuery().Page.rename(name, newName)
+          AhaWikiQuery().pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")

@@ -3,7 +3,7 @@ package logics
 import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
 import logics.wikis.Interpreters
-import models.{AhaWikiDatabase, LatLng, PageNameRevisionTimeAuthorRemoteAddressSizeComment, WikiContext}
+import models.{AhaWikiQuery, LatLng, PageNameRevisionTimeAuthorRemoteAddressSizeComment, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -22,7 +22,7 @@ object AhaWikiCache {
   object PageList extends CacheEntity {
     def get()(implicit cacheApi: CacheApi, db:Database): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = cacheApi.getOrElse(key, 60.minutes) {
       db.withConnection { implicit connection =>
-        AhaWikiDatabase().pageSelectPageList()
+        AhaWikiQuery().pageSelectPageList()
       }
     }
 
@@ -40,19 +40,19 @@ object AhaWikiCache {
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
-      Interpreters.interpret(AhaWikiDatabase().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
+      Interpreters.interpret(AhaWikiQuery().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
     }}
   }
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
-      Interpreters.interpret(AhaWikiDatabase().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
+      Interpreters.interpret(AhaWikiQuery().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
     }}
   }
 
   object Config extends CacheEntity {
     def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) { db.withConnection { implicit connection =>
-      AhaWikiDatabase().Page.selectLastRevision(".config").map(_.content).getOrElse("")
+      AhaWikiQuery().Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }}
   }
 
@@ -66,7 +66,7 @@ object AhaWikiCache {
         case _ =>
           if (!(address == null) && !address.isEmpty) {
             database.withConnection { implicit connection =>
-              AhaWikiDatabase().GeocodeCache.select(address) match {
+              AhaWikiQuery().GeocodeCache.select(address) match {
                 case Some(geocodeCache) =>
                   val latLng = geocodeCache.latLng
                   AhaWikiCache.AddressToLatLng.set(address, latLng)

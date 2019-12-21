@@ -13,7 +13,7 @@ import com.aha00a.play.Implicits._
 import javax.inject._
 import logics.wikis.WikiPermission
 import logics.{AhaWikiCache, SessionLogic}
-import models.{AhaWikiDatabase, PageContent, WikiContext}
+import models.{AhaWikiQuery, PageContent, WikiContext}
 import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -39,7 +39,7 @@ class Diary @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     database.withConnection { implicit connection =>
-      val (latestText: String, latestRevision: Long) = AhaWikiDatabase().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+      val (latestText: String, latestRevision: Long) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
       if (WikiPermission.isWritable(PageContent(latestText))) {
         val body =
@@ -48,7 +48,7 @@ class Diary @Inject()(implicit
           else
             s"$latestText\n * $q"
 
-        AhaWikiDatabase().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+        AhaWikiQuery().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
         actorAhaWiki ! Calculate(name)
         AhaWikiCache.PageList.invalidate()
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")

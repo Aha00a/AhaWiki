@@ -8,7 +8,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, Using}
 import javax.inject._
-import models.AhaWikiDatabase
+import models.AhaWikiQuery
 import models.Page
 import play.api.Logger
 import play.api.db.Database
@@ -35,7 +35,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.scheduleOnce(2 second, () => { db.withConnection { implicit connection =>
     Logger.info("OnApplicationStarted")
-    if (0 == AhaWikiDatabase().Page.selectCount()) {
+    if (0 == AhaWikiQuery().Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
           val name = file.getName
@@ -46,7 +46,7 @@ class ApplicationLifecycleHook @Inject()(implicit
       }
 
       getArrayPageFromFile.foreach(p => {
-        AhaWikiDatabase().pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
+        AhaWikiQuery().pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
         actorAhaWiki ! Calculate(p.name)
       })
     }
@@ -54,7 +54,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   //noinspection LanguageFeature
   actorSystem.scheduler.schedule(3 seconds, 60 minutes, () => { db.withConnection { implicit connection =>
-    AhaWikiDatabase().pageSelectNameWhereNoCosineSimilarity() match {
+    AhaWikiQuery().pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! Calculate(s)
       case None => Logger.info("None")
     }

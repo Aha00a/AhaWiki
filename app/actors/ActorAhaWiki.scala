@@ -8,7 +8,7 @@ import javax.inject.Inject
 import logics.wikis.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
 import models.Page
-import models.{AhaWikiDatabase, LatLng, WikiContext}
+import models.{AhaWikiQuery, LatLng, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.libs.json.{Json, Reads}
@@ -29,13 +29,13 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
       db.withTransaction { implicit connection =>
-        AhaWikiDatabase().Page.selectLastRevision(name) foreach { page =>
+        AhaWikiQuery().Page.selectLastRevision(name) foreach { page =>
             val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-            AhaWikiDatabase().Page.updateSimilarPage(name, wordCount)
+            AhaWikiQuery().Page.updateSimilarPage(name, wordCount)
 
             implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
             val seqLink = Interpreters.extractLink(page.name, page.content)
-            AhaWikiDatabase().Page.updateLink(page.name, seqLink)
+            AhaWikiQuery().Page.updateLink(page.name, seqLink)
         }
       }
     }
@@ -54,7 +54,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
         })
         .map(latLng => {
           db.withTransaction { implicit connection =>
-            AhaWikiDatabase().GeocodeCache.replace(address, latLng)
+            AhaWikiQuery().GeocodeCache.replace(address, latLng)
             AhaWikiCache.AddressToLatLng.set(address, latLng)
           }
         })
