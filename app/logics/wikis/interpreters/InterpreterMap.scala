@@ -6,6 +6,7 @@ import java.net.URLEncoder
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.InterpreterTable.convert
+import logics.wikis.macros.MacroError
 import logics.{AhaWikiCache, ApplicationConf}
 import models.{AhaWikiQuery, LatLng, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
@@ -37,6 +38,13 @@ object InterpreterMap {
   case class LocationListVisited(location: Location, listVisited: List[String])
 
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+    implicit val configuration: Configuration = wikiContext.configuration
+    val geocodingKey = ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
+    val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+    if(geocodingKey.isNullOrEmpty || mapJavaScriptApiKey.isNullOrEmpty){
+      return MacroError(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
+    }
+
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
     val setPageName: Set[String] = AhaWikiCache.PageNameSet.get()
@@ -100,8 +108,6 @@ object InterpreterMap {
           }
         }
 
-        implicit val configuration: Configuration = wikiContext.configuration
-        val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
         val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
         val htmlStringWiki: String = new InterpreterWiki().apply(buffer.mkString("\n", "\n", "\n"))
         htmlStringMap + htmlStringWiki
