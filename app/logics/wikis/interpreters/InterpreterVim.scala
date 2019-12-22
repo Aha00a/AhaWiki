@@ -92,13 +92,13 @@ object InterpreterVim {
         }
 
         if(cacheFileHtmlRaw.exists()) {
-          val lines = Using(scala.io.Source.fromFile(cacheFileHtmlRaw))(_.getLines())
+          val lines = Using(scala.io.Source.fromFile(cacheFileHtmlRaw))(_.getLines().toSeq)
           val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").filterNot(_.startsWith("*")).map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
           val pre = lines.dropWhile(!_.startsWith("<pre")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
 
           cacheFileHtml.writeAll(style + pre)
         } else {
-          val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines())
+          val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines().toSeq)
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
         }
 
