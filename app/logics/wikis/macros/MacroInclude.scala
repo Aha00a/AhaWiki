@@ -10,7 +10,7 @@ object MacroInclude extends TraitMacro {
     if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))(wikiContext.request, wikiContext.cacheApi, wikiContext.database)) {
       pageLastRevision.map(w => Interpreters.interpret(preprocessor(w.content))).getOrElse("Error: " + argument)
     } else {
-      MacroError.apply(s"Permission Denied - [[$name($argument)]]")
+      MacroError(s"Permission Denied - [[$name($argument)]]")
     }
   }}
 

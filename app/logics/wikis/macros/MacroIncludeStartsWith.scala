@@ -15,7 +15,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
         if (WikiPermission.isReadable(pageLastRevision.map(s => PageContent(s.content)))(wikiContext.request, wikiContext.cacheApi, wikiContext.database)) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {
-          MacroError.apply(s"Permission Denied - [[$name($argument)]]")
+          MacroError(s"Permission Denied - [[$name($argument)]]")
         }
       }).mkString("\n")
     }

@@ -18,11 +18,11 @@ object MacroRecentChangesList extends TraitMacro {
     argument match {
       case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse)
       case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(i.toInt))
-      case _ => MacroError.apply(s"Bad argument - [[$name($argument)]]")
+      case _ => MacroError(s"Bad argument - [[$name($argument)]]")
     }
   }
 
   def interpret(list: List[PageNameRevisionTimeAuthorRemoteAddressSizeComment])(implicit wikiContext: WikiContext): String = {
-    new InterpreterWiki().apply(list.map(p => s" * ${p.localDateTime.toIsoLocalDateTimeString} - [${p.name}]").mkString("\n"))
+    new InterpreterWiki()(list.map(p => s" * ${p.localDateTime.toIsoLocalDateTimeString} - [${p.name}]").mkString("\n"))
   }
 }

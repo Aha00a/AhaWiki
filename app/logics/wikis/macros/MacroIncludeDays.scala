@@ -24,7 +24,7 @@ object MacroIncludeDays extends TraitMacro {
         .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREA)))
         .mkString("\n")
     })).mkString("\n")
-    case _ => MacroError.apply(s"Argument Error - [[$name($argument)]]")
+    case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 
   override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).mkString("\n").length

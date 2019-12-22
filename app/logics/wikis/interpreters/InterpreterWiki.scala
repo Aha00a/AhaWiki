@@ -131,7 +131,7 @@ class InterpreterWiki {
     variableHolder := State.Normal
 
     if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki().apply(arrayBufferHeading.mkString("\n")) + """</div>""")
+      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki()(arrayBufferHeading.mkString("\n")) + """</div>""")
 
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }

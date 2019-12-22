@@ -62,12 +62,12 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
     case regex(name, argument) =>
-      mapMacros.get(name).map(_.apply(argument)).getOrElse {
+      mapMacros.get(name).map(_(argument)).getOrElse {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
           case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
-          case _ => MacroError.apply(s"Macro not found. - [[$name($argument)]]")
+          case _ => MacroError(s"Macro not found. - [[$name($argument)]]")
         }
       }
     case _ => "error"

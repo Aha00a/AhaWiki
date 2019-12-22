@@ -34,7 +34,7 @@ object InterpreterTable {
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
         val rowColumnData = convert(listReader)
           .map(row => row
-            .map(s => if(s == null) "" else new InterpreterWiki().apply(s))
+            .map(s => if(s == null) "" else new InterpreterWiki()(s))
             .zipWithIndex
           )
           .zipWithIndex

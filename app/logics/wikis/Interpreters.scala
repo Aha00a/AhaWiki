@@ -25,13 +25,13 @@ object Interpreters {
       case Some("Paper") => InterpreterPaper.interpret(argument, body)
       case Some("Vim") | Some("vim") | Some("AhaTracVim") => InterpreterVim.interpret(pageContent)
       case Some("Table") | Some("table") | Some("AhaTracTable") => InterpreterTable.interpret(pageContent)
-      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki().apply(body) + "</blockquote>"
+      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki()(body) + "</blockquote>"
       case Some("Math") => InterpreterMath(argument, body)
       case Some("Graph") => InterpreterGraph(pageContent)
       case Some("Map") => InterpreterMap(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
-        MacroError.apply(s"Interpreter not found. - [[[$s]]]")
+        MacroError(s"Interpreter not found. - [[[$s]]]")
     }
   }
 
