@@ -15,7 +15,10 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
     nextFilter(requestHeader).map(result => {
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
-      Logger.info(Seq(getRemoteAddress(requestHeader).padRight(15), s"${duration}ms".padLeft(7), result.header.status, requestHeader.method, requestHeader.uri, requestHeader.userAgent.getOrElse("")).mkString("\t"))
+      val uri: String = requestHeader.uri
+      if(uri.isNotNullOrEmpty && !uri.startsWith("/public/"))
+        Logger.info(Seq(getRemoteAddress(requestHeader).padRight(15), s"${duration}ms".padLeft(7), result.header.status, requestHeader.method, uri, requestHeader.userAgent.getOrElse("")).mkString("\t"))
+
       result.withHeaders("Request-Time" -> duration.toString)
     })
   }
