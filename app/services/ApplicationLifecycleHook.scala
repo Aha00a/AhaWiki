@@ -53,7 +53,7 @@ class ApplicationLifecycleHook @Inject()(implicit
   }})
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.schedule(3 seconds, 60 minutes, () => { db.withConnection { implicit connection =>
+  actorSystem.scheduler.schedule(3 seconds, 3 minutes, () => { db.withConnection { implicit connection =>
     AhaWikiQuery().pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! Calculate(s)
       case None => Logger.info("None")
