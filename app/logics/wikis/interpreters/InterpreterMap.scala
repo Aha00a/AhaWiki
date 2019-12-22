@@ -73,7 +73,7 @@ object InterpreterMap {
       })
       wikiContext.database.withConnection { implicit connection =>
         val seqLocationLastVisited = locations.map(l => {
-          val listDates = AhaWikiQuery().Link.selectBacklink(l.name).map(_.src).sorted(Ordering[String].reverse)
+          val listDates = AhaWikiQuery().Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
           LocationListVisited(l, listDates)
         })
 
