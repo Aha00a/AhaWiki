@@ -7,7 +7,6 @@ import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
-import models.Page
 import models.{AhaWikiQuery, LatLng, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
