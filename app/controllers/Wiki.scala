@@ -102,6 +102,9 @@ class Wiki @Inject()(implicit
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
               val cosineSimilarities: immutable.Seq[CosineSimilarity] = AhaWikiQuery().CosineSimilarity.select(name)
+              if(cosineSimilarities.isEmpty) {
+                actorAhaWiki ! Calculate(name)
+              }
               val similarPageNames = cosineSimilarities.map(_.name2)
               val highScoredTerms = AhaWikiQuery().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
@@ -135,7 +138,7 @@ class Wiki @Inject()(implicit
           }
         }
         finally {
-          if ((environment.mode == Mode.Dev && request.isLocalhost) || Random.nextDouble() < 0.1)
+          if ((environment.mode == Mode.Dev && request.isLocalhost))
             actorAhaWiki ! Calculate(name)
         }
       case (Some(page), "diff", true, _) =>
