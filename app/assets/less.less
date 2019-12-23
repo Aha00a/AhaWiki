@@ -151,13 +151,19 @@ html, body {
 			padding-left:1em;
 			margin-top: 1px;
 			margin-bottom: 1px;
-			&[data-lang] { @color: #99c; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=scala] { @color: #DC322F; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=perl] { @color: #004065; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=python] { @color: #75A8D3; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=javascript] { @color: #F0DB4F; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=css] { @color: #FF6600; border: 2px solid @color; &:before { background: @color; } }
-			&[data-lang=html] { @color: #E44D26; border: 2px solid @color; &:before { background: @color; } }
+			.borderAndBeforeBackground(@color) {
+				border: 2px solid @color;
+				&:before {
+					background: @color;
+				}
+			}
+			&[data-lang]            { .borderAndBeforeBackground(#9999cc); }
+			&[data-lang=scala]      { .borderAndBeforeBackground(#DC322F); }
+			&[data-lang=perl]       { .borderAndBeforeBackground(#004065); }
+			&[data-lang=python]     { .borderAndBeforeBackground(#75A8D3); }
+			&[data-lang=javascript] { .borderAndBeforeBackground(#F0DB4F); }
+			&[data-lang=css]        { .borderAndBeforeBackground(#FF6600); }
+			&[data-lang=html]       { .borderAndBeforeBackground(#E44D26); }
 			&::before {
 				background: #f00;
 				content: attr(data-lang);
