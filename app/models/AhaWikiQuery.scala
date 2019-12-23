@@ -166,7 +166,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
 
     def selectBacklinkOfDatePage(name: String): List[Link] = {
-      SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '\d{4}-(0\d|1[12])-([012]\d|3[01])'"""
+      SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[0-9]|1[12])-([012][0-9]|3[01])'"""
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
     }
