@@ -28,7 +28,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      db.withTransaction { implicit connection =>
+      db.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
