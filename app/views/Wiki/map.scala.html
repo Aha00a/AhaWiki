@@ -124,7 +124,8 @@
         </div>
     </div>
     <script type="text/javascript">
-        function initMap() {
+        console.log("AAA");
+        arrayOnGoogleMapLoaded.push(function () {
             var map = new google.maps.Map(document.getElementById('@id'), {
                 options: {
                     gestureHandling: 'greedy'
@@ -177,7 +178,7 @@
             }
 
             map.fitBounds(bounds);
-        }
+        });
     </script>
     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">
@@ -199,5 +200,4 @@
             </div>
         </script>
     }
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(mapsJavaScriptAPIKey)&callback=initMap"></script>
 }

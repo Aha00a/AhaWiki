@@ -43,6 +43,16 @@
         <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>@*TODO: apply cdn*@
 @*        <script src="https://cdnjs.cloudflare.com/ajax/libs/vivagraphjs/0.8.1/vivagraph.min.js" integrity="sha256-f6NrIr4IYO6bptV+xEOM13oYjSI9IedZxnitCDCsg5s=" crossorigin="anonymous"></script>*@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vivagraphjs/0.12.0/vivagraph.min.js" integrity="sha256-kKQdUhGEwWzNj3itlPXnaVunrFXAnCsNbFXLKKUcago=" crossorigin="anonymous"></script>
+        @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
+            <script type="text/javascript">
+                var arrayOnGoogleMapLoaded = [];
+                function onGoogleMapLoaded() {
+                    for (var i = 0; i < arrayOnGoogleMapLoaded.length; i++) {
+                        arrayOnGoogleMapLoaded[i]();
+                    }
+                }
+            </script>
+        }
         @if(ApplicationConf().AhaWiki.google.AdSense.adClient()) {
             <script data-ad-client="@(ApplicationConf().AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
@@ -51,6 +61,9 @@
     </head>
     <body class="AhaWiki no-mathjax">
         @body
+        @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
+            <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
+        }
         @_googleAnalytics()
     </body>
 </html>
