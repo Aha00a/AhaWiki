@@ -24,11 +24,9 @@ trait WithDateTime {
   lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
 }
 
-case class Page                                               (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithDateTime
-case class PageWithoutBlobField                               (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String) extends WithDateTime
-case class PageNameRevisionTimeAuthorRemoteAddressSizeComment (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
-
-
+case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String            ) extends WithDateTime
+case class PageWithoutBlobField        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String            ) extends WithDateTime
+case class PageWithoutBlobFieldWithSize(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
 
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
@@ -282,7 +280,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
       .map(PageWithoutBlobField.tupled)
   }
 
-  def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = {
+  def pageSelectPageList(): List[PageWithoutBlobFieldWithSize] = {
     SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, LENGTH(content) size
            |    FROM Page w
            |    INNER JOIN (
@@ -295,7 +293,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
            |    ORDER BY name
            |""".stripMargin)
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ long("size") *).map(flatten)
-      .map(PageNameRevisionTimeAuthorRemoteAddressSizeComment.tupled)
+      .map(PageWithoutBlobFieldWithSize.tupled)
   }
 
   def pageInsert(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = {
