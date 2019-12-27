@@ -25,8 +25,8 @@ trait WithDateTime {
 }
 
 case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String            ) extends WithDateTime
-case class PageWithoutBlobField        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String            ) extends WithDateTime
-case class PageWithoutBlobFieldWithSize(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String            ) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
 
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
@@ -109,10 +109,10 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Page.tupled)
     }
 
-    def selectHistory(name: String): List[PageWithoutBlobField] = {
+    def selectHistory(name: String): List[PageWithoutContent] = {
       SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
         .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
-        .map(PageWithoutBlobField.tupled)
+        .map(PageWithoutContent.tupled)
     }
 
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
@@ -280,7 +280,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
   }
 
-  def pageSelectPageList(): List[PageWithoutBlobFieldWithSize] = {
+  def pageSelectPageList(): List[PageWithoutContentWithSize] = {
     SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, LENGTH(content) size
            |    FROM Page w
            |    INNER JOIN (
@@ -293,7 +293,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
            |    ORDER BY name
            |""".stripMargin)
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ long("size") *).map(flatten)
-      .map(PageWithoutBlobFieldWithSize.tupled)
+      .map(PageWithoutContentWithSize.tupled)
   }
 
   def pageInsert(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = {

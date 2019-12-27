@@ -1,4 +1,4 @@
-@(title: String, listHistory: List[models.PageWithoutBlobField])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(title: String, listHistory: List[models.PageWithoutContent])(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_base(title, s"history of $title") {
     @hotkey()
     <script type="text/javascript">

@@ -3,7 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
-import models.PageWithoutBlobFieldWithSize
+import models.PageWithoutContentWithSize
 import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -22,7 +22,7 @@ object MacroRecentChangesList extends TraitMacro {
     }
   }
 
-  def interpret(list: List[PageWithoutBlobFieldWithSize])(implicit wikiContext: WikiContext): String = {
+  def interpret(list: List[PageWithoutContentWithSize])(implicit wikiContext: WikiContext): String = {
     new InterpreterWiki()(list.map(p => s" * ${p.localDateTime.toIsoLocalDateTimeString} - [${p.name}]").mkString("\n"))
   }
 }

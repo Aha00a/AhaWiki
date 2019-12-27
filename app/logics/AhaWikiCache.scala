@@ -3,7 +3,7 @@ package logics
 import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
 import logics.wikis.Interpreters
-import models.{AhaWikiQuery, LatLng, PageWithoutBlobFieldWithSize, WikiContext}
+import models.{AhaWikiQuery, LatLng, PageWithoutContentWithSize, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -20,7 +20,7 @@ object AhaWikiCache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): List[PageWithoutBlobFieldWithSize] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, db:Database): List[PageWithoutContentWithSize] = cacheApi.getOrElse(key, 60.minutes) {
       db.withConnection { implicit connection =>
         AhaWikiQuery().pageSelectPageList()
       }
