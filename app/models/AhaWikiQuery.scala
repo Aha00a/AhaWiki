@@ -25,7 +25,7 @@ trait WithDateTime {
 }
 
 case class Page                                               (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithDateTime
-case class PageRevisionTimeAuthorRemoteAddressComment         (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String) extends WithDateTime
+case class PageWithoutBlobField                               (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String) extends WithDateTime
 case class PageNameRevisionTimeAuthorRemoteAddressSizeComment (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
 
 
@@ -276,10 +276,10 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
   }
 
-  def pageSelectHistory(name: String): List[PageRevisionTimeAuthorRemoteAddressComment] = {
+  def pageSelectHistory(name: String): List[PageWithoutBlobField] = {
     SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
-      .map(PageRevisionTimeAuthorRemoteAddressComment.tupled)
+      .map(PageWithoutBlobField.tupled)
   }
 
   def pageSelectPageList(): List[PageNameRevisionTimeAuthorRemoteAddressSizeComment] = {
