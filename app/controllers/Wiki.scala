@@ -54,10 +54,11 @@ class Wiki @Inject()(implicit
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
-
-    val pageFirstRevision = AhaWikiQuery().Page.selectFirstRevision(name)
-    val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(name)
-    val pageSpecificRevision = AhaWikiQuery().Page.select(name, revision)
+    
+    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
+    val pageFirstRevision = ahaWikiQuery.Page.selectFirstRevision(name)
+    val pageLastRevision = ahaWikiQuery.Page.selectLastRevision(name)
+    val pageSpecificRevision = ahaWikiQuery.Page.select(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
@@ -101,12 +102,12 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[CosineSimilarity] = AhaWikiQuery().CosineSimilarity.select(name)
+              val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name)
               if(cosineSimilarities.isEmpty) {
                 actorAhaWiki ! Calculate(name)
               }
               val similarPageNames = cosineSimilarities.map(_.name2)
-              val highScoredTerms = AhaWikiQuery().selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+              val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
               val additionalInfo =
@@ -145,8 +146,8 @@ class Wiki @Inject()(implicit
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
 
-        val beforePage = AhaWikiQuery().Page.selectSpecificRevision(name, before)
-        val afterPage = AhaWikiQuery().Page.selectSpecificRevision(name, after)
+        val beforePage = ahaWikiQuery.Page.selectSpecificRevision(name, before)
+        val afterPage = ahaWikiQuery.Page.selectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
@@ -156,9 +157,9 @@ class Wiki @Inject()(implicit
         Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiQuery().Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        Ok(views.html.Wiki.history(name, AhaWikiQuery().Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
+        Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
         
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
