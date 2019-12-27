@@ -26,15 +26,14 @@ trait WithDateTime {
 
 case class Page(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithDateTime
 
-case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
-  lazy val latLng: LatLng = LatLng(lat, lng)
-}
-
 case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String) extends WithDateTime
 
 case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, dateTime: Date, author: String, remoteAddress: String, size:Long, comment: String) extends WithDateTime
 
 case class PageNameRevisionTime(name: String, revision: Int, dateTime: Date) extends WithDateTime
+
+
+
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
   def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
@@ -67,6 +66,10 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
         .map(_.map(i => (i + 1, lines(i)))).toSeq
     )
   }
+}
+
+case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
+  lazy val latLng: LatLng = LatLng(lat, lng)
 }
 
 
