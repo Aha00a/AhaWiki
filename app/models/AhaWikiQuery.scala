@@ -13,7 +13,7 @@ import scala.collection.immutable
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
-trait WithTime {
+trait WithDateTime {
   val dateTime:Date
 
   lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.convert(dateTime)
@@ -24,17 +24,17 @@ trait WithTime {
   lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
 }
 
-case class Page(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithTime
+case class Page(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithDateTime
 
 case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
   lazy val latLng: LatLng = LatLng(lat, lng)
 }
 
-case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String) extends WithTime
+case class PageRevisionTimeAuthorRemoteAddressComment(revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String) extends WithDateTime
 
-case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, dateTime: Date, author: String, remoteAddress: String, size:Long, comment: String) extends WithTime
+case class PageNameRevisionTimeAuthorRemoteAddressSizeComment(name:String, revision: Long, dateTime: Date, author: String, remoteAddress: String, size:Long, comment: String) extends WithDateTime
 
-case class PageNameRevisionTime(name: String, revision: Int, dateTime: Date) extends WithTime
+case class PageNameRevisionTime(name: String, revision: Int, dateTime: Date) extends WithDateTime
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
   def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
