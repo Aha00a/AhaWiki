@@ -157,6 +157,9 @@ class Wiki @Inject()(implicit
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiQuery().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "blame", true, _) =>
+        Ok(views.html.Wiki.history(name, AhaWikiQuery().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+        
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
