@@ -156,9 +156,9 @@ class Wiki @Inject()(implicit
         Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiQuery().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, AhaWikiQuery().Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        Ok(views.html.Wiki.history(name, AhaWikiQuery().pageSelectHistory(name))).withHeaderRobotNoIndexNoFollow
+        Ok(views.html.Wiki.history(name, AhaWikiQuery().Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
         
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow

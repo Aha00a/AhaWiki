@@ -109,6 +109,12 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Page.tupled)
     }
 
+    def selectHistory(name: String): List[PageWithoutBlobField] = {
+      SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
+        .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
+        .map(PageWithoutBlobField.tupled)
+    }
+
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
       val linkCount = Link.delete(name)
       val cosineSimilarityCount = CosineSimilarity.delete(name)
@@ -272,12 +278,6 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
   def pageSelectNameGroupByNameOrderByName: List[String] = {
     //noinspection LanguageFeature
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
-  }
-
-  def pageSelectHistory(name: String): List[PageWithoutBlobField] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
-      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
-      .map(PageWithoutBlobField.tupled)
   }
 
   def pageSelectPageList(): List[PageWithoutBlobFieldWithSize] = {
