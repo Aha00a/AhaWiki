@@ -26,7 +26,7 @@ trait WithDateTime {
 
 case class Page                                               (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String) extends WithDateTime
 case class PageRevisionTimeAuthorRemoteAddressComment         (              revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String) extends WithDateTime
-case class PageNameRevisionTimeAuthorRemoteAddressSizeComment (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, size: Long) extends WithDateTime
+case class PageNameRevisionTimeAuthorRemoteAddressSizeComment (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
 
 
 
