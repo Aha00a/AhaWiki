@@ -14,12 +14,11 @@ import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
 import com.aha00a.supercsv.SupercsvUtil
-import com.github.difflib.patch.{Chunk, DeltaType, Patch}
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
-import models.{AhaWikiQuery, Blame, CosineSimilarity, PageContent, PageMetaData, WikiContext}
+import models._
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -31,7 +30,6 @@ import scala.collection.JavaConversions._
 import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.util.Random
 import scala.util.matching.Regex
 
 // TODO: Why???? Singleton?
