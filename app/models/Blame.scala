@@ -17,7 +17,8 @@ class Blame[MetaData](val seqBlameLine: Seq[BlameLine[MetaData]] = Seq()) {
       val source: Chunk[String] = delta.getSource
       val target: Chunk[String] = delta.getTarget
       delta.getType match {
-        case DeltaType.EQUAL => blame
+        case DeltaType.EQUAL =>
+          blame
         case _ =>
           val sourcePosition = source.getPosition
           val targetLines = target.getLines

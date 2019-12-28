@@ -415,7 +415,19 @@ class Test @Inject()(implicit
   }
 
   def testBlame(): Unit = {
+    class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
+
+    val blame1 = new Blame().next(new MetaData(1), "A")
+    assertEquals(blame1.size, 1)
+    assertEquals(blame1.seqBlameLine(0).metaData.revision, 1)
+    assertEquals(blame1.seqBlameLine(0).line, "A")
+
+    val blame2 = new Blame().next(new MetaData(2), "B")
+    assertEquals(blame2.size, 1)
+    assertEquals(blame2.seqBlameLine(0).metaData.revision, 2)
+    assertEquals(blame2.seqBlameLine(0).line, "B")
+
   }
 
 
