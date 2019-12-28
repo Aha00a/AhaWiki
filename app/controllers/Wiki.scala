@@ -151,9 +151,12 @@ class Wiki @Inject()(implicit
         val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
 
+        val beforeComment = beforePage.map(_.comment).getOrElse("")
+        val afterComment = afterPage.map(_.comment).getOrElse("")
+
         val diff = DiffUtils.diff(beforeContent, afterContent)
         val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent, diff, 10).mkString("\n")
-        Ok(views.html.Wiki.diff(name, before, after, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
