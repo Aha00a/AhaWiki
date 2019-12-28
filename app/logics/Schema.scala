@@ -3,6 +3,7 @@ package logics
 import java.io.File
 
 import com.aha00a.commons.utils.Using
+import com.aha00a.commons.Implicits._
 import models.LatLng
 import play.api.Logger
 import play.api.libs.json.{JsLookupResult, JsValue, Json, Reads}
@@ -19,7 +20,7 @@ object Schema {
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val children = (node \ "children").asOpt[Seq[JsValue]]
-    if(id.contains(q)) {
+    if(id.containsIgnoreCase(q)) {
       <ul>
         <li class={if(id == q){"match"}else{""}}>{id}</li>
         {children.map(seq => seq.map(n => getHtmlTree("", n))).getOrElse(NodeSeq.Empty)}

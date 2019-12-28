@@ -61,7 +61,9 @@ object Implicits {
     def isNullOrEmpty: Boolean = s == null || s.isEmpty
     def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
     def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
-    def getOrElse(s:String): String = toOption.getOrElse(s)
+    def getOrElse(rhs:String): String = toOption.getOrElse(rhs)
+
+    def containsIgnoreCase(rhs: String): Boolean = s.toLowerCase().contains(rhs.toLowerCase())
 
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
 
