@@ -9,7 +9,7 @@ import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
-import models.{PageContent, WikiContext}
+import models.{Blame, PageContent, WikiContext}
 import play.api.{Configuration, Logger}
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -144,6 +144,7 @@ class Test @Inject()(implicit
     assertEquals(MacroDays.name, "Days")
     assertEquals(MacroCalendar.name, "Calendar")
 
+    testBlame()
     Ok("Ok.")
   }
 
@@ -367,7 +368,6 @@ class Test @Inject()(implicit
     test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
   }
 
-
   def testHeadingNumber(): Unit = {
     val headingNumber: HeadingNumber = new HeadingNumber()
     assertEquals(headingNumber.incrGet(1), "1.")
@@ -413,6 +413,12 @@ class Test @Inject()(implicit
   def filetest: Action[AnyContent] = Action { implicit request =>
     Ok("Ok.")
   }
+
+  def testBlame(): Unit = {
+    assertEquals(Blame().seqBlameLine.size, 0)
+  }
+
+
 }
 
 

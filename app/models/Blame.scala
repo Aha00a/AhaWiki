@@ -8,7 +8,7 @@ import com.github.difflib.patch.{AbstractDelta, Chunk, DeltaType}
 
 import scala.collection.JavaConversions._
 
-case class Blame(seqBlameLine: Seq[BlameLine]) {
+case class Blame(seqBlameLine: Seq[BlameLine] = Seq()) {
   lazy val maxRevision: Long = seqBlameLine.map(_.revision).max
   def next(page:models.Page): Blame = {
     val deltas: util.List[AbstractDelta[String]] = DiffUtils.diff(seqBlameLine.map(_.line), page.content.splitLines().toSeq).getDeltas
