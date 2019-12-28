@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData], maxRevision: Long)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(blame:models.Blame[PageMetaData, String], maxRevision: Long)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {

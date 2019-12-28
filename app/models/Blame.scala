@@ -9,15 +9,15 @@ import com.github.difflib.patch.{AbstractDelta, Chunk, DeltaType}
 
 import scala.collection.JavaConversions._
 
-class BlameLine[MetaData](val metaData:MetaData, val line:String)
+class BlameLine[MetaData, Item](val metaData:MetaData, val item:Item)
 
-class Blame[MetaData](val seqBlameLine: Seq[BlameLine[MetaData]] = Seq()) {
+class Blame[MetaData, Item](val seqBlameLine: Seq[BlameLine[MetaData, Item]] = Seq()) {
   def size: Int = seqBlameLine.size
-  def next(metaData: MetaData, seq:Seq[String]): Blame[MetaData] = {
-    val deltas: util.List[AbstractDelta[String]] = DiffUtils.diff(seqBlameLine.map(_.line), seq).getDeltas
+  def next(metaData: MetaData, seq:Seq[Item]): Blame[MetaData, Item] = {
+    val deltas = DiffUtils.diff(seqBlameLine.map(_.item), seq).getDeltas
     deltas.sortBy(-_.getSource.getPosition).foldLeft(this)((blame, delta) => {
-      val source: Chunk[String] = delta.getSource
-      val target: Chunk[String] = delta.getTarget
+      val source = delta.getSource
+      val target = delta.getTarget
       delta.getType match {
         case DeltaType.EQUAL =>
           blame
@@ -25,7 +25,7 @@ class Blame[MetaData](val seqBlameLine: Seq[BlameLine[MetaData]] = Seq()) {
           val sourcePosition = source.getPosition
           val targetLines = target.getLines
           val sourceSize = source.size()
-          val lines = blame.seqBlameLine.patch(sourcePosition, targetLines.map(l => new BlameLine[MetaData](metaData, l)), sourceSize)
+          val lines = blame.seqBlameLine.patch(sourcePosition, targetLines.map(l => new BlameLine[MetaData, Item](metaData, l)), sourceSize)
           new Blame(lines)
       }
     })
