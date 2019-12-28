@@ -1,6 +1,7 @@
 package logics.wikis
 
 import com.aha00a.commons.utils.ShebangUtil
+import logics.wikis.interpreters.Interpreters
 import models.WikiContext
 
 class ExtractConvertApplyChunk() extends ExtractConvertApply {

@@ -1,7 +1,8 @@
 package logics.wikis.macros
 
 import logics.AhaWikiCache
-import logics.wikis.{Interpreters, WikiPermission}
+import logics.wikis.WikiPermission
+import logics.wikis.interpreters.Interpreters
 import models.PageWithoutContentWithSize
 import models.{AhaWikiQuery, PageContent, WikiContext}
 

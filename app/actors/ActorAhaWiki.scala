@@ -5,7 +5,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
-import logics.wikis.Interpreters
+import logics.wikis.interpreters.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
 import models.{AhaWikiQuery, LatLng, WikiContext}
 import play.api.cache.CacheApi

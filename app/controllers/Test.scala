@@ -6,9 +6,9 @@ import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim.Parser
-import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.interpreters.{InterpreterWiki, Interpreters}
 import logics.wikis.macros._
-import logics.wikis.{HeadingNumber, Interpreters}
+import logics.wikis.HeadingNumber
 import models.{Blame, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database

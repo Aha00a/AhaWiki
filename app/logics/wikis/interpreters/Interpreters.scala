@@ -1,9 +1,7 @@
-package logics.wikis
+package logics.wikis.interpreters
 
-import logics.wikis.interpreters._
 import logics.wikis.macros.MacroError
-import models.Link
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 import play.api.Logger
 
 object Interpreters {

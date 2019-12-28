@@ -1,6 +1,5 @@
 package logics.wikis.interpreters
 
-import logics.wikis.Interpreters
 import models.{PageContent, WikiContext}
 
 object InterpreterWikiSyntaxPreview {

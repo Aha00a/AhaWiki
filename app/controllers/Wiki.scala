@@ -17,7 +17,8 @@ import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
-import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
+import logics.wikis.interpreters.Interpreters
+import logics.wikis.{ExtractConvertApplyChunkCustom, WikiPermission}
 import models._
 import play.api.cache.CacheApi
 import play.api.data.Form

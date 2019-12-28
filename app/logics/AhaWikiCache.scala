@@ -2,7 +2,7 @@ package logics
 
 import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
-import logics.wikis.Interpreters
+import logics.wikis.interpreters.Interpreters
 import models.{AhaWikiQuery, LatLng, PageWithoutContentWithSize, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi

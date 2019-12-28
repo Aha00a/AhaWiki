@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
-import logics.wikis.{Interpreters, WikiPermission}
+import logics.wikis.WikiPermission
+import logics.wikis.interpreters.Interpreters
 import models.{AhaWikiQuery, PageContent, WikiContext}
 
 object MacroInclude extends TraitMacro {
