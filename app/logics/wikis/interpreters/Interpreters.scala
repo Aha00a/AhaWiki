@@ -20,7 +20,7 @@ object Interpreters {
       case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki()(body) + "</blockquote>"
       case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
       case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
-      case Some("Vim") | Some("vim") | Some("AhaTracVim") => InterpreterVim.interpret(pageContent)
+      case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
       case Some("Wiki") | Some("wiki") | None => (new InterpreterWiki())(body)
       case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
       case _ =>
