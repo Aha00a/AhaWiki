@@ -3,9 +3,6 @@ package logics.wikis.macros
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.Interpreters
 import models.{AhaWikiQuery, PageContent, WikiContext}
-import play.api.cache.CacheApi
-import play.api.db.Database
-import play.api.mvc.Request
 
 object MacroInclude extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = doApply(argument, s => s)
