@@ -14,17 +14,6 @@ import scala.collection.immutable
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
-trait WithDateTime {
-  val dateTime:Date
-
-  lazy val localDateTime: LocalDateTime = LocalDateTimeUtil.convert(dateTime)
-  lazy val localDate: LocalDate = localDateTime.toLocalDate
-  lazy val year: Int = localDate.getYear
-  lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
-
-  lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
-}
-
 case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String            ) extends WithDateTime
 case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String            ) extends WithDateTime
 case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
