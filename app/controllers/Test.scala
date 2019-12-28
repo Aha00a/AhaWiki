@@ -144,7 +144,7 @@ class Test @Inject()(implicit
     assertEquals(MacroDays.name, "Days")
     assertEquals(MacroCalendar.name, "Calendar")
 
-    testBlame()
+    testBlame1()
     Ok("Ok.")
   }
 
@@ -414,7 +414,7 @@ class Test @Inject()(implicit
     Ok("Ok.")
   }
 
-  def testBlame(): Unit = {
+  def testBlame1(): Unit = {
     class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
 
@@ -423,14 +423,35 @@ class Test @Inject()(implicit
     assertEquals(blame1.seqBlameLine(0).metaData.revision, 1)
     assertEquals(blame1.seqBlameLine(0).line, "A")
 
-    val blame2 = new Blame().next(new MetaData(2), "B")
+    val blame2 = blame1.next(new MetaData(2), "B")
     assertEquals(blame2.size, 1)
     assertEquals(blame2.seqBlameLine(0).metaData.revision, 2)
     assertEquals(blame2.seqBlameLine(0).line, "B")
 
+    val blame3 = blame2.next(new MetaData(3), "a\nb\nc\nd\ne")
+    assertEquals(blame3.size, 5)
+    assertEquals(blame3.seqBlameLine(0).metaData.revision, 3)
+    assertEquals(blame3.seqBlameLine(0).line, "a")
+    assertEquals(blame3.seqBlameLine(1).metaData.revision, 3)
+    assertEquals(blame3.seqBlameLine(1).line, "b")
+    assertEquals(blame3.seqBlameLine(2).metaData.revision, 3)
+    assertEquals(blame3.seqBlameLine(2).line, "c")
+    assertEquals(blame3.seqBlameLine(3).metaData.revision, 3)
+    assertEquals(blame3.seqBlameLine(3).line, "d")
+    assertEquals(blame3.seqBlameLine(4).metaData.revision, 3)
+    assertEquals(blame3.seqBlameLine(4).line, "e")
+
+    val blame4 = blame3.next(new MetaData(4), "a\nb\nd\ne")
+    assertEquals(blame4.size, 4)
+    assertEquals(blame4.seqBlameLine(0).metaData.revision, 3)
+    assertEquals(blame4.seqBlameLine(0).line, "a")
+    assertEquals(blame4.seqBlameLine(1).metaData.revision, 3)
+    assertEquals(blame4.seqBlameLine(1).line, "b")
+    assertEquals(blame4.seqBlameLine(2).metaData.revision, 3)
+    assertEquals(blame4.seqBlameLine(2).line, "d")
+    assertEquals(blame4.seqBlameLine(3).metaData.revision, 3)
+    assertEquals(blame4.seqBlameLine(3).line, "e")
   }
-
-
 }
 
 
