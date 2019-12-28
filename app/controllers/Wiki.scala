@@ -19,7 +19,7 @@ import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
-import models.{AhaWikiQuery, Blame, CosineSimilarity, PageContent, WikiContext}
+import models.{AhaWikiQuery, Blame, CosineSimilarity, PageContent, PageMetaData, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -160,8 +160,9 @@ class Wiki @Inject()(implicit
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        val blame = ahaWikiQuery.Page.selectHistoryStream(name, Blame(Seq()), (blame:Blame, p) => blame.next(p))
-        Ok(views.html.Wiki.blame(blame)).withHeaderRobotNoIndexNoFollow
+        val blame = ahaWikiQuery.Page.selectHistoryStream(name, new Blame[PageMetaData](), (blame:Blame[PageMetaData], p) => blame.next(new PageMetaData(p), p.content))
+        val maxRevision: Long = blame.seqBlameLine.map(_.metaData.revision).max
+        Ok(views.html.Wiki.blame(blame, maxRevision)).withHeaderRobotNoIndexNoFollow
         
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow

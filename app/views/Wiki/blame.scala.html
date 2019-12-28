@@ -1,4 +1,4 @@
-@(blame:models.Blame)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(blame:models.Blame[PageMetaData], maxRevision: Long)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {
@@ -11,10 +11,10 @@
                         <td colspan="4" class="empty"></td>
                     </tr>
                     @for(blameLine <- blame.seqBlameLine) {
-                        <tr style="background-color: hsl(@((blame.maxRevision - blameLine.revision) * 360 / blame.maxRevision), 100%, 87%);">
-                            <td class="lineNumber">@blameLine.revision</td>
-                            <td class="lineDateTime">@blameLine.isoLocalDateTime</td>
-                            <td class="lineAuthor">@blameLine.author</td>
+                        <tr style="background-color: hsl(@((maxRevision - blameLine.metaData.revision) * 360 / maxRevision), 100%, 87%);">
+                            <td class="lineNumber">@blameLine.metaData.revision</td>
+                            <td class="lineDateTime">@blameLine.metaData.isoLocalDateTime</td>
+                            <td class="lineAuthor">@blameLine.metaData.author</td>
                             <td class="lineContent">@blameLine.line</td>
                         </tr>
                     }
