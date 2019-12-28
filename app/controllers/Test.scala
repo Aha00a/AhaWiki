@@ -415,6 +415,7 @@ class Test @Inject()(implicit
     Ok("Ok.")
   }
 
+  //noinspection ZeroIndexToHead
   def testBlame1(): Unit = {
     class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
@@ -454,6 +455,7 @@ class Test @Inject()(implicit
     assertEquals(blame4.seqBlameLine(3).item, "e")
   }
 
+  //noinspection ZeroIndexToHead
   def testBlame2(): Unit = {
     class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
