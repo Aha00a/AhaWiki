@@ -10,7 +10,7 @@ object Interpreters {
     val body = pageContent.content
     val argument = pageContent.argument.mkString(" ")
     pageContent.interpreter match {
-      case Some("Comment") | Some("comment") => ""
+      case Some("Comment") | Some("comment") => InterpreterComment(pageContent)
       case Some("Graph") => InterpreterGraph(pageContent)
       case Some("Html") | Some("html") => body
       case Some("Map") => InterpreterMap(pageContent)
