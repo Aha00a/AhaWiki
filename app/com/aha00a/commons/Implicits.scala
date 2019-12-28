@@ -62,9 +62,12 @@ object Implicits {
     def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
     def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
     def getOrElse(s:String): String = toOption.getOrElse(s)
+
     def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
+
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
+
     def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
