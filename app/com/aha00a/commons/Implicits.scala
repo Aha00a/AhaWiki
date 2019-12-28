@@ -66,6 +66,7 @@ object Implicits {
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
     def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
+    def splitLinesSeq(): Seq[String] = s.splitLines().toSeq
   }
 
   implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }

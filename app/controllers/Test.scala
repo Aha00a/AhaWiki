@@ -3,17 +3,17 @@ package controllers
 import akka.actor.{ActorRef, ActorSystem}
 import anorm.SQL
 import anorm.SqlParser.long
-import com.aha00a.stemmers.Stemmer
+import com.aha00a.commons.Implicits._
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import logics.wikis.{HeadingNumber, Interpreters}
 import models.{Blame, PageContent, WikiContext}
-import play.api.{Configuration, Logger}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
+import play.api.{Configuration, Logger}
 
 @Singleton
 class Test @Inject()(implicit
@@ -419,17 +419,17 @@ class Test @Inject()(implicit
     class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
 
-    val blame1 = new Blame().next(new MetaData(1), "A")
+    val blame1 = new Blame().next(new MetaData(1), "A".splitLinesSeq())
     assertEquals(blame1.size, 1)
     assertEquals(blame1.seqBlameLine(0).metaData.revision, 1)
     assertEquals(blame1.seqBlameLine(0).line, "A")
 
-    val blame2 = blame1.next(new MetaData(2), "B")
+    val blame2 = blame1.next(new MetaData(2), "B".splitLinesSeq())
     assertEquals(blame2.size, 1)
     assertEquals(blame2.seqBlameLine(0).metaData.revision, 2)
     assertEquals(blame2.seqBlameLine(0).line, "B")
 
-    val blame3 = blame2.next(new MetaData(3), "a\nb\nc\nd\ne")
+    val blame3 = blame2.next(new MetaData(3), "a\nb\nc\nd\ne".splitLinesSeq())
     assertEquals(blame3.size, 5)
     assertEquals(blame3.seqBlameLine(0).metaData.revision, 3)
     assertEquals(blame3.seqBlameLine(0).line, "a")
@@ -442,7 +442,7 @@ class Test @Inject()(implicit
     assertEquals(blame3.seqBlameLine(4).metaData.revision, 3)
     assertEquals(blame3.seqBlameLine(4).line, "e")
 
-    val blame4 = blame3.next(new MetaData(4), "a\nb\nd\ne")
+    val blame4 = blame3.next(new MetaData(4), "a\nb\nd\ne".splitLinesSeq())
     assertEquals(blame4.size, 4)
     assertEquals(blame4.seqBlameLine(0).metaData.revision, 3)
     assertEquals(blame4.seqBlameLine(0).line, "a")
@@ -458,8 +458,8 @@ class Test @Inject()(implicit
     class MetaData(val revision: Int)
     assertEquals(new Blame().size, 0)
 
-    val blame1 = new Blame().next(new MetaData(1), "1\n1\n1\n2\n2\n2\n2\n1\n1\n1")
-    val blame2 = blame1.next(new MetaData(2), "1\n1\n2\n2\n1\n1")
+    val blame1 = new Blame().next(new MetaData(1), "1\n1\n1\n2\n2\n2\n2\n1\n1\n1".splitLinesSeq())
+    val blame2 = blame1.next(new MetaData(2), "1\n1\n2\n2\n1\n1".splitLinesSeq())
     assertEquals(blame2.size, 6)
     assertEquals(blame2.seqBlameLine(0).metaData.revision, 1)
     assertEquals(blame2.seqBlameLine(0).line, "1")

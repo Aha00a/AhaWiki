@@ -160,7 +160,7 @@ class Wiki @Inject()(implicit
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        val blame = ahaWikiQuery.Page.selectHistoryStream(name, new Blame[PageMetaData](), (blame:Blame[PageMetaData], p) => blame.next(new PageMetaData(p), p.content))
+        val blame = ahaWikiQuery.Page.selectHistoryStream(name, new Blame[PageMetaData](), (blame:Blame[PageMetaData], p) => blame.next(new PageMetaData(p), p.content.splitLinesSeq()))
         val maxRevision: Long = blame.seqBlameLine.map(_.metaData.revision).max
         Ok(views.html.Wiki.blame(blame, maxRevision)).withHeaderRobotNoIndexNoFollow
         
