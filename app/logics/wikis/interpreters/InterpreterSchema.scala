@@ -1,14 +1,19 @@
 package logics.wikis.interpreters
 
-import logics.Schema
+import logics.{AhaWikiCache, Schema}
 import logics.wikis.macros.MacroError
 import models.{PageContent, WikiContext}
 import com.aha00a.commons.Implicits._
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 object InterpreterSchema {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
+    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val database: Database = wikiContext.database
+    val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
@@ -17,7 +22,13 @@ object InterpreterSchema {
             val values = l.splitTabsSeq()
             val key = values.head
             <dt>{key}</dt> ++ values.tail.map(v => {
-              <dd property={key}>{v}</dd>
+              <dd property={key}>{
+                if(pageNameSet.contains(v)) {
+                  <a href={v}>{v}</a>
+                } else {
+                  v
+                }
+              }</dd>
             })
           })
         }
