@@ -18,6 +18,7 @@ object Interpreters {
       case Some("Math") => InterpreterMath(argument, body)
       case Some("Paper") => InterpreterPaper.interpret(argument, body)
       case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki()(body) + "</blockquote>"
+      case Some("Schema") | Some("schema") => InterpreterSchema(pageContent)
       case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
       case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
       case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
