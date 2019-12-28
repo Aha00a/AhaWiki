@@ -6,10 +6,9 @@ import java.util.Date
 import actors.ActorAhaWiki.Calculate
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{DateTimeUtil, Using}
+import com.aha00a.commons.utils.Using
 import javax.inject._
-import models.AhaWikiQuery
-import models.Page
+import models.{AhaWikiQuery, Page}
 import play.api.Logger
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
