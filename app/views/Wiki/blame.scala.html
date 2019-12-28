@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData, String], maxRevision: Long)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(blame:models.Blame[PageMetaData, String], minRevision: Long, maxRevision: Long)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {
@@ -8,7 +8,7 @@
             <table class="tableBlame">
                 <thead>
                     <tr>
-                        <th>Revision</th>
+                        <th>Rev</th>
                         <th>DateTime</th>
                         <th>Author</th>
                         <th>Content</th>
@@ -17,14 +17,14 @@
                 </thead>
                 <tbody>
                     @for(blameLine <- blame.seqBlameLine) {
-                        <tr style="background-color: hsl(@((maxRevision - blameLine.metaData.revision) * 360 / maxRevision), 100%, 87%);">
+                        <tr style="background-color: @com.aha00a.commons.utils.WarmCoolColors.warm(blameLine.metaData.revision, minRevision, maxRevision);">
                             <td class="lineNumber">
                                 <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
                             </td>
                             <td class="lineDateTime">@blameLine.metaData.isoLocalDateTime</td>
                             <td class="lineAuthor">@blameLine.metaData.author</td>
                             <td class="lineContent">@blameLine.item</td>
-                            <td class="lineAuthor">@blameLine.metaData.comment</td>
+                            <td class="lineComment">@blameLine.metaData.comment</td>
                         </tr>
                     }
                 </tbody>

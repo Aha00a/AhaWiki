@@ -603,9 +603,11 @@ html, body {
 			width: 100%;
 			border-collapse: collapse;
 			border: 1px solid #ccc;
-			td {
+			thead {
 				border: 1px solid #ccc;
-				border-bottom: 1px solid #eee;
+				background-color: #f7f7f7;
+			}
+			th, td {
 				padding: 5px;
 				.monospace;
 				white-space: pre-wrap;
@@ -621,6 +623,12 @@ html, body {
 				}
 				&.lineContent {
 					background-color: #fff;
+					border: 1px solid #ccc;
+					border-bottom: 1px solid #eee;
+				}
+				&.lineComment {
+					background-color: #f7f7f7;
+					border-bottom: 1px solid #eee;
 				}
 			}
 			tr:last-of-type {

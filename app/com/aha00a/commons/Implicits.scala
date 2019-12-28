@@ -35,6 +35,7 @@ object Implicits {
 
   implicit class RichSeq[T](seq:Seq[T]) {
     def getOrElse(i: Int, t:T): T = if(seq.isDefinedAt(i)) seq(i) else t
+    def getWithMinMax(i: Int): T = seq(Math.max(Math.min(i, seq.length - 1), 0))
     def tailSafe(): Seq[T] = if(seq.length > 1) { seq.tail } else { Seq[T]() }
     def shuffle(): Seq[T] = Random.shuffle(seq)
     def groupByCount(): Map[T, Int] = seq.foldLeft(Map[T, Int]()) {
