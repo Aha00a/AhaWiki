@@ -68,7 +68,8 @@ object InterpreterSchema {
   def extractLink(pageContent: PageContent)(implicit wikiContext: WikiContext): Seq[Link] = {
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
-    val properties: Seq[String] = contentLines.flatMap(_.splitTabsSeq().headOption)
+    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
+    val properties: Seq[String] = fields.flatMap(_.headOption)
     Seq()
   }
 }
