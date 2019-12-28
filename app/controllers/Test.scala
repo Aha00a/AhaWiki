@@ -415,7 +415,7 @@ class Test @Inject()(implicit
   }
 
   def testBlame(): Unit = {
-    assertEquals(new Blame().seqBlameLine.size, 0)
+    assertEquals(new Blame().size, 0)
   }
 
 
