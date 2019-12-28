@@ -1,3 +1,3 @@
 package models
 
-case class BlameLine[MetaData](metaData:MetaData, line:String) 
+class BlameLine[MetaData](val metaData:MetaData, val line:String)
