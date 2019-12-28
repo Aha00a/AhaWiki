@@ -69,9 +69,14 @@ object Schema {
             <h5>Properties of {c}</h5>
             <div>
               {
-                seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).map(p => {
-                  <span title={p.comment} class={if(properties.contains(p.id)){"match"} else {""}}>{p.id} </span>
-                })
+                val map: Map[Char, Seq[Node]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
+                map.keys.toSeq.sorted.map { k =>
+                  <div>
+                    {
+                      map(k).map(p => <span title={p.comment} class={if(properties.contains(p.id)){"match"} else {""}}>{p.id} </span>)
+                    }
+                  </div>
+                }
               }
             </div>
           </div>
