@@ -14,11 +14,12 @@ import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
 import com.aha00a.supercsv.SupercsvUtil
+import com.github.difflib.patch.{Chunk, DeltaType, Patch}
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import javax.inject.{Singleton, _}
 import logics._
 import logics.wikis.{ExtractConvertApplyChunkCustom, Interpreters, WikiPermission}
-import models.{AhaWikiQuery, CosineSimilarity, PageContent, WikiContext}
+import models.{AhaWikiQuery, Blame, CosineSimilarity, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -159,7 +160,8 @@ class Wiki @Inject()(implicit
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
       case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
+        val blame = ahaWikiQuery.Page.selectHistoryStream(name, Blame(Seq()), (blame:Blame, p) => blame.next(p))
+        Ok(views.html.Wiki.blame(blame)).withHeaderRobotNoIndexNoFollow
         
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow

@@ -8,6 +8,7 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits.{LocalDateTimeFormatter, _}
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
+import play.api.Logger
 
 import scala.collection.immutable
 import scala.language.postfixOps
@@ -113,6 +114,12 @@ class AhaWikiQuery()(implicit connection: Connection) {
       SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
         .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
         .map(PageWithoutContent.tupled)
+    }
+
+    def selectHistoryStream[T](name: String, t:T, f:(T, models.Page) => T): T = {
+      SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = $name ORDER BY revision ASC"
+        .as(rowParser *).map(flatten)
+        .foldLeft(t)((a, v) => f(a, models.Page.tupled(v)))
     }
 
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {

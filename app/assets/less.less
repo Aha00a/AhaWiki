@@ -596,6 +596,41 @@ html, body {
 		}
 	}
 
+
+	.blame {
+		padding: 10px;
+		table.tableBlame {
+			width: 100%;
+			border-collapse: collapse;
+			border: 1px solid #ccc;
+			td {
+				border: 1px solid #ccc;
+				border-bottom: 1px solid #eee;
+				padding: 5px;
+				.monospace;
+				white-space: pre-wrap;
+				word-break: break-word;
+				&.lineNumber, &.lineDateTime, &.lineAuthor, &.lineComment {
+					width: 50px;
+					padding: 5px 10px;
+					.userSelect(none);
+					white-space: nowrap;
+				}
+				&.lineNumber{
+					text-align: right;
+				}
+				&.lineContent {
+					background-color: #fff;
+				}
+			}
+			tr:last-of-type {
+				> td {
+					border-bottom: 1px solid #ccc;
+				}
+			}
+		}
+	}
+
 	.circleWithRotateAnimation(@size, @thickness) {
 		width: @size;
 		height: @size;

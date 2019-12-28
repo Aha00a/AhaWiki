@@ -1,0 +1,26 @@
+@(blame:models.Blame)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
+    @views.html.Wiki.hotkey()
+} {
+    <div class="wikiContent blame">
+        <div class="limitWidth">
+            <h1>Blame of <a href="@wikiContext.name">@wikiContext.name</a></h1>
+            <table class="tableBlame">
+                <tbody>
+                    <tr>
+                        <td colspan="4" class="empty"></td>
+                    </tr>
+                    @for(blameLine <- blame.seqBlameLine) {
+                        <tr style="background-color: hsl(@((blame.maxRevision - blameLine.revision) * 360 / blame.maxRevision), 100%, 87%);">
+                            <td class="lineNumber">@blameLine.revision</td>
+                            <td class="lineDateTime">@blameLine.isoLocalDateTime</td>
+                            <td class="lineAuthor">@blameLine.author</td>
+                            <td class="lineContent">@blameLine.line</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @views.html.Wiki.action(isWritable = false, null, null)
+}
