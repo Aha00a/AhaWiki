@@ -1,9 +1,8 @@
 package logics.wikis.interpreters
 
-import logics.{AhaWikiCache, Schema}
-import logics.wikis.macros.MacroError
-import models.{PageContent, WikiContext}
 import com.aha00a.commons.Implicits._
+import logics.{AhaWikiCache, Schema}
+import models.{PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 
