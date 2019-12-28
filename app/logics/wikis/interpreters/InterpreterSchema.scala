@@ -19,10 +19,7 @@ object InterpreterSchema {
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
         {
-          contentLines.map(l => {
-            val values = l.splitTabsSeq()
-            values
-          }).map(values => {
+          contentLines.map(_.splitTabsSeq()).map(values => {
             val key = values.head
             <dt>{key}</dt> ++ values.tail.map(v => {
               <dd property={key}>{
