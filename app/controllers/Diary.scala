@@ -29,7 +29,7 @@ class Diary @Inject()(implicit
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       configuration: Configuration
                      ) extends Controller {
-  def write() = PostAction { implicit request =>
+  def write() = PostAction { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString
@@ -41,7 +41,8 @@ class Diary @Inject()(implicit
     database.withConnection { implicit connection =>
       val (latestText: String, latestRevision: Long) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
-      if (WikiPermission.isWritable(PageContent(latestText))) {
+      val permission: WikiPermission = WikiPermission()
+      if (permission.isWritable(PageContent(latestText))) {
         val body =
           if (latestText == "")
             f"= [$yearDashMonth]-$day%02d $weekdayName\n * $q"

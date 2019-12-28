@@ -24,7 +24,7 @@ class Search @Inject()(implicit
       q,
       q.toOption.map(
         AhaWikiQuery().pageSearch(_)
-          .filter(sr => WikiPermission.isReadable(PageContent(sr.content)))
+          .filter(sr => WikiPermission().isReadable(PageContent(sr.content)))
           .sortBy(_.dateTime)(Ordering[Date].reverse)
           .partition(_.name == q)
           .concat()

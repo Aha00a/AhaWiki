@@ -61,8 +61,9 @@ class Wiki @Inject()(implicit
     val pageSpecificRevision = ahaWikiQuery.Page.select(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
-    val isWritable = WikiPermission.isWritable(pageLastRevisionContent)
-    val isReadable = WikiPermission.isReadable(pageLastRevisionContent)
+    val wikiPermission = WikiPermission()
+    val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
+    val isReadable = wikiPermission.isReadable(pageLastRevisionContent)
 
     //noinspection ScalaUnusedSymbol
     (pageSpecificRevision, action, isReadable, isWritable) match {
@@ -200,7 +201,7 @@ class Wiki @Inject()(implicit
     val (revision, body, comment, minorEdit) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean)).bindFromRequest.get
     val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
 
-    if (WikiPermission.isWritable(PageContent(latestText))) {
+    if (WikiPermission().isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else new Date(),  body, comment)
         Ok("")
@@ -238,7 +239,7 @@ class Wiki @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
     AhaWikiQuery().Page.selectLastRevision(name) match {
       case Some(page) =>
-        if (WikiPermission.isWritable(PageContent(page.content))) {
+        if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.deleteWithRelatedData(name)
           AhaWikiCache.PageList.invalidate()
           Ok("")
@@ -255,7 +256,7 @@ class Wiki @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
     AhaWikiQuery().Page.selectLastRevision(name) match {
       case Some(page) =>
-        if (WikiPermission.isWritable(PageContent(page.content))) {
+        if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
@@ -281,7 +282,7 @@ class Wiki @Inject()(implicit
       case Some(page) =>
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
-        if (WikiPermission.isWritable(pageContent)) {
+        if (WikiPermission().isWritable(pageContent)) {
           val extractConvertApplyChunkRefresh = new ExtractConvertApplyChunkCustom(s => {
             val pageContentChunk = PageContent(s)
             if(url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
@@ -319,7 +320,7 @@ class Wiki @Inject()(implicit
     implicit val wikiContext: WikiContext = WikiContext(name)
     (AhaWikiQuery().Page.selectLastRevision(name), AhaWikiQuery().Page.selectLastRevision(newName)) match {
       case (Some(page), None) =>
-        if (WikiPermission.isWritable(PageContent(page.content))) {
+        if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.rename(name, newName)
           AhaWikiQuery().pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
