@@ -2,13 +2,11 @@ package logics
 
 import java.io.File
 
-import com.aha00a.commons.utils.Using
 import com.aha00a.commons.Implicits._
-import models.LatLng
+import com.aha00a.commons.utils.Using
 import play.api.Logger
-import play.api.libs.json.{JsLookupResult, JsValue, Json, Reads}
+import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
-import scala.collection.immutable
 import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
@@ -52,7 +50,7 @@ object Schema {
       val comment = (v \ "comment").as[String]
 
       val node = Node(id, typeStr, subClassOf, domainIncludes, comment)
-      Logger.info(s"${node}")
+      Logger.info(s"$node")
       node
     })
   }
