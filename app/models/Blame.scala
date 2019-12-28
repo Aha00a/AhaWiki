@@ -9,6 +9,8 @@ import com.github.difflib.patch.{AbstractDelta, Chunk, DeltaType}
 
 import scala.collection.JavaConversions._
 
+class BlameLine[MetaData](val metaData:MetaData, val line:String)
+
 class Blame[MetaData](val seqBlameLine: Seq[BlameLine[MetaData]] = Seq()) {
   def size: Int = seqBlameLine.size
   def next(metaData: MetaData, seq:Seq[String]): Blame[MetaData] = {
