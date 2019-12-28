@@ -33,7 +33,7 @@ object InterpreterSchema {
             })
           })
         }
-        <h5>Schema Hierarchy</h5>
+        <h6>Hierarchy</h6>
         {Schema.getHtmlTree(schemaClass)}
       </dl>
 
