@@ -87,6 +87,15 @@
                 }
             });
 
+            $('textarea[name=text]').bind('keydown', function (e) {
+                if(e.keyCode === 9){
+                    if(this.value.length === this.selectionStart)
+                        return;
+
+                    document.execCommand("insertText", false, '\t');
+                    return false;
+                }
+            });
             $('textarea[name=text]').bind('input cut paste keydown keyup keypress blur change', function () {
                 if(timer) {
                     clearTimeout(timer);
