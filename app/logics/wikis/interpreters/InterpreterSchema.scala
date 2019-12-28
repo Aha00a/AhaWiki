@@ -13,7 +13,7 @@ object InterpreterSchema {
 
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
-    val fields = contentLines.map(_.splitTabsSeq())
+    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
     val properties: Seq[String] = fields.flatMap(_.headOption)
     val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
     val dl =
