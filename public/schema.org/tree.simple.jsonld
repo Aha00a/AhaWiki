@@ -1,0 +1,66 @@
+{
+    "id": "Thing",
+    "children": [
+        {
+            "id": "Action",
+            "children": [
+                {
+                    "id": "AchieveAction",
+                    "children": [
+                        {
+                            "id": "LoseAction"
+                        },
+                        {
+                            "id": "TieAction"
+                        },
+                        {
+                            "id": "WinAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "AssessAction",
+                    "children": [
+                        {
+                            "id": "ChooseAction",
+                            "children": [
+                                {
+                                    "id": "VoteAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "IgnoreAction"
+                        },
+                        {
+                            "id": "ReactAction",
+                            "children": [
+                                {
+                                    "id": "AgreeAction"
+                                },
+                                {
+                                    "id": "DisagreeAction"
+                                },
+                                {
+                                    "id": "DislikeAction"
+                                },
+                                {
+                                    "id": "EndorseAction"
+                                },
+                                {
+                                    "id": "LikeAction"
+                                },
+                                {
+                                    "id": "WantAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ReviewAction"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

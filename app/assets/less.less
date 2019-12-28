@@ -238,7 +238,7 @@ html, body {
 			border: 1px solid #ccc;
 			padding: 10px;
 			max-width: 50%;
-			margin-bottom: 5px;
+			margin-bottom: 10px;
 			position: relative;
 			margin-left: 10px;
 			z-index: 1;
@@ -641,6 +641,40 @@ html, body {
 				> td {
 					border-bottom: 1px solid #ccc;
 				}
+			}
+		}
+	}
+
+	.schema {
+		@width: 250px;
+		position: relative;
+		float: right;
+		clear: right;
+		border: 1px solid #aaa;
+		border-spacing: 3px;
+		background-color: #eee;
+		padding: 0 20px;
+		min-width: @width;
+		margin-left: 10px;
+		margin-bottom: 10px;
+		dt {
+			margin-top: 10px;
+		}
+		dd {
+			margin-left: 20px;
+		}
+		&:hover {
+			.preview {
+				display: block;
+			}
+		}
+		.preview {
+			display: none;
+			.match {
+				color: #00f;
+				font-weight: bold;
+			}
+			.properties {
 			}
 		}
 	}
