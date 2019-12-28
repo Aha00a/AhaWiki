@@ -14,7 +14,7 @@ object MacroRecentChangesList extends TraitMacro {
   val regexDigits: Regex = """^(\d+)$""".r
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
-    implicit val db: Database = wikiContext.database
+    implicit val database: Database = wikiContext.database
     argument match {
       case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse)
       case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(i.toInt))

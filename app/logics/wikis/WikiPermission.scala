@@ -6,12 +6,13 @@ import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
+// TODO: object to class
 object WikiPermission {
-  def getReadDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, db:Database): Array[String] = {
+  def getReadDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, database:Database): Array[String] = {
     pageContent.flatMap(_.read).getOrElse(AhaWikiConfig().permission.default.read()).split("""\s*,\s*""")
   }
 
-  def getWriteDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, db:Database): Array[String] = {
+  def getWriteDirective(pageContent:Option[PageContent])(implicit request:Request[Any], cacheApi: CacheApi, database:Database): Array[String] = {
     pageContent.flatMap(_.write).getOrElse(AhaWikiConfig().permission.default.write()).split("""\s*,\s*""")
   }
 

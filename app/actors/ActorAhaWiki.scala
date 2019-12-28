@@ -23,18 +23,18 @@ object ActorAhaWiki {
   case class Geocode(address: String)
 }
 
-class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
+class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
-      db.withConnection { implicit connection =>
+      database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
 
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, db, context.self, configuration)
+          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
           val seqLink = Interpreters.extractLink(page.name, page.content)
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
         }
@@ -54,7 +54,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, db: Database, ws: WSCl
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
-          db.withTransaction { implicit connection =>
+          database.withTransaction { implicit connection =>
             AhaWikiQuery().GeocodeCache.replace(address, latLng)
             AhaWikiCache.AddressToLatLng.set(address, latLng)
           }

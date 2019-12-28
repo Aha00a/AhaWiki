@@ -20,8 +20,8 @@ object AhaWikiCache {
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): List[PageWithoutContentWithSize] = cacheApi.getOrElse(key, 60.minutes) {
-      db.withConnection { implicit connection =>
+    def get()(implicit cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = cacheApi.getOrElse(key, 60.minutes) {
+      database.withConnection { implicit connection =>
         AhaWikiQuery().pageSelectPageList()
       }
     }
@@ -33,7 +33,7 @@ object AhaWikiCache {
   }
 
   object PageNameSet extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit cacheApi: CacheApi, database:Database): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
       PageList.get().map(_.name).toSet
     }
   }
@@ -51,7 +51,7 @@ object AhaWikiCache {
   }
 
   object Config extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, db:Database): String = cacheApi.getOrElse(key, 60.minutes) { db.withConnection { implicit connection =>
+    def get()(implicit cacheApi: CacheApi, database:Database): String = cacheApi.getOrElse(key, 60.minutes) { database.withConnection { implicit connection =>
       AhaWikiQuery().Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }}
   }
