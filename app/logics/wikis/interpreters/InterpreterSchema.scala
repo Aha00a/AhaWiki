@@ -25,7 +25,7 @@ object InterpreterSchema {
                 if(pageNameSet.contains(v)) {
                   <a href={v}>{v}</a>
                 } else {
-                  v
+                  <a href={v} class="missing">{v}</a>
                 }
               }</dd>
             })
