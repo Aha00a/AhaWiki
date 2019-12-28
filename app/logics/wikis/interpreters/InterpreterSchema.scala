@@ -10,12 +10,12 @@ object InterpreterSchema {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
+    val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
 
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
     val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
     val properties: Seq[String] = fields.flatMap(_.headOption)
-    val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
