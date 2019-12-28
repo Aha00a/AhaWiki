@@ -68,7 +68,6 @@ class Test @Inject()(implicit
     testInterpreterWiki()
     testInterpreterVim()
     testHeadingNumber()
-    testStemmer()
 
     implicit val wikiContext: WikiContext = WikiContext("SandBox")
 
@@ -399,12 +398,6 @@ class Test @Inject()(implicit
     assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
     assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
   }
-
-  def testStemmer(): Unit = {
-    assertEquals(Stemmer.stem("ABC 가나다"), List("ABC", "가나다"))
-    assertEquals(Stemmer.stem("""He likes programming. 그는 프로그래밍을 좋아합니다."""), List("He", "like", "program", "그", "프로그래밍"))
-  }
-
 
   case class Dddd()(implicit database2: Database) {
     def selectCount(): Long = database2.withConnection { implicit connection =>
