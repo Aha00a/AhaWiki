@@ -6,16 +6,25 @@
         <div class="limitWidth">
             <h1>Blame of <a href="@wikiContext.name">@wikiContext.name</a></h1>
             <table class="tableBlame">
-                <tbody>
+                <thead>
                     <tr>
-                        <td colspan="4" class="empty"></td>
+                        <th>Revision</th>
+                        <th>DateTime</th>
+                        <th>Author</th>
+                        <th>Content</th>
+                        <th>Comment</th>
                     </tr>
+                </thead>
+                <tbody>
                     @for(blameLine <- blame.seqBlameLine) {
                         <tr style="background-color: hsl(@((maxRevision - blameLine.metaData.revision) * 360 / maxRevision), 100%, 87%);">
-                            <td class="lineNumber">@blameLine.metaData.revision</td>
+                            <td class="lineNumber">
+                                <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
+                            </td>
                             <td class="lineDateTime">@blameLine.metaData.isoLocalDateTime</td>
                             <td class="lineAuthor">@blameLine.metaData.author</td>
-                            <td class="lineContent">@blameLine.line</td>
+                            <td class="lineContent">@blameLine.item</td>
+                            <td class="lineAuthor">@blameLine.metaData.comment</td>
                         </tr>
                     }
                 </tbody>
