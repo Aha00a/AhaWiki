@@ -23,7 +23,7 @@ class Blame[MetaData](val seqBlameLine: Seq[BlameLine[MetaData]] = Seq()) {
           val sourcePosition = source.getPosition
           val targetLines = target.getLines
           val sourceSize = source.size()
-          val lines = seqBlameLine.patch(sourcePosition, targetLines.map(l => BlameLine[MetaData](metaData, l)), sourceSize)
+          val lines = blame.seqBlameLine.patch(sourcePosition, targetLines.map(l => BlameLine[MetaData](metaData, l)), sourceSize)
           new Blame(lines)
       }
     })

@@ -145,6 +145,7 @@ class Test @Inject()(implicit
     assertEquals(MacroCalendar.name, "Calendar")
 
     testBlame1()
+    testBlame2()
     Ok("Ok.")
   }
 
@@ -451,6 +452,27 @@ class Test @Inject()(implicit
     assertEquals(blame4.seqBlameLine(2).line, "d")
     assertEquals(blame4.seqBlameLine(3).metaData.revision, 3)
     assertEquals(blame4.seqBlameLine(3).line, "e")
+  }
+
+  def testBlame2(): Unit = {
+    class MetaData(val revision: Int)
+    assertEquals(new Blame().size, 0)
+
+    val blame1 = new Blame().next(new MetaData(1), "1\n1\n1\n2\n2\n2\n2\n1\n1\n1")
+    val blame2 = blame1.next(new MetaData(2), "1\n1\n2\n2\n1\n1")
+    assertEquals(blame2.size, 6)
+    assertEquals(blame2.seqBlameLine(0).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(0).line, "1")
+    assertEquals(blame2.seqBlameLine(1).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(1).line, "1")
+    assertEquals(blame2.seqBlameLine(2).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(2).line, "2")
+    assertEquals(blame2.seqBlameLine(3).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(3).line, "2")
+    assertEquals(blame2.seqBlameLine(4).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(4).line, "1")
+    assertEquals(blame2.seqBlameLine(5).metaData.revision, 1)
+    assertEquals(blame2.seqBlameLine(5).line, "1")
   }
 }
 
