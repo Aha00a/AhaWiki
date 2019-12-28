@@ -15,7 +15,9 @@ object InterpreterSchema {
     val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
-        <h5>{schemaClass}</h5>
+        <h5>
+          <a href={s"http://schema.org/${schemaClass}"} target="_blank">{schemaClass}</a>
+        </h5>
         {
           contentLines.map(l => {
             val values = l.splitTabsSeq()
@@ -31,6 +33,8 @@ object InterpreterSchema {
             })
           })
         }
+        <h5>Schema Hierarchy</h5>
+        {Schema.getHtmlTree(schemaClass)}
       </dl>
 
     if(wikiContext.isPreview) {
@@ -39,8 +43,6 @@ object InterpreterSchema {
         <div class="schema">
           {dl}
           <div class="preview">
-            <h5>Schema Hierarchy</h5>
-            {Schema.getHtmlTree(schemaClass)}
             {
               if(Schema.mapClass.isDefinedAt(schemaClass)) {
                 <div>
