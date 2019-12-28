@@ -20,7 +20,9 @@ object Schema {
     val children = (node \ "children").asOpt[Seq[JsValue]]
     if(id.containsIgnoreCase(q)) {
       <ul>
-        <li class={if(id == q){"match"}else{""}}>{id}</li>
+        <li>
+          <a target="_blank" href={s"http://schema.org/${id}"}>{id}</a>
+        </li>
         {children.map(seq => seq.map(n => getHtmlTree("", n))).getOrElse(NodeSeq.Empty)}
       </ul>
     } else {
@@ -29,7 +31,7 @@ object Schema {
         c
       } else {
         <ul>
-          <li>{id}</li>
+          <a target="_blank" href={s"http://schema.org/${id}"}>{id}</a>
           {c}
         </ul>
       }
