@@ -1,11 +1,7 @@
 package models
 
-import java.util
-import java.util.Date
-
-import com.aha00a.commons.Implicits._
 import com.github.difflib.DiffUtils
-import com.github.difflib.patch.{AbstractDelta, Chunk, DeltaType}
+import com.github.difflib.patch.DeltaType
 
 import scala.collection.JavaConversions._
 
