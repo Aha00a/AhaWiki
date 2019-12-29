@@ -1,6 +1,5 @@
 package logics.wikis.macros
 
-import logics.AhaWikiCache
 import models.WikiContext
 
 trait TraitMacro {
