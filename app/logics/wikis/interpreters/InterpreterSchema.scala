@@ -68,9 +68,9 @@ object InterpreterSchema extends TraitInterpreter {
 
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
-    val seqSchema = Link(wikiContext.name, schemaClass, "Schema")
+    val seqSchema = Link(wikiContext.name, Schema.withNameSpace(schemaClass), Schema.withNameSpace("Schema"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, key)) }
+    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, Schema.withNameSpace(key))) }
     seqSchema +: seqLinkProperty
   }
 }

@@ -11,6 +11,8 @@ import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
 object Schema {
+  def withNameSpace(s: String): String = s"schema:$s"
+
   implicit val codec: Codec = Codec.UTF8
 
   lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/tree.jsonld")))(_.mkString))

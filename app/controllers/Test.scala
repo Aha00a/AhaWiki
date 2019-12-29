@@ -330,10 +330,10 @@ class Test @Inject()(implicit
           |memberOf	Aharise""".stripMargin
       ).toList,
       Seq(
-        Link("UnitTest", "Person", "Schema"),
-        Link("UnitTest", "KIM, Aha", "name"),
-        Link("UnitTest", "https://aha00a.com", "url"),
-        Link("UnitTest", "Aharise", "memberOf")
+        Link("UnitTest", "schema:Person", "schema:Schema"),
+        Link("UnitTest", "KIM, Aha", "schema:name"),
+        Link("UnitTest", "https://aha00a.com", "schema:url"),
+        Link("UnitTest", "Aharise", "schema:memberOf")
       )
     )
   }

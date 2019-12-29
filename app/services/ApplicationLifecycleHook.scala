@@ -8,7 +8,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
-import models.{AhaWikiQuery, Page}
+import logics.Schema
+import models.{AhaWikiQuery, Link, Page}
 import play.api.Logger
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
@@ -32,8 +33,9 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   Logger.info("OnApplicationStart")
   actorSystem.scheduler.scheduleOnce(2 second, () => { database.withConnection { implicit connection =>
+    Logger.info("OnApplicationStarting")
+
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    Logger.info("OnApplicationStarted")
     if (0 == ahaWikiQuery.Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
@@ -49,6 +51,15 @@ class ApplicationLifecycleHook @Inject()(implicit
         actorAhaWiki ! Calculate(p.name)
       })
     }
+
+    val count = ahaWikiQuery.Link.selectCountWhereAlias("subClassOf")
+    
+    val seqLink: Seq[Link] = Schema.seqClass.flatMap(c => c.subClassOf.map(s => Link(Schema.withNameSpace(c.id), Schema.withNameSpace(s), "subClassOf")))
+    if(count < seqLink.length) {
+      ahaWikiQuery.Link.insert(seqLink)
+    }
+
+    Logger.info("OnApplicationStarted")
   }})
 
   //noinspection LanguageFeature

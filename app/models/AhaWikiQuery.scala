@@ -158,6 +158,12 @@ class AhaWikiQuery()(implicit connection: Connection) {
   }
 
   object Link {
+    def selectCountWhereAlias(alias: String): Long = {
+      SQL"SELECT COUNT(*) cnt FROM Link WHERE alias = $alias"
+        .as(long("cnt") single)
+    }
+
+
     def selectBacklink(name: String): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link WHERE dst = $name"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
