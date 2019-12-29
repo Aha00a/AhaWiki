@@ -35,7 +35,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
 
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
-          val seqLink = Interpreters.extractLink(page.name, page.content)
+          val seqLink = Interpreters.extractLink(page.content)
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
         }
       }
