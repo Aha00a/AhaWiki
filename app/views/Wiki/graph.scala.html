@@ -106,6 +106,23 @@
                 linkUI.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
             });
 
+            @* TODO: link label
+            graphics.link(function(link){
+                var edge = Viva.Graph.svg('path').attr('stroke', '#777').attr('marker-end', 'url(#Triangle)');
+                var label = Viva.Graph.svg('text').attr('fill', '#777').text('');
+                var g = Viva.Graph.svg('g')
+                g.append(edge);
+                g.append(label);
+                g.edge = edge;
+                g.label = label;
+                return g;
+            }).placeLink(function(linkUI, fromPos, toPos) {
+                linkUI.edge.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
+                linkUI.label.attr("x", (fromPos.x + toPos.x) / 2).attr('y', (fromPos.y + toPos.y) / 2);
+            });
+            *@
+
+
             @for(link <- links) { @link match {
                 case Array(node)=> {
             graph.addNode("@(node)"); }
