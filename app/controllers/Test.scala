@@ -5,10 +5,10 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import javax.inject.{Inject, Named, Singleton}
+import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.{InterpreterWiki, Interpreters}
 import logics.wikis.macros._
-import logics.wikis.HeadingNumber
 import models.{Blame, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -276,33 +276,35 @@ class Test @Inject()(implicit
     assertEquals(iw.formatInline("""\\[wiki:FrontPage Alias]"""), """\\<a href="FrontPage">Alias</a>""")
 
 
-    InterpreterWiki.extractLink("Src", """http://a.com""")
-    InterpreterWiki.extractLink("Src", """http://a.com$""")
-    InterpreterWiki.extractLink("Src", """[http://a.com]""")
-    InterpreterWiki.extractLink("Src", """[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """[FrontPage]""")
-    InterpreterWiki.extractLink("Src", """[FrontPage Alias]""")
-    InterpreterWiki.extractLink("Src", """[wiki:FrontPage]""")
-    InterpreterWiki.extractLink("Src", """[wiki:FrontPage Alias]""")
-    InterpreterWiki.extractLink("Src", """http://a.com/$   [http://a.com]  [http://a.com a com]""")
 
-    InterpreterWiki.extractLink("Src", """\http://a.com""")
-    InterpreterWiki.extractLink("Src", """\http://a.com$""")
-    InterpreterWiki.extractLink("Src", """\[http://a.com]""")
-    InterpreterWiki.extractLink("Src", """\[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """\[FrontPage]""")
-    InterpreterWiki.extractLink("Src", """\[FrontPage Alias]""")
-    InterpreterWiki.extractLink("Src", """\[wiki:FrontPage]""")
-    InterpreterWiki.extractLink("Src", """\[wiki:FrontPage Alias]""")
+    InterpreterWiki.extractLinkMarkup("""http://a.com""")
+    InterpreterWiki.extractLinkMarkup("""http://a.com$""")
+    InterpreterWiki.extractLinkMarkup("""[http://a.com]""")
+    InterpreterWiki.extractLinkMarkup("""[http://a.com a com]""")
+    InterpreterWiki.extractLinkMarkup("""[FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""[FrontPage Alias]""")
+    InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage Alias]""")
 
-    InterpreterWiki.extractLink("Src", """\\http://a.com""")
-    InterpreterWiki.extractLink("Src", """\\http://a.com$""")
-    InterpreterWiki.extractLink("Src", """\\[http://a.com]""")
-    InterpreterWiki.extractLink("Src", """\\[http://a.com a com]""")
-    InterpreterWiki.extractLink("Src", """\\[FrontPage]""")
-    InterpreterWiki.extractLink("Src", """\\[FrontPage Alias]""")
-    InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage]""")
-    InterpreterWiki.extractLink("Src", """\\[wiki:FrontPage Alias]""")
+    InterpreterWiki.extractLinkMarkup("""http://a.com/$   [http://a.com]  [http://a.com a com]""")
+
+    InterpreterWiki.extractLinkMarkup("""\http://a.com""")
+    InterpreterWiki.extractLinkMarkup("""\http://a.com$""")
+    InterpreterWiki.extractLinkMarkup("""\[http://a.com]""")
+    InterpreterWiki.extractLinkMarkup("""\[http://a.com a com]""")
+    InterpreterWiki.extractLinkMarkup("""\[FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""\[FrontPage Alias]""")
+    InterpreterWiki.extractLinkMarkup("""\[wiki:FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""\[wiki:FrontPage Alias]""")
+    
+    InterpreterWiki.extractLinkMarkup("""\\http://a.com""")
+    InterpreterWiki.extractLinkMarkup("""\\http://a.com$""")
+    InterpreterWiki.extractLinkMarkup("""\\[http://a.com]""")
+    InterpreterWiki.extractLinkMarkup("""\\[http://a.com a com]""")
+    InterpreterWiki.extractLinkMarkup("""\\[FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""\\[FrontPage Alias]""")
+    InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""")
+    InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""")
   }
 
 

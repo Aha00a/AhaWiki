@@ -146,7 +146,7 @@ class InterpreterWiki {
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLink(name, backQuoteExtracted).toSeq
+    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(name)).filterNot(_.dst.startsWith("[")).toSeq
   }
 
 
@@ -218,14 +218,14 @@ object InterpreterWiki {
       case value => "wrong : " + value
     })
   }
-  
-  def extractLink(src:String, content:String):Iterator[Link] = {
+
+  def extractLinkMarkup(content:String):Iterator[LinkMarkup] = {
     regexLink.findAllIn(content).map {
-      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toLink(src)
-      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri).toLink(src)
-      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toLink(src)
+      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
       case _ => null
-    }.filter(_ != null).filterNot(_.dst.startsWith("[")) // TODO: Macro
+    }.filter(_ != null)
   }
 }
 
