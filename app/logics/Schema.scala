@@ -42,18 +42,14 @@ object Schema {
   def jsonAllLayers: JsValue = Json.parse(file)
 
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
-    def toXmlSpan(classes: String*): Elem = {
-      <span
-        title={
-          Seq(
-            if(supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
-            comment
-          ).filter(_.isNotNullOrEmpty).mkString("\n")
-        }
-        class={
-          (classes :+ (if(supersededBy.nonEmpty) "supersededBy" else "")).mkString(" ")
-        }
-      >{id} </span>
+    def toXmlSpan(text:String, classes: String*): Elem = {
+      val seqTitle = Seq(
+        if (supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
+        comment
+      ).filter(_.isNotNullOrEmpty)
+      val seqClass = classes :+ (if (supersededBy.nonEmpty) "supersededBy" else "")
+
+      <span title={seqTitle.mkString("\n")} class={seqClass.mkString(" ")}>{text} </span>
     }
   }
   lazy val seqAll:Seq[Node] = {
@@ -86,7 +82,7 @@ object Schema {
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(if(seqPropertyUsed.contains(p.id)){"match"}else{""}))
+                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(p.id, if(seqPropertyUsed.contains(p.id)){"match"}else{""}))
                     }
                   </div>
                 }

@@ -28,7 +28,7 @@ object InterpreterSchema extends TraitInterpreter {
             <dt>
               {
                 Schema.mapProperty.get(key).map(n => {
-                  <span class={if(n.supersededBy.isEmpty) "" else "supersededBy"} title={n.comment}>{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                  n.toXmlSpan(EnglishCaseConverter.camelCase2TitleCase(key), if(n.supersededBy.isEmpty) "" else "supersededBy")
                 }).getOrElse{
                   <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
                 }
