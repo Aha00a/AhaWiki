@@ -15,7 +15,7 @@ object InterpreterSchema extends TraitInterpreter {
     val schemaClass = pageContent.argument.headOption.getOrElse("")
     val contentLines = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val seqPropertiesUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
+    val seqPropertyUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
@@ -43,7 +43,7 @@ object InterpreterSchema extends TraitInterpreter {
               if(Schema.mapClass.isDefinedAt(schemaClass)) {
                 <div>
                   {
-                    Schema.getHtmlProperties(schemaClass, seqPropertiesUsed)
+                    Schema.getHtmlProperties(schemaClass, seqPropertyUsed)
                   }
                 </div>
               } else {
@@ -63,14 +63,16 @@ object InterpreterSchema extends TraitInterpreter {
 
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent = PageContent(content)
+    if(pageContent.interpreter.getOrElse("") != name)
+      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
-    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
-    fields.flatMap(values => {
-      val key = values.head
-      values.tail.map(v => {
-        Link(key, v, key)
-      })
-    })
+    val seqLinkClass: Seq[Link] = Schema.getClassHierarchy(schemaClass) match { case key +: tail =>
+      Link(wikiContext.name, key, "Schema") +: tail.map(v => Link(wikiContext.name, v, "subClassOf"))
+    }
+    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
+    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, key)) }
+    seqLinkClass ++ seqLinkProperty
   }
 }

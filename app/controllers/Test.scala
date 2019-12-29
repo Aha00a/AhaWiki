@@ -8,7 +8,7 @@ import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
-import logics.wikis.interpreters.{InterpreterWiki, Interpreters}
+import logics.wikis.interpreters.{InterpreterSchema, InterpreterWiki, Interpreters}
 import logics.wikis.macros._
 import models.{Blame, Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
@@ -68,6 +68,7 @@ class Test @Inject()(implicit
     testInterpreterTable()
     testInterpreterWiki()
     testInterpreterVim()
+    testInterpreterSchema()
     testHeadingNumber()
 
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
@@ -315,6 +316,29 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))
 
   }
+
+  def testInterpreterSchema()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
+
+    assertEquals(InterpreterSchema.name, "Schema")
+
+    assertEquals(
+      InterpreterSchema.extractLink(
+        """#!Schema Person
+          |name	KIM, Aha
+          |url	https://aha00a.com
+          |memberOf	Aharise""".stripMargin
+      ).toList,
+      Seq(
+        Link("UnitTest", "Person", "Schema"),
+        Link("UnitTest", "Thing", "subClassOf"),
+        Link("UnitTest", "KIM, Aha", "name"),
+        Link("UnitTest", "https://aha00a.com", "url"),
+        Link("UnitTest", "Aharise", "memberOf")
+      )
+    )
+  }
+
 
 
   //noinspection NameBooleanParameters

@@ -57,7 +57,7 @@ object Schema {
   lazy val mapClass: Map[String, Node] = seqClass.map(n => (n.id, n)).toMap
   lazy val seqProperty: Seq[Node] = seqAll.filter(_.schemaType == "Property")
 
-  def getHtmlProperties(schema:String, properties:Seq[String]): Elem = {
+  def getHtmlProperties(schema:String, seqPropertyUsed:Seq[String]): Elem = {
     val seqClass = getClassHierarchy(schema)
     <div>
       {
@@ -70,7 +70,7 @@ object Schema {
                 map.keys.toSeq.sorted.map { k =>
                   <div>
                     {
-                      map(k).map(p => <span title={p.comment} class={if(properties.contains(p.id)){"match"} else {""}}>{p.id} </span>)
+                      map(k).map(p => <span title={p.comment} class={if(seqPropertyUsed.contains(p.id)){"match"} else {""}}>{p.id} </span>)
                     }
                   </div>
                 }
