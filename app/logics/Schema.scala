@@ -75,6 +75,7 @@ object Schema {
   lazy val seqClass: Seq[Node] = seqAll.filter(_.schemaType == "Class")
   lazy val mapClass: Map[String, Node] = seqClass.map(n => (n.id, n)).toMap
   lazy val seqProperty: Seq[Node] = seqAll.filter(_.schemaType == "Property")
+  lazy val mapProperty: Map[String, Node] = seqProperty.map(n => (n.id, n)).toMap
 
   def getHtmlProperties(schema:String, seqPropertyUsed:Seq[String]): Elem = {
     val seqClass = getClassHierarchy(schema)

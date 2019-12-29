@@ -25,7 +25,15 @@ object InterpreterSchema extends TraitInterpreter {
         <h5>{schemaClass}</h5>
         {
           seqSeqField.map { case key +: tail =>
-            <dt>{EnglishCaseConverter.camelCase2TitleCase(key)}</dt>
+            <dt>
+              {
+                Schema.mapProperty.get(key).map(n => {
+                  <span class={if(n.supersededBy.isEmpty) "" else "supersededBy"} title={n.comment}>{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                }).getOrElse{
+                  <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                }
+              }
+            </dt>
             <dd property={key}>
             {
               tail.map { v =>
