@@ -1,6 +1,7 @@
 package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.EnglishCaseConverter
 import logics.wikis.PageNameLogic
 import logics.{AhaWikiCache, Schema}
 import models.{Link, PageContent, WikiContext}
@@ -22,17 +23,18 @@ object InterpreterSchema extends TraitInterpreter {
         <h5>{schemaClass}</h5>
         {
           seqSeqField.map { case key +: tail =>
-            <dt>{key}</dt> ++ tail.map { v =>
-              <dd property={key}>
-                {
-                  if(PageNameLogic.isExternal(v)) {
-                    <a href={v} target="_blank">{v}</a>
-                  } else {
-                    <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a>
-                  }
+            <dt>{EnglishCaseConverter.camelCase2TitleCase(key)}</dt>
+            <dd property={key}>
+            {
+              tail.map { v =>
+                if(PageNameLogic.isExternal(v)) {
+                  <a href={v} target="_blank">{v}</a><span> </span>
+                } else {
+                  <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a><span> </span>
                 }
-              </dd>
+              }
             }
+            </dd>
           }
         }
         <dt>Hierarchy</dt>
