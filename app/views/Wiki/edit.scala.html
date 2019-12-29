@@ -88,11 +88,17 @@
             });
 
             $('textarea[name=text]').bind('keydown', function (e) {
+                console.log(e);
                 if(e.keyCode === 9){
                     if(this.value.length === this.selectionStart)
                         return;
 
                     document.execCommand("insertText", false, '\t');
+                    return false;
+                }
+                if(e.key === '[') {
+                    document.execCommand("insertText", false, '[]');
+                    this.selectionStart = this.selectionEnd = this.selectionStart - 1;
                     return false;
                 }
             });
