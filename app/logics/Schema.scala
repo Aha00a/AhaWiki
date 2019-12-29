@@ -4,7 +4,6 @@ import java.io.File
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import play.api.Logger
 import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
 import scala.io.Codec
@@ -43,7 +42,7 @@ object Schema {
   def jsonAllLayers: JsValue = Json.parse(file)
 
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
-    def toXmlSpan(checkMatch: String => Boolean) = {
+    def toXmlSpan(checkMatch: String => Boolean): Elem = {
       <span
         title={
           Seq(
