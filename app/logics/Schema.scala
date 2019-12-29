@@ -72,7 +72,14 @@ object Schema {
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      groupByFirstLetter(firstLetter).map(p => <span title={p.comment} class={if(seqPropertyUsed.contains(p.id)){"match"} else {""}}>{p.id} </span>)
+                      groupByFirstLetter(firstLetter).map(p =>
+                        <span title={p.comment} class={
+                          Seq(
+                            if(seqPropertyUsed.contains(p.id)){"match"} else {""},
+                            if(p.supersededBy.nonEmpty){"supersededBy"} else {""}
+                          ).mkString(" ")
+                        }>{p.id} </span>
+                      )
                     }
                   </div>
                 }
