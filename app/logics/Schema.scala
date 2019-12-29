@@ -82,7 +82,7 @@ object Schema {
       {
         seqClass.map(c => {
           <div class="properties">
-            <h5>Properties of {c}</h5>
+            <h6>Properties of {c}</h6>
             <div>
               {
                 val groupByFirstLetter: Map[Char, Seq[Node]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))

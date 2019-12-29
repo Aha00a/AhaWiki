@@ -8,6 +8,8 @@ import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 
+import scala.xml.{Elem, NodeSeq}
+
 object InterpreterSchema extends TraitInterpreter {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
@@ -38,9 +40,14 @@ object InterpreterSchema extends TraitInterpreter {
           }
         }
         <dt>Hierarchy</dt>
-        <dd>
-          {Schema.getHtmlTree(schemaClass)}
-        </dd>
+        {Schema.getClassHierarchy(schemaClass).foldLeft(NodeSeq.Empty)((a, v) => {
+          <ul>
+            <li>
+              <a href={s"/w/${Schema.withNameSpace(v)}"}>{v}</a>
+            </li>
+            {a}
+          </ul>
+        })}
       </dl>
 
     if(wikiContext.isPreview) {
@@ -48,13 +55,12 @@ object InterpreterSchema extends TraitInterpreter {
         <div class="schema">
           {dl}
           <div class="preview">
+            <h5>Preview Only</h5>
+            <h6>Hierarchical Search</h6>
+            {Schema.getHtmlTree(schemaClass)}
             {
               if(Schema.mapClass.isDefinedAt(schemaClass)) {
-                <div>
-                  {
-                    Schema.getHtmlProperties(schemaClass, seqPropertyUsed)
-                  }
-                </div>
+                <div>{Schema.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
               } else {
 
               }
