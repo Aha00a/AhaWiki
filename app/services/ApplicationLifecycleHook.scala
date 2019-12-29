@@ -31,10 +31,10 @@ class ApplicationLifecycleHook @Inject()(implicit
   }
 
   Logger.info("OnApplicationStart")
-
   actorSystem.scheduler.scheduleOnce(2 second, () => { database.withConnection { implicit connection =>
+    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     Logger.info("OnApplicationStarted")
-    if (0 == AhaWikiQuery().Page.selectCount()) {
+    if (0 == ahaWikiQuery.Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
           val name = file.getName
@@ -45,7 +45,7 @@ class ApplicationLifecycleHook @Inject()(implicit
       }
 
       getArrayPageFromFile.foreach(p => {
-        AhaWikiQuery().pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
+        ahaWikiQuery.pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
         actorAhaWiki ! Calculate(p.name)
       })
     }
@@ -53,7 +53,8 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   //noinspection LanguageFeature
   actorSystem.scheduler.schedule(3 seconds, 3 minutes, () => { database.withConnection { implicit connection =>
-    AhaWikiQuery().pageSelectNameWhereNoCosineSimilarity() match {
+    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
+    ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! Calculate(s)
       case None => Logger.info("None")
     }
