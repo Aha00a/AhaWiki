@@ -478,6 +478,7 @@ class Test @Inject()(implicit
   def testEnglishCaseConverter(): Unit = {
     assertEquals(EnglishCaseConverter.splitCamelCase("someWordsAreHere"), Seq("some", "words", "are", "here"))
     assertEquals(EnglishCaseConverter.joinTitleCase(EnglishCaseConverter.splitCamelCase("someWordsAreHere")), "Some Words Are Here")
+    assertEquals(EnglishCaseConverter.camelCase2TitleCase("someWordsAreHere"), "Some Words Are Here")
   }
 }
 
