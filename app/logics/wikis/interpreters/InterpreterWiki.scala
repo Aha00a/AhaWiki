@@ -22,7 +22,7 @@ object InterpreterWiki extends TraitInterpreter {
     def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
 
     def toRegexReplacement(set: Set[String] = Set[String]()): String = {
-      val external: Boolean = uri.contains("://")
+      val external: Boolean = PageNameLogic.isExternal(uri)
 
       val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
       val attrTarget: String = if (external) " target=\"_blank\"" else ""

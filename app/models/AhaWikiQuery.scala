@@ -6,6 +6,7 @@ import java.util.Date
 import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits._
+import logics.wikis.PageNameLogic
 
 import scala.collection.immutable
 import scala.language.postfixOps
@@ -21,7 +22,7 @@ case class TermFrequency(name:String, term:String, frequency:Int) {
 }
 
 case class Link(src:String, dst:String, alias:String) {
-  lazy val isDstExternal: Boolean = dst.contains("://")
+  lazy val isDstExternal: Boolean = PageNameLogic.isExternal(dst)
 
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
