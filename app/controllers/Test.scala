@@ -70,7 +70,7 @@ class Test @Inject()(implicit
     testInterpreterVim()
     testHeadingNumber()
 
-    implicit val wikiContext: WikiContext = WikiContext("SandBox")
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     val empty = ""
     val dummy = "aaaa"
@@ -230,7 +230,7 @@ class Test @Inject()(implicit
 
 
   def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
-    implicit val wikiContext: WikiContext = WikiContext("")
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
     assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
@@ -245,7 +245,7 @@ class Test @Inject()(implicit
 
 
   def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
-    implicit val wikiContext: WikiContext = WikiContext("")
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
     assertEquals(InterpreterWiki.formatInline("""http://a.com"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(InterpreterWiki.formatInline("""http://a.com$"""), """<a href="http://a.com$" target="_blank">http://a.com$</a>""")
     assertEquals(InterpreterWiki.formatInline("""[http://a.com]"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
