@@ -20,18 +20,15 @@ object InterpreterSchema {
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
         {
-          seqSeqField.map(values => {
-            val key = values.head
-            <dt>{key}</dt> ++ values.tail.map(v => {
-              <dd property={key}>{
-                if(pageNameSet.contains(v)) {
-                  <a href={v}>{v}</a>
-                } else {
-                  <a href={v} class="missing">{v}</a>
-                }
-                }</dd>
-            })
-          })
+          seqSeqField.map { case key +: tail =>
+            <dt>{key}</dt> ++ tail.map { v =>
+              <dd property={key}>
+                <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>
+                  {v}
+                </a>
+              </dd>
+            }
+          }
         }
         <dt>Hierarchy</dt>
         <dd>
