@@ -8,6 +8,7 @@ import logics.wikis._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.Link
 import models.WikiContext
+import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
 
@@ -162,7 +163,7 @@ object InterpreterWiki extends TraitInterpreter {
 
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
-    val extractConvertApplyChunk = new ExtractConvertApplyChunk()
+    val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
@@ -170,7 +171,10 @@ object InterpreterWiki extends TraitInterpreter {
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toSeq
+    val seqLinkInterpreter: Seq[Link] = extractConvertApplyChunk.extractLink().toList
+    val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+    val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+    seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
   }
 
 
