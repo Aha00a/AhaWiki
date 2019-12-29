@@ -42,7 +42,24 @@ object Schema {
   private val file: String = Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld")))(_.mkString)
   def jsonAllLayers: JsValue = Json.parse(file)
 
-  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String])
+  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
+    def toXmlSpan(checkMatch: String => Boolean) = {
+      <span
+        title={
+          Seq(
+            if(supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
+            comment
+          ).mkString("\n")
+        }
+        class={
+          Seq(
+            if(checkMatch(id)) "match" else "",
+            if(supersededBy.nonEmpty) "supersededBy" else ""
+          ).mkString(" ")
+        }
+      >{id} </span>
+    }
+  }
   lazy val seqAll:Seq[Node] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
@@ -72,14 +89,7 @@ object Schema {
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      groupByFirstLetter(firstLetter).map(p =>
-                        <span title={p.comment} class={
-                          Seq(
-                            if(seqPropertyUsed.contains(p.id)){"match"} else {""},
-                            if(p.supersededBy.nonEmpty){"supersededBy"} else {""}
-                          ).mkString(" ")
-                        }>{p.id} </span>
-                      )
+                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(seqPropertyUsed.contains))
                     }
                   </div>
                 }
