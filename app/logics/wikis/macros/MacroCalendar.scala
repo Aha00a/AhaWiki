@@ -25,6 +25,7 @@ object MacroCalendar extends TraitMacro {
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 
+  @scala.annotation.tailrec
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
