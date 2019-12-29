@@ -22,7 +22,7 @@ object InterpreterSchema {
         {
           fields.map(values => {
             val key = values.head
-            <dt>{key}</dt> ++ values.tail.map(v => {
+            <dt>{key}</dt> ++ values.filter(_.isNotNullOrEmpty).tail.map(v => {
               <dd property={key}>{
                 if(pageNameSet.contains(v)) {
                   <a href={v}>{v}</a>
