@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.EnglishCaseConverter
 import javax.inject.{Inject, Named, Singleton}
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
@@ -108,6 +109,8 @@ class Test @Inject()(implicit
 
     testBlame1()
     testBlame2()
+
+    testEnglishCaseConverter()
     Ok("Ok.")
   }
 
@@ -469,6 +472,12 @@ class Test @Inject()(implicit
     assertEquals(blame2.seqBlameLine(4).item, "1")
     assertEquals(blame2.seqBlameLine(5).metaData.revision, 1)
     assertEquals(blame2.seqBlameLine(5).item, "1")
+  }
+
+
+  def testEnglishCaseConverter(): Unit = {
+    assertEquals(EnglishCaseConverter.splitCamelCase("someWordsAreHere"), Seq("some", "words", "are", "here"))
+    assertEquals(EnglishCaseConverter.joinTitleCase(EnglishCaseConverter.splitCamelCase("someWordsAreHere")), "Some Words Are Here")
   }
 }
 
