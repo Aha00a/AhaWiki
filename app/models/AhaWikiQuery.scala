@@ -24,6 +24,8 @@ case class TermFrequency(name:String, term:String, frequency:Int) {
 }
 
 case class Link(src:String, dst:String, alias:String) {
+  lazy val isDstExternal: Boolean = dst.contains("://")
+
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
 
