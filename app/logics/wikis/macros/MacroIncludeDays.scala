@@ -17,7 +17,7 @@ object MacroIncludeDays extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
-    case regex(y, m) => getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(existsInPageName).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
+    case regex(y, m) => getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(wikiContext.existPage).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
       val ldt: LocalDateTime = LocalDateTimeUtil.convert(new SimpleDateFormat("yyyy-MM-dd").parse(pageName))
       content
         .split("\n")

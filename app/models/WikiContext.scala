@@ -1,6 +1,7 @@
 package models
 
 import akka.actor.ActorRef
+import logics.AhaWikiCache
 import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -16,6 +17,8 @@ case class WikiContext(
                        val database: Database,
                        val actorAhaWiki: ActorRef,
                        val configuration: Configuration
-                      )
+                      ) {
+  def existPage(name: String): Boolean = AhaWikiCache.PageNameSet.get().contains(name) // TODO: this may causes performance issue.
+}
 
 

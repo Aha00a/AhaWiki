@@ -1,7 +1,10 @@
 package logics.wikis
 
+import logics.AhaWikiCache
 import logics.wikis.macros._
 import models.WikiContext
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -74,7 +77,9 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
-      case regex(name, argument) => mapMacros.get(name).map(_.extractLinkExistsOnly(argument)).getOrElse(Seq())
+      case regex(name, argument) => mapMacros.get(name)
+        .map(_.extractLink(argument).filter(wikiContext.existPage))
+        .getOrElse(Seq())
       case _ => Seq()
     }
   }
