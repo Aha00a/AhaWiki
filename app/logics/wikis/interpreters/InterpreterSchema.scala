@@ -22,7 +22,7 @@ object InterpreterSchema extends TraitInterpreter {
     val seqPropertyUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
-        <h5>{schemaClass}</h5>
+        <h5>{EnglishCaseConverter.pascalCase2TitleCase(schemaClass)}</h5>
         {
           seqSeqField.map { case key +: tail =>
             <dt>
