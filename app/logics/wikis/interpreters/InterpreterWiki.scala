@@ -17,7 +17,7 @@ import scala.util.matching.Regex
 
 
 
-object InterpreterWiki {
+object InterpreterWiki extends TraitInterpreter {
   case class LinkMarkup(uri:String, alias:String = "") {
     def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
 
@@ -161,7 +161,7 @@ object InterpreterWiki {
   }
 
 
-  def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
+  override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
     val extractConvertApplyChunk = new ExtractConvertApplyChunk()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()

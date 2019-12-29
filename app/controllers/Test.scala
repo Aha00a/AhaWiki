@@ -246,6 +246,9 @@ class Test @Inject()(implicit
 
   def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
+
+    assertEquals(InterpreterWiki.name, "Wiki")
+
     assertEquals(InterpreterWiki.formatInline("""http://a.com"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
     assertEquals(InterpreterWiki.formatInline("""http://a.com$"""), """<a href="http://a.com$" target="_blank">http://a.com$</a>""")
     assertEquals(InterpreterWiki.formatInline("""[http://a.com]"""), """<a href="http://a.com" target="_blank">http://a.com</a>""")
