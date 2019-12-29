@@ -1,6 +1,7 @@
 package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
+import logics.wikis.PageNameLogic
 import logics.{AhaWikiCache, Schema}
 import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
@@ -23,7 +24,13 @@ object InterpreterSchema extends TraitInterpreter {
           seqSeqField.map { case key +: tail =>
             <dt>{key}</dt> ++ tail.map { v =>
               <dd property={key}>
-                <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a>
+                {
+                  if(PageNameLogic.isExternal(v)) {
+                    <a href={v} target="_blank">{v}</a>
+                  } else {
+                    <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a>
+                  }
+                }
               </dd>
             }
           }
