@@ -42,7 +42,7 @@ object Schema {
   private val file: String = Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld")))(_.mkString)
   def jsonAllLayers: JsValue = Json.parse(file)
 
-  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String)
+  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String])
   lazy val seqAll:Seq[Node] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
@@ -51,7 +51,8 @@ object Schema {
       val subClassOf: Seq[String] = getSeqString(v \ "subClassOf")
       val domainIncludes: Seq[String] = getSeqString(v \ "domainIncludes")
       val comment = (v \ "comment").as[String]
-      Node(id, typeStr, subClassOf, domainIncludes, comment)
+      val supersededBy: Seq[String] = getSeqString(v \ "supersededBy")
+      Node(id, typeStr, subClassOf, domainIncludes, comment, supersededBy)
     })
   }
   lazy val seqClass: Seq[Node] = seqAll.filter(_.schemaType == "Class")
