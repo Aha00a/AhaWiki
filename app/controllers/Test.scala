@@ -10,7 +10,7 @@ import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.{InterpreterWiki, Interpreters}
 import logics.wikis.macros._
-import models.{Blame, PageContent, WikiContext}
+import models.{Blame, Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
@@ -307,6 +307,10 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage Alias]""").toList, Seq(LinkMarkup("""FrontPage""", """Alias""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
+
+    assertEquals(InterpreterWiki.extractLink("name","[link]").toList, Seq(Link("name", "link", "")))
+    assertEquals(InterpreterWiki.extractLink("name","[link alias][b]").toList, Seq(Link("name", "link", "alias"), Link("name", "b", "")))
+
   }
 
 
