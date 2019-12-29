@@ -42,19 +42,16 @@ object Schema {
   def jsonAllLayers: JsValue = Json.parse(file)
 
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
-    def toXmlSpan(checkMatch: String => Boolean): Elem = {
+    def toXmlSpan(classes: String*): Elem = {
       <span
         title={
           Seq(
             if(supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
             comment
-          ).mkString("\n")
+          ).filter(_.isNotNullOrEmpty).mkString("\n")
         }
         class={
-          Seq(
-            if(checkMatch(id)) "match" else "",
-            if(supersededBy.nonEmpty) "supersededBy" else ""
-          ).mkString(" ")
+          (classes :+ (if(supersededBy.nonEmpty) "supersededBy" else "")).mkString(" ")
         }
       >{id} </span>
     }
@@ -89,7 +86,7 @@ object Schema {
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(seqPropertyUsed.contains))
+                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(if(seqPropertyUsed.contains(p.id)){"match"}else{""}))
                     }
                   </div>
                 }
