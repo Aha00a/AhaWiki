@@ -42,7 +42,7 @@ object InterpreterWiki {
     def toLink(src:String) = Link(src, uriNormalized, alias)
   }
 
-    object State extends Enumeration {
+  object State extends Enumeration {
     type State = Value
     val Normal, Hr, Heading, List = Value
   }
