@@ -8,7 +8,7 @@ object MacroBacklinks extends TraitMacro {
     InterpreterWiki(AhaWikiQuery().Link.linkSelectNotUrl(wikiContext.name)
       .filterNot(_.or(_.contains("://")))
       .filter(_.dst == wikiContext.name)
-      .map(l => s" * [${l.src}]")
+      .map(l => s" * [${l.src}] ${l.alias}")
       .mkString("\n")
     )
   }}
