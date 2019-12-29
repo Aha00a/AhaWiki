@@ -43,7 +43,8 @@ object InterpreterSchema extends TraitInterpreter {
         {Schema.getClassHierarchy(schemaClass).foldLeft(NodeSeq.Empty)((a, v) => {
           <ul>
             <li>
-              <a href={s"/w/${Schema.withNameSpace(v)}"}>{v}</a>
+              <a href={s"/w/${Schema.withNameSpace(v)}"}>{v}</a><br/>
+              {Schema.mapClass(v).comment}
             </li>
             {a}
           </ul>
