@@ -177,7 +177,7 @@ class Wiki @Inject()(implicit
   }}
 
   def getRelatedPages(name: String)(implicit connection: Connection): String = {
-    val seqLink: Seq[Link] = AhaWikiQuery().Link.linkSelect(name)
+    val seqLink: Seq[Link] = AhaWikiQuery().Link.select(name)
     val seqLinkExpanded: scala.Seq[_root_.models.Link] = expandLink(seqLink)
     val result = seqLinkExpanded
       .map(l => s"${l.src}->${l.dst}")
@@ -193,8 +193,8 @@ class Wiki @Inject()(implicit
 
 
   private def expandLink(seqLink: Seq[Link])(implicit connection: Connection): Seq[Link] = {
-    val backward: Seq[Link] = seqLink.flatMap(lm => AhaWikiQuery().Link.linkSelect(lm.src))
-    val forward: Seq[Link] = seqLink.flatMap(lm => AhaWikiQuery().Link.linkSelect(lm.dst))
+    val backward: Seq[Link] = seqLink.flatMap(lm => AhaWikiQuery().Link.select(lm.src))
+    val forward: Seq[Link] = seqLink.flatMap(lm => AhaWikiQuery().Link.select(lm.dst))
     val listExpanded: Seq[Link] = seqLink ++ backward ++ forward
     listExpanded
   }

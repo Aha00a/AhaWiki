@@ -178,7 +178,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Link.tupled)
     }
 
-    def linkSelect(name: String): List[Link] = {
+    def select(name: String): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
