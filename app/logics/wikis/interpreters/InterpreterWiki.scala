@@ -23,11 +23,11 @@ class InterpreterWiki {
     val Normal, Hr, Heading, List = Value
   }
 
-  val extractConvertApplyChunk = new ExtractConvertApplyChunk()
-  val extractConvertApplyMacro = new ExtractConvertApplyMacro()
-  val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
-
   def apply(wikiText:String)(implicit wikiContext:WikiContext):String = {
+    val extractConvertApplyChunk = new ExtractConvertApplyChunk()
+    val extractConvertApplyMacro = new ExtractConvertApplyMacro()
+    val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+
     val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
@@ -138,6 +138,10 @@ class InterpreterWiki {
 
 
   def extractLink(name:String, content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
+    val extractConvertApplyChunk = new ExtractConvertApplyChunk()
+    val extractConvertApplyMacro = new ExtractConvertApplyMacro()
+    val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+
     val chunkExtracted = extractConvertApplyChunk.extract(content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
