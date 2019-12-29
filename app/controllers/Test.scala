@@ -308,8 +308,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
 
-    assertEquals(InterpreterWiki.extractLink("name","[link]").toList, Seq(Link("name", "link", "")))
-    assertEquals(InterpreterWiki.extractLink("name","[link alias][b]").toList, Seq(Link("name", "link", "alias"), Link("name", "b", "")))
+    assertEquals(InterpreterWiki.extractLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
+    assertEquals(InterpreterWiki.extractLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))
 
   }
 

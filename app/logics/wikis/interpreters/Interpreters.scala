@@ -35,7 +35,7 @@ object Interpreters {
     val pageContent: PageContent = PageContent(content)
     val body = pageContent.content
     pageContent.interpreter match {
-      case Some("Wiki") | Some("wiki") | None => InterpreterWiki.extractLink(name, body).filterNot(_.or(_.startsWith("#")))
+      case Some("Wiki") | Some("wiki") | None => InterpreterWiki.extractLink(body).filterNot(_.or(_.startsWith("#")))
       case Some("Schema") | Some("schema") | None => InterpreterSchema.extractLink(pageContent)
       // case Some("Comment") | Some("comment") => ""
       // case Some("Graph") => InterpreterGraph.interpret(pageContent)

@@ -161,7 +161,7 @@ object InterpreterWiki {
   }
 
 
-  def extractLink(name:String, content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
+  def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
     val extractConvertApplyChunk = new ExtractConvertApplyChunk()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
@@ -170,7 +170,7 @@ object InterpreterWiki {
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(name)).filterNot(_.dst.startsWith("[")).toSeq
+    extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)) ++ InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toSeq
   }
 
 
