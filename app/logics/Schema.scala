@@ -19,12 +19,11 @@ object Schema {
 
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
+    val idWithNameSpace = withNameSpace(id)
     val children = (node \ "children").asOpt[Seq[JsValue]]
     if(id.containsIgnoreCase(q)) {
       <ul>
-        <li>
-          <a target="_blank" href={s"http://schema.org/${id}"}>{id}</a>
-        </li>
+        <li><a href={s"/w/${idWithNameSpace}"}>{id}</a></li>
         {children.map(seq => seq.map(n => getHtmlTree("", n))).getOrElse(NodeSeq.Empty)}
       </ul>
     } else {
@@ -33,7 +32,7 @@ object Schema {
         c
       } else {
         <ul>
-          <a target="_blank" href={s"http://schema.org/${id}"}>{id}</a>
+          <li><a href={s"/w/${idWithNameSpace}"}>{id}</a></li>
           {c}
         </ul>
       }
