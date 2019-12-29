@@ -5,10 +5,7 @@ import java.net.URLEncoder
 import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.AhaWikiCache
 import logics.wikis._
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
-import models.Link
-import models.WikiContext
-import play.api.Logger
+import models.{Link, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 
