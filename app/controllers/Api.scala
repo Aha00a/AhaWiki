@@ -12,7 +12,7 @@ import scala.util.Random
 
 class Api @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
   def pageMap: Action[AnyContent] = Action { database.withConnection { implicit connection =>
-    val listLink = Random.shuffle(AhaWikiQuery().Link.linkSelect()).take(10)
+    val listLink = Random.shuffle(AhaWikiQuery().Link.selectAll()).take(10)
 
     Ok(Json.toJson(Map(
       "links" -> listLink
