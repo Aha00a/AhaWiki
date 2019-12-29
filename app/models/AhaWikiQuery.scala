@@ -190,6 +190,14 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Link.tupled)
     }
 
+    def expand(seq: Seq[Link]): Seq[Link] = {
+      val backward: Seq[Link] = seq.flatMap(l => select(l.src))
+      val forward: Seq[Link] = seq.flatMap(l => select(l.dst))
+      val seqExpanded: Seq[Link] = seq ++ backward ++ forward
+      seqExpanded
+    }
+
+
     def insert(seq: Seq[Link]): Array[Int] = {
       if(seq.isEmpty) {
         Array[Int]()
