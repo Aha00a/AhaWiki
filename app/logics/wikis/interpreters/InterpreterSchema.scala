@@ -52,7 +52,7 @@ object InterpreterSchema extends TraitInterpreter {
           <ul>
             <li>
               <a href={s"/w/${Schema.withNameSpace(v)}"}>{v}</a>
-              <sup>({Schema.mapClass(v).comment})</sup>
+              <sup title={Schema.mapClass(v).comment}>{Schema.mapClass(v).comment}</sup>
             </li>
             {a}
           </ul>
