@@ -50,10 +50,7 @@ object Schema {
       val subClassOf: Seq[String] = getSeqString(v \ "subClassOf")
       val domainIncludes: Seq[String] = getSeqString(v \ "domainIncludes")
       val comment = (v \ "comment").as[String]
-
-      val node = Node(id, typeStr, subClassOf, domainIncludes, comment)
-      Logger.info(s"$node")
-      node
+      Node(id, typeStr, subClassOf, domainIncludes, comment)
     })
   }
   lazy val seqClass: Seq[Node] = seqAll.filter(_.schemaType == "Class")
