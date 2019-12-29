@@ -69,7 +69,11 @@ object InterpreterSchema {
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
     val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
-    val properties: Seq[String] = fields.flatMap(_.headOption)
-    Seq()
+    fields.flatMap(values => {
+      val key = values.head
+      values.tail.map(v => {
+        Link(key, v, key)
+      })
+    })
   }
 }
