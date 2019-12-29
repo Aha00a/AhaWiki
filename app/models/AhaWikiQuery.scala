@@ -1,14 +1,11 @@
 package models
 
 import java.sql.Connection
-import java.time.{LocalDate, LocalDateTime}
 import java.util.Date
 
 import anorm.SqlParser._
 import anorm._
-import com.aha00a.commons.Implicits.{LocalDateTimeFormatter, _}
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil}
-import play.api.Logger
+import com.aha00a.commons.Implicits._
 
 import scala.collection.immutable
 import scala.language.postfixOps
