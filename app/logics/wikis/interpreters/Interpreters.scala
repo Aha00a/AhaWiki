@@ -17,12 +17,12 @@ object Interpreters {
       case Some("Markdown") | Some("markdown") => InterpreterMarkdown(body)
       case Some("Math") => InterpreterMath(argument, body)
       case Some("Paper") => InterpreterPaper.interpret(argument, body)
-      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki()(body) + "</blockquote>"
+      case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki(body) + "</blockquote>"
       case Some("Schema") | Some("schema") => InterpreterSchema(pageContent)
       case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
       case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
       case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
-      case Some("Wiki") | Some("wiki") | None => (new InterpreterWiki())(body)
+      case Some("Wiki") | Some("wiki") | None => InterpreterWiki(body)
       case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
@@ -35,7 +35,7 @@ object Interpreters {
     val pageContent: PageContent = PageContent(content)
     val body = pageContent.content
     pageContent.interpreter match {
-      case Some("Wiki") | Some("wiki") | None => new InterpreterWiki().extractLink(name, body).filterNot(_.or(_.startsWith("#")))
+      case Some("Wiki") | Some("wiki") | None => InterpreterWiki.extractLink(name, body).filterNot(_.or(_.startsWith("#")))
       case Some("Schema") | Some("schema") | None => InterpreterSchema.extractLink(pageContent)
       // case Some("Comment") | Some("comment") => ""
       // case Some("Graph") => InterpreterGraph.interpret(pageContent)

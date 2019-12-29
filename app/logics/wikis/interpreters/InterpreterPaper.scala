@@ -5,7 +5,7 @@ import models.WikiContext
 object InterpreterPaper {
   def interpret(argument:String, wikiText:String)(implicit wikiContext:WikiContext):String = {
     val arguments = argument.split("""\s+""")
-    val wikiPageRenderer = new InterpreterWiki
+    val wikiPageRenderer = InterpreterWiki
 
     s"""<div class="paperContent ${arguments(0)}">""" +
       wikiPageRenderer(wikiText).split( """<hr/>""")

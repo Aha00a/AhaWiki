@@ -17,8 +17,32 @@ import scala.util.matching.Regex
 
 
 
-class InterpreterWiki {
-  object State extends Enumeration {
+object InterpreterWiki {
+  case class LinkMarkup(uri:String, alias:String = "") {
+    def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
+
+    def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
+
+    def toRegexReplacement(set: Set[String] = Set[String]()): String = {
+      val external: Boolean = uri.contains("://")
+
+      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
+      val attrTarget: String = if (external) " target=\"_blank\"" else ""
+      val display: String = aliasWithDefault
+      val attrCss = if (
+        external ||
+          uriNormalized.startsWith("#") ||
+          uriNormalized.startsWith("?") ||
+          set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
+      ) { "" } else { """ class="missing"""" }
+
+      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
+    }
+
+    def toLink(src:String) = Link(src, uriNormalized, alias)
+  }
+
+    object State extends Enumeration {
     type State = Value
     val Normal, Hr, Heading, List = Value
   }
@@ -131,7 +155,7 @@ class InterpreterWiki {
     variableHolder := State.Normal
 
     if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + new InterpreterWiki()(arrayBufferHeading.mkString("\n")) + """</div>""")
+      arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki(arrayBufferHeading.mkString("\n")) + """</div>""")
 
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }
@@ -167,32 +191,7 @@ class InterpreterWiki {
     s = InterpreterWiki.replaceLink(s)
     s
   }
-}
 
-object InterpreterWiki {
-  case class LinkMarkup(uri:String, alias:String = "") {
-    def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
-
-    def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
-
-    def toRegexReplacement(set: Set[String] = Set[String]()): String = {
-      val external: Boolean = uri.contains("://")
-
-      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
-      val attrTarget: String = if (external) " target=\"_blank\"" else ""
-      val display: String = aliasWithDefault
-      val attrCss = if (
-        external ||
-          uriNormalized.startsWith("#") ||
-          uriNormalized.startsWith("?") ||
-          set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
-      ) { "" } else { """ class="missing"""" }
-
-      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
-    }
-
-    def toLink(src:String) = Link(src, uriNormalized, alias)
-  }
 
   val regexLink: Regex =
     """(?x)

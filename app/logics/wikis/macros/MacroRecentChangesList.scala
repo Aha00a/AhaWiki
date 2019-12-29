@@ -23,6 +23,6 @@ object MacroRecentChangesList extends TraitMacro {
   }
 
   def interpret(list: List[PageWithoutContentWithSize])(implicit wikiContext: WikiContext): String = {
-    new InterpreterWiki()(list.map(p => s" * ${p.localDateTime.toIsoLocalDateTimeString} - [${p.name}]").mkString("\n"))
+    InterpreterWiki(list.map(p => s" * ${p.localDateTime.toIsoLocalDateTimeString} - [${p.name}]").mkString("\n"))
   }
 }
