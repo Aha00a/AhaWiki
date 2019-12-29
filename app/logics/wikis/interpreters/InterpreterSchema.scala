@@ -12,9 +12,9 @@ object InterpreterSchema {
     implicit val database: Database = wikiContext.database
     val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
 
-    val schemaClass = pageContent.argument.head
+    val schemaClass = pageContent.argument.headOption.getOrElse("")
     val contentLines = pageContent.content.splitLinesSeq()
-    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
+    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
     val properties: Seq[String] = fields.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
@@ -22,7 +22,7 @@ object InterpreterSchema {
         {
           fields.map(values => {
             val key = values.head
-            <dt>{key}</dt> ++ values.filter(_.isNotNullOrEmpty).tail.map(v => {
+            <dt>{key}</dt> ++ values.tail.map(v => {
               <dd property={key}>{
                 if(pageNameSet.contains(v)) {
                   <a href={v}>{v}</a>
