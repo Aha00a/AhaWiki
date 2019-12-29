@@ -14,13 +14,13 @@ object InterpreterSchema {
 
     val schemaClass = pageContent.argument.headOption.getOrElse("")
     val contentLines = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
-    val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val properties: Seq[String] = fields.flatMap(_.headOption)
+    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
+    val seqPropertiesUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
         <h5>{schemaClass}</h5>
         {
-          fields.map(values => {
+          seqSeqField.map(values => {
             val key = values.head
             <dt>{key}</dt> ++ values.tail.map(v => {
               <dd property={key}>{
@@ -48,7 +48,7 @@ object InterpreterSchema {
               if(Schema.mapClass.isDefinedAt(schemaClass)) {
                 <div>
                   {
-                    Schema.getHtmlProperties(schemaClass, properties)
+                    Schema.getHtmlProperties(schemaClass, seqPropertiesUsed)
                   }
                 </div>
               } else {
