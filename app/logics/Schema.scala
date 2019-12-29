@@ -68,11 +68,11 @@ object Schema {
             <h5>Properties of {c}</h5>
             <div>
               {
-                val map: Map[Char, Seq[Node]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
-                map.keys.toSeq.sorted.map { k =>
+                val groupByFirstLetter: Map[Char, Seq[Node]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
+                groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      map(k).map(p => <span title={p.comment} class={if(seqPropertyUsed.contains(p.id)){"match"} else {""}}>{p.id} </span>)
+                      groupByFirstLetter(firstLetter).map(p => <span title={p.comment} class={if(seqPropertyUsed.contains(p.id)){"match"} else {""}}>{p.id} </span>)
                     }
                   </div>
                 }
