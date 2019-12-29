@@ -6,7 +6,7 @@ import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 
-object InterpreterSchema {
+object InterpreterSchema extends TraitInterpreter {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
@@ -60,7 +60,9 @@ object InterpreterSchema {
       r.toString()
     }
   }
-  def extractLink(pageContent: PageContent)(implicit wikiContext: WikiContext): Seq[Link] = {
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+    val pageContent = PageContent(content)
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
     val fields: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq())
