@@ -177,9 +177,9 @@ class Wiki @Inject()(implicit
   }}
 
   def getRelatedPages(name: String)(implicit connection: Connection): String = {
-    val relationship = AhaWikiQuery().Link.linkSelectNotUrl(name)
-    val backward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelectNotUrl(lm.src))
-    val forward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelectNotUrl(lm.dst))
+    val relationship = AhaWikiQuery().Link.linkSelect(name)
+    val backward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelect(lm.src))
+    val forward = relationship.flatMap(lm => AhaWikiQuery().Link.linkSelect(lm.dst))
 
     val result = (relationship ++ backward ++ forward)
       .map(l => s"${l.src}->${l.dst}")

@@ -176,22 +176,16 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Link.tupled)
     }
 
-    // TODO: remove filterNot
-    def linkSelectNotUrl(name: String): List[Link] = {
+    def linkSelect(name: String): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
-        .filterNot(_.or(_.startsWith(".")))
-        .filterNot(_.or(_.contains("://")))
     }
 
-    // TODO: remove filterNot
-    def linkSelectNotUrl(): List[Link] = {
+    def linkSelect(): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
-        .filterNot(_.or(_.startsWith(".")))
-        .filterNot(_.or(_.contains("://")))
     }
 
     def insert(seq: Seq[Link]): Array[Int] = {
