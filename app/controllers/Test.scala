@@ -331,7 +331,6 @@ class Test @Inject()(implicit
       ).toList,
       Seq(
         Link("UnitTest", "Person", "Schema"),
-        Link("UnitTest", "Thing", "subClassOf"),
         Link("UnitTest", "KIM, Aha", "name"),
         Link("UnitTest", "https://aha00a.com", "url"),
         Link("UnitTest", "Aharise", "memberOf")
