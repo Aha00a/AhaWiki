@@ -441,6 +441,11 @@ html, body {
 				.previewPane {
 					border: 1px solid #ccc;
 					background: url('/public/img/imageDraftVersion.png');
+					&:after {
+						display: block;
+						clear: right;
+						content: '';
+					}
 				}
 			}
 		}
