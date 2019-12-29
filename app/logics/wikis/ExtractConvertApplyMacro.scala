@@ -1,10 +1,7 @@
 package logics.wikis
 
-import logics.AhaWikiCache
 import logics.wikis.macros._
 import models.WikiContext
-import play.api.cache.CacheApi
-import play.api.db.Database
 
 import scala.collection.mutable
 import scala.util.matching.Regex
