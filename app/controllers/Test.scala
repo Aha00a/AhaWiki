@@ -476,6 +476,7 @@ class Test @Inject()(implicit
 
 
   def testEnglishCaseConverter(): Unit = {
+    assertEquals(EnglishCaseConverter.splitPascalCase("Person"), Seq("Person"))
     assertEquals(EnglishCaseConverter.splitPascalCase("FrontPage"), Seq("Front", "Page"))
 
 
