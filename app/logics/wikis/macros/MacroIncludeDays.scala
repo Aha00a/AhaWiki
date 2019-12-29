@@ -28,8 +28,6 @@ object MacroIncludeDays extends TraitMacro {
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 
-  override def calcLength(body: String)(implicit wikiContext: WikiContext): Long = extractLink(body).mkString("\n").length
-
   @scala.annotation.tailrec
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)

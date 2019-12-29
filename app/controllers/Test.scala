@@ -76,15 +76,11 @@ class Test @Inject()(implicit
 
     assertEquals(MacroPageOutline(empty), "")
     assertEquals(MacroPageOutline(dummy), "")
-    assertEquals(MacroPageOutline.calcLength(empty), 0)
-    assertEquals(MacroPageOutline.calcLength(dummy), 0)
     assertEquals(MacroPageOutline.extractLink(""), Seq())
     assertEquals(MacroPageOutline.extractLink(dummy), Seq())
 
     assertEquals(MacroBr(empty), "<br/>")
     assertEquals(MacroBr(dummy), "<br/>")
-    assertEquals(MacroBr.calcLength(empty), 1)
-    assertEquals(MacroBr.calcLength(dummy), 1)
     assertEquals(MacroBr.extractLink(empty), Seq())
     assertEquals(MacroBr.extractLink(dummy), Seq())
 
@@ -103,7 +99,6 @@ class Test @Inject()(implicit
         |<li><a href="1000-11" class="missing">1000-11</a></li>
         |<li><a href="1000-12" class="missing">1000-12</a></li>
         |</ul>""".stripMargin)
-    assertEquals(MacroMonths.calcLength("1000"), 95)
     assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
 
     assertEquals(MacroMonths.name, "Months")

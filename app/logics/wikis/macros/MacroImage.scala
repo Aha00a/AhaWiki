@@ -15,6 +15,4 @@ object MacroImage extends TraitMacro {
       case _ => s"""<img src="$argument" alt="$argument"/>"""
     }
   }
-
-  override def calcLength(argument: String)(implicit wikiContext: WikiContext): Long = argument.length * 3 / 4
 }
