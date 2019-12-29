@@ -23,9 +23,7 @@ object InterpreterSchema {
           seqSeqField.map { case key +: tail =>
             <dt>{key}</dt> ++ tail.map { v =>
               <dd property={key}>
-                <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>
-                  {v}
-                </a>
+                <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a>
               </dd>
             }
           }
