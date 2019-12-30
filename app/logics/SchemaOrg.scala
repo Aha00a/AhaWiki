@@ -12,9 +12,7 @@ import scala.xml.{Elem, NodeSeq}
 object SchemaOrg {
   def withNameSpace(s: String): String = s"schema:$s"
 
-  implicit val codec: Codec = Codec.UTF8
-
-  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/tree.jsonld")))(_.mkString))
+  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/tree.jsonld"))(Codec.UTF8))(_.mkString))
 
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
@@ -38,7 +36,7 @@ object SchemaOrg {
     }
   }
 
-  private val file: String = Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld")))(_.mkString)
+  private val file: String = Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld"))(Codec.UTF8))(_.mkString)
   def jsonAllLayers: JsValue = Json.parse(file)
 
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
