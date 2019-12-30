@@ -112,6 +112,14 @@ html, body {
 			border: 1px solid darken(@color, 30%);
 			padding: 10px;
 		}
+
+		.info {
+			@color: #ff7;
+			color: darken(@color, 60%);
+			background-color: lighten(@color, 20%);
+			border: 1px solid darken(@color, 40%);
+			padding: 10px;
+		}
 	}
 
 	.commonAhaWiki {
@@ -266,8 +274,14 @@ html, body {
 			}
 		}
 
+		.success {
+			.flash.success;
+		}
 		.error {
 			.flash.error;
+		}
+		.info {
+			.flash.info;
 		}
 	}
 

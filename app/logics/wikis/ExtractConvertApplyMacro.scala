@@ -8,6 +8,7 @@ import scala.util.matching.Regex
 
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapMacros: Map[String, TraitMacro] = Seq(
+
     MacroPageOutline,
 
     MacroBr,
@@ -32,7 +33,9 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
     MacroPeriod,
 
-    MacroError
+    MacroError,
+    MacroInfo,
+    MacroSuccess
   ).map(m => m.name -> m).toMap
 
   val mapVariable = new mutable.HashMap[String, String]()
@@ -40,7 +43,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val regex: Regex =
     """(?x)
       \[\[
-        (\w+)
+        (\w*)
         (?:
           \(
             (.+?)
