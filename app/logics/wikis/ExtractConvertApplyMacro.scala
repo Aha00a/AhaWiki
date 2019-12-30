@@ -73,7 +73,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
           case _ =>
             if(wikiContext.isPreview) {
               MacroError(s"Macro not found. - $s") + 
-              MacroInfo(s"Available Macro: ${ExtractConvertApplyMacro.mapMacros.keys.mkString(",")}")
+              MacroInfo(s"Available Macro: ${ExtractConvertApplyMacro.mapMacros.keys.toSeq.sorted.mkString(", ")}")
             } else {
               MacroError(s"Macro not found. - $s")
             }

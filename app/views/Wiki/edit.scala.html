@@ -96,6 +96,12 @@
                     return false;
                 }
                 if(e.key === '[') {
+                    var value = this.value;
+                    if(value[this.selectionStart - 1] === '[' && value[this.selectionStart - 2] === '[') {
+                        document.execCommand("insertText", false, "[\n]");
+                        this.selectionStart = this.selectionEnd = this.selectionStart - 2;
+                        return false;
+                    }
                     document.execCommand("insertText", false, '[]');
                     this.selectionStart = this.selectionEnd = this.selectionStart - 1;
                     return false;
@@ -107,7 +113,7 @@
                     timer = null;
                 }
 
-                timer = setTimeout(preview, 200)
+                timer = setTimeout(preview, 500)
             });
             preview();
         });
