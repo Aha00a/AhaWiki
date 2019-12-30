@@ -1,5 +1,6 @@
 package logics.wikis
 
+import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import models.WikiContext
 
@@ -71,11 +72,18 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
           case "Get" => MacroGet(argument)
           case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
           case _ =>
+            val macroErrorResult = MacroError(s"$s - Macro not found.")
             if(wikiContext.isPreview) {
-              MacroError(s"Macro not found. - $s") + 
-              MacroInfo(s"Available Macro: ${ExtractConvertApplyMacro.mapMacros.keys.toSeq.sorted.mkString(", ")}")
+              val linkAhaWikiSyntaxMacro = InterpreterWiki.formatInline("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
+              val macroList = InterpreterWiki.formatInline(ExtractConvertApplyMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
+              val macroInfoResult = MacroInfo(Seq(
+                "Available Macros",
+                macroList,
+                linkAhaWikiSyntaxMacro
+              ).mkString("<br/>"))
+              macroErrorResult + macroInfoResult
             } else {
-              MacroError(s"Macro not found. - $s")
+              macroErrorResult
             }
         }
       }
