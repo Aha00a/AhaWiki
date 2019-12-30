@@ -240,29 +240,23 @@ html, body {
 			&:after { top: 0; right: 3px; content: '”'; }
 		}
 
+        .toc, .schema {
+            z-index: 1;
+            position: relative;
+            float: right;
+            margin-bottom: 10px;
+            margin-left: 10px;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            max-width: 50%;
+            clear: right;
+        }
 		.toc {
-			float: right;
-			background-color: #eee;
-			border: 1px solid #ccc;
 			padding: 10px;
-			max-width: 50%;
-			margin-bottom: 10px;
-			position: relative;
-			margin-left: 10px;
-			z-index: 1;
 		}
 
 		.schema {
-			z-index: 1;
-			position: relative;
-			float: right;
-			clear: right;
-			background-color: #eee;
-			border: 1px solid #ccc;
 			padding: 0 20px;
-			max-width: 50%;
-			margin-left: 10px;
-			margin-bottom: 10px;
 			dl {
 				dt {
 					margin-top: 10px;
