@@ -111,8 +111,14 @@ class Wiki @Inject()(implicit
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getRelatedPages(name)
+
+              val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
+              val schema = seqLinkSchema.map(l => (l, ahaWikiQuery.Link.selectSchemaClass(Seq(l.src)))).map(l => s" * [${l._1.alias}] of [${l._1.src}] which is ${l._2}").mkString("\n")
+
               val additionalInfo =
                 s"""
+                   |== Schema
+                   |$schema
                    |== See also
                    |[[Html(<table class="seeAlso"><tr><th>Page Suggestion</th><th>Related Pages</th></tr><tr><td class="">)]]
                    |'''SimilarPages'''

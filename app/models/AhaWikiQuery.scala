@@ -182,11 +182,26 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(models.Link.tupled)
     }
 
+    def selectSchema(name: String): List[Link] = {
+      SQL"SELECT src, dst, alias FROM Link WHERE dst = $name AND alias LIKE ${"schema:%"}"
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(models.Link.tupled)
+    }
+
+    def selectSchemaClass(src: Seq[String]) = {
+      SQL"SELECT src, dst, alias FROM Link WHERE src IN ($src) AND alias LIKE 'schema:Schema'"
+        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+        .map(models.Link.tupled)
+    }
+
+
+
     def selectAll(): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
     }
+
 
     def expand(seq: Seq[Link]): Seq[Link] = {
       val backward: Seq[Link] = seq.flatMap(l => select(l.src))
