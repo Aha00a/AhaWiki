@@ -131,6 +131,13 @@ html, body {
 			.headingNumber {
 				text-decoration: none;
 			}
+
+		}
+
+		h2, h3, h4, h5, h6 {
+			&:first-of-type {
+				margin-top: 0;
+			}
 		}
 
 		h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #cccccc; padding: 5px; }
@@ -246,18 +253,21 @@ html, body {
             float: right;
             margin-bottom: 10px;
             margin-left: 10px;
-            background-color: #eee;
+			clear: right;
+			max-width: 50%;
             border: 1px solid #ccc;
-            max-width: 50%;
-            clear: right;
+			background-color: #eee;
+			padding: 20px;
+			p {
+				margin-top: 0;
+			}
         }
 		.toc {
-			padding: 10px;
 		}
 
 		.schema {
-			padding: 0 20px;
 			dl {
+				margin: 0;
 				dt {
 					margin-top: 10px;
 				}
