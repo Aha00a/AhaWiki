@@ -10,10 +10,21 @@ import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
 object SchemaOrg {
+  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
+    def toXmlSpan(text:String, classes: String*): Elem = {
+      val seqTitle = Seq(
+        if (supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
+        comment
+      ).filter(_.isNotNullOrEmpty)
+      val seqClass = classes :+ (if (supersededBy.nonEmpty) "supersededBy" else "")
+
+      <span title={seqTitle.mkString("\n")} class={seqClass.mkString(" ")}>{text} </span>
+    }
+  }
+
   def withNameSpace(s: String): String = s"schema:$s"
 
   lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/tree.jsonld"))(Codec.UTF8))(_.mkString))
-
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -36,20 +47,9 @@ object SchemaOrg {
     }
   }
 
-  private val file: String = Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld"))(Codec.UTF8))(_.mkString)
-  def jsonAllLayers: JsValue = Json.parse(file)
 
-  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
-    def toXmlSpan(text:String, classes: String*): Elem = {
-      val seqTitle = Seq(
-        if (supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
-        comment
-      ).filter(_.isNotNullOrEmpty)
-      val seqClass = classes :+ (if (supersededBy.nonEmpty) "supersededBy" else "")
-
-      <span title={seqTitle.mkString("\n")} class={seqClass.mkString(" ")}>{text} </span>
-    }
-  }
+  
+  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld"))(Codec.UTF8))(_.mkString))
   lazy val seqAll:Seq[Node] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
@@ -63,8 +63,9 @@ object SchemaOrg {
     })
   }
   lazy val seqClass: Seq[Node] = seqAll.filter(_.schemaType == "Class")
-  lazy val mapClass: Map[String, Node] = seqClass.map(n => (n.id, n)).toMap
   lazy val seqProperty: Seq[Node] = seqAll.filter(_.schemaType == "Property")
+  lazy val mapAll: Map[String, Node] = seqAll.map(n => (n.id, n)).toMap
+  lazy val mapClass: Map[String, Node] = seqClass.map(n => (n.id, n)).toMap
   lazy val mapProperty: Map[String, Node] = seqProperty.map(n => (n.id, n)).toMap
 
   def getHtmlProperties(schema:String, seqPropertyUsed:Seq[String]): Elem = {
