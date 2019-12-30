@@ -90,11 +90,11 @@ object InterpreterSchema extends TraitInterpreter {
     if(pageContent.interpreter.getOrElse("") != name)
       throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
 
-    val schemaClass = pageContent.argument.head
-    val contentLines = pageContent.content.splitLinesSeq()
-    val seqSchema = Link(wikiContext.name, SchemaOrg.withNameSpace(schemaClass), SchemaOrg.withNameSpace("SchemaOrg"))
+    val schemaClass: String = pageContent.argument.head
+    val contentLines: Seq[String] = pageContent.content.splitLinesSeq()
+    val linkSchema: Link = Link(wikiContext.name, SchemaOrg.withNameSpace(schemaClass), SchemaOrg.withNameSpace("SchemaOrg"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
     val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(key))) }
-    seqSchema +: seqLinkProperty
+    linkSchema +: seqLinkProperty
   }
 }
