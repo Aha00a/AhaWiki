@@ -88,16 +88,23 @@
             });
 
             $('textarea[name=text]').bind('keydown', function (e) {
+                var value = this.value;
+                var selectionStart = this.selectionStart;
                 if(e.keyCode === 9){
-                    if(this.value.length === this.selectionStart)
+                    if(0 === selectionStart)
+                        return;
+
+                    if(value.length === selectionStart)
+                        return;
+
+                    if(value[selectionStart - 1] === '\n')
                         return;
 
                     document.execCommand("insertText", false, '\t');
                     return false;
                 }
                 if(e.key === '[') {
-                    var value = this.value;
-                    if(value[this.selectionStart - 1] === '[' && value[this.selectionStart - 2] === '[') {
+                    if(value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[') {
                         document.execCommand("insertText", false, "[\n]");
                         this.selectionStart = this.selectionEnd = this.selectionStart - 2;
                         return false;
