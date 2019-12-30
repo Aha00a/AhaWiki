@@ -9,7 +9,7 @@ import play.api.libs.json.{JsLookupResult, JsValue, Json}
 import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
-object Schema {
+object SchemaOrg {
   def withNameSpace(s: String): String = s"schema:$s"
 
   implicit val codec: Codec = Codec.UTF8

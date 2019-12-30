@@ -3,7 +3,7 @@ package logics.wikis.interpreters
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import logics.wikis.PageNameLogic
-import logics.{AhaWikiCache, Schema}
+import logics.{AhaWikiCache, SchemaOrg}
 import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -27,7 +27,7 @@ object InterpreterSchema extends TraitInterpreter {
           seqSeqField.map { case key +: tail =>
             <dt>
               {
-                Schema.mapProperty.get(key).map(n => {
+                SchemaOrg.mapProperty.get(key).map(n => {
                   n.toXmlSpan(EnglishCaseConverter.camelCase2TitleCase(key), if(n.supersededBy.isEmpty) "" else "supersededBy")
                 }).getOrElse{
                   <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
@@ -48,11 +48,11 @@ object InterpreterSchema extends TraitInterpreter {
           }
         }
         <dt>Hierarchy</dt>
-        {Schema.getClassHierarchy(schemaClass).foldLeft(NodeSeq.Empty)((a, v) => {
+        {SchemaOrg.getClassHierarchy(schemaClass).foldLeft(NodeSeq.Empty)((a, v) => {
           <ul>
             <li>
-              <a href={s"/w/${Schema.withNameSpace(v)}"}>{v}</a>
-              <sup title={Schema.mapClass(v).comment}>{Schema.mapClass(v).comment}</sup>
+              <a href={s"/w/${SchemaOrg.withNameSpace(v)}"}>{v}</a>
+              <sup title={SchemaOrg.mapClass(v).comment}>{SchemaOrg.mapClass(v).comment}</sup>
             </li>
             {a}
           </ul>
@@ -66,10 +66,10 @@ object InterpreterSchema extends TraitInterpreter {
           <div class="preview">
             <h5>Preview Only</h5>
             <h6>Hierarchical Search</h6>
-            {Schema.getHtmlTree(schemaClass)}
+            {SchemaOrg.getHtmlTree(schemaClass)}
             {
-              if(Schema.mapClass.isDefinedAt(schemaClass)) {
-                <div>{Schema.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
+              if(SchemaOrg.mapClass.isDefinedAt(schemaClass)) {
+                <div>{SchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
               } else {
 
               }
@@ -92,9 +92,9 @@ object InterpreterSchema extends TraitInterpreter {
 
     val schemaClass = pageContent.argument.head
     val contentLines = pageContent.content.splitLinesSeq()
-    val seqSchema = Link(wikiContext.name, Schema.withNameSpace(schemaClass), Schema.withNameSpace("Schema"))
+    val seqSchema = Link(wikiContext.name, SchemaOrg.withNameSpace(schemaClass), SchemaOrg.withNameSpace("SchemaOrg"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, Schema.withNameSpace(key))) }
+    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(key))) }
     seqSchema +: seqLinkProperty
   }
 }

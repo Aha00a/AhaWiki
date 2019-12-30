@@ -8,7 +8,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
-import logics.Schema
+import logics.SchemaOrg
 import models.{AhaWikiQuery, Link, Page}
 import play.api.Logger
 import play.api.db.Database
@@ -54,7 +54,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
     val count = ahaWikiQuery.Link.selectCountWhereAlias("subClassOf")
     
-    val seqLink: Seq[Link] = Schema.seqClass.flatMap(c => c.subClassOf.map(s => Link(Schema.withNameSpace(c.id), Schema.withNameSpace(s), "subClassOf")))
+    val seqLink: Seq[Link] = SchemaOrg.seqClass.flatMap(c => c.subClassOf.map(s => Link(SchemaOrg.withNameSpace(c.id), SchemaOrg.withNameSpace(s), "subClassOf")))
     if(count < seqLink.length) {
       ahaWikiQuery.Link.insert(seqLink)
     }
