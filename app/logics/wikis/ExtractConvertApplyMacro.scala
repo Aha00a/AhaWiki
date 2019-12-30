@@ -6,7 +6,7 @@ import models.WikiContext
 import scala.collection.mutable
 import scala.util.matching.Regex
 
-class ExtractConvertApplyMacro() extends ExtractConvertApply {
+object ExtractConvertApplyMacro {
   val mapMacros: Map[String, TraitMacro] = Seq(
 
     MacroPageOutline,
@@ -37,7 +37,8 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
     MacroInfo,
     MacroSuccess
   ).map(m => m.name -> m).toMap
-
+}
+class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapVariable = new mutable.HashMap[String, String]()
 
   val regex: Regex =
@@ -64,7 +65,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
     case regex(name, argument) =>
-      mapMacros.get(name).map(_(argument)).getOrElse {
+      ExtractConvertApplyMacro.mapMacros.get(name).map(_(argument)).getOrElse {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
@@ -77,7 +78,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
-      case regex(name, argument) => mapMacros.get(name)
+      case regex(name, argument) => ExtractConvertApplyMacro.mapMacros.get(name)
         .map(_.extractLink(argument).filter(wikiContext.existPage))
         .getOrElse(Seq())
       case _ => Seq()
