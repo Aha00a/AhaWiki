@@ -1,7 +1,7 @@
 package com.aha00a.commons
 
 import java.io.{File, PrintWriter}
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.util.Date
 
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil, Using}
@@ -43,6 +43,13 @@ object Implicits {
     def toYearDashMonthString: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
+  implicit class LocalDateFormatter(localDate:LocalDate) {
+    def toIsoLocalDateString: String = localDate.format(DateTimeFormatterHolder.isoLocalDate)
+
+    def toYearString: String = localDate.format(DateTimeFormatterHolder.year)
+    def toYearDashMonthString: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
+    def toMonthDashDayString: String = localDate.format(DateTimeFormatterHolder.monthDashDay)
+  }
 
 
   implicit class RichSeq[T](seq:Seq[T]) {

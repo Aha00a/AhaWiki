@@ -1,7 +1,7 @@
 package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.EnglishCaseConverter
+import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
 import logics.wikis.PageNameLogic
 import logics.{AhaWikiCache, SchemaOrg}
 import models.{Link, PageContent, WikiContext}
@@ -94,7 +94,7 @@ object InterpreterSchema extends TraitInterpreter {
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq()
     val linkSchema: Link = Link(wikiContext.name, SchemaOrg.withNameSpace(schemaClass), SchemaOrg.withNameSpace("Schema"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(key))) }
+    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_y_ym_md).map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(key))) }
     linkSchema +: seqLinkProperty
   }
 }
