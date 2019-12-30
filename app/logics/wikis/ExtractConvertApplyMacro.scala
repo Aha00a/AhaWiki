@@ -47,7 +47,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
         (\w*)
         (?:
           \(
-            (.+?)
+            (.*?)
           \)
         )?
       \]\]""".r
