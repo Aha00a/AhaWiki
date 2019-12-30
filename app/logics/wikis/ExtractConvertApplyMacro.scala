@@ -71,7 +71,12 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
           case "Get" => MacroGet(argument)
           case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
           case _ =>
-            MacroError(s"Macro not found. - $s")
+            if(wikiContext.isPreview) {
+              MacroError(s"Macro not found. - $s") + 
+              MacroInfo(s"Available Macro: ${ExtractConvertApplyMacro.mapMacros.keys.mkString(",")}")
+            } else {
+              MacroError(s"Macro not found. - $s")
+            }
         }
       }
     case _ => "error"
