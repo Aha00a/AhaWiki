@@ -10,6 +10,7 @@ import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.LocalDateTimeUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
@@ -201,7 +202,8 @@ class Wiki @Inject()(implicit
 
     if (WikiPermission().isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
-        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else new Date(),  body, comment)
+        val now = new Date()
+        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"${comment} - minor edit at ${LocalDateTimeUtil.convert(now).toIsoLocalDateTimeString}" else comment)
         Ok("")
       } else {
         Conflict("")
