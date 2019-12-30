@@ -8,6 +8,28 @@ import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
 import scala.util.Random
 
 object Implicits {
+  implicit class RichString(s:String) {
+    def isNullOrEmpty: Boolean = s == null || s.isEmpty
+    def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
+    def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
+    def getOrElse(rhs:String): String = toOption.getOrElse(rhs)
+
+    def containsIgnoreCase(rhs: String): Boolean = s.toLowerCase().contains(rhs.toLowerCase())
+
+    def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
+
+    def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
+    def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
+
+    def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
+
+    def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
+    def splitTabs(): Array[String] = s.split("""\t""")
+    def splitLinesSeq(): Seq[String] = s.splitLines().toSeq
+    def splitTabsSeq(): Seq[String] = s.splitTabs().toSeq
+  }
+
+
   implicit class LocalDateTimeFormatter(localDateTime:LocalDateTime) {
     def toIsoLocalDateTimeString: String = localDateTime.format(DateTimeFormatterHolder.isoLocalDateTime)
     def toIsoLocalDateString: String = localDateTime.format(DateTimeFormatterHolder.isoLocalDate)
@@ -15,23 +37,7 @@ object Implicits {
     def toYearDashMonthString: String = localDateTime.format(DateTimeFormatterHolder.yearDashMonth)
   }
 
-  implicit class RichFile(file: File) {
-    def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit) {
-      Using(new PrintWriter(f))(op)
-    }
 
-    def writeAll(s1: String): Unit = {
-      usingPrintWriter(file)(_.write(s1))
-    }
-
-    def getSlashBasedPath: String = {
-      if(File.separator != "/") {
-        file.getPath.replaceAllLiterally(File.separator, "/")
-      } else {
-        file.getPath
-      }
-    }
-  }
 
   implicit class RichSeq[T](seq:Seq[T]) {
     def getOrElse(i: Int, t:T): T = if(seq.isDefinedAt(i)) seq(i) else t
@@ -57,26 +63,26 @@ object Implicits {
     def concat(): Seq[T] = t._1 ++ t._2
   }
 
-  implicit class RichString(s:String) {
-    def isNullOrEmpty: Boolean = s == null || s.isEmpty
-    def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
-    def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
-    def getOrElse(rhs:String): String = toOption.getOrElse(rhs)
-
-    def containsIgnoreCase(rhs: String): Boolean = s.toLowerCase().contains(rhs.toLowerCase())
-
-    def escapeHtml(): String = s.replaceAll("""<""", "&lt;")
-
-    def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
-    def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
-
-    def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
-
-    def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
-    def splitTabs(): Array[String] = s.split("""\t""")
-    def splitLinesSeq(): Seq[String] = s.splitLines().toSeq
-    def splitTabsSeq(): Seq[String] = s.splitTabs().toSeq
-  }
+  
 
   implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }
+
+
+  implicit class RichFile(file: File) {
+    def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+      Using(new PrintWriter(f))(op)
+    }
+
+    def writeAll(s1: String): Unit = {
+      usingPrintWriter(file)(_.write(s1))
+    }
+
+    def getSlashBasedPath: String = {
+      if(File.separator != "/") {
+        file.getPath.replaceAllLiterally(File.separator, "/")
+      } else {
+        file.getPath
+      }
+    }
+  }
 }
