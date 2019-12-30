@@ -252,6 +252,51 @@ html, body {
 			z-index: 1;
 		}
 
+		.schema {
+			z-index: 1;
+			position: relative;
+			float: right;
+			clear: right;
+			background-color: #eee;
+			border: 1px solid #ccc;
+			padding: 0 20px;
+			max-width: 50%;
+			margin-left: 10px;
+			margin-bottom: 10px;
+			dl {
+				dt {
+					margin-top: 10px;
+				}
+				dd {
+					margin-left: 20px;
+					>ul {
+						padding-left: 0;
+					}
+				}
+			}
+			ul {
+				list-style-type: none;
+				margin: 0;
+				padding-left: 20px;
+			}
+			.match {
+				color: #00f;
+				font-weight: bold;
+			}
+			.unknown, .supersededBy {
+				text-decoration: line-through;
+				color: #aaa;
+			}
+			sup {
+				color: #777;
+				display: block;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+
+
 		.wikiSyntax {
 			.simpleTable;
 			width: 100%;
@@ -661,50 +706,6 @@ html, body {
 					border-bottom: 1px solid #ccc;
 				}
 			}
-		}
-	}
-
-	.schema {
-        z-index: 1;
-		position: relative;
-		float: right;
-		clear: right;
-		background-color: #eee;
-		border: 1px solid #ccc;
-		padding: 0 20px;
-		max-width: 50%;
-		margin-left: 10px;
-		margin-bottom: 10px;
-		dl {
-			dt {
-				margin-top: 10px;
-			}
-			dd {
-				margin-left: 20px;
-				>ul {
-					padding-left: 0;
-				}
-			}
-		}
-		ul {
-			list-style-type: none;
-			margin: 0;
-			padding-left: 20px;
-		}
-		.match {
-			color: #00f;
-			font-weight: bold;
-		}
-		.unknown, .supersededBy {
-			text-decoration: line-through;
-			color: #aaa;
-		}
-		sup {
-			color: #777;
-			display: block;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
 		}
 	}
 
