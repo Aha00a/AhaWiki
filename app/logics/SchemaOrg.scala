@@ -12,13 +12,15 @@ import scala.xml.{Elem, NodeSeq}
 object SchemaOrg {
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
     def toXmlSpan(text:String, classes: String*): Elem = {
-      val seqTitle = Seq(
-        if (supersededBy.isEmpty) "" else "Superseded by " + supersededBy.mkString(","),
-        comment
-      ).filter(_.isNotNullOrEmpty)
-      val seqClass = classes :+ (if (supersededBy.nonEmpty) "supersededBy" else "")
+      val (title, seqClass) = if (supersededBy.nonEmpty) (
+        "Superseded by " + supersededBy.mkString(",") + "\n" + comment,
+        classes :+ "supersededBy" 
+      ) else (
+        comment,
+        classes
+      )
 
-      <span title={seqTitle.mkString("\n")} class={seqClass.mkString(" ")}>{text} </span>
+      <span title={title} class={seqClass.mkString(" ")}>{text} </span>
     }
   }
 

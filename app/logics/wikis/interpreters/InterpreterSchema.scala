@@ -63,8 +63,7 @@ object InterpreterSchema extends TraitInterpreter {
       val r =
         <div class="schema">
           {dl}
-          <div class="preview">
-            <h5>Preview Only</h5>
+          <div class="preview info">
             <h6>Hierarchical Search</h6>
             {SchemaOrg.getHtmlTree(schemaClass)}
             {
