@@ -203,7 +203,7 @@ class Wiki @Inject()(implicit
     if (WikiPermission().isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         val now = new Date()
-        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"${comment} - minor edit at ${LocalDateTimeUtil.convert(now).toIsoLocalDateTimeString}" else comment)
+        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"${comment} - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment)
         Ok("")
       } else {
         Conflict("")

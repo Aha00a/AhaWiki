@@ -2,8 +2,9 @@ package com.aha00a.commons
 
 import java.io.{File, PrintWriter}
 import java.time.LocalDateTime
+import java.util.Date
 
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, Using}
+import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil, Using}
 
 import scala.util.Random
 
@@ -28,6 +29,11 @@ object Implicits {
     def splitLinesSeq(): Seq[String] = s.splitLines().toSeq
     def splitTabsSeq(): Seq[String] = s.splitTabs().toSeq
   }
+
+  implicit class RichDate(date:Date) {
+    def toLocalDateTime: LocalDateTime = LocalDateTimeUtil.convert(date)
+  }
+
 
 
   implicit class LocalDateTimeFormatter(localDateTime:LocalDateTime) {
