@@ -111,14 +111,7 @@ class Wiki @Inject()(implicit
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getMarkupRelatedPages(name)
-
-              val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
-              val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => (l.src, l.alias.split(":")(1), l.alias.split(":")(2))).groupBy(_._2)
-              val schema = mapClassSrcProperty.keys.toSeq.sorted.map(k => {
-                s""" * [schema:$k $k]
-                   |${mapClassSrcProperty(k).map(t => s"  * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}
-                   |""".stripMargin
-              }).mkString("\n")
+              val schema: String = getMarkupSchema(name, ahaWikiQuery)
 
 
               val additionalInfo =
@@ -191,6 +184,15 @@ class Wiki @Inject()(implicit
     }
   }}
 
+  private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
+    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
+    val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => (l.src, l.alias.split(":")(1), l.alias.split(":")(2))).groupBy(_._2)
+    mapClassSrcProperty.keys.toSeq.sorted.map(k => {
+      s""" * [schema:$k $k]
+         |${mapClassSrcProperty(k).map(t => s"  * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}""".stripMargin
+    }).mkString("\n")
+  }
+
   def getMarkupRelatedPages(name: String)(implicit connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
@@ -199,12 +201,12 @@ class Wiki @Inject()(implicit
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
-    if (result != "") {
-      s"[[[#!Graph enableWikiLink\n$result\n]]]"
-    }
-    else {
-      ""
-    }
+    result.toOption.map(r => {
+      s"""[[[#!Graph enableWikiLink
+         |$result
+         |]]]
+         |""".stripMargin
+    }).getOrElse("")
   }
   
   def save(nameEncoded: String): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
