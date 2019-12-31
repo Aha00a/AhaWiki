@@ -127,7 +127,7 @@ class Wiki @Inject()(implicit
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
                    |$schema
-                   |'''SimilarPages'''
+                   |'''Similar Pages'''
                    |$similarPages
                    |'''Backlinks'''
                    |[[Backlinks]]
