@@ -115,21 +115,25 @@ class Wiki @Inject()(implicit
               val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
               val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => (l.src, l.alias.split(":")(1), l.alias.split(":")(2))).groupBy(_._2)
               val schema = mapClassSrcProperty.keys.toSeq.sorted.map(k => {
-                s"""=== [schema:$k $k]
-                   |${mapClassSrcProperty(k).map(t => s" * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}
+                s""" * [schema:$k $k]
+                   |${mapClassSrcProperty(k).map(t => s"  * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}
                    |""".stripMargin
               }).mkString("\n")
 
+
               val additionalInfo =
                 s"""
-                   |== Schema
-                   |$schema
                    |== See also
-                   |[[Html(<table class="seeAlso"><tr><th>Page Suggestion</th><th>Related Pages</th></tr><tr><td class="">)]]
+                   |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+                   |'''[schema:Schema Schema]'''
+                   |$schema
                    |'''SimilarPages'''
                    |$similarPages
                    |'''Backlinks'''
-                   |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+                   |[[Backlinks]]
+                   |[[Html(</td><td>)]]
+                   |$relatedPages
+                   |[[Html(</td></tr></tbody></table>)]]
                    |""".stripMargin
               val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
               Ok(pageContent.interpreter match {
