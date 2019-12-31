@@ -78,6 +78,7 @@ class Wiki @Inject()(implicit
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val relatedPages = getMarkupRelatedPages(name)
+        val schema: String = getMarkupSchema(name, ahaWikiQuery)
         val additionalInfo =
           s"""= $name
              |This page does not exist.
@@ -89,9 +90,14 @@ class Wiki @Inject()(implicit
              | * Search [https://duckduckgo.com/?q=$name+wiki $name wiki] on DuckDuckGo
              |
              |== See also
-             |[[Html(<table class="seeAlso"><tr><th>Similar Pages</th><th>Related Pages</th></tr><tr><td class="">)]]
+             |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+             |'''[schema:Schema Schema]'''
+             |$schema
              |'''Backlinks'''
-             |[[Backlinks]][[Html(</td><td class="">)]]$relatedPages[[Html(</td></tr></table>)]]
+             |[[Backlinks]]
+             |[[Html(</td><td>)]]
+             |$relatedPages
+             |[[Html(</td></tr></tbody></table>)]]
              |""".stripMargin
 
         NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
