@@ -31,6 +31,7 @@ object InterpreterWiki extends TraitInterpreter {
         external ||
           uriNormalized.startsWith("#") ||
           uriNormalized.startsWith("?") ||
+          uriNormalized.startsWith("schema:") ||
           set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
       ) { "" } else { """ class="missing"""" }
 
