@@ -63,7 +63,7 @@ class ApplicationLifecycleHook @Inject()(implicit
   }})
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.schedule(3 seconds, 3 minutes, () => { database.withConnection { implicit connection =>
+  actorSystem.scheduler.schedule(30 seconds, 1 minutes, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! Calculate(s)
