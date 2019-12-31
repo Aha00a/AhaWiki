@@ -113,7 +113,12 @@ class Wiki @Inject()(implicit
               val relatedPages = getRelatedPages(name)
 
               val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
-              val schema = seqLinkSchema.map(l => (l, ahaWikiQuery.Link.selectSchemaClass(Seq(l.src)))).map(l => s" * [${l._1.alias}] of [${l._1.src}] which is ${l._2}").mkString("\n")
+              val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => (l.src, l.alias.split(":")(1), l.alias.split(":")(2))).groupBy(_._2)
+              val schema = mapClassSrcProperty.keys.toSeq.sorted.map(k => {
+                s"""=== [schema:$k $k]
+                   |${mapClassSrcProperty(k).map(t => s" * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}
+                   |""".stripMargin
+              }).mkString("\n")
 
               val additionalInfo =
                 s"""
