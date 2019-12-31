@@ -77,7 +77,7 @@ class Wiki @Inject()(implicit
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
-        val relatedPages = getRelatedPages(name)
+        val relatedPages = getMarkupRelatedPages(name)
         val additionalInfo =
           s"""= $name
              |This page does not exist.
@@ -110,7 +110,7 @@ class Wiki @Inject()(implicit
               val similarPageNames = cosineSimilarities.map(_.name2)
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
-              val relatedPages = getRelatedPages(name)
+              val relatedPages = getMarkupRelatedPages(name)
 
               val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
               val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => (l.src, l.alias.split(":")(1), l.alias.split(":")(2))).groupBy(_._2)
@@ -183,7 +183,7 @@ class Wiki @Inject()(implicit
         val maxRevision: Long = seqRevision.max
         val minRevision: Long = seqRevision.min
         Ok(views.html.Wiki.blame(blame, minRevision, maxRevision)).withHeaderRobotNoIndexNoFollow
-        
+
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
@@ -191,7 +191,7 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  def getRelatedPages(name: String)(implicit connection: Connection): String = {
+  def getMarkupRelatedPages(name: String)(implicit connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
     val seqLinkExpanded: scala.Seq[_root_.models.Link] = ahaWikiQuery.Link.expand(seqLink)
