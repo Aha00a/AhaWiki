@@ -28,7 +28,7 @@ object InterpreterWiki extends TraitInterpreter {
       val attrTarget: String = if (external) " target=\"_blank\"" else ""
       val display: String = aliasWithDefault
       val attrCss = if(uriNormalized.startsWith("schema:")) {
-        """ class="schema" """
+        """ class="schema""""
       } else if (
         external ||
         uriNormalized.startsWith("#") ||
@@ -37,7 +37,7 @@ object InterpreterWiki extends TraitInterpreter {
       ) {
         ""
       } else {
-        """ class="missing" """
+        """ class="missing""""
       }
 
       s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""

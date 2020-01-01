@@ -334,9 +334,9 @@ class Test @Inject()(implicit
       ).toList,
       Seq(
         Link("UnitTest", "schema:Person", "schema:Schema"),
-        Link("UnitTest", "KIM, Aha", "schema:name"),
-        Link("UnitTest", "https://aha00a.com", "schema:url"),
-        Link("UnitTest", "Aharise", "schema:memberOf")
+        Link("UnitTest", "KIM, Aha", "schema:Person:name"),
+        Link("UnitTest", "https://aha00a.com", "schema:Person:url"),
+        Link("UnitTest", "Aharise", "schema:Person:memberOf")
       )
     )
     assertEquals(
@@ -351,14 +351,14 @@ class Test @Inject()(implicit
       ).toList,
       Seq(
         Link("UnitTest", "schema:WebApplication", "schema:Schema"),
-        Link("UnitTest", "AhaWiki", "schema:name"),
-        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWiki", "schema:url"),
-        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWikiFeature", "schema:featureList"),
-        Link("UnitTest", "Wiki", "schema:applicationCategory"),
-        Link("UnitTest", "2015-10-21", "schema:datePublished"),
-        Link("UnitTest", "2015", "schema:datePublished"),
-        Link("UnitTest", "2015-10", "schema:datePublished"),
-        Link("UnitTest", "10-21", "schema:datePublished")
+        Link("UnitTest", "AhaWiki", "schema:WebApplication:name"),
+        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWiki", "schema:WebApplication:url"),
+        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWikiFeature", "schema:WebApplication:featureList"),
+        Link("UnitTest", "Wiki", "schema:WebApplication:applicationCategory"),
+        Link("UnitTest", "2015-10-21", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "2015", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "2015-10", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "10-21", "schema:WebApplication:datePublished")
       )
     )
   }
