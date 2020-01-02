@@ -263,6 +263,11 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.formatInline("""[wiki:FrontPage Alias]"""), """<a href="FrontPage">Alias</a>""")
     assertEquals(InterpreterWiki.formatInline("""["Some Page"]"""), """<a href="Some Page" class="missing">Some Page</a>""")
     assertEquals(InterpreterWiki.formatInline("""["Some Page" Alias]"""), """<a href="Some Page" class="missing">Alias</a>""")
+    assertEquals(InterpreterWiki.formatInline("""[schema:Schema]"""), """<a href="./schema:Schema" class="schema">schema:Schema</a>""")
+    assertEquals(InterpreterWiki.formatInline("""[schema:Schema Alias]"""), """<a href="./schema:Schema" class="schema">Alias</a>""")
+    assertEquals(InterpreterWiki.formatInline("""["schema:Schema"]"""), """<a href="./schema:Schema" class="schema">schema:Schema</a>""")
+    assertEquals(InterpreterWiki.formatInline("""["schema:Schema" Alias]"""), """<a href="./schema:Schema" class="schema">Alias</a>""")
+
     assertEquals(InterpreterWiki.formatInline("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank">http://a.com/$</a>   <a href="http://a.com" target="_blank">http://a.com</a>  <a href="http://a.com" target="_blank">a com</a>""")
 
     assertEquals(InterpreterWiki.formatInline("""\http://a.com"""), "http://a.com")

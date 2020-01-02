@@ -1,7 +1,6 @@
 package logics.wikis.interpreters
 
-import java.net.URLEncoder
-
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
 import logics.AhaWikiCache
 import logics.wikis._
@@ -17,14 +16,13 @@ import scala.util.matching.Regex
 
 object InterpreterWiki extends TraitInterpreter {
   case class LinkMarkup(uri:String, alias:String = "") {
-    def uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
-
-    def aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
+    lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
+    lazy val aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
 
     def toRegexReplacement(set: Set[String] = Set[String]()): String = {
       val external: Boolean = PageNameLogic.isExternal(uri)
 
-      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else uriNormalized
+      val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
       val attrTarget: String = if (external) """ target="_blank"""" else ""
       val display: String = aliasWithDefault
       val attrCss = if(uriNormalized.startsWith("schema:")) {
