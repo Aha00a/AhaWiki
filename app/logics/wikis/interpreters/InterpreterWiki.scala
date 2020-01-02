@@ -202,24 +202,27 @@ object InterpreterWiki extends TraitInterpreter {
 
   val regexLink: Regex =
     """(?x)
-                ((?<!\\)\\)?        ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
-                ((?<!\\)\\)?        \[ ([^\]\s]+) \]                            |
-                ((?<!\\)\\)?        \[ ([^\]\s]+) \s+ ([^\]]+) \]
+          ((?<!\\)\\)?
+          (?:
+            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
+            \[ ([^\]\s]+) \]                            |
+            \[ ([^\]\s]+) \s+ ([^\]]+) \]
+          )
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
     val set: Set[String] = AhaWikiCache.PageNameSet.get()
-    //noinspection ScalaUnusedSymbol
-    regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()
-      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
-      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
 
-      case regexLink(escape, uri, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
-      case regexLink(null, null, escape, uri, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
-      case regexLink(null, null, null, null, escape, uri, alias) => RegexUtil.escapeDollar(s"[$uri $alias]")
+    regexLink.replaceAllIn(s, _ match {
+      case regexLink(null, uri , null, null, null) => LinkMarkup(uri).toRegexReplacement()
+      case regexLink(null, null, uri , null, null) => LinkMarkup(uri).toRegexReplacement(set)
+      case regexLink(null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
+
+      case regexLink(_   , uri , null, null, null) => RegexUtil.escapeDollar(uri)
+      case regexLink(_   , null, uri , null, null) => RegexUtil.escapeDollar(s"[$uri]")
+      case regexLink(_   , null, null, uri , alia) => RegexUtil.escapeDollar(s"[$uri $alia]")
 
       case value => "wrong : " + value
     })
@@ -227,9 +230,9 @@ object InterpreterWiki extends TraitInterpreter {
 
   def extractLinkMarkup(content:String):Iterator[LinkMarkup] = {
     regexLink.findAllIn(content).map {
-      case regexLink(null, uri, null, null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, uri, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
+      case regexLink(null, uri , null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, uri , null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, uri, alias) => LinkMarkup(uri, alias)
       case _ => null
     }.filter(_ != null)
   }
