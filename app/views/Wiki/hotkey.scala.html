@@ -19,19 +19,20 @@
     ))) {
 
         function showSearch() {
+            $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
+            $('.searchBg').click(function () {
+                hideSearch();
+            });
+            $('[name=q]').keydown(function (e) {
+                if (e.keyCode == 27) {
+                    hideSearch();
+                }
+            }).focus();
             $.get(
                     '@routes.Api.pageNames()',
                     {},
                     function (data, textStatus, jqXHR) {
-                        $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
-                        $('.searchBg').click(function () {
-                            hideSearch();
-                        });
-                        $('[name=q]').keydown(function (e) {
-                            if (e.keyCode == 27) {
-                                hideSearch();
-                            }
-                        }).autocomplete({
+                        $('[name=q]').autocomplete({
                             lookup: data,
                             onSelect: function (suggestion) {
                                 hideSearch();
