@@ -261,6 +261,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.formatInline("""[FrontPage Alias]"""), """<a href="FrontPage">Alias</a>""")
     assertEquals(InterpreterWiki.formatInline("""[wiki:FrontPage]"""), """<a href="FrontPage">FrontPage</a>""")
     assertEquals(InterpreterWiki.formatInline("""[wiki:FrontPage Alias]"""), """<a href="FrontPage">Alias</a>""")
+    assertEquals(InterpreterWiki.formatInline("""["Some Page"]"""), """<a href="Some Page" class="missing">Some Page</a>""")
+    assertEquals(InterpreterWiki.formatInline("""["Some Page" Alias]"""), """<a href="Some Page" class="missing">Alias</a>""")
     assertEquals(InterpreterWiki.formatInline("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank">http://a.com/$</a>   <a href="http://a.com" target="_blank">http://a.com</a>  <a href="http://a.com" target="_blank">a com</a>""")
 
     assertEquals(InterpreterWiki.formatInline("""\http://a.com"""), "http://a.com")
@@ -269,6 +271,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.formatInline("""\[http://a.com a com]"""), "[http://a.com a com]")
     assertEquals(InterpreterWiki.formatInline("""\[FrontPage]"""), "[FrontPage]")
     assertEquals(InterpreterWiki.formatInline("""\[FrontPage Alias]"""), "[FrontPage Alias]")
+    assertEquals(InterpreterWiki.formatInline("""\[wiki:FrontPage]"""), "[wiki:FrontPage]")
+    assertEquals(InterpreterWiki.formatInline("""\[wiki:FrontPage Alias]"""), "[wiki:FrontPage Alias]")
     assertEquals(InterpreterWiki.formatInline("""\[wiki:FrontPage]"""), "[wiki:FrontPage]")
     assertEquals(InterpreterWiki.formatInline("""\[wiki:FrontPage Alias]"""), "[wiki:FrontPage Alias]")
 
@@ -280,6 +284,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.formatInline("""\\[FrontPage Alias]"""), """\\<a href="FrontPage">Alias</a>""")
     assertEquals(InterpreterWiki.formatInline("""\\[wiki:FrontPage]"""), """\\<a href="FrontPage">FrontPage</a>""")
     assertEquals(InterpreterWiki.formatInline("""\\[wiki:FrontPage Alias]"""), """\\<a href="FrontPage">Alias</a>""")
+    assertEquals(InterpreterWiki.formatInline("""\\["Some Page"]"""), """\\<a href="Some Page" class="missing">Some Page</a>""")
+    assertEquals(InterpreterWiki.formatInline("""\\["Some Page" Alias]"""), """\\<a href="Some Page" class="missing">Alias</a>""")
 
 
 
@@ -291,6 +297,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""[FrontPage Alias]""").toList, Seq(LinkMarkup("""FrontPage""", """Alias""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
+    assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page"]""").toList, Seq(LinkMarkup("""Some Page""")))
+    assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page" Alias]""").toList, Seq(LinkMarkup("""Some Page""", "Alias")))
 
     assertEquals(
       InterpreterWiki.extractLinkMarkup("""http://a.com/$   [http://a.com]  [http://a.com a com]""").toList,
@@ -305,6 +313,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""\[FrontPage Alias]""").toList, Seq())
     assertEquals(InterpreterWiki.extractLinkMarkup("""\[wiki:FrontPage]""").toList, Seq())
     assertEquals(InterpreterWiki.extractLinkMarkup("""\[wiki:FrontPage Alias]""").toList, Seq())
+    assertEquals(InterpreterWiki.extractLinkMarkup("""\["SomePage"]""").toList, Seq())
+    assertEquals(InterpreterWiki.extractLinkMarkup("""\["SomePage" Alias]""").toList, Seq())
 
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com""").toList, Seq(LinkMarkup("""http://a.com""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com$""").toList, Seq(LinkMarkup("""http://a.com$""")))
@@ -314,6 +324,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage Alias]""").toList, Seq(LinkMarkup("""FrontPage""", """Alias""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
+    assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage"]""").toList, Seq(LinkMarkup("""SomePage""")))
+    assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage" Alias]""").toList, Seq(LinkMarkup("""SomePage""", """Alias""")))
 
     assertEquals(InterpreterWiki.extractLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
     assertEquals(InterpreterWiki.extractLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))

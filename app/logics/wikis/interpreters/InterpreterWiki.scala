@@ -24,8 +24,8 @@ object InterpreterWiki extends TraitInterpreter {
     def toRegexReplacement(set: Set[String] = Set[String]()): String = {
       val external: Boolean = PageNameLogic.isExternal(uri)
 
-      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else URLEncoder.encode(uriNormalized, "utf-8")
-      val attrTarget: String = if (external) " target=\"_blank\"" else ""
+      val href: String = if(external || uriNormalized.startsWith("#") || uriNormalized.startsWith("?")) uriNormalized else uriNormalized
+      val attrTarget: String = if (external) """ target="_blank"""" else ""
       val display: String = aliasWithDefault
       val attrCss = if(uriNormalized.startsWith("schema:")) {
         """ class="schema""""
@@ -205,7 +205,9 @@ object InterpreterWiki extends TraitInterpreter {
           ((?<!\\)\\)?
           (?:
             ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
+            \[" ([^\]"]+) "\]                           |
             \[ ([^\]\s]+) \]                            |
+            \[" ([^\]"]+) " \s+ ([^\]]+) \]            |
             \[ ([^\]\s]+) \s+ ([^\]]+) \]
           )
     """.r
@@ -216,13 +218,17 @@ object InterpreterWiki extends TraitInterpreter {
     val set: Set[String] = AhaWikiCache.PageNameSet.get()
 
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri , null, null, null) => LinkMarkup(uri).toRegexReplacement()
-      case regexLink(null, null, uri , null, null) => LinkMarkup(uri).toRegexReplacement(set)
-      case regexLink(null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
+      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()
+      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
+      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
+      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toRegexReplacement(set)
+      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
 
-      case regexLink(_   , uri , null, null, null) => RegexUtil.escapeDollar(uri)
-      case regexLink(_   , null, uri , null, null) => RegexUtil.escapeDollar(s"[$uri]")
-      case regexLink(_   , null, null, uri , alia) => RegexUtil.escapeDollar(s"[$uri $alia]")
+      case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
+      case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
+      case regexLink(_   , null, null, uri , null, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
+      case regexLink(_   , null, null, null, uri , alia, null, null) => RegexUtil.escapeDollar(s"""["$uri" $alia]""")
+      case regexLink(_   , null, null, null, null, null, uri , alia) => RegexUtil.escapeDollar(s"""[$uri $alia]""")
 
       case value => "wrong : " + value
     })
@@ -230,9 +236,11 @@ object InterpreterWiki extends TraitInterpreter {
 
   def extractLinkMarkup(content:String):Iterator[LinkMarkup] = {
     regexLink.findAllIn(content).map {
-      case regexLink(null, uri , null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, uri , null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, uri, alias) => LinkMarkup(uri, alias)
+      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias)
+      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
       case _ => null
     }.filter(_ != null)
   }
