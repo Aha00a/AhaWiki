@@ -175,6 +175,7 @@ html, body {
 			padding-left:1em;
 			margin-top: 1px;
 			margin-bottom: 1px;
+			overflow: hidden;
 			.borderAndBeforeBackground(@color) {
 				border: 2px solid @color;
 				&:before {
@@ -251,7 +252,6 @@ html, body {
 		}
 
         div.toc, div.schema {
-            z-index: 1;
             position: relative;
             float: right;
             margin-bottom: 10px;
@@ -602,14 +602,12 @@ html, body {
 		left: 0;
 		background-color: #000;
 		opacity: .25;
-		z-index: 1;
 	}
 	.search {
 		position: fixed;
 		top: 30%;
 		left: 40%;
 		width: 20%;
-		z-index: 1;
 		form {
 			.boxShadow;
 			input {
