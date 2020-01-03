@@ -20,6 +20,9 @@ object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
   case class Calculate(name: String, i: Int = 1, length: Int = 1)
+  case class CalculateCosineSimilarity(name: String, i: Int = 1, length: Int = 1)
+  case class CalculateLink(name: String, i: Int = 1, length: Int = 1)
+
   case class Geocode(address: String)
 }
 
@@ -27,13 +30,24 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name - ($i/$length)") {
+    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"Calculate - $name - ($i/$length)") {
+      context.self ! CalculateCosineSimilarity(name, i, length)
+      context.self ! CalculateLink(name, i, length)
+    }
+
+    case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"CalculateCosineSimilarity - $name - ($i/$length)") {
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
-
+        }
+      }
+    }
+    case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"CalculateLink - $name - ($i/$length)") {
+      database.withConnection { implicit connection =>
+        val ahaWikiQuery = AhaWikiQuery()
+        ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
           val seqLink = Interpreters.extractLink(page.content).filterNot(_.isDstExternal)
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
