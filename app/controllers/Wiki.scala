@@ -2,9 +2,8 @@ package controllers
 
 import java.net.URLDecoder
 import java.sql.Connection
-import java.time.format.TextStyle
-import java.time.{LocalDate, LocalDateTime}
-import java.util.{Date, Locale}
+import java.time.LocalDate
+import java.util.Date
 
 import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
