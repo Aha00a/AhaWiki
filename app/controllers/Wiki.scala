@@ -110,7 +110,7 @@ class Wiki @Inject()(implicit
 
           case DateTimeUtil.regexYearDashMonth(y, m) =>
             val content =
-              s"""= $name
+              s"""= [$y]-$m
                  |[[IncludeDays]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
