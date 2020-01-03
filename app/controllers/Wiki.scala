@@ -144,8 +144,7 @@ class Wiki @Inject()(implicit
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
               val additionalInfo =
-                s"""
-                   |== See also
+                s"""== See also
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
                    |${getMarkupSchema(name, ahaWikiQuery)}
