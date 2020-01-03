@@ -112,7 +112,7 @@ class Wiki @Inject()(implicit
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
                  |""".stripMargin
 
-            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content + additionalInfo) + """</div></div>"""
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case regexPageType(null, ym  , null, null, null  , null) => Ok(ym)
           case regexPageType(null, null, md  , null, null  , null) => Ok(md)
@@ -160,7 +160,7 @@ class Wiki @Inject()(implicit
                   val contentInterpreted = Interpreters.interpret(page.content)
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case None | Some("Wiki") =>
-                  val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(page.content + additionalInfo) + """</div></div>"""
+                  val contentInterpreted = Interpreters.interpret(page.content + additionalInfo) 
                   if(request.isLocalhost) {
 //                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
 //                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
@@ -168,7 +168,7 @@ class Wiki @Inject()(implicit
                   }
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case _ =>
-                  val contentInterpreted = s"""<div class="limitWidth"><div class="wikiContent"><h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo) + """</div></div>"""
+                  val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo)
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
               })
           }

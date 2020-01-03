@@ -46,6 +46,10 @@
         });
     </script>
 } {
-    @Html(contentInterpreted)
+    <div class="limitWidth">
+        <div class="wikiContent">
+            @Html(contentInterpreted)
+        </div>
+    </div>
     @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
 }
