@@ -25,7 +25,7 @@ object SchemaOrg {
 
       <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
     }
-    def toLinkMarkup(): LinkMarkup = LinkMarkup(s"schema:${id}", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toLinkMarkup: LinkMarkup = LinkMarkup(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"
@@ -37,7 +37,7 @@ object SchemaOrg {
     val children = (node \ "children").asOpt[Seq[JsValue]]
     if(id.containsIgnoreCase(q)) {
       <ul>
-        <li><a href={s"/w/${idWithNameSpace}"}>{id}</a></li>
+        <li><a href={s"/w/$idWithNameSpace"}>{id}</a></li>
         {children.map(seq => seq.map(n => getHtmlTree("", n))).getOrElse(NodeSeq.Empty)}
       </ul>
     } else {
@@ -46,7 +46,7 @@ object SchemaOrg {
         c
       } else {
         <ul>
-          <li><a href={s"/w/${idWithNameSpace}"}>{id}</a></li>
+          <li><a href={s"/w/$idWithNameSpace"}>{id}</a></li>
           {c}
         </ul>
       }
