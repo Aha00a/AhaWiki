@@ -136,10 +136,31 @@ class Wiki @Inject()(implicit
               case 4 | 6 | 9 | 11 => 30
               case 2 => 29
             }
+
+            val r = <table class="month simpleTable">
+              <thead>
+                <tr>
+                  <th colspan="31">{MacroMonthName(s"--$mm")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {(1 to lastDay).grouped(5).map(t =>
+                    <tr>
+                      {t.map(Some(_)).padTo(5, None).map(d =>
+                        <td>{d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--${mm}-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}</td>
+                      )}
+                    </tr>
+                  )}
+                </tr>
+              </tbody>
+            </table>
             val content =
               s"""= [--$mm $mm]-[----$dd $dd]
                  |[$mm]
-                 |${(1 to lastDay).map(d => f"""[--$mm-$d%02d $mm-$d%02d]""").mkString(" ")}
+                 |[[[#!Html
+                 |${r.toString()}
+                 |]]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
