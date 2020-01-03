@@ -79,7 +79,8 @@ class Wiki @Inject()(implicit
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val additionalInfo =
-          s"""== See also
+          s"""
+             |== See also
              |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
              |'''[schema:Schema Schema]'''
              |${getMarkupSchema(name, ahaWikiQuery)}
@@ -130,7 +131,8 @@ class Wiki @Inject()(implicit
                  |""".stripMargin
 
             val additionalInfo =
-              s"""== See also
+              s"""
+                 |== See also
                  |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                  |'''[schema:Schema Schema]'''
                  |${getMarkupSchema(name, ahaWikiQuery)}
@@ -152,7 +154,8 @@ class Wiki @Inject()(implicit
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
               val additionalInfo =
-                s"""== See also
+                s"""
+                   |== See also
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
                    |${getMarkupSchema(name, ahaWikiQuery)}
