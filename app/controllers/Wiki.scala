@@ -72,8 +72,7 @@ class Wiki @Inject()(implicit
         val content = name match {
           case regexYmd(y, m, d) =>
             val localDate = LocalDate.parse(name)
-            val weekdayName = localDate.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN)
-            s"= [$y-$m]-$d $weekdayName\n * "
+            s"= [$y-$m]-$d [[WeekdayName]]\n * "
           case _ => s"""= $name\ndescribe $name here."""
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
