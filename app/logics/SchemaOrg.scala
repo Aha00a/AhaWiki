@@ -3,25 +3,29 @@ package logics
 import java.io.File
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.Using
+import com.aha00a.commons.utils.{EnglishCaseConverter, Using}
+import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
+import scala.Ordering.Implicits._
+import scala.collection.mutable
 import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
 object SchemaOrg {
   case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
-    def toXmlSpan(text:String, classes: String*): Elem = {
+    def toXmlSpan(toTitleCase: Boolean = true, classes: Seq[String] = Seq()): Elem = {
       val (title, seqClass) = if (supersededBy.nonEmpty) (
         "Superseded by " + supersededBy.mkString(",") + "\n" + comment,
-        classes :+ "supersededBy" 
+        classes :+ "supersededBy"
       ) else (
         comment,
         classes
       )
 
-      <span title={title} class={seqClass.mkString(" ")}>{text} </span>
+      <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
     }
+    def toLinkMarkup(): LinkMarkup = LinkMarkup(s"schema:${id}", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"
@@ -83,7 +87,7 @@ object SchemaOrg {
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
-                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(p.id, if(seqPropertyUsed.contains(p.id)){"match"}else{""}))
+                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(toTitleCase = false, if(seqPropertyUsed.contains(p.id)){Seq("match")}else{Seq("")}))
                     }
                   </div>
                 }
@@ -97,6 +101,28 @@ object SchemaOrg {
 
   def getClassHierarchy(schema: String): Seq[String] = {
     mapClass.get(schema).map(v => v.id +: v.subClassOf.flatMap(p => getClassHierarchy(p))).getOrElse(Seq())
+  }
+
+  def getParents(schema:String): Seq[String] = {
+    mapClass.get(schema) match {
+      case Some(n) => n.subClassOf
+      case None => Seq()
+    }
+  }
+
+  def traverse(path: Seq[String], callback: Seq[String] => Unit): Unit = {
+    val strings = getParents(path.head)
+    if (strings.isEmpty) {
+      callback(path)
+    } else {
+      strings.foreach(p => traverse(p +: path, callback))
+    }
+  }
+
+  def getPathHierarchy(schema:String): Seq[Seq[String]] = {
+    val buffer: mutable.Buffer[Seq[String]] = mutable.Buffer[Seq[String]]()
+    traverse(Seq(schema), s => buffer += s)
+    buffer.sorted
   }
 
   def getSeqString(jsLookupResult: JsLookupResult): Seq[String] = {

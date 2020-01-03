@@ -28,7 +28,7 @@ object InterpreterSchema extends TraitInterpreter {
             <dt>
               {
                 SchemaOrg.mapProperty.get(key).map(n => {
-                  n.toXmlSpan(EnglishCaseConverter.camelCase2TitleCase(key), if(n.supersededBy.isEmpty) "" else "supersededBy")
+                  n.toXmlSpan()
                 }).getOrElse{
                   <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
                 }
@@ -48,15 +48,13 @@ object InterpreterSchema extends TraitInterpreter {
           }
         }
         <dt>Hierarchy</dt>
-        {SchemaOrg.getClassHierarchy(schemaClass).foldLeft(NodeSeq.Empty)((a, v) => {
-          <ul>
-            <li>
-              <a href={s"/w/${SchemaOrg.withNameSpace(v)}"}>{v}</a>
-              <sup title={SchemaOrg.mapClass(v).comment}>{SchemaOrg.mapClass(v).comment}</sup>
-            </li>
-            {a}
-          </ul>
-        })}
+        {
+          SchemaOrg.getPathHierarchy(schemaClass).map(v => {
+            {
+              scala.xml.XML.loadString(v.map(w =>(SchemaOrg.mapClass(w).toLinkMarkup().toRegexReplacement(pageNameSet))).mkString("<dd>", " / ", "</dd>"))
+            }
+          })
+        }
       </dl>
 
     if(wikiContext.isPreview) {
