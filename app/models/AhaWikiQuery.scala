@@ -354,6 +354,21 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
       .as(str("name") singleOpt)
   }
 
+  def pageSelectNameWhereNoLinkSrc(): Option[String] = {
+    SQL( """SELECT
+           |    name
+           |    FROM (
+           |        SELECT DISTINCT(name) name FROM Page
+           |    ) w
+           |    WHERE name NOT IN (
+           |        SELECT DISTINCT(src) FROM Link
+           |    )
+           |    ORDER BY RAND()
+           |    LIMIT 1
+           | """.stripMargin)
+      .as(str("name") singleOpt)
+  }
+
   def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = {
     if(similarPageNames.isEmpty) {
       immutable.Seq()

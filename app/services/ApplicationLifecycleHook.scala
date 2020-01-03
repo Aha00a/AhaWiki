@@ -3,7 +3,7 @@ package services
 import java.io.File
 import java.util.Date
 
-import actors.ActorAhaWiki.Calculate
+import actors.ActorAhaWiki.{Calculate, CalculateCosineSimilarity, CalculateLink}
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
@@ -63,10 +63,19 @@ class ApplicationLifecycleHook @Inject()(implicit
   }})
 
   //noinspection LanguageFeature
-  actorSystem.scheduler.schedule(30 seconds, 1 minutes, () => { database.withConnection { implicit connection =>
+  actorSystem.scheduler.schedule(30 seconds, 5 minutes, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
-      case Some(s) => actorAhaWiki ! Calculate(s)
+      case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
+      case None => Logger.info("None")
+    }
+  }})
+
+  //noinspection LanguageFeature
+  actorSystem.scheduler.schedule(15 seconds, 30 seconds, () => { database.withConnection { implicit connection =>
+    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
+    ahaWikiQuery.pageSelectNameWhereNoLinkSrc() match {
+      case Some(s) => actorAhaWiki ! CalculateLink(s)
       case None => Logger.info("None")
     }
   }})
