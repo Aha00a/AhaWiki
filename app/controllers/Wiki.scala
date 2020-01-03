@@ -133,14 +133,13 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val similarPages: String = getMarkupSimilarPages(name, ahaWikiQuery)
               val additionalInfo =
                 s"""== See also
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
                    |${getMarkupSchema(name, ahaWikiQuery)}
                    |'''Similar Pages'''
-                   |$similarPages
+                   |${getMarkupSimilarPages(name, ahaWikiQuery)}
                    |'''Backlinks'''
                    |[[Backlinks]]
                    |[[Html(</td><td>)]]
