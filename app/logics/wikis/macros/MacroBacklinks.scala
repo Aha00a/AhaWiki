@@ -5,8 +5,7 @@ import models.{AhaWikiQuery, WikiContext}
 
 object MacroBacklinks extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
-    InterpreterWiki(AhaWikiQuery().Link.select(wikiContext.name)
-      .filter(_.dst == wikiContext.name)
+    InterpreterWiki(AhaWikiQuery().Link.selectDst(wikiContext.name)
       .map(l => s""" * ["${l.src}"] ${l.alias}""")
       .mkString("\n")
     )
