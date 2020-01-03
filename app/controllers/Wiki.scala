@@ -140,15 +140,12 @@ class Wiki @Inject()(implicit
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
               val relatedPages = getMarkupRelatedPages(name)
-              val schema: String = getMarkupSchema(name, ahaWikiQuery)
-
-
               val additionalInfo =
                 s"""
                    |== See also
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
-                   |$schema
+                   |${getMarkupSchema(name, ahaWikiQuery)}
                    |'''Similar Pages'''
                    |$similarPages
                    |'''Backlinks'''
