@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import com.aha00a.supercsv.SupercsvUtil
 import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
@@ -13,17 +14,19 @@ object MacroRecentChanges extends TraitMacro {
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
               case (yearMonth, groupedByYearMonth) =>
-                s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
-                  groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => {
-                    Seq(
-                      s"""'''["${t.name}"]'''""",
-                      s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
-                      s"${t.isoLocalDateTime}",
-                      s"[${t.author}](${t.remoteAddress})",
-                      s"${t.comment}"
-                    ).mkString("\t")
-                  }).mkString("\n") +
-                  "\n]]]"
+                val list = groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => Seq(
+                    s"""'''["${t.name}"]'''""",
+                    s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
+                    s"${t.isoLocalDateTime}",
+                    s"[${t.author}](${t.remoteAddress})",
+                    s"${t.comment}"
+                ))
+                s"""=== $yearMonth
+                   |[[[#!Table tsv 1
+                   |Name	Revision	at	by	comment
+                   |${SupercsvUtil.toTsvString(list)}
+                   |]]]
+                   |""".stripMargin
             }.mkString("\n")
       }.mkString("\n")
     )
