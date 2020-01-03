@@ -360,7 +360,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
       .as(str("name") singleOpt)
   }
 
-  def pageSelectNameWhereNoLinkSrc(): Option[String] = {
+  def pageSelectNameWhereNoLinkSrc(): Seq[String] = {
     SQL( """SELECT
            |    name
            |    FROM (
@@ -370,9 +370,9 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.c
            |        SELECT DISTINCT(src) FROM Link
            |    )
            |    ORDER BY RAND()
-           |    LIMIT 1
+           |    LIMIT 100
            | """.stripMargin)
-      .as(str("name") singleOpt)
+      .as(str("name") *)
   }
 
   def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = {

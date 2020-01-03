@@ -74,9 +74,11 @@ class ApplicationLifecycleHook @Inject()(implicit
   //noinspection LanguageFeature
   actorSystem.scheduler.schedule(15 seconds, 30 seconds, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    ahaWikiQuery.pageSelectNameWhereNoLinkSrc() match {
-      case Some(s) => actorAhaWiki ! CalculateLink(s)
-      case None => Logger.info("None")
+    val seq: Seq[String] = ahaWikiQuery.pageSelectNameWhereNoLinkSrc()
+    if(seq.isEmpty) {
+      Logger.info("None")
+    } else {
+      seq.foreach(v => actorAhaWiki ! CalculateLink(v))
     }
   }})
 }
