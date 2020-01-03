@@ -91,7 +91,7 @@ class Wiki @Inject()(implicit
           case pageType(y   , null, null, null, null  , null) =>
             val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(s"""
               |= $name
-              |${(RangeUtil.around(y.toInt, 10)).map(y => s"[$y]").mkString(", ")}
+              |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString(", ")}
               |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
               |""".stripMargin) + """</div></div>"""
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
