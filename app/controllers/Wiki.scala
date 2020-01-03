@@ -105,8 +105,8 @@ class Wiki @Inject()(implicit
             val content =
               s"""= $name
                  |[[[#!Table tsv 1
-                 |${(RangeUtil.around(0, 5)).map(y => f"'''$y%+d'''").mkString("\t")}
-                 |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString("\t")}
+                 |${RangeUtil.around(0, 5).map(y => f"'''$y%+d'''").mkString("\t")}
+                 |${RangeUtil.around(y.toInt, 5).map(y => s"[$y]").mkString("\t")}
                  |]]]
                  |== Calendar
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
@@ -271,7 +271,7 @@ class Wiki @Inject()(implicit
 
     result.toOption.map(r => {
       s"""[[[#!Graph enableWikiLink
-         |$result
+         |$r
          |]]]
          |""".stripMargin
     }).getOrElse("")
