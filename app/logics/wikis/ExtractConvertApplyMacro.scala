@@ -32,7 +32,9 @@ object ExtractConvertApplyMacro {
     MacroMonths,
     MacroCalendar,
     MacroIncludeDays,
+
     MacroWeekdayName,
+    MacroMonthName,
 
     MacroPeriod,
 
