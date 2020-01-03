@@ -130,19 +130,6 @@ class Wiki @Inject()(implicit
                  | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
                  |""".stripMargin
 
-            val additionalInfo =
-              s"""
-                 |== See also
-                 |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
-                 |'''[schema:Schema Schema]'''
-                 |${getMarkupSchema(name, ahaWikiQuery)}
-                 |'''Backlinks'''
-                 |[[Backlinks]]
-                 |[[Html(</td><td>)]]
-                 |${getMarkupRelatedPages(name)}
-                 |[[Html(</td></tr></tbody></table>)]]
-                 |""".stripMargin
-
             NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(content + additionalInfo)))
         }
 
