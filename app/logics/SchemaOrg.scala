@@ -5,6 +5,7 @@ import java.io.File
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{EnglishCaseConverter, Using}
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import models.WikiContext
 import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
 import scala.Ordering.Implicits._
@@ -25,7 +26,7 @@ object SchemaOrg {
 
       <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
     }
-    def toLinkMarkup: LinkMarkup = LinkMarkup(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toLinkMarkup(implicit wikiContext:WikiContext): LinkMarkup = LinkMarkup(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"

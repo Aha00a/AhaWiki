@@ -15,31 +15,33 @@ import scala.util.matching.Regex
 
 
 object InterpreterWiki extends TraitInterpreter {
-  case class LinkMarkup(uri:String, alias:String = "") {
+  case class LinkMarkup(uri:String, alias:String = "")(implicit wikiContext:WikiContext) {
     lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
     lazy val aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
 
     def toHtmlString(set: Set[String] = Set[String]()): String = {
-      val external: Boolean = PageNameLogic.isExternal(uri)
-
-      val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
-      val attrTarget: String = if (external) """ target="_blank"""" else ""
-      val display: String = aliasWithDefault
-      val attrCss = if(uriNormalized.startsWith("schema:")) {
-        """ class="schema""""
-      } else if (
-        external ||
-        uriNormalized.startsWith("#") ||
-        uriNormalized.startsWith("?") ||
-        set.isEmpty ||
-        set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
-      ) {
-        ""
+      if(wikiContext.name == uri){
+        s"""<b>${uri}</b>"""
       } else {
-        """ class="missing""""
+        val external: Boolean = PageNameLogic.isExternal(uri)
+        val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
+        val attrTarget: String = if (external) """ target="_blank"""" else ""
+        val display: String = aliasWithDefault
+        val attrCss = if(uriNormalized.startsWith("schema:")) {
+          """ class="schema""""
+        } else if (
+          external ||
+            uriNormalized.startsWith("#") ||
+            uriNormalized.startsWith("?") ||
+            set.isEmpty ||
+            set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
+        ) {
+          ""
+        } else {
+          """ class="missing""""
+        }
+        s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
       }
-
-      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
     }
 
     def toLink(src:String) = Link(src, uriNormalized, alias)
@@ -233,7 +235,7 @@ object InterpreterWiki extends TraitInterpreter {
     })
   }
 
-  def extractLinkMarkup(content:String):Iterator[LinkMarkup] = {
+  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[LinkMarkup] = {
     regexLink.findAllIn(content).map {
       case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri)
       case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri)
