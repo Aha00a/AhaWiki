@@ -10,6 +10,7 @@ import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.RangeUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
@@ -90,7 +91,7 @@ class Wiki @Inject()(implicit
           case pageType(y   , null, null, null, null  , null) =>
             val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(s"""
               |= $name
-              |${(2013 to LocalDateTime.now.getYear).map(y => s"[$y]").mkString(", ")}
+              |${(RangeUtil.around(y.toInt, 10)).map(y => s"[$y]").mkString(", ")}
               |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
               |""".stripMargin) + """</div></div>"""
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
