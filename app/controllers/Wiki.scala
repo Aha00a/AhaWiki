@@ -139,7 +139,6 @@ class Wiki @Inject()(implicit
               val similarPageNames = cosineSimilarities.map(_.name2)
               val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
               val similarPages = cosineSimilarities.map(c => " * [[[#!Html\n" + views.html.Wiki.percentLinkTitle(c.similarity, c.name2, highScoredTerms.getOrElse(c.name2, "")) + "\n]]]").mkString("\n")
-              val relatedPages = getMarkupRelatedPages(name)
               val additionalInfo =
                 s"""
                    |== See also
@@ -151,7 +150,7 @@ class Wiki @Inject()(implicit
                    |'''Backlinks'''
                    |[[Backlinks]]
                    |[[Html(</td><td>)]]
-                   |$relatedPages
+                   |${getMarkupRelatedPages(name)}
                    |[[Html(</td></tr></tbody></table>)]]
                    |""".stripMargin
               val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
