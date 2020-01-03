@@ -201,7 +201,7 @@ class Wiki @Inject()(implicit
     }).filter(_._3.isNotNullOrEmpty).groupBy(_._2)
     mapClassSrcProperty.keys.toSeq.sorted.map(k => {
       s""" * [schema:$k $k]
-         |${mapClassSrcProperty(k).map(t => s"  * [schema:${t._3} ${t._3}] of [${t._1}]").mkString("\n")}""".stripMargin
+         |${mapClassSrcProperty(k).map(t => s"""  * [schema:${t._3} ${t._3}] of ["${t._1}"]""").mkString("\n")}""".stripMargin
     }).mkString("\n")
   }
 
