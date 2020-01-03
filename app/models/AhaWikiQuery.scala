@@ -6,6 +6,7 @@ import java.util.Date
 import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.RangeUtil
 import logics.wikis.PageNameLogic
 
 import scala.collection.immutable
@@ -35,7 +36,6 @@ case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
 
 case class SearchResult(name:String, content:String, dateTime: Date) {
   def summarise(q: String): SearchResultSummary = {
-    def around(i:Int, distance: Int = 3) = (i - distance) to (i + distance)
     val lines = content.split("""(\r\n|\n)+""").toSeq
     SearchResultSummary(
       name,
@@ -43,7 +43,7 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
         .zipWithIndex
         .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
         .map(_._2)
-        .flatMap(around(_))
+        .flatMap(RangeUtil.around(_, 3))
         .distinct
         .filter(lines.isDefinedAt)
         .splitBy((a, b) => a + 1 != b)
