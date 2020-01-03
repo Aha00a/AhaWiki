@@ -89,44 +89,16 @@ class Wiki @Inject()(implicit
              |[[Html(</td></tr></tbody></table>)]]
              |""".stripMargin
 
-        val regexPageType: Regex ="""(?x)
-          ^
-            ~~~~~~~~~~~~~~~~~~~~~~
-          | (\d{4})
-          | (\d{4}-\d\d)
-          | (\d\d-\d\d)
-          | (\d{4}-\d\d-\d\d)
-          | schema:(.+)
-          | (.+)
-          $
-        """.r
+        val regexIsoLocalDate: Regex = """^(\d{4})-(0[1-9]|1[0-2])-([0-2]\d|3[0-1])$""".r
+        val regexYearDashMonth: Regex = """^(\d{4})-(0[1-9]|1[0-2])$""".r
+        val regexYear: Regex = """^(\d{4})$""".r
+        val regexDashDashMonthDashDay: Regex = """^--(0[1-9]|1[0-2])-([0-2]\d|3[0-1])$""".r
+        val regexDashDashMonth: Regex = """^--(0[1-9]|1[0-2])$""".r
+        val regexDashDashDashDashDay: Regex = """^----([0-2]\d|3[0-1])$""".r
+        val regexSchemaColon: Regex = """^schema:$""".r
+
         name match {
-          case regexPageType(y   , null, null, null, null  , null) =>
-            val content =
-              s"""= $name
-                 |[[[#!Table tsv 1
-                 |${RangeUtil.around(0, 5).map(y => f"'''$y%+d'''").mkString("\t")}
-                 |${RangeUtil.around(y.toInt, 5).map(y => s"[$y]").mkString("\t")}
-                 |]]]
-                 |== Calendar
-                 |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
-                 |""".stripMargin
-
-            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-          case regexPageType(null, ym  , null, null, null  , null) =>
-            val content =
-              s"""= $name
-                 |[[IncludeDays]]
-                 |""".stripMargin
-            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-//          case regexPageType(null, null, md  , null, null  , null) =>
-//            Ok(md) // TODO
-
-          case regexPageType(null, null, null, ymd , null  , null) =>
+          case regexIsoLocalDate(y, m, d) =>
             val content =
               s"""= $name [[WeekdayName]]
                  |This page does not exist.
@@ -140,7 +112,50 @@ class Wiki @Inject()(implicit
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
-//          case regexPageType(null, null, null, null, schema, null) =>
+          case regexYearDashMonth(y, m) =>
+            val content =
+              s"""= $name
+                 |[[IncludeDays]]
+                 |""".stripMargin
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+
+          case regexYear(y) =>
+            val content =
+              s"""= $name
+                 |[[[#!Table tsv 1
+                 |${RangeUtil.around(0, 5).map(y => f"'''$y%+d'''").mkString("\t")}
+                 |${RangeUtil.around(y.toInt, 5).map(y => s"[$y]").mkString("\t")}
+                 |]]]
+                 |== Calendar
+                 |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
+                 |""".stripMargin
+
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+
+          case regexDashDashMonthDashDay(mm, dd) =>
+            val lastDay: Int = mm.toInt match {
+              case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
+              case 4 | 6 | 9 | 11 => 30
+              case 2 => 29
+            }
+            val content =
+              s"""= [$mm]-[$dd]
+                 |[$mm]
+                 |${(1 to lastDay).map(d => f"""[$mm-$d%02d]""").mkString(" ")}
+                 |""".stripMargin
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+
+
+//          case regexDashDashMonth(mm) =>
+//            Ok(mm) // TODO
+
+//          case regexDashDashDashDashDay(mm) =>
+//            Ok(mm) // TODO
+
+//          case regexSchemaColon(schema) =>
 //            Ok(schema) // TODO
 
           case _ => Ok(name)

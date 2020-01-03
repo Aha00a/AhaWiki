@@ -14,7 +14,7 @@ object DateTimeUtil {
       localDate.toIsoLocalDateString,
       localDate.toYearDashMonthString,
       localDate.toYearString,
-      localDate.toMonthDashDayString,
+      localDate.toDashDashMonthDashDayString,
       localDate.toDashDashMonthString,
       localDate.toDashDashDashDashDayString
     )).getOrElse(Seq(ymd))

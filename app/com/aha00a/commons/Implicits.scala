@@ -49,6 +49,7 @@ object Implicits {
     def toYearDashMonthString: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
     def toYearString: String = localDate.format(DateTimeFormatterHolder.year)
     def toMonthDashDayString: String = localDate.format(DateTimeFormatterHolder.monthDashDay)
+    def toDashDashMonthDashDayString: String = localDate.format(DateTimeFormatterHolder.dashDashMonthDashDay)
     def toDashDashMonthString: String = localDate.format(DateTimeFormatterHolder.dashDashMonth)
     def toDashDashDashDashDayString: String = localDate.format(DateTimeFormatterHolder.dashDashDashDashDay)
 

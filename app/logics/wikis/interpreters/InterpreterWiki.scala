@@ -21,7 +21,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     def toHtmlString(set: Set[String] = Set[String]()): String = {
       if(wikiContext.name == uri){
-        s"""<b>${uri}</b>"""
+        s"""<b>$aliasWithDefault</b>"""
       } else {
         val external: Boolean = PageNameLogic.isExternal(uri)
         val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
