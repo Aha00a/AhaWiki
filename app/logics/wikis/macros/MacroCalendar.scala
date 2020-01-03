@@ -26,13 +26,12 @@ object MacroCalendar extends TraitMacro {
       val yearMonth = YearMonth.of(y.toInt, m.toInt)
       val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
-      val set: Set[String] = AhaWikiCache.PageNameSet.get()
 
-      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
+      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString())
       val r = <table class="macroCalendar simpleTable">
         <thead>
           <tr>
-            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString(set))}</th>
+            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString())}</th>
           </tr>
           <tr>
             {
