@@ -149,8 +149,18 @@ class Wiki @Inject()(implicit
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
 
-//          case regexDashDashMonth(mm) =>
-//            Ok(mm) // TODO
+          case regexDashDashMonth(mm) =>
+            val lastDay: Int = mm.toInt match {
+              case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
+              case 4 | 6 | 9 | 11 => 30
+              case 2 => 29
+            }
+            val content =
+              s"""= ${mm}
+                 |${(1 to lastDay).map(d => f"""[----$d%02d $d%02d]""").mkString(" ")}
+                 |""".stripMargin
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
 //          case regexDashDashDashDashDay(mm) =>
 //            Ok(mm) // TODO
