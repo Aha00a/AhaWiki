@@ -3,9 +3,9 @@ package logics.wikis.macros
 import java.text.SimpleDateFormat
 import java.time.format.TextStyle
 import java.time.{LocalDateTime, YearMonth}
-import java.util.Locale
 
 import com.aha00a.commons.Implicits._
+import com.aha00a.play.Implicits._
 import models.WikiContext
 
 import scala.util.matching.Regex
@@ -22,7 +22,7 @@ object MacroIncludeDays extends TraitMacro {
       content
         .split("\n")
         .map(_.replaceAll("^(=+ )", "=$1"))
-        .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREA))) // TODO: remove locale KOREA
+        .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.request.locale)))
         .mkString("\n")
     })).mkString("\n")
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
