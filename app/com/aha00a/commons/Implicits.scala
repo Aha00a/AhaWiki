@@ -46,9 +46,12 @@ object Implicits {
   implicit class LocalDateFormatter(localDate:LocalDate) {
     def toIsoLocalDateString: String = localDate.format(DateTimeFormatterHolder.isoLocalDate)
 
-    def toYearString: String = localDate.format(DateTimeFormatterHolder.year)
     def toYearDashMonthString: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
+    def toYearString: String = localDate.format(DateTimeFormatterHolder.year)
     def toMonthDashDayString: String = localDate.format(DateTimeFormatterHolder.monthDashDay)
+    def toDashDashMonthString: String = localDate.format(DateTimeFormatterHolder.dashDashMonth)
+    def toDashDashDashDashDayString: String = localDate.format(DateTimeFormatterHolder.dashDashDashDashDay)
+
   }
 
 
