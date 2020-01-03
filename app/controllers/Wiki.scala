@@ -92,6 +92,7 @@ class Wiki @Inject()(implicit
              |""".stripMargin
 
         val regexPageType: Regex ="""(?x)
+          ^
             ~~~~~~~~~~~~~~~~~~~~~~
           | (\d{4})
           | (\d{4}-\d\d)
@@ -99,6 +100,7 @@ class Wiki @Inject()(implicit
           | (\d{4}-\d\d-\d\d)
           | schema:(.+)
           | (.+)
+          $
         """.r
         name match {
           case regexPageType(y   , null, null, null, null  , null) =>
@@ -114,7 +116,13 @@ class Wiki @Inject()(implicit
 
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          case regexPageType(null, ym  , null, null, null  , null) => Ok(ym)
+          case regexPageType(null, ym  , null, null, null  , null) =>
+            val content =
+              s"""= $name
+                 |[[IncludeDays]]
+                 |""".stripMargin
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case regexPageType(null, null, md  , null, null  , null) => Ok(md)
           case regexPageType(null, null, null, ymd , null  , null) => Ok(ymd)
           case regexPageType(null, null, null, null, schema, null) => Ok(schema)
