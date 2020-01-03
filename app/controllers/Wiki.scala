@@ -95,6 +95,7 @@ class Wiki @Inject()(implicit
                  |${(RangeUtil.around(0, 5)).map(y => s"'''$y'''").mkString("\t")}
                  |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString("\t")}
                  |]]]
+                 |== Calendar
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
                  |""".stripMargin
 
