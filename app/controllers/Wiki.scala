@@ -91,7 +91,10 @@ class Wiki @Inject()(implicit
           case pageType(y   , null, null, null, null  , null) =>
             val content =
               s"""= $name
-                 |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString(", ")}
+                 |[[[#!Table tsv 1
+                 |${(RangeUtil.around(0, 5)).map(y => s"'''$y'''").mkString("\t")}
+                 |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString("\t")}
+                 |]]]
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
                  |""".stripMargin
 
