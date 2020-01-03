@@ -123,7 +123,20 @@ class Wiki @Inject()(implicit
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case regexPageType(null, null, md  , null, null  , null) => Ok(md)
-          case regexPageType(null, null, null, ymd , null  , null) => Ok(ymd)
+
+          case regexPageType(null, null, null, ymd , null  , null) =>
+            val content =
+              s"""= $name [[WeekdayName]]
+                 |This page does not exist.
+                 |== Possible actions
+                 | * [[Html(<a href="?action=edit">create page</a>)]]
+                 | * Search ["https://google.com/search?q=$name" $name] on Google
+                 | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
+                 | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
+                 | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
+                 |""".stripMargin
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case regexPageType(null, null, null, null, schema, null) => Ok(schema)
           case _ => Ok(name)
             val content =
@@ -136,8 +149,8 @@ class Wiki @Inject()(implicit
                  | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
                  | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
                  |""".stripMargin
-
-            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(content + additionalInfo)))
+            val contentInterpreted = Interpreters.interpret(content + additionalInfo)
+            NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
         }
 
       case (Some(page), "" | "view", true, _) =>
