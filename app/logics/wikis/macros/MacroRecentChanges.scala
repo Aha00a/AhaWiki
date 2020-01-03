@@ -16,7 +16,7 @@ object MacroRecentChanges extends TraitMacro {
                 s"=== $yearMonth\n[[[#!Table tsv 1\nName\tRevision\tat\tby\tcomment\n" +
                   groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => {
                     Seq(
-                      s"'''[${t.name}]'''",
+                      s"""'''["${t.name}"]'''""",
                       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
                       s"${t.isoLocalDateTime}",
                       s"[${t.author}](${t.remoteAddress})",
