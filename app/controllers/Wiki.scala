@@ -94,7 +94,20 @@ class Wiki @Inject()(implicit
                  |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString(", ")}
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
                  |""".stripMargin
-            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content) + """</div></div>"""
+
+            val additionalInfo =
+              s"""== See also
+                 |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+                 |'''[schema:Schema Schema]'''
+                 |${getMarkupSchema(name, ahaWikiQuery)}
+                 |'''Backlinks'''
+                 |[[Backlinks]]
+                 |[[Html(</td><td>)]]
+                 |${getMarkupRelatedPages(name)}
+                 |[[Html(</td></tr></tbody></table>)]]
+                 |""".stripMargin
+
+            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content + additionalInfo) + """</div></div>"""
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case pageType(null, ym  , null, null, null  , null) => Ok(ym)
           case pageType(null, null, md  , null, null  , null) => Ok(md)
