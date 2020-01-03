@@ -123,8 +123,8 @@ class Wiki @Inject()(implicit
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
-          case regexPageType(null, null, md  , null, null  , null) =>
-            Ok(md) // TODO
+//          case regexPageType(null, null, md  , null, null  , null) =>
+//            Ok(md) // TODO
 
           case regexPageType(null, null, null, ymd , null  , null) =>
             val content =
@@ -140,8 +140,8 @@ class Wiki @Inject()(implicit
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
             NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
-          case regexPageType(null, null, null, null, schema, null) =>
-            Ok(schema) // TODO
+//          case regexPageType(null, null, null, null, schema, null) =>
+//            Ok(schema) // TODO
 
           case _ => Ok(name)
             val content =
