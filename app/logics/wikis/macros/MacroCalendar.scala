@@ -5,8 +5,11 @@ import java.time.{DayOfWeek, YearMonth}
 import java.util.Locale
 
 import com.aha00a.commons.Implicits._
+import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.util.matching.Regex
 
@@ -17,14 +20,19 @@ object MacroCalendar extends TraitMacro {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
     case regex(y, m) =>
+      implicit val cacheApi: CacheApi = wikiContext.cacheApi
+      implicit val database: Database = wikiContext.database
+
       val yearMonth = YearMonth.of(y.toInt, m.toInt)
       val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
-      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString())
+      val set: Set[String] = AhaWikiCache.PageNameSet.get()
+
+      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
       val r = <table class="macroCalendar simpleTable">
         <thead>
           <tr>
-            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString())}</th>
+            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString(set))}</th>
           </tr>
           <tr>
             {
