@@ -133,13 +133,7 @@ class Wiki @Inject()(implicit
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name)
-              if(cosineSimilarities.isEmpty) {
-                actorAhaWiki ! Calculate(name)
-              }
-              val similarPageNames = cosineSimilarities.map(_.name2)
-              val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
-              val similarPages = cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
+              val similarPages: String = getMarkupSimilarPages(name, ahaWikiQuery)
               val additionalInfo =
                 s"""== See also
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
@@ -208,6 +202,17 @@ class Wiki @Inject()(implicit
       case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
     }
   }}
+
+  private def getMarkupSimilarPages(name: String, ahaWikiQuery: AhaWikiQuery) = {
+    val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name)
+    if (cosineSimilarities.isEmpty) {
+      actorAhaWiki ! Calculate(name)
+    }
+    val similarPageNames = cosineSimilarities.map(_.name2)
+    val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+    val similarPages = cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
+    similarPages
+  }
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
     val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
