@@ -25,6 +25,7 @@ object ExtractConvertApplyMacro {
     MacroPageMap,
     MacroPageCount,
     MacroBacklinks,
+    MacroPercentLinkTitle,
 
     MacroEmbed,
     MacroInclude,
