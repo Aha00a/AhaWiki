@@ -2,8 +2,8 @@ package controllers
 
 import java.net.URLDecoder
 import java.sql.Connection
-import java.time.LocalDate
 import java.time.format.TextStyle
+import java.time.{LocalDate, LocalDateTime}
 import java.util.{Date, Locale}
 
 import actionCompositions.PostAction
@@ -77,30 +77,53 @@ class Wiki @Inject()(implicit
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
-        val relatedPages = getMarkupRelatedPages(name)
-        val schema: String = getMarkupSchema(name, ahaWikiQuery)
-        val additionalInfo =
-          s"""= $name
-             |This page does not exist.
-             |== Possible actions
-             | * [[Html(<a href="?action=edit">create page</a>)]]
-             | * Search ["https://google.com/search?q=$name" $name] on Google
-             | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
-             | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
-             | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
-             |
-             |== See also
-             |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
-             |'''[schema:Schema Schema]'''
-             |$schema
-             |'''Backlinks'''
-             |[[Backlinks]]
-             |[[Html(</td><td>)]]
-             |$relatedPages
-             |[[Html(</td></tr></tbody></table>)]]
-             |""".stripMargin
+        val pageType ="""(?x)
+            ~~~~~~~~~~~~~~~~~~~~~~
+          | (\d{4})
+          | (\d{4}-\d\d)
+          | (\d\d-\d\d)
+          | (\d{4}-\d\d-\d\d)
+          | schema:(.+)
+          | (.+)
+        """.r
+        name match {
+          case pageType(y   , null, null, null, null  , null) =>
+            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(s"""
+              |= $name
+              |${(2013 to LocalDateTime.now.getYear).map(y => s"[$y]").mkString(", ")}
+              |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
+              |""".stripMargin) + """</div></div>"""
+            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+          case pageType(null, ym  , null, null, null  , null) => Ok(ym)
+          case pageType(null, null, md  , null, null  , null) => Ok(md)
+          case pageType(null, null, null, ymd , null  , null) => Ok(ymd)
+          case pageType(null, null, null, null, schema, null) => Ok(schema)
+          case _ => Ok(name)
+            val relatedPages = getMarkupRelatedPages(name)
+            val schema: String = getMarkupSchema(name, ahaWikiQuery)
+            val additionalInfo =
+              s"""= $name
+                 |This page does not exist.
+                 |== Possible actions
+                 | * [[Html(<a href="?action=edit">create page</a>)]]
+                 | * Search ["https://google.com/search?q=$name" $name] on Google
+                 | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
+                 | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
+                 | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
+                 |
+                 |== See also
+                 |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+                 |'''[schema:Schema Schema]'''
+                 |$schema
+                 |'''Backlinks'''
+                 |[[Backlinks]]
+                 |[[Html(</td><td>)]]
+                 |$relatedPages
+                 |[[Html(</td></tr></tbody></table>)]]
+                 |""".stripMargin
 
-        NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
+            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
+        }
 
       case (Some(page), "" | "view", true, _) =>
         try {

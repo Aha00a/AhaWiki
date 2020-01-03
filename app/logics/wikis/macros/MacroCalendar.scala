@@ -4,8 +4,9 @@ import java.time.format.TextStyle
 import java.time.{DayOfWeek, YearMonth}
 import java.util.Locale
 
-import logics.wikis.interpreters.InterpreterTable
-import models.{PageContent, WikiContext}
+import com.aha00a.commons.Implicits._
+import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import models.WikiContext
 
 import scala.util.matching.Regex
 
@@ -17,11 +18,35 @@ object MacroCalendar extends TraitMacro {
     case "-" => apply(wikiContext.name + ",-")
     case regex(y, m) =>
       val yearMonth = YearMonth.of(y.toInt, m.toInt)
-      val header = DayOfWeek.values().map(_.getDisplayName(TextStyle.SHORT, Locale.getDefault))
-      val firstPadding = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
-      val lastPadding = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
-      val dates = (1 to yearMonth.lengthOfMonth()).map(d => f"[$argument-$d%02d $d%02d]")
-      InterpreterTable.interpret(PageContent("#!Table tsv 1\n"+ (header ++ firstPadding ++ dates ++ lastPadding).grouped(7).map(_.mkString("\t")).mkString("\n")))
+      val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
+      val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
+      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toRegexReplacement())
+      val r = <table class="macroCalendar simpleTable">
+        <thead>
+          <tr>
+            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toRegexReplacement())}</th>
+          </tr>
+          <tr>
+            {
+              DayOfWeek.values().map(_.getDisplayName(TextStyle.NARROW, Locale.getDefault)).map(v =>
+                <th>{v}</th>
+              )
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {(firstPadding ++ dates ++ lastPadding).grouped(7).map(v =>
+            <tr>
+              {
+                v.map(d =>
+                  <td>{if(d.isNullOrEmpty) "" else scala.xml.XML.loadString(d)}</td>
+                )
+              }
+            </tr>
+          )}
+        </tbody>
+      </table>
+      r.toString
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 
@@ -32,5 +57,4 @@ object MacroCalendar extends TraitMacro {
     case regex(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }
-
 }

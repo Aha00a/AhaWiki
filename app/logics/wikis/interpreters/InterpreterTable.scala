@@ -53,9 +53,9 @@ object InterpreterTable {
           )
           .map(s => s"<tr>$s</tr>").mkString("\n")
         if(thead.isEmpty)
-          s"""<table class="${shebang.getClasses}"><tbody>$tbody</tbody></table>"""
+          s"""<table class="macroTable ${shebang.getClasses}"><tbody>$tbody</tbody></table>"""
         else
-          s"""<table class="${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
+          s"""<table class="macroTable ${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
     }).getOrElse("Error!")
   }
