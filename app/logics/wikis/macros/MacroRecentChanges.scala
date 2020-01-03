@@ -22,7 +22,7 @@ object MacroRecentChanges extends TraitMacro {
                     s"${t.comment}"
                 ))
                 s"""=== $yearMonth
-                   |[[[#!Table tsv 1
+                   |[[[#!Table tsv 1 tablesorter
                    |Name	Revision	at	by	comment
                    |${SupercsvUtil.toTsvString(list)}
                    |]]]
