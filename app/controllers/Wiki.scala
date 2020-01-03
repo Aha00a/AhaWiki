@@ -102,7 +102,8 @@ class Wiki @Inject()(implicit
           case _ => Ok(name)
             val relatedPages = getMarkupRelatedPages(name)
             val schema: String = getMarkupSchema(name, ahaWikiQuery)
-            val additionalInfo =
+
+            val content =
               s"""= $name
                  |This page does not exist.
                  |== Possible actions
@@ -111,8 +112,10 @@ class Wiki @Inject()(implicit
                  | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
                  | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
                  | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
-                 |
-                 |== See also
+                 |""".stripMargin
+
+            val additionalInfo =
+              s"""== See also
                  |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                  |'''[schema:Schema Schema]'''
                  |$schema
@@ -123,7 +126,7 @@ class Wiki @Inject()(implicit
                  |[[Html(</td></tr></tbody></table>)]]
                  |""".stripMargin
 
-            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(additionalInfo)))
+            NotFound(views.html.Wiki.notFound(name, Interpreters.interpret(content + additionalInfo)))
         }
 
       case (Some(page), "" | "view", true, _) =>
