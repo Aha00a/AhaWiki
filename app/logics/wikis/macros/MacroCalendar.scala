@@ -2,10 +2,9 @@ package logics.wikis.macros
 
 import java.time.format.TextStyle
 import java.time.{DayOfWeek, YearMonth}
-import java.util.Locale
 
 import com.aha00a.commons.Implicits._
-import logics.AhaWikiCache
+import com.aha00a.play.Implicits._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
 import play.api.cache.CacheApi
@@ -35,7 +34,7 @@ object MacroCalendar extends TraitMacro {
           </tr>
           <tr>
             {
-              DayOfWeek.values().map(_.getDisplayName(TextStyle.NARROW, Locale.getDefault)).map(v =>
+              DayOfWeek.values().map(_.getDisplayName(TextStyle.NARROW, wikiContext.request.locale)).map(v =>
                 <th>{v}</th>
               )
             }
