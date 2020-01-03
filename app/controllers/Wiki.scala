@@ -90,7 +90,7 @@ class Wiki @Inject()(implicit
              |[[Html(</td></tr></tbody></table>)]]
              |""".stripMargin
 
-        val pageType ="""(?x)
+        val regexPageType: Regex ="""(?x)
             ~~~~~~~~~~~~~~~~~~~~~~
           | (\d{4})
           | (\d{4}-\d\d)
@@ -100,7 +100,7 @@ class Wiki @Inject()(implicit
           | (.+)
         """.r
         name match {
-          case pageType(y   , null, null, null, null  , null) =>
+          case regexPageType(y   , null, null, null, null  , null) =>
             val content =
               s"""= $name
                  |[[[#!Table tsv 1
@@ -113,10 +113,10 @@ class Wiki @Inject()(implicit
 
             val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content + additionalInfo) + """</div></div>"""
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          case pageType(null, ym  , null, null, null  , null) => Ok(ym)
-          case pageType(null, null, md  , null, null  , null) => Ok(md)
-          case pageType(null, null, null, ymd , null  , null) => Ok(ymd)
-          case pageType(null, null, null, null, schema, null) => Ok(schema)
+          case regexPageType(null, ym  , null, null, null  , null) => Ok(ym)
+          case regexPageType(null, null, md  , null, null  , null) => Ok(md)
+          case regexPageType(null, null, null, ymd , null  , null) => Ok(ymd)
+          case regexPageType(null, null, null, null, schema, null) => Ok(schema)
           case _ => Ok(name)
             val content =
               s"""= $name
