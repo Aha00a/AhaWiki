@@ -89,11 +89,12 @@ class Wiki @Inject()(implicit
         """.r
         name match {
           case pageType(y   , null, null, null, null  , null) =>
-            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(s"""
-              |= $name
-              |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString(", ")}
-              |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
-              |""".stripMargin) + """</div></div>"""
+            val content =
+              s"""= $name
+                 |${(RangeUtil.around(y.toInt, 5)).map(y => s"[$y]").mkString(", ")}
+                 |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
+                 |""".stripMargin
+            val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content) + """</div></div>"""
             Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           case pageType(null, ym  , null, null, null  , null) => Ok(ym)
           case pageType(null, null, md  , null, null  , null) => Ok(md)
