@@ -53,7 +53,7 @@ object InterpreterSchema extends TraitInterpreter {
             {
               scala.xml.XML.loadString(
                 seqClass.map(c => SchemaOrg.mapClass.get(c)
-                  .map(node => node.toLinkMarkup.toRegexReplacement(pageNameSet))
+                  .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
                   .getOrElse("")
                 ).mkString("<dd>", " / ", "</dd>")
               )

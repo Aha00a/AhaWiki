@@ -19,7 +19,7 @@ object InterpreterWiki extends TraitInterpreter {
     lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
     lazy val aliasWithDefault: String = if(alias == null || alias.isEmpty) uriNormalized else alias
 
-    def toRegexReplacement(set: Set[String] = Set[String]()): String = {
+    def toHtmlString(set: Set[String] = Set[String]()): String = {
       val external: Boolean = PageNameLogic.isExternal(uri)
 
       val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
@@ -216,11 +216,11 @@ object InterpreterWiki extends TraitInterpreter {
     val set: Set[String] = AhaWikiCache.PageNameSet.get()
 
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement()
-      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
-      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toRegexReplacement(set)
-      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toRegexReplacement(set)
-      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toRegexReplacement(set)
+      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()
+      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
+      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
+      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toHtmlString(set)
+      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toHtmlString(set)
 
       case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
       case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
