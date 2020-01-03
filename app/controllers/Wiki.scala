@@ -100,9 +100,6 @@ class Wiki @Inject()(implicit
           case pageType(null, null, null, ymd , null  , null) => Ok(ymd)
           case pageType(null, null, null, null, schema, null) => Ok(schema)
           case _ => Ok(name)
-            val relatedPages = getMarkupRelatedPages(name)
-            val schema: String = getMarkupSchema(name, ahaWikiQuery)
-
             val content =
               s"""= $name
                  |This page does not exist.
@@ -118,11 +115,11 @@ class Wiki @Inject()(implicit
               s"""== See also
                  |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                  |'''[schema:Schema Schema]'''
-                 |$schema
+                 |${getMarkupSchema(name, ahaWikiQuery)}
                  |'''Backlinks'''
                  |[[Backlinks]]
                  |[[Html(</td><td>)]]
-                 |$relatedPages
+                 |${getMarkupRelatedPages(name)}
                  |[[Html(</td></tr></tbody></table>)]]
                  |""".stripMargin
 
