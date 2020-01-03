@@ -78,6 +78,18 @@ class Wiki @Inject()(implicit
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
+        val additionalInfo =
+          s"""== See also
+             |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+             |'''[schema:Schema Schema]'''
+             |${getMarkupSchema(name, ahaWikiQuery)}
+             |'''Backlinks'''
+             |[[Backlinks]]
+             |[[Html(</td><td>)]]
+             |${getMarkupRelatedPages(name)}
+             |[[Html(</td></tr></tbody></table>)]]
+             |""".stripMargin
+
         val pageType ="""(?x)
             ~~~~~~~~~~~~~~~~~~~~~~
           | (\d{4})
@@ -97,18 +109,6 @@ class Wiki @Inject()(implicit
                  |]]]
                  |== Calendar
                  |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
-                 |""".stripMargin
-
-            val additionalInfo =
-              s"""== See also
-                 |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
-                 |'''[schema:Schema Schema]'''
-                 |${getMarkupSchema(name, ahaWikiQuery)}
-                 |'''Backlinks'''
-                 |[[Backlinks]]
-                 |[[Html(</td><td>)]]
-                 |${getMarkupRelatedPages(name)}
-                 |[[Html(</td></tr></tbody></table>)]]
                  |""".stripMargin
 
             val contentInterpreted = """<div class="limitWidth"><div class="wikiContent">""" + Interpreters.interpret(content + additionalInfo) + """</div></div>"""
