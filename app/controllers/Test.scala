@@ -375,9 +375,11 @@ class Test @Inject()(implicit
         Link("UnitTest", "https://wiki.aha00a.com/w/AhaWikiFeature", "schema:WebApplication:featureList"),
         Link("UnitTest", "Wiki", "schema:WebApplication:applicationCategory"),
         Link("UnitTest", "2015-10-21", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "2015", "schema:WebApplication:datePublished"),
         Link("UnitTest", "2015-10", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "10-21", "schema:WebApplication:datePublished")
+        Link("UnitTest", "2015", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "--10-21", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "--10", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "----21", "schema:WebApplication:datePublished")
       )
     )
   }
