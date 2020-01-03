@@ -51,7 +51,7 @@ object InterpreterSchema extends TraitInterpreter {
         {
           SchemaOrg.getPathHierarchy(schemaClass).map(v => {
             {
-              scala.xml.XML.loadString(v.map(w =>(SchemaOrg.mapClass(w).toLinkMarkup().toRegexReplacement(pageNameSet))).mkString("<dd>", " / ", "</dd>"))
+              scala.xml.XML.loadString(v.map(w =>(SchemaOrg.mapClass(w).toLinkMarkup.toRegexReplacement(pageNameSet))).mkString("<dd>", " / ", "</dd>"))
             }
           })
         }
