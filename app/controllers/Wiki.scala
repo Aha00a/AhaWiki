@@ -2,7 +2,7 @@ package controllers
 
 import java.net.URLDecoder
 import java.sql.Connection
-import java.time.LocalDate
+import java.time.{LocalDate, MonthDay}
 import java.util.Date
 
 import actionCompositions.PostAction
@@ -156,8 +156,8 @@ class Wiki @Inject()(implicit
               </tbody>
             </table>
             val content =
-              s"""= [--$mm $mm]-[----$dd $dd]
-                 |[$mm]
+              s"""= $mm-$dd
+                 |[--$mm $mm]-[----$dd $dd]
                  |[[[#!Html
                  |${r.toString()}
                  |]]]
