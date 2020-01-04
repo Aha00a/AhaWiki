@@ -71,10 +71,7 @@ class Wiki @Inject()(implicit
     (pageSpecificRevision, action, isReadable, isWritable) match {
       case (None, "edit", _, true) =>
         val content = name match {
-          case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-            val localDate = LocalDate.parse(name)
-            s"""[[DayHeader]]
-               | * """.stripMargin
+          case DateTimeUtil.regexIsoLocalDate(y, m, d) => s"[[DayHeader]]\n * "
           case _ => s"""= $name\n"""
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
