@@ -1,7 +1,7 @@
 package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{RegexUtil, VariableHolder}
+import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.AhaWikiCache
 import logics.wikis._
 import models.{Link, WikiContext}
@@ -30,10 +30,16 @@ object InterpreterWiki extends TraitInterpreter {
         val attrCss = if(uriNormalized.startsWith("schema:")) {
           """ class="schema""""
         } else if (
-          external ||
+            set.isEmpty ||
+            external ||
             uriNormalized.startsWith("#") ||
             uriNormalized.startsWith("?") ||
-            set.isEmpty ||
+            // uriNormalized.matches(DateTimeUtil.regexIsoLocalDate.pattern.pattern()) ||
+            uriNormalized.matches(DateTimeUtil.regexYearDashMonth.pattern.pattern()) ||
+            uriNormalized.matches(DateTimeUtil.regexDashDashDashDashDay.pattern.pattern()) ||
+            uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
+            uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
+            uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
             set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
         ) {
           ""
