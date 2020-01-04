@@ -9,7 +9,7 @@ import scala.collection.immutable
 
 object MacroSimilarPages extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
-    InterpreterWiki(getMarkupSimilarPages(argument.toOption.getOrElse(wikiContext.nameTop)))
+    InterpreterWiki(getMarkupSimilarPages(argument.getOrElse(wikiContext.nameTop)))
   }
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
