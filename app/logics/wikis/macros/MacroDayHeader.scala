@@ -7,19 +7,19 @@ import models.WikiContext
 
 object MacroDayHeader extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = {
-    (argument, wikiContext.nameTop, wikiContext.nameBottom) match {
-      case ("" | null, _, _) => apply(wikiContext.nameTop)
-      case (_, DateTimeUtil.regexIsoLocalDate(ty, tm, td), DateTimeUtil.regexIsoLocalDate(by, bm, bd)) => 
+    argument match {
+      case "" | null => apply(wikiContext.nameTop)
+      case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop == wikiContext.nameBottom =>
         Interpreters.interpret(
           s"""
-             |[[LinkDate]]
-             |= [[Html(${LinkMarkup(s"$ty-$tm").toHtmlString()})]]-$td [[WeekdayName]]
+             |[[LinkDate($y-$m-$d)]]
+             |= [[Html(${LinkMarkup(s"$y-$m").toHtmlString()})]]-$d [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
-      case (_, DateTimeUtil.regexIsoLocalDate(ty, tm, td), DateTimeUtil.regexYearDashMonth(by, bm)) =>
+      case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop != wikiContext.nameBottom =>
         Interpreters.interpret(
           s"""
-             |== [${wikiContext.nameTop}] [[WeekdayName]]
+             |== [${wikiContext.nameTop}] [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
       case _ => MacroError(s"Argument Error - [[$name($argument)]]")
