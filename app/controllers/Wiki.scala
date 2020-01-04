@@ -75,7 +75,7 @@ class Wiki @Inject()(implicit
             val localDate = LocalDate.parse(name)
             s"""[[DayHeader]]
                | * """.stripMargin
-          case _ => s"""= $name\ndescribe $name here."""
+          case _ => s"""= $name\n"""
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
