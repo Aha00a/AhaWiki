@@ -202,8 +202,8 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
 
 
-    def selectAll(): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link"
+    def selectAllButNotEmpty(): List[Link] = {
+      SQL"SELECT src, dst, alias FROM Link WHERE src != '' AND dst != ''"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
     }
