@@ -28,10 +28,6 @@ class AhaWikiConfig(implicit cacheApi: CacheApi, database:Database) {
     }
   }
 
-  object schema {
-    def custom(): Option[JsValue] = hocon().getJson(fqn)
-  }
-
   def hocon(): Hocon = {
     new Hocon(AhaWikiCache.Config.get())
   }
