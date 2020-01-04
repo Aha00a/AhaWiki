@@ -304,8 +304,7 @@ class Wiki @Inject()(implicit
     }
     val similarPageNames = cosineSimilarities.map(_.name2)
     val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
-    val similarPages = cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
-    similarPages
+    cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
   }
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
