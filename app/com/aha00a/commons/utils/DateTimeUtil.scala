@@ -21,10 +21,10 @@ object DateTimeUtil {
     Try(LocalDate.parse(ymd, DateTimeFormatterHolder.isoLocalDate)).toOption.map(localDate => Seq(
       localDate.toIsoLocalDateString,
       localDate.toYearDashMonthString,
+      localDate.toDashDashDashDashDayString,
       localDate.toYearString,
       localDate.toDashDashMonthDashDayString,
-      localDate.toDashDashMonthString,
-      localDate.toDashDashDashDashDayString
+      localDate.toDashDashMonthString
     )).getOrElse(Seq(ymd))
   }
 }
