@@ -2,6 +2,8 @@ package models
 
 import akka.actor.ActorRef
 import logics.AhaWikiCache
+import logics.wikis.RenderingMode
+import logics.wikis.RenderingMode.RenderingMode
 import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -9,7 +11,7 @@ import play.api.mvc.Request
 
 case class WikiContext(
                         name: String,
-                        isPreview: Boolean = false
+                        isPreview: RenderingMode = RenderingMode.Normal
                       )
                       (implicit
                        val request: Request[Any],

@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
-import logics.wikis.PageNameLogic
+import logics.wikis.{PageNameLogic, RenderingMode}
 import logics.{AhaWikiCache, SchemaOrg}
 import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
@@ -61,29 +61,27 @@ object InterpreterSchema extends TraitInterpreter {
           })
         }
       </dl>
+    wikiContext.isPreview match {
+      case RenderingMode.Normal =>
+        val r = <div class="schema">{dl}</div>
+        r.toString()
+      case RenderingMode.Preview =>
+        val r =
+          <div class="schema">
+            {dl}
+            <div class="preview info">
+              <h6>Hierarchical Search</h6>
+              {SchemaOrg.getHtmlTree(schemaClass)}
+              {
+                if(SchemaOrg.mapClass.isDefinedAt(schemaClass)) {
+                  <div>{SchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
+                } else {
 
-    if(wikiContext.isPreview) {
-      val r =
-        <div class="schema">
-          {dl}
-          <div class="preview info">
-            <h6>Hierarchical Search</h6>
-            {SchemaOrg.getHtmlTree(schemaClass)}
-            {
-              if(SchemaOrg.mapClass.isDefinedAt(schemaClass)) {
-                <div>{SchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
-              } else {
-
+                }
               }
-            }
+            </div>
           </div>
-        </div>
-      r.toString()
-    } else {
-      val r = <div class="schema">
-        {dl}
-      </div>
-      r.toString()
+        r.toString()
     }
   }
 

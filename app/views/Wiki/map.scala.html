@@ -21,7 +21,7 @@
                 <div class="sheetLink">
                     <a href="@url" target="_blank">Data Source</a>
                 </div>
-                @if(!wikiContext.isPreview) {
+                @if(wikiContext.isPreview == logics.wikis.RenderingMode.Normal) {
                     <div class="refreshLink" id="sync@id" data-url="@url" data-sheet="@sheetName">
                         <i class="fas fa-sync"></i>
                     </div>

@@ -20,8 +20,9 @@ import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import logics.wikis.{ExtractConvertApplyChunkCustom, WikiPermission}
+import logics.wikis.{ExtractConvertApplyChunkCustom, RenderingMode, WikiPermission}
 import models._
+import play.Play
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -55,7 +56,7 @@ class Wiki @Inject()(implicit
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
-    
+
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val pageFirstRevision = ahaWikiQuery.Page.selectFirstRevision(name)
     val pageLastRevision = ahaWikiQuery.Page.selectLastRevision(name)
@@ -485,7 +486,7 @@ class Wiki @Inject()(implicit
 
   def preview(): Action[AnyContent] = PostAction { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
-    implicit val wikiContext: WikiContext = WikiContext(name, isPreview = true)
+    implicit val wikiContext: WikiContext = WikiContext(name, RenderingMode.Preview)
     Ok("""<div class="limitWidth"><div class="wikiContent preview">""" + Interpreters.interpret(body) + """</div></div>""")
   }
 
