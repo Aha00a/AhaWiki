@@ -102,7 +102,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
       case regex(name, argument) => ExtractConvertApplyMacro.mapMacros.get(name)
-        .map(_.extractLink(argument).filter(wikiContext.existPage))
+        .map(_.extractLink(argument))
         .getOrElse(Seq())
       case _ => Seq()
     }

@@ -1,14 +1,11 @@
 package logics.wikis.macros
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDate
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, DateTimeUtil, LocalDateTimeUtil, RangeUtil}
-import logics.wikis.interpreters.InterpreterWiki
+import com.aha00a.commons.utils.{DateTimeUtil, RangeUtil}
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
-
-import scala.util.Try
 
 object MacroLinkDate extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
@@ -22,11 +19,11 @@ object MacroLinkDate extends TraitMacro {
         s"${l(y)}-${l(s"--$m")}-${l(s"----$d")}",
         ""
       ).mkString("<br/>")
-      val localDate = LocalDate.parse(argument)
-      val linksAround = RangeUtil.around(0, 3).map(i => LinkMarkup(localDate.plusDays(i).toIsoLocalDateString).toHtmlString()).mkString("<br/>")
+      val seqLinkAround: Seq[LinkMarkup] = getSeqLinkAround(argument)
+      val linkAroundHtml = seqLinkAround.map(_.toHtmlString()).mkString("<br/>")
       s"""
          |<div class="MacroLinkDate">
-         |$linksAround
+         |$linkAroundHtml
          |</div>
          |<div class="MacroLinkDate">
          |$links
@@ -35,10 +32,17 @@ object MacroLinkDate extends TraitMacro {
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 
+  private def getSeqLinkAround(argument: String)(implicit wikiContext: WikiContext): Seq[LinkMarkup] = {
+    val localDate: LocalDate = LocalDate.parse(argument)
+    val seqLinkAround: Seq[LinkMarkup] = RangeUtil.around(0, 3).map(i => LinkMarkup(localDate.plusDays(i).toIsoLocalDateString))
+    seqLinkAround
+  }
+
   @scala.annotation.tailrec
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
-    case DateTimeUtil.regexIsoLocalDate(y, m, d) => Seq() // TODO
+    case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
+      DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d(body) ++ getSeqLinkAround(body).map(_.uri)
     case _ => Seq()
   }
 
