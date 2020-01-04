@@ -297,14 +297,16 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  private def getMarkupSimilarPages(name: String, ahaWikiQuery: AhaWikiQuery) = {
+  private def getMarkupSimilarPages(name: String, ahaWikiQuery: AhaWikiQuery): String = {
     val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name)
     if (cosineSimilarities.isEmpty) {
       actorAhaWiki ! Calculate(name)
+      ""
+    } else {
+      val similarPageNames = cosineSimilarities.map(_.name2)
+      val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+      cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
     }
-    val similarPageNames = cosineSimilarities.map(_.name2)
-    val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
-    cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
   }
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
