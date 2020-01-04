@@ -32,8 +32,6 @@ class Diary @Inject()(implicit
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString
-    val yearDashMonth: String = now.toYearDashMonthString
-    val day = now.getDayOfMonth
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     database.withConnection { implicit connection =>
@@ -43,7 +41,7 @@ class Diary @Inject()(implicit
       if (permission.isWritable(PageContent(latestText))) {
         val body =
           if (latestText == "")
-            f"= [$yearDashMonth]-$day%02d [[WeekdayName]]\n * $q"
+            s"[[DayHeader]]\n * $q"
           else
             s"$latestText\n * $q"
 
