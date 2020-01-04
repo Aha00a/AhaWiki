@@ -6,7 +6,10 @@ import java.time.{LocalDateTime, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import logics.AhaWikiCache
 import models.WikiContext
+import play.api.cache.CacheApi
+import play.api.db.Database
 
 import scala.util.matching.Regex
 
@@ -17,14 +20,19 @@ object MacroIncludeDays extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
-    case regex(y, m) => getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(wikiContext.existPage).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
-      val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(pageName).toLocalDateTime
-      content
-        .split("\n")
-        .map(_.replaceAll("^(=+ )", "=$1"))
-        .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.request.locale)))
-        .mkString("\n")
-    })).mkString("\n")
+    case regex(y, m) =>
+      implicit val cacheApi: CacheApi = wikiContext.cacheApi
+      implicit val database: Database = wikiContext.database
+      val set = AhaWikiCache.PageNameSet.get()
+
+      getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains).reverse.map(pageName => MacroInclude.doApply(pageName, content => {
+        val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(pageName).toLocalDateTime
+        content
+          .split("\n")
+          .map(_.replaceAll("^(=+ )", "=$1"))
+          .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.request.locale)))
+          .mkString("\n")
+      })).mkString("\n")
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 

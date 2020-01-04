@@ -17,7 +17,6 @@ case class WikiContext(name: String, renderingMode: RenderingMode = RenderingMod
                        val actorAhaWiki: ActorRef,
                        val configuration: Configuration
                       ) {
-  def existPage(name: String): Boolean = AhaWikiCache.PageNameSet.get().contains(name) // TODO: this may causes performance issue.
 }
 
 
