@@ -13,7 +13,7 @@ object MacroDayHeader extends TraitMacro {
         Interpreters.interpret(
           s"""
              |[[LinkDate]]
-             |= $argument [[WeekdayName]]
+             |= [[Html(${LinkMarkup(s"$ty-$tm").toHtmlString()})]]-$td [[WeekdayName]]
              |""".stripMargin
         )
       case (_, DateTimeUtil.regexIsoLocalDate(ty, tm, td), DateTimeUtil.regexYearDashMonth(by, bm)) =>
