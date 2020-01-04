@@ -29,7 +29,7 @@ object MacroCalendar extends TraitMacro {
 
       val set: Set[String] = AhaWikiCache.PageNameSet.get()
       val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
-      val r = <table class="macroCalendar simpleTable">
+      val r = <table class="MacroCalendar simpleTable">
         <thead>
           <tr>
             <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString())}</th>
