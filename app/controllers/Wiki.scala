@@ -82,8 +82,10 @@ class Wiki @Inject()(implicit
              |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
              |'''[schema:Schema Schema]'''
              |${getMarkupSchema(name, ahaWikiQuery)}
+             |
              |'''Backlinks'''
              |[[Backlinks]]
+             |
              |[[Html(</td><td>)]]
              |${getMarkupRelatedPages(name)}
              |[[Html(</td></tr></tbody></table>)]]
@@ -233,8 +235,10 @@ class Wiki @Inject()(implicit
                    |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
                    |'''[schema:Schema Schema]'''
                    |${getMarkupSchema(name, ahaWikiQuery)}
+                   |
                    |'''Similar Pages'''
                    [[SimilarPages]]
+                   |
                    |'''Backlinks'''
                    |[[Backlinks]]
                    |[[Html(</td><td>)]]
