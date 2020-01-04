@@ -2,7 +2,7 @@ package controllers
 
 import java.net.URLDecoder
 import java.sql.Connection
-import java.time.{LocalDate, MonthDay}
+import java.time.LocalDate
 import java.util.Date
 
 import actionCompositions.PostAction
@@ -148,7 +148,7 @@ class Wiki @Inject()(implicit
                   {(1 to lastDay).grouped(5).map(t =>
                     <tr>
                       {t.map(Some(_)).padTo(5, None).map(d =>
-                        <td>{d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--${mm}-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}</td>
+                        <td>{d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}</td>
                       )}
                     </tr>
                   )}
@@ -184,7 +184,7 @@ class Wiki @Inject()(implicit
                   {(1 to lastDay).grouped(5).map(t =>
                     <tr>
                       {t.map(Some(_)).padTo(5, None).map(d =>
-                        <td>{d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--${mm}-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}</td>
+                        <td>{d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}</td>
                       )}
                     </tr>
                   )}
