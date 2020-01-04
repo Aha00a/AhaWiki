@@ -6,7 +6,7 @@ import java.util.Date
 
 import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil, Using}
 
-import scala.util.Random
+import scala.util.{Random, Try}
 
 object Implicits {
   implicit class RichString(s:String) {
@@ -22,7 +22,7 @@ object Implicits {
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
 
-    def toIntOrZero: Int = if(s == null || s == "") 0 else s.toInt
+    def toIntOrZero: Int = Try(s.toInt).toOption.getOrElse(0)
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
     def splitTabs(): Array[String] = s.split("""\t""")

@@ -66,6 +66,9 @@ class Test @Inject()(implicit
 
 
   def unit: Action[AnyContent] = Action { implicit request =>
+    assertEquals("aa".toIntOrZero, 0)
+    assertEquals("10".toIntOrZero, 10)
+
     testPageContent()
     testInterpreterTable()
     testInterpreterWiki()
