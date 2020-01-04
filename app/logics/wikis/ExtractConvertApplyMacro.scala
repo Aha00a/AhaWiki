@@ -23,18 +23,22 @@ object ExtractConvertApplyMacro {
     MacroRecentChanges,
     MacroRecentChangesList,
     MacroPageMap,
-    MacroPageCount,
     MacroBacklinks,
+
+    MacroPageCount,
     MacroPercentLinkTitle,
 
     MacroEmbed,
     MacroInclude,
+
+
     MacroMonths,
     MacroCalendar,
     MacroIncludeDays,
 
     MacroWeekdayName,
     MacroMonthName,
+
 
     MacroPeriod,
 
