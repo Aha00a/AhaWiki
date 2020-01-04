@@ -47,7 +47,6 @@ class Wiki @Inject()(implicit
                      ws: WSClient,
                      executor: ExecutionContext
                     ) extends Controller {
-  private val regexYmd: Regex = """^(\d{4})-(\d{2})-(\d{2})$""".r
 
   implicit class RichResult(result:Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -71,7 +70,7 @@ class Wiki @Inject()(implicit
     (pageSpecificRevision, action, isReadable, isWritable) match {
       case (None, "edit", _, true) =>
         val content = name match {
-          case regexYmd(y, m, d) =>
+          case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
             val localDate = LocalDate.parse(name)
             s"= [$y-$m]-$d [[WeekdayName]]\n * "
           case _ => s"""= $name\ndescribe $name here."""

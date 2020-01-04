@@ -36,6 +36,7 @@ object ExtractConvertApplyMacro {
     MacroCalendar,
     MacroIncludeDays,
 
+    MacroDayHeader,
     MacroLinkDate,
     MacroWeekdayName,
     MacroMonthName,
