@@ -96,7 +96,7 @@ class Wiki @Inject()(implicit
         name match {
           case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
             val content =
-              s"""= $name [[WeekdayName]]
+              s"""[[DayHeader]]
                  |This page does not exist.
                  |== Possible actions
                  | * [[Html(<a href="?action=edit">create page</a>)]]
