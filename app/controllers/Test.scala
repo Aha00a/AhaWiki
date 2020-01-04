@@ -6,6 +6,7 @@ import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import javax.inject.{Inject, Named, Singleton}
+import logics.AhaWikiConfig
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
@@ -376,10 +377,10 @@ class Test @Inject()(implicit
         Link("UnitTest", "Wiki", "schema:WebApplication:applicationCategory"),
         Link("UnitTest", "2015-10-21", "schema:WebApplication:datePublished"),
         Link("UnitTest", "2015-10", "schema:WebApplication:datePublished"),
+        Link("UnitTest", "----21", "schema:WebApplication:datePublished"),
         Link("UnitTest", "2015", "schema:WebApplication:datePublished"),
         Link("UnitTest", "--10-21", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "--10", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "----21", "schema:WebApplication:datePublished")
+        Link("UnitTest", "--10", "schema:WebApplication:datePublished")
       )
     )
   }
