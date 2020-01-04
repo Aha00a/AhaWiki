@@ -30,12 +30,12 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"Calculate - $name - ($i/$length)") {
+    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
       context.self ! CalculateCosineSimilarity(name, i, length)
       context.self ! CalculateLink(name, i, length)
     }
 
-    case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"CalculateCosineSimilarity - $name - ($i/$length)") {
+    case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
@@ -44,7 +44,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         }
       }
     }
-    case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"CalculateLink - $name - ($i/$length)") {
+    case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
