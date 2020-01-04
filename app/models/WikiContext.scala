@@ -11,7 +11,22 @@ import play.api.mvc.Request
 
 
 object WikiContext {
-  def apply(name: String, renderingMode: RenderingMode = RenderingMode.Normal)(implicit request: Request[Any], cacheApi: CacheApi, database: Database, actorAhaWiki: ActorRef, configuration: Configuration): WikiContext = new WikiContext(name, renderingMode)(request, cacheApi, database, actorAhaWiki, configuration)
+  def apply(name: String)(
+    implicit
+    request: Request[Any],
+    cacheApi: CacheApi,
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration
+  ): WikiContext = new WikiContext(name, RenderingMode.Normal)
+  def preview(name: String)(
+    implicit
+    request: Request[Any],
+    cacheApi: CacheApi,
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration
+  ): WikiContext = new WikiContext(name, RenderingMode.Preview)
 }
 
 class WikiContext(val name: String, val renderingMode: RenderingMode = RenderingMode.Normal)
