@@ -18,7 +18,7 @@ object WikiContext {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration
-  ): WikiContext = new WikiContext(name, RenderingMode.Normal)
+  ): WikiContext = new WikiContext(Seq(name), RenderingMode.Normal)
   def preview(name: String)(
     implicit
     request: Request[Any],
@@ -26,10 +26,10 @@ object WikiContext {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration
-  ): WikiContext = new WikiContext(name, RenderingMode.Preview)
+  ): WikiContext = new WikiContext(Seq(name), RenderingMode.Preview)
 }
 
-class WikiContext(val name: String, val renderingMode: RenderingMode)
+class WikiContext(seqName: Seq[String], val renderingMode: RenderingMode)
                  (implicit
                   val request: Request[Any],
                   val cacheApi: CacheApi,
@@ -37,6 +37,7 @@ class WikiContext(val name: String, val renderingMode: RenderingMode)
                   val actorAhaWiki: ActorRef,
                   val configuration: Configuration
                  ) {
+  def name: String = seqName.head
 }
 
 
