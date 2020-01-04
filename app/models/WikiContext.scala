@@ -11,7 +11,7 @@ import play.api.mvc.Request
 
 case class WikiContext(
                         name: String,
-                        isPreview: RenderingMode = RenderingMode.Normal
+                        renderingMode: RenderingMode = RenderingMode.Normal
                       )
                       (implicit
                        val request: Request[Any],

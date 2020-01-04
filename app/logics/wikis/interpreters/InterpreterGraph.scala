@@ -6,7 +6,7 @@ import models.{PageContent, WikiContext}
 object InterpreterGraph {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
     val lines = pageContent.content.trim.split("""(\r\n|\n)+""")
-    val linesCut = wikiContext.isPreview match {
+    val linesCut = wikiContext.renderingMode match {
       case RenderingMode.Normal => lines
       case RenderingMode.Preview => lines.take(100)
     }

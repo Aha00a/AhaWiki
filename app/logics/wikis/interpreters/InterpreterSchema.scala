@@ -61,7 +61,7 @@ object InterpreterSchema extends TraitInterpreter {
           })
         }
       </dl>
-    wikiContext.isPreview match {
+    wikiContext.renderingMode match {
       case RenderingMode.Normal =>
         val r = <div class="schema">{dl}</div>
         r.toString()
