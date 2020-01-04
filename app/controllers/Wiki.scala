@@ -110,7 +110,7 @@ class Wiki @Inject()(implicit
 
           case DateTimeUtil.regexYearDashMonth(y, m) =>
             val content =
-              s"""= [$y]-$m
+              s"""= [[Html(${LinkMarkup(y).toHtmlString()})]]-$m
                  |[[IncludeDays]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
