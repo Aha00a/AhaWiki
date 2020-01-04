@@ -237,7 +237,7 @@ class Wiki @Inject()(implicit
                    |${getMarkupSchema(name, ahaWikiQuery)}
                    |
                    |'''Similar Pages'''
-                   [[SimilarPages]]
+                   |[[SimilarPages]]
                    |
                    |'''Backlinks'''
                    |[[Backlinks]]
