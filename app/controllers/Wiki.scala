@@ -329,7 +329,7 @@ class Wiki @Inject()(implicit
   def getMarkupRelatedPages(name: String)(implicit connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
-    val seqLinkExpanded: scala.Seq[_root_.models.Link] = ahaWikiQuery.Link.expand(seqLink.filterNot(_.or(_.isNullOrEmpty)))
+    val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLink)
     val result = seqLinkExpanded
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")

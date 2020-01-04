@@ -177,7 +177,11 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
 
     def select(name: String): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE src = $name OR dst = $name"
+      SQL"""SELECT src, dst, alias
+           FROM Link
+           WHERE
+            src != '' AND dst != '' AND (src = $name OR dst = $name)
+        """
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
     }
@@ -213,7 +217,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
       val backward: Seq[Link] = seq.flatMap(l => select(l.src))
       val forward: Seq[Link] = seq.flatMap(l => select(l.dst))
       val seqExpanded: Seq[Link] = seq ++ backward ++ forward
-      seqExpanded
+      seqExpanded.distinct
     }
 
 
