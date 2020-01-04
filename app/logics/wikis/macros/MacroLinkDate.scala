@@ -1,8 +1,9 @@
 package logics.wikis.macros
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, DateTimeUtil}
+import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.{DateTimeFormatterHolder, DateTimeUtil, LocalDateTimeUtil, RangeUtil}
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
@@ -21,7 +22,12 @@ object MacroLinkDate extends TraitMacro {
         s"${l(y)}-${l(s"--$m")}-${l(s"----$d")}",
         ""
       ).mkString("<br/>")
+      val localDate = LocalDate.parse(argument)
+      val linksAround = RangeUtil.around(0, 3).map(i => LinkMarkup(localDate.plusDays(i).toIsoLocalDateString).toHtmlString()).mkString("<br/>")
       s"""
+         |<div class="MacroLinkDate">
+         |$linksAround
+         |</div>
          |<div class="MacroLinkDate">
          |$links
          |</div>
