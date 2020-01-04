@@ -29,7 +29,7 @@ object WikiContext {
   ): WikiContext = new WikiContext(name, RenderingMode.Preview)
 }
 
-class WikiContext(val name: String, val renderingMode: RenderingMode = RenderingMode.Normal)
+class WikiContext(val name: String, val renderingMode: RenderingMode)
                  (implicit
                   val request: Request[Any],
                   val cacheApi: CacheApi,
