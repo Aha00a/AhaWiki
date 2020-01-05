@@ -2,11 +2,11 @@
 @_base(title, message) {
     @hotkey()
 } {
-    <div class="wikiContent">
-        <div class="limitWidth">
+    <div class="limitWidth">
+        <div class="wikiContent">
+            @action(false, null, null)
             <h1>@title</h1>
             <p>@(message)</p>
         </div>
     </div>
-    @action(false, null, null)
 }
