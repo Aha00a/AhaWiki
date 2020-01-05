@@ -263,7 +263,7 @@ class Wiki @Inject()(implicit
         val seqRevision = blame.seqBlameLine.map(_.metaData.revision)
         val maxRevision: Long = seqRevision.max
         val minRevision: Long = seqRevision.min
-        Ok(views.html.Wiki.blame(blame, minRevision, maxRevision)).withHeaderRobotNoIndexNoFollow
+        Ok(views.html.Wiki.blame(blame, minRevision, maxRevision, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
 
       case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow

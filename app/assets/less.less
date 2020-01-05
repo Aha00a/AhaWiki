@@ -253,14 +253,19 @@ html, body {
 
 		.gnb {
 			float: right;
-			margin-bottom: 20px;
+			margin-bottom: 10px;
 			border: 1px solid #ccc;
 			background-color: #fafafa;
 			max-width: 50vw;
-			padding: 10px 10px 10px 40px;
+			padding: 10px 10px 10px 20px;
 			text-align: right;
-			.action {
+			> div {
 				margin-bottom: 10px;
+				&:last-of-type {
+					margin-bottom: 0;
+				}
+			}
+			.action {
 				a {
 					display: inline-block;
 					margin: 0 0 0 5px;
@@ -269,7 +274,6 @@ html, body {
 				}
 			}
 			.revisionInfo {
-				//.monospace;
 				font-style: italic;
 				text-align: right;
 			}
