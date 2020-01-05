@@ -1,36 +1,36 @@
 @(isWritable:Boolean, wikiFirst:models.Page, wikiLast:models.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
-    <div class="gnb">
-        <div class="action">
-            @if(request.session.get("id")) {
-                @(request.session.get("id"))
-                <a href="@(routes.Auth.logout())">Logout</a>
-            } else {
-                <a href="@(routes.Auth.login())">Login</a>
-            }
-            |
-            <a href="javascript:showSearch();">Search</a>
-            @if(isWritable) {
-                <a href="javascript:showWrite();">Write Diary</a>
-            }
-            |
-            <a href="?action=raw">Raw</a>
-            <a href="?action=history">History</a>
-            <a href="?action=blame">Blame</a>
-            @if(isWritable) {
-                <a href="?action=edit">Edit</a>
-                <a href="?action=rename">Rename</a>
-                <a href="?action=delete">Delete</a>
-            }
-        </div>
+<div class="gnb">
+    <div class="action">
+        @if(request.session.get("id")) {
+            @(request.session.get("id"))
+            <a href="@(routes.Auth.logout())">Logout</a>
+        } else {
+            <a href="@(routes.Auth.login())">Login</a>
+        }
+        |
+        <a href="javascript:showSearch();">Search</a>
+        @if(isWritable) {
+            <a href="javascript:showWrite();">Write Diary</a>
+        }
+        |
+        <a href="?action=raw">Raw</a>
+        <a href="?action=history">History</a>
+        <a href="?action=blame">Blame</a>
+        @if(isWritable) {
+            <a href="?action=edit">Edit</a>
+            <a href="?action=rename">Rename</a>
+            <a href="?action=delete">Delete</a>
+        }
     </div>
+</div>
 
 @if(wikiFirst != null && wikiLast != null) {
     <div class="revisionInfo">
         @if(wikiFirst != null) {
-            <div class="first">created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoLocalDateTime)</a></div>
+            <div class="first">created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.toIsoLocalDateString)</a></div>
         }
         @if(wikiLast != null) {
-            <div class="last">last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=blame">@(wikiLast.isoLocalDateTime)</a></div>
+            <div class="last">last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=blame">@(wikiLast.toIsoLocalDateString)</a></div>
         }
     </div>
 }
