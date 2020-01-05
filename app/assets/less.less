@@ -251,7 +251,8 @@ html, body {
 			&:after { top: 0; right: 3px; content: '”'; }
 		}
 
-		.gnb {
+		.gnb, .revisionInfo {
+			clear: right;
 			float: right;
 			margin-bottom: 10px;
 			margin-left: 10px;
@@ -260,12 +261,6 @@ html, body {
 			max-width: 50vw;
 			padding: 10px 10px 10px 20px;
 			text-align: right;
-			> div {
-				margin-bottom: 10px;
-				&:last-of-type {
-					margin-bottom: 0;
-				}
-			}
 			.action {
 				a {
 					display: inline-block;
@@ -274,15 +269,16 @@ html, body {
 					color: #000;
 				}
 			}
-			.revisionInfo {
-				font-style: italic;
-				text-align: right;
-			}
-
 			@media print {
 				display: none;
 			}
 		}
+
+		.revisionInfo {
+			font-style: italic;
+			text-align: right;
+		}
+
 
 		div.toc, div.schema, div.MacroLinkDate, div.rightInfoBox {
             position: relative;

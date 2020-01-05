@@ -22,14 +22,16 @@
                 <a href="?action=delete">Delete</a>
             }
         </div>
-        @if(wikiFirst != null && wikiLast != null) {
-            <div class="revisionInfo">
-                @if(wikiFirst != null) {
-                    <div class="first">created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoLocalDateTime)</a></div>
-                }
-                @if(wikiLast != null) {
-                    <div class="last">last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=blame">@(wikiLast.isoLocalDateTime)</a></div>
-                }
-            </div>
+    </div>
+
+@if(wikiFirst != null && wikiLast != null) {
+    <div class="revisionInfo">
+        @if(wikiFirst != null) {
+            <div class="first">created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.isoLocalDateTime)</a></div>
+        }
+        @if(wikiLast != null) {
+            <div class="last">last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=blame">@(wikiLast.isoLocalDateTime)</a></div>
         }
     </div>
+}
+
