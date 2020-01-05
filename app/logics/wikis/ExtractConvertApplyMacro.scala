@@ -22,6 +22,8 @@ object ExtractConvertApplyMacro {
     MacroTitleIndex,
     MacroRecentChanges,
     MacroRecentChangesList,
+
+    MacroSeeAlso,
     MacroPageMap,
     MacroSimilarPages,
     MacroBacklinks,
