@@ -22,7 +22,7 @@ object MacroLinkDate extends TraitMacro {
       val seqLinkAround: Seq[LinkMarkup] = getSeqLinkAround(argument)
       val linkAroundHtml = seqLinkAround.map(_.toHtmlString()).mkString("<br/>")
       s"""
-         |<div class="MacroLinkDate">
+         |<div class="MacroLinkDate around">
          |$linkAroundHtml
          |</div>
          |<div class="MacroLinkDate">
