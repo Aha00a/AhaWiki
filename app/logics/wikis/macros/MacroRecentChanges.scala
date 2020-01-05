@@ -17,7 +17,7 @@ object MacroRecentChanges extends TraitMacro {
                 val list = groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => Seq(
                     s"""'''["${t.name}"]'''""",
                     s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
-                    s"${t.isoLocalDateTime}",
+                    s"${t.toIsoLocalDateTimeString}",
                     s"[${t.author}](${t.remoteAddress})",
                     s"${t.comment}"
                 ))

@@ -15,6 +15,6 @@ trait WithDateTime {
   lazy val year: Int = localDate.getYear
   lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)
 
-  lazy val isoLocalDateTime: String = localDateTime.toIsoLocalDateTimeString
+  lazy val toIsoLocalDateTimeString: String = localDateTime.toIsoLocalDateTimeString
   lazy val toIsoLocalDateString: String = localDateTime.toIsoLocalDateString
 }
