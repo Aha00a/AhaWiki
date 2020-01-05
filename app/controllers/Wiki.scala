@@ -76,21 +76,7 @@ class Wiki @Inject()(implicit
         }
         Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
-        val additionalInfo =
-          s"""
-             |== See also
-             |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
-             |'''[schema:Schema Schema]'''
-             |${getMarkupSchema(name, ahaWikiQuery)}
-             |
-             |'''Backlinks'''
-             |[[Backlinks]]
-             |
-             |[[Html(</td><td>)]]
-             |${getMarkupRelatedPages(name)}
-             |[[Html(</td></tr></tbody></table>)]]
-             |""".stripMargin
-
+        val additionalInfo = getMarkupSeeAlso(name, ahaWikiQuery)
         val regexSchemaColon: Regex = """^schema:$""".r
 
         name match {
@@ -225,26 +211,11 @@ class Wiki @Inject()(implicit
       case (Some(page), "" | "view", true, _) =>
         try {
           val pageContent: PageContent = PageContent(page.content)
+          val additionalInfo = getMarkupSeeAlso(name, ahaWikiQuery)
           pageContent.redirect match {
             case Some(directive) =>
               Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
-              val additionalInfo =
-                s"""
-                   |== See also
-                   |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
-                   |'''[schema:Schema Schema]'''
-                   |${getMarkupSchema(name, ahaWikiQuery)}
-                   |
-                   |'''Similar Pages'''
-                   |[[SimilarPages]]
-                   |
-                   |'''Backlinks'''
-                   |[[Backlinks]]
-                   |[[Html(</td><td>)]]
-                   |${getMarkupRelatedPages(name)}
-                   |[[Html(</td></tr></tbody></table>)]]
-                   |""".stripMargin
               val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
               Ok(pageContent.interpreter match {
                 case Some("Paper") =>
@@ -301,6 +272,24 @@ class Wiki @Inject()(implicit
     }
   }}
 
+  def getMarkupSeeAlso(name: String, ahaWikiQuery: AhaWikiQuery)(implicit connection: Connection): String = {
+      s"""
+         |== See also
+         |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+         |'''[schema:Schema Schema]'''
+         |${getMarkupSchema(name, ahaWikiQuery)}
+         |
+         |'''Similar Pages'''
+         |[[SimilarPages]]
+         |
+         |'''Backlinks'''
+         |[[Backlinks]]
+         |[[Html(</td><td>)]]
+         |${getMarkupRelatedPages(name, ahaWikiQuery)}
+         |[[Html(</td></tr></tbody></table>)]]
+         |""".stripMargin
+  }
+
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
     val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
     val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => {
@@ -316,7 +305,7 @@ class Wiki @Inject()(implicit
     }).mkString("\n")
   }
 
-  def getMarkupRelatedPages(name: String)(implicit connection: Connection): String = {
+  def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
     val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLink)
