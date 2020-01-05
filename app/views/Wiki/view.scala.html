@@ -48,8 +48,8 @@
 } {
     <div class="limitWidth">
         <div class="wikiContent">
+            @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
             @Html(contentInterpreted)
         </div>
     </div>
-    @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
 }

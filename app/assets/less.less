@@ -251,7 +251,34 @@ html, body {
 			&:after { top: 0; right: 3px; content: '”'; }
 		}
 
-        div.toc, div.schema, div.MacroLinkDate, div.rightInfoBox {
+		.gnb {
+			float: right;
+			margin-bottom: 20px;
+			border: 1px solid #ccc;
+			background-color: #fafafa;
+			padding: 10px 10px 10px 40px;
+			text-align: right;
+			.action {
+				margin-bottom: 10px;
+				a {
+					display: inline-block;
+					margin: 0 0 0 5px;
+					padding: 5px;
+					color: #000;
+				}
+			}
+			.revisionInfo {
+				//.monospace;
+				font-style: italic;
+				text-align: right;
+			}
+
+			@media print {
+				display: none;
+			}
+		}
+
+		div.toc, div.schema, div.MacroLinkDate, div.rightInfoBox {
             position: relative;
             float: right;
             margin-bottom: 10px;
@@ -410,23 +437,6 @@ html, body {
 			}
 
 
-		}
-	}
-
-	.action {
-		padding: 10px;
-		background-color: #eee;
-		table {
-			width: 100%;
-		}
-		.revisionInfo {
-			.monospace;
-			font-style: italic;
-			text-align: right;
-		}
-
-		@media print {
-			display: none;
 		}
 	}
 
@@ -797,6 +807,7 @@ html, body {
 	}
 
 	.interpreterMap {
+		clear: right;
 		>.mapArea {
 			position: relative;
 			.googleMapsInfoWindow {
