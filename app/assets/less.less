@@ -258,15 +258,26 @@ html, body {
 			margin-left: 10px;
 			padding: 10px 10px 10px 20px;
 			text-align: right;
+			color: #222;
 			.action {
 				a {
 					display: inline-block;
 					margin: 0 0 0 5px;
 					padding: 5px;
 				}
+				.authArea, .globalAction, .pageAction {
+					display: inline-block;
+					border-left: 1px solid #ccc;
+					&:first-of-type {
+						border-left: none;
+					}
+				}
 			}
 			a {
-				color: #000;
+                i.fas {
+                    margin-right: 5px;
+                }
+				color: #222;
 			}
 			@media print {
 				display: none;

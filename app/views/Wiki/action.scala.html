@@ -1,26 +1,30 @@
 @(isWritable:Boolean, wikiFirst:models.Page, wikiLast:models.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 <div class="gnb">
     <div class="action">
-        @if(request.session.get("id")) {
-            @(request.session.get("id"))
-            <a href="@(routes.Auth.logout())">Logout</a>
-        } else {
-            <a href="@(routes.Auth.login())">Login</a>
-        }
-        |
-        <a href="javascript:showSearch();">Search</a>
-        @if(isWritable) {
-            <a href="javascript:showWrite();">Write Diary</a>
-        }
-        |
-        <a href="?action=raw">Raw</a>
-        <a href="?action=history">History</a>
-        <a href="?action=blame">Blame</a>
-        @if(isWritable) {
-            <a href="?action=edit">Edit</a>
-            <a href="?action=rename">Rename</a>
-            <a href="?action=delete">Delete</a>
-        }
+        <div class="authArea">
+            @if(request.session.get("id")) {
+                <i class="fas fa-user-cog"></i> @(request.session.get("id"))
+                <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>
+            } else {
+                <a href="@(routes.Auth.login())"><i class="fas fa-sign-in-alt"></i>Login</a>
+            }
+        </div>
+        <div class="globalAction">
+            <a href="javascript:showSearch();"><i class="fas fa-search"></i>Search</a>
+            @if(isWritable) {
+                <a href="javascript:showWrite();"><i class="fas fa-signature"></i>Write Diary</a>
+            }
+        </div>
+        <div class="pageAction">
+            <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
+            <a href="?action=history"><i class="fas fa-history"></i>History</a>
+            <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+            @if(isWritable) {
+                <a href="?action=edit"><i class="fas fa-edit"></i>Edit</a>
+                <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename</a>
+                <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete</a>
+            }
+        </div>
     </div>
 </div>
 
