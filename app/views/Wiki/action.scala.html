@@ -16,9 +16,11 @@
             }
         </div>
         <div class="pageAction">
-            <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
-            <a href="?action=history"><i class="fas fa-history"></i>History</a>
-            <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+            @if(wikiFirst != null) {
+                <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
+                <a href="?action=history"><i class="fas fa-history"></i>History</a>
+                <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+            }
             @if(isWritable) {
                 <a href="?action=edit"><i class="fas fa-edit"></i>Edit</a>
                 <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename</a>
