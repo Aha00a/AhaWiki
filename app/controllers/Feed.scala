@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import javax.inject.Inject
 import logics.AhaWikiCache
+import models.PageWithoutContentWithSize
 import play.api.cache.CacheApi
 import play.api.mvc._
 
@@ -45,8 +46,10 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
     }
 
-    val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", LocalDateTime.now()) // TODO
-    val entries = AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(15).map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
+    val seqPageSorted: Seq[PageWithoutContentWithSize] = AhaWikiCache.PageList.get().sortBy(_.dateTime)
+    val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)
+    val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO
+    val entries = seqListLatest.map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}
