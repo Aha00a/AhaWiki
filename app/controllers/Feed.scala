@@ -10,7 +10,9 @@ import play.api.mvc._
 import scala.xml.{Elem, NodeBuffer}
 
 class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
-  def index: Action[AnyContent] = atom
+  def index: Action[AnyContent] = Action {
+    Redirect(routes.Feed.atom())
+  }
 
   def atom: Action[AnyContent] = Action { implicit request =>
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
@@ -50,40 +52,6 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
         {feed.toXml}
         {entries.map(_.toXml)}
       </feed>
-    )
-  }
-
-  def rss: Action[AnyContent] = Action { implicit request =>
-    case class Channel(title:String, description:String, link:String, lastBuildDate:LocalDateTime, pubDate:LocalDateTime, ttl:Int) {
-      def toXml: NodeBuffer =
-        <title>{title}</title>
-        <description>{description}</description>
-        <link>/w/{link}</link>
-        <lastBuildDate>{lastBuildDate}</lastBuildDate>
-        <pubDate>{pubDate}</pubDate>
-        <ttl>{ttl}</ttl>
-    }
-
-    case class Item(title:String, description:String, link:String, pubDate:LocalDateTime) {
-      def toXml: Elem =
-        <item>
-          <title>{title}</title>
-          <description>{description}</description>
-          <link>/w/{link}</link>
-          <pubDate>{pubDate}</pubDate>
-        </item>
-    }
-
-    val channel = Channel("title", "description", "link", LocalDateTime.now(), LocalDateTime.now(), 180) // TODO
-    val items = AhaWikiCache.PageList.get.sortBy(_.dateTime).reverse.take(15).map(p => Item(p.name, p.name, p.name, p.localDateTime)) // TODO
-
-    Ok(
-      <rss version="2.0">
-        <channel>
-          {channel.toXml}
-          {items.map(_.toXml)}
-        </channel>
-      </rss>
     )
   }
 }
