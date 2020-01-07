@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
+import com.aha00a.supercsv.SupercsvUtil
 import logics.AhaWikiCache
 import logics.wikis.interpreters.InterpreterWiki
 import models.PageWithoutContentWithSize
@@ -23,6 +24,21 @@ object MacroRecentChangesList extends TraitMacro {
   }
 
   def interpret(list: List[PageWithoutContentWithSize])(implicit wikiContext: WikiContext): String = {
-    InterpreterWiki(list.map(p => s""" * ${p.localDateTime.toIsoLocalDateTimeString} - ["${p.name}"]""").mkString("\n"))
+    def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
+    val rows = list.sortBy(_.dateTime)(desc).map(t => Seq(
+      s"""'''["${t.name}"]'''""",
+      s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
+      s"${t.toIsoLocalDateTimeString}",
+      s"[${t.author}](${t.remoteAddress})",
+      s"${t.comment}"
+    ))
+
+    InterpreterWiki(
+      s"""[[[#!Table tsv 1 tablesorter
+         |Name	Revision	at	by	comment
+         |${SupercsvUtil.toTsvString(rows)}
+         |]]]
+         |""".stripMargin
+    )
   }
 }

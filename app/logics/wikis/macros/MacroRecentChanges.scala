@@ -7,7 +7,7 @@ import models.WikiContext
 
 object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
-    def desc[T : Ordering] = implicitly[Ordering[T]].reverse
+    def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     InterpreterWiki(
       AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.database).groupBy(_.year).toList.sortBy(_._1)(desc).map {
         case (year, groupedByYear) =>
