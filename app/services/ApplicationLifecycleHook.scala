@@ -36,6 +36,13 @@ class ApplicationLifecycleHook @Inject()(implicit
     Logger.info("OnApplicationStarting")
 
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
+    insertSeedPages(ahaWikiQuery)
+    insertSchemaOrg(ahaWikiQuery)
+
+    Logger.info("OnApplicationStarted")
+  }})
+
+  private def insertSeedPages(ahaWikiQuery: AhaWikiQuery): Unit = {
     if (0 == ahaWikiQuery.Page.selectCount()) {
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
@@ -51,18 +58,16 @@ class ApplicationLifecycleHook @Inject()(implicit
         actorAhaWiki ! Calculate(p.name)
       })
     }
+  }
 
+  private def insertSchemaOrg(ahaWikiQuery: AhaWikiQuery):Unit = {
     val count = ahaWikiQuery.Link.selectCountWhereAlias("subClassOf")
-    
     val seqLink: Seq[Link] = SchemaOrg.seqClass.flatMap(c => c.subClassOf.map(s => Link(SchemaOrg.withNameSpace(c.id), SchemaOrg.withNameSpace(s), "subClassOf")))
-    if(count < seqLink.length) {
+    if (count < seqLink.length) {
       ahaWikiQuery.Link.insert(seqLink)
     }
+  }
 
-    Logger.info("OnApplicationStarted")
-  }})
-
-  //noinspection LanguageFeature
   actorSystem.scheduler.schedule(30 seconds, 5 minutes, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
@@ -71,7 +76,6 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   }})
 
-  //noinspection LanguageFeature
   actorSystem.scheduler.schedule(15 seconds, 30 seconds, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seq: Seq[String] = ahaWikiQuery.pageSelectNameWhereNoLinkSrc()
