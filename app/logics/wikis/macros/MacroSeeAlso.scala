@@ -12,8 +12,8 @@ object MacroSeeAlso extends TraitMacro {
     InterpreterWiki(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
   }}
 
-  private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery) = {
-    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name)
+  private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext) = {
+    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name).filter(l => l.and(a => wikiContext.setPageName.contains(a)))
     val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => {
       val splitted = l.alias.split(":")
       splitted match {
