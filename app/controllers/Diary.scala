@@ -10,7 +10,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import javax.inject._
-import logics.wikis.WikiPermission
+import logics.wikis.{PageLogic, WikiPermission}
 import logics.{AhaWikiCache, SessionLogic}
 import models.{AhaWikiQuery, Page, PageContent, WikiContext}
 import play.api.Configuration
@@ -45,10 +45,7 @@ class Diary @Inject()(implicit
           else
             s"$latestText\n * $q"
 
-        val page = Page(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, "add item", "", body)
-        AhaWikiQuery().Page.insert(page)
-        actorAhaWiki ! Calculate(name)
-        AhaWikiCache.PageList.invalidate()
+        PageLogic.insert(name, latestRevision + 1, new Date(), body, "add item")
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
       } else {
         Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
