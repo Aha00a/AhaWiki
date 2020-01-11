@@ -337,11 +337,6 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
     }
   }
 
-  def pageSelectNameGroupByNameOrderByName: List[String] = {
-    //noinspection LanguageFeature
-    SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
-  }
-
   // TODO: remove IFNULL(permRead) and fix schema
   def pageSelectPageList(): List[PageWithoutContentWithSize] = {
     SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
