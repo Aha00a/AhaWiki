@@ -32,12 +32,16 @@ object PageLogic {
     }
   }
 
-  def getListPageWithoutContentWithSize()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPage()(implicit cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
+    AhaWikiCache.PageList.get()
+  }
+
+  def getListPageByPermission()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
     val optionId = SessionLogic.getId(request)
-    val list: List[PageWithoutContentWithSize] = AhaWikiCache.PageList.get()
+    val list: List[PageWithoutContentWithSize] = getListPage()
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })
@@ -45,6 +49,6 @@ object PageLogic {
   }
 
   def getSeqPageName()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Seq[String] = {
-    getListPageWithoutContentWithSize().map(_.name)
+    getListPageByPermission().map(_.name)
   }
 }

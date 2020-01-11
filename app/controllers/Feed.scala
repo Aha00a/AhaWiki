@@ -47,7 +47,7 @@ class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database)
 
     }
 
-    val seqPageSorted: Seq[PageWithoutContentWithSize] = PageLogic.getListPageWithoutContentWithSize().sortBy(_.dateTime)
+    val seqPageSorted: Seq[PageWithoutContentWithSize] = PageLogic.getListPageByPermission().sortBy(_.dateTime)
     val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)
     val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO
     val entries = seqListLatest.map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
