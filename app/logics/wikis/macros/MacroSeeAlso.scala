@@ -13,7 +13,7 @@ object MacroSeeAlso extends TraitMacro {
   }}
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext) = {
-    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name).filter(l => l.and(a => wikiContext.setPageName.contains(a)))
+    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name).filter(l => l.and(a => wikiContext.setPageNameByPermission.contains(a)))
     val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => {
       val splitted = l.alias.split(":")
       splitted match {
@@ -30,9 +30,9 @@ object MacroSeeAlso extends TraitMacro {
   def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
-    val seqLinkFiltered: Seq[Link] = seqLink.filter(l => l.and(v => wikiContext.setPageName.contains(v)))
+    val seqLinkFiltered: Seq[Link] = seqLink.filter(l => l.and(v => wikiContext.setPageNameByPermission.contains(v)))
     val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLinkFiltered)
-    val seqLinkExpandedFiltered: Seq[Link] = seqLinkExpanded.filter(l => l.and(v => wikiContext.setPageName.contains(v)))
+    val seqLinkExpandedFiltered: Seq[Link] = seqLinkExpanded.filter(l => l.and(v => wikiContext.setPageNameByPermission.contains(v)))
     val result = seqLinkExpandedFiltered
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
