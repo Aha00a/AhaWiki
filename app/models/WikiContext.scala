@@ -41,7 +41,8 @@ class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last
   def push(name: String) = new WikiContext(name +: seqName, renderingMode)
-  lazy val seqPageNameByPermission: Seq[String] = PageLogic.getSeqPageNameByPermission()
+  lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
+  lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
 }
 
