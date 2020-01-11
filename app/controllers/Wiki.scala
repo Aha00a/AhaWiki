@@ -278,7 +278,9 @@ class Wiki @Inject()(implicit
     if (WikiPermission().isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         val now = new Date()
-        PageLogic.insert(name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment)
+        val dateTime = if (minorEdit) latestTime else now
+        val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
+        PageLogic.insert(name, revision + 1, dateTime, body, commentFixed)
         Ok("")
       } else {
         Conflict("")
