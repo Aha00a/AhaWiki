@@ -293,14 +293,18 @@ class Wiki @Inject()(implicit
   }}
 
   private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, dateTime: Date, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = { wikiContext.database.withConnection { implicit connection =>
-    AhaWikiQuery().pageInsert(
+    val author = SessionLogic.getId(request).getOrElse("anonymous")
+    val remoteAddress = request.remoteAddressWithXRealIp
+    val permRead = PageContent(body).read.getOrElse("")
+    AhaWikiQuery().Page.insert(Page(
       name,
       revision,
       dateTime,
-      SessionLogic.getId(request).getOrElse("anonymous"),
-      request.remoteAddressWithXRealIp,
-      body,
-      comment)
+      author,
+      remoteAddress,
+      comment,
+      permRead,
+      body))
 
     actorAhaWiki ! Calculate(name)
 
@@ -401,7 +405,7 @@ class Wiki @Inject()(implicit
       case (Some(page), None) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.rename(name, newName)
-          AhaWikiQuery().pageInsert(name, 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, s"#!redirect $newName", "redirect")
+          pageInsertLogic(request, name, 1, new Date(), s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")

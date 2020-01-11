@@ -12,7 +12,7 @@ import com.aha00a.play.Implicits._
 import javax.inject._
 import logics.wikis.WikiPermission
 import logics.{AhaWikiCache, SessionLogic}
-import models.{AhaWikiQuery, PageContent, WikiContext}
+import models.{AhaWikiQuery, Page, PageContent, WikiContext}
 import play.api.Configuration
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -45,7 +45,8 @@ class Diary @Inject()(implicit
           else
             s"$latestText\n * $q"
 
-        AhaWikiQuery().pageInsert(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, body, "add item")
+        val page = Page(name, latestRevision + 1, new Date(), SessionLogic.getId(request).getOrElse("anonymous"), request.remoteAddressWithXRealIp, "add item", "", body)
+        AhaWikiQuery().Page.insert(page)
         actorAhaWiki ! Calculate(name)
         AhaWikiCache.PageList.invalidate()
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")

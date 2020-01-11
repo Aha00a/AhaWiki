@@ -54,7 +54,7 @@ class ApplicationLifecycleHook @Inject()(implicit
       }
 
       getArrayPageFromFile.foreach(p => {
-        ahaWikiQuery.pageInsert(p.name, p.revision, p.dateTime, p.author, p.remoteAddress, p.content, p.comment)
+        ahaWikiQuery.Page.insert(p)
         actorAhaWiki ! Calculate(p.name)
       })
     }

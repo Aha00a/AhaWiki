@@ -126,6 +126,14 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     }
 
+    def insert(p: Page): Option[Long] = {
+      SQL"""
+           INSERT INTO Page
+           (name, revision, dateTime, author, remoteAddress, comment, permRead, content) values
+           (${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
+        """.executeInsert()
+    }
+
     def updatePerm(page: Page): Int = {
       val pageContent: PageContent = PageContent(page.content)
       SQL"""
@@ -350,12 +358,6 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
-
-  // TODO: refactoring to use models.Page
-  def pageInsert(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = {
-    SQL"INSERT INTO Page (name, revision, dateTime, author, remoteAddress, content, comment) values ($name, $revision, $dateTime, $author, $remoteAddress, $content, $comment)".executeInsert()
-  }
-
 
   def pageSearch(q:String): immutable.Seq[SearchResult] = {
     SQL("""
