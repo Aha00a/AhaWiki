@@ -25,6 +25,7 @@ case class TermFrequency(name:String, term:String, frequency:Int) {
 case class Link(src:String, dst:String, alias:String) {
   lazy val isDstExternal: Boolean = PageNameLogic.isExternal(dst)
 
+  def and(a: String => Boolean):Boolean = a(src) && a(dst)
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
 
