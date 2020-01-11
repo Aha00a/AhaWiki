@@ -29,7 +29,10 @@ case class Link(src:String, dst:String, alias:String) {
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
 
-case class CosineSimilarity(name1: String, name2: String, similarity: Double)
+case class CosineSimilarity(name1: String, name2: String, similarity: Double) {
+  def and(a: String => Boolean):Boolean = a(name1) && a(name2)
+  def or(a: String => Boolean):Boolean = a(name1) || a(name2)
+}
 
 case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
