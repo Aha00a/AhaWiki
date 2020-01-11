@@ -4,5 +4,5 @@ import logics.wikis.PageLogic
 import models.WikiContext
 
 object MacroPageCount extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = PageLogic.getListPageByPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).size.toString
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = wikiContext.listPageByPermission.size.toString
 }

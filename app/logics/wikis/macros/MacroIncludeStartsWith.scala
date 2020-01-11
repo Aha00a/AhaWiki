@@ -8,7 +8,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
-      val list: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database)
+      val list: List[PageWithoutContentWithSize] = wikiContext.listPageByPermission
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
         val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(page.name)
         if (WikiPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {

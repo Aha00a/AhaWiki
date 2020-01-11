@@ -9,7 +9,7 @@ object MacroRecentChanges extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     InterpreterWiki(
-      PageLogic.getListPageByPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).groupBy(_.year).toList.sortBy(_._1)(desc).map {
+      wikiContext.listPageByPermission.groupBy(_.year).toList.sortBy(_._1)(desc).map {
         case (year, groupedByYear) =>
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
