@@ -8,7 +8,7 @@ import logics.{AhaWikiCache, SessionLogic}
 import models.{AhaWikiQuery, Page, PageContent, WikiContext}
 
 object PageLogic {
-  def insert(name: String, revision: Long, dateTime: Date, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = {
+  def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
       val request = wikiContext.request
       val author = SessionLogic.getId(request).getOrElse("anonymous")

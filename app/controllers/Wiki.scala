@@ -280,7 +280,7 @@ class Wiki @Inject()(implicit
         val now = new Date()
         val dateTime = if (minorEdit) latestTime else now
         val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
-        PageLogic.insert(name, revision + 1, dateTime, body, commentFixed)
+        PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
         Ok("")
       } else {
         Conflict("")
@@ -359,7 +359,7 @@ class Wiki @Inject()(implicit
           })
           val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
-            PageLogic.insert(pageName, page.revision + 1, new Date(), body, "Sync Google Spreadsheet")
+            PageLogic.insert(pageName, page.revision + 1, new Date(), "Sync Google Spreadsheet", body)
             Ok("")
           } else {
             Ok("NotChanged")
@@ -380,7 +380,7 @@ class Wiki @Inject()(implicit
       case (Some(page), None) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.rename(name, newName)
-          PageLogic.insert(name, 1, new Date(), s"#!redirect $newName", "redirect")
+          PageLogic.insert(name, 1, new Date(), "redirect", s"#!redirect $newName")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")

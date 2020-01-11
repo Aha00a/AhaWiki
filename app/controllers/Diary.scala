@@ -45,7 +45,7 @@ class Diary @Inject()(implicit
           else
             s"$latestText\n * $q"
 
-        PageLogic.insert(name, latestRevision + 1, new Date(), body, "add item")
+        PageLogic.insert(name, latestRevision + 1, new Date(), "add item", body)
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
       } else {
         Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
