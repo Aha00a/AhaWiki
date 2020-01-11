@@ -6,7 +6,7 @@ import actors.ActorAhaWiki.Calculate
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.{AhaWikiCache, AhaWikiConfig, SessionLogic}
-import models.{AhaWikiQuery, Page, PageContent, PageWithoutContentWithSize, WikiContext}
+import models._
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
