@@ -44,7 +44,11 @@ object PageLogic {
     listFiltered
   }
 
+  def getSeqPageName()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Seq[String] = {
+    getListPageWithoutContentWithSize().map(_.name)
+  }
+
   def getSetPageName()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Set[String] = {
-    getListPageWithoutContentWithSize().map(_.name).toSet
+    getSeqPageName().toSet
   }
 }

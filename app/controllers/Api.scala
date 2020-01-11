@@ -21,6 +21,6 @@ class Api @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) 
   }}
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    Ok(Json.toJson(PageLogic.getSetPageName()))
+    Ok(Json.toJson(PageLogic.getSeqPageName()))
   }
 }
