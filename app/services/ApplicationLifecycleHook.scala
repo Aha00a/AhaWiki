@@ -89,8 +89,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     ahaWikiQuery.Page.selectPermNullAndContentStartsWithSheBangRead() match {
       case Some(page) =>
         ahaWikiQuery.Page.updatePerm(page)
-        Logger.info(s"name: ${page.name}")
-        Logger.info(s"revision: ${page.revision}")
+        Logger.info(s"updatePerm\t${page.name}\tr${page.revision}")
       case None =>
         Logger.info("None")
     }
