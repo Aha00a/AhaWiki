@@ -1,6 +1,5 @@
 package logics.wikis.macros
 
-import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.{AhaWikiQuery, Link, WikiContext}
 
