@@ -27,11 +27,13 @@ object MacroSeeAlso extends TraitMacro {
     }).mkString("\n")
   }
 
-  def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit connection: Connection): String = {
+  def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
-    val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLink)
-    val result = seqLinkExpanded
+    val seqLinkFiltered: Seq[Link] = seqLink.filter(l => l.and(v => wikiContext.setPageName.contains(v)))
+    val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLinkFiltered)
+    val seqLinkExpandedFiltered: Seq[Link] = seqLinkExpanded.filter(l => l.and(v => wikiContext.setPageName.contains(v)))
+    val result = seqLinkExpandedFiltered
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
@@ -44,7 +46,7 @@ object MacroSeeAlso extends TraitMacro {
   }
 
 
-  def getMarkupSeeAlso(name: String, ahaWikiQuery: AhaWikiQuery)(implicit connection: Connection): String = {
+  def getMarkupSeeAlso(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
     s"""
        |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
        |'''[schema:Schema Schema]'''
