@@ -36,7 +36,12 @@ class WikiPermission(implicit request: Request[Any], cacheApi: CacheApi, databas
   }
 
   def allowed(directive: Array[String]): Boolean = {
-    SessionLogic.getId(request) match {
+    val optionId: Option[String] = SessionLogic.getId(request)
+    allowed(optionId, directive)
+  }
+
+  def allowed(optionId: Option[String], directive: Array[String]): Boolean = {
+    optionId match {
       case Some(id) => directive.exists(s => s == "all" || s == "login" || s == id)
       case None => directive.contains("all")
     }

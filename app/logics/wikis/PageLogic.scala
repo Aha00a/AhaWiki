@@ -3,8 +3,9 @@ package logics.wikis
 import java.util.Date
 
 import actors.ActorAhaWiki.Calculate
+import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import logics.{AhaWikiCache, SessionLogic}
+import logics.{AhaWikiCache, AhaWikiConfig, SessionLogic}
 import models.{AhaWikiQuery, Page, PageContent, PageWithoutContentWithSize, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -32,6 +33,14 @@ object PageLogic {
   }
 
   def getListPageWithoutContentWithSize()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
-    AhaWikiCache.PageList.get()
+    val permissionDefaultRead = AhaWikiConfig().permission.default.read()
+    val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
+    val wikiPermission = WikiPermission()
+    val optionId = SessionLogic.getId(request)
+    val list: List[PageWithoutContentWithSize] = AhaWikiCache.PageList.get()
+    val listFiltered = list.filter(p => {
+      wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
+    })
+    listFiltered
   }
 }

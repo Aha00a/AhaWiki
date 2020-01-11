@@ -26,6 +26,7 @@ object Implicits {
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
     def splitTabs(): Array[String] = s.split("""\t""")
+    def splitCommaIgnoreAroundWhitespace(): Array[String] = s.split("""\s*,\s*""")
     def splitLinesSeq(): Seq[String] = s.splitLines().toSeq
     def splitTabsSeq(): Seq[String] = s.splitTabs().toSeq
   }
