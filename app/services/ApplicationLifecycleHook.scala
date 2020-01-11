@@ -49,7 +49,7 @@ class ApplicationLifecycleHook @Inject()(implicit
           val name = file.getName
           implicit val codec: Codec = Codec.UTF8
           val body = Using(scala.io.Source.fromFile(file))(_.mkString)
-          Page(name, 1, new Date(), "AhaWiki", "127.0.0.1", body, "initial")
+          Page(name, 1, new Date(), "AhaWiki", "127.0.0.1", "initial", "", body)
         })
       }
 

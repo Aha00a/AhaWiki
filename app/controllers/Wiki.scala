@@ -74,7 +74,7 @@ class Wiki @Inject()(implicit
           case DateTimeUtil.regexIsoLocalDate(y, m, d) => s"[[DayHeader]]\n * "
           case _ => s"""= $name\n"""
         }
-        Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", content, ""))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
         val regexSchemaColon: Regex = """^schema:$""".r

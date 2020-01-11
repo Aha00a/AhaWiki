@@ -13,9 +13,9 @@ import scala.collection.immutable
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String            ) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String            ) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String,                  comment: String, size: Long) extends WithDateTime
+case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 
 
 case class TermFrequency(name:String, term:String, frequency:Int) {
@@ -64,7 +64,7 @@ object AhaWikiQuery {
 class AhaWikiQuery()(implicit connection: Connection) {
 
   object Page {
-    private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("content") ~ str("comment")
+    private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
 
     def selectCount(): Long = {
       SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
@@ -79,41 +79,41 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
 
     def selectLastRevision(name: String): Option[Page] = {
-      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectFirstRevision(name: String): Option[Page] = {
-      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
         .on('name -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectSpecificRevision(name: String, revision: Int): Option[Page] = {
-      SQL("SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
+      SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
         .on('name -> name, 'revision -> revision)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectHistory(name: String): List[PageWithoutContent] = {
-      SQL"SELECT name, revision, dateTime, author, remoteAddress, comment FROM Page WHERE name = $name ORDER BY revision DESC"
-        .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") *).map(flatten)
+      SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision DESC"
+        .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") *).map(flatten)
         .map(PageWithoutContent.tupled)
     }
 
     def selectHistoryStream[T](name: String, t:T, f:(T, models.Page) => T): T = {
-      SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment FROM Page WHERE name = $name ORDER BY revision ASC"
+      SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision ASC"
         .as(rowParser *).map(flatten)
         .foldLeft(t)((a, v) => f(a, models.Page.tupled(v)))
     }
 
     def selectPermNullAndContentStartsWithSheBangRead(): Option[Page] = {
       SQL"""
-           SELECT name, revision, dateTime, author, remoteAddress, content, comment
+           SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content
               FROM Page
               WHERE
                   permRead IS NULL AND
@@ -334,8 +334,9 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
     SQL"SELECT name FROM Page GROUP BY name ORDER BY name".as(str("name") *)
   }
 
+  // TODO: remove IFNULL(permRead) and fix schema
   def pageSelectPageList(): List[PageWithoutContentWithSize] = {
-    SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, LENGTH(content) size
+    SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
            |    FROM Page w
            |    INNER JOIN (
            |        SELECT
@@ -346,10 +347,11 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
            |    ) NV ON w.name = NV.name AND w.revision = NV.revision
            |    ORDER BY name
            |""".stripMargin)
-      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ long("size") *).map(flatten)
+      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
 
+  // TODO: refactoring to use models.Page
   def pageInsert(name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, content: String, comment: String): Option[Long] = {
     SQL"INSERT INTO Page (name, revision, dateTime, author, remoteAddress, content, comment) values ($name, $revision, $dateTime, $author, $remoteAddress, $content, $comment)".executeInsert()
   }
@@ -357,7 +359,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
 
   def pageSearch(q:String): immutable.Seq[SearchResult] = {
     SQL("""
-SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.content, w.comment
+SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, w.content
      FROM Page w
      INNER JOIN (
          SELECT
