@@ -1,14 +1,14 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
-import logics.AhaWikiCache
+import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterTable
 import models.{PageContent, WikiContext}
 
 object MacroPageList extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.interpret(PageContent(
     "#!Table tsv 1 tablesorter\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
-    AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.database).map { t =>
+      PageLogic.getListPageWithoutContentWithSize()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).map { t =>
       Seq(
         s"'''[${t.name}]'''",
         s"${t.localDateTime.toIsoLocalDateTimeString}",

@@ -1,11 +1,9 @@
 package logics.wikis.macros
 
-import com.aha00a.commons.Implicits._
 import com.aha00a.supercsv.SupercsvUtil
-import logics.AhaWikiCache
+import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
-import models.PageWithoutContentWithSize
-import models.WikiContext
+import models.{PageWithoutContentWithSize, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 
@@ -17,8 +15,8 @@ object MacroRecentChangesList extends TraitMacro {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
     argument match {
-      case "" | null => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse)
-      case regexDigits(i) => interpret(AhaWikiCache.PageList.get().sortBy(_.dateTime).reverse.take(i.toInt))
+      case "" | null => interpret(PageLogic.getListPageWithoutContentWithSize()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).sortBy(_.dateTime).reverse)
+      case regexDigits(i) => interpret(PageLogic.getListPageWithoutContentWithSize()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).sortBy(_.dateTime).reverse.take(i.toInt))
       case _ => MacroError(s"Bad argument - [[$name($argument)]]")
     }
   }

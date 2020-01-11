@@ -1,8 +1,8 @@
 package logics.wikis.macros
 
-import logics.AhaWikiCache
+import logics.wikis.PageLogic
 import models.WikiContext
 
 object MacroPageCount extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = AhaWikiCache.PageList.get()(wikiContext.cacheApi, wikiContext.database).size.toString
+  override def apply(argument:String)(implicit wikiContext: WikiContext): String = PageLogic.getListPageWithoutContentWithSize()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).size.toString
 }

@@ -5,7 +5,10 @@ import java.util.Date
 import actors.ActorAhaWiki.Calculate
 import com.aha00a.play.Implicits._
 import logics.{AhaWikiCache, SessionLogic}
-import models.{AhaWikiQuery, Page, PageContent, WikiContext}
+import models.{AhaWikiQuery, Page, PageContent, PageWithoutContentWithSize, WikiContext}
+import play.api.cache.CacheApi
+import play.api.db.Database
+import play.api.mvc.Request
 
 object PageLogic {
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
@@ -26,5 +29,9 @@ object PageLogic {
         case _ =>
       }
     }
+  }
+
+  def getListPageWithoutContentWithSize()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
+    AhaWikiCache.PageList.get()
   }
 }
