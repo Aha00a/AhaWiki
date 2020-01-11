@@ -1,8 +1,6 @@
 package controllers
 
 import java.net.URLDecoder
-import java.sql.Connection
-import java.time.LocalDate
 import java.util.Date
 
 import actionCompositions.PostAction
@@ -20,9 +18,8 @@ import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import logics.wikis.{ExtractConvertApplyChunkCustom, RenderingMode, WikiPermission}
+import logics.wikis.{ExtractConvertApplyChunkCustom, PageLogic, WikiPermission}
 import models._
-import play.Play
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -31,7 +28,6 @@ import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 
 import scala.collection.JavaConversions._
-import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
@@ -282,7 +278,7 @@ class Wiki @Inject()(implicit
     if (WikiPermission().isWritable(PageContent(latestText))) {
       if (revision == latestRevision) {
         val now = new Date()
-        pageInsertLogic(request, name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment)
+        PageLogic.insert(name, revision + 1, if(minorEdit) latestTime else now,  body, if(minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment)
         Ok("")
       } else {
         Conflict("")
@@ -292,30 +288,7 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  private def pageInsertLogic(request: Request[AnyContent], name: String, revision: Long, dateTime: Date, body: String, comment: String)(implicit wikiContext: WikiContext): Unit = { wikiContext.database.withConnection { implicit connection =>
-    val author = SessionLogic.getId(request).getOrElse("anonymous")
-    val remoteAddress = request.remoteAddressWithXRealIp
-    val permRead = PageContent(body).read.getOrElse("")
-    AhaWikiQuery().Page.insert(Page(
-      name,
-      revision,
-      dateTime,
-      author,
-      remoteAddress,
-      comment,
-      permRead,
-      body))
 
-    actorAhaWiki ! Calculate(name)
-
-    AhaWikiCache.PageList.invalidate()
-    name match {
-      case ".header" => AhaWikiCache.Header.invalidate()
-      case ".footer" => AhaWikiCache.Footer.invalidate()
-      case ".config" => AhaWikiCache.Config.invalidate()
-      case _ =>
-    }
-  }}
 
   def delete(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
@@ -384,7 +357,7 @@ class Wiki @Inject()(implicit
           })
           val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
-            pageInsertLogic(request, pageName, page.revision + 1, new Date(), body, "Sync Google Spreadsheet")
+            PageLogic.insert(pageName, page.revision + 1, new Date(), body, "Sync Google Spreadsheet")
             Ok("")
           } else {
             Ok("NotChanged")
@@ -405,7 +378,7 @@ class Wiki @Inject()(implicit
       case (Some(page), None) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
           AhaWikiQuery().Page.rename(name, newName)
-          pageInsertLogic(request, name, 1, new Date(), s"#!redirect $newName", "redirect")
+          PageLogic.insert(name, 1, new Date(), s"#!redirect $newName", "redirect")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)
           Ok("")
