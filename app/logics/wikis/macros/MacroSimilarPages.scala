@@ -15,7 +15,7 @@ object MacroSimilarPages extends TraitMacro {
   def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
     wikiContext.database.withConnection { implicit connection =>
       val ahaWikiQuery = AhaWikiQuery()
-      val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name).filter(v => v.and(a => wikiContext.setPageNameByPermission.contains(a)))
+      val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name).filter(v => v.and(wikiContext.pageCanSee))
       if (cosineSimilarities.isEmpty) {
         wikiContext.actorAhaWiki ! Calculate(name)
         ""
