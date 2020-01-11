@@ -83,4 +83,16 @@ class ApplicationLifecycleHook @Inject()(implicit
       actorAhaWiki ! CalculateLink(v, i, seq.length)
     }
   }})
+
+  actorSystem.scheduler.schedule(10 seconds, 10 seconds, () => { database.withConnection { implicit connection =>
+    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
+    ahaWikiQuery.Page.selectPermNullAndContentStartsWithSheBangRead() match {
+      case Some(page) =>
+        ahaWikiQuery.Page.updatePerm(page)
+        Logger.info(s"name: ${page.name}")
+        Logger.info(s"revision: ${page.revision}")
+      case None =>
+        Logger.info("None")
+    }
+  }})
 }

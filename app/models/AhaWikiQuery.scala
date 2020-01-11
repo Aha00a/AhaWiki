@@ -111,6 +111,31 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .foldLeft(t)((a, v) => f(a, models.Page.tupled(v)))
     }
 
+    def selectPermNullAndContentStartsWithSheBangRead(): Option[Page] = {
+      SQL"""
+           SELECT name, revision, dateTime, author, remoteAddress, content, comment
+              FROM Page
+              WHERE
+                  permRead IS NULL AND
+                  content LIKE ${"#!read %"}
+              ORDER BY RAND()
+              LIMIT 1
+      """
+        .as(rowParser singleOpt).map(flatten)
+        .map(models.Page.tupled)
+
+    }
+
+    def updatePerm(page: Page): Int = {
+      val pageContent: PageContent = PageContent(page.content)
+      SQL"""
+           UPDATE Page SET
+              permRead = ${pageContent.read}
+              WHERE name = ${page.name} AND revision = ${page.revision}
+      """.executeUpdate()
+    }
+
+
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
       val linkCount = Link.delete(name)
       val cosineSimilarityCount = CosineSimilarity.delete(name)
