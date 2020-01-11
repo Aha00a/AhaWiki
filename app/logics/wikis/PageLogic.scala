@@ -48,7 +48,7 @@ object PageLogic {
     listFiltered
   }
 
-  def getSeqPageName()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Seq[String] = {
+  def getSeqPageNameByPermission()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Seq[String] = {
     getListPageByPermission().map(_.name)
   }
 }
