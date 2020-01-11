@@ -8,7 +8,7 @@ object MacroInclude extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = doApply(argument, s => s)
   def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
     val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(argument)
-    if (WikiPermission().isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
+    if (WikiPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
       pageLastRevision.map(w => Interpreters.interpret(preprocessor(w.content))).getOrElse("Error: " + argument)
     } else {
       MacroError(s"Permission Denied - [[$name($argument)]]")

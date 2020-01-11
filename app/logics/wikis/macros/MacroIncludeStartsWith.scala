@@ -11,7 +11,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
       val list: List[PageWithoutContentWithSize] = PageLogic.getListPageWithoutContentWithSize()(wikiContext.request, wikiContext.cacheApi, wikiContext.database)
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
         val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(page.name)
-        if (WikiPermission().isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
+        if (WikiPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.interpret(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {
           MacroError(s"Permission Denied - [[$name($argument)]]")

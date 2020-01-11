@@ -7,13 +7,10 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object WikiPermission {
-  def apply()(implicit wikiContext: WikiContext): WikiPermission = new WikiPermission()
+  def apply()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): WikiPermission = new WikiPermission()
 }
 
-class WikiPermission(implicit wikiContext: WikiContext) {
-  implicit val request: Request[Any] = wikiContext.request
-  implicit val cacheApi: CacheApi = wikiContext.cacheApi
-  implicit val database: Database = wikiContext.database
+class WikiPermission(implicit request: Request[Any], cacheApi: CacheApi, database:Database) {
   def getReadDirective(pageContent:Option[PageContent]): Array[String] = {
     pageContent.flatMap(_.read).getOrElse(AhaWikiConfig().permission.default.read()).split("""\s*,\s*""")
   }
