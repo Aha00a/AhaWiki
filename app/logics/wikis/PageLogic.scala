@@ -43,4 +43,8 @@ object PageLogic {
     })
     listFiltered
   }
+
+  def getSetPageName()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): Set[String] = {
+    getListPageWithoutContentWithSize().map(_.name).toSet
+  }
 }

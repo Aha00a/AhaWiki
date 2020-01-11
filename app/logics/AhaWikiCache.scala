@@ -25,17 +25,6 @@ object AhaWikiCache {
         AhaWikiQuery().pageSelectPageList()
       }
     }
-
-    override def invalidate()(implicit wikiContext: WikiContext): Unit = {
-      super.invalidate()
-      PageNameSet.invalidate()
-    }
-  }
-
-  object PageNameSet extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, database:Database): Set[String] = cacheApi.getOrElse(key, 60.minutes) {
-      PageList.get().map(_.name).toSet
-    }
   }
 
   object Header extends CacheEntity {

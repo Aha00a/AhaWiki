@@ -2,19 +2,19 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
-import logics.wikis.{PageNameLogic, RenderingMode}
-import logics.{AhaWikiCache, SchemaOrg}
+import logics.SchemaOrg
+import logics.wikis.{PageLogic, PageNameLogic, RenderingMode}
 import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
-
-import scala.xml.{Elem, NodeSeq}
+import play.api.mvc.Request
 
 object InterpreterSchema extends TraitInterpreter {
   def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+    implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val pageNameSet: Set[String] = AhaWikiCache.PageNameSet.get()
+    val pageNameSet: Set[String] = PageLogic.getSetPageName()
 
     val schemaClass = pageContent.argument.headOption.getOrElse("")
     val contentLines = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)

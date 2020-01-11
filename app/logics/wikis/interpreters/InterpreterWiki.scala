@@ -1,12 +1,11 @@
 package logics.wikis.interpreters
 
-import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
-import logics.AhaWikiCache
 import logics.wikis._
 import models.{Link, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
+import play.api.mvc.Request
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
@@ -220,9 +219,10 @@ object InterpreterWiki extends TraitInterpreter {
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
+    implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val set: Set[String] = AhaWikiCache.PageNameSet.get()
+    val set: Set[String] = PageLogic.getSetPageName()
 
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()

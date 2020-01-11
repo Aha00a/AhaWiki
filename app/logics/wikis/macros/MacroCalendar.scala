@@ -5,11 +5,12 @@ import java.time.{DayOfWeek, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import logics.AhaWikiCache
+import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.db.Database
+import play.api.mvc.Request
 
 import scala.util.matching.Regex
 
@@ -20,6 +21,7 @@ object MacroCalendar extends TraitMacro {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
     case regex(y, m) =>
+      implicit val request: Request[Any] = wikiContext.request
       implicit val cacheApi: CacheApi = wikiContext.cacheApi
       implicit val database: Database = wikiContext.database
 
@@ -27,7 +29,7 @@ object MacroCalendar extends TraitMacro {
       val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
 
-      val set: Set[String] = AhaWikiCache.PageNameSet.get()
+      val set: Set[String] = PageLogic.getSetPageName()
       val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
       val r = <table class="MacroCalendar simpleTable">
         <thead>

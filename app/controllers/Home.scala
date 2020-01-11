@@ -1,10 +1,9 @@
 package controllers
 
-import java.net.URLEncoder
-
 import com.aha00a.commons.Implicits._
 import javax.inject._
-import logics.{AhaWikiCache, ApplicationConf}
+import logics.ApplicationConf
+import logics.wikis.PageLogic
 import models.{AhaWikiQuery, PageContent}
 import play.api.Configuration
 import play.api.cache.CacheApi
@@ -21,7 +20,7 @@ class Home @Inject() (
   }
 
   def random: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.Wiki.view(AhaWikiCache.PageNameSet.get.toSeq.random())).flashing(request.flash)
+    Redirect(routes.Wiki.view(PageLogic.getSetPageName().toSeq.random())).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>

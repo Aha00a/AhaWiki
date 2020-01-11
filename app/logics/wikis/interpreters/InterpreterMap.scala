@@ -5,6 +5,7 @@ import java.net.URLEncoder
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
+import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
 import logics.{AhaWikiCache, ApplicationConf}
@@ -45,15 +46,15 @@ object InterpreterMap {
       return MacroError(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
     }
 
+    implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val setPageName: Set[String] = AhaWikiCache.PageNameSet.get()
+    val setPageName: Set[String] = PageLogic.getSetPageName()
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
       val head: Seq[String] = rowColumnData.head
       val tail: Seq[Seq[String]] = rowColumnData.tail
 
-      implicit val request: Request[Any] = wikiContext.request
       val seqHeaderName: Seq[String] = Seq("Name", "Address", "Score")
       val seqHeaderIndex: Seq[Int] = seqHeaderName.map(head.indexOf)
       val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqHeaderName.contains(v._1)).map(_._2)
