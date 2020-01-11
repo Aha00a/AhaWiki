@@ -14,7 +14,7 @@ object InterpreterSchema extends TraitInterpreter {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val pageNameSet: Set[String] = PageLogic.getSetPageName()
+    val pageNameSet: Set[String] = PageLogic.getSeqPageName().toSet
 
     val schemaClass = pageContent.argument.headOption.getOrElse("")
     val contentLines = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)

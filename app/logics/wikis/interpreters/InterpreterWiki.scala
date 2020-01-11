@@ -222,7 +222,7 @@ object InterpreterWiki extends TraitInterpreter {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val set: Set[String] = PageLogic.getSetPageName()
+    val set: Set[String] = PageLogic.getSeqPageName().toSet
 
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()

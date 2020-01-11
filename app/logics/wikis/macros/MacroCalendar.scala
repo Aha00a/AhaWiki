@@ -29,7 +29,7 @@ object MacroCalendar extends TraitMacro {
       val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
 
-      val set: Set[String] = PageLogic.getSetPageName()
+      val set: Set[String] = PageLogic.getSeqPageName().toSet
       val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
       val r = <table class="MacroCalendar simpleTable">
         <thead>

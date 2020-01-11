@@ -2,7 +2,7 @@ package models
 
 import akka.actor.ActorRef
 import logics.AhaWikiCache
-import logics.wikis.RenderingMode
+import logics.wikis.{PageLogic, RenderingMode}
 import logics.wikis.RenderingMode.RenderingMode
 import play.api.Configuration
 import play.api.cache.CacheApi
@@ -41,6 +41,8 @@ class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last
   def push(name: String) = new WikiContext(name +: seqName, renderingMode)
+  lazy val seqPageName: Seq[String] = PageLogic.getSeqPageName()
+  lazy val setPageName: Set[String] = seqPageName.toSet
 }
 
 

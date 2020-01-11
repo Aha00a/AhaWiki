@@ -49,7 +49,7 @@ object InterpreterMap {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val setPageName: Set[String] = PageLogic.getSetPageName()
+    val setPageName: Set[String] = PageLogic.getSeqPageName().toSet
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
       val head: Seq[String] = rowColumnData.head
