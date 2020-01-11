@@ -21,7 +21,7 @@ class Home @Inject() (
   }
 
   def random: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.Wiki.view(AhaWikiCache.PageNameSet.get.toSeq.random(), 0, "")).flashing(request.flash)
+    Redirect(routes.Wiki.view(AhaWikiCache.PageNameSet.get.toSeq.random())).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
