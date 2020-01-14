@@ -277,32 +277,43 @@ class Wiki @Inject()(implicit
     val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
     val secretKey = ApplicationConf().AhaWiki.google.reCAPTCHA.secretKey()
     val remoteAddress = request.remoteAddressWithXRealIp
-    ws.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
-      Logger.info(response.body)
-      val json: JsValue = response.json
-      if (!(json \ "success").as[Boolean]) {
-        val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
-        Logger.error(s"robot - ${errorCodes.mkString("\t")}")
-        Forbidden("")
-      } else {
-        database.withConnection { implicit connection =>
-          val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
-          if (!WikiPermission().isWritable(PageContent(latestText))) {
-            Forbidden("")
+
+    def doSave() = {
+      database.withConnection { implicit connection =>
+        val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
+        if (!WikiPermission().isWritable(PageContent(latestText))) {
+          Forbidden("")
+        } else {
+          if (revision != latestRevision) {
+            Conflict("")
           } else {
-            if (revision != latestRevision) {
-              Conflict("")
-            } else {
-              val now = new Date()
-              val dateTime = if (minorEdit) latestTime else now
-              val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
-              PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
-              Ok("")
-            }
+            val now = new Date()
+            val dateTime = if (minorEdit) latestTime else now
+            val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
+            PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
+            Ok("")
           }
         }
       }
-    })
+    }
+
+    if(secretKey != "") {
+      ws.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
+        Logger.info(response.body)
+        val json: JsValue = response.json
+        if (!(json \ "success").as[Boolean]) {
+          val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
+          Logger.error(s"robot - ${errorCodes.mkString("\t")}")
+          Forbidden("")
+        } else {
+          doSave()
+        }
+      })
+    } else {
+      Future {
+        doSave()
+      }
+    }
   }
 
 
