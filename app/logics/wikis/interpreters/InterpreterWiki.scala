@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
-import models.{Link, WikiContext}
+import models.{Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -172,18 +172,23 @@ object InterpreterWiki extends TraitInterpreter {
 
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
-    val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
-    val extractConvertApplyMacro = new ExtractConvertApplyMacro()
-    val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+    val pageContent: PageContent = PageContent(content)
+    pageContent.redirect match {
+      case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
+      case None =>
+        val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
+        val extractConvertApplyMacro = new ExtractConvertApplyMacro()
+        val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-    val chunkExtracted = extractConvertApplyChunk.extract(content)
-    val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-    val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+        val chunkExtracted = extractConvertApplyChunk.extract(content)
+        val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+        val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    val seqLinkInterpreter: Seq[Link] = extractConvertApplyChunk.extractLink().toList
-    val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
-    val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
-    seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
+        val seqLinkInterpreter: Seq[Link] = extractConvertApplyChunk.extractLink().toList
+        val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+        val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+        seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
+    }
   }
 
 
