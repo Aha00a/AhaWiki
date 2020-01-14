@@ -35,6 +35,10 @@ class ApplicationConf(configuration: Configuration) {
         def adClient(): String = configuration.getString(fqn).getOrElse("")
         def adsTxtContent(): String = configuration.getString(fqn).getOrElse("")
       }
+      object reCAPTCHA {
+        def siteKey(): String = configuration.getString(fqn).getOrElse("")
+        def secretKey(): String = configuration.getString(fqn).getOrElse("")
+      }
     }
   }
 }

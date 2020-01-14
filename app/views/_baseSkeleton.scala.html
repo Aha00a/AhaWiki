@@ -56,6 +56,19 @@
         @if(ApplicationConf().AhaWiki.google.AdSense.adClient()) {
             <script data-ad-client="@(ApplicationConf().AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
+        @if(ApplicationConf().AhaWiki.google.reCAPTCHA.siteKey() && ApplicationConf().AhaWiki.google.reCAPTCHA.siteKey()) {
+            <script src="https://www.google.com/recaptcha/api.js?render=@(ApplicationConf().AhaWiki.google.reCAPTCHA.siteKey())"></script>
+            <script>
+                grecaptcha.ready(function() {
+                    grecaptcha.execute('@(ApplicationConf().AhaWiki.google.reCAPTCHA.siteKey())', {action: 'homepage'}).then(function(token) {
+                        var element = document.getElementById('recaptcha');
+                        if(element)
+                            element.value = token;
+                    });
+                });
+            </script>
+        }
+
 
         @head
     </head>

@@ -23,7 +23,9 @@ import models._
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
+import play.api.libs.ws.WSResponse
 import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 
@@ -218,7 +220,7 @@ class Wiki @Inject()(implicit
                   val contentInterpreted = Interpreters.interpret(page.content)
                   views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case None | Some("Wiki") =>
-                  val contentInterpreted = Interpreters.interpret(page.content + additionalInfo) 
+                  val contentInterpreted = Interpreters.interpret(page.content + additionalInfo)
                   if(request.isLocalhost) {
 //                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
 //                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
@@ -268,27 +270,40 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  def save(nameEncoded: String): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
+  def save(nameEncoded: String): Action[AnyContent] = PostAction.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val (revision, body, comment, minorEdit) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean)).bindFromRequest.get
-    val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
-
-    if (WikiPermission().isWritable(PageContent(latestText))) {
-      if (revision == latestRevision) {
-        val now = new Date()
-        val dateTime = if (minorEdit) latestTime else now
-        val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
-        PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
-        Ok("")
+    val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
+    val secretKey = ApplicationConf().AhaWiki.google.reCAPTCHA.secretKey()
+    val remoteAddress = request.remoteAddressWithXRealIp
+    ws.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
+      Logger.info(response.body)
+      val json: JsValue = response.json
+      if (!(json \ "success").as[Boolean]) {
+        val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
+        Logger.error(s"robot - ${errorCodes.mkString("\t")}")
+        Forbidden("")
       } else {
-        Conflict("")
+        database.withConnection { implicit connection =>
+          val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
+          if (!WikiPermission().isWritable(PageContent(latestText))) {
+            Forbidden("")
+          } else {
+            if (revision != latestRevision) {
+              Conflict("")
+            } else {
+              val now = new Date()
+              val dateTime = if (minorEdit) latestTime else now
+              val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
+              PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
+              Ok("")
+            }
+          }
+        }
       }
-    } else {
-      Forbidden("")
-    }
-  }}
+    })
+  }
 
 
 

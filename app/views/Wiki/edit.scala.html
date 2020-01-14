@@ -142,6 +142,7 @@
                         @form(routes.Wiki.save(page.name), 'class -> "form") {
                             @CSRF.formField
                             <input type="hidden" name="revision" value="@page.revision"/>
+                            <input type="hidden" id="recaptcha" name="recaptcha">
                             <textarea name="text" style="min-height: 500px;" autofocus="autofocus">@page.content</textarea>
                             <div>
                                 <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
@@ -157,6 +158,10 @@
                         </td>
                     </tr>
                 </table>
+                <small>This site is protected by reCAPTCHA and the Google
+                    <a target="_blank" href="https://policies.google.com/privacy">Privacy Policy</a> and
+                    <a target="_blank" href="https://policies.google.com/terms">Terms of Service</a> apply.
+                </small>
             </div>
         </div>
     </div>
