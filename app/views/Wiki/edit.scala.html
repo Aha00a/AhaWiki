@@ -1,4 +1,4 @@
-@(page: models.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(page: models.Page, applicationConf: logics.ApplicationConf)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @import helper._
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
@@ -125,6 +125,22 @@
             preview();
         });
     </script>
+    @if(applicationConf.AhaWiki.google.reCAPTCHA.siteKey() && applicationConf.AhaWiki.google.reCAPTCHA.siteKey()) {
+        <script src="https://www.google.com/recaptcha/api.js?render=@(applicationConf.AhaWiki.google.reCAPTCHA.siteKey())"></script>
+        <script>
+            function getReCaptcha() {
+                grecaptcha.ready(function() {
+                    grecaptcha.execute('@(applicationConf.AhaWiki.google.reCAPTCHA.siteKey())', {action: 'homepage'}).then(function(token) {
+                        var element = document.getElementById('recaptcha');
+                        if(element)
+                            element.value = token;
+                    });
+                });
+            }
+            setInterval(getReCaptcha, 60 * 1000);
+            getReCaptcha();
+        </script>
+    }
 } {
     <div class="wikiContent">
         <div class="limitWidth">
@@ -158,10 +174,6 @@
                         </td>
                     </tr>
                 </table>
-                <small>This site is protected by reCAPTCHA and the Google
-                    <a target="_blank" href="https://policies.google.com/privacy">Privacy Policy</a> and
-                    <a target="_blank" href="https://policies.google.com/terms">Terms of Service</a> apply.
-                </small>
             </div>
         </div>
     </div>

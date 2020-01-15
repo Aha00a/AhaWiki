@@ -72,7 +72,7 @@ class Wiki @Inject()(implicit
           case DateTimeUtil.regexIsoLocalDate(y, m, d) => s"[[DayHeader]]\n * "
           case _ => s"""= $name\n"""
         }
-        Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content))).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        Ok(views.html.Wiki.edit(models.Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
       case (None, _, _, _) =>
         val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
         val regexSchemaColon: Regex = """^schema:$""".r
@@ -263,7 +263,7 @@ class Wiki @Inject()(implicit
         val minRevision: Long = seqRevision.min
         Ok(views.html.Wiki.blame(blame, minRevision, maxRevision, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
 
-      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page)).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page, ApplicationConf())).withHeaderRobotNoIndexNoFollow
       case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
       case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
       case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
