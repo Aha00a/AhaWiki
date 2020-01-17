@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 
 object InterpreterWikiSyntaxPreview extends TraitInterpreter {
 
@@ -36,5 +36,10 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
        |        </tr>
        |    </tbody>
        |</table>""".stripMargin
+  }
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+    val pageContent: PageContent = PageContent(content)
+    InterpreterWiki.extractLink(pageContent.content)
   }
 }

@@ -7,7 +7,7 @@ import java.security.MessageDigest
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.AhaWikiConfig
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
@@ -131,4 +131,6 @@ object InterpreterVim extends TraitInterpreter {
   def getCacheFileHtmlRaw(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".raw.html")
 
   def getCacheFileHtml(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".html")
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

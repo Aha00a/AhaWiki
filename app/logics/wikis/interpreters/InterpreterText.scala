@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 
 object InterpreterText extends TraitInterpreter {
   override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
@@ -8,4 +8,6 @@ object InterpreterText extends TraitInterpreter {
     val contentEscaped = pageContent.content.replaceAll("""&""", "&amp;").replaceAll("<", "&lt;")
     s"""<pre class="text">$contentEscaped</pre>"""
   }
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

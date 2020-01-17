@@ -4,7 +4,7 @@ import java.io.StringReader
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
@@ -73,4 +73,8 @@ object InterpreterTable extends TraitInterpreter {
     throw new Exception()
   }
 
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+    // TODO
+    Seq()
+  }
 }

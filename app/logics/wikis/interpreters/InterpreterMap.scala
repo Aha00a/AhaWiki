@@ -9,7 +9,7 @@ import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiQuery, LatLng, PageContent, WikiContext}
+import models.{AhaWikiQuery, LatLng, Link, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
@@ -116,5 +116,10 @@ object InterpreterMap extends TraitInterpreter {
         htmlStringMap + htmlStringWiki
       }
     }
+  }
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+    // TODO: implement
+    Seq()
   }
 }

@@ -8,7 +8,7 @@ object InterpreterMarkdown extends TraitInterpreter {
   }
 
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
-    // TODO:
-    super.extractLink(content)
+    // TODO: implement
+    Seq()
   }
 }

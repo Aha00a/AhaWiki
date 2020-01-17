@@ -1,7 +1,7 @@
 package logics.wikis.interpreters
 
 import logics.wikis.RenderingMode
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 
 object InterpreterGraph extends TraitInterpreter {
   override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
@@ -13,4 +13,6 @@ object InterpreterGraph extends TraitInterpreter {
     }
     views.html.Wiki.graph(linesCut.flatMap(_.split("->").sliding(2).map(_.toArray)), enableWikiLink = pageContent.shebang.contains("enableWikiLink")).toString()
   }
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

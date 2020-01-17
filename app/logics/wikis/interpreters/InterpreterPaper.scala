@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import models.{PageContent, WikiContext}
+import models.{Link, PageContent, WikiContext}
 
 object InterpreterPaper extends TraitInterpreter {
   //noinspection ZeroIndexToHead
@@ -23,5 +23,10 @@ object InterpreterPaper extends TraitInterpreter {
              |</div>""".stripMargin
         }.mkString("\n") +
     """</div>"""
+  }
+
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+    val pageContent: PageContent = PageContent(content)
+    InterpreterWiki.extractLink(pageContent.content)
   }
 }

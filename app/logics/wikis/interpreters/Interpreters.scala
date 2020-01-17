@@ -2,7 +2,6 @@ package logics.wikis.interpreters
 
 import logics.wikis.macros.MacroError
 import models.{Link, PageContent, WikiContext}
-import play.api.Logger
 
 object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
