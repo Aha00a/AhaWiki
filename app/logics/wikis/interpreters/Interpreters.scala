@@ -15,6 +15,9 @@ object Interpreters {
     val body = pageContent.content
     val argument = pageContent.argument.mkString(" ")
     pageContent.interpreter match {
+      case Some("Wiki") | Some("wiki") | None => InterpreterWiki(body)
+      case Some("Schema") | Some("schema") => InterpreterSchema(pageContent)
+
       case Some("Comment") | Some("comment") => InterpreterComment(pageContent)
       case Some("Graph") => InterpreterGraph(pageContent)
       case Some("Html") | Some("html") => body
@@ -23,11 +26,9 @@ object Interpreters {
       case Some("Math") => InterpreterMath(argument, body)
       case Some("Paper") => InterpreterPaper.interpret(argument, body)
       case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki(body) + "</blockquote>"
-      case Some("Schema") | Some("schema") => InterpreterSchema(pageContent)
       case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
       case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
       case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
-      case Some("Wiki") | Some("wiki") | None => InterpreterWiki(body)
       case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
