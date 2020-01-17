@@ -35,11 +35,8 @@ object Interpreters {
     getInterpreter(pageContent) match {
       case Some(interpreter) => interpreter.interpret(content)
       case None =>
-        pageContent.interpreter match {
-          case _ =>
-            Logger.error(s"$pageContent")
-            MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")
-        }
+        Logger.error(s"$pageContent")
+        MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")
     }
   }
 
