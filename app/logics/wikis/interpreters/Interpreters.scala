@@ -15,6 +15,7 @@ object Interpreters {
     InterpreterQuote,
 
     InterpreterVim,
+    InterpreterTable,
     
     InterpreterSchema,
     null
@@ -34,7 +35,6 @@ object Interpreters {
           case Some("Map") => InterpreterMap(pageContent)
           case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
-          case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
           case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
           case _ =>
             Logger.error(s"$pageContent")

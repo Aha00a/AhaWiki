@@ -12,7 +12,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
-object InterpreterTable {
+object InterpreterTable extends TraitInterpreter {
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {
@@ -28,7 +28,8 @@ object InterpreterTable {
     case _ => None
   }
 
-  def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
+  override def interpret(content: String)(implicit wikiContext:WikiContext): String = {
+    val pageContent: PageContent = PageContent(content)
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>

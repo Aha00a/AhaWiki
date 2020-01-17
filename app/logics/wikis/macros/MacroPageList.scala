@@ -1,12 +1,11 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
-import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterTable
-import models.{PageContent, WikiContext}
+import models.WikiContext
 
 object MacroPageList extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.interpret(PageContent(
+  override def apply(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.interpret(
     "#!Table tsv 1 tablesorter\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
       wikiContext.listPageByPermission.map { t =>
       Seq(
@@ -19,5 +18,5 @@ object MacroPageList extends TraitMacro {
         s"${t.comment}"
       ).mkString("\t")
     }.mkString("\n")
-  ))
+  )
 }
