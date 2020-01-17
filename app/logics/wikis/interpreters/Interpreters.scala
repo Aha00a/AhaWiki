@@ -29,18 +29,16 @@ object Interpreters {
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
-    val body = pageContent.content
-    val argument = pageContent.argument.mkString(" ")
-
     getInterpreter(pageContent)
-      .map(i => i.interpret(content))
+      .map(_.interpret(content))
       .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
-
   def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
-    getInterpreter(pageContent).map(_.extractLink(content)).getOrElse(Seq())
+    getInterpreter(pageContent)
+      .map(_.extractLink(content))
+      .getOrElse(Seq())
   }
 
   def getInterpreter(pageContent: PageContent): Option[TraitInterpreter] = {
