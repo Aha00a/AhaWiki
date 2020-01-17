@@ -12,6 +12,8 @@ object Interpreters {
     InterpreterHtml,
     InterpreterText,
     InterpreterMarkdown,
+
+    InterpreterVim,
     
     InterpreterSchema,
     null
@@ -33,7 +35,6 @@ object Interpreters {
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
           case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki.interpret(body) + "</blockquote>"
           case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
-          case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
           case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
           case _ =>
             Logger.error(s"$pageContent")

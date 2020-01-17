@@ -15,7 +15,7 @@ import play.api.db.Database
 import scala.io.Codec
 import scala.sys.process._
 
-object InterpreterVim {
+object InterpreterVim extends TraitInterpreter {
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
       if (!raw.startsWith("#!Vim")) {
@@ -52,8 +52,10 @@ object InterpreterVim {
     }
   }
 
-  def interpret(pageContent: PageContent)(implicit wikiContext: WikiContext):String = {
+  override def interpret(content: String)(implicit wikiContext: WikiContext):String = {
     implicit val codec:Codec = Codec.UTF8
+    val pageContent: PageContent = PageContent(content)
+
     codec.onMalformedInput(CodingErrorAction.REPLACE)
     codec.onUnmappableCharacter(CodingErrorAction.REPLACE)
 
