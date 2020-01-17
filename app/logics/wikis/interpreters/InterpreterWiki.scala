@@ -58,11 +58,13 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
+    val pageContent: PageContent = PageContent(content)
+
     val extractConvertApplyChunk = new ExtractConvertApplyChunk()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-    val chunkExtracted = extractConvertApplyChunk.extract(content)
+    val chunkExtracted = extractConvertApplyChunk.extract(pageContent.content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
