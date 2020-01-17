@@ -7,6 +7,7 @@ import play.api.Logger
 object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
+    InterpreterPaper,
 
     InterpreterWikiSyntaxPreview,
 
@@ -35,8 +36,6 @@ object Interpreters {
       case Some(interpreter) => interpreter.interpret(content)
       case None =>
         pageContent.interpreter match {
-
-          case Some("Paper") => InterpreterPaper.interpret(argument, body)
           case _ =>
             Logger.error(s"$pageContent")
             MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")
