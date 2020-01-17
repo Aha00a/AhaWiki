@@ -8,7 +8,8 @@ object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
     InterpreterSchema,
-    InterpreterComment
+    InterpreterComment,
+    InterpreterHtml
   ).map(m => m.name.toLowerCase -> m).toMap
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
