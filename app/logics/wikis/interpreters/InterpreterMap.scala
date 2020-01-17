@@ -19,7 +19,7 @@ import play.api.mvc.Request
 
 import scala.collection.mutable
 
-object InterpreterMap {
+object InterpreterMap extends TraitInterpreter {
   case class Location(
                        name:String,
                        exists: Boolean,
@@ -38,8 +38,10 @@ object InterpreterMap {
 
   case class LocationListVisited(location: Location, listVisited: List[String])
 
-  def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     implicit val configuration: Configuration = wikiContext.configuration
+
+    val pageContent: PageContent = PageContent(content)
     val geocodingKey = ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
     val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
     if(geocodingKey.isNullOrEmpty || mapJavaScriptApiKey.isNullOrEmpty){
