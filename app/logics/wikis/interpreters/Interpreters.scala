@@ -12,12 +12,13 @@ object Interpreters {
     InterpreterHtml,
     InterpreterText,
     InterpreterMarkdown,
+    InterpreterQuote,
 
     InterpreterVim,
     
     InterpreterSchema,
     null
-  ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap
+  ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
@@ -33,7 +34,6 @@ object Interpreters {
           case Some("Map") => InterpreterMap(pageContent)
           case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
-          case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki.interpret(body) + "</blockquote>"
           case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
           case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
           case _ =>
