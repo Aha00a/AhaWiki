@@ -23,7 +23,6 @@ object Interpreters {
         pageContent.interpreter match {
 
           case Some("Graph") => InterpreterGraph(pageContent)
-          case Some("Html") | Some("html") => body
           case Some("Map") => InterpreterMap(pageContent)
           case Some("Markdown") | Some("markdown") => InterpreterMarkdown(body)
           case Some("Math") => InterpreterMath(argument, body)
