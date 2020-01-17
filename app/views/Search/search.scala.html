@@ -15,6 +15,7 @@
             @for(searchResultSummary <- seq) {
                 <div class="item">
                     <h2 class="pageName"><a href="/w/@(searchResultSummary.name)" >@(searchResultSummary.name)</a></h2>
+                    last modified at @(searchResultSummary.dateTime)
                     <table class="tableSearchResult">
                         <tbody>
                             @for(seq2 <- searchResultSummary.summary) {

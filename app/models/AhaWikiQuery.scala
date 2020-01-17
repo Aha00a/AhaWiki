@@ -36,7 +36,7 @@ case class CosineSimilarity(name1: String, name2: String, similarity: Double) {
 
 case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
-case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]])
+case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: Date)
 
 case class SearchResult(name:String, content:String, dateTime: Date) {
   def summarise(q: String): SearchResultSummary = {
@@ -51,7 +51,8 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
         .distinct
         .filter(lines.isDefinedAt)
         .splitBy((a, b) => a + 1 != b)
-        .map(_.map(i => (i + 1, lines(i)))).toSeq
+        .map(_.map(i => (i + 1, lines(i)))).toSeq,
+      dateTime
     )
   }
 }
