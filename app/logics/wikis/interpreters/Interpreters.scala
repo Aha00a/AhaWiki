@@ -8,6 +8,8 @@ object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
 
+    InterpreterWikiSyntaxPreview,
+
     InterpreterComment,
     InterpreterHtml,
     InterpreterText,
@@ -35,7 +37,6 @@ object Interpreters {
           case Some("Map") => InterpreterMap(pageContent)
           case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
-          case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
           case _ =>
             Logger.error(s"$pageContent")
             MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")

@@ -2,9 +2,10 @@ package logics.wikis.interpreters
 
 import models.{PageContent, WikiContext}
 
-object InterpreterWikiSyntaxPreview {
+object InterpreterWikiSyntaxPreview extends TraitInterpreter {
 
-  def interpret(pageContent: PageContent)(implicit wikiContext:WikiContext): String = {
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+    val pageContent: PageContent = PageContent(content)
     val argument = pageContent.argument.mkString(" ")
     val body = pageContent.content
     if (argument == "") {
