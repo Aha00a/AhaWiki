@@ -18,6 +18,7 @@ object Interpreters {
 
     InterpreterVim,
     InterpreterTable,
+    InterpreterGraph,
     
     InterpreterSchema,
     null
@@ -33,7 +34,6 @@ object Interpreters {
       case None =>
         pageContent.interpreter match {
 
-          case Some("Graph") => InterpreterGraph(pageContent)
           case Some("Map") => InterpreterMap(pageContent)
           case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)

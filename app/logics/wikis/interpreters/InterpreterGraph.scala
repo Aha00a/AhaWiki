@@ -3,8 +3,9 @@ package logics.wikis.interpreters
 import logics.wikis.RenderingMode
 import models.{PageContent, WikiContext}
 
-object InterpreterGraph {
-  def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+object InterpreterGraph extends TraitInterpreter {
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+    val pageContent: PageContent = PageContent(content)
     val lines = pageContent.content.trim.split("""(\r\n|\n)+""")
     val linesCut = wikiContext.renderingMode match {
       case RenderingMode.Normal => lines
