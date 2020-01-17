@@ -7,11 +7,15 @@ import play.api.Logger
 object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
-    InterpreterSchema,
+
     InterpreterComment,
     InterpreterHtml,
-    InterpreterMarkdown
-  ).map(m => m.name.toLowerCase -> m).toMap
+    InterpreterText,
+    InterpreterMarkdown,
+    
+    InterpreterSchema,
+    null
+  ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
@@ -29,7 +33,6 @@ object Interpreters {
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
           case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki.interpret(body) + "</blockquote>"
           case Some("Table") | Some("table") => InterpreterTable.interpret(pageContent)
-          case Some("Text") | Some("text") | Some("txt") => "<pre class=\"text\">" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
           case Some("Vim") | Some("vim") => InterpreterVim.interpret(pageContent)
           case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
           case _ =>
