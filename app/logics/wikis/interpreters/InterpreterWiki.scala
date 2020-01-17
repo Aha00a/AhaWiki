@@ -57,12 +57,12 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
-  def apply(wikiText:String)(implicit wikiContext:WikiContext):String = {
+  override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
     val extractConvertApplyChunk = new ExtractConvertApplyChunk()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-    val chunkExtracted = extractConvertApplyChunk.extract(wikiText)
+    val chunkExtracted = extractConvertApplyChunk.extract(content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
@@ -165,7 +165,7 @@ object InterpreterWiki extends TraitInterpreter {
     variableHolder := State.Normal
 
     if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki(arrayBufferHeading.mkString("\n")) + """</div>""")
+      arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
 
     extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }

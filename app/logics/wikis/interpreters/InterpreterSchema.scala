@@ -10,10 +10,12 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object InterpreterSchema extends TraitInterpreter {
-  def apply(pageContent: PageContent)(implicit wikiContext: WikiContext): String = {
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
+
+    val pageContent: PageContent = PageContent(content)
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
 
     val schemaClass = pageContent.argument.headOption.getOrElse("")

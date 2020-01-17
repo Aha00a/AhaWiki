@@ -110,7 +110,7 @@ object InterpreterMap {
         }
 
         val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
-        val htmlStringWiki: String = InterpreterWiki(buffer.mkString("\n", "\n", "\n"))
+        val htmlStringWiki: String = InterpreterWiki.interpret(buffer.mkString("\n", "\n", "\n"))
         htmlStringMap + htmlStringWiki
       }
     }

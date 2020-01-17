@@ -31,7 +31,7 @@ object MacroRecentChangesList extends TraitMacro {
       s"${t.comment}"
     ))
 
-    InterpreterWiki(
+    InterpreterWiki.interpret(
       s"""[[[#!Table tsv 1 tablesorter
          |Name	Revision	at	by	comment
          |${SupercsvUtil.toTsvString(rows)}

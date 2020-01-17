@@ -9,7 +9,7 @@ import models.{AhaWikiQuery, Link, WikiContext}
 object MacroSeeAlso extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    InterpreterWiki(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
+    InterpreterWiki.interpret(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
   }}
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext) = {
