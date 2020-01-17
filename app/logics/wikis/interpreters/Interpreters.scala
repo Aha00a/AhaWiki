@@ -5,6 +5,11 @@ import models.{Link, PageContent, WikiContext}
 import play.api.Logger
 
 object Interpreters {
+  val mapMacros: Map[String, TraitInterpreter] = Seq(
+    InterpreterWiki,
+    InterpreterSchema
+  ).map(m => m.name.toLowerCase -> m).toMap
+
   def interpret(s: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(s)
     val body = pageContent.content
@@ -33,22 +38,6 @@ object Interpreters {
 
   def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
-    val body = pageContent.content
-    pageContent.interpreter match {
-      case Some("Wiki") | Some("wiki") | None => InterpreterWiki.extractLink(content).filterNot(_.or(_.startsWith("#")))
-      case Some("Schema") | Some("schema") | None => InterpreterSchema.extractLink(content)
-      // case Some("Comment") | Some("comment") => ""
-      // case Some("Graph") => InterpreterGraph.interpret(pageContent)
-      // case Some("Html") | Some("html") => body
-      // case Some("Markdown") | Some("markdown") => com.github.rjeschke.txtmark.Processor.process(body)
-      // case Some("Math") => InterpreterMath.interpret(argument, body)
-      // case Some("Paper") => InterpreterPaper.interpret(argument, body)
-      // case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + new InterpreterWiki().interpret(body) + "</blockquote>"
-      // case Some("Table") | Some("table") | Some("AhaTracTable") => InterpreterTable.interpret(pageContent)
-      // case Some("Text") | Some("text") | Some("txt") => "<pre>" + body.replaceAll( """&""", "&amp;").replaceAll("<", "&lt;") + "</pre>"
-      // case Some("Vim") | Some("vim") | Some("AhaTracVim") => InterpreterVim.interpret(pageContent)
-      // case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
-      case _ => Seq()
-    }
+    mapMacros.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki")).map(_.extractLink(content)).getOrElse(Seq())
   }
 }
