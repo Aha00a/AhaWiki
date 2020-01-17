@@ -10,8 +10,8 @@ object Interpreters {
     InterpreterSchema
   ).map(m => m.name.toLowerCase -> m).toMap
 
-  def interpret(s: String)(implicit wikiContext: WikiContext): String = {
-    val pageContent: PageContent = PageContent(s)
+  def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+    val pageContent: PageContent = PageContent(content)
     val body = pageContent.content
     val argument = pageContent.argument.mkString(" ")
     pageContent.interpreter match {
@@ -31,7 +31,7 @@ object Interpreters {
       case Some("WikiSyntaxPreview") => InterpreterWikiSyntaxPreview.interpret(pageContent)
       case _ =>
         Logger.error(s"$pageContent")
-        MacroError(s"Interpreter not found. - [[[$s]]]")
+        MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")
     }
   }
 
