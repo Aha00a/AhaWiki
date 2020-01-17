@@ -7,7 +7,8 @@ import play.api.Logger
 object Interpreters {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
-    InterpreterSchema
+    InterpreterSchema,
+    InterpreterComment
   ).map(m => m.name.toLowerCase -> m).toMap
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
@@ -20,7 +21,6 @@ object Interpreters {
       case None =>
         pageContent.interpreter match {
 
-          case Some("Comment") | Some("comment") => InterpreterComment(pageContent)
           case Some("Graph") => InterpreterGraph(pageContent)
           case Some("Html") | Some("html") => body
           case Some("Map") => InterpreterMap(pageContent)
