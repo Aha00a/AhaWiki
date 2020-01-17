@@ -9,7 +9,8 @@ object Interpreters {
     InterpreterWiki,
     InterpreterSchema,
     InterpreterComment,
-    InterpreterHtml
+    InterpreterHtml,
+    InterpreterMarkdown
   ).map(m => m.name.toLowerCase -> m).toMap
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String = {
@@ -24,7 +25,6 @@ object Interpreters {
 
           case Some("Graph") => InterpreterGraph(pageContent)
           case Some("Map") => InterpreterMap(pageContent)
-          case Some("Markdown") | Some("markdown") => InterpreterMarkdown(body)
           case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
           case Some("Quote") | Some("quote") | Some("AhaTracQuote") => "<blockquote>" + InterpreterWiki.interpret(body) + "</blockquote>"
