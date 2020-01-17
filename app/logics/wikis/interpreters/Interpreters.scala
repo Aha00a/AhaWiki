@@ -32,12 +32,9 @@ object Interpreters {
     val body = pageContent.content
     val argument = pageContent.argument.mkString(" ")
 
-    getInterpreter(pageContent) match {
-      case Some(interpreter) => interpreter.interpret(content)
-      case None =>
-        Logger.error(s"$pageContent")
-        MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>")
-    }
+    getInterpreter(pageContent)
+      .map(i => i.interpret(content))
+      .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
 
