@@ -1,5 +1,9 @@
 package logics.wikis.interpreters
+import models.{PageContent, WikiContext}
 
-object InterpreterMath {
-  def apply(argument: String, body: String): String = """<span class="mathjax">$___$""" + body + "$___$</span>"
+object InterpreterMath extends TraitInterpreter {
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+    val pageContent: PageContent = PageContent(content)
+    """<span class="mathjax">$___$""" + pageContent.content + """$___$</span>"""
+  }
 }

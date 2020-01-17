@@ -19,7 +19,8 @@ object Interpreters {
     InterpreterVim,
     InterpreterTable,
     InterpreterGraph,
-    
+    InterpreterMath,
+
     InterpreterSchema,
     null
   ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
@@ -35,7 +36,6 @@ object Interpreters {
         pageContent.interpreter match {
 
           case Some("Map") => InterpreterMap(pageContent)
-          case Some("Math") => InterpreterMath(argument, body)
           case Some("Paper") => InterpreterPaper.interpret(argument, body)
           case _ =>
             Logger.error(s"$pageContent")
