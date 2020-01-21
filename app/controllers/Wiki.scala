@@ -90,7 +90,7 @@ class Wiki @Inject()(implicit
                  | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
           case DateTimeUtil.regexYearDashMonth(y, m) =>
             val content =
@@ -98,7 +98,7 @@ class Wiki @Inject()(implicit
                  |[[IncludeDays]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
           case DateTimeUtil.regexYear(y) =>
             val content =
@@ -113,7 +113,7 @@ class Wiki @Inject()(implicit
                  |""".stripMargin
 
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
           case DateTimeUtil.regexDashDashMonthDashDay(mm, dd) =>
             val lastDay: Int = mm.toInt match {
@@ -148,7 +148,7 @@ class Wiki @Inject()(implicit
                  |]]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
 
           case DateTimeUtil.regexDashDashMonth(mm) =>
@@ -183,7 +183,7 @@ class Wiki @Inject()(implicit
                  |]]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
 //          case regexDashDashDashDashDay(mm) =>
 //            Ok(mm) // TODO
@@ -203,7 +203,7 @@ class Wiki @Inject()(implicit
                  | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
-            NotFound(views.html.Wiki.view(name, name, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
         }
 
       case (Some(page), "" | "view", true, _) =>
@@ -218,7 +218,7 @@ class Wiki @Inject()(implicit
               Ok(pageContent.interpreter match {
                 case Some("Paper") =>
                   val contentInterpreted = Interpreters.interpret(page.content)
-                  views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                  views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case None | Some("Wiki") =>
                   val contentInterpreted = Interpreters.interpret(page.content + additionalInfo)
                   if(request.isLocalhost) {
@@ -226,10 +226,10 @@ class Wiki @Inject()(implicit
 //                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
                     Logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
                   }
-                  views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                  views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case _ =>
                   val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.interpret(page.content) + Interpreters.interpret(additionalInfo)
-                  views.html.Wiki.view(name, description, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+                  views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
               })
           }
         }

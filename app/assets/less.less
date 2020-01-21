@@ -256,47 +256,6 @@ html, body {
 			&:after { top: 5px; right: 3px; content: '”'; }
 		}
 
-		.gnb, .revisionInfo {
-			clear: right;
-			float: right;
-			margin-bottom: 10px;
-			margin-left: 10px;
-			padding: 10px 10px 10px 20px;
-			text-align: right;
-			color: #222;
-			.action {
-				a {
-					display: inline-block;
-					margin: 0 0 0 5px;
-					padding: 5px;
-				}
-				.authArea, .globalAction, .pageAction {
-					display: inline-block;
-					border-left: 1px solid #ccc;
-					&:first-of-type {
-						border-left: none;
-					}
-				}
-			}
-			a {
-                i.fas {
-                    margin-right: 5px;
-                }
-				color: #222;
-			}
-			@media print {
-				display: none;
-			}
-		}
-
-		.gnb {
-			//border: 1px solid #eee;
-			//background-color: #fafafa;
-		}
-		.revisionInfo {
-			font-style: italic;
-		}
-
 
 		div.toc, div.schema, div.MacroLinkDate, div.rightInfoBox {
             position: relative;
@@ -402,12 +361,62 @@ html, body {
 		.commonAhaWiki;
 	}
 
-	.paperContent {
-
-		padding: 1mm;
-		@media screen {
-			background-color: #777;
+	.gnb, .revisionInfo {
+		clear: right;
+		float: right;
+		margin-bottom: 10px;
+		margin-left: 10px;
+		padding: 10px 10px 10px 20px;
+		text-align: right;
+		color: #222;
+		.action {
+			a {
+				display: inline-block;
+				margin: 0 0 0 5px;
+				padding: 5px;
+			}
+			.authArea, .globalAction, .pageAction {
+				display: inline-block;
+				border-left: 1px solid #ccc;
+				&:first-of-type {
+					border-left: none;
+				}
+			}
 		}
+		a {
+			i.fas {
+				margin-right: 5px;
+			}
+			color: #222;
+		}
+		@media print {
+			display: none;
+		}
+	}
+
+	.gnb {
+		//border: 1px solid #eee;
+		//background-color: #fafafa;
+	}
+	.revisionInfo {
+		font-style: italic;
+	}
+
+	.Paper {
+		@media screen {
+			background-color: #ddd;
+		}
+		.gnb, .revisionInfo {
+			float: none;
+			margin: 0;
+
+		}
+	}
+
+
+	.paperContent {
+		padding: 1mm;
+
 
 		.page {
 

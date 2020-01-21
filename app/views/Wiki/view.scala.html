@@ -1,4 +1,4 @@
-@(title:String, description: String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Page], wikiLast:Option[models.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.Page], wikiLast:Option[models.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base(title, description) {
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
@@ -46,10 +46,14 @@
         });
     </script>
 } {
-    <div class="wikiContent">
+    <div class="@(interpreter)">
         <div class="limitWidth">
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
-            @Html(contentInterpreted)
+        </div>
+        <div class="wikiContent">
+            <div class="limitWidth">
+                @Html(contentInterpreted)
+            </div>
         </div>
     </div>
 }
