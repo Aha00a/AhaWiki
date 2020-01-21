@@ -7,8 +7,8 @@
         });
     </script>
 } {
-    <div class="limitWidth">
-        <div class="wikiContent searchResult">
+    <div class="wikiContent searchResult">
+        <div class="limitWidth">
             @views.html.Wiki.action(isWritable = false, null, null)
             <h1>search <a href="@routes.Wiki.view(q.replaceAll("""\s""", ""))">@q</a></h1>
             @(seq.size) results.
