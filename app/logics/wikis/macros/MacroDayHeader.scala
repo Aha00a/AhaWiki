@@ -32,7 +32,4 @@ object MacroDayHeader extends TraitMacro {
     case DateTimeUtil.regexIsoLocalDate(y, m, d) => MacroLinkDate.extractLink(body)
     case _ => Seq()
   }
-
-  def l(s:String)(implicit wikiContext: WikiContext): String = LinkMarkup(s, s.replaceAllLiterally("--", "")).toHtmlString()
-
 }
