@@ -42,7 +42,7 @@ object MacroLinkDate extends TraitMacro {
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-      DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d(body) ++ getSeqLinkAround(body).map(_.uri)
+      DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d(body)// ++ getSeqLinkAround(body).map(_.uri)
     case _ => Seq()
   }
 
