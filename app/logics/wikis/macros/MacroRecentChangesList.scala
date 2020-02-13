@@ -14,29 +14,15 @@ object MacroRecentChangesList extends TraitMacro {
   override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
+    def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {
-      case "" | null => interpret(wikiContext.listPageByPermission.sortBy(_.dateTime).reverse)
-      case regexDigits(i) => interpret(wikiContext.listPageByPermission.sortBy(_.dateTime).reverse.take(i.toInt))
+      case "" | null => interpret(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc))
+      case regexDigits(i) => interpret(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc).take(i.toInt))
       case _ => MacroError(s"Bad argument - [[$name($argument)]]")
     }
   }
 
   def interpret(list: List[PageWithoutContentWithSize])(implicit wikiContext: WikiContext): String = {
-    def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
-    val rows = list.sortBy(_.dateTime)(desc).map(t => Seq(
-      s"""'''["${t.name}"]'''""",
-      s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
-      s"${t.toIsoLocalDateTimeString}",
-      s"[${t.author}](${t.remoteAddress})",
-      s"${t.comment}"
-    ))
-
-    InterpreterWiki.interpret(
-      s"""[[[#!Table tsv 1 tablesorter
-         |Name	Revision	at	by	comment
-         |${SupercsvUtil.toTsvString(rows)}
-         |]]]
-         |""".stripMargin
-    )
+    InterpreterWiki.interpret(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - ["${p.name}"] - ["${p.name}?action=diff&after=${p.revision}" r${p.revision}] - ${p.comment}""").mkString("\n"))
   }
 }
