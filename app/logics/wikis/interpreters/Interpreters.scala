@@ -1,9 +1,9 @@
 package logics.wikis.interpreters
 
 import logics.wikis.macros.MacroError
-import models.{Link, PageContent, WikiContext}
+import models.{Link, PageContent, SchemaOrg, WikiContext}
 
-object Interpreters {
+object Interpreters extends TraitInterpreter {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
     InterpreterPaper,
@@ -26,21 +26,28 @@ object Interpreters {
     null
   ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
 
-  def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  def getInterpreter(pageContent: PageContent): Option[TraitInterpreter] = {
+    map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
+  }
+
+  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.interpret(content))
       .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
-  def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.extractLink(content))
       .getOrElse(Seq())
   }
 
-  def getInterpreter(pageContent: PageContent): Option[TraitInterpreter] = {
-    map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
+  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+    val pageContent: PageContent = PageContent(content)
+    getInterpreter(pageContent)
+      .map(_.extractSchema(content))
+      .getOrElse(Seq())
   }
 }

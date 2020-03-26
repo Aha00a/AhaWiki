@@ -2,7 +2,8 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
-import models.{Link, PageContent, WikiContext}
+import models.{Link, PageContent, SchemaOrg, WikiContext}
+import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -257,6 +258,11 @@ object InterpreterWiki extends TraitInterpreter {
       case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
       case _ => null
     }.filter(_ != null)
+  }
+
+  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+    Logger.info("a");
+    Seq();
   }
 }
 

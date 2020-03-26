@@ -5,6 +5,7 @@ import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
 import logics.SchemaOrg
 import logics.wikis.{PageLogic, PageNameLogic, RenderingMode}
 import models.{Link, PageContent, WikiContext}
+import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -98,5 +99,10 @@ object InterpreterSchema extends TraitInterpreter {
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
     val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(s"${schemaClass}:${key}"))) }
     linkSchema +: seqLinkProperty
+  }
+
+  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
+    Logger.info("A");
+    Seq()
   }
 }
