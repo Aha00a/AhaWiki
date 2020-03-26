@@ -34,6 +34,8 @@ case class CosineSimilarity(name1: String, name2: String, similarity: Double) {
   def or(a: String => Boolean):Boolean = a(name1) || a(name2)
 }
 
+case class SchemaOrg(page: String, cls: String, prop: String, value: String)
+
 case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
 case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: Date)
