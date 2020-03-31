@@ -69,7 +69,7 @@ object InterpreterMap extends TraitInterpreter {
           name,
           setPageName.contains(name),
           row.getOrElse(seqHeaderIndex(1), ""),
-          row.getOrElse(seqHeaderIndex(2), "").toOption.map(_.toDouble).getOrElse(0),
+          row.getOrElse(seqHeaderIndex(2), "").toOption.map(_.toDoubleOrZero).getOrElse(0),
           seqIndexRest
             .map(v => (head.getOrElse(v, "").getOrElse(""), row.getOrElse(v, "").getOrElse("")))
         )

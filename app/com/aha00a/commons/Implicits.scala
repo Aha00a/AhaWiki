@@ -23,6 +23,7 @@ object Implicits {
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
 
     def toIntOrZero: Int = Try(s.toInt).toOption.getOrElse(0)
+    def toDoubleOrZero: Double = Try(s.toDouble).toOption.getOrElse(0)
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
     def splitTabs(): Array[String] = s.split("""\t""")
