@@ -1,6 +1,6 @@
 package controllers
 
-import java.net.URLDecoder
+import java.net.{URLDecoder, URLEncoder}
 import java.util.Date
 
 import actionCompositions.PostAction
@@ -20,6 +20,7 @@ import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
 import logics.wikis.{ExtractConvertApplyChunkCustom, PageLogic, WikiPermission}
 import models._
+import org.apache.http.client.utils.URIUtils
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
@@ -212,7 +213,7 @@ class Wiki @Inject()(implicit
           val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
           pageContent.redirect match {
             case Some(directive) =>
-              Redirect(directive).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
+              Redirect(URLEncoder.encode(directive, "utf-8").replaceAllLiterally("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
               val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
               Ok(pageContent.interpreter match {
