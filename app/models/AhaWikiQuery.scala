@@ -34,7 +34,10 @@ case class CosineSimilarity(name1: String, name2: String, similarity: Double) {
   def or(a: String => Boolean):Boolean = a(name1) || a(name2)
 }
 
-case class SchemaOrg(page: String, cls: String, prop: String, value: String)
+case class SchemaOrg(page: String, cls: String, prop: String, value: String) {
+  def and(a: String => Boolean):Boolean = a(page) && a(value)
+  def or(a: String => Boolean):Boolean = a(page) || a(value)
+}
 
 case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
 
@@ -125,7 +128,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
            (${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
         """.executeInsert()
     }
-    
+
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
       val linkCount = Link.delete(name)
       val cosineSimilarityCount = CosineSimilarity.delete(name)
@@ -153,10 +156,17 @@ class AhaWikiQuery()(implicit connection: Connection) {
       TermFrequency.insert(name, wordCount)
       CosineSimilarity.recalc(name)
     }
+
     def updateLink(name: String, seqLink: Seq[Link])(implicit connection:Connection): Array[Int] = {
       Link.delete(name)
       Link.insert(seqLink)
     }
+
+    def updateSchemaOrg(name:String, seqSchemaOrg: Seq[SchemaOrg])(implicit connection:Connection): Array[Int] = {
+      SchemaOrg.delete(name)
+      SchemaOrg.insert(seqSchemaOrg)
+    }
+
   }
 
   object GeocodeCache {
@@ -206,21 +216,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
         .map(models.Link.tupled)
     }
-
-    def selectSchema(name: String): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE dst = $name AND alias LIKE ${"schema:%"}"
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-    def selectSchemaClass(src: Seq[String]): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE src IN ($src) AND alias LIKE 'schema:Schema'"
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-
-
+    
     def selectAllButNotEmpty(): List[Link] = {
       SQL"SELECT src, dst, alias FROM Link WHERE src != '' AND dst != ''"
         .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
@@ -319,6 +315,39 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
     }
   }
 
+  object SchemaOrg {
+    def insert(seq: Seq[models.SchemaOrg]): Array[Int] = {
+      if(seq.isEmpty) {
+        Array[Int]()
+      } else {
+        val values = seq.map(s => Seq[NamedParameter]('page -> s.page, 'cls -> s.cls, 'prop -> s.prop, 'value -> s.value))
+        BatchSql(
+          "REPLACE INTO SchemaOrg (page, cls, prop, value) values ({page}, {cls}, {prop}, {value})",
+          values.head,
+          values.tail: _*
+        ).execute()
+      }
+    }
+
+    case class PropCnt(prop: String, cnt: Int)
+
+    def selectPropCountWhereCls(cls: String): List[PropCnt] = {
+      SQL"""SELECT prop, COUNT(*) cnt FROM SchemaOrg WHERE cls = $cls AND prop <> '' GROUP BY prop ORDER BY cnt DESC"""
+        .as(str("prop") ~ int("cnt") *).map(flatten)
+        .map(PropCnt.tupled)
+    }
+
+    def selectWhereValue(value: String): List[models.SchemaOrg] = {
+      SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value = $value"
+        .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+        .map(models.SchemaOrg.tupled)
+    }
+
+    def delete(name: String)(implicit connection:Connection): Int = {
+      SQL"DELETE FROM SchemaOrg WHERE page = $name".executeUpdate()
+    }
+  }
+  
   // TODO: remove IFNULL(permRead) and fix schema
   def pageSelectPageList(): List[PageWithoutContentWithSize] = {
     SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size

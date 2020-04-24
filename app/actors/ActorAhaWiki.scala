@@ -20,13 +20,17 @@ object ActorAhaWiki {
   def props: Props = Props[ActorAhaWiki]
 
   case class Calculate(name: String, i: Int = 1, length: Int = 1)
+
   case class CalculateCosineSimilarity(name: String, i: Int = 1, length: Int = 1)
+
   case class CalculateLink(name: String, i: Int = 1, length: Int = 1)
 
   case class Geocode(address: String)
+
 }
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
+
   import ActorAhaWiki._
 
   def receive: PartialFunction[Any, Unit] = {
@@ -52,8 +56,8 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
           val seqLink = Interpreters.extractLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
 
-          val orgs: Seq[SchemaOrg] = Interpreters.extractSchema(page.content)
-          Logger.info(orgs.mkString("\n")) // TODO:
+          val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.extractSchema(page.content)
+          ahaWikiQuery.Page.updateSchemaOrg(name, seqSchemaOrg)
         }
       }
     }
@@ -81,5 +85,5 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
       Logger.error("Unknown")
   }
 
-  }
+}
 

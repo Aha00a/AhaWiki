@@ -13,17 +13,11 @@ object MacroSeeAlso extends TraitMacro {
   }}
 
   private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext) = {
-    val seqLinkSchema: List[Link] = ahaWikiQuery.Link.selectSchema(name).filter(l => l.and(wikiContext.pageCanSee))
-    val mapClassSrcProperty: Map[String, List[(String, String, String)]] = seqLinkSchema.map(l => {
-      val splitted = l.alias.split(":")
-      splitted match {
-        case Array(s0, s1) => (l.src, s1, "")
-        case Array(s0, s1, s2) => (l.src, s1, s2)
-      }
-    }).filter(_._3.isNotNullOrEmpty).groupBy(_._2)
-    mapClassSrcProperty.keys.toSeq.sorted.map(k => {
+    val listSchemaOrg = ahaWikiQuery.SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+    val mapClsList = listSchemaOrg.groupBy(_.cls)
+    mapClsList.keys.toSeq.sorted.map(k => {
       s""" * [schema:$k $k]
-         |${mapClassSrcProperty(k).map(t => s"""  * [schema:${t._3} ${t._3}] of ["${t._1}"]""").mkString("\n")}""".stripMargin
+         |${mapClsList(k).map(t => s"""  * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}""".stripMargin
     }).mkString("\n")
   }
 

@@ -3,9 +3,8 @@ package logics.wikis.interpreters
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
 import logics.SchemaOrg
-import logics.wikis.{PageLogic, PageNameLogic, RenderingMode}
-import models.{Link, PageContent, WikiContext}
-import play.api.Logger
+import logics.wikis.{PageNameLogic, RenderingMode}
+import models.{AhaWikiQuery, Link, PageContent, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -69,10 +68,20 @@ object InterpreterSchema extends TraitInterpreter {
         val r = <div class="schema">{dl}</div>
         r.toString()
       case RenderingMode.Preview =>
+        val recommendedProperties = if(schemaClass.isNotNullOrEmpty){
+          val listPropCount = wikiContext.database.withConnection { implicit connection =>
+            AhaWikiQuery().SchemaOrg.selectPropCountWhereCls(schemaClass)
+          }
+          listPropCount.filterNot(pc => seqPropertyUsed.contains(pc.prop)).map(pc => s"${pc.prop}(${pc.cnt})").mkString(", ")
+        } else {
+          ""
+        }
         val r =
           <div class="schema">
             {dl}
             <div class="preview info">
+              <h6>Recommended Properties</h6>
+              {recommendedProperties}
               <h6>Hierarchical Search</h6>
               {SchemaOrg.getHtmlTree(schemaClass)}
               {
@@ -97,12 +106,23 @@ object InterpreterSchema extends TraitInterpreter {
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq()
     val linkSchema: Link = Link(wikiContext.name, SchemaOrg.withNameSpace(schemaClass), SchemaOrg.withNameSpace("Schema"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(s"${schemaClass}:${key}"))) }
+    val seqLinkProperty: Seq[Link] = seqSeqField.flatMap { case key +: tail => tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(Link(wikiContext.name, _, SchemaOrg.withNameSpace(s"$schemaClass:$key"))) }
     linkSchema +: seqLinkProperty
   }
 
   override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
-    Logger.info("A");
-    Seq()
+    val pageContent = PageContent(content)
+    if(pageContent.interpreter.getOrElse("") != name)
+      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+
+    val schemaClass: String = pageContent.argument.head
+    val contentLines: Seq[String] = pageContent.content.splitLinesSeq()
+    val linkSchema: models.SchemaOrg = models.SchemaOrg(wikiContext.name, schemaClass, "", "")
+    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
+    val seqLinkProperty: Seq[models.SchemaOrg] = seqSeqField.flatMap {
+      case key +: tail =>
+        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(models.SchemaOrg(wikiContext.name, schemaClass, key, _))
+    }
+    linkSchema +: seqLinkProperty
   }
 }

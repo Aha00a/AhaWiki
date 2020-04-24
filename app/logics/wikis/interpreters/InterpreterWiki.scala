@@ -3,7 +3,6 @@ package logics.wikis.interpreters
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
 import models.{Link, PageContent, SchemaOrg, WikiContext}
-import play.api.Logger
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -24,7 +23,7 @@ object InterpreterWiki extends TraitInterpreter {
         s"""<b>$aliasWithDefault</b>"""
       } else {
         val external: Boolean = PageNameLogic.isExternal(uri)
-        val href: String = if(uriNormalized.startsWith("schema:")) s"./${uriNormalized}" else uriNormalized;
+        val href: String = if(uriNormalized.startsWith("schema:")) s"./$uriNormalized" else uriNormalized
         val attrTarget: String = if (external) """ target="_blank"""" else ""
         val display: String = aliasWithDefault
         val attrCss = if(uriNormalized.startsWith("schema:")) {
@@ -261,8 +260,21 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
-    Logger.info("a");
-    Seq();
+    val pageContent: PageContent = PageContent(content)
+    pageContent.redirect match {
+      case Some(v) => Seq()
+      case None =>
+        val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
+        val extractConvertApplyMacro = new ExtractConvertApplyMacro()
+        val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+
+        val chunkExtracted = extractConvertApplyChunk.extract(content)
+        val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+        val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+
+        val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyChunk.extractSchemaOrg()
+        seqLinkInterpreter
+    }
   }
 }
 
