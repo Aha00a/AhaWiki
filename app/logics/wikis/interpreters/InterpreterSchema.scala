@@ -24,7 +24,18 @@ object InterpreterSchema extends TraitInterpreter {
     val seqPropertyUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={schemaClass}>
-        <h5>{EnglishCaseConverter.pascalCase2TitleCase(schemaClass)}</h5>
+        <h5>
+          {
+            SchemaOrg.getPathHierarchy(schemaClass).map(seqClass => {
+              scala.xml.XML.loadString(
+                seqClass.map(c => SchemaOrg.mapClass.get(c)
+                  .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
+                  .getOrElse("")
+                ).mkString("<span>", " / ", "</span>")
+              )
+            })
+          }
+        </h5>
         {
           seqSeqField.map { case key +: tail =>
             <dt>
@@ -48,19 +59,6 @@ object InterpreterSchema extends TraitInterpreter {
             }
             </dd>
           }
-        }
-        <dt>Hierarchy</dt>
-        {
-          SchemaOrg.getPathHierarchy(schemaClass).map(seqClass => {
-            {
-              scala.xml.XML.loadString(
-                seqClass.map(c => SchemaOrg.mapClass.get(c)
-                  .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
-                  .getOrElse("")
-                ).mkString("<dd>", " / ", "</dd>")
-              )
-            }
-          })
         }
       </dl>
     wikiContext.renderingMode match {
