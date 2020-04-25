@@ -50,7 +50,7 @@ object InterpreterSchema extends TraitInterpreter {
             <dd property={key}>
             {
               tail.map {
-                case v if PageNameLogic.isExternal(v) && key == "image" =>
+                case v if PageNameLogic.isExternal(v) && Seq("image", "logo").contains(key) =>
                   <a href={v} target="_blank"><img src={v}></img></a> <span> </span>
                 case v if PageNameLogic.isExternal(v) =>
                   <a href={v} target="_blank">{v}</a> <span> </span>
