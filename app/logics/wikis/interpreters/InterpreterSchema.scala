@@ -51,11 +51,11 @@ object InterpreterSchema extends TraitInterpreter {
             {
               tail.map {
                 case v if PageNameLogic.isExternal(v) && Seq("image", "logo").contains(key) =>
-                  <a href={v} target="_blank"><img src={v}></img></a> <span> </span>
+                  <img src={v} alt={s"${v} ${key}"}></img><span> </span>
                 case v if PageNameLogic.isExternal(v) =>
-                  <a href={v} target="_blank">{v}</a> <span> </span>
+                  <a href={v} target="_blank">{v}</a><span> </span>
                 case v =>
-                  <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a> <span> </span>
+                  <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a><span> </span>
               }
             }
             </dd>
