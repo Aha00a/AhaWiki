@@ -31,7 +31,7 @@ object InterpreterSchema extends TraitInterpreter {
                 seqClass.map(c => SchemaOrg.mapClass.get(c)
                   .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
                   .getOrElse("")
-                ).mkString("<span>", " / ", "</span>")
+                ).mkString("<div>", " / ", "</div>")
               )
             })
           }
