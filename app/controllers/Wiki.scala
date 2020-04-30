@@ -1,6 +1,7 @@
 package controllers
 
 import java.net.{URLDecoder, URLEncoder}
+import java.time.{LocalDate, Month}
 import java.util.Date
 
 import actionCompositions.PostAction
@@ -94,8 +95,14 @@ class Wiki @Inject()(implicit
             NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
           case DateTimeUtil.regexYearDashMonth(y, m) =>
+            val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
             val content =
               s"""= [[Html(${LinkMarkup(y).toHtmlString()})]]-$m
+                 |[[[#!Html
+                 |<div class="rightInfoBox">
+                 |${RangeUtil.around(0, 12).map(i => LinkMarkup(localDate.plusMonths(i).toYearDashMonthString).toHtmlString()).mkString("<br/>")}
+                 |</div>
+                 |]]]
                  |[[IncludeDays]]
                  |""".stripMargin
             val contentInterpreted = Interpreters.interpret(content + additionalInfo)
