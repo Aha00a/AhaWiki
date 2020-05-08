@@ -100,16 +100,16 @@
                     if(value[selectionStart - 1] === '\n')
                         return;
 
-                    document.execCommand("insertText", false, '\t');
+                    $(this).insertAtCaret('\t');
                     return false;
                 }
                 if(e.key === '[') {
                     if(value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[') {
-                        document.execCommand("insertText", false, "[\n]");
+                        $(this).insertAtCaret('[\n]');
                         this.selectionStart = this.selectionEnd = this.selectionStart - 2;
                         return false;
                     }
-                    document.execCommand("insertText", false, '[]');
+                    $(this).insertAtCaret('[]');
                     this.selectionStart = this.selectionEnd = this.selectionStart - 1;
                     return false;
                 }
