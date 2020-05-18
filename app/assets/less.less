@@ -256,14 +256,33 @@ html, body {
 			&:after { top: 5px; right: 3px; content: '”'; }
 		}
 
-
-		div.toc, div.schema, div.MacroLinkDate, div.rightInfoBox {
-            position: relative;
-            float: right;
-            margin-bottom: 10px;
-            margin-left: 10px;
+		div.toc {
+			clear: right;
+		}
+		div.schema {
+			position: relative;
+			margin-right: 10px;
+			margin-bottom: 10px;
+			border: 1px solid #ccc;
+			background-color: #eee;
+			padding: 20px;
+			vertical-align: top;
+			display: inline-block;
 			max-width: 50vw;
-            border: 1px solid #ccc;
+			p {
+				margin-top: 0;
+			}
+			img {
+				max-width: 100%;
+			}
+		}
+		div.toc, div.MacroLinkDate, div.rightInfoBox {
+			position: relative;
+			float: right;
+			margin-bottom: 10px;
+			margin-left: 10px;
+			max-width: 50vw;
+			border: 1px solid #ccc;
 			background-color: #eee;
 			padding: 20px;
 			p {
@@ -272,15 +291,11 @@ html, body {
 			img {
 				max-width: 100%;
 			}
-        }
+		}
 		div.MacroLinkDate.around {
-			clear: right;
+            clear: right;
 		}
-        div.toc, div.schema {
-			clear: right;
-        }
-		div.toc {
-		}
+
 		.previewPane {
 			div.toc, div.schema {
 				max-width: 25vw;
