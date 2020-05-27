@@ -24,10 +24,13 @@ object MacroSeeAlso extends TraitMacro {
   def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
-    val seqLinkFiltered: Seq[Link] = seqLink.filter(l => l.and(wikiContext.pageCanSee))
-    val seqLinkExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLinkFiltered)
-    val seqLinkExpandedFiltered: Seq[Link] = seqLinkExpanded.filter(l => l.and(wikiContext.pageCanSee))
-    val result = seqLinkExpandedFiltered
+    val seqSchemaOrg = ahaWikiQuery.SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+    val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
+
+    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqSchemaOrgLink).filter(l => l.and(wikiContext.pageCanSee))
+    val seqLinkFilteredExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLinkFiltered)
+    val seqLinkFilteredExpandedFiltered: Seq[Link] = seqLinkFilteredExpanded.filter(l => l.and(wikiContext.pageCanSee))
+    val result = seqLinkFilteredExpandedFiltered
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
