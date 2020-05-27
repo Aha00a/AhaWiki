@@ -37,7 +37,6 @@ class ApplicationLifecycleHook @Inject()(implicit
 
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     insertSeedPages(ahaWikiQuery)
-    insertSchemaOrg(ahaWikiQuery)
 
     Logger.info("OnApplicationStarted")
   }})
@@ -57,14 +56,6 @@ class ApplicationLifecycleHook @Inject()(implicit
         ahaWikiQuery.Page.insert(p)
         actorAhaWiki ! Calculate(p.name)
       })
-    }
-  }
-
-  private def insertSchemaOrg(ahaWikiQuery: AhaWikiQuery):Unit = {
-    val count = ahaWikiQuery.Link.selectCountWhereAlias("subClassOf")
-    val seqLink: Seq[Link] = SchemaOrg.seqClass.flatMap(c => c.subClassOf.map(s => Link(SchemaOrg.withNameSpace(c.id), SchemaOrg.withNameSpace(s), "subClassOf")))
-    if (count < seqLink.length) {
-      ahaWikiQuery.Link.insert(seqLink)
     }
   }
 
