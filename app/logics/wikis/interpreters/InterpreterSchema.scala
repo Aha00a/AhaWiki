@@ -36,31 +36,33 @@ object InterpreterSchema extends TraitInterpreter {
             })
           }
         </h5>
-        {
-          seqSeqField.map { case key +: tail =>
-            <dt>
-              {
-                SchemaOrg.mapProperty.get(key).map(n => {
-                  n.toXmlSpan()
-                }).getOrElse{
-                  <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+        <div>
+          {
+            seqSeqField.map { case key +: tail =>
+              <div>
+                <dt>
+                  {
+                    SchemaOrg.mapProperty.get(key).map(n => {
+                      n.toXmlSpan()
+                    }).getOrElse{
+                      <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                    }
+                  }
+                </dt>
+                {
+                  tail.map {
+                    case v if Seq("image", "logo").contains(key) =>
+                      <dd property={key}><img src={v} alt={s"${v} ${key}"}></img></dd>
+                    case v if PageNameLogic.isExternal(v) =>
+                      <dd property={key}><a href={v} target="_blank">{v}</a></dd>
+                    case v =>
+                      <dd property={key}><a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a></dd>
+                  }
                 }
-              }
-            </dt>
-            <dd property={key}>
-            {
-              tail.map {
-                case v if Seq("image", "logo").contains(key) =>
-                  <img src={v} alt={s"${v} ${key}"}></img><span> </span>
-                case v if PageNameLogic.isExternal(v) =>
-                  <a href={v} target="_blank">{v}</a><span> </span>
-                case v =>
-                  <a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a><span> </span>
-              }
+              </div>
             }
-            </dd>
           }
-        }
+        </div>
       </dl>
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>
