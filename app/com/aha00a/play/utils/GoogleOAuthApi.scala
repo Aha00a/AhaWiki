@@ -2,7 +2,7 @@ package com.aha00a.play.utils
 
 import play.api.Logger
 import play.api.libs.json.JsValue
-import play.api.libs.ws.WSClient
+import play.api.libs.ws.{WSClient, WSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,15 +42,24 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
   }
 
   def requestMe(accessToken: String): Future[Option[JsValue]] = {
-    wsClient.url("https://www.googleapis.com/plus/v1/people/me").withQueryString("access_token" -> accessToken).get().map(response => {
-      Logger.info(response.status.toString)
-      Logger.info(response.body)
+    val responseToJaValue: WSResponse => Option[JsValue] = response => {
       if (200 == response.status) {
         Some(response.json)
       } else {
+        Logger.info(response.status.toString)
+        Logger.info(response.body)
         None
       }
-    })
+    }
+
+    // New Api
+    wsClient.url("https://people.googleapis.com/v1/people/me").withQueryString("access_token" -> accessToken, "personFields" -> "emailAddresses").get().map(responseToJaValue) flatMap {
+      case Some(z) =>
+        Future(Some(z))
+      case None =>
+        // Legacy Api
+        wsClient.url("https://www.googleapis.com/plus/v1/people/me").withQueryString("access_token" -> accessToken).get().map(responseToJaValue)
+    }
   }
 
   def getAccessToken(jsValue: JsValue): String = {
@@ -58,6 +67,10 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
   }
 
   def getEmail(jsValue: JsValue): String = {
-    ((jsValue \ "emails")(0) \ "value").as[String]
+    try {
+      ((jsValue \ "emailAddresses")(0) \ "value").as[String] // New Api
+    } catch  {
+      case _: Exception => ((jsValue \ "emails")(0) \ "value").as[String] // Legacy Api
+    }
   }
 }

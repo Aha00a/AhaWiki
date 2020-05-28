@@ -26,7 +26,7 @@ class GoogleOAuth @Inject()(
 
   def login = Action { implicit request =>
     val referer = request.refererOrRoot
-    Redirect("https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/userinfo.email&client_id=" + confApi.clientId + "&redirect_uri=" + googleApiRedirectUri)
+    Redirect("https://accounts.google.com/o/oauth2/auth?response_type=code&scope=https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile&client_id=" + confApi.clientId + "&redirect_uri=" + googleApiRedirectUri)
       .flashing("redirect" -> referer)
   }
 
