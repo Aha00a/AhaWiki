@@ -5,5 +5,7 @@ import models.{Link, WikiContext}
 object InterpreterComment extends TraitInterpreter {
   override def interpret(content: String)(implicit wikiContext: WikiContext): String = ""
 
+  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = Seq()
+
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

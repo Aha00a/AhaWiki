@@ -20,7 +20,8 @@ libraryDependencies ++= Seq(
   "net.sf.supercsv" % "super-csv" % "2.3.1",
   "com.github.rjeschke" % "txtmark" % "0.13",
   "com.google.oauth-client" % "google-oauth-client" % "1.20.0",
-  "io.github.java-diff-utils" % "java-diff-utils" % "4.5"
+  "io.github.java-diff-utils" % "java-diff-utils" % "4.5",
+  "org.jsoup" % "jsoup" % "1.13.1"
 //  "com.twitter.penguin" % "korean-text" % "4.1.2",
 //  "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
 )

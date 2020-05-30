@@ -37,6 +37,13 @@ object Interpreters extends TraitInterpreter {
       .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
+  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+    val pageContent: PageContent = PageContent(content)
+    getInterpreter(pageContent)
+      .map(_.extractWord(content))
+      .getOrElse(Seq())
+  }
+
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)

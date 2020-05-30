@@ -21,13 +21,11 @@ import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
 import logics.wikis.{ExtractConvertApplyChunkCustom, PageLogic, WikiPermission}
 import models._
-import org.apache.http.client.utils.URIUtils
 import play.api.cache.CacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
-import play.api.libs.ws.WSResponse
 import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 

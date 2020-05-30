@@ -7,6 +7,8 @@ trait TraitInterpreter {
 
   def interpret(content: String)(implicit wikiContext: WikiContext): String
 
+  def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = content.split("""\s+""")
+
   def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link]
 
   def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = Seq()
