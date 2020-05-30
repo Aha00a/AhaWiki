@@ -26,6 +26,9 @@ object InterpreterSchema extends TraitInterpreter {
     implicit val database: Database = wikiContext.database
 
     val pageContent: PageContent = PageContent(content)
+    if(pageContent.interpreter.getOrElse("") != name)
+      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
 
     val parseResult: ParseResult = parse(pageContent)
