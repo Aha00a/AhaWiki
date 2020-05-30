@@ -12,7 +12,7 @@ import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.{InterpreterSchema, InterpreterWiki, Interpreters}
 import logics.wikis.macros._
-import models.{Blame, Link, PageContent, WikiContext}
+import models.{Blame, Link, PageContent, SchemaOrg, WikiContext}
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
@@ -349,21 +349,21 @@ class Test @Inject()(implicit
     assertEquals(InterpreterSchema.name, "Schema")
 
     assertEquals(
-      InterpreterSchema.extractLink(
+      InterpreterSchema.extractSchema(
         """#!Schema Person
           |name	KIM, Aha
           |url	https://aha00a.com
           |memberOf	Aharise""".stripMargin
       ).toList,
       Seq(
-        Link("UnitTest", "schema:Person", "schema:Schema"),
-        Link("UnitTest", "KIM, Aha", "schema:Person:name"),
-        Link("UnitTest", "https://aha00a.com", "schema:Person:url"),
-        Link("UnitTest", "Aharise", "schema:Person:memberOf")
+        SchemaOrg("UnitTest", "Person", "", ""),
+        SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
+        SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
+        SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
       )
     )
     assertEquals(
-      InterpreterSchema.extractLink(
+      InterpreterSchema.extractSchema(
         """#!Schema WebApplication
           |name	AhaWiki
           |url	https://wiki.aha00a.com/w/AhaWiki
@@ -373,17 +373,17 @@ class Test @Inject()(implicit
           |""".stripMargin
       ).toList,
       Seq(
-        Link("UnitTest", "schema:WebApplication", "schema:Schema"),
-        Link("UnitTest", "AhaWiki", "schema:WebApplication:name"),
-        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWiki", "schema:WebApplication:url"),
-        Link("UnitTest", "https://wiki.aha00a.com/w/AhaWikiFeature", "schema:WebApplication:featureList"),
-        Link("UnitTest", "Wiki", "schema:WebApplication:applicationCategory"),
-        Link("UnitTest", "2015-10-21", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "2015-10", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "----21", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "2015", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "--10-21", "schema:WebApplication:datePublished"),
-        Link("UnitTest", "--10", "schema:WebApplication:datePublished")
+        SchemaOrg("UnitTest", "WebApplication", "", ""),
+        SchemaOrg("UnitTest", "WebApplication", "name", "AhaWiki"),
+        SchemaOrg("UnitTest", "WebApplication", "url", "https://wiki.aha00a.com/w/AhaWiki"),
+        SchemaOrg("UnitTest", "WebApplication", "featureList", "https://wiki.aha00a.com/w/AhaWikiFeature"),
+        SchemaOrg("UnitTest", "WebApplication", "applicationCategory", "Wiki"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10-21"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "----21"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "--10-21"),
+        SchemaOrg("UnitTest", "WebApplication", "datePublished", "--10")
       )
     )
   }
