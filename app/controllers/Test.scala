@@ -382,6 +382,11 @@ class Test @Inject()(implicit
       )
 
       assertEquals(
+        InterpreterSchema.extractWord(wikiMarkup),
+        Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
+      )
+
+      assertEquals(
         InterpreterSchema.extractLink(wikiMarkup),
         Seq()
       )

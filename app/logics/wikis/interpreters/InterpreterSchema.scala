@@ -10,6 +10,16 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object InterpreterSchema extends TraitInterpreter {
+  case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
+
+  def parse(pageContent: PageContent): ParseResult = {
+    val schemaClass: String = pageContent.argument.headOption.getOrElse("")
+    val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
+    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
+    ParseResult(schemaClass, seqSeqField)
+  }
+
+
   override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
@@ -18,15 +28,13 @@ object InterpreterSchema extends TraitInterpreter {
     val pageContent: PageContent = PageContent(content)
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
 
-    val schemaClass = pageContent.argument.headOption.getOrElse("")
-    val contentLines = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
-    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty))
-    val seqPropertyUsed: Seq[String] = seqSeqField.flatMap(_.headOption)
+    val parseResult: ParseResult = parse(pageContent)
+    val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
     val dl =
-      <dl vocab="http://schema.org/" typeof={schemaClass}>
+      <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
         <h5>
           {
-            SchemaOrg.getPathHierarchy(schemaClass).map(seqClass => {
+            SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
               scala.xml.XML.loadString(
                 seqClass.map(c => SchemaOrg.mapClass.get(c)
                   .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
@@ -38,7 +46,7 @@ object InterpreterSchema extends TraitInterpreter {
         </h5>
         <div>
           {
-            seqSeqField.map { case key +: tail =>
+            parseResult.seqSeqField.map { case key +: tail =>
               <div>
                 <dt>
                   {
@@ -52,7 +60,7 @@ object InterpreterSchema extends TraitInterpreter {
                 {
                   tail.map {
                     case v if Seq("image", "logo").contains(key) =>
-                      <dd property={key}><img src={v} alt={s"${v} ${key}"}></img></dd>
+                      <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
                     case v if PageNameLogic.isExternal(v) =>
                       <dd property={key}><a href={v} target="_blank">{v}</a></dd>
                     case v =>
@@ -69,9 +77,9 @@ object InterpreterSchema extends TraitInterpreter {
         val r = <div class="schema">{dl}</div>
         r.toString()
       case RenderingMode.Preview =>
-        val recommendedProperties = if(schemaClass.isNotNullOrEmpty){
+        val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
           val listPropCount = wikiContext.database.withConnection { implicit connection =>
-            AhaWikiQuery().SchemaOrg.selectPropCountWhereCls(schemaClass)
+            AhaWikiQuery().SchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
           }
           listPropCount.filterNot(pc => seqPropertyUsed.contains(pc.prop)).map(pc => s"${pc.prop}(${pc.cnt})").mkString(", ")
         } else {
@@ -84,10 +92,10 @@ object InterpreterSchema extends TraitInterpreter {
               <h6>Recommended Properties</h6>
               {recommendedProperties}
               <h6>Hierarchical Search</h6>
-              {SchemaOrg.getHtmlTree(schemaClass)}
+              {SchemaOrg.getHtmlTree(parseResult.schemaClass)}
               {
-                if(SchemaOrg.mapClass.isDefinedAt(schemaClass)) {
-                  <div>{SchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
+                if(SchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
+                  <div>{SchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
                 } else {
 
                 }
@@ -98,6 +106,17 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
+  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+    val pageContent = PageContent(content)
+    if(pageContent.interpreter.getOrElse("") != name)
+      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+
+    val parseResult: ParseResult = parse(pageContent)
+
+    Seq(name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten
+  }
+
+
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
   override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
@@ -105,14 +124,11 @@ object InterpreterSchema extends TraitInterpreter {
     if(pageContent.interpreter.getOrElse("") != name)
       throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
 
-    val schemaClass: String = pageContent.argument.head
-    val contentLines: Seq[String] = pageContent.content.splitLinesSeq()
-    val linkSchema: models.SchemaOrg = models.SchemaOrg(wikiContext.name, schemaClass, "", "")
-    val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-    val seqLinkProperty: Seq[models.SchemaOrg] = seqSeqField.flatMap {
+    val parseResult: ParseResult = parse(pageContent)
+    val seqLinkProperty: Seq[models.SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
-        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(models.SchemaOrg(wikiContext.name, schemaClass, key, _))
+        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(models.SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
     }
-    linkSchema +: seqLinkProperty
+    models.SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
   }
 }
