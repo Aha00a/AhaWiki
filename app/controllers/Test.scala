@@ -354,6 +354,11 @@ class Test @Inject()(implicit
           |name	KIM, Aha
           |url	https://aha00a.com
           |memberOf	Aharise""".stripMargin
+
+      val wikiMarkup =
+        s"""[[[$schemaMarkup
+           |]]]""".stripMargin
+
       val interpreted =
         """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
           |        <h5>
@@ -378,36 +383,25 @@ class Test @Inject()(implicit
           |              </div>
           |        </div>
           |      </dl></div>""".stripMargin
-      assertEquals(
-        InterpreterSchema.interpret(schemaMarkup),
-        interpreted
-      )
 
-      assertEquals(
-        InterpreterSchema.extractWord(schemaMarkup),
-        Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
-      )
-
-      assertEquals(
-        InterpreterSchema.extractLink(schemaMarkup),
-        Seq()
-      )
-
-      assertEquals(
-        InterpreterSchema.extractSchema(schemaMarkup),
-        Seq(
-          SchemaOrg("UnitTest", "Person", "", ""),
-          SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
-          SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
-          SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
-        )
-      )
-
-      val wikiMarkup =
-        s"""[[[$schemaMarkup
-           |]]]""".stripMargin
-
+      assertEquals(InterpreterSchema.interpret(schemaMarkup), interpreted)
       assertEquals(Interpreters.interpret(wikiMarkup), interpreted)
+
+      val extractWordResult = Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
+      assertEquals(InterpreterSchema.extractWord(schemaMarkup), extractWordResult)
+      assertEquals(Interpreters.extractWord(schemaMarkup), extractWordResult)
+
+      assertEquals(InterpreterSchema.extractLink(schemaMarkup), Seq())
+      assertEquals(Interpreters.extractLink(schemaMarkup), Seq())
+
+      val extractSchemaResult = Seq(
+        SchemaOrg("UnitTest", "Person", "", ""),
+        SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
+        SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
+        SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
+      )
+      assertEquals(InterpreterSchema.extractSchema(schemaMarkup), extractSchemaResult)
+      assertEquals(Interpreters.extractSchema(schemaMarkup), extractSchemaResult)
     }
 
     
