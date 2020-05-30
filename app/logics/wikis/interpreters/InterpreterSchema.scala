@@ -5,9 +5,6 @@ import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
 import logics.SchemaOrg
 import logics.wikis.{PageNameLogic, RenderingMode}
 import models.{AhaWikiQuery, Link, PageContent, WikiContext}
-import play.api.cache.CacheApi
-import play.api.db.Database
-import play.api.mvc.Request
 
 object InterpreterSchema extends TraitInterpreter {
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
