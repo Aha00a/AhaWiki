@@ -349,13 +349,13 @@ class Test @Inject()(implicit
     assertEquals(InterpreterSchema.name, "Schema")
 
     {
-      val raw =
+      val wikiMarkup =
         """#!Schema Person
           |name	KIM, Aha
           |url	https://aha00a.com
           |memberOf	Aharise""".stripMargin
       assertEquals(
-        InterpreterSchema.interpret(raw),
+        InterpreterSchema.interpret(wikiMarkup),
         """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
           |        <h5>
           |          <div><a class="schema" href="./schema:Thing">Thing</a> / <a class="schema" href="./schema:Person">Person</a></div>
@@ -382,7 +382,12 @@ class Test @Inject()(implicit
       )
 
       assertEquals(
-        InterpreterSchema.extractSchema(raw),
+        InterpreterSchema.extractLink(wikiMarkup),
+        Seq()
+      )
+
+      assertEquals(
+        InterpreterSchema.extractSchema(wikiMarkup),
         Seq(
           SchemaOrg("UnitTest", "Person", "", ""),
           SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
@@ -392,7 +397,7 @@ class Test @Inject()(implicit
       )
     }
 
-
+    
     assertEquals(
       InterpreterSchema.extractSchema(
         """#!Schema WebApplication
