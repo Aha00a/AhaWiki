@@ -348,53 +348,49 @@ class Test @Inject()(implicit
 
     assertEquals(InterpreterSchema.name, "Schema")
 
-    assertEquals(
-      InterpreterSchema.interpret(
+    {
+      val raw =
         """#!Schema Person
           |name	KIM, Aha
           |url	https://aha00a.com
           |memberOf	Aharise""".stripMargin
-      ),
-      """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
-        |        <h5>
-        |          <div><a class="schema" href="./schema:Thing">Thing</a> / <a class="schema" href="./schema:Person">Person</a></div>
-        |        </h5>
-        |        <div>
-        |          <div>
-        |                <dt>
-        |                  <span title="The name of the item." class="">Name </span>
-        |                </dt>
-        |                <dd property="name"><a href="KIM, Aha" class="missing">KIM, Aha</a></dd>
-        |              </div><div>
-        |                <dt>
-        |                  <span title="URL of the item." class="">Url </span>
-        |                </dt>
-        |                <dd property="url"><a href="https://aha00a.com" target="_blank">https://aha00a.com</a></dd>
-        |              </div><div>
-        |                <dt>
-        |                  <span title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of </span>
-        |                </dt>
-        |                <dd property="memberOf"><a href="Aharise" class="">Aharise</a></dd>
-        |              </div>
-        |        </div>
-        |      </dl></div>""".stripMargin
-    )
-
-    assertEquals(
-      InterpreterSchema.extractSchema(
-        """#!Schema Person
-          |name	KIM, Aha
-          |url	https://aha00a.com
-          |memberOf	Aharise""".stripMargin
-      ).toList,
-      Seq(
-        SchemaOrg("UnitTest", "Person", "", ""),
-        SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
-        SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
-        SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
+      assertEquals(
+        InterpreterSchema.interpret(raw),
+        """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
+          |        <h5>
+          |          <div><a class="schema" href="./schema:Thing">Thing</a> / <a class="schema" href="./schema:Person">Person</a></div>
+          |        </h5>
+          |        <div>
+          |          <div>
+          |                <dt>
+          |                  <span title="The name of the item." class="">Name </span>
+          |                </dt>
+          |                <dd property="name"><a href="KIM, Aha" class="missing">KIM, Aha</a></dd>
+          |              </div><div>
+          |                <dt>
+          |                  <span title="URL of the item." class="">Url </span>
+          |                </dt>
+          |                <dd property="url"><a href="https://aha00a.com" target="_blank">https://aha00a.com</a></dd>
+          |              </div><div>
+          |                <dt>
+          |                  <span title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of </span>
+          |                </dt>
+          |                <dd property="memberOf"><a href="Aharise" class="">Aharise</a></dd>
+          |              </div>
+          |        </div>
+          |      </dl></div>""".stripMargin
       )
-    )
 
+      assertEquals(
+        InterpreterSchema.extractSchema(raw),
+        Seq(
+          SchemaOrg("UnitTest", "Person", "", ""),
+          SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
+          SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
+          SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
+        )
+      )
+    }
 
 
     assertEquals(
