@@ -12,6 +12,14 @@ import play.api.mvc.Request
 object InterpreterSchema extends TraitInterpreter {
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
 
+  def createPageContent(content: String): PageContent = {
+    val pageContent: PageContent = PageContent(content)
+    if (pageContent.interpreter.getOrElse("") != name)
+      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+
+    pageContent
+  }
+
   def parse(pageContent: PageContent): ParseResult = {
     val schemaClass: String = pageContent.argument.headOption.getOrElse("")
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
@@ -21,17 +29,11 @@ object InterpreterSchema extends TraitInterpreter {
 
 
   override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
-    implicit val request: Request[Any] = wikiContext.request
-    implicit val cacheApi: CacheApi = wikiContext.cacheApi
-    implicit val database: Database = wikiContext.database
-
-    val pageContent: PageContent = PageContent(content)
-    if(pageContent.interpreter.getOrElse("") != name)
-      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+    val pageContent: PageContent = createPageContent(content)
+    val parseResult: ParseResult = parse(pageContent)
 
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
 
-    val parseResult: ParseResult = parse(pageContent)
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
     val dl =
       <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
@@ -110,24 +112,18 @@ object InterpreterSchema extends TraitInterpreter {
   }
 
   override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent = PageContent(content)
-    if(pageContent.interpreter.getOrElse("") != name)
-      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
-
+    val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
     Seq(name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten
   }
 
-
   override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
   override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
-    val pageContent = PageContent(content)
-    if(pageContent.interpreter.getOrElse("") != name)
-      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
-
+    val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
+
     val seqLinkProperty: Seq[models.SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
         tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(models.SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
