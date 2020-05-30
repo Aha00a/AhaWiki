@@ -349,13 +349,12 @@ class Test @Inject()(implicit
     assertEquals(InterpreterSchema.name, "Schema")
 
     {
-      val wikiMarkup =
+      val schemaMarkup =
         """#!Schema Person
           |name	KIM, Aha
           |url	https://aha00a.com
           |memberOf	Aharise""".stripMargin
-      assertEquals(
-        InterpreterSchema.interpret(wikiMarkup),
+      val interpreted =
         """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
           |        <h5>
           |          <div><a class="schema" href="./schema:Thing">Thing</a> / <a class="schema" href="./schema:Person">Person</a></div>
@@ -379,20 +378,23 @@ class Test @Inject()(implicit
           |              </div>
           |        </div>
           |      </dl></div>""".stripMargin
+      assertEquals(
+        InterpreterSchema.interpret(schemaMarkup),
+        interpreted
       )
 
       assertEquals(
-        InterpreterSchema.extractWord(wikiMarkup),
+        InterpreterSchema.extractWord(schemaMarkup),
         Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
       )
 
       assertEquals(
-        InterpreterSchema.extractLink(wikiMarkup),
+        InterpreterSchema.extractLink(schemaMarkup),
         Seq()
       )
 
       assertEquals(
-        InterpreterSchema.extractSchema(wikiMarkup),
+        InterpreterSchema.extractSchema(schemaMarkup),
         Seq(
           SchemaOrg("UnitTest", "Person", "", ""),
           SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
@@ -400,6 +402,12 @@ class Test @Inject()(implicit
           SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
         )
       )
+
+      val wikiMarkup =
+        s"""[[[$schemaMarkup
+           |]]]""".stripMargin
+
+      assertEquals(Interpreters.interpret(wikiMarkup), interpreted)
     }
 
     
