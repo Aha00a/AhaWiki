@@ -253,7 +253,7 @@ object InterpreterWiki extends TraitInterpreter {
   override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
-      case Some(v) => Seq()
+      case Some(_) => Seq()
       case None =>
         val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
         val extractConvertApplyMacro = new ExtractConvertApplyMacro()
