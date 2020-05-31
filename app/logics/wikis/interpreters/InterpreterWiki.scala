@@ -54,6 +54,16 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
+  val regexHr: Regex = """^-{4,}$""".r
+  val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
+  val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
+  val regexListUnordered: Regex = """[*-]""".r
+  val regexListDecimal: Regex = """\d+\.""".r
+  val regexListLowerAlpha: Regex = """[a-z]+\.""".r
+  val regexListUpperAlpha: Regex = """[A-Z]+\.""".r
+  val regexListLowerRoman: Regex = """[ivx]+\.""".r
+  val regexListUpperRoman: Regex = """[IVX]+\.""".r
+
   val regexLink: Regex =
     """(?x)
           ((?<!\\)\\)?
@@ -114,6 +124,7 @@ object InterpreterWiki extends TraitInterpreter {
     s = InterpreterWiki.replaceLink(s)
     s
   }
+
   
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
@@ -130,15 +141,6 @@ object InterpreterWiki extends TraitInterpreter {
     val arrayBuffer = ArrayBuffer[String]()
     val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
 
-    val regexHr = """^-{4,}$""".r
-    val regexHeading = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
-    val regexList = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
-    val regexListUnordered = """[*-]""".r
-    val regexListDecimal = """\d+\.""".r
-    val regexListLowerAlpha = """[a-z]+\.""".r
-    val regexListUpperAlpha = """[A-Z]+\.""".r
-    val regexListLowerRoman = """[ivx]+\.""".r
-    val regexListUpperRoman = """[IVX]+\.""".r
 
 
 
