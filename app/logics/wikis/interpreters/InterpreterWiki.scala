@@ -3,9 +3,6 @@ package logics.wikis.interpreters
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
 import models.{Link, PageContent, SchemaOrg, WikiContext}
-import play.api.cache.CacheApi
-import play.api.db.Database
-import play.api.mvc.Request
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
