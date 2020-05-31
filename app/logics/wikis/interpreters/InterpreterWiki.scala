@@ -124,11 +124,11 @@ object InterpreterWiki extends TraitInterpreter {
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
 
-    val extractConvertApplyChunk = new ExtractConvertApplyChunk()
+    val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-    val chunkExtracted = extractConvertApplyChunk.extract(pageContent.content)
+    val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
     val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
@@ -220,7 +220,7 @@ object InterpreterWiki extends TraitInterpreter {
           oldIndent = indent
         case _ =>
           variableHolder := State.Normal
-          if(Seq(extractConvertApplyChunk, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+          if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
             arrayBuffer += s"<p>${formatInline(s)}</p>"
           } else {
             arrayBuffer += formatInline(s)
@@ -233,7 +233,7 @@ object InterpreterWiki extends TraitInterpreter {
     if(arrayBufferHeading.length > 5)
       arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-    extractConvertApplyChunk(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+    extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
   }
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
@@ -241,15 +241,15 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
       case None =>
-        val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
+        val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
         val extractConvertApplyMacro = new ExtractConvertApplyMacro()
         val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-        val chunkExtracted = extractConvertApplyChunk.extract(content)
+        val chunkExtracted = extractConvertApplyInterpreter.extract(content)
         val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
         val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-        val seqLinkInterpreter: Seq[Link] = extractConvertApplyChunk.extractLink().toList
+        val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
         val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
         val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
         seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
@@ -261,15 +261,15 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(v) => Seq()
       case None =>
-        val extractConvertApplyChunk = new ExtractConvertApplyChunk() // TODO: rename
+        val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
         val extractConvertApplyMacro = new ExtractConvertApplyMacro()
         val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-        val chunkExtracted = extractConvertApplyChunk.extract(content)
+        val chunkExtracted = extractConvertApplyInterpreter.extract(content)
         val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
         val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-        val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyChunk.extractSchemaOrg()
+        val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyInterpreter.extractSchemaOrg()
         seqLinkInterpreter
     }
   }

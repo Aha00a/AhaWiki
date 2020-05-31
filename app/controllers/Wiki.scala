@@ -19,7 +19,7 @@ import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import logics.wikis.{ExtractConvertApplyChunkCustom, PageLogic, WikiPermission}
+import logics.wikis.{ExtractConvertApplyInterpreterCustom, PageLogic, WikiPermission}
 import models._
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -373,7 +373,7 @@ class Wiki @Inject()(implicit
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
         if (WikiPermission().isWritable(pageContent)) {
-          val extractConvertApplyChunkRefresh = new ExtractConvertApplyChunkCustom(s => {
+          val extractConvertApplyInterpreterRefresh = new ExtractConvertApplyInterpreterCustom(s => {
             val pageContentChunk = PageContent(s)
             if(url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
               url match {
@@ -389,7 +389,7 @@ class Wiki @Inject()(implicit
               s
             }
           })
-          val body = extractConvertApplyChunkRefresh(extractConvertApplyChunkRefresh.extract(pageContent.content))
+          val body = extractConvertApplyInterpreterRefresh(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
             PageLogic.insert(pageName, page.revision + 1, new Date(), "Sync Google Spreadsheet", body)
             Ok("")

@@ -4,7 +4,7 @@ import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
 import models.{Link, SchemaOrg, WikiContext}
 
-class ExtractConvertApplyChunk() extends ExtractConvertApply {
+class ExtractConvertApplyInterpreter() extends ExtractConvertApply {
 
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {

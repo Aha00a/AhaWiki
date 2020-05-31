@@ -3,7 +3,7 @@ package logics.wikis
 import models.WikiContext
 
 // TODO: Refactor this.
-class ExtractConvertApplyChunkCustom(converter:String => String) extends ExtractConvertApply {
+class ExtractConvertApplyInterpreterCustom(converter:String => String) extends ExtractConvertApply {
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
       s
