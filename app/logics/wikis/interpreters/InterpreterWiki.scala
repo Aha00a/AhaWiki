@@ -125,10 +125,8 @@ object InterpreterWiki extends TraitInterpreter {
     s
   }
 
-  
-  override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
-    val pageContent: PageContent = PageContent(content)
 
+  case class Handler(val pageContent: PageContent)(implicit wikiContext:WikiContext) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
@@ -138,17 +136,9 @@ object InterpreterWiki extends TraitInterpreter {
     val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
 
-    val arrayBuffer = ArrayBuffer[String]()
-    val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
-
-
-
-
-
-    val arrayBufferHeading = ArrayBuffer[String]()
+    val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
+    val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
-
-
     var oldIndent = 0
     //noinspection ScalaUnusedSymbol
     val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
@@ -160,76 +150,109 @@ object InterpreterWiki extends TraitInterpreter {
       }
     })
 
-    for(s <- chunkExtractedSplit) {
-      s match {
-        case "" =>
-          variableHolder := State.Normal
-        case regexHr() =>
-          variableHolder := State.Hr
-          arrayBuffer += """<hr/>"""
+    def preprocess() = {
+      val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
+      chunkExtractedSplit
+    }
 
-        case regexHeading(heading, title, _, _, id) =>
-          variableHolder := State.Heading
-
-          val headingLength = heading.length
-          val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
-          val listStyle = ",1.,A.,I.,a.,i.".split(",")
-          val titleForToc = title
-            .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
-            .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
-            .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
-          arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-          arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
-
-        case regexList(indentString, style, _, content) =>
-          variableHolder := State.List
-
-          val indent = indentString.length
+    def emptyLine() = {
+      variableHolder := State.Normal
+    }
 
 
-          if(oldIndent < indent) {
-            val listType = style match {
-              case regexListUnordered() => ""
-              case regexListDecimal() => "decimal"
-              case regexListLowerRoman() => "lower-roman"
-              case regexListUpperRoman() => "upper-roman"
-              case regexListLowerAlpha() => "lower-alpha"
-              case regexListUpperAlpha() => "upper-alpha"
-              case _ => ""
-            }
-            for(_ <- 0 until indent - oldIndent) {
-              arrayBuffer += "<ul style=\"list-style-type: " + listType + ";\">"
-            }
-          }
-          if(oldIndent > indent) {
-            for(_ <- 0 until oldIndent - indent) {
-              arrayBuffer += s"</ul>"
-            }
-          }
+    def hr() = {
+      variableHolder := State.Hr
+      arrayBuffer += """<hr/>"""
+    }
 
-          if(indent == 0) {
-            arrayBuffer += formatInline(content)
-          } else {
-            arrayBuffer += "<li>" + formatInline(content) + "</li>"
-          }
+    def heading(heading: String, title: String, id: String) = {
+      variableHolder := State.Heading
+      val headingLength = heading.length
+      val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
+      val listStyle = ",1.,A.,I.,a.,i.".split(",")
+      val titleForToc = title
+        .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
+        .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
+        .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
 
-          oldIndent = indent
-        case _ =>
-          variableHolder := State.Normal
-          if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
-            arrayBuffer += s"<p>${formatInline(s)}</p>"
-          } else {
-            arrayBuffer += formatInline(s)
-          }
+      arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
+      arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
+    }
+
+    def list(indentString: String, style: String, content: String) = {
+      variableHolder := State.List
+      val indent = indentString.length
+
+
+      if(oldIndent < indent) {
+        val listType = style match {
+          case regexListUnordered() => ""
+          case regexListDecimal() => "decimal"
+          case regexListLowerRoman() => "lower-roman"
+          case regexListUpperRoman() => "upper-roman"
+          case regexListLowerAlpha() => "lower-alpha"
+          case regexListUpperAlpha() => "upper-alpha"
+          case _ => ""
+        }
+        for(_ <- 0 until indent - oldIndent) {
+          arrayBuffer += "<ul style=\"list-style-type: " + listType + ";\">"
+        }
+      }
+      if(oldIndent > indent) {
+        for(_ <- 0 until oldIndent - indent) {
+          arrayBuffer += s"</ul>"
+        }
+      }
+
+      if(indent == 0) {
+        arrayBuffer += formatInline(content)
+      } else {
+        arrayBuffer += "<li>" + formatInline(content) + "</li>"
+      }
+
+      oldIndent = indent
+    }
+
+    def others(s: String) = {
+      variableHolder := State.Normal
+      if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+        arrayBuffer += s"<p>${formatInline(s)}</p>"
+      } else {
+        arrayBuffer += formatInline(s)
       }
     }
 
-    variableHolder := State.Normal
+    def done() = {
+      variableHolder := State.Normal
+      if(arrayBufferHeading.length > 5)
+        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-    if(arrayBufferHeading.length > 5)
-      arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
+      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+    }
 
-    extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+  }
+
+  override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
+    val pageContent: PageContent = PageContent(content)
+    val handler = Handler(pageContent)
+
+
+    for(s <- handler.preprocess()) {
+      s match {
+        case "" =>
+          handler.emptyLine()
+        case regexHr() =>
+          handler.hr()
+        case regexHeading(heading, title, _, _, id) =>
+          handler.heading(heading, title, id)
+        case regexList(indentString, style, _, content) =>
+          handler.list(indentString, style, content);
+        case _ =>
+          handler.others(s)
+      }
+    }
+
+    handler.done();
   }
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
