@@ -126,7 +126,11 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  class HandlerInterpret(val pageContent: PageContent)(implicit wikiContext:WikiContext) {
+  class Handler(val pageContent: PageContent)(implicit wikiContext:WikiContext) {
+
+  }
+
+  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler(pageContent) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
