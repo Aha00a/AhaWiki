@@ -131,9 +131,6 @@ object InterpreterWiki extends TraitInterpreter {
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
-    val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
-    val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-    val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
 
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
@@ -150,22 +147,25 @@ object InterpreterWiki extends TraitInterpreter {
       }
     })
 
-    def preprocess() = {
+    def preprocess(): Array[String] = {
+      val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
+      val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+      val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
       val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
       chunkExtractedSplit
     }
 
-    def emptyLine() = {
+    def emptyLine(): State.Value = {
       variableHolder := State.Normal
     }
 
 
-    def hr() = {
+    def hr(): arrayBuffer.type = {
       variableHolder := State.Hr
       arrayBuffer += """<hr/>"""
     }
 
-    def heading(heading: String, title: String, id: String) = {
+    def heading(heading: String, title: String, id: String): arrayBuffer.type = {
       variableHolder := State.Heading
       val headingLength = heading.length
       val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
@@ -179,7 +179,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
     }
 
-    def list(indentString: String, style: String, content: String) = {
+    def list(indentString: String, style: String, content: String): Unit = {
       variableHolder := State.List
       val indent = indentString.length
 
@@ -213,7 +213,7 @@ object InterpreterWiki extends TraitInterpreter {
       oldIndent = indent
     }
 
-    def others(s: String) = {
+    def others(s: String): arrayBuffer.type = {
       variableHolder := State.Normal
       if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
         arrayBuffer += s"<p>${formatInline(s)}</p>"
@@ -222,7 +222,7 @@ object InterpreterWiki extends TraitInterpreter {
       }
     }
 
-    def done() = {
+    def done(): String = {
       variableHolder := State.Normal
       if(arrayBufferHeading.length > 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
@@ -236,23 +236,17 @@ object InterpreterWiki extends TraitInterpreter {
     val pageContent: PageContent = PageContent(content)
     val handler = Handler(pageContent)
 
-
     for(s <- handler.preprocess()) {
       s match {
-        case "" =>
-          handler.emptyLine()
-        case regexHr() =>
-          handler.hr()
-        case regexHeading(heading, title, _, _, id) =>
-          handler.heading(heading, title, id)
-        case regexList(indentString, style, _, content) =>
-          handler.list(indentString, style, content);
-        case _ =>
-          handler.others(s)
+        case "" => handler.emptyLine()
+        case regexHr() => handler.hr()
+        case regexHeading(heading, title, _, _, id) => handler.heading(heading, title, id)
+        case regexList(indentString, style, _, content) => handler.list(indentString, style, content);
+        case _ => handler.others(s)
       }
     }
 
-    handler.done();
+    handler.done()
   }
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
