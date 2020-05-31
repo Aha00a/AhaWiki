@@ -127,20 +127,25 @@ object InterpreterWiki extends TraitInterpreter {
 
 
   class Handler(val pageContent: PageContent)(implicit wikiContext:WikiContext) {
-
-  }
-
-  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler(pageContent) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
+    def preprocess(): Array[String] = {
+      val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
+      val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
+      val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+      val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
+      chunkExtractedSplit
+    }
+  }
 
-
+  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler(pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
     var oldIndent = 0
+
     //noinspection ScalaUnusedSymbol
     val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
       if(after != State.List) {
@@ -150,14 +155,6 @@ object InterpreterWiki extends TraitInterpreter {
         }
       }
     })
-
-    def preprocess(): Array[String] = {
-      val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
-      val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-      val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
-      val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
-      chunkExtractedSplit
-    }
 
     def emptyLine(): State.Value = {
       variableHolder := State.Normal
