@@ -70,9 +70,6 @@ object InterpreterWiki extends TraitInterpreter {
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
-    implicit val request: Request[Any] = wikiContext.request
-    implicit val cacheApi: CacheApi = wikiContext.cacheApi
-    implicit val database: Database = wikiContext.database
     val set: Set[String] = wikiContext.setPageNameByPermission
 
     regexLink.replaceAllIn(s, _ match {
