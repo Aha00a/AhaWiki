@@ -92,7 +92,7 @@ class Test @Inject()(implicit
     assertEquals(MacroBr.extractLink(dummy), Seq())
 
     assertEquals(MacroMonths("1000"),
-      """<ul style="list-style-type: ;">
+      """<ul style="list-style-type: disc;">
         |<li><a href="1000-01">1000-01</a></li>
         |<li><a href="1000-02">1000-02</a></li>
         |<li><a href="1000-03">1000-03</a></li>
