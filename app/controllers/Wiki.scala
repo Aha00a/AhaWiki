@@ -389,7 +389,7 @@ class Wiki @Inject()(implicit
               s
             }
           })
-          val body = extractConvertApplyInterpreterRefresh(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
+          val body = extractConvertApplyInterpreterRefresh.inject(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
           if (pageContent.content != body) {
             PageLogic.insert(pageName, page.revision + 1, new Date(), "Sync Google Spreadsheet", body)
             Ok("")

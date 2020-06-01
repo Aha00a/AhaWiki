@@ -5,6 +5,7 @@ import models.WikiContext
 
 import scala.collection.mutable.ArrayBuffer
 
+// TODO: rename to ExtractConvertInject
 trait ExtractConvertApply {
   val arrayBuffer = new ArrayBuffer[(String, String)]()
 
@@ -16,7 +17,7 @@ trait ExtractConvertApply {
 
   def convert(s: String)(implicit wikiContext: WikiContext): String
 
-  def apply(s: String)(implicit wikiContext: WikiContext): String = {
+  def inject(s: String)(implicit wikiContext: WikiContext): String = {
     var result = s
     for ((key, value) <- arrayBuffer) {
       result = result.replace(key, convert(value))

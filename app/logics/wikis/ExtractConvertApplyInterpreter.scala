@@ -4,6 +4,7 @@ import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
 import models.{Link, SchemaOrg, WikiContext}
 
+// TODO: rename to ExtractConvertInject
 class ExtractConvertApplyInterpreter() extends ExtractConvertApply {
 
   override def extract(s: String): String = {

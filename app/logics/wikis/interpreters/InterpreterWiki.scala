@@ -184,7 +184,7 @@ object InterpreterWiki extends TraitInterpreter {
       if (arrayBufferHeading.length > 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+      extractConvertApplyInterpreter.inject(extractConvertApplyMacro.inject(extractConvertApplyBackQuote.inject(arrayBuffer.mkString("\n"))))
     }
   }
 

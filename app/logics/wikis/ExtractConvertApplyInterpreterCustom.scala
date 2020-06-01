@@ -2,6 +2,7 @@ package logics.wikis
 
 import models.WikiContext
 
+// TODO: rename to ExtractConvertInject
 // TODO: Refactor this.
 class ExtractConvertApplyInterpreterCustom(converter:String => String) extends ExtractConvertApply {
   override def extract(s: String): String = {

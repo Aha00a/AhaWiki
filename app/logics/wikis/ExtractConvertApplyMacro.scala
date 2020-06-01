@@ -7,6 +7,7 @@ import models.WikiContext
 import scala.collection.mutable
 import scala.util.matching.Regex
 
+// TODO: rename to ExtractConvertInject
 object ExtractConvertApplyMacro {
   val mapMacros: Map[String, TraitMacro] = Seq(
 
@@ -52,6 +53,8 @@ object ExtractConvertApplyMacro {
     MacroSuccess
   ).map(m => m.name -> m).toMap
 }
+
+// TODO: rename to ExtractConvertInject
 class ExtractConvertApplyMacro() extends ExtractConvertApply {
   val mapVariable = new mutable.HashMap[String, String]()
 

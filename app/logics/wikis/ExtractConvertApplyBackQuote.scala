@@ -3,6 +3,7 @@ package logics.wikis
 import com.aha00a.commons.Implicits._
 import models.WikiContext
 
+// TODO: rename to ExtractConvertInject
 class ExtractConvertApplyBackQuote() extends ExtractConvertApply {
   override def extract(s: String): String = {
     val regex = """`(.+?)`""".r
