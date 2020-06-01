@@ -2,7 +2,6 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
-import logics.wikis.interpreters.InterpreterWiki.State
 import models.{Link, PageContent, SchemaOrg, WikiContext}
 
 import scala.collection.mutable.ArrayBuffer
@@ -54,16 +53,6 @@ object InterpreterWiki extends TraitInterpreter {
     type State = Value
     val Normal, Hr, Heading, List = Value
   }
-
-  val regexHr: Regex = """^-{4,}$""".r
-  val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
-  val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
-  val regexListUnordered: Regex = """[*-]""".r
-  val regexListDecimal: Regex = """\d+\.""".r
-  val regexListLowerAlpha: Regex = """[a-z]+\.""".r
-  val regexListUpperAlpha: Regex = """[A-Z]+\.""".r
-  val regexListLowerRoman: Regex = """[ivx]+\.""".r
-  val regexListUpperRoman: Regex = """[IVX]+\.""".r
 
   val regexLink: Regex =
     """(?x)
@@ -136,40 +125,26 @@ object InterpreterWiki extends TraitInterpreter {
     val chunkMacroExtracted: String = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted: String = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    def preprocess(): Array[String] = {
-      val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
-      chunkExtractedSplit
-    }
-
-    def process(): Result = {
-      for(s <- preprocess()) {
-        s match {
-          case "" => emptyLine()
-          case regexHr() => hr()
-          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
-          case regexList(indentString, style, _, content) => list(indentString, style, content);
-          case _ => others(s)
-        }
-      }
-      done()
-    }
-
-    def emptyLine(): Unit = {}
-    def hr(): Unit = {}
-    def heading(heading: String, title: String, id: String): Unit = {}
-    def list(indentString: String, style: String, content: String): Unit = {}
-    def others(s: String): Unit = {}
-    def done(): Result
+    def process(): Result
   }
 
   class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[String](pageContent) {
+    val regexHr: Regex = """^-{4,}$""".r
+    val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
+    val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
+    val regexListUnordered: Regex = """[*-]""".r
+    val regexListDecimal: Regex = """\d+\.""".r
+    val regexListLowerAlpha: Regex = """[a-z]+\.""".r
+    val regexListUpperAlpha: Regex = """[A-Z]+\.""".r
+    val regexListLowerRoman: Regex = """[ivx]+\.""".r
+    val regexListUpperRoman: Regex = """[IVX]+\.""".r
+
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
     var oldIndent = 0
 
-    //noinspection ScalaUnusedSymbol
-    val variableHolder = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
+    val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
       if(after != State.List) {
         while (0 < oldIndent) {
           arrayBuffer += "</ul>"
@@ -178,17 +153,35 @@ object InterpreterWiki extends TraitInterpreter {
       }
     })
 
-    override def emptyLine(): Unit = {
-      variableHolder := State.Normal
+    override def process(): String = {
+      for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
+        s match {
+          case "" => emptyLine()
+          case regexHr() => hr()
+          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
+          case regexList(indentString, style, _, content) => list(indentString, style, content);
+          case _ => others(s)
+        }
+      }
+
+      variableHolderState := State.Normal
+      if (arrayBufferHeading.length > 5)
+        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
+
+      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
     }
 
-    override def hr(): Unit = {
-      variableHolder := State.Hr
+    def emptyLine(): Unit = {
+      variableHolderState := State.Normal
+    }
+
+    def hr(): Unit = {
+      variableHolderState := State.Hr
       arrayBuffer += """<hr/>"""
     }
 
-    override def heading(heading: String, title: String, id: String): Unit = {
-      variableHolder := State.Heading
+    def heading(heading: String, title: String, id: String): Unit = {
+      variableHolderState := State.Heading
       val headingLength = heading.length
       val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
@@ -201,8 +194,8 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
     }
 
-    override def list(indentString: String, style: String, content: String): Unit = {
-      variableHolder := State.List
+    def list(indentString: String, style: String, content: String): Unit = {
+      variableHolderState := State.List
       val indent = indentString.length
 
 
@@ -235,21 +228,28 @@ object InterpreterWiki extends TraitInterpreter {
       oldIndent = indent
     }
 
-    override def others(s: String): Unit = {
-      variableHolder := State.Normal
+    def others(s: String): Unit = {
+      variableHolderState := State.Normal
       if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
         arrayBuffer += s"<p>${formatInline(s)}</p>"
       } else {
         arrayBuffer += formatInline(s)
       }
     }
+  }
 
-    override def done(): String = {
-      variableHolder := State.Normal
-      if(arrayBufferHeading.length > 5)
-        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
+  class HandlerLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
+    override def process(): Seq[Link] = {
+      val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
+      val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+      val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+      seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
+    }
+  }
 
-      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+  class HandlerSchema(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
+    override def process(): Seq[SchemaOrg] = {
+      extractConvertApplyInterpreter.extractSchemaOrg()
     }
   }
 
@@ -257,15 +257,6 @@ object InterpreterWiki extends TraitInterpreter {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerInterpret(pageContent)
     handler.process()
-  }
-
-  class HandlerLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
-    override def done(): Seq[Link] = {
-      val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
-      val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
-      val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
-      seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
-    }
   }
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
@@ -276,13 +267,6 @@ object InterpreterWiki extends TraitInterpreter {
         val pageContent: PageContent = PageContent(content)
         val handler = new HandlerLink(pageContent)
         handler.process()
-    }
-  }
-
-  class HandlerSchema(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
-    override def done(): Seq[SchemaOrg] = {
-      val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyInterpreter.extractSchemaOrg()
-      seqLinkInterpreter
     }
   }
 
@@ -297,5 +281,4 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 }
-
 
