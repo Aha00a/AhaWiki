@@ -66,7 +66,7 @@ object InterpreterWiki extends TraitInterpreter {
     def process(): Result
   }
 
-  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[String](pageContent) {
+  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[String](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
@@ -176,7 +176,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
+  class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
     override def process(): Seq[Link] = {
       val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
       val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
@@ -185,7 +185,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerSchema(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
+  class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
     override def process(): Seq[SchemaOrg] = {
       extractConvertApplyInterpreter.extractSchemaOrg()
     }
@@ -257,7 +257,7 @@ object InterpreterWiki extends TraitInterpreter {
 
   override def toHtmlString(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
-    val handler = new HandlerInterpret(pageContent)
+    val handler = new HandlerToHtmlString(pageContent)
     handler.process()
   }
 
@@ -271,7 +271,7 @@ object InterpreterWiki extends TraitInterpreter {
       case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
       case None =>
         val pageContent: PageContent = PageContent(content)
-        val handler = new HandlerLink(pageContent)
+        val handler = new HandlerToSeqLink(pageContent)
         handler.process()
     }
   }
@@ -282,7 +282,7 @@ object InterpreterWiki extends TraitInterpreter {
       case Some(_) => Seq()
       case None =>
         val pageContent: PageContent = PageContent(content)
-        val handler = new HandlerSchema(pageContent)
+        val handler = new HandlerToSeqSchemaOrg(pageContent)
         handler.process()
     }
   }
