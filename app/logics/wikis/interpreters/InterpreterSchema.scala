@@ -25,7 +25,7 @@ object InterpreterSchema extends TraitInterpreter {
   }
 
 
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
@@ -108,16 +108,16 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
-  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
     Seq(name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
-  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 

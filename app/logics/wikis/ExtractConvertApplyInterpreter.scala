@@ -18,14 +18,14 @@ class ExtractConvertApplyInterpreter() extends ExtractConvertApply {
     }
   }
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = Interpreters.interpret(ShebangUtil.addWhenNotExist(s, "text"))
+  override def convert(s: String)(implicit wikiContext: WikiContext): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[Link] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.extractLink(c))
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c))
   }
 
   def extractSchemaOrg()(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.extractSchema(c))
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c))
   }
 }
 

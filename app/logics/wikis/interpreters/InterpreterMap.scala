@@ -67,7 +67,7 @@ object InterpreterMap extends TraitInterpreter {
     }
   }
 
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     implicit val configuration: Configuration = wikiContext.configuration
 
     val pageContent: PageContent = PageContent(content)
@@ -119,12 +119,12 @@ object InterpreterMap extends TraitInterpreter {
       }
 
       val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
-      val htmlStringWiki: String = InterpreterWiki.interpret(buffer.mkString("\n", "\n", "\n"))
+      val htmlStringWiki: String = InterpreterWiki.toHtmlString(buffer.mkString("\n", "\n", "\n"))
       htmlStringMap + htmlStringWiki
     }
   }
 
-  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
     implicit val configuration: Configuration = wikiContext.configuration
 
     val pageContent: PageContent = PageContent(content)
@@ -135,7 +135,7 @@ object InterpreterMap extends TraitInterpreter {
     seq
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     // TODO: implement
     Seq()
   }

@@ -9,8 +9,8 @@ object MacroMonths extends TraitMacro {
   override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => apply(wikiContext.name)
     case "-" => apply(wikiContext.name + ",-")
-    case regexIncr(y) => InterpreterWiki.interpret((1 to 12).map(m => f" * [$y-$m%02d]").mkString("\n"))
-    case regexDecr(y) => InterpreterWiki.interpret((1 to 12).reverse.map(m => f" * [$y-$m%02d]").mkString("\n"))
+    case regexIncr(y) => InterpreterWiki.toHtmlString((1 to 12).map(m => f" * [$y-$m%02d]").mkString("\n"))
+    case regexDecr(y) => InterpreterWiki.toHtmlString((1 to 12).reverse.map(m => f" * [$y-$m%02d]").mkString("\n"))
     case _ => MacroError(s"Argument Error - [[$name($argument)]]")
   }
 

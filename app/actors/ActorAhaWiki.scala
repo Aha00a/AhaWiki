@@ -44,7 +44,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
-          val seqLink: Seq[String] = Interpreters.extractWord(page.content)
+          val seqLink: Seq[String] = Interpreters.toSeqWord(page.content)
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
@@ -56,10 +56,10 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
-          val seqLink = Interpreters.extractLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
+          val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
 
-          val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.extractSchema(page.content)
+          val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
           ahaWikiQuery.Page.updateSchemaOrg(name, seqSchemaOrg)
         }
       }

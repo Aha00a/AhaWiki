@@ -15,18 +15,18 @@ object InterpreterGraph extends TraitInterpreter {
     val array: Array[Array[String]] = linesCut.flatMap(_.split("->").sliding(2).map(_.toArray))
     array
   }
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
     val array = parse(wikiContext, pageContent)
     views.html.Wiki.graph(array, enableWikiLink = pageContent.shebang.contains("enableWikiLink")).toString()
   }
 
 
-  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
     val pageContent: PageContent = PageContent(content)
     val array = parse(wikiContext, pageContent)
     array.flatten.toSeq
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

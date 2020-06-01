@@ -242,15 +242,15 @@ class Test @Inject()(implicit
   def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
-    assertEquals(Interpreters.interpret("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 1\na\tb"), <table class="InterpreterTable simpleTable"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 0 1\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv 1\na\tb"), <table class="InterpreterTable simpleTable"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv 0 1\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
 
-    assertEquals(Interpreters.interpret("#!table tsv some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 1 tablesorter\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-    assertEquals(Interpreters.interpret("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv 1 tablesorter\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
+    assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
   }
 
 
@@ -338,8 +338,8 @@ class Test @Inject()(implicit
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage"]""").toList, Seq(LinkMarkup("""SomePage""")))
     assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage" Alias]""").toList, Seq(LinkMarkup("""SomePage""", """Alias""")))
 
-    assertEquals(InterpreterWiki.extractLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
-    assertEquals(InterpreterWiki.extractLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))
+    assertEquals(InterpreterWiki.toSeqLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
+    assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))
 
   }
 
@@ -384,15 +384,15 @@ class Test @Inject()(implicit
           |        </div>
           |      </dl></div>""".stripMargin
 
-      assertEquals(InterpreterSchema.interpret(schemaMarkup), interpreted)
-      assertEquals(Interpreters.interpret(wikiMarkup), interpreted)
+      assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
+      assertEquals(Interpreters.toHtmlString(wikiMarkup), interpreted)
 
       val extractWordResult = Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
-      assertEquals(InterpreterSchema.extractWord(schemaMarkup), extractWordResult)
+      assertEquals(InterpreterSchema.toSeqWord(schemaMarkup), extractWordResult)
 //      assertEquals(Interpreters.extractWord(wikiMarkup), extractWordResult) // TODO:
 
-      assertEquals(InterpreterSchema.extractLink(schemaMarkup), Seq())
-      assertEquals(Interpreters.extractLink(wikiMarkup), Seq())
+      assertEquals(InterpreterSchema.toSeqLink(schemaMarkup), Seq())
+      assertEquals(Interpreters.toSeqLink(wikiMarkup), Seq())
 
       val extractSchemaResult = Seq(
         SchemaOrg("UnitTest", "Person", "", ""),
@@ -400,13 +400,13 @@ class Test @Inject()(implicit
         SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
         SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
       )
-      assertEquals(InterpreterSchema.extractSchema(schemaMarkup), extractSchemaResult)
-      assertEquals(Interpreters.extractSchema(wikiMarkup), extractSchemaResult)
+      assertEquals(InterpreterSchema.toSeqSchemaOrg(schemaMarkup), extractSchemaResult)
+      assertEquals(Interpreters.toSeqSchemaOrg(wikiMarkup), extractSchemaResult)
     }
 
     
     assertEquals(
-      InterpreterSchema.extractSchema(
+      InterpreterSchema.toSeqSchemaOrg(
         """#!Schema WebApplication
           |name	AhaWiki
           |url	https://wiki.aha00a.com/w/AhaWiki

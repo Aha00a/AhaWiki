@@ -4,19 +4,19 @@ import models.{Link, PageContent, WikiContext}
 
 object InterpreterWikiSyntaxPreview extends TraitInterpreter {
 
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
     val argument = pageContent.argument.mkString(" ")
     val body = pageContent.content
     if (argument == "") {
-      val raw = Interpreters.interpret("#!text\n" + body)
-      val preview = Interpreters.interpret("#!wiki\n" + body)
+      val raw = Interpreters.toHtmlString("#!text\n" + body)
+      val preview = Interpreters.toHtmlString("#!wiki\n" + body)
       render(raw, preview)
     }
     else
     {
-      val raw = Interpreters.interpret(s"#!text\n[[[#!$argument\n" + body + "\n]]]")
-      val preview = Interpreters.interpret(s"#!$argument\n" + body)
+      val raw = Interpreters.toHtmlString(s"#!text\n[[[#!$argument\n" + body + "\n]]]")
+      val preview = Interpreters.toHtmlString(s"#!$argument\n" + body)
       render(raw, preview)
     }
   }
@@ -38,8 +38,8 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
        |</table>""".stripMargin
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
-    InterpreterWiki.extractLink(pageContent.content)
+    InterpreterWiki.toSeqLink(pageContent.content)
   }
 }

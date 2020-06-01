@@ -30,31 +30,31 @@ object Interpreters extends TraitInterpreter {
     map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
   }
 
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
-      .map(_.interpret(content))
+      .map(_.toHtmlString(content))
       .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
-  override def extractWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
-      .map(_.extractWord(content))
+      .map(_.toSeqWord(content))
       .getOrElse(Seq())
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
-      .map(_.extractLink(content))
+      .map(_.toSeqLink(content))
       .getOrElse(Seq())
   }
 
-  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
-      .map(_.extractSchema(content))
+      .map(_.toSeqSchemaOrg(content))
       .getOrElse(Seq())
   }
 }

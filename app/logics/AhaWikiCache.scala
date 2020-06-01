@@ -29,13 +29,13 @@ object AhaWikiCache {
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
-      Interpreters.interpret(AhaWikiQuery().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
+      Interpreters.toHtmlString(AhaWikiQuery().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
     }}
   }
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
-      Interpreters.interpret(AhaWikiQuery().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
+      Interpreters.toHtmlString(AhaWikiQuery().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
     }}
   }
 

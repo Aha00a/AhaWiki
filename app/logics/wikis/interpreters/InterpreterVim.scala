@@ -52,7 +52,7 @@ object InterpreterVim extends TraitInterpreter {
     }
   }
 
-  override def interpret(content: String)(implicit wikiContext: WikiContext):String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext):String = {
     implicit val codec:Codec = Codec.UTF8
     val pageContent: PageContent = PageContent(content)
 
@@ -132,5 +132,5 @@ object InterpreterVim extends TraitInterpreter {
 
   def getCacheFileHtml(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".html")
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

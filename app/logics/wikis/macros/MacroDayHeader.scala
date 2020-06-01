@@ -10,14 +10,14 @@ object MacroDayHeader extends TraitMacro {
     argument match {
       case "" | null => apply(wikiContext.nameTop)
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop == wikiContext.nameBottom =>
-        Interpreters.interpret(
+        Interpreters.toHtmlString(
           s"""
              |[[LinkDate($y-$m-$d)]]
              |= [[Html(${LinkMarkup(s"$y-$m").toHtmlString()})]]-$d [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop != wikiContext.nameBottom =>
-        Interpreters.interpret(
+        Interpreters.toHtmlString(
           s"""
              |== [${wikiContext.nameTop}] [[WeekdayName($y-$m-$d)]]
              |""".stripMargin

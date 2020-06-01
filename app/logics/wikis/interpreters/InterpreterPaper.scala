@@ -4,10 +4,10 @@ import models.{Link, PageContent, WikiContext}
 
 object InterpreterPaper extends TraitInterpreter {
   //noinspection ZeroIndexToHead
-  override def interpret(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)
     s"""<div class="paperContent ${pageContent.argument(0)}">""" +
-      InterpreterWiki.interpret(pageContent.content).split( """<hr/>""")
+      InterpreterWiki.toHtmlString(pageContent.content).split( """<hr/>""")
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">
@@ -25,8 +25,8 @@ object InterpreterPaper extends TraitInterpreter {
     """</div>"""
   }
 
-  override def extractLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
-    InterpreterWiki.extractLink(pageContent.content)
+    InterpreterWiki.toSeqLink(pageContent.content)
   }
 }

@@ -104,7 +104,7 @@ object InterpreterWiki extends TraitInterpreter {
 
       variableHolderState := State.Normal
       if (arrayBufferHeading.length > 5)
-        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
+        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
       extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
     }
@@ -255,13 +255,13 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
+  override def toHtmlString(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerInterpret(pageContent)
     handler.process()
   }
 
-  override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
+  override def toSeqLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
       case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
@@ -272,7 +272,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  override def extractSchema(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
       case Some(_) => Seq()
