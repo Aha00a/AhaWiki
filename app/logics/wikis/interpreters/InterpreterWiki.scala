@@ -54,7 +54,7 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
-  abstract class Handler[Result](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
+  abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
@@ -63,10 +63,10 @@ object InterpreterWiki extends TraitInterpreter {
     val chunkMacroExtracted: String = extractConvertApplyMacro.extract(chunkExtracted)
     val backQuoteExtracted: String = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
 
-    def process(): Result
+    def process(): T
   }
 
-  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[String](pageContent) {
+  abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
@@ -77,11 +77,14 @@ object InterpreterWiki extends TraitInterpreter {
     val regexListLowerRoman: Regex = """[ivx]+\.""".r
     val regexListUpperRoman: Regex = """[IVX]+\.""".r
 
+  }
+
+  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends HandlerContentIterateBase[String](pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
-    var oldIndent = 0
 
+    var oldIndent = 0
     val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
       if(after != State.List) {
         while (0 < oldIndent) {
