@@ -139,13 +139,13 @@ object InterpreterWiki extends TraitInterpreter {
 
       if(oldIndent < indent) {
         val listType = style match {
-          case regexListUnordered() => ""
+          case regexListUnordered() => "disc"
           case regexListDecimal() => "decimal"
           case regexListLowerRoman() => "lower-roman"
           case regexListUpperRoman() => "upper-roman"
           case regexListLowerAlpha() => "lower-alpha"
           case regexListUpperAlpha() => "upper-alpha"
-          case _ => ""
+          case _ => "disc"
         }
         for(_ <- 0 until indent - oldIndent) {
           arrayBuffer += "<ul style=\"list-style-type: " + listType + ";\">"
