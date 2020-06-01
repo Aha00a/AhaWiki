@@ -54,68 +54,6 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
-  val regexLink: Regex =
-    """(?x)
-          ((?<!\\)\\)?
-          (?:
-            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
-            \[" ([^\]"]+) "\]                           |
-            \[ ([^\]\s]+) \]                            |
-            \[" ([^\]"]+) " \s+ ([^\]]+) \]            |
-            \[ ([^\]\s]+) \s+ ([^\]]+) \]
-          )
-    """.r
-
-  def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
-    val set: Set[String] = wikiContext.setPageNameByPermission
-
-    regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()
-      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
-      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
-      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toHtmlString(set)
-      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toHtmlString(set)
-
-      case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
-      case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
-      case regexLink(_   , null, null, uri , null, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
-      case regexLink(_   , null, null, null, uri , alia, null, null) => RegexUtil.escapeDollar(s"""["$uri" $alia]""")
-      case regexLink(_   , null, null, null, null, null, uri , alia) => RegexUtil.escapeDollar(s"""[$uri $alia]""")
-
-      case value => "wrong : " + value
-    })
-  }
-
-  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[LinkMarkup] = {
-    regexLink.findAllIn(content).map {
-      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias)
-      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
-      case _ => null
-    }.filter(_ != null)
-  }
-
-  def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
-    var s = line
-    for((regex, replacement) <- List(
-      ("""<""".r, "&lt;"),
-      ("""'''(.+?)'''""".r, "<b>$1</b>"),
-      ("""''(.+?)''""".r, "<i>$1</i>"),
-      ("""__(.+?)__""".r, "<u>$1</u>"),
-      ("""~~(.+?)~~""".r, "<s>$1</s>"),
-      ("""`(.+?)`""".r, "<code>$1</code>"),
-
-      ("""""".r, "")
-    )) {
-      s = regex.replaceAllIn(s, replacement)
-    }
-    s = InterpreterWiki.replaceLink(s)
-    s
-  }
-
-
   abstract class Handler[Result](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
@@ -252,6 +190,70 @@ object InterpreterWiki extends TraitInterpreter {
       extractConvertApplyInterpreter.extractSchemaOrg()
     }
   }
+
+
+
+  val regexLink: Regex =
+    """(?x)
+          ((?<!\\)\\)?
+          (?:
+            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
+            \[" ([^\]"]+) "\]                           |
+            \[ ([^\]\s]+) \]                            |
+            \[" ([^\]"]+) " \s+ ([^\]]+) \]            |
+            \[ ([^\]\s]+) \s+ ([^\]]+) \]
+          )
+    """.r
+
+  def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
+    val set: Set[String] = wikiContext.setPageNameByPermission
+
+    regexLink.replaceAllIn(s, _ match {
+      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()
+      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
+      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
+      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toHtmlString(set)
+      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toHtmlString(set)
+
+      case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
+      case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
+      case regexLink(_   , null, null, uri , null, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
+      case regexLink(_   , null, null, null, uri , alia, null, null) => RegexUtil.escapeDollar(s"""["$uri" $alia]""")
+      case regexLink(_   , null, null, null, null, null, uri , alia) => RegexUtil.escapeDollar(s"""[$uri $alia]""")
+
+      case value => "wrong : " + value
+    })
+  }
+
+  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[LinkMarkup] = {
+    regexLink.findAllIn(content).map {
+      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri)
+      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias)
+      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
+      case _ => null
+    }.filter(_ != null)
+  }
+
+  def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
+    var s = line
+    for((regex, replacement) <- List(
+      ("""<""".r, "&lt;"),
+      ("""'''(.+?)'''""".r, "<b>$1</b>"),
+      ("""''(.+?)''""".r, "<i>$1</i>"),
+      ("""__(.+?)__""".r, "<u>$1</u>"),
+      ("""~~(.+?)~~""".r, "<s>$1</s>"),
+      ("""`(.+?)`""".r, "<code>$1</code>"),
+
+      ("""""".r, "")
+    )) {
+      s = regex.replaceAllIn(s, replacement)
+    }
+    s = InterpreterWiki.replaceLink(s)
+    s
+  }
+
 
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
