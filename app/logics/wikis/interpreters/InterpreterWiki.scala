@@ -2,6 +2,7 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
+import logics.wikis.interpreters.InterpreterWiki.State
 import models.{Link, PageContent, SchemaOrg, WikiContext}
 
 import scala.collection.mutable.ArrayBuffer
@@ -126,7 +127,7 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  class Handler(val pageContent: PageContent)(implicit wikiContext:WikiContext) {
+  abstract class Handler(val pageContent: PageContent)(implicit wikiContext: WikiContext) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
@@ -138,6 +139,13 @@ object InterpreterWiki extends TraitInterpreter {
       val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
       chunkExtractedSplit
     }
+
+    def emptyLine(): Unit
+    def hr(): Unit
+    def heading(heading: String, title: String, id: String): Unit
+    def list(indentString: String, style: String, content: String): Unit
+    def others(s: String): Unit
+    def done(): String
   }
 
   class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler(pageContent) {
@@ -156,17 +164,16 @@ object InterpreterWiki extends TraitInterpreter {
       }
     })
 
-    def emptyLine(): State.Value = {
+    override def emptyLine(): Unit = {
       variableHolder := State.Normal
     }
 
-
-    def hr(): arrayBuffer.type = {
+    override def hr(): Unit = {
       variableHolder := State.Hr
       arrayBuffer += """<hr/>"""
     }
 
-    def heading(heading: String, title: String, id: String): arrayBuffer.type = {
+    override def heading(heading: String, title: String, id: String): Unit = {
       variableHolder := State.Heading
       val headingLength = heading.length
       val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
@@ -180,7 +187,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
     }
 
-    def list(indentString: String, style: String, content: String): Unit = {
+    override def list(indentString: String, style: String, content: String): Unit = {
       variableHolder := State.List
       val indent = indentString.length
 
@@ -214,7 +221,7 @@ object InterpreterWiki extends TraitInterpreter {
       oldIndent = indent
     }
 
-    def others(s: String): arrayBuffer.type = {
+    override def others(s: String): Unit = {
       variableHolder := State.Normal
       if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
         arrayBuffer += s"<p>${formatInline(s)}</p>"
@@ -223,14 +230,13 @@ object InterpreterWiki extends TraitInterpreter {
       }
     }
 
-    def done(): String = {
+    override def done(): String = {
       variableHolder := State.Normal
       if(arrayBufferHeading.length > 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.interpret(arrayBufferHeading.mkString("\n")) + """</div>""")
 
       extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
     }
-
   }
 
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
