@@ -261,6 +261,10 @@ object InterpreterWiki extends TraitInterpreter {
     handler.process()
   }
 
+  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
+    Seq() // TODO: implement
+  }
+
   override def toSeqLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
