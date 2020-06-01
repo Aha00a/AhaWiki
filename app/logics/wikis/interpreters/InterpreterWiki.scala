@@ -127,28 +127,42 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  abstract class Handler(val pageContent: PageContent)(implicit wikiContext: WikiContext) {
+  abstract class Handler[Result](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
     val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
     val extractConvertApplyMacro = new ExtractConvertApplyMacro()
     val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
 
+    val chunkExtracted: String = extractConvertApplyInterpreter.extract(pageContent.content)
+    val chunkMacroExtracted: String = extractConvertApplyMacro.extract(chunkExtracted)
+    val backQuoteExtracted: String = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+
     def preprocess(): Array[String] = {
-      val chunkExtracted = extractConvertApplyInterpreter.extract(pageContent.content)
-      val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-      val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
       val chunkExtractedSplit: Array[String] = backQuoteExtracted.split("""(\r\n|\n)""")
       chunkExtractedSplit
     }
 
-    def emptyLine(): Unit
-    def hr(): Unit
-    def heading(heading: String, title: String, id: String): Unit
-    def list(indentString: String, style: String, content: String): Unit
-    def others(s: String): Unit
-    def done(): String
+    def process(): Result = {
+      for(s <- preprocess()) {
+        s match {
+          case "" => emptyLine()
+          case regexHr() => hr()
+          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
+          case regexList(indentString, style, _, content) => list(indentString, style, content);
+          case _ => others(s)
+        }
+      }
+      done()
+    }
+
+    def emptyLine(): Unit = {}
+    def hr(): Unit = {}
+    def heading(heading: String, title: String, id: String): Unit = {}
+    def list(indentString: String, style: String, content: String): Unit = {}
+    def others(s: String): Unit = {}
+    def done(): Result
   }
 
-  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler(pageContent) {
+  class HandlerInterpret(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[String](pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
@@ -242,18 +256,16 @@ object InterpreterWiki extends TraitInterpreter {
   override def interpret(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerInterpret(pageContent)
+    handler.process()
+  }
 
-    for(s <- handler.preprocess()) {
-      s match {
-        case "" => handler.emptyLine()
-        case regexHr() => handler.hr()
-        case regexHeading(heading, title, _, _, id) => handler.heading(heading, title, id)
-        case regexList(indentString, style, _, content) => handler.list(indentString, style, content);
-        case _ => handler.others(s)
-      }
+  class HandlerLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
+    override def done(): Seq[Link] = {
+      val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
+      val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+      val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+      seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }
-
-    handler.done()
   }
 
   override def extractLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
@@ -261,18 +273,16 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
       case None =>
-        val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
-        val extractConvertApplyMacro = new ExtractConvertApplyMacro()
-        val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+        val pageContent: PageContent = PageContent(content)
+        val handler = new HandlerLink(pageContent)
+        handler.process()
+    }
+  }
 
-        val chunkExtracted = extractConvertApplyInterpreter.extract(content)
-        val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-        val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
-
-        val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
-        val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
-        val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
-        seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
+  class HandlerSchema(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
+    override def done(): Seq[SchemaOrg] = {
+      val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyInterpreter.extractSchemaOrg()
+      seqLinkInterpreter
     }
   }
 
@@ -281,16 +291,9 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(_) => Seq()
       case None =>
-        val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
-        val extractConvertApplyMacro = new ExtractConvertApplyMacro()
-        val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
-
-        val chunkExtracted = extractConvertApplyInterpreter.extract(content)
-        val chunkMacroExtracted = extractConvertApplyMacro.extract(chunkExtracted)
-        val backQuoteExtracted = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
-
-        val seqLinkInterpreter: Seq[SchemaOrg] = extractConvertApplyInterpreter.extractSchemaOrg()
-        seqLinkInterpreter
+        val pageContent: PageContent = PageContent(content)
+        val handler = new HandlerSchema(pageContent)
+        handler.process()
     }
   }
 }
