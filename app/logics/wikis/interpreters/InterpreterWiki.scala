@@ -77,6 +77,25 @@ object InterpreterWiki extends TraitInterpreter {
     val regexListLowerRoman: Regex = """[ivx]+\.""".r
     val regexListUpperRoman: Regex = """[IVX]+\.""".r
 
+    override def process(): T = {
+      for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
+        s match {
+          case "" => emptyLine()
+          case regexHr() => hr()
+          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
+          case regexList(indentString, style, _, content) => list(indentString, style, content);
+          case _ => others(s)
+        }
+      }
+      result()
+    }
+
+    def emptyLine(): Unit
+    def hr(): Unit
+    def heading(heading: String, title: String, id: String): Unit
+    def list(indentString: String, style: String, content: String): Unit
+    def others(s: String): Unit
+    def result(): T
   }
 
   class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends HandlerContentIterateBase[String](pageContent) {
@@ -94,34 +113,16 @@ object InterpreterWiki extends TraitInterpreter {
       }
     })
 
-    override def process(): String = {
-      for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
-        s match {
-          case "" => emptyLine()
-          case regexHr() => hr()
-          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
-          case regexList(indentString, style, _, content) => list(indentString, style, content);
-          case _ => others(s)
-        }
-      }
-
-      variableHolderState := State.Normal
-      if (arrayBufferHeading.length > 5)
-        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
-
-      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
-    }
-
-    def emptyLine(): Unit = {
+    override def emptyLine(): Unit = {
       variableHolderState := State.Normal
     }
 
-    def hr(): Unit = {
+    override def hr(): Unit = {
       variableHolderState := State.Hr
       arrayBuffer += """<hr/>"""
     }
 
-    def heading(heading: String, title: String, id: String): Unit = {
+    override def heading(heading: String, title: String, id: String): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
       val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
@@ -135,7 +136,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
     }
 
-    def list(indentString: String, style: String, content: String): Unit = {
+    override def list(indentString: String, style: String, content: String): Unit = {
       variableHolderState := State.List
       val indent = indentString.length
 
@@ -169,13 +170,49 @@ object InterpreterWiki extends TraitInterpreter {
       oldIndent = indent
     }
 
-    def others(s: String): Unit = {
+    override def others(s: String): Unit = {
       variableHolderState := State.Normal
       if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
         arrayBuffer += s"<p>${formatInline(s)}</p>"
       } else {
         arrayBuffer += formatInline(s)
       }
+    }
+
+    override def result(): String = {
+      variableHolderState := State.Normal
+      if (arrayBufferHeading.length > 5)
+        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
+
+      extractConvertApplyInterpreter(extractConvertApplyMacro(extractConvertApplyBackQuote(arrayBuffer.mkString("\n"))))
+    }
+  }
+
+  class HandlerToSeqWord(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends HandlerContentIterateBase[Seq[String]](pageContent) {
+    val arrayWord: ArrayBuffer[String] = ArrayBuffer[String]()
+
+    override def emptyLine(): Unit = {}
+
+    override def hr(): Unit = {}
+
+    override def heading(heading: String, title: String, id: String): Unit = {
+      arrayWord += title
+    }
+
+    override def list(indentString: String, style: String, content: String): Unit = {
+      arrayWord += content
+    }
+
+    override def others(s: String): Unit = {
+      if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+        arrayWord += s // TODO
+      } else {
+        arrayWord += s // TODO
+      }
+    }
+
+    override def result(): Seq[String] = {
+      arrayWord // TODO
     }
   }
 
@@ -265,7 +302,9 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    Seq() // TODO: implement
+    val pageContent: PageContent = PageContent(content)
+    val handler = new HandlerToSeqWord(pageContent)
+    handler.process()
   }
 
   override def toSeqLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
