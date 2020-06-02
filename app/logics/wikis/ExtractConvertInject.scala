@@ -3,6 +3,7 @@ package logics.wikis
 import com.aha00a.commons.utils.UuidUtil
 import models.WikiContext
 
+import scala.collection.GenTraversableOnce
 import scala.collection.mutable.ArrayBuffer
 
 trait ExtractConvertInject {
@@ -25,5 +26,9 @@ trait ExtractConvertInject {
   }
 
   def contains(s:String): Boolean = arrayBuffer.exists(_._1 == s)
+
+  def toSeqWord: Seq[String] = {
+    arrayBuffer.flatMap(_._2.split("""\s+"""))
+  }
 }
 

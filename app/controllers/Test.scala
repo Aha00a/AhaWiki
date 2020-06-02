@@ -387,9 +387,9 @@ class Test @Inject()(implicit
       assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
       assertEquals(Interpreters.toHtmlString(wikiMarkup), interpreted)
 
-      val extractWordResult = Seq("Schema", "Person", "name", "KIM, Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
+      val extractWordResult = Seq("#!Schema", "Person", "name", "KIM,", "Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
       assertEquals(InterpreterSchema.toSeqWord(schemaMarkup), extractWordResult)
-//      assertEquals(Interpreters.toSeqWord(wikiMarkup), extractWordResult) // TODO:
+      assertEquals(Interpreters.toSeqWord(wikiMarkup), extractWordResult)
 
       assertEquals(InterpreterSchema.toSeqLink(schemaMarkup), Seq())
       assertEquals(Interpreters.toSeqLink(wikiMarkup), Seq())

@@ -112,7 +112,7 @@ object InterpreterSchema extends TraitInterpreter {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    Seq(name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten
+    Seq("#!" + name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten.flatMap(_.split("""\s+"""))
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
