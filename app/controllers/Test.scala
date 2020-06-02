@@ -78,13 +78,7 @@ class Test @Inject()(implicit
 
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
-    val empty = ""
-    val dummy = "aaaa"
-    
-    assertEquals(MacroBr.toHtmlString(empty), "<br/>")
-    assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
-    assertEquals(MacroBr.extractLink(empty), Seq())
-    assertEquals(MacroBr.extractLink(dummy), Seq())
+    testMacroBr()
 
     assertEquals(MacroMonths.toHtmlString("1000"),
       """<ul style="list-style-type: disc;">
@@ -233,7 +227,6 @@ class Test @Inject()(implicit
 
   }
 
-
   def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
@@ -247,7 +240,6 @@ class Test @Inject()(implicit
     assertEquals(Interpreters.toHtmlString("#!table tsv 1 tablesorter\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
     assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
   }
-
 
   def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
@@ -481,6 +473,17 @@ class Test @Inject()(implicit
     assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
     assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
   }
+
+  def testMacroBr()(implicit wikiContext: WikiContext): Unit = {
+    val empty = ""
+    val dummy = "aaaa"
+
+    assertEquals(MacroBr.toHtmlString(empty), "<br/>")
+    assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
+    assertEquals(MacroBr.extractLink(empty), Seq())
+    assertEquals(MacroBr.extractLink(dummy), Seq())
+  }
+
 
   case class Dddd()(implicit database2: Database) {
     def selectCount(): Long = database2.withConnection { implicit connection =>

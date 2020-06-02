@@ -10,8 +10,6 @@ import scala.util.matching.Regex
 object ExtractConvertInjectMacro {
   val mapMacros: Map[String, TraitMacro] = Seq(
 
-    MacroPageOutline,
-
     MacroBr,
     MacroHtml,
     MacroImage,
