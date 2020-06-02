@@ -55,13 +55,13 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
-    val extractConvertApplyInterpreter = new ExtractConvertInjectInterpreter()
-    val extractConvertApplyMacro = new ExtractConvertInjectMacro()
-    val extractConvertApplyBackQuote = new ExtractConvertInjectBackQuote()
+    val extractConvertInjectInterpreter = new ExtractConvertInjectInterpreter()
+    val extractConvertInjectMacro = new ExtractConvertInjectMacro()
+    val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
 
-    val chunkExtracted: String = extractConvertApplyInterpreter.extract(pageContent.content)
-    val chunkMacroExtracted: String = extractConvertApplyMacro.extract(chunkExtracted)
-    val backQuoteExtracted: String = extractConvertApplyBackQuote.extract(chunkMacroExtracted)
+    val chunkExtracted: String = extractConvertInjectInterpreter.extract(pageContent.content)
+    val chunkMacroExtracted: String = extractConvertInjectMacro.extract(chunkExtracted)
+    val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(chunkMacroExtracted)
 
     def process(): T
   }
@@ -172,7 +172,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def others(s: String): Unit = {
       variableHolderState := State.Normal
-      if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+      if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
         arrayBuffer += s"<p>${formatInline(s)}</p>"
       } else {
         arrayBuffer += formatInline(s)
@@ -184,7 +184,7 @@ object InterpreterWiki extends TraitInterpreter {
       if (arrayBufferHeading.length > 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-      extractConvertApplyInterpreter.inject(extractConvertApplyMacro.inject(extractConvertApplyBackQuote.inject(arrayBuffer.mkString("\n"))))
+      extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(arrayBuffer.mkString("\n"))))
     }
   }
 
@@ -204,7 +204,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
 
     override def others(s: String): Unit = {
-      if(Seq(extractConvertApplyInterpreter, extractConvertApplyMacro, extractConvertApplyBackQuote).forall(!_.contains(s))) {
+      if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
         arrayWord += s // TODO
       } else {
         arrayWord += s // TODO
@@ -218,8 +218,8 @@ object InterpreterWiki extends TraitInterpreter {
 
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
     override def process(): Seq[Link] = {
-      val seqLinkInterpreter: Seq[Link] = extractConvertApplyInterpreter.extractLink().toList
-      val seqLinkMacro: Seq[Link] = extractConvertApplyMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+      val seqLinkInterpreter: Seq[Link] = extractConvertInjectInterpreter.extractLink().toList
+      val seqLinkMacro: Seq[Link] = extractConvertInjectMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
       val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
       seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }
@@ -227,7 +227,7 @@ object InterpreterWiki extends TraitInterpreter {
 
   class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
     override def process(): Seq[SchemaOrg] = {
-      extractConvertApplyInterpreter.extractSchemaOrg()
+      extractConvertInjectInterpreter.extractSchemaOrg()
     }
   }
 
