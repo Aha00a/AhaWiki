@@ -80,12 +80,7 @@ class Test @Inject()(implicit
 
     val empty = ""
     val dummy = "aaaa"
-
-    assertEquals(MacroPageOutline.toHtmlString(empty), "")
-    assertEquals(MacroPageOutline.toHtmlString(dummy), "")
-    assertEquals(MacroPageOutline.extractLink(""), Seq())
-    assertEquals(MacroPageOutline.extractLink(dummy), Seq())
-
+    
     assertEquals(MacroBr.toHtmlString(empty), "<br/>")
     assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
     assertEquals(MacroBr.extractLink(empty), Seq())
