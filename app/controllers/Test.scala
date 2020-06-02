@@ -80,6 +80,18 @@ class Test @Inject()(implicit
 
     testMacroBr()
 
+    testMacroMonths()
+
+    testTraitMacroName()
+
+    testBlame1()
+    testBlame2()
+
+    testEnglishCaseConverter()
+    Ok("Ok.")
+  }
+
+  def testMacroMonths()(implicit wikiContext: WikiContext): Unit = {
     assertEquals(MacroMonths.toHtmlString("1000"),
       """<ul style="list-style-type: disc;">
         |<li><a href="1000-01">1000-01</a></li>
@@ -96,14 +108,6 @@ class Test @Inject()(implicit
         |<li><a href="1000-12">1000-12</a></li>
         |</ul>""".stripMargin)
     assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
-
-    testTraitMacroName()
-
-    testBlame1()
-    testBlame2()
-
-    testEnglishCaseConverter()
-    Ok("Ok.")
   }
 
   def testTraitMacroName(): Unit = {
