@@ -136,7 +136,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
       linkCount + cosineSimilarityCount + termFrequencyCount
     }
 
-    def deleteWithRelatedData(name:String): Int = { // TODO: transaction, FK
+    def deleteWithRelatedData(name:String): Int = {
       deleteLinkCosignSimilarityTermFrequency(name)
       SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
     }
