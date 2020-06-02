@@ -44,7 +44,8 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
-          val seqLink: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
+          val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
+          Logger.info(seq.mkString("(", ")\t(", ")"))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
