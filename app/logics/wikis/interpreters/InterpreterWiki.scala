@@ -55,9 +55,9 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
-    val extractConvertApplyInterpreter = new ExtractConvertApplyInterpreter()
-    val extractConvertApplyMacro = new ExtractConvertApplyMacro()
-    val extractConvertApplyBackQuote = new ExtractConvertApplyBackQuote()
+    val extractConvertApplyInterpreter = new ExtractConvertInjectInterpreter()
+    val extractConvertApplyMacro = new ExtractConvertInjectMacro()
+    val extractConvertApplyBackQuote = new ExtractConvertInjectBackQuote()
 
     val chunkExtracted: String = extractConvertApplyInterpreter.extract(pageContent.content)
     val chunkMacroExtracted: String = extractConvertApplyMacro.extract(chunkExtracted)

@@ -5,8 +5,7 @@ import models.WikiContext
 
 import scala.collection.mutable.ArrayBuffer
 
-// TODO: rename to ExtractConvertInject
-trait ExtractConvertApply {
+trait ExtractConvertInject {
   val arrayBuffer = new ArrayBuffer[(String, String)]()
 
   def getUniqueKey: String = {

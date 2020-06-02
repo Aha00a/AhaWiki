@@ -2,9 +2,8 @@ package logics.wikis
 
 import models.WikiContext
 
-// TODO: rename to ExtractConvertInject
 // TODO: Refactor this.
-class ExtractConvertApplyInterpreterCustom(converter:String => String) extends ExtractConvertApply {
+class ExtractConvertInjectInterpreterCustom(converter:String => String) extends ExtractConvertInject {
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
       s

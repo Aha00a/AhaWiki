@@ -19,7 +19,7 @@ import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import logics.wikis.{ExtractConvertApplyInterpreterCustom, PageLogic, WikiPermission}
+import logics.wikis.{ExtractConvertInjectInterpreterCustom, PageLogic, WikiPermission}
 import models._
 import play.api.cache.CacheApi
 import play.api.data.Form
@@ -373,7 +373,7 @@ class Wiki @Inject()(implicit
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
         if (WikiPermission().isWritable(pageContent)) {
-          val extractConvertApplyInterpreterRefresh = new ExtractConvertApplyInterpreterCustom(s => {
+          val extractConvertApplyInterpreterRefresh = new ExtractConvertInjectInterpreterCustom(s => {
             val pageContentChunk = PageContent(s)
             if(url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
               url match {

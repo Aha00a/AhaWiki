@@ -7,8 +7,7 @@ import models.WikiContext
 import scala.collection.mutable
 import scala.util.matching.Regex
 
-// TODO: rename to ExtractConvertInject
-object ExtractConvertApplyMacro {
+object ExtractConvertInjectMacro {
   val mapMacros: Map[String, TraitMacro] = Seq(
 
     MacroPageOutline,
@@ -54,8 +53,7 @@ object ExtractConvertApplyMacro {
   ).map(m => m.name -> m).toMap
 }
 
-// TODO: rename to ExtractConvertInject
-class ExtractConvertApplyMacro() extends ExtractConvertApply {
+class ExtractConvertInjectMacro() extends ExtractConvertInject {
   val mapVariable = new mutable.HashMap[String, String]()
 
   val regex: Regex =
@@ -82,7 +80,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
     case regex(name, argument) =>
-      ExtractConvertApplyMacro.mapMacros.get(name).map(_(argument)).getOrElse {
+      ExtractConvertInjectMacro.mapMacros.get(name).map(_(argument)).getOrElse {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
@@ -94,7 +92,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
                 macroErrorResult
               case RenderingMode.Preview =>
                 val linkAhaWikiSyntaxMacro = InterpreterWiki.formatInline("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
-                val macroList = InterpreterWiki.formatInline(ExtractConvertApplyMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
+                val macroList = InterpreterWiki.formatInline(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
                 val macroInfoResult = MacroInfo(Seq(
                   "Available Macros",
                   macroList,
@@ -109,7 +107,7 @@ class ExtractConvertApplyMacro() extends ExtractConvertApply {
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
-      case regex(name, argument) => ExtractConvertApplyMacro.mapMacros.get(name)
+      case regex(name, argument) => ExtractConvertInjectMacro.mapMacros.get(name)
         .map(_.extractLink(argument))
         .getOrElse(Seq())
       case _ => Seq()
