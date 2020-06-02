@@ -91,8 +91,8 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
               case RenderingMode.Normal =>
                 macroErrorResult
               case RenderingMode.Preview =>
-                val linkAhaWikiSyntaxMacro = InterpreterWiki.formatInline("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
-                val macroList = InterpreterWiki.formatInline(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
+                val linkAhaWikiSyntaxMacro = InterpreterWiki.inlineToHtmlString("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
+                val macroList = InterpreterWiki.inlineToHtmlString(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
                 val macroInfoResult = MacroInfo.toHtmlString(Seq(
                   "Available Macros",
                   macroList,

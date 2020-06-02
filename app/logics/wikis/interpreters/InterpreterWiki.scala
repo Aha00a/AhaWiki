@@ -133,7 +133,7 @@ object InterpreterWiki extends TraitInterpreter {
         .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${formatInline(title)}</h$headingLength>"""
+      arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
     }
 
     override def list(indentString: String, style: String, content: String): Unit = {
@@ -162,9 +162,9 @@ object InterpreterWiki extends TraitInterpreter {
       }
 
       if(indent == 0) {
-        arrayBuffer += formatInline(content)
+        arrayBuffer += inlineToHtmlString(content)
       } else {
-        arrayBuffer += "<li>" + formatInline(content) + "</li>"
+        arrayBuffer += "<li>" + inlineToHtmlString(content) + "</li>"
       }
 
       oldIndent = indent
@@ -173,9 +173,9 @@ object InterpreterWiki extends TraitInterpreter {
     override def others(s: String): Unit = {
       variableHolderState := State.Normal
       if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
-        arrayBuffer += s"<p>${formatInline(s)}</p>"
+        arrayBuffer += s"<p>${inlineToHtmlString(s)}</p>"
       } else {
-        arrayBuffer += formatInline(s)
+        arrayBuffer += inlineToHtmlString(s)
       }
     }
 
@@ -279,7 +279,7 @@ object InterpreterWiki extends TraitInterpreter {
     }.filter(_ != null)
   }
 
-  def formatInline(line: String)(implicit wikiContext:WikiContext): String = {
+  def inlineToHtmlString(line: String)(implicit wikiContext:WikiContext): String = {
     var s = line
     for((regex, replacement) <- List(
       ("""<""".r, "&lt;"),
