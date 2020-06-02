@@ -7,7 +7,7 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.{AhaWikiQuery, Link, WikiContext}
 
 object MacroSeeAlso extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
   }}

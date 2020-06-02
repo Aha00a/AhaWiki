@@ -17,9 +17,9 @@ import scala.util.matching.Regex
 object MacroCalendar extends TraitMacro {
   val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => apply(wikiContext.name)
-    case "-" => apply(wikiContext.name + ",-")
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+    case "" | null => toHtmlString(wikiContext.name)
+    case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
       implicit val request: Request[Any] = wikiContext.request
       implicit val cacheApi: CacheApi = wikiContext.cacheApi
@@ -57,7 +57,7 @@ object MacroCalendar extends TraitMacro {
         </tbody>
       </table>
       r.toString
-    case _ => MacroError(s"Argument Error - [[$name($argument)]]")
+    case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 
   @scala.annotation.tailrec

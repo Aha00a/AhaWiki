@@ -8,7 +8,7 @@ import models.{AhaWikiQuery, CosineSimilarity, WikiContext}
 import scala.collection.immutable
 
 object MacroSimilarPages extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
     InterpreterWiki.toHtmlString(getMarkupSimilarPages(argument.getOrElse(wikiContext.nameTop)))
   }
 

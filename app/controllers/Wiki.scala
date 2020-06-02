@@ -131,7 +131,7 @@ class Wiki @Inject()(implicit
             val r = <table class="month simpleTable">
               <thead>
                 <tr>
-                  <th colspan="31">{MacroMonthName(s"--$mm")}</th>
+                  <th colspan="31">{MacroMonthName.toHtmlString(s"--$mm")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -167,7 +167,7 @@ class Wiki @Inject()(implicit
             val r = <table class="month simpleTable">
               <thead>
                 <tr>
-                  <th colspan="31">{MacroMonthName(s"--$mm")}</th>
+                  <th colspan="31">{MacroMonthName.toHtmlString(s"--$mm")}</th>
                 </tr>
               </thead>
               <tbody>

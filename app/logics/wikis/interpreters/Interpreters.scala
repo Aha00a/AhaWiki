@@ -34,7 +34,7 @@ object Interpreters extends TraitInterpreter {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toHtmlString(content))
-      .getOrElse(MacroError(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
+      .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
   override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {

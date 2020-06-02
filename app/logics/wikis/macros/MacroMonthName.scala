@@ -10,8 +10,8 @@ import com.aha00a.play.Implicits._
 import models.WikiContext
 
 object MacroMonthName extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => apply(wikiContext.name)
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+    case "" | null => toHtmlString(wikiContext.name)
     case DateTimeUtil.regexDashDashMonth(mm) =>
       s"""${Month.of(mm.toInt).getDisplayName(TextStyle.FULL, wikiContext.request.locale)}"""
   }

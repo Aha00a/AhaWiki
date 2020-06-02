@@ -11,14 +11,14 @@ import scala.util.matching.Regex
 
 object MacroRecentChangesList extends TraitMacro {
   val regexDigits: Regex = """^(\d+)$""".r
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {
       case "" | null => toHtmlString(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc))
       case regexDigits(i) => toHtmlString(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc).take(i.toInt))
-      case _ => MacroError(s"Bad argument - [[$name($argument)]]")
+      case _ => MacroError.toHtmlString(s"Bad argument - [[$name($argument)]]")
     }
   }
 

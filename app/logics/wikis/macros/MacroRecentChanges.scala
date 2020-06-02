@@ -6,7 +6,7 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.WikiContext
 
 object MacroRecentChanges extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     InterpreterWiki.toHtmlString(
       wikiContext.listPageByPermission.groupBy(_.year).toList.sortBy(_._1)(desc).map {

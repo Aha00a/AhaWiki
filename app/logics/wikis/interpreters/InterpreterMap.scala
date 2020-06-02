@@ -74,7 +74,7 @@ object InterpreterMap extends TraitInterpreter {
     val geocodingKey = ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
     val mapJavaScriptApiKey = ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
     if(geocodingKey.isNullOrEmpty || mapJavaScriptApiKey.isNullOrEmpty){
-      return MacroError(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
+      return MacroError.toHtmlString(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
     }
 
     implicit val request: Request[Any] = wikiContext.request

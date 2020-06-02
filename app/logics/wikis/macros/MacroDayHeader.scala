@@ -6,9 +6,9 @@ import logics.wikis.interpreters.Interpreters
 import models.WikiContext
 
 object MacroDayHeader extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = {
     argument match {
-      case "" | null => apply(wikiContext.nameTop)
+      case "" | null => toHtmlString(wikiContext.nameTop)
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop == wikiContext.nameBottom =>
         Interpreters.toHtmlString(
           s"""
@@ -22,7 +22,7 @@ object MacroDayHeader extends TraitMacro {
              |== [${wikiContext.nameTop}] [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
-      case _ => MacroError(s"Argument Error - [[$name($argument)]]")
+      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
     }
   }
 

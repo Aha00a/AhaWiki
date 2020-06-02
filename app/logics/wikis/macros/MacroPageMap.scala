@@ -3,7 +3,7 @@ package logics.wikis.macros
 import models.{AhaWikiQuery, WikiContext}
 
 object MacroPageMap extends TraitMacro {
-  override def apply(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
     views.html.Wiki.graph(
       AhaWikiQuery().Link.selectAllButNotEmpty()
         .filter(l => l.and(wikiContext.pageCanSee))

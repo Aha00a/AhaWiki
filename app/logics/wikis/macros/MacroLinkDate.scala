@@ -8,8 +8,8 @@ import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
 
 object MacroLinkDate extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => apply(wikiContext.name)
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+    case "" | null => toHtmlString(wikiContext.name)
     case DateTimeUtil.regexYearDashMonth(y, m) => ""
     case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
       val links = Seq(
@@ -29,7 +29,7 @@ object MacroLinkDate extends TraitMacro {
          |$links
          |</div>
          |""".stripMargin
-    case _ => MacroError(s"Argument Error - [[$name($argument)]]")
+    case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 
   private def getSeqLinkAround(argument: String)(implicit wikiContext: WikiContext): Seq[LinkMarkup] = {

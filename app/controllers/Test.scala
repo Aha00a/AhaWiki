@@ -81,17 +81,17 @@ class Test @Inject()(implicit
     val empty = ""
     val dummy = "aaaa"
 
-    assertEquals(MacroPageOutline(empty), "")
-    assertEquals(MacroPageOutline(dummy), "")
+    assertEquals(MacroPageOutline.toHtmlString(empty), "")
+    assertEquals(MacroPageOutline.toHtmlString(dummy), "")
     assertEquals(MacroPageOutline.extractLink(""), Seq())
     assertEquals(MacroPageOutline.extractLink(dummy), Seq())
 
-    assertEquals(MacroBr(empty), "<br/>")
-    assertEquals(MacroBr(dummy), "<br/>")
+    assertEquals(MacroBr.toHtmlString(empty), "<br/>")
+    assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
     assertEquals(MacroBr.extractLink(empty), Seq())
     assertEquals(MacroBr.extractLink(dummy), Seq())
 
-    assertEquals(MacroMonths("1000"),
+    assertEquals(MacroMonths.toHtmlString("1000"),
       """<ul style="list-style-type: disc;">
         |<li><a href="1000-01">1000-01</a></li>
         |<li><a href="1000-02">1000-02</a></li>

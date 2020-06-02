@@ -5,8 +5,8 @@ import logics.wikis.{PageLogic, WikiPermission}
 import models.{AhaWikiQuery, PageContent, PageWithoutContentWithSize, WikiContext}
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = argument match {
-    case "" | null => apply(wikiContext.name)
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+    case "" | null => toHtmlString(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
       val list: List[PageWithoutContentWithSize] = wikiContext.listPageByPermission
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
@@ -14,7 +14,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
         if (WikiPermission()(wikiContext.request, wikiContext.cacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.toHtmlString(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {
-          MacroError(s"Permission Denied - [[$name($argument)]]")
+          MacroError.toHtmlString(s"Permission Denied - [[$name($argument)]]")
         }
       }).mkString("\n")
     }

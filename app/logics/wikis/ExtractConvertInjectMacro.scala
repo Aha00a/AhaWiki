@@ -80,20 +80,20 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
 
   override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
     case regex(name, argument) =>
-      ExtractConvertInjectMacro.mapMacros.get(name).map(_(argument)).getOrElse {
+      ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
           case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
           case _ =>
-            val macroErrorResult = MacroError(s"$s - Macro not found.")
+            val macroErrorResult = MacroError.toHtmlString(s"$s - Macro not found.")
             wikiContext.renderingMode match {
               case RenderingMode.Normal =>
                 macroErrorResult
               case RenderingMode.Preview =>
                 val linkAhaWikiSyntaxMacro = InterpreterWiki.formatInline("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
                 val macroList = InterpreterWiki.formatInline(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
-                val macroInfoResult = MacroInfo(Seq(
+                val macroInfoResult = MacroInfo.toHtmlString(Seq(
                   "Available Macros",
                   macroList,
                   linkAhaWikiSyntaxMacro

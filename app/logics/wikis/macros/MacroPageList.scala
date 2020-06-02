@@ -5,7 +5,7 @@ import logics.wikis.interpreters.InterpreterTable
 import models.WikiContext
 
 object MacroPageList extends TraitMacro {
-  override def apply(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.toHtmlString(
+  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = InterpreterTable.toHtmlString(
     "#!Table tsv 1 tablesorter\nName\tDate\tSize\tRevision\tAuthor\tRemote Address\tComment\n" +
       wikiContext.listPageByPermission.map { t =>
       Seq(
