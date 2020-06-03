@@ -70,22 +70,22 @@ class Test @Inject()(implicit
     assertEquals("10".toIntOrZero, 10)
 
     testPageContent()
-    testInterpreterTable()
-    testInterpreterWiki()
-    testInterpreterVim()
-    testInterpreterSchema()
-    testHeadingNumber()
-
-    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
-
-    testMacroBr()
-
-    testMacroMonths()
 
     testTraitMacroName()
 
-    testBlame1()
-    testBlame2()
+    testMacroBr()
+    testMacroMonths()
+
+    testHeadingNumber()
+
+    testInterpreterWiki()
+    testInterpreterTable()
+    testInterpreterVim()
+    testInterpreterSchema()
+
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
+
+    testBlame()
 
     testEnglishCaseConverter()
     Ok("Ok.")
@@ -504,6 +504,11 @@ class Test @Inject()(implicit
 
   def filetest: Action[AnyContent] = Action { implicit request =>
     Ok("Ok.")
+  }
+
+  def testBlame(): Unit = {
+    testBlame1()
+    testBlame2()
   }
 
   //noinspection ZeroIndexToHead
