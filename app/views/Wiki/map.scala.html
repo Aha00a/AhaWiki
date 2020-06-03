@@ -171,12 +171,30 @@
                 })();
             }
 
-            var bounds = new google.maps.LatLngBounds();
-            for (var i = 0; i < markers.length; i++) {
-                bounds.extend(markers[i].position);
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    map.setCenter(pos);
+                    map.setZoom(17);
+                }, function () {
+                    handleLocationError();
+                });
+            } else {
+                handleLocationError();
             }
 
-            map.fitBounds(bounds);
+            function handleLocationError() {
+                var bounds = new google.maps.LatLngBounds();
+                for (var i = 0; i < markers.length; i++) {
+                    bounds.extend(markers[i].position);
+                }
+
+                map.fitBounds(bounds);
+            }
         });
     </script>
     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
