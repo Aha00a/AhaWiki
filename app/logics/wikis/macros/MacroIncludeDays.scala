@@ -6,7 +6,6 @@ import java.time.{LocalDateTime, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import logics.wikis.PageLogic
 import models.WikiContext
 import play.api.cache.CacheApi
 import play.api.db.Database
