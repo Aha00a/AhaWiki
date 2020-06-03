@@ -17,6 +17,7 @@ import scala.util.matching.Regex
 object MacroCalendar extends TraitMacro {
   val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
+  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
