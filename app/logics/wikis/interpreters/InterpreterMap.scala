@@ -5,11 +5,10 @@ import java.net.URLEncoder
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiQuery, LatLng, Link, PageContent, WikiContext}
+import models._
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
@@ -17,15 +16,13 @@ import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
-import scala.collection.mutable
-
 object InterpreterMap extends TraitInterpreter {
   case class Location(
                        name:String,
                        exists: Boolean,
                        address:String,
                        score:Double,
-                       rest:Seq[(String, String)]
+                       raw:Seq[String]
                      )(implicit wikiContext: WikiContext) {
     val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.cacheApi, wikiContext.actorAhaWiki, wikiContext.database)
     val fillOpacity: Double = score / 10
@@ -34,36 +31,33 @@ object InterpreterMap extends TraitInterpreter {
     val labelColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
     val scale:Double = score
     val urlMap:String = address.toOption.map(u => s"https://www.google.com/maps/search/${URLEncoder.encode(u, "utf-8")}").getOrElse("")
-    def toSeq: Seq[String] = Seq(name, address) ++ rest.map(_._2)
   }
 
   case class LocationListVisited(location: Location, listVisited: List[String])
 
-  def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[String], Seq[Location]) = {
+  def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location]) = {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
       val head: Seq[String] = rowColumnData.head
       val tail: Seq[Seq[String]] = rowColumnData.tail
 
-      val seqHeaderName: Seq[String] = Seq("Name", "Address", "Score")
-      val seqHeaderIndex: Seq[Int] = seqHeaderName.map(head.indexOf)
-      val seqIndexRest: Seq[Int] = head.zipWithIndex.filterNot(v => seqHeaderName.contains(v._1)).map(_._2)
-      val seqHeaderRest: Seq[String] = seqIndexRest.map(i => head.getOrElse(i, ""))
+      val indexName = head.indexOf("Name")
+      val indexScore = head.indexOf("Score")
+      val indexAddress = head.indexOf("Address")
 
       //noinspection ZeroIndexToHead
       val locations: Seq[Location] = tail.map(row => {
-        val name = row.getOrElse(seqHeaderIndex(0), "")
+        val name = row.getOrElse(indexName, "")
         Location(
           name,
           setPageName.contains(name),
-          row.getOrElse(seqHeaderIndex(1), ""),
-          row.getOrElse(seqHeaderIndex(2), "").toOption.map(_.toDoubleOrZero).getOrElse(0),
-          seqIndexRest
-            .map(v => (head.getOrElse(v, "").getOrElse(""), row.getOrElse(v, "").getOrElse("")))
+          row.getOrElse(indexAddress, ""),
+          row.getOrElse(indexScore, "").toOption.map(_.toDoubleOrZero).getOrElse(0),
+          row
         )
       })
-      (seqHeaderName, seqHeaderRest, locations)
+      (head, locations)
     }
   }
 
@@ -80,59 +74,27 @@ object InterpreterMap extends TraitInterpreter {
     implicit val request: Request[Any] = wikiContext.request
     implicit val cacheApi: CacheApi = wikiContext.cacheApi
     implicit val database: Database = wikiContext.database
-    val (seqHeaderName, seqHeaderRest, locations) = parse(pageContent)
+    val (seqHeader, locations) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>
       val seqLocationLastVisited = locations.map(l => {
         val listDates = AhaWikiQuery().Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
         LocationListVisited(l, listDates)
       })
 
-      val seqAddressLocation: Seq[(Seq[String], LocationListVisited)] = seqLocationLastVisited
-        .filterNot(_.location.address.isNullOrEmpty)
-        .map(l => (l.location.address.split(" ").toSeq.padTo(3, ""), l))
-
-      //noinspection ZeroIndexToHead
-      val mapSeqTuple = seqAddressLocation.groupBy(_._1(0))
-      val mapMapSeqTuple = mapSeqTuple.mapValues(_.groupBy(_._1(1)))
-      val mapMapMapSeqTuple = mapMapSeqTuple.mapValues(_.mapValues(_.groupBy(_._1(2))))
-      val mapMapMapSeq = mapMapMapSeqTuple.mapValues(_.mapValues(_.mapValues(_.map(_._2))))
-
-      val buffer = mutable.Buffer[String]()
-      for ((k1, v1) <- mapMapMapSeq.toList.sortBy(_._1)) {
-        if (!k1.isNullOrEmpty) buffer += s"== $k1"
-        for ((k2, v2) <- v1.toList.sortBy(_._1)) {
-          if (!k2.isNullOrEmpty) buffer += s"=== $k2"
-          for ((k3, v3) <- v2.toList.sortBy(_._1)) {
-            if (!k3.isNullOrEmpty) buffer += s"==== $k3"
-            for (v <- v3) {
-              if (v.location.exists) {
-                buffer += s" * [${v.location.name}] - ${v.location.score}"
-              } else {
-                buffer += s" * ${v.location.name} - ${v.location.score}"
-              }
-              buffer += s"  * ${v.location.address}"
-              buffer ++= v.location.rest.filterNot(_._2.isNullOrEmpty).map(v => s"  * ${v._1}: ${v._2}")
-              buffer += ""
-            }
-          }
-        }
-      }
-
-      val htmlStringMap: String = views.html.Wiki.map(mapJavaScriptApiKey, pageContent.argument.getOrElse(0, ""), pageContent.argument.getOrElse(1, ""), seqLocationLastVisited, seqHeaderName, seqHeaderRest).toString()
-      val htmlStringWiki: String = InterpreterWiki.toHtmlString(buffer.mkString("\n", "\n", "\n"))
-      htmlStringMap + htmlStringWiki
+      views.html.Wiki.map(
+        mapJavaScriptApiKey,
+        pageContent.argument.getOrElse(0, ""),
+        pageContent.argument.getOrElse(1, ""),
+        seqHeader,
+        seqLocationLastVisited
+      ).toString()
     }
   }
 
   override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    implicit val configuration: Configuration = wikiContext.configuration
-
     val pageContent: PageContent = PageContent(content)
-    implicit val request: Request[Any] = wikiContext.request
-    implicit val cacheApi: CacheApi = wikiContext.cacheApi
-    val (seqHeaderName, seqHeaderRest, locations) = parse(pageContent)
-    val seq = seqHeaderName ++ seqHeaderRest ++ locations.flatMap(_.toSeq)
-    seq
+    val (seqHeader, locations) = parse(pageContent)
+    seqHeader ++ locations.flatMap(_.raw)
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
