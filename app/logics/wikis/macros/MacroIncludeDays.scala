@@ -18,6 +18,7 @@ object MacroIncludeDays extends TraitMacro {
   val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
   //noinspection ScalaUnusedSymbol
+  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
