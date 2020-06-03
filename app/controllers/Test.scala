@@ -69,6 +69,8 @@ class Test @Inject()(implicit
     assertEquals("aa".toIntOrZero, 0)
     assertEquals("10".toIntOrZero, 10)
 
+    testEnglishCaseConverter()
+
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     testPageContent()
@@ -80,15 +82,14 @@ class Test @Inject()(implicit
 
     testHeadingNumber()
 
-    testInterpreterWiki()
-    testInterpreterTable()
     testInterpreterVim()
+    testInterpreterTable()
     testInterpreterSchema()
+    testInterpreterWiki()
 
 
     testBlame()
 
-    testEnglishCaseConverter()
     Ok("Ok.")
   }
 
