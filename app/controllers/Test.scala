@@ -69,6 +69,8 @@ class Test @Inject()(implicit
     assertEquals("aa".toIntOrZero, 0)
     assertEquals("10".toIntOrZero, 10)
 
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
+
     testPageContent()
 
     testTraitMacroName()
@@ -83,7 +85,6 @@ class Test @Inject()(implicit
     testInterpreterVim()
     testInterpreterSchema()
 
-    implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     testBlame()
 
