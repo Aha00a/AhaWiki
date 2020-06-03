@@ -5,7 +5,6 @@ import java.time.{DayOfWeek, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
 import play.api.cache.CacheApi
