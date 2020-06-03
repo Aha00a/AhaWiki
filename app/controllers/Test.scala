@@ -6,13 +6,12 @@ import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import javax.inject.{Inject, Named, Singleton}
-import logics.AhaWikiConfig
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.{InterpreterSchema, InterpreterWiki, Interpreters}
 import logics.wikis.macros._
-import models.{Blame, Link, PageContent, SchemaOrg, WikiContext}
+import models._
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
