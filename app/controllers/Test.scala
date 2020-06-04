@@ -347,7 +347,7 @@ class Test @Inject()(implicit
         """#!Schema Person
           |name	KIM, Aha
           |url	https://aha00a.com
-          |memberOf	Aharise""".stripMargin
+          |memberOf	AhariseNotExists""".stripMargin
 
       val wikiMarkup =
         s"""[[[$schemaMarkup
@@ -373,7 +373,7 @@ class Test @Inject()(implicit
           |                <dt>
           |                  <span title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of </span>
           |                </dt>
-          |                <dd property="memberOf"><a href="Aharise" class="">Aharise</a></dd>
+          |                <dd property="memberOf"><a href="AhariseNotExists" class="missing">AhariseNotExists</a></dd>
           |              </div>
           |        </div>
           |      </dl></div>""".stripMargin
@@ -381,7 +381,7 @@ class Test @Inject()(implicit
       assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
       assertEquals(Interpreters.toHtmlString(wikiMarkup), interpreted)
 
-      val extractWordResult = Seq("#!Schema", "Person", "name", "KIM,", "Aha", "url", "https://aha00a.com", "memberOf", "Aharise")
+      val extractWordResult = Seq("#!Schema", "Person", "name", "KIM,", "Aha", "url", "https://aha00a.com", "memberOf", "AhariseNotExists")
       assertEquals(InterpreterSchema.toSeqWord(schemaMarkup), extractWordResult)
       assertEquals(Interpreters.toSeqWord(wikiMarkup), extractWordResult)
 
@@ -392,7 +392,7 @@ class Test @Inject()(implicit
         SchemaOrg("UnitTest", "Person", "", ""),
         SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
         SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
-        SchemaOrg("UnitTest", "Person", "memberOf", "Aharise")
+        SchemaOrg("UnitTest", "Person", "memberOf", "AhariseNotExists")
       )
       assertEquals(InterpreterSchema.toSeqSchemaOrg(schemaMarkup), extractSchemaResult)
       assertEquals(Interpreters.toSeqSchemaOrg(wikiMarkup), extractSchemaResult)
