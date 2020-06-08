@@ -2,12 +2,11 @@ package controllers
 
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.play.Implicits._
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Named}
 import logics.wikis.interpreters.InterpreterVim
 import play.api.cache.CacheApi
 import play.api.mvc._
 
-@Singleton
 class Dev @Inject()(
   implicit cacheApi: CacheApi,
   system: ActorSystem,

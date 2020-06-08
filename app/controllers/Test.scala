@@ -5,7 +5,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
-import javax.inject.{Inject, Named, Singleton}
+import javax.inject.{Inject, Named}
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
@@ -17,7 +17,6 @@ import play.api.db.Database
 import play.api.mvc._
 import play.api.{Configuration, Logger}
 
-@Singleton
 class Test @Inject()(implicit
                      cacheApi: CacheApi,
                      system: ActorSystem,

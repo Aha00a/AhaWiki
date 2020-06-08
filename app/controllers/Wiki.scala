@@ -14,7 +14,7 @@ import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
 import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
-import javax.inject.{Singleton, _}
+import javax.inject._
 import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
@@ -34,8 +34,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
-// TODO: Why???? Singleton?
-@Singleton
 class Wiki @Inject()(implicit
                      cacheApi: CacheApi,
                      actorSystem: ActorSystem,

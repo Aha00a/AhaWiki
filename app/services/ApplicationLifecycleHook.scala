@@ -8,8 +8,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
-import logics.SchemaOrg
-import models.{AhaWikiQuery, Link, Page}
+import models.{AhaWikiQuery, Page}
 import play.api.Logger
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
@@ -18,7 +17,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Codec
 
-@Singleton
 class ApplicationLifecycleHook @Inject()(implicit
                                          applicationLifecycle: ApplicationLifecycle,
                                          actorSystem: ActorSystem,
