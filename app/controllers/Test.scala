@@ -1,21 +1,26 @@
 package controllers
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
-import javax.inject.{Inject, Named}
+import javax.inject.Inject
+import javax.inject.Named
 import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterVim.Parser
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
-import logics.wikis.interpreters.{InterpreterSchema, InterpreterWiki, Interpreters}
+import logics.wikis.interpreters.InterpreterSchema
+import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros._
 import models._
 import play.api.cache.CacheApi
 import play.api.db.Database
 import play.api.mvc._
-import play.api.{Configuration, Logger}
+import play.api.Configuration
+import play.api.Logger
 
 class Test @Inject()(implicit
                      cacheApi: CacheApi,
