@@ -131,10 +131,10 @@ html, body {
 		h1, h2, h3, h4, h5, h6 {
 			margin: 0;
 			text-shadow: 1px 1px 2px #99a;
+			word-break: keep-all;
 			.headingNumber {
 				text-decoration: none;
 			}
-
 		}
 
 		h2, h3, h4, h5, h6 {
@@ -872,6 +872,7 @@ html, body {
 			margin-left: 150px;
 			max-height: 400px;
 			overflow: hidden;
+			white-space: pre-wrap;
 		}
 	}
 
@@ -901,13 +902,13 @@ html, body {
 				box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
 			}
 			>.sheetLink {
+				top: 10px;
 				right: 60px;
-				bottom: 24px;
 				padding: 9px 12px;
 			}
 			>.refreshLink {
-				top: 10px;
-				right: 60px;
+				top: 60px;
+				right: 10px;
 				padding: 9px 12px;
 			}
 		}
