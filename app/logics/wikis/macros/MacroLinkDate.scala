@@ -8,6 +8,7 @@ import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
 
 object MacroLinkDate extends TraitMacro {
+  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case DateTimeUtil.regexYearDashMonth(y, m) => ""

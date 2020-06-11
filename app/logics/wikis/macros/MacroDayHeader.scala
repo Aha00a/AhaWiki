@@ -6,6 +6,7 @@ import logics.wikis.interpreters.Interpreters
 import models.WikiContext
 
 object MacroDayHeader extends TraitMacro {
+  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = {
     argument match {
       case "" | null => toHtmlString(wikiContext.nameTop)
