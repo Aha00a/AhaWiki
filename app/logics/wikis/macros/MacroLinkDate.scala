@@ -15,7 +15,7 @@ object MacroLinkDate extends TraitMacro {
     case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
       val links = Seq(
         s"${l(s"$y-$m-$d")}",
-        s"${l(s"$y-$m")}-${l(s"----${d}")}",
+        s"${l(s"$y-$m")}-${l(s"----$d")}",
         s"${l(y)}-${l(s"--$m-$d")}",
         s"${l(y)}-${l(s"--$m")}-${l(s"----$d")}",
         ""
