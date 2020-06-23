@@ -53,7 +53,7 @@ object InterpreterMap extends TraitInterpreter {
           name,
           setPageName.contains(name),
           row.getOrElse(indexAddress, ""),
-          row.getOrElse(indexScore, "").toOption.map(_.toDoubleOrZero).getOrElse(0),
+          row.getOrElse(indexScore, "").toOption.map(score => if(score == "Origin") 10 else score.toDoubleOrZero).getOrElse(0),
           row
         )
       })
