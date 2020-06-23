@@ -71,4 +71,27 @@ object AhaWikiCache {
       }
     }
   }
+
+  object Distance {
+    def key(src: String, dst: String): String = "Addr" + src + dst
+    def set(src: String, dst: String, meters: Int)(implicit cacheApi: CacheApi): Unit = cacheApi.set(key(src, dst), meters, 365 days)
+    def get(src: String, dst: String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef, database: Database): Int = {
+      cacheApi.get[Int](key(src, dst)) match {
+        case Some(meters) => meters
+        case _ =>
+          database.withConnection { implicit connection =>
+            AhaWikiQuery().DistanceCache.select(src, dst) match {
+              case Some(distance) =>
+                val meters = distance.meters
+                AhaWikiCache.Distance.set(src, dst, meters)
+                meters
+              case None =>
+                import actors.ActorAhaWiki
+                actorAhaWiki ! ActorAhaWiki.Distance(src, dst)
+                0
+            }
+          }
+      }
+    }
+  }
 }

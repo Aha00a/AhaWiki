@@ -27,6 +27,8 @@ object ActorAhaWiki {
 
   case class Geocode(address: String)
 
+  case class Distance(src: String, dst: String)
+
 }
 
 class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
@@ -82,6 +84,30 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
           database.withTransaction { implicit connection =>
             AhaWikiQuery().GeocodeCache.replace(address, latLng)
             AhaWikiCache.AddressToLatLng.set(address, latLng)
+          }
+        })
+    }
+    case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
+      ws
+        .url("https://maps.googleapis.com/maps/api/distancematrix/json")
+        .withQueryString(
+          "mode" -> "transit",
+          "origins" -> src,
+          "destinations" -> dst,
+          "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
+        )
+        .get()
+        .map(r => {
+          Logger.info(s"$src - $dst - ${r.json}")
+          (
+            (r.json \ "rows" \ 0 \ "elements" \ 0 \ "distance" \ "value").as[Int],
+            (r.json \ "rows" \ 0 \ "elements" \ 0 \ "duration" \ "value").as[Int]
+          )
+        })
+        .map(metersSeconds => {
+          database.withTransaction { implicit connection =>
+            AhaWikiQuery().DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
+            AhaWikiCache.Distance.set(src, dst, metersSeconds._1)
           }
         })
     }

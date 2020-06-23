@@ -5,7 +5,8 @@
         url:String,
         sheetName:String,
         seqHeader: Seq[String],
-        seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited]
+        seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited],
+        mapAddressMeters: Map[String, Int]
 )(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div class="interpreterMap">
@@ -69,6 +70,9 @@
                         @for(headerName <- seqHeader) {
                             <th rowspan="2">@headerName</th>
                         }
+                        @if(mapAddressMeters.nonEmpty) {
+                            <th rowspan="2">Distance</th>
+                        }
                         @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
                             <th colspan="3">Visited</th>
                         }
@@ -105,10 +109,13 @@
                                     }
                                 }</td>
                             }
+                            @if(mapAddressMeters.nonEmpty) {
+                                <td class="distance">@(mapAddressMeters.get(locationLastVisited.location.address).map(m => java.text.NumberFormat.getIntegerInstance.format(m)).getOrElse(""))</td>
+                            }
                             @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
                                 <td>@(locationLastVisited.listVisited.headOption.getOrElse(""))</td>
                                 <td>@(locationLastVisited.listVisited.lastOption.getOrElse(""))</td>
-                                <td>@(locationLastVisited.listVisited.length)</td>
+                                <td class="count">@(locationLastVisited.listVisited.length)</td>
                             }
                         </tr>
                     }
