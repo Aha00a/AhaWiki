@@ -18,13 +18,9 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
       val duration = endTime - startTime
       val uri: String = requestHeader.uri
       if(uri.isNotNullOrEmpty && !uri.startsWith("/public/"))
-        logger.info(Seq(getRemoteAddress(requestHeader).padRight(15), s"${duration}ms".padLeft(7), result.header.status, requestHeader.method, uri, requestHeader.userAgent.getOrElse("")).mkString("\t"))
+        logger.info(Seq(requestHeader.remoteAddressWithXRealIp.padRight(15), s"${duration}ms".padLeft(7), result.header.status, requestHeader.method, uri, requestHeader.userAgent.getOrElse("")).mkString("\t"))
 
       result.withHeaders("Request-Time" -> duration.toString)
     })
-  }
-
-  def getRemoteAddress(requestHeader: RequestHeader): String = {
-    requestHeader.headers.get("X-Real-IP").getOrElse(requestHeader.remoteAddress)
   }
 }
