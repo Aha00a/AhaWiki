@@ -53,11 +53,23 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
       }
     }
 
-    val apiPeopleMeNew: Future[Option[JsValue]] = wsClient.url("https://people.googleapis.com/v1/people/me").withQueryString("access_token" -> accessToken, "personFields" -> "emailAddresses").get().map(responseToOptionJsValue)
+    val apiPeopleMeNew: Future[Option[JsValue]] = wsClient
+      .url("https://people.googleapis.com/v1/people/me")
+      .withQueryString(
+        "access_token" -> accessToken,
+        "personFields" -> "emailAddresses"
+      )
+      .get()
+      .map(responseToOptionJsValue)
+
     apiPeopleMeNew flatMap {
       case Some(z) => Future(Some(z))
       case None =>
-        val apiPeopleMeLegacy: Future[Option[JsValue]] = wsClient.url("https://www.googleapis.com/plus/v1/people/me").withQueryString("access_token" -> accessToken).get().map(responseToOptionJsValue)
+        val apiPeopleMeLegacy: Future[Option[JsValue]] = wsClient
+          .url("https://www.googleapis.com/plus/v1/people/me")
+          .withQueryString("access_token" -> accessToken)
+          .get()
+          .map(responseToOptionJsValue)
         apiPeopleMeLegacy
     }
   }
