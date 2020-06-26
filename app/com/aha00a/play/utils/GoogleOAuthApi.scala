@@ -6,6 +6,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.{WSClient, WSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.async.Async.{async, await}
 
 case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) extends Logging {
 
@@ -24,22 +25,21 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
     }
   }
 
-  def requestOAuthToken(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[JsValue]] = {
-    wsClient.url("https://accounts.google.com/o/oauth2/token").post(Map(
+  def requestOAuthToken(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[JsValue]] = async {
+    val response = await(wsClient.url("https://accounts.google.com/o/oauth2/token").post(Map(
       "client_id" -> Seq(googleClientId),
       "client_secret" -> Seq(googleClientSecret),
       "redirect_uri" -> Seq(redirectUri),
       "code" -> Seq(code),
       "grant_type" -> Seq("authorization_code")
-    )).map(response => {
-      logger.info(response.status.toString)
-      logger.info(response.body)
-      if (200 == response.status) {
-        Some(response.json)
-      } else {
-        None
-      }
-    })
+    )))
+    logger.info(response.status.toString)
+    logger.info(response.body)
+    if (200 == response.status) {
+      Some(response.json)
+    } else {
+      None
+    }
   }
 
   def requestMe(accessToken: String): Future[Option[JsValue]] = {

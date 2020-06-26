@@ -26,7 +26,8 @@ libraryDependencies += "io.github.java-diff-utils" % "java-diff-utils" % "4.5"
 libraryDependencies += "org.jsoup" % "jsoup" % "1.13.1"
 //libraryDependencies += "com.twitter.penguin" % "korean-text" % "4.1.2"
 //libraryDependencies += "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
-
+libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"
