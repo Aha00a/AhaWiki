@@ -49,7 +49,7 @@ class Test @Inject()(implicit val
   def assertEquals(actual: String, expect: String): Unit = {
     if (actual == expect) {
 
-    } else if (actual == expect.replaceAllLiterally("\r", "")) {
+    } else if (actual == expect.replace("\r", "")) {
 
     } else {
       throw ExceptionEquals(actual, expect)

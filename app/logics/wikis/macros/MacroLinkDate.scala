@@ -47,6 +47,6 @@ object MacroLinkDate extends TraitMacro {
     case _ => Seq()
   }
 
-  def l(s:String)(implicit wikiContext: WikiContext): String = LinkMarkup(s, s.replaceAllLiterally("--", "")).toHtmlString()
+  def l(s:String)(implicit wikiContext: WikiContext): String = LinkMarkup(s, s.replace("--", "")).toHtmlString()
 
 }

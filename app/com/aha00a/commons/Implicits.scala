@@ -88,7 +88,7 @@ object Implicits {
 
 
   implicit class RichFile(file: File) {
-    def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit) {
+    def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit): Unit = {
       Using(new PrintWriter(f))(op)
     }
 
@@ -98,7 +98,7 @@ object Implicits {
 
     def getSlashBasedPath: String = {
       if(File.separator != "/") {
-        file.getPath.replaceAllLiterally(File.separator, "/")
+        file.getPath.replace(File.separator, "/")
       } else {
         file.getPath
       }

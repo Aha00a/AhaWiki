@@ -23,7 +23,7 @@ class GoogleOAuth @Inject()(
   private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
-    routes.GoogleOAuth.callback("").absoluteURL().replaceAllLiterally("?code=", "")
+    routes.GoogleOAuth.callback("").absoluteURL().replace("?code=", "")
   }
 
   def login = Action { implicit request =>

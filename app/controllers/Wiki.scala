@@ -29,7 +29,7 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
@@ -51,7 +51,7 @@ class Wiki @Inject()(implicit val
   }
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
-    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
@@ -217,7 +217,7 @@ class Wiki @Inject()(implicit val
           val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
           pageContent.redirect match {
             case Some(directive) =>
-              Redirect(URLEncoder.encode(directive, "utf-8").replaceAllLiterally("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
+              Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
             case None =>
               val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
               Ok(pageContent.interpreter match {
@@ -276,7 +276,7 @@ class Wiki @Inject()(implicit val
   }}
 
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
+    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
