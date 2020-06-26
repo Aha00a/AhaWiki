@@ -1,12 +1,13 @@
 package com.aha00a.play.utils
 
 import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.JsValue
 import play.api.libs.ws.{WSClient, WSResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) {
+case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) extends Logging {
 
 
   def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[String]] = {
@@ -31,8 +32,8 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
       "code" -> Seq(code),
       "grant_type" -> Seq("authorization_code")
     )).map(response => {
-      Logger.info(response.status.toString)
-      Logger.info(response.body)
+      logger.info(response.status.toString)
+      logger.info(response.body)
       if (200 == response.status) {
         Some(response.json)
       } else {
@@ -46,8 +47,8 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
       if (200 == response.status) {
         Some(response.json)
       } else {
-        Logger.info(response.status.toString)
-        Logger.info(response.body)
+        logger.info(response.status.toString)
+        logger.info(response.body)
         None
       }
     }

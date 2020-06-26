@@ -8,7 +8,7 @@ import models.{Link, PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
@@ -64,9 +64,9 @@ object InterpreterTable extends TraitInterpreter {
   def convert(reader: CsvListReader): Seq[Seq[String]] = {
     val arrayBuffer = ArrayBuffer[Seq[String]]()
     while (true) {
-      val javaListString = reader.read()
+      val javaListString = reader.read().asScala
       if (null == javaListString)
-        return arrayBuffer
+        return arrayBuffer.toSeq
       
       arrayBuffer += javaListString.toSeq
     }

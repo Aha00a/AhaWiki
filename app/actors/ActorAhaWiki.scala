@@ -8,7 +8,9 @@ import javax.inject.Inject
 import logics.wikis.interpreters.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
 import models.{AhaWikiQuery, LatLng, Link, SchemaOrg, WikiContext}
-import play.api.cache.CacheApi
+import play.api.Logging
+import play.api.cache.SyncCacheApi
+import play.api.cache.AsyncCacheApi
 import play.api.db.Database
 import play.api.libs.json.{Json, Reads}
 import play.api.libs.ws.WSClient
@@ -31,7 +33,7 @@ object ActorAhaWiki {
 
 }
 
-class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor {
+class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor with Logging {
 
   import ActorAhaWiki._
 
@@ -45,9 +47,9 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
+          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
-          Logger.info(seq.mkString("(", ")\t(", ")"))
+          logger.info(seq.mkString("(", ")\t(", ")"))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
@@ -58,7 +60,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, cacheApi, database, context.self, configuration)
+          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           ahaWikiQuery.Page.updateLink(page.name, seqLink)
 
@@ -77,7 +79,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         )
         .get()
         .map(r => {
-          Logger.info(s"$address - ${r.json}")
+          logger.info(s"$address - ${r.json}")
           (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
         })
         .map(latLng => {
@@ -98,7 +100,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         )
         .get()
         .map(r => {
-          Logger.info(s"$src - $dst - ${r.json}")
+          logger.info(s"$src - $dst - ${r.json}")
           (
             (r.json \ "rows" \ 0 \ "elements" \ 0 \ "distance" \ "value").as[Int],
             (r.json \ "rows" \ 0 \ "elements" \ 0 \ "duration" \ "value").as[Int]
@@ -112,7 +114,7 @@ class ActorAhaWiki @Inject()(implicit cacheApi: CacheApi, database: Database, ws
         })
     }
     case _ =>
-      Logger.error("Unknown")
+      logger.error("Unknown")
   }
 
 }

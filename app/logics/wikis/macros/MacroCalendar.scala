@@ -7,7 +7,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import models.WikiContext
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
@@ -22,7 +22,7 @@ object MacroCalendar extends TraitMacro {
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
       implicit val request: Request[Any] = wikiContext.request
-      implicit val cacheApi: CacheApi = wikiContext.cacheApi
+      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
 
       val yearMonth = YearMonth.of(y.toInt, m.toInt)

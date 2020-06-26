@@ -5,7 +5,7 @@ import logics.AhaWikiCache
 import logics.wikis.{PageLogic, RenderingMode}
 import logics.wikis.RenderingMode.RenderingMode
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
@@ -14,7 +14,7 @@ object WikiContext {
   def apply(name: String)(
     implicit
     request: Request[Any],
-    cacheApi: CacheApi,
+    syncCacheApi: SyncCacheApi,
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration
@@ -22,7 +22,7 @@ object WikiContext {
   def preview(name: String)(
     implicit
     request: Request[Any],
-    cacheApi: CacheApi,
+    syncCacheApi: SyncCacheApi,
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration
@@ -32,7 +32,7 @@ object WikiContext {
 class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                  (implicit
                   val request: Request[Any],
-                  val cacheApi: CacheApi,
+                  val syncCacheApi: SyncCacheApi,
                   val database: Database,
                   val actorAhaWiki: ActorRef,
                   val configuration: Configuration

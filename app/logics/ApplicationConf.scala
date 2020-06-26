@@ -16,28 +16,28 @@ class ApplicationConf(configuration: Configuration) {
     object google {
       object credentials {
         object oAuth {
-          def clientId(): String = configuration.getString(fqn).getOrElse("")
-          def clientSecret(): String = configuration.getString(fqn).getOrElse("")
+          def clientId(): String = configuration.getOptional[String](fqn).getOrElse("")
+          def clientSecret(): String = configuration.getOptional[String](fqn).getOrElse("")
         }
         object api {
           object Geocoding {
-            def key(): String = configuration.getString(fqn).getOrElse("")
+            def key(): String = configuration.getOptional[String](fqn).getOrElse("")
           }
           object MapsJavaScriptAPI {
-            def key(): String = configuration.getString(fqn).getOrElse("")
+            def key(): String = configuration.getOptional[String](fqn).getOrElse("")
           }
           object GoogleSheetsAPI {
-            def key(): String = configuration.getString(fqn).getOrElse("")
+            def key(): String = configuration.getOptional[String](fqn).getOrElse("")
           }
         }
       }
       object AdSense {
-        def adClient(): String = configuration.getString(fqn).getOrElse("")
-        def adsTxtContent(): String = configuration.getString(fqn).getOrElse("")
+        def adClient(): String = configuration.getOptional[String](fqn).getOrElse("")
+        def adsTxtContent(): String = configuration.getOptional[String](fqn).getOrElse("")
       }
       object reCAPTCHA {
-        def siteKey(): String = configuration.getString(fqn).getOrElse("")
-        def secretKey(): String = configuration.getString(fqn).getOrElse("")
+        def siteKey(): String = configuration.getOptional[String](fqn).getOrElse("")
+        def secretKey(): String = configuration.getOptional[String](fqn).getOrElse("")
       }
     }
   }

@@ -9,13 +9,14 @@ import com.aha00a.commons.utils.Using
 import logics.AhaWikiConfig
 import models.{Link, PageContent, WikiContext}
 import play.api.Logger
-import play.api.cache.CacheApi
+import play.api.Logging
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 import scala.io.Codec
 import scala.sys.process._
 
-object InterpreterVim extends TraitInterpreter {
+object InterpreterVim extends TraitInterpreter with Logging {
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
       if (!raw.startsWith("#!Vim")) {
@@ -68,7 +69,7 @@ object InterpreterVim extends TraitInterpreter {
     if(parser.isError) {
       "Error!"
     } else {
-      implicit val cacheApi: CacheApi = wikiContext.cacheApi
+      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
       val colorscheme: String = AhaWikiConfig().interpreter.Vim.colorscheme()
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
@@ -83,14 +84,14 @@ object InterpreterVim extends TraitInterpreter {
 
         val cacheFileSh = new File(cacheDir, md5 + ".sh")
         val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme $colorscheme" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getSlashBasedPath}" +q! ${cacheFileText.getSlashBasedPath} 2> /dev/null"""
-        Logger.info(shellScript)
+        logger.info(shellScript)
         cacheFileSh.writeAll(shellScript)
         //noinspection LanguageFeature
         try {
           Seq("sh", cacheFileSh.getPath) !!
         }
         catch {
-          case e:RuntimeException => Logger.error(e.toString)
+          case e:RuntimeException => logger.error(e.toString)
         }
 
         if(cacheFileHtmlRaw.exists()) {

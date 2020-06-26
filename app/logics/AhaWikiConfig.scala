@@ -1,13 +1,13 @@
 package logics
 
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 object AhaWikiConfig {
-  def apply()(implicit cacheApi: CacheApi, database:Database) = new AhaWikiConfig()
+  def apply()(implicit syncCacheApi: SyncCacheApi, database:Database) = new AhaWikiConfig()
 }
 
-class AhaWikiConfig(implicit cacheApi: CacheApi, database:Database) {
+class AhaWikiConfig(implicit syncCacheApi: SyncCacheApi, database:Database) {
   object permission {
     object default {
       def read(): String = hocon().getOrElse(fqn, "all")

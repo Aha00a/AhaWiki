@@ -28,7 +28,7 @@ trait ExtractConvertInject {
   def contains(s:String): Boolean = arrayBuffer.exists(_._1 == s)
 
   def toSeqWord: Seq[String] = {
-    arrayBuffer.flatMap(_._2.split("""\s+"""))
+    arrayBuffer.flatMap(_._2.split("""\s+""")).toSeq
   }
 }
 

@@ -6,15 +6,16 @@ import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.{AhaWikiQuery, PageContent}
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.mvc._
 
 class Home @Inject() (
-                       implicit
-                       cacheApi: CacheApi,
+                       implicit val
+                       controllerComponents: ControllerComponents,
+                       syncCacheApi: SyncCacheApi,
                        database:play.api.db.Database,
                        configuration: Configuration
-                     ) extends Controller {
+                     ) extends BaseController {
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }

@@ -215,7 +215,7 @@ object InterpreterWiki extends TraitInterpreter {
       val seqEci = Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote)
       val seqWord = arrayWord ++ seqEci.flatMap(_.toSeqWord)
       val seqWordFiltered = seqWord.filterNot(s => seqEci.exists(eci => eci.contains(s)))
-      seqWordFiltered
+      seqWordFiltered.toSeq
     }
   }
 

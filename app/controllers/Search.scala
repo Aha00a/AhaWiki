@@ -8,15 +8,16 @@ import javax.inject._
 import logics.wikis.WikiPermission
 import models.{AhaWikiQuery, PageContent, WikiContext}
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.mvc._
 
-class Search @Inject()(implicit
-                       cacheApi: CacheApi,
+class Search @Inject()(implicit val
+                       controllerComponents: ControllerComponents,
+                       syncCacheApi: SyncCacheApi,
                        database: play.api.db.Database,
                        @Named("db-actor") actorAhaWiki: ActorRef,
                        configuration: Configuration
-                      ) extends Controller {
+                      ) extends BaseController {
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     implicit val wikiContext: WikiContext = WikiContext("")
 

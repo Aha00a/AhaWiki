@@ -1,8 +1,8 @@
-@import play.api.cache.CacheApi
+@import play.api.cache.SyncCacheApi
 @import play.api.db.Database
 @import play.api.Configuration
 @import logics.ApplicationConf
-@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], cacheApi: CacheApi, database:Database, configuration: Configuration)
+@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], syncCacheApi: SyncCacheApi, database:Database, configuration: Configuration)
 <!DOCTYPE html>
 
 <html lang="en">

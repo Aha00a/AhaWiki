@@ -21,11 +21,11 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   override def convert(s: String)(implicit wikiContext: WikiContext): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
 
   def extractLink()(implicit wikiContext: WikiContext): Seq[Link] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c))
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c)).toSeq
   }
 
   def extractSchemaOrg()(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c))
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c)).toSeq
   }
 }
 

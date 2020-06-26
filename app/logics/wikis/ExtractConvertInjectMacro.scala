@@ -109,7 +109,7 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
         .map(_.extractLink(argument))
         .getOrElse(Seq())
       case _ => Seq()
-    }
+    }.toSeq
   }
 
   def MacroSet(argument: String): String = {

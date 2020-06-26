@@ -3,7 +3,6 @@ package controllers
 import java.time.LocalDateTime
 import java.util.Date
 
-import actionCompositions.PostAction
 import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
@@ -11,19 +10,20 @@ import javax.inject._
 import logics.wikis.{PageLogic, WikiPermission}
 import models.{AhaWikiQuery, PageContent, WikiContext}
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
 
-class Diary @Inject()(implicit
-                      cacheApi: CacheApi,
+class Diary @Inject()(implicit val
+                      controllerComponents: ControllerComponents,
+                      syncCacheApi: SyncCacheApi,
                       actorSystem: ActorSystem,
                       database: play.api.db.Database,
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       configuration: Configuration
-                     ) extends Controller {
-  def write(): Action[AnyContent] = PostAction { implicit request: Request[Any] =>
+                     ) extends BaseController {
+  def write() = Action { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString

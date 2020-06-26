@@ -5,7 +5,7 @@ import com.aha00a.play.utils.GoogleOAuthApi
 import javax.inject.Inject
 import logics.{ApplicationConf, SessionLogic}
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
@@ -13,11 +13,13 @@ import scala.concurrent.ExecutionContext
 
 //noinspection TypeAnnotation
 class GoogleOAuth @Inject()(
-  implicit cacheApi: CacheApi,
+  implicit val
+  controllerComponents: ControllerComponents,
+  syncCacheApi: SyncCacheApi,
   wsClient: WSClient,
   executionContext: ExecutionContext,
   configuration: Configuration
-) extends Controller {
+) extends BaseController {
   private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {

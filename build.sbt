@@ -1,41 +1,35 @@
 name := """AhaWiki"""
+organization := "com.aha00a"
 
 version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.13.2"
 scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:reflectiveCalls", "-language:postfixOps")
 
-libraryDependencies ++= Seq(
-  jdbc,
-  cache,
-  ws,
-  specs2 % Test,
-  filters,
-  evolutions,
-  "com.typesafe.play" %% "anorm" % "2.4.0",
-  "com.h2database" % "h2" % "1.4.189",
-  "mysql" % "mysql-connector-java" % "5.1.18",
-  "net.sf.supercsv" % "super-csv" % "2.3.1",
-  "com.github.rjeschke" % "txtmark" % "0.13",
-  "com.google.oauth-client" % "google-oauth-client" % "1.20.0",
-  "io.github.java-diff-utils" % "java-diff-utils" % "4.5",
-  "org.jsoup" % "jsoup" % "1.13.1"
-//  "com.twitter.penguin" % "korean-text" % "4.1.2",
-//  "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
-)
+libraryDependencies += guice
+libraryDependencies += jdbc
+libraryDependencies += ehcache
+libraryDependencies += cacheApi
+libraryDependencies += ws
+libraryDependencies += specs2 % Test
+libraryDependencies += filters
+libraryDependencies += evolutions
+libraryDependencies += "org.playframework.anorm" % "anorm_2.13" % "2.6.5"
+libraryDependencies += "com.h2database" % "h2" % "1.4.189"
+libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.18"
+libraryDependencies += "net.sf.supercsv" % "super-csv" % "2.3.1"
+libraryDependencies += "com.github.rjeschke" % "txtmark" % "0.13"
+libraryDependencies += "com.google.oauth-client" % "google-oauth-client" % "1.20.0"
+libraryDependencies += "io.github.java-diff-utils" % "java-diff-utils" % "4.5"
+libraryDependencies += "org.jsoup" % "jsoup" % "1.13.1"
+//libraryDependencies += "com.twitter.penguin" % "korean-text" % "4.1.2"
+//libraryDependencies += "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
 
-resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-// Play provides two styles of routers, one expects its actions to be injected, the
-// other, legacy style, accesses its actions statically.
-routesGenerator := InjectedRoutesGenerator
-includeFilter in (Assets, LessKeys.less) := "*.less"
+// Adds additional packages into Twirl
+//TwirlKeys.templateImports += "com.example.controllers._"
 
-//<editor-fold desc="Prevent to build API document - https://www.playframework.com/documentation/2.5.x/Deploying">
-sources in (Compile, doc) := Seq.empty
-publishArtifact in (Compile, packageDoc) := false
-//</editor-fold>
-
-//skip in update := true
+// Adds additional packages into conf/routes
+// play.sbt.routes.RoutesKeys.routesImport += "com.example.binders._"

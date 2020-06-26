@@ -1,6 +1,6 @@
-@import play.api.cache.CacheApi
+@import play.api.cache.SyncCacheApi
 @import play.api.db.Database
-@()(implicit cacheApi: CacheApi, database:Database)
+@()(implicit syncCacheApi: SyncCacheApi, database:Database)
 @for(trackingId <- Seq(logics.AhaWikiConfig().google.analytics.trackingId())) {
     @if(trackingId) {
         <script>

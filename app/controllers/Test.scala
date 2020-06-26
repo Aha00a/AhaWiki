@@ -16,23 +16,25 @@ import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros._
 import models._
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc._
 import play.api.Configuration
 import play.api.Logger
+import play.api.Logging
 
-class Test @Inject()(implicit
-                     cacheApi: CacheApi,
+class Test @Inject()(implicit val
+                     controllerComponents: ControllerComponents,
+                     syncCacheApi: SyncCacheApi,
                      system: ActorSystem,
                      database: play.api.db.Database,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration
-                    ) extends Controller {
+                    ) extends BaseController with Logging {
 
   case class ExceptionEquals[T](actual: T, expect: T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
-    Logger.error(actual.toString)
-    Logger.error(expect.toString)
+    logger.error(actual.toString)
+    logger.error(expect.toString)
   }
 
 
@@ -238,7 +240,7 @@ class Test @Inject()(implicit
 
   }
 
-  def testInterpreterTable()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+  def testInterpreterTable()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
@@ -252,7 +254,7 @@ class Test @Inject()(implicit
     assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
   }
 
-  def testInterpreterWiki()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+  def testInterpreterWiki()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(InterpreterWiki.name, "Wiki")
@@ -341,7 +343,7 @@ class Test @Inject()(implicit
 
   }
 
-  def testInterpreterSchema()(implicit request: Request[Any], cacheApi: CacheApi): Unit = {
+  def testInterpreterSchema()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(InterpreterSchema.name, "Schema")

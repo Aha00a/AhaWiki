@@ -50,7 +50,7 @@ object Stemmer {
 //      ntsf
 //    } catch {
 //      case e:Exception =>
-//        Logger.error(e.toString)
+//        logger.error(e.toString)
 //        Seq[String]()
 //    }
 //  }

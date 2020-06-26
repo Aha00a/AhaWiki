@@ -10,6 +10,7 @@ import com.aha00a.commons.utils.Using
 import javax.inject._
 import models.{AhaWikiQuery, Page}
 import play.api.Logger
+import play.api.Logging
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
 
@@ -23,20 +24,20 @@ class ApplicationLifecycleHook @Inject()(implicit
                                          executionContext: ExecutionContext,
                                          database: Database,
                                          @Named("db-actor") actorAhaWiki: ActorRef
-                                        ) {
+                                        ) extends Logging {
   applicationLifecycle.addStopHook { () =>
-    Logger.info("OnApplicationStop")
+    logger.info("OnApplicationStop")
     Future.successful(())
   }
 
-  Logger.info("OnApplicationStart")
+  logger.info("OnApplicationStart")
   actorSystem.scheduler.scheduleOnce(2 second, () => { database.withConnection { implicit connection =>
-    Logger.info("OnApplicationStarting")
+    logger.info("OnApplicationStarting")
 
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     insertSeedPages(ahaWikiQuery)
 
-    Logger.info("OnApplicationStarted")
+    logger.info("OnApplicationStarted")
   }})
 
   private def insertSeedPages(ahaWikiQuery: AhaWikiQuery): Unit = {
@@ -61,7 +62,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
-      case None => Logger.info("None")
+      case None => logger.info("None")
     }
   }})
 

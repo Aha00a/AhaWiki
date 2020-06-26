@@ -4,7 +4,7 @@ import com.aha00a.supercsv.SupercsvUtil
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.{PageWithoutContentWithSize, WikiContext}
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 import scala.util.matching.Regex
@@ -12,7 +12,7 @@ import scala.util.matching.Regex
 object MacroRecentChangesList extends TraitMacro {
   val regexDigits: Regex = """^(\d+)$""".r
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
-    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {

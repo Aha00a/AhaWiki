@@ -5,22 +5,23 @@ import akka.actor.ActorRef
 import logics.wikis.interpreters.Interpreters
 import models.{AhaWikiQuery, LatLng, PageWithoutContentWithSize, WikiContext}
 import play.api.Logger
-import play.api.cache.CacheApi
+import play.api.Logging
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 import scala.concurrent.duration._
 
-object AhaWikiCache {
+object AhaWikiCache extends Logging {
   trait CacheEntity {
     val key: String = getClass.getName
     def invalidate()(implicit wikiContext: WikiContext): Unit = {
-      Logger.info(s"Invalidate Cache: $key")
-      wikiContext.cacheApi.remove(key)
+      logger.info(s"Invalidate Cache: $key")
+      wikiContext.syncCacheApi.remove(key)
     }
   }
 
   object PageList extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = cacheApi.getOrElse(key, 60.minutes) {
+    def get()(implicit syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = syncCacheApi.getOrElseUpdate(key, 60.minutes) {
       database.withConnection { implicit connection =>
         AhaWikiQuery().pageSelectPageList()
       }
@@ -28,19 +29,19 @@ object AhaWikiCache {
   }
 
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
       Interpreters.toHtmlString(AhaWikiQuery().Page.selectLastRevision(".header").map(_.content).getOrElse(""))
     }}
   }
 
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.cacheApi.getOrElse(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
+    def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, 60.minutes) { wikiContext.database.withConnection { implicit connection =>
       Interpreters.toHtmlString(AhaWikiQuery().Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
     }}
   }
 
   object Config extends CacheEntity {
-    def get()(implicit cacheApi: CacheApi, database:Database): String = cacheApi.getOrElse(key, 60.minutes) { database.withConnection { implicit connection =>
+    def get()(implicit syncCacheApi: SyncCacheApi, database:Database): String = syncCacheApi.getOrElseUpdate(key, 60.minutes) { database.withConnection { implicit connection =>
       AhaWikiQuery().Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }}
   }
@@ -48,9 +49,9 @@ object AhaWikiCache {
 
   object AddressToLatLng {
     def key(address: String): String = "Addr" + address
-    def set(address: String, latLng: LatLng)(implicit cacheApi: CacheApi): Unit = cacheApi.set(key(address), latLng, 365 days)
-    def get(address:String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef, database: Database): LatLng = {
-      cacheApi.get[LatLng](key(address)) match {
+    def set(address: String, latLng: LatLng)(implicit syncCacheApi: SyncCacheApi): Unit = syncCacheApi.set(key(address), latLng, 365 days)
+    def get(address:String)(implicit syncCacheApi: SyncCacheApi, actorAhaWiki: ActorRef, database: Database): LatLng = {
+      syncCacheApi.get[LatLng](key(address)) match {
         case Some(latLng) => latLng
         case _ =>
           if (!(address == null) && !address.isEmpty) {
@@ -74,9 +75,9 @@ object AhaWikiCache {
 
   object Distance {
     def key(src: String, dst: String): String = "Addr" + src + dst
-    def set(src: String, dst: String, meters: Int)(implicit cacheApi: CacheApi): Unit = cacheApi.set(key(src, dst), meters, 365 days)
-    def get(src: String, dst: String)(implicit cacheApi: CacheApi, actorAhaWiki: ActorRef, database: Database): Int = {
-      cacheApi.get[Int](key(src, dst)) match {
+    def set(src: String, dst: String, meters: Int)(implicit syncCacheApi: SyncCacheApi): Unit = syncCacheApi.set(key(src, dst), meters, 365 days)
+    def get(src: String, dst: String)(implicit syncCacheApi: SyncCacheApi, actorAhaWiki: ActorRef, database: Database): Int = {
+      syncCacheApi.get[Int](key(src, dst)) match {
         case Some(meters) => meters
         case _ =>
           database.withConnection { implicit connection =>

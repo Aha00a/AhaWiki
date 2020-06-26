@@ -12,7 +12,7 @@ import models._
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
@@ -25,7 +25,7 @@ object InterpreterMap extends TraitInterpreter {
                        scoreRaw:String,
                        raw:Seq[String]
                      )(implicit wikiContext: WikiContext) {
-    val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.cacheApi, wikiContext.actorAhaWiki, wikiContext.database)
+    val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.syncCacheApi, wikiContext.actorAhaWiki, wikiContext.database)
     val isOrigin: Boolean = scoreRaw == originString
 
     val score: Double = if(isOrigin) 10 else scoreRaw.toDoubleOrZero
@@ -65,7 +65,7 @@ object InterpreterMap extends TraitInterpreter {
       val mapAddressMeters: Map[String, Int] = locations.find(_.isOrigin) match {
         case Some(locationOrigin) =>
           locations.filter(_.address != locationOrigin.address).map(l => {
-            val meters = AhaWikiCache.Distance.get(locationOrigin.address, l.address)(wikiContext.cacheApi, wikiContext.actorAhaWiki, wikiContext.database)
+            val meters = AhaWikiCache.Distance.get(locationOrigin.address, l.address)(wikiContext.syncCacheApi, wikiContext.actorAhaWiki, wikiContext.database)
             (l.address, meters)
           }).toMap
         case None =>
@@ -87,7 +87,7 @@ object InterpreterMap extends TraitInterpreter {
     }
 
     implicit val request: Request[Any] = wikiContext.request
-    implicit val cacheApi: CacheApi = wikiContext.cacheApi
+    implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>

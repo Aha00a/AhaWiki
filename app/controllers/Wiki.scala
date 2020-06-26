@@ -4,7 +4,6 @@ import java.net.{URLDecoder, URLEncoder}
 import java.time.{LocalDate, Month}
 import java.util.Date
 
-import actionCompositions.PostAction
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
@@ -21,7 +20,8 @@ import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
 import logics.wikis.{ExtractConvertInjectInterpreterCustom, PageLogic, WikiPermission}
 import models._
-import play.api.cache.CacheApi
+import play.api.Logging
+import play.api.cache.SyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.JsValue
@@ -29,13 +29,14 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.matching.Regex
 
-class Wiki @Inject()(implicit
-                     cacheApi: CacheApi,
+class Wiki @Inject()(implicit val
+                     controllerComponents: ControllerComponents,
+                     syncCacheApi: SyncCacheApi,
                      actorSystem: ActorSystem,
                      database: play.api.db.Database,
                      environment: Environment,
@@ -43,7 +44,7 @@ class Wiki @Inject()(implicit
                      configuration: Configuration,
                      ws: WSClient,
                      executor: ExecutionContext
-                    ) extends Controller {
+                    ) extends BaseController with Logging {
 
   implicit class RichResult(result:Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -226,9 +227,9 @@ class Wiki @Inject()(implicit
                 case None | Some("Wiki") =>
                   val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
                   if(request.isLocalhost) {
-//                    Logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
-//                    Logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
-                    Logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
+//                    logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
+//                    logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
+                    logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
                   }
                   views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                 case _ =>
@@ -254,8 +255,8 @@ class Wiki @Inject()(implicit
         val beforeComment = beforePage.map(_.comment).getOrElse("")
         val afterComment = afterPage.map(_.comment).getOrElse("")
 
-        val diff = DiffUtils.diff(beforeContent, afterContent)
-        val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent, diff, 10).mkString("\n")
+        val diff = DiffUtils.diff(beforeContent.asJava, afterContent.asJava)
+        val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent.asJava, diff, 10).asScala.mkString("\n")
         Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
@@ -274,7 +275,7 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  def save(nameEncoded: String): Action[AnyContent] = PostAction.async { implicit request =>
+  def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replaceAllLiterally("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
@@ -303,11 +304,11 @@ class Wiki @Inject()(implicit
 
     if(secretKey != "") {
       ws.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
-        Logger.info(response.body)
+        logger.info(response.body)
         val json: JsValue = response.json
         if (!(json \ "success").as[Boolean]) {
           val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
-          Logger.error(s"robot - ${errorCodes.mkString("\t")}")
+          logger.error(s"robot - ${errorCodes.mkString("\t")}")
           Forbidden("")
         } else {
           doSave()
@@ -322,7 +323,7 @@ class Wiki @Inject()(implicit
 
 
 
-  def delete(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
+  def delete(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     AhaWikiQuery().Page.selectLastRevision(name) match {
@@ -339,7 +340,7 @@ class Wiki @Inject()(implicit
     }
   }}
 
-  def deleteLastRevision(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
+  def deleteLastRevision(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     AhaWikiQuery().Page.selectLastRevision(name) match {
@@ -403,7 +404,7 @@ class Wiki @Inject()(implicit
   }}
 
 
-  def rename(): Action[AnyContent] = PostAction { implicit request => database.withConnection { implicit connection =>
+  def rename(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
     (AhaWikiQuery().Page.selectLastRevision(name), AhaWikiQuery().Page.selectLastRevision(newName)) match {
@@ -423,7 +424,7 @@ class Wiki @Inject()(implicit
   }}
 
 
-  def preview(): Action[AnyContent] = PostAction { implicit request =>
+  def preview(): Action[AnyContent] = Action { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext.preview(name)
     Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")

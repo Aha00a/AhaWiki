@@ -7,7 +7,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.{AhaWikiCache, AhaWikiConfig, SessionLogic}
 import models._
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
@@ -32,11 +32,11 @@ object PageLogic {
     }
   }
 
-  def getListPage()(implicit cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPage()(implicit syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
     AhaWikiCache.PageList.get()
   }
 
-  def getListPageByPermission()(implicit request: Request[Any], cacheApi: CacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit request: Request[Any], syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()

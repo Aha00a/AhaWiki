@@ -6,12 +6,17 @@ import javax.inject.Inject
 import logics.AhaWikiCache
 import logics.wikis.PageLogic
 import models.PageWithoutContentWithSize
-import play.api.cache.CacheApi
+import play.api.cache.SyncCacheApi
 import play.api.mvc._
 
 import scala.xml.{Elem, NodeBuffer}
 
-class Feed @Inject()(implicit cacheApi: CacheApi, database:play.api.db.Database) extends Controller {
+class Feed @Inject()(
+                      implicit val
+                      controllerComponents: ControllerComponents,
+                      syncCacheApi: SyncCacheApi,
+                      database:play.api.db.Database
+                    ) extends BaseController {
   def index: Action[AnyContent] = Action {
     Redirect(routes.Feed.atom())
   }

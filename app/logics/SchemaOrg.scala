@@ -123,7 +123,7 @@ object SchemaOrg {
   def getPathHierarchy(schema:String): Seq[Seq[String]] = {
     val buffer: mutable.Buffer[Seq[String]] = mutable.Buffer[Seq[String]]()
     traverse(Seq(schema), s => buffer += s)
-    buffer.sorted
+    buffer.sorted.toSeq
   }
 
   def getSeqString(jsLookupResult: JsLookupResult): Seq[String] = {
