@@ -7,9 +7,8 @@ import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import javax.inject.Inject
-import javax.inject.Named
 import logics.wikis.HeadingNumber
-import logics.wikis.interpreters.InterpreterVim.Parser
+import logics.wikis.interpreters.InterpreterVim
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
@@ -28,7 +27,7 @@ class Test @Inject()(implicit val
                      syncCacheApi: SyncCacheApi,
                      system: ActorSystem,
                      database: play.api.db.Database,
-                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     @javax.inject.Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration
                     ) extends BaseController with Logging {
 
@@ -94,6 +93,7 @@ class Test @Inject()(implicit val
 
 
     testBlame()
+    testParboiled()
 
     Ok("Ok.")
   }
@@ -435,25 +435,25 @@ class Test @Inject()(implicit val
 
   //noinspection NameBooleanParameters
   def testInterpreterVim(): Unit = {
-    def test(p: Parser, syntax: String, content: String, isError: Boolean): Unit = {
+    def test(p: InterpreterVim.Parser, syntax: String, content: String, isError: Boolean): Unit = {
       assertEquals(p.syntax, syntax)
       assertEquals(p.content, content)
       assertEquals(p.isError, isError)
     }
 
-    test(Parser(""), "", "", true)
-    test(Parser("#!Vi"), "", "", true)
-    test(Parser("#!Vim"), "", "", false)
-    test(Parser("#!Vim c"), "c", "", false)
-    test(Parser("#!Vim cpp"), "cpp", "", false)
-    test(Parser("#!Vim\n"), "", "", false)
-    test(Parser("#!Vim cpp\n"), "cpp", "", false)
-    test(Parser("#!Vim cpp\nasdf"), "cpp", "asdf", false)
-    test(Parser("#!Vim\n#!cpp\nasdf"), "cpp", "asdf", false)
-    test(Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-    test(Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-    test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
-    test(Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
+    test(InterpreterVim.Parser(""), "", "", true)
+    test(InterpreterVim.Parser("#!Vi"), "", "", true)
+    test(InterpreterVim.Parser("#!Vim"), "", "", false)
+    test(InterpreterVim.Parser("#!Vim c"), "c", "", false)
+    test(InterpreterVim.Parser("#!Vim cpp"), "cpp", "", false)
+    test(InterpreterVim.Parser("#!Vim\n"), "", "", false)
+    test(InterpreterVim.Parser("#!Vim cpp\n"), "cpp", "", false)
+    test(InterpreterVim.Parser("#!Vim cpp\nasdf"), "cpp", "asdf", false)
+    test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf"), "cpp", "asdf", false)
+    test(InterpreterVim.Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+    test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
+    test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
   }
 
   def testHeadingNumber(): Unit = {
@@ -589,6 +589,40 @@ class Test @Inject()(implicit val
     assertEquals(EnglishCaseConverter.camelCase2TitleCase("someWordsAreHere"), "Some Words Are Here")
     assertEquals(EnglishCaseConverter.pascalCase2TitleCase("FrontPage"), "Front Page")
     assertEquals(EnglishCaseConverter.pascalCase2TitleCase("TVSeries"), "TV Series")
+  }
+
+  def testParboiled() = {
+    import org.parboiled2._
+
+    import scala.util.Try
+
+    class Calculator(val input: ParserInput) extends Parser {
+      def InputLine = rule { Expression ~ EOI }
+
+      def Expression: Rule1[Int] = rule {
+        Term ~ zeroOrMore(
+          '+' ~ Term ~> ((_: Int) + _)
+            | '-' ~ Term ~> ((_: Int) - _))
+      }
+
+      def Term = rule {
+        Factor ~ zeroOrMore(
+          '*' ~ Factor ~> ((_: Int) * _)
+            | '/' ~ Factor ~> ((_: Int) / _))
+      }
+
+      def Factor = rule { Number | Parens }
+
+      def Parens = rule { '(' ~ Expression ~ ')' }
+
+      def Number = rule { capture(Digits) ~> (_.toInt) }
+
+      def Digits = rule { oneOrMore(CharPredicate.Digit) }
+    }
+
+    val triedInt: Try[Int] = new Calculator("1+1").InputLine.run()
+    assertEquals(triedInt.isSuccess, true)
+    assertEquals(triedInt.get, 2)
   }
 }
 

@@ -40,7 +40,6 @@ GET         /test/dbtest                       controllers.Test.dbtest
 GET         /test/filetest                     controllers.Test.filetest
 
 GET         /dev/deleteVimCache                controllers.Dev.deleteVimCache(md5:String)
-GET         /dev/peg                           controllers.Dev.peg
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /public/*file                      controllers.Assets.versioned(path="/public", file: Asset)
