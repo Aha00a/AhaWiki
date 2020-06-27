@@ -28,6 +28,7 @@ libraryDependencies += "org.jsoup" % "jsoup" % "1.13.1"
 //libraryDependencies += "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
+libraryDependencies += "org.parboiled" %% "parboiled" % "2.1.8"
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"
