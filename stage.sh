@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./activator stage
+~/sbt/bin/sbt stage
 
