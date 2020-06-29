@@ -35,3 +35,6 @@ libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
 
 // Adds additional packages into conf/routes
 // play.sbt.routes.RoutesKeys.routesImport += "com.example.binders._"
+
+includeFilter in (Assets, LessKeys.less) := "*.less"
+excludeFilter in (Assets, LessKeys.less) := "_*.less"
