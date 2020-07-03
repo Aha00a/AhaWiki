@@ -73,21 +73,21 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def selectLastRevision(name: String): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
-        .on('name -> name)
+        .on(Symbol("name") -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectFirstRevision(name: String): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
-        .on('name -> name)
+        .on(Symbol("name") -> name)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
 
     def selectSpecificRevision(name: String, revision: Int): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
-        .on('name -> name, 'revision -> revision)
+        .on(Symbol("name") -> name, 'revision -> revision)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
@@ -188,7 +188,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
          w.name LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
-      .on('q -> q)
+      .on(Symbol("q") -> q)
       .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
   }
 
