@@ -22,7 +22,7 @@ object TermFrequency {
     if(seqTermFrequency.isEmpty) {
       Array()
     } else {
-      val values = seqTermFrequency.map(s => Seq[NamedParameter]('name -> s.name, 'term -> s.term, 'frequency -> s.frequency))
+      val values = seqTermFrequency.map(s => Seq[NamedParameter](Symbol("name") -> s.name, Symbol("term") -> s.term, Symbol("frequency") -> s.frequency))
       BatchSql(
         "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
         values.head,
@@ -52,7 +52,7 @@ object TermFrequency {
             |    WHERE
             |        tf1.name = {name} AND tf2.name IN ({pageNames})
             |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
-        .on('name -> name, 'pageNames -> similarPageNames)
+        .on(Symbol("name") -> name, Symbol("pageNames") -> similarPageNames)
         .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
     }

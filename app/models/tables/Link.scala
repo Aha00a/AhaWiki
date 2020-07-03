@@ -78,7 +78,7 @@ object Link {
     if(seq.isEmpty) {
       Array[Int]()
     } else {
-      val values = seq.map(s => Seq[NamedParameter]('src -> s.src, 'dst -> s.dst, 'alias -> s.alias))
+      val values = seq.map(s => Seq[NamedParameter](Symbol("src") -> s.src, Symbol("dst") -> s.dst, Symbol("alias") -> s.alias))
       BatchSql(
         "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
         values.head,
