@@ -21,7 +21,8 @@ class Home @Inject() (
   }
 
   def random: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.Wiki.view(PageLogic.getListPageByPermission().map(_.name).random())).flashing(request.flash)
+    import java.net.URLEncoder
+    Redirect(routes.Wiki.view(URLEncoder.encode(PageLogic.getListPageByPermission().random().name, "utf-8"), 0, "")).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
