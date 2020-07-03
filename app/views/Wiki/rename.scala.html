@@ -24,7 +24,7 @@
                 The complete history of the page will be moved to the new location.
             </p>
 
-            @form(routes.Wiki.rename(), 'class -> "form") {
+            @form(routes.Wiki.rename(), Symbol("class") -> "form") {
                 @CSRF.formField
                 <input type="hidden" name="name" value="@(page.name)"/>
                 <input type="text" name="newName" value="@(page.name)"/>

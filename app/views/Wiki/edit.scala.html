@@ -158,7 +158,7 @@
                 <table class="layout">
                     <tr>
                         <td>
-                        @form(routes.Wiki.save(page.name), 'class -> "form") {
+                        @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
                             @CSRF.formField
                             <input type="hidden" name="revision" value="@page.revision"/>
                             <input type="hidden" id="recaptcha" name="recaptcha">
