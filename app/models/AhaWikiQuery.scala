@@ -19,7 +19,7 @@ case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: 
 
 
 
-case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
+
 
 case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: Date)
 
@@ -52,6 +52,8 @@ object AhaWikiQuery {
 }
 
 class AhaWikiQuery()(implicit connection: Connection) {
+
+  import models.tables.HighScoredTerm
 
   object Page {
 
@@ -224,20 +226,4 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
       .as(str("name") *)
   }
 
-  def selectHighScoredTerm(name:String, similarPageNames:Seq[String]): immutable.Seq[HighScoredTerm] = {
-    if(similarPageNames.isEmpty) {
-      immutable.Seq()
-    } else {
-      SQL("""SELECT
-            |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
-            |    FROM TermFrequency tf1
-            |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
-            |    WHERE
-            |        tf1.name = {name} AND tf2.name IN ({pageNames})
-            |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
-        .on('name -> name, 'pageNames -> similarPageNames)
-        .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
-        .map(HighScoredTerm.tupled)
-    }
-  }
 }

@@ -10,6 +10,8 @@ case class TermFrequency(name:String, term:String, frequency:Int) {
   def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
 }
 
+case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
+
 object TermFrequency {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
@@ -33,4 +35,27 @@ object TermFrequency {
   def delete(name: String)(implicit connection:Connection): Int = {
     SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
   }
+
+  def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection): Seq[HighScoredTerm] = {
+    import anorm.SqlParser.flatten
+    import anorm.SqlParser.float
+    import anorm.SqlParser.str
+
+    import scala.collection.immutable
+    if(similarPageNames.isEmpty) {
+      immutable.Seq()
+    } else {
+      SQL("""SELECT
+            |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
+            |    FROM TermFrequency tf1
+            |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
+            |    WHERE
+            |        tf1.name = {name} AND tf2.name IN ({pageNames})
+            |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
+        .on('name -> name, 'pageNames -> similarPageNames)
+        .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
+        .map(HighScoredTerm.tupled)
+    }
+  }
+
 }
