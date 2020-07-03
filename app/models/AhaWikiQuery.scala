@@ -7,7 +7,6 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RangeUtil
-import logics.wikis.PageNameLogic
 
 import scala.collection.immutable
 import scala.language.postfixOps
@@ -52,8 +51,6 @@ object AhaWikiQuery {
 }
 
 class AhaWikiQuery()(implicit connection: Connection) {
-
-  import models.tables.HighScoredTerm
 
   object Page {
 
