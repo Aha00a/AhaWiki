@@ -66,7 +66,7 @@ case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date
   lazy val latLng: LatLng = LatLng(lat, lng)
 }
 
-case class DistanceCache(src: String, dst: String, meters: Int, seconds: Int, created: Date)
+
 
 
 object AhaWikiQuery {
@@ -181,19 +181,6 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def replace(address: String, latLng: LatLng): Int = {
       SQL"""REPLACE INTO GeocodeCache (address, lat, lng) VALUES ($address, ${latLng.lat}, ${latLng.lng})""".executeUpdate()
-    }
-  }
-
-  object DistanceCache {
-    private val rowParser = str("src") ~ str("dst") ~ int("meters") ~ int("seconds") ~ date("created")
-    def select(src: String, dst: String): Option[DistanceCache] = {
-      SQL"SELECT src, dst, meters, seconds, created FROM DistanceCache WHERE src = $src AND dst = $dst"
-        .as(rowParser singleOpt).map(flatten)
-        .map(models.DistanceCache.tupled)
-    }
-
-    def replace(src: String, dst: String, meters: Int, seconds: Int): Int = {
-      SQL"""REPLACE INTO DistanceCache (src, dst, meters, seconds) VALUES ($src, $dst, $meters, $seconds)""".executeUpdate()
     }
   }
 

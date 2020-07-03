@@ -108,7 +108,8 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
         })
         .map(metersSeconds => {
           database.withTransaction { implicit connection =>
-            AhaWikiQuery().DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
+            import models.tables.DistanceCache
+            DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
             AhaWikiCache.Distance.set(src, dst, metersSeconds._1)
           }
         })

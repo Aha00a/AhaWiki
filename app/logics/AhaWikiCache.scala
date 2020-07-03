@@ -81,7 +81,8 @@ object AhaWikiCache extends Logging {
         case Some(meters) => meters
         case _ =>
           database.withConnection { implicit connection =>
-            AhaWikiQuery().DistanceCache.select(src, dst) match {
+            import models.tables.DistanceCache
+            DistanceCache.select(src, dst) match {
               case Some(distance) =>
                 val meters = distance.meters
                 AhaWikiCache.Distance.set(src, dst, meters)
