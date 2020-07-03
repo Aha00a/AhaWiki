@@ -8,8 +8,7 @@ import models.{AhaWikiQuery, WikiContext}
 
 object MacroSeeAlso extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
-    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
+    InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop)))
   }}
 
   private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
@@ -22,10 +21,9 @@ object MacroSeeAlso extends TraitMacro {
     }).mkString("\n")
   }
 
-  def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
+  def getMarkupRelatedPages(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     import models.tables.Link
     import models.tables.SchemaOrg
-    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = Link.select(name)
     val seqSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
@@ -46,7 +44,7 @@ object MacroSeeAlso extends TraitMacro {
   }
 
 
-  def getMarkupSeeAlso(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
+  def getMarkupSeeAlso(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     s"""
        |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
        |'''[schema:Schema Schema]'''
@@ -58,7 +56,7 @@ object MacroSeeAlso extends TraitMacro {
        |'''Backlinks'''
        |[[Backlinks]]
        |[[Html(</td><td>)]]
-       |${getMarkupRelatedPages(name, ahaWikiQuery)}
+       |${getMarkupRelatedPages(name)}
        |[[Html(</td></tr></tbody></table>)]]
        |""".stripMargin
   }
