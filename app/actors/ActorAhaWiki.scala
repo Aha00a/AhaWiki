@@ -84,7 +84,8 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
         })
         .map(latLng => {
           database.withTransaction { implicit connection =>
-            AhaWikiQuery().GeocodeCache.replace(address, latLng)
+            import models.tables.GeocodeCache
+            GeocodeCache.replace(address, latLng)
             AhaWikiCache.AddressToLatLng.set(address, latLng)
           }
         })

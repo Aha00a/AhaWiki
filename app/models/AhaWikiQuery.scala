@@ -62,9 +62,7 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
   }
 }
 
-case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
-  lazy val latLng: LatLng = LatLng(lat, lng)
-}
+
 
 
 
@@ -169,19 +167,6 @@ class AhaWikiQuery()(implicit connection: Connection) {
       SchemaOrg.insert(seqSchemaOrg)
     }
 
-  }
-
-  object GeocodeCache {
-    private val rowParser = str("address") ~ double("lat") ~ double("lng") ~ date("created")
-    def select(address: String): Option[GeocodeCache] = {
-      SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address = $address"
-        .as(rowParser singleOpt).map(flatten)
-        .map(models.GeocodeCache.tupled)
-    }
-
-    def replace(address: String, latLng: LatLng): Int = {
-      SQL"""REPLACE INTO GeocodeCache (address, lat, lng) VALUES ($address, ${latLng.lat}, ${latLng.lng})""".executeUpdate()
-    }
   }
 
   object Link {

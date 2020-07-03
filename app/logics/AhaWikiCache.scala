@@ -56,7 +56,8 @@ object AhaWikiCache extends Logging {
         case _ =>
           if (!(address == null) && !address.isEmpty) {
             database.withConnection { implicit connection =>
-              AhaWikiQuery().GeocodeCache.select(address) match {
+              import models.tables.GeocodeCache
+              GeocodeCache.select(address) match {
                 case Some(geocodeCache) =>
                   val latLng = geocodeCache.latLng
                   AhaWikiCache.AddressToLatLng.set(address, latLng)
