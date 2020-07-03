@@ -18,9 +18,7 @@ case class PageWithoutContent          (name: String, revision: Long, dateTime: 
 case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 
 
-case class TermFrequency(name:String, term:String, frequency:Int) {
-  def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
-}
+
 
 case class Link(src:String, dst:String, alias:String) {
   lazy val isDstExternal: Boolean = PageNameLogic.isExternal(dst)
@@ -128,6 +126,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
       import models.tables.CosineSimilarity
+      import models.tables.TermFrequency
       val linkCount = Link.delete(name)
       val cosineSimilarityCount = CosineSimilarity.delete(name)
       val termFrequencyCount = TermFrequency.delete(name)
@@ -151,6 +150,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection:Connection): Int = {
       import models.tables.CosineSimilarity
+      import models.tables.TermFrequency
       TermFrequency.delete(name)
       TermFrequency.insert(name, wordCount)
       CosineSimilarity.recalc(name)
@@ -236,27 +236,6 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
   }
 
-  object TermFrequency {
-    def insert(name: String, map:Map[String, Int]): Array[Int] = insert(map.map(kv => new TermFrequency(name, kv)).toSeq)
-
-    def insert(seqTermFrequency: Seq[TermFrequency]): Array[Int] = {
-      if(seqTermFrequency.isEmpty) {
-        Array()
-      } else {
-        val values = seqTermFrequency.map(s => Seq[NamedParameter]('name -> s.name, 'term -> s.term, 'frequency -> s.frequency))
-        BatchSql(
-          "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
-          values.head,
-          values.tail: _*
-        ).execute()
-      }
-    }
-
-
-    def delete(name: String)(implicit connection:Connection): Int = {
-      SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
-    }
-  }
 
   object SchemaOrg {
     def insert(seq: Seq[models.SchemaOrg]): Array[Int] = {
