@@ -3,7 +3,7 @@ package logics.wikis.macros
 import actors.ActorAhaWiki.Calculate
 import logics.wikis.interpreters.InterpreterWiki
 import com.aha00a.commons.Implicits._
-import models.{AhaWikiQuery, CosineSimilarity, WikiContext}
+import models.{AhaWikiQuery, WikiContext}
 
 import scala.collection.immutable
 
@@ -14,8 +14,9 @@ object MacroSimilarPages extends TraitMacro {
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
     wikiContext.database.withConnection { implicit connection =>
+      import models.tables.CosineSimilarity
       val ahaWikiQuery = AhaWikiQuery()
-      val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name).filter(v => v.and(wikiContext.pageCanSee))
+      val cosineSimilarities: immutable.Seq[CosineSimilarity] = CosineSimilarity.select(name).filter(v => v.and(wikiContext.pageCanSee))
       if (cosineSimilarities.isEmpty) {
         wikiContext.actorAhaWiki ! Calculate(name)
         ""

@@ -29,10 +29,7 @@ case class Link(src:String, dst:String, alias:String) {
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
 
-case class CosineSimilarity(name1: String, name2: String, similarity: Double) {
-  def and(a: String => Boolean):Boolean = a(name1) && a(name2)
-  def or(a: String => Boolean):Boolean = a(name1) || a(name2)
-}
+
 
 case class SchemaOrg(page: String, cls: String, prop: String, value: String) {
   def and(a: String => Boolean):Boolean = a(page) && a(value)
@@ -130,6 +127,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
 
     def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection:Connection): Int = {
+      import models.tables.CosineSimilarity
       val linkCount = Link.delete(name)
       val cosineSimilarityCount = CosineSimilarity.delete(name)
       val termFrequencyCount = TermFrequency.delete(name)
@@ -152,6 +150,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
     }
 
     def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection:Connection): Int = {
+      import models.tables.CosineSimilarity
       TermFrequency.delete(name)
       TermFrequency.insert(name, wordCount)
       CosineSimilarity.recalc(name)
@@ -256,49 +255,6 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def delete(name: String)(implicit connection:Connection): Int = {
       SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
-    }
-  }
-
-  object CosineSimilarity {
-    def recalc(name: String): Int = {
-      SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
-
-      SQL"""
-REPLACE INTO CosineSimilarity (name1, name2, similarity)
-SELECT *
-    FROM (
-        SELECT
-            TF3.name name1,
-            $name name2,
-            IFNULL(
-                ( SELECT SUM(TF1.frequency * TF2.frequency) product FROM TermFrequency TF1 INNER JOIN TermFrequency TF2 ON TF1.term = TF2.term WHERE TF1.name = TF3.name AND TF2.name = $name)
-                /
-                (
-                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = TF3.name)
-                        *
-                    (SELECT SQRT(SUM(frequency * frequency)) FROM TermFrequency WHERE name = $name)
-                ),
-                0
-            ) similarity
-            FROM (SELECT DISTINCT name FROM TermFrequency) TF3
-    ) CS1
-    WHERE similarity > 0
-      """.executeUpdate()
-
-      SQL"""
-REPLACE INTO CosineSimilarity (name1, name2, similarity)
-SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
-      """.executeUpdate()
-    }
-
-    def select(name: String): List[CosineSimilarity] = {
-      SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
-        .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
-        .map(models.CosineSimilarity.tupled)
-    }
-
-    def delete(name: String)(implicit connection:Connection): Int = {
-      SQL"""DELETE FROM CosineSimilarity WHERE name1 = $name OR name2 = $name""".executeUpdate()
     }
   }
 
