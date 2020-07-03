@@ -87,7 +87,7 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
     def selectSpecificRevision(name: String, revision: Int): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
-        .on(Symbol("name") -> name, 'revision -> revision)
+        .on(Symbol("name") -> name, Symbol("revision") -> revision)
         .as(rowParser singleOpt).map(flatten)
         .map(models.Page.tupled)
     }
