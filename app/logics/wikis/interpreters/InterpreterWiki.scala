@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
-import models.{PageContent, SchemaOrg, WikiContext}
+import models.{PageContent, WikiContext}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
@@ -13,6 +13,7 @@ import scala.util.matching.Regex
 object InterpreterWiki extends TraitInterpreter {
 
   import models.tables.Link
+  import models.tables.SchemaOrg
 
   case class LinkMarkup(uri:String, alias:String = "")(implicit wikiContext:WikiContext) {
 

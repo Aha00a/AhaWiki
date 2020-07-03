@@ -84,7 +84,8 @@ object InterpreterSchema extends TraitInterpreter {
       case RenderingMode.Preview =>
         val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
           val listPropCount = wikiContext.database.withConnection { implicit connection =>
-            AhaWikiQuery().SchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
+            import models.tables.SchemaOrg
+            SchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
           }
           listPropCount.filterNot(pc => seqPropertyUsed.contains(pc.prop)).map(pc => s"${pc.prop}(${pc.cnt})").mkString(", ")
         } else {
@@ -120,14 +121,16 @@ object InterpreterSchema extends TraitInterpreter {
 
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[models.SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[models.tables.SchemaOrg] = {
+    import models.tables
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    val seqLinkProperty: Seq[models.SchemaOrg] = parseResult.seqSeqField.flatMap {
+    val seqLinkProperty: Seq[tables.SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
-        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(models.SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+        import models.tables
+        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(tables.SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
     }
-    models.SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
+    tables.SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
   }
 }

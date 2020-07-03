@@ -2,11 +2,12 @@ package logics.wikis
 
 import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
-import models.{SchemaOrg, WikiContext}
+import models.WikiContext
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   import models.tables.Link
+  import models.tables.SchemaOrg
 
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {

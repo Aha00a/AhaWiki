@@ -12,8 +12,9 @@ object MacroSeeAlso extends TraitMacro {
     InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop), ahaWikiQuery))
   }}
 
-  private def getMarkupSchema(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext) = {
-    val listSchemaOrg = ahaWikiQuery.SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
+    import models.tables.SchemaOrg
+    val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
       s""" * [schema:$k $k]
@@ -23,9 +24,10 @@ object MacroSeeAlso extends TraitMacro {
 
   def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
     import models.tables.Link
+    import models.tables.SchemaOrg
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
     val seqLink: Seq[Link] = Link.select(name)
-    val seqSchemaOrg = ahaWikiQuery.SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+    val seqSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
 
     val seqLinkFiltered: Seq[Link] = (seqLink ++ seqSchemaOrgLink).filter(l => l.and(wikiContext.pageCanSee))
@@ -48,7 +50,7 @@ object MacroSeeAlso extends TraitMacro {
     s"""
        |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
        |'''[schema:Schema Schema]'''
-       |${getMarkupSchema(name, ahaWikiQuery)}
+       |${getMarkupSchema(name)}
        |
        |'''Similar Pages'''
        |[[SimilarPages]]
