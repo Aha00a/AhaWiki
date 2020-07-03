@@ -255,6 +255,7 @@ class Test @Inject()(implicit val
   }
 
   def testInterpreterWiki()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    import models.tables.Link
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(InterpreterWiki.name, "Wiki")

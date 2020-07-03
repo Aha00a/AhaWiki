@@ -1,8 +1,11 @@
 package logics.wikis.interpreters
 
-import models.{Link, PageContent, WikiContext}
+import models.{PageContent, WikiContext}
 
 object InterpreterPaper extends TraitInterpreter {
+
+  import models.tables.Link
+
   //noinspection ZeroIndexToHead
   override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
     val pageContent: PageContent = PageContent(content)

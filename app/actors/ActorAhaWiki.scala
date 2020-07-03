@@ -7,7 +7,7 @@ import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.interpreters.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiQuery, LatLng, Link, SchemaOrg, WikiContext}
+import models.{AhaWikiQuery, LatLng, SchemaOrg, WikiContext}
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.cache.AsyncCacheApi
@@ -60,6 +60,7 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
       database.withConnection { implicit connection =>
         val ahaWikiQuery = AhaWikiQuery()
         ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
+          import models.tables.Link
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           ahaWikiQuery.Page.updateLink(page.name, seqLink)

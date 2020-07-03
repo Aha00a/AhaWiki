@@ -1,8 +1,11 @@
 package logics.wikis.interpreters
 
-import models.{Link, SchemaOrg, WikiContext}
+import models.{SchemaOrg, WikiContext}
 
 trait TraitInterpreter {
+
+  import models.tables.Link
+
   val name: String = getClass.getSimpleName.replaceAll("^Interpreter", "").replaceAll("""\$$""", "")
 
   def toHtmlString(content: String)(implicit wikiContext: WikiContext): String

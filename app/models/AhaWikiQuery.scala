@@ -20,12 +20,7 @@ case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: 
 
 
 
-case class Link(src:String, dst:String, alias:String) {
-  lazy val isDstExternal: Boolean = PageNameLogic.isExternal(dst)
 
-  def and(a: String => Boolean):Boolean = a(src) && a(dst)
-  def or(a: String => Boolean):Boolean = a(src) || a(dst)
-}
 
 
 
@@ -69,6 +64,9 @@ object AhaWikiQuery {
 class AhaWikiQuery()(implicit connection: Connection) {
 
   object Page {
+
+    import models.tables.Link
+
     private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
 
     def selectCount(): Long = {
@@ -168,73 +166,6 @@ class AhaWikiQuery()(implicit connection: Connection) {
 
   }
 
-  object Link {
-    def selectCountWhereAlias(alias: String): Long = {
-      SQL"SELECT COUNT(*) cnt FROM Link WHERE alias = $alias"
-        .as(long("cnt") single)
-    }
-
-
-    def selectBacklink(name: String): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE dst = $name"
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-    def selectBacklinkOfDatePage(name: String): List[Link] = {
-      SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[0-9]|1[12])-([012][0-9]|3[01])'"""
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-    def select(name: String): List[Link] = {
-      SQL"""SELECT src, dst, alias
-           FROM Link
-           WHERE
-            src != '' AND dst != '' AND (src = $name OR dst = $name)
-        """
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-    def selectDst(dst: String): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE dst = $dst"
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-    
-    def selectAllButNotEmpty(): List[Link] = {
-      SQL"SELECT src, dst, alias FROM Link WHERE src != '' AND dst != ''"
-        .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-        .map(models.Link.tupled)
-    }
-
-
-    def expand(seq: Seq[Link]): Seq[Link] = {
-      val backward: Seq[Link] = seq.flatMap(l => select(l.src))
-      val forward: Seq[Link] = seq.flatMap(l => select(l.dst))
-      val seqExpanded: Seq[Link] = seq ++ backward ++ forward
-      seqExpanded.distinct
-    }
-
-
-    def insert(seq: Seq[Link]): Array[Int] = {
-      if(seq.isEmpty) {
-        Array[Int]()
-      } else {
-        val values = seq.map(s => Seq[NamedParameter]('src -> s.src, 'dst -> s.dst, 'alias -> s.alias))
-        BatchSql(
-          "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
-          values.head,
-          values.tail: _*
-        ).execute()
-      }
-    }
-
-    def delete(name: String)(implicit connection:Connection): Int = {
-      SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
-    }
-  }
 
 
   object SchemaOrg {

@@ -4,7 +4,7 @@ import java.sql.Connection
 
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.InterpreterWiki
-import models.{AhaWikiQuery, Link, WikiContext}
+import models.{AhaWikiQuery, WikiContext}
 
 object MacroSeeAlso extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
@@ -22,13 +22,14 @@ object MacroSeeAlso extends TraitMacro {
   }
 
   def getMarkupRelatedPages(name: String, ahaWikiQuery: AhaWikiQuery)(implicit wikiContext: WikiContext, connection: Connection): String = {
+    import models.tables.Link
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    val seqLink: Seq[Link] = ahaWikiQuery.Link.select(name)
+    val seqLink: Seq[Link] = Link.select(name)
     val seqSchemaOrg = ahaWikiQuery.SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
 
     val seqLinkFiltered: Seq[Link] = (seqLink ++ seqSchemaOrgLink).filter(l => l.and(wikiContext.pageCanSee))
-    val seqLinkFilteredExpanded: Seq[Link] = ahaWikiQuery.Link.expand(seqLinkFiltered)
+    val seqLinkFilteredExpanded: Seq[Link] = Link.expand(seqLinkFiltered)
     val seqLinkFilteredExpandedFiltered: Seq[Link] = seqLinkFilteredExpanded.filter(l => l.and(wikiContext.pageCanSee))
     val result = seqLinkFilteredExpandedFiltered
       .map(l => s"${l.src}->${l.dst}")

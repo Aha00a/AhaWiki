@@ -4,9 +4,12 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
 import logics.SchemaOrg
 import logics.wikis.{PageNameLogic, RenderingMode}
-import models.{AhaWikiQuery, Link, PageContent, WikiContext}
+import models.{AhaWikiQuery, PageContent, WikiContext}
 
 object InterpreterSchema extends TraitInterpreter {
+
+  import models.tables.Link
+
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
 
   def createPageContent(content: String): PageContent = {

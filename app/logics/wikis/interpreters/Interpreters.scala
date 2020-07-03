@@ -1,9 +1,12 @@
 package logics.wikis.interpreters
 
 import logics.wikis.macros.MacroError
-import models.{Link, PageContent, SchemaOrg, WikiContext}
+import models.{PageContent, SchemaOrg, WikiContext}
 
 object Interpreters extends TraitInterpreter {
+
+  import models.tables.Link
+
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
     InterpreterPaper,
