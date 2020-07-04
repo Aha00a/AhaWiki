@@ -24,7 +24,7 @@ class Search @Inject()(implicit val
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
-        AhaWikiQuery().pageSearch(_)
+        AhaWikiQuery().Page.pageSearch(_)
           .filter(sr => WikiPermission().isReadable(PageContent(sr.content)))
           .sortBy(_.dateTime)(Ordering[Date].reverse)
           .partition(_.name == q)

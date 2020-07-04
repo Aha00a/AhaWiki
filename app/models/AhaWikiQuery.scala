@@ -126,28 +126,25 @@ class AhaWikiQuery()(implicit connection: Connection) {
       SchemaOrg.insert(seqSchemaOrg)
     }
 
-  }
+    // TODO: remove IFNULL(permRead) and fix schema
+    def pageSelectPageList(): List[PageWithoutContentWithSize] = {
+      SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
+             |    FROM Page w
+             |    INNER JOIN (
+             |        SELECT
+             |            name, MAX(revision) revision
+             |            FROM Page
+             |            GROUP BY name
+             |            ORDER BY MAX(dateTime) DESC
+             |    ) NV ON w.name = NV.name AND w.revision = NV.revision
+             |    ORDER BY name
+             |""".stripMargin)
+        .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
+        .map(PageWithoutContentWithSize.tupled)
+    }
 
-
-  // TODO: remove IFNULL(permRead) and fix schema
-  def pageSelectPageList(): List[PageWithoutContentWithSize] = {
-    SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
-           |    FROM Page w
-           |    INNER JOIN (
-           |        SELECT
-           |            name, MAX(revision) revision
-           |            FROM Page
-           |            GROUP BY name
-           |            ORDER BY MAX(dateTime) DESC
-           |    ) NV ON w.name = NV.name AND w.revision = NV.revision
-           |    ORDER BY name
-           |""".stripMargin)
-      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
-      .map(PageWithoutContentWithSize.tupled)
-  }
-
-  def pageSearch(q:String): immutable.Seq[SearchResult] = {
-    SQL("""
+    def pageSearch(q:String): immutable.Seq[SearchResult] = {
+      SQL("""
 SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, w.content
      FROM Page w
      INNER JOIN (
@@ -160,39 +157,39 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
          w.name LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name""")
-      .on(Symbol("q") -> q)
-      .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
+        .on(Symbol("q") -> q)
+        .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
+    }
+
+
+    def pageSelectNameWhereNoCosineSimilarity(): Option[String] = {
+      SQL( """SELECT
+             |    name
+             |    FROM (
+             |        SELECT DISTINCT(name) name FROM Page
+             |    ) w
+             |    WHERE name NOT IN (
+             |        SELECT DISTINCT(name1) FROM CosineSimilarity
+             |    )
+             |    ORDER BY RAND()
+             |    LIMIT 1
+             | """.stripMargin)
+        .as(str("name") singleOpt)
+    }
+
+    def pageSelectNameWhereNoLinkSrc(): Seq[String] = {
+      SQL( """SELECT
+             |    name
+             |    FROM (
+             |        SELECT DISTINCT(name) name FROM Page
+             |    ) w
+             |    WHERE name NOT IN (
+             |        SELECT DISTINCT(src) FROM Link
+             |    )
+             |    ORDER BY RAND()
+             |    LIMIT 100
+             | """.stripMargin)
+        .as(str("name") *)
+    }
   }
-
-
-  def pageSelectNameWhereNoCosineSimilarity(): Option[String] = {
-    SQL( """SELECT
-           |    name
-           |    FROM (
-           |        SELECT DISTINCT(name) name FROM Page
-           |    ) w
-           |    WHERE name NOT IN (
-           |        SELECT DISTINCT(name1) FROM CosineSimilarity
-           |    )
-           |    ORDER BY RAND()
-           |    LIMIT 1
-           | """.stripMargin)
-      .as(str("name") singleOpt)
-  }
-
-  def pageSelectNameWhereNoLinkSrc(): Seq[String] = {
-    SQL( """SELECT
-           |    name
-           |    FROM (
-           |        SELECT DISTINCT(name) name FROM Page
-           |    ) w
-           |    WHERE name NOT IN (
-           |        SELECT DISTINCT(src) FROM Link
-           |    )
-           |    ORDER BY RAND()
-           |    LIMIT 100
-           | """.stripMargin)
-      .as(str("name") *)
-  }
-
 }

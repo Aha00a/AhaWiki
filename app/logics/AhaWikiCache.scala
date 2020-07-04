@@ -26,7 +26,7 @@ object AhaWikiCache extends Logging {
 
     def get()(implicit syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = syncCacheApi.getOrElseUpdate(key, 60.minutes) {
       database.withConnection { implicit connection =>
-        AhaWikiQuery().pageSelectPageList()
+        AhaWikiQuery().Page.pageSelectPageList()
       }
     }
   }

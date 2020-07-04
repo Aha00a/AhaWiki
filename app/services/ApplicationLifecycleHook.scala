@@ -61,7 +61,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.schedule(30 seconds, 5 minutes, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    ahaWikiQuery.pageSelectNameWhereNoCosineSimilarity() match {
+    ahaWikiQuery.Page.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
       case None => logger.info("None")
     }
@@ -69,7 +69,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.schedule(15 seconds, 30 seconds, () => { database.withConnection { implicit connection =>
     val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    val seq: Seq[String] = ahaWikiQuery.pageSelectNameWhereNoLinkSrc()
+    val seq: Seq[String] = ahaWikiQuery.Page.pageSelectNameWhereNoLinkSrc()
     for((v, i) <- seq.zipWithIndex) {
       actorAhaWiki ! CalculateLink(v, i, seq.length)
     }
