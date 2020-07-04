@@ -1,9 +1,9 @@
 package logics.wikis.macros
 
 import actors.ActorAhaWiki.Calculate
-import logics.wikis.interpreters.InterpreterWiki
 import com.aha00a.commons.Implicits._
-import models.{AhaWikiQuery, WikiContext}
+import logics.wikis.interpreters.InterpreterWiki
+import models.WikiContext
 
 import scala.collection.immutable
 

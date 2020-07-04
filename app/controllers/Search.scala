@@ -6,7 +6,8 @@ import akka.actor.ActorRef
 import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.wikis.WikiPermission
-import models.{AhaWikiQuery, PageContent, WikiContext}
+import models.PageContent
+import models.WikiContext
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.mvc._
@@ -24,7 +25,7 @@ class Search @Inject()(implicit val
     Ok(views.html.Search.search(
       q,
       q.toOption.map(
-        AhaWikiQuery().Page.pageSearch(_)
+        models.tables.Page.pageSearch(_)
           .filter(sr => WikiPermission().isReadable(PageContent(sr.content)))
           .sortBy(_.dateTime)(Ordering[Date].reverse)
           .partition(_.name == q)

@@ -1,6 +1,6 @@
 package logics.wikis.macros
 
-import models.{AhaWikiQuery, WikiContext}
+import models.WikiContext
 
 object MacroPageMap extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>

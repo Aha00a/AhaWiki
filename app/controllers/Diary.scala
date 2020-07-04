@@ -8,7 +8,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import javax.inject._
 import logics.wikis.{PageLogic, WikiPermission}
-import models.{AhaWikiQuery, PageContent, WikiContext}
+import models.{PageContent, WikiContext}
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.data.Form
@@ -30,7 +30,7 @@ class Diary @Inject()(implicit val
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     database.withConnection { implicit connection =>
-      val (latestText: String, latestRevision: Long) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+      val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
 
       val permission: WikiPermission = WikiPermission()
       if (permission.isWritable(PageContent(latestText))) {

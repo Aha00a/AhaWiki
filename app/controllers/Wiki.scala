@@ -54,10 +54,9 @@ class Wiki @Inject()(implicit val
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
 
-    val ahaWikiQuery: AhaWikiQuery = AhaWikiQuery()
-    val pageFirstRevision = ahaWikiQuery.Page.selectFirstRevision(name)
-    val pageLastRevision = ahaWikiQuery.Page.selectLastRevision(name)
-    val pageSpecificRevision = ahaWikiQuery.Page.select(name, revision)
+    val pageFirstRevision = models.tables.Page.selectFirstRevision(name)
+    val pageLastRevision = models.tables.Page.selectLastRevision(name)
+    val pageSpecificRevision = models.tables.Page.select(name, revision)
 
     val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
     val wikiPermission = WikiPermission()
@@ -246,8 +245,8 @@ class Wiki @Inject()(implicit val
         val after = request.getQueryString("after").getOrElse("0").toInt
         val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
 
-        val beforePage = ahaWikiQuery.Page.selectSpecificRevision(name, before)
-        val afterPage = ahaWikiQuery.Page.selectSpecificRevision(name, after)
+        val beforePage = models.tables.Page.selectSpecificRevision(name, before)
+        val afterPage = models.tables.Page.selectSpecificRevision(name, after)
 
         val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
         val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
@@ -260,9 +259,9 @@ class Wiki @Inject()(implicit val
         Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
       case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
-      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, ahaWikiQuery.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
+      case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, models.tables.Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
       case (Some(page), "blame", true, _) =>
-        val blame = ahaWikiQuery.Page.selectHistoryStream(name, new Blame[PageMetaData, String](), (blame:Blame[PageMetaData, String], p) => blame.next(new PageMetaData(p), p.content.splitLinesSeq()))
+        val blame = models.tables.Page.selectHistoryStream(name, new Blame[PageMetaData, String](), (blame:Blame[PageMetaData, String], p) => blame.next(new PageMetaData(p), p.content.splitLinesSeq()))
         val seqRevision = blame.seqBlameLine.map(_.metaData.revision)
         val maxRevision: Long = seqRevision.max
         val minRevision: Long = seqRevision.min
@@ -285,7 +284,7 @@ class Wiki @Inject()(implicit val
 
     def doSave() = {
       database.withConnection { implicit connection =>
-        val (latestText, latestRevision, latestTime) = AhaWikiQuery().Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
+        val (latestText, latestRevision, latestTime) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("")
         } else {
@@ -326,10 +325,10 @@ class Wiki @Inject()(implicit val
   def delete(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiQuery().Page.selectLastRevision(name) match {
+    models.tables.Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
-          AhaWikiQuery().Page.deleteWithRelatedData(name)
+          models.tables.Page.deleteWithRelatedData(name)
           AhaWikiCache.PageList.invalidate()
           Ok("")
         } else {
@@ -343,10 +342,10 @@ class Wiki @Inject()(implicit val
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val name = Form("name" -> text).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    AhaWikiQuery().Page.selectLastRevision(name) match {
+    models.tables.Page.selectLastRevision(name) match {
       case Some(page) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
-          AhaWikiQuery().Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
+          models.tables.Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(name)
           Ok("")
@@ -367,7 +366,7 @@ class Wiki @Inject()(implicit val
 
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
-    AhaWikiQuery().Page.selectLastRevision(pageName) match {
+    models.tables.Page.selectLastRevision(pageName) match {
       case Some(page) =>
         implicit val wikiContext: WikiContext = WikiContext(pageName)
         val pageContent = PageContent(page.content)
@@ -407,10 +406,10 @@ class Wiki @Inject()(implicit val
   def rename(): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
     implicit val wikiContext: WikiContext = WikiContext(name)
-    (AhaWikiQuery().Page.selectLastRevision(name), AhaWikiQuery().Page.selectLastRevision(newName)) match {
+    (models.tables.Page.selectLastRevision(name), models.tables.Page.selectLastRevision(newName)) match {
       case (Some(page), None) =>
         if (WikiPermission().isWritable(PageContent(page.content))) {
-          AhaWikiQuery().Page.rename(name, newName)
+          models.tables.Page.rename(name, newName)
           PageLogic.insert(name, 1, new Date(), "redirect", s"#!redirect $newName")
           AhaWikiCache.PageList.invalidate()
           actorAhaWiki ! Calculate(newName)

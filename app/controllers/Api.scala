@@ -2,7 +2,6 @@ package controllers
 
 import javax.inject._
 import logics.wikis.PageLogic
-import models.AhaWikiQuery
 import play.api.cache.SyncCacheApi
 import play.api.libs.json._
 import play.api.mvc._

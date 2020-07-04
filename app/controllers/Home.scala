@@ -4,7 +4,7 @@ import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.ApplicationConf
 import logics.wikis.PageLogic
-import models.{AhaWikiQuery, PageContent}
+import models.PageContent
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.mvc._
@@ -27,7 +27,7 @@ class Home @Inject() (
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      Ok(AhaWikiQuery().Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+      Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
     }
   }
 

@@ -1,10 +1,13 @@
 package logics.wikis.interpreters
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{DateTimeUtil, EnglishCaseConverter}
+import com.aha00a.commons.utils.DateTimeUtil
+import com.aha00a.commons.utils.EnglishCaseConverter
 import logics.SchemaOrg
-import logics.wikis.{PageNameLogic, RenderingMode}
-import models.{AhaWikiQuery, PageContent, WikiContext}
+import logics.wikis.PageNameLogic
+import logics.wikis.RenderingMode
+import models.PageContent
+import models.WikiContext
 
 object InterpreterSchema extends TraitInterpreter {
 

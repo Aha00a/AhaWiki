@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import logics.wikis.interpreters.InterpreterWiki
-import models.{AhaWikiQuery, WikiContext}
+import models.WikiContext
 
 object MacroBacklinks extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>

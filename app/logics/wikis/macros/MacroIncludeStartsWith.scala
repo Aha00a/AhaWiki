@@ -1,8 +1,9 @@
 package logics.wikis.macros
 
+import logics.wikis.WikiPermission
 import logics.wikis.interpreters.Interpreters
-import logics.wikis.{PageLogic, WikiPermission}
-import models.{AhaWikiQuery, PageContent, WikiContext}
+import models.PageContent
+import models.WikiContext
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
   @scala.annotation.tailrec
@@ -12,7 +13,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
       import models.tables.PageWithoutContentWithSize
       val list: List[PageWithoutContentWithSize] = wikiContext.listPageByPermission
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
-        val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(page.name)
+        val pageLastRevision = models.tables.Page.selectLastRevision(page.name)
         if (WikiPermission()(wikiContext.request, wikiContext.syncCacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.toHtmlString(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {

@@ -7,7 +7,7 @@ import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.interpreters.Interpreters
 import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiQuery, LatLng, WikiContext}
+import models.{LatLng, WikiContext}
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.cache.AsyncCacheApi
@@ -45,29 +45,27 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
 
     case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
-        val ahaWikiQuery = AhaWikiQuery()
-        ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
+        models.tables.Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
           logger.info(seq.mkString("(", ")\t(", ")"))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-          ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
+          models.tables.Page.updateSimilarPage(name, wordCount)
         }
       }
     }
     case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
-        val ahaWikiQuery = AhaWikiQuery()
-        ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
+        models.tables.Page.selectLastRevision(name) foreach { page =>
           import models.tables.Link
           import models.tables.SchemaOrg
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-          ahaWikiQuery.Page.updateLink(page.name, seqLink)
+          models.tables.Page.updateLink(page.name, seqLink)
 
           val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-          ahaWikiQuery.Page.updateSchemaOrg(name, seqSchemaOrg)
+          models.tables.Page.updateSchemaOrg(name, seqSchemaOrg)
         }
       }
     }

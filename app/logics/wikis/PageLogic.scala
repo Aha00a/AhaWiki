@@ -23,8 +23,7 @@ object PageLogic {
       val remoteAddress = request.remoteAddressWithXRealIp
       val permRead = PageContent(body).read.getOrElse("")
       val page = Page(name, revision, dateTime, author, remoteAddress, comment, permRead, body)
-      val ahaWikiQuery = AhaWikiQuery()
-      ahaWikiQuery.Page.insert(page)
+      models.tables.Page.insert(page)
       wikiContext.actorAhaWiki ! Calculate(name)
       AhaWikiCache.PageList.invalidate()
       name match {
