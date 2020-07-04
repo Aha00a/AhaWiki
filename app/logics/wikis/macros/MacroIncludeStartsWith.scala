@@ -2,12 +2,14 @@ package logics.wikis.macros
 
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.{PageLogic, WikiPermission}
-import models.{AhaWikiQuery, PageContent, PageWithoutContentWithSize, WikiContext}
+import models.{AhaWikiQuery, PageContent, WikiContext}
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
+  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
+      import models.tables.PageWithoutContentWithSize
       val list: List[PageWithoutContentWithSize] = wikiContext.listPageByPermission
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
         val pageLastRevision = AhaWikiQuery().Page.selectLastRevision(page.name)

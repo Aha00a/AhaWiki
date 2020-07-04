@@ -3,7 +3,7 @@ package logics
 import actors.ActorAhaWiki.Geocode
 import akka.actor.ActorRef
 import logics.wikis.interpreters.Interpreters
-import models.{AhaWikiQuery, LatLng, PageWithoutContentWithSize, WikiContext}
+import models.{AhaWikiQuery, LatLng, WikiContext}
 import play.api.Logger
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -21,6 +21,9 @@ object AhaWikiCache extends Logging {
   }
 
   object PageList extends CacheEntity {
+
+    import models.tables.PageWithoutContentWithSize
+
     def get()(implicit syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = syncCacheApi.getOrElseUpdate(key, 60.minutes) {
       database.withConnection { implicit connection =>
         AhaWikiQuery().pageSelectPageList()

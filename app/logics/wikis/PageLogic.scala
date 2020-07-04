@@ -12,8 +12,12 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object PageLogic {
+
+  import models.tables.PageWithoutContentWithSize
+
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
+      import models.tables.Page
       val request = wikiContext.request
       val author = SessionLogic.getId(request).getOrElse("anonymous")
       val remoteAddress = request.remoteAddressWithXRealIp

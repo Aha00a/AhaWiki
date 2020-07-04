@@ -8,7 +8,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
-import models.{AhaWikiQuery, Page}
+import models.AhaWikiQuery
 import play.api.Logger
 import play.api.Logging
 import play.api.db.Database
@@ -42,6 +42,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   private def insertSeedPages(ahaWikiQuery: AhaWikiQuery): Unit = {
     if (0 == ahaWikiQuery.Page.selectCount()) {
+      import models.tables.Page
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
           val name = file.getName

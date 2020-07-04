@@ -12,9 +12,6 @@ import scala.collection.immutable
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 
 
 
@@ -52,9 +49,13 @@ object AhaWikiQuery {
 
 class AhaWikiQuery()(implicit connection: Connection) {
 
+  import models.tables.PageWithoutContentWithSize
+
   object Page {
 
     import models.tables.Link
+    import models.tables.Page
+    import models.tables.PageWithoutContent
     import models.tables.SchemaOrg
 
     private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
@@ -75,21 +76,21 @@ class AhaWikiQuery()(implicit connection: Connection) {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
         .on(Symbol("name") -> name)
         .as(rowParser singleOpt).map(flatten)
-        .map(models.Page.tupled)
+        .map(models.tables.Page.tupled)
     }
 
     def selectFirstRevision(name: String): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
         .on(Symbol("name") -> name)
         .as(rowParser singleOpt).map(flatten)
-        .map(models.Page.tupled)
+        .map(models.tables.Page.tupled)
     }
 
     def selectSpecificRevision(name: String, revision: Int): Option[Page] = {
       SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
         .on(Symbol("name") -> name, Symbol("revision") -> revision)
         .as(rowParser singleOpt).map(flatten)
-        .map(models.Page.tupled)
+        .map(models.tables.Page.tupled)
     }
 
     def selectHistory(name: String): List[PageWithoutContent] = {
@@ -98,10 +99,10 @@ class AhaWikiQuery()(implicit connection: Connection) {
         .map(PageWithoutContent.tupled)
     }
 
-    def selectHistoryStream[T](name: String, t:T, f:(T, models.Page) => T): T = {
+    def selectHistoryStream[T](name: String, t:T, f:(T, models.tables.Page) => T): T = {
       SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision ASC"
         .as(rowParser *).map(flatten)
-        .foldLeft(t)((a, v) => f(a, models.Page.tupled(v)))
+        .foldLeft(t)((a, v) => f(a, models.tables.Page.tupled(v)))
     }
 
     def insert(p: Page): Option[Long] = {

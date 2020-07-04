@@ -24,7 +24,7 @@ object SchemaOrg {
     if(seq.isEmpty) {
       Array[Int]()
     } else {
-      val values = seq.map(s => Seq[NamedParameter]('page -> s.page, 'cls -> s.cls, 'prop -> s.prop, 'value -> s.value))
+      val values = seq.map(s => Seq[NamedParameter](Symbol("page") -> s.page, Symbol("cls") -> s.cls, Symbol("prop") -> s.prop, Symbol("value") -> s.value))
       BatchSql(
         "REPLACE INTO SchemaOrg (page, cls, prop, value) values ({page}, {cls}, {prop}, {value})",
         values.head,
