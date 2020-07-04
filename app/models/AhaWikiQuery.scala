@@ -13,36 +13,6 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 
 
-
-
-
-
-case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: Date)
-
-case class SearchResult(name:String, content:String, dateTime: Date) {
-  def summarise(q: String): SearchResultSummary = {
-    val lines = content.split("""(\r\n|\n)+""").toSeq
-    SearchResultSummary(
-      name,
-      lines
-        .zipWithIndex
-        .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
-        .map(_._2)
-        .flatMap(RangeUtil.around(_, 3))
-        .distinct
-        .filter(lines.isDefinedAt)
-        .splitBy((a, b) => a + 1 != b)
-        .map(_.map(i => (i + 1, lines(i)))).toSeq,
-      dateTime
-    )
-  }
-}
-
-
-
-
-
-
 object AhaWikiQuery {
   def apply()(implicit connection: Connection): AhaWikiQuery = new AhaWikiQuery()
 }
@@ -50,6 +20,7 @@ object AhaWikiQuery {
 class AhaWikiQuery()(implicit connection: Connection) {
 
   import models.tables.PageWithoutContentWithSize
+  import models.tables.SearchResult
 
   object Page {
 
