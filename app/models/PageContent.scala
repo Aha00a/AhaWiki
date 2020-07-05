@@ -5,8 +5,8 @@ import com.aha00a.commons.Implicits._
 case class PageContent(raw: String) {
   private val split: Array[String] = raw.replaceAll("""^\n#!""", "#!").split("""(\n|\r\n)""")
 
-  val directives: Seq[String] = split.toIterator.takeWhile(_.startsWith("#!")).map(_.substring(2)).toSeq
-  val content: String = split.toIterator.dropWhile(_.startsWith("#!")).mkString("\n")
+  val directives: Seq[String] = split.iterator.takeWhile(_.startsWith("#!")).map(_.substring(2)).toSeq
+  val content: String = split.iterator.dropWhile(_.startsWith("#!")).mkString("\n")
 
   val read: Option[String] = extractDirective("read")
   val write: Option[String] = extractDirective("write")
