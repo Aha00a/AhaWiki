@@ -33,13 +33,15 @@ class ApplicationLifecycleHook @Inject()(implicit
   }
 
   logger.info("OnApplicationStart")
-  actorSystem.scheduler.scheduleOnce(2 second, () => { database.withConnection { implicit connection =>
-    logger.info("OnApplicationStarting")
+  actorSystem.scheduler.scheduleOnce(2 second, () => {
+    database.withConnection { implicit connection =>
+      logger.info("OnApplicationStarting")
 
-    insertSeedPages()
+      insertSeedPages()
 
-    logger.info("OnApplicationStarted")
-  }})
+      logger.info("OnApplicationStarted")
+    }
+  })
 
   private def insertSeedPages()(implicit connection: Connection): Unit = {
     if (0 == models.tables.Page.selectCount()) {
@@ -60,17 +62,21 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => { database.withConnection { implicit connection =>
-    models.tables.Page.pageSelectNameWhereNoCosineSimilarity() match {
-      case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
-      case None => logger.info("None")
+  actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => {
+    database.withConnection { implicit connection =>
+      models.tables.Page.pageSelectNameWhereNoCosineSimilarity() match {
+        case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
+        case None => logger.info("None")
+      }
     }
-  }})
+  })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 30 seconds)(() => { database.withConnection { implicit connection =>
-    val seq: Seq[String] = models.tables.Page.pageSelectNameWhereNoLinkSrc()
-    for((v, i) <- seq.zipWithIndex) {
-      actorAhaWiki ! CalculateLink(v, i, seq.length)
+  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 30 seconds)(() => {
+    database.withConnection { implicit connection =>
+      val seq: Seq[String] = models.tables.Page.pageSelectNameWhereNoLinkSrc()
+      for ((v, i) <- seq.zipWithIndex) {
+        actorAhaWiki ! CalculateLink(v, i, seq.length)
+      }
     }
-  }})
+  })
 }
