@@ -36,6 +36,7 @@ import play.api.mvc._
 import play.api.Configuration
 import play.api.Environment
 import play.api.Mode
+import play.api.db.Database
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -48,7 +49,7 @@ class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
                      syncCacheApi: SyncCacheApi,
                      actorSystem: ActorSystem,
-                     database: play.api.db.Database,
+                     database: Database,
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
