@@ -10,8 +10,7 @@ object Implicits {
   implicit class RichCsvListWriter(csvListWriter: CsvListWriter) {
     def writeSeqSeqString(seqSeqString: Seq[Seq[String]]): Unit = {
       for (row <- seqSeqString) {
-        val list: util.List[String] = row.toList.asJava
-        csvListWriter.write(list)
+        csvListWriter.write(row.toList.asJava)
       }
     }
   }
