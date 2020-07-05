@@ -1,24 +1,30 @@
 package controllers
 
-import java.net.{URLDecoder, URLEncoder}
-import java.time.{LocalDate, Month}
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.time.LocalDate
+import java.time.Month
 import java.util.Date
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{DateTimeUtil, RangeUtil}
+import com.aha00a.commons.utils.DateTimeUtil
+import com.aha00a.commons.utils.RangeUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.stemmers.Stemmer
 import com.aha00a.supercsv.SupercsvUtil
-import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
+import com.github.difflib.DiffUtils
+import com.github.difflib.UnifiedDiffUtils
 import javax.inject._
 import logics._
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import logics.wikis.{ExtractConvertInjectInterpreterCustom, PageLogic, WikiPermission}
+import logics.wikis.ExtractConvertInjectInterpreterCustom
+import logics.wikis.PageLogic
+import logics.wikis.WikiPermission
 import models._
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -27,11 +33,15 @@ import play.api.data.Forms._
 import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc._
-import play.api.{Configuration, Environment, Logger, Mode}
+import play.api.Configuration
+import play.api.Environment
+import play.api.Mode
 
-import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 class Wiki @Inject()(implicit val
