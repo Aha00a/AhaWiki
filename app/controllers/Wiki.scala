@@ -54,7 +54,7 @@ class Wiki @Inject()(implicit val
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
                      wsClient: WSClient,
-                     executor: ExecutionContext
+                     executionContext: ExecutionContext
                     ) extends BaseController with Logging {
 
   implicit class RichResult(result: Result) {

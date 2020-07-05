@@ -37,7 +37,7 @@ class ActorAhaWiki @Inject()(implicit
                              syncCacheApi: SyncCacheApi,
                              database: Database,
                              wsClient: WSClient,
-                             executor: ExecutionContext,
+                             executionContext: ExecutionContext,
                              configuration: Configuration
                             ) extends Actor with Logging {
 
