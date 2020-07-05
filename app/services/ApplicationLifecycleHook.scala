@@ -11,13 +11,14 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
+import models.tables.Page
 import play.api.Logging
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.io.Codec
 
 class ApplicationLifecycleHook @Inject()(implicit
@@ -47,7 +48,7 @@ class ApplicationLifecycleHook @Inject()(implicit
   })
 
   private def insertSeedPages()(implicit connection: Connection): Unit = {
-    if (0 == models.tables.Page.selectCount()) {
+    if (0 == Page.selectCount()) {
       import models.tables.Page
       def getArrayPageFromFile: Array[Page] = {
         new File("app/assets/Page").listFiles().map(file => {
@@ -59,7 +60,7 @@ class ApplicationLifecycleHook @Inject()(implicit
       }
 
       getArrayPageFromFile.foreach(p => {
-        models.tables.Page.insert(p)
+        Page.insert(p)
         actorAhaWiki ! Calculate(p.name)
       })
     }
@@ -67,7 +68,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => {
     database.withConnection { implicit connection =>
-      models.tables.Page.pageSelectNameWhereNoCosineSimilarity() match {
+      Page.pageSelectNameWhereNoCosineSimilarity() match {
         case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
         case None => logger.info("None")
       }
@@ -76,7 +77,7 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 30 seconds)(() => {
     database.withConnection { implicit connection =>
-      val seq: Seq[String] = models.tables.Page.pageSelectNameWhereNoLinkSrc()
+      val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
       for ((v, i) <- seq.zipWithIndex) {
         actorAhaWiki ! CalculateLink(v, i, seq.length)
       }

@@ -6,15 +6,18 @@ import com.aha00a.commons.utils.StopWatch
 import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.interpreters.Interpreters
-import logics.{AhaWikiCache, ApplicationConf}
-import models.{LatLng, WikiContext}
+import logics.AhaWikiCache
+import logics.ApplicationConf
+import models.tables.Page
+import models.LatLng
+import models.WikiContext
+import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
-import play.api.cache.AsyncCacheApi
 import play.api.db.Database
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Json
+import play.api.libs.json.Reads
 import play.api.libs.ws.WSClient
-import play.api.{Configuration, Logger}
 
 import scala.concurrent.ExecutionContext
 
@@ -51,27 +54,27 @@ class ActorAhaWiki @Inject()(implicit
 
     case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
-        models.tables.Page.selectLastRevision(name) foreach { page =>
+        Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
           logger.info(seq.mkString("(", ")\t(", ")"))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-          models.tables.Page.updateSimilarPage(name, wordCount)
+          Page.updateSimilarPage(name, wordCount)
         }
       }
     }
     case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
-        models.tables.Page.selectLastRevision(name) foreach { page =>
+        Page.selectLastRevision(name) foreach { page =>
           import models.tables.Link
           import models.tables.SchemaOrg
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-          models.tables.Page.updateLink(page.name, seqLink)
+          Page.updateLink(page.name, seqLink)
 
           val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-          models.tables.Page.updateSchemaOrg(name, seqSchemaOrg)
+          Page.updateSchemaOrg(name, seqSchemaOrg)
         }
       }
     }

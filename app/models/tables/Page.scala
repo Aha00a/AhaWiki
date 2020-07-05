@@ -66,21 +66,21 @@ object Page {
     SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
       .on(Symbol("name") -> name)
       .as(rowParser singleOpt).map(flatten)
-      .map(models.tables.Page.tupled)
+      .map(Page.tupled)
   }
 
   def selectFirstRevision(name: String)(implicit connection: Connection): Option[Page] = {
     SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
       .on(Symbol("name") -> name)
       .as(rowParser singleOpt).map(flatten)
-      .map(models.tables.Page.tupled)
+      .map(Page.tupled)
   }
 
   def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection): Option[Page] = {
     SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
       .on(Symbol("name") -> name, Symbol("revision") -> revision)
       .as(rowParser singleOpt).map(flatten)
-      .map(models.tables.Page.tupled)
+      .map(Page.tupled)
   }
 
   def selectHistory(name: String)(implicit connection: Connection): List[PageWithoutContent] = {
@@ -89,10 +89,10 @@ object Page {
       .map(PageWithoutContent.tupled)
   }
 
-  def selectHistoryStream[T](name: String, t:T, f:(T, models.tables.Page) => T)(implicit connection: Connection): T = {
+  def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection): T = {
     SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision ASC"
       .as(rowParser *).map(flatten)
-      .foldLeft(t)((a, v) => f(a, models.tables.Page.tupled(v)))
+      .foldLeft(t)((a, v) => f(a, Page.tupled(v)))
   }
 
   def insert(p: Page)(implicit connection: Connection): Option[Long] = {

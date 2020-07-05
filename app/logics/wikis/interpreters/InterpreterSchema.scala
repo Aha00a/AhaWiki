@@ -12,6 +12,7 @@ import models.WikiContext
 object InterpreterSchema extends TraitInterpreter {
 
   import models.tables.Link
+  import models.tables.SchemaOrg
 
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
 
@@ -42,9 +43,9 @@ object InterpreterSchema extends TraitInterpreter {
       <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
         <h5>
           {
-            SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
+            logics.SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
               scala.xml.XML.loadString(
-                seqClass.map(c => SchemaOrg.mapClass.get(c)
+                seqClass.map(c => logics.SchemaOrg.mapClass.get(c)
                   .map(node => node.toLinkMarkup.toHtmlString(pageNameSet))
                   .getOrElse("")
                 ).mkString("<div>", " / ", "</div>")
@@ -58,7 +59,7 @@ object InterpreterSchema extends TraitInterpreter {
               <div>
                 <dt>
                   {
-                    SchemaOrg.mapProperty.get(key).map(n => {
+                  logics.SchemaOrg.mapProperty.get(key).map(n => {
                       n.toXmlSpan()
                     }).getOrElse{
                       <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
@@ -101,10 +102,10 @@ object InterpreterSchema extends TraitInterpreter {
               <h6>Recommended Properties</h6>
               {recommendedProperties}
               <h6>Hierarchical Search</h6>
-              {SchemaOrg.getHtmlTree(parseResult.schemaClass)}
+              {logics.SchemaOrg.getHtmlTree(parseResult.schemaClass)}
               {
-                if(SchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
-                  <div>{SchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
+                if(logics.SchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
+                  <div>{logics.SchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
                 } else {
 
                 }
@@ -124,16 +125,16 @@ object InterpreterSchema extends TraitInterpreter {
 
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[models.tables.SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
     import models.tables
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    val seqLinkProperty: Seq[tables.SchemaOrg] = parseResult.seqSeqField.flatMap {
+    val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
         import models.tables
-        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(tables.SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
     }
-    tables.SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
+    SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
   }
 }
