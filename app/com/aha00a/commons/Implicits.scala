@@ -1,12 +1,17 @@
 package com.aha00a.commons
 
-import java.io.{File, PrintWriter}
-import java.time.{LocalDate, LocalDateTime}
+import java.io.File
+import java.io.PrintWriter
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.Date
 
-import com.aha00a.commons.utils.{DateTimeFormatterHolder, LocalDateTimeUtil, Using}
+import com.aha00a.commons.utils.DateTimeFormatterHolder
+import com.aha00a.commons.utils.LocalDateTimeUtil
+import com.aha00a.commons.utils.Using
 
-import scala.util.{Random, Try}
+import scala.util.Random
+import scala.util.Try
 
 object Implicits {
   implicit class RichString(s:String) {
