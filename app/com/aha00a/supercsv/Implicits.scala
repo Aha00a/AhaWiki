@@ -8,7 +8,7 @@ import scala.jdk.CollectionConverters._
 
 object Implicits {
   implicit class RichCsvListWriter(csvListWriter: CsvListWriter) {
-    def writeSeqSeqString(seqSeqString: Seq[Seq[String]]): Unit = {
+    def write(seqSeqString: Seq[Seq[String]]): Unit = {
       for (row <- seqSeqString) {
         csvListWriter.write(row.toList.asJava)
       }
