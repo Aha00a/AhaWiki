@@ -60,14 +60,14 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   }
 
-  actorSystem.scheduler.schedule(30 seconds, 5 minutes, () => { database.withConnection { implicit connection =>
+  actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => { database.withConnection { implicit connection =>
     models.tables.Page.pageSelectNameWhereNoCosineSimilarity() match {
       case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
       case None => logger.info("None")
     }
   }})
 
-  actorSystem.scheduler.schedule(15 seconds, 30 seconds, () => { database.withConnection { implicit connection =>
+  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 30 seconds)(() => { database.withConnection { implicit connection =>
     val seq: Seq[String] = models.tables.Page.pageSelectNameWhereNoLinkSrc()
     for((v, i) <- seq.zipWithIndex) {
       actorAhaWiki ! CalculateLink(v, i, seq.length)
