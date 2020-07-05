@@ -14,8 +14,8 @@ object SupercsvUtil {
 
   def toString(seqSeqString: Seq[Seq[String]], csvPreference: CsvPreference): String = {
     Using(new StringWriter()) { stringWriter =>
-      Using(new CsvListWriter(stringWriter, csvPreference)) {
-        _.write(seqSeqString)
+      Using(new CsvListWriter(stringWriter, csvPreference)) { csvListWriter =>
+        csvListWriter.write(seqSeqString)
       }
       stringWriter.toString
     }
