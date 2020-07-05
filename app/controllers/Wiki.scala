@@ -52,7 +52,7 @@ class Wiki @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
-                     ws: WSClient,
+                     wsClient: WSClient,
                      executor: ExecutionContext
                     ) extends BaseController with Logging {
 
@@ -322,7 +322,7 @@ class Wiki @Inject()(implicit val
     }
 
     if (secretKey != "") {
-      ws.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
+      wsClient.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
         logger.info(response.body)
         val json: JsValue = response.json
         if (!(json \ "success").as[Boolean]) {

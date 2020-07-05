@@ -33,7 +33,13 @@ object ActorAhaWiki {
 
 }
 
-class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor with Logging {
+class ActorAhaWiki @Inject()(implicit
+                             syncCacheApi: SyncCacheApi,
+                             database: Database,
+                             wsClient: WSClient,
+                             executor: ExecutionContext,
+                             configuration: Configuration
+                            ) extends Actor with Logging {
 
   import ActorAhaWiki._
 
@@ -71,7 +77,7 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
     }
     case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
-      ws
+      wsClient
         .url("https://maps.googleapis.com/maps/api/geocode/json")
         .withQueryStringParameters(
           "address" -> address,
@@ -91,7 +97,7 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
         })
     }
     case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
-      ws
+      wsClient
         .url("https://maps.googleapis.com/maps/api/distancematrix/json")
         .withQueryStringParameters(
           "mode" -> "transit",
