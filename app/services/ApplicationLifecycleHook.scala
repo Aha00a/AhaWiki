@@ -3,18 +3,21 @@ package services
 import java.io.File
 import java.util.Date
 
-import actors.ActorAhaWiki.{Calculate, CalculateCosineSimilarity, CalculateLink}
-import akka.actor.{ActorRef, ActorSystem}
+import actors.ActorAhaWiki.Calculate
+import actors.ActorAhaWiki.CalculateCosineSimilarity
+import actors.ActorAhaWiki.CalculateLink
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import javax.inject._
-import play.api.Logger
 import play.api.Logging
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.io.Codec
 
 class ApplicationLifecycleHook @Inject()(implicit
