@@ -73,7 +73,7 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
       ws
         .url("https://maps.googleapis.com/maps/api/geocode/json")
-        .withQueryString(
+        .withQueryStringParameters(
           "address" -> address,
           "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
         )
@@ -93,7 +93,7 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
     case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
       ws
         .url("https://maps.googleapis.com/maps/api/distancematrix/json")
-        .withQueryString(
+        .withQueryStringParameters(
           "mode" -> "transit",
           "origins" -> src,
           "destinations" -> dst,
