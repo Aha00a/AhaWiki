@@ -1,9 +1,9 @@
 package logics.wikis.macros
 
 import actors.ActorAhaWiki.Calculate
-import logics.wikis.interpreters.InterpreterWiki
 import com.aha00a.commons.Implicits._
-import models.{AhaWikiQuery, CosineSimilarity, WikiContext}
+import logics.wikis.interpreters.InterpreterWiki
+import models.WikiContext
 
 import scala.collection.immutable
 
@@ -14,14 +14,15 @@ object MacroSimilarPages extends TraitMacro {
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
     wikiContext.database.withConnection { implicit connection =>
-      val ahaWikiQuery = AhaWikiQuery()
-      val cosineSimilarities: immutable.Seq[CosineSimilarity] = ahaWikiQuery.CosineSimilarity.select(name).filter(v => v.and(wikiContext.pageCanSee))
+      import models.tables.CosineSimilarity
+      val cosineSimilarities: immutable.Seq[CosineSimilarity] = CosineSimilarity.select(name).filter(v => v.and(wikiContext.pageCanSee))
       if (cosineSimilarities.isEmpty) {
         wikiContext.actorAhaWiki ! Calculate(name)
         ""
       } else {
+        import models.tables.TermFrequency
         val similarPageNames = cosineSimilarities.map(_.name2)
-        val highScoredTerms = ahaWikiQuery.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).mapValues(_.map(_.term).mkString(", "))
+        val highScoredTerms = TermFrequency.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).view.mapValues(_.map(_.term).mkString(", ")).toMap
         cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
       }
     }

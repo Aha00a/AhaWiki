@@ -255,6 +255,7 @@ class Test @Inject()(implicit val
   }
 
   def testInterpreterWiki()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    import models.tables.Link
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(InterpreterWiki.name, "Wiki")
@@ -344,11 +345,13 @@ class Test @Inject()(implicit val
   }
 
   def testInterpreterSchema()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    import models.tables.SchemaOrg
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     assertEquals(InterpreterSchema.name, "Schema")
 
     {
+      import models.tables.SchemaOrg
       val schemaMarkup =
         """#!Schema Person
           |name	KIM, Aha

@@ -1,4 +1,4 @@
-@(page: models.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(page: models.tables.Page)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @import helper._
 @_base(page.name, "") {
     <script type="text/javascript">
@@ -22,7 +22,7 @@
             <p><b>This is an irreversible operation!</b></p>
             <p>Are you sure you want to completely delete this page?</p>
 
-            @form(routes.Wiki.delete(), 'class -> "form") {
+            @form(routes.Wiki.delete(), Symbol("class") -> "form") {
                 @CSRF.formField
                 <input type="hidden" name="name" value="@(page.name)"/>
                 <input type="submit" value="Delete" style="margin-bottom: 20px;"/>

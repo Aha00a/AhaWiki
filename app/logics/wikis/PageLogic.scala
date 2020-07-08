@@ -12,15 +12,18 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object PageLogic {
+
+  import models.tables.PageWithoutContentWithSize
+
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
+      import models.tables.Page
       val request = wikiContext.request
       val author = SessionLogic.getId(request).getOrElse("anonymous")
       val remoteAddress = request.remoteAddressWithXRealIp
       val permRead = PageContent(body).read.getOrElse("")
       val page = Page(name, revision, dateTime, author, remoteAddress, comment, permRead, body)
-      val ahaWikiQuery = AhaWikiQuery()
-      ahaWikiQuery.Page.insert(page)
+      Page.insert(page)
       wikiContext.actorAhaWiki ! Calculate(name)
       AhaWikiCache.PageList.invalidate()
       name match {

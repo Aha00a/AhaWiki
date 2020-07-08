@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import javax.inject.Inject
 import logics.AhaWikiCache
 import logics.wikis.PageLogic
-import models.PageWithoutContentWithSize
+import models.tables.PageWithoutContentWithSize
 import play.api.cache.SyncCacheApi
 import play.api.mvc._
 

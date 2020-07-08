@@ -7,7 +7,7 @@ import java.security.MessageDigest
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.AhaWikiConfig
-import models.{Link, PageContent, WikiContext}
+import models.{PageContent, WikiContext}
 import play.api.Logger
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -17,6 +17,9 @@ import scala.io.Codec
 import scala.sys.process._
 
 object InterpreterVim extends TraitInterpreter with Logging {
+
+  import models.tables.Link
+
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
       if (!raw.startsWith("#!Vim")) {

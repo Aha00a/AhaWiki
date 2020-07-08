@@ -4,15 +4,18 @@ import java.io.StringReader
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import models.{Link, PageContent, WikiContext}
+import models.{PageContent, WikiContext}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 object InterpreterTable extends TraitInterpreter {
+
+  import models.tables.Link
+
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {

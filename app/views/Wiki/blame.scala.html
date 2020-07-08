@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData, String], minRevision: Long, maxRevision: Long, isWritable:Boolean, wikiFirst:Option[models.Page], wikiLast:Option[models.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(blame:models.Blame[PageMetaData, String], minRevision: Long, maxRevision: Long, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {
@@ -18,7 +18,7 @@
                 </thead>
                 <tbody>
                     @for(blameLine <- blame.seqBlameLine) {
-                        <tr style="background-color: @com.aha00a.commons.utils.WarmCoolColors.warm(blameLine.metaData.revision, minRevision, maxRevision);">
+                        <tr style="background-color: @com.aha00a.commons.utils.WarmCoolColors.warm(blameLine.metaData.revision.toDouble, minRevision.toDouble, maxRevision.toDouble);">
                             <td class="lineNumber">
                                 <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
                             </td>

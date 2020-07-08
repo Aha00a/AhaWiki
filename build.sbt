@@ -29,6 +29,7 @@ libraryDependencies += "org.jsoup" % "jsoup" % "1.13.1"
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
 
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"

@@ -37,6 +37,9 @@ class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                   val actorAhaWiki: ActorRef,
                   val configuration: Configuration
                  ) {
+
+  import models.tables.PageWithoutContentWithSize
+
   def name: String = seqName.last
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last

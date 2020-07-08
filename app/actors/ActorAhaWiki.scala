@@ -6,15 +6,18 @@ import com.aha00a.commons.utils.StopWatch
 import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.wikis.interpreters.Interpreters
-import logics.{AhaWikiCache, ApplicationConf}
-import models.{AhaWikiQuery, LatLng, Link, SchemaOrg, WikiContext}
+import logics.AhaWikiCache
+import logics.ApplicationConf
+import models.tables.Page
+import models.LatLng
+import models.WikiContext
+import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
-import play.api.cache.AsyncCacheApi
 import play.api.db.Database
-import play.api.libs.json.{Json, Reads}
+import play.api.libs.json.Json
+import play.api.libs.json.Reads
 import play.api.libs.ws.WSClient
-import play.api.{Configuration, Logger}
 
 import scala.concurrent.ExecutionContext
 
@@ -33,7 +36,13 @@ object ActorAhaWiki {
 
 }
 
-class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Database, ws: WSClient, executor: ExecutionContext, configuration: Configuration) extends Actor with Logging {
+class ActorAhaWiki @Inject()(implicit
+                             syncCacheApi: SyncCacheApi,
+                             database: Database,
+                             wsClient: WSClient,
+                             executionContext: ExecutionContext,
+                             configuration: Configuration
+                            ) extends Actor with Logging {
 
   import ActorAhaWiki._
 
@@ -45,35 +54,35 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
 
     case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
-        val ahaWikiQuery = AhaWikiQuery()
-        ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
+        Page.selectLastRevision(name) foreach { page =>
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
           logger.info(seq.mkString("(", ")\t(", ")"))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-          ahaWikiQuery.Page.updateSimilarPage(name, wordCount)
+          Page.updateSimilarPage(name, wordCount)
         }
       }
     }
     case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
-        val ahaWikiQuery = AhaWikiQuery()
-        ahaWikiQuery.Page.selectLastRevision(name) foreach { page =>
+        Page.selectLastRevision(name) foreach { page =>
+          import models.tables.Link
+          import models.tables.SchemaOrg
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-          ahaWikiQuery.Page.updateLink(page.name, seqLink)
+          Page.updateLink(page.name, seqLink)
 
           val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-          ahaWikiQuery.Page.updateSchemaOrg(name, seqSchemaOrg)
+          Page.updateSchemaOrg(name, seqSchemaOrg)
         }
       }
     }
     case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
       implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
-      ws
+      wsClient
         .url("https://maps.googleapis.com/maps/api/geocode/json")
-        .withQueryString(
+        .withQueryStringParameters(
           "address" -> address,
           "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
         )
@@ -84,15 +93,16 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
         })
         .map(latLng => {
           database.withTransaction { implicit connection =>
-            AhaWikiQuery().GeocodeCache.replace(address, latLng)
+            import models.tables.GeocodeCache
+            GeocodeCache.replace(address, latLng)
             AhaWikiCache.AddressToLatLng.set(address, latLng)
           }
         })
     }
     case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
-      ws
+      wsClient
         .url("https://maps.googleapis.com/maps/api/distancematrix/json")
-        .withQueryString(
+        .withQueryStringParameters(
           "mode" -> "transit",
           "origins" -> src,
           "destinations" -> dst,
@@ -108,7 +118,8 @@ class ActorAhaWiki @Inject()(implicit syncCacheApi: SyncCacheApi, database: Data
         })
         .map(metersSeconds => {
           database.withTransaction { implicit connection =>
-            AhaWikiQuery().DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
+            import models.tables.DistanceCache
+            DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
             AhaWikiCache.Distance.set(src, dst, metersSeconds._1)
           }
         })

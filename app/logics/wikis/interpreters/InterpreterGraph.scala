@@ -1,11 +1,14 @@
 package logics.wikis.interpreters
 
 import logics.wikis.RenderingMode
-import models.{Link, PageContent, WikiContext}
+import models.{PageContent, WikiContext}
 
 import scala.collection.mutable
 
 object InterpreterGraph extends TraitInterpreter {
+
+  import models.tables.Link
+
   private def parse(wikiContext: WikiContext, pageContent: PageContent): Array[Array[String]] = {
     val lines = pageContent.content.trim.split("""(\r\n|\n)+""")
     val linesCut = wikiContext.renderingMode match {

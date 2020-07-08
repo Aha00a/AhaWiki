@@ -17,6 +17,9 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object InterpreterMap extends TraitInterpreter {
+
+  import models.tables.Link
+
   val originString: String = "Origin"
   case class Location(
                        name:String,
@@ -92,7 +95,7 @@ object InterpreterMap extends TraitInterpreter {
     val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>
       val seqLocationLastVisited = locations.map(l => {
-        val listDates = AhaWikiQuery().Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
+        val listDates = Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
         LocationListVisited(l, listDates)
       })
 

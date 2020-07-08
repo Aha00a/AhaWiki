@@ -3,7 +3,7 @@ package models
 import com.github.difflib.DiffUtils
 import com.github.difflib.patch.DeltaType
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class BlameItem[MetaData, Item](val metaData:MetaData, val item:Item)
 

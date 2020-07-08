@@ -3,13 +3,16 @@ package logics.wikis.macros
 import com.aha00a.supercsv.SupercsvUtil
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
-import models.{PageWithoutContentWithSize, WikiContext}
+import models.WikiContext
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 import scala.util.matching.Regex
 
 object MacroRecentChangesList extends TraitMacro {
+
+  import models.tables.PageWithoutContentWithSize
+
   val regexDigits: Regex = """^(\d+)$""".r
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
     implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
