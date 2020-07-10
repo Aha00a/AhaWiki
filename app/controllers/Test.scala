@@ -42,7 +42,6 @@ class Test @Inject()(implicit val
 
     testTraitMacroName()
 
-    testMacroBr()
     testMacroMonths()
 
     testHeadingNumber()
@@ -452,15 +451,6 @@ class Test @Inject()(implicit val
     assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
   }
 
-  def testMacroBr()(implicit wikiContext: WikiContext): Unit = {
-    val empty = ""
-    val dummy = "aaaa"
-
-    assertEquals(MacroBr.toHtmlString(empty), "<br/>")
-    assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
-    assertEquals(MacroBr.extractLink(empty), Seq())
-    assertEquals(MacroBr.extractLink(dummy), Seq())
-  }
 
 
   case class Dddd()(implicit database2: Database) {
