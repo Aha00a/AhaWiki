@@ -6,21 +6,21 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
+import com.aha00a.tests.TestUtil
 import javax.inject.Inject
 import logics.wikis.HeadingNumber
-import logics.wikis.interpreters.InterpreterVim
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.InterpreterSchema
+import logics.wikis.interpreters.InterpreterVim
 import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros._
 import models._
+import play.api.Configuration
+import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc._
-import play.api.Configuration
-import play.api.Logger
-import play.api.Logging
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -30,51 +30,12 @@ class Test @Inject()(implicit val
                      @javax.inject.Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration
                     ) extends BaseController with Logging {
+  val testUtil = new TestUtil(x => logger.error(x.toString))
 
-  case class ExceptionEquals[T](actual: T, expect: T) extends Exception(s"\nActual=($actual)\nExpect=($expect)") {
-    logger.error(actual.toString)
-    logger.error(expect.toString)
-  }
-
-
-  def assertEquals[T](actual: T, expect: T): Unit = {
-    if (actual == expect) {
-
-    } else {
-      throw ExceptionEquals(actual, expect)
-    }
-  }
-
-  def assertEquals(actual: String, expect: String): Unit = {
-    if (actual == expect) {
-
-    } else if (actual == expect.replace("\r", "")) {
-
-    } else {
-      throw ExceptionEquals(actual, expect)
-    }
-  }
-
-  def assertEquals[T](actual: Seq[T], expect: Seq[T]): Unit = {
-    if (actual.isEmpty && expect.isEmpty) {
-
-    }
-    else {
-      if (actual == expect) {
-
-      } else {
-        throw ExceptionEquals(actual, expect)
-      }
-    }
-  }
-
+  import testUtil.assertEquals
 
   def unit: Action[AnyContent] = Action { implicit request =>
-    assertEquals("aa".toIntOrZero, 0)
-    assertEquals("10".toIntOrZero, 10)
-
-    testEnglishCaseConverter()
-
+    import tests.CliTest
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
     testPageContent()
@@ -95,6 +56,7 @@ class Test @Inject()(implicit val
     testBlame()
     testParboiled()
 
+    CliTest.run()
     Ok("Ok.")
   }
 
@@ -407,7 +369,7 @@ class Test @Inject()(implicit val
       assertEquals(Interpreters.toSeqSchemaOrg(wikiMarkup), extractSchemaResult)
     }
 
-    
+
     assertEquals(
       InterpreterSchema.toSeqSchemaOrg(
         """#!Schema WebApplication
@@ -584,17 +546,7 @@ class Test @Inject()(implicit val
   }
 
 
-  def testEnglishCaseConverter(): Unit = {
-    assertEquals(EnglishCaseConverter.splitPascalCase("Person"), Seq("Person"))
-    assertEquals(EnglishCaseConverter.splitPascalCase("FrontPage"), Seq("Front", "Page"))
-
-
-    assertEquals(EnglishCaseConverter.camelCase2TitleCase("someWordsAreHere"), "Some Words Are Here")
-    assertEquals(EnglishCaseConverter.pascalCase2TitleCase("FrontPage"), "Front Page")
-    assertEquals(EnglishCaseConverter.pascalCase2TitleCase("TVSeries"), "TV Series")
-  }
-
-  def testParboiled() = {
+  def testParboiled(): Unit = {
     import org.parboiled2._
 
     import scala.util.Try
