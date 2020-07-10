@@ -28,8 +28,7 @@ object CliTest extends App {
 
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, null, null, null, null)
 
-    testMacroBr()
-    def testMacroBr()(implicit wikiContext: WikiContext): Unit = {
+    val testMacroBr: Unit = (() => {
       import logics.wikis.macros.MacroBr
       val empty = ""
       val dummy = "aaaa"
@@ -38,7 +37,7 @@ object CliTest extends App {
       assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
       assertEquals(MacroBr.extractLink(empty), Seq())
       assertEquals(MacroBr.extractLink(dummy), Seq())
-    }
+    })()
 
   }
   run()
