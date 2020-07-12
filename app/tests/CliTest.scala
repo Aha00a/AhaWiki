@@ -3,8 +3,7 @@ package tests
 object CliTest extends App {
   import com.aha00a.tests.TestUtil
 
-  val testUtil: TestUtil = new TestUtil(x => println(x))
-  run(testUtil)
+  run(new TestUtil(x => println(x)))
 
   def run(testUtil: TestUtil): Unit = {
     import models.WikiContext
@@ -49,7 +48,7 @@ object CliTest extends App {
         assertEquals(pageContent.read, Some("all"))
         assertEquals(pageContent.write, Some("aha00a"))
         assertEquals(pageContent.redirect, Some("FrontPage"))
-        assertEquals(pageContent.shebang, Array[String]().toSeq)
+        assertEquals(pageContent.shebang, Seq[String]())
         assertEquals(pageContent.content, "")
       }
       {
