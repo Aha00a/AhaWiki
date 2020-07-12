@@ -55,7 +55,7 @@ class Test @Inject()(implicit val
     testBlame()
     testParboiled()
 
-    CliTest.run()
+    CliTest.run(testUtil)
     Ok("Ok.")
   }
 
