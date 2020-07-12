@@ -255,6 +255,29 @@ object CliTest extends App {
       }; testBlame2()
     }; testBlame()
 
+    //noinspection NameBooleanParameters
+    def testInterpreterVim(): Unit = {
+      import logics.wikis.interpreters.InterpreterVim
+      def test(p: InterpreterVim.Parser, syntax: String, content: String, isError: Boolean): Unit = {
+        assertEquals(p.syntax, syntax)
+        assertEquals(p.content, content)
+        assertEquals(p.isError, isError)
+      }
+
+      test(InterpreterVim.Parser(""), "", "", true)
+      test(InterpreterVim.Parser("#!Vi"), "", "", true)
+      test(InterpreterVim.Parser("#!Vim"), "", "", false)
+      test(InterpreterVim.Parser("#!Vim c"), "c", "", false)
+      test(InterpreterVim.Parser("#!Vim cpp"), "cpp", "", false)
+      test(InterpreterVim.Parser("#!Vim\n"), "", "", false)
+      test(InterpreterVim.Parser("#!Vim cpp\n"), "cpp", "", false)
+      test(InterpreterVim.Parser("#!Vim cpp\nasdf"), "cpp", "asdf", false)
+      test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf"), "cpp", "asdf", false)
+      test(InterpreterVim.Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+      test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
+      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
+      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
+    }; testInterpreterVim()
 
 
     def testWithWikiContext():Unit = {
