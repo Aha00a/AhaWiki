@@ -10,12 +10,12 @@ object CliTest extends App {
     import models.WikiContext
     import testUtil.assertEquals
 
-    def testComAha00aCommonsImlicits(): Unit = {
+    def testComAha00aCommonsImplicits(): Unit = {
       import com.aha00a.commons.Implicits._
       assertEquals(0, 0)
       assertEquals("aa".toIntOrZero, 0)
       assertEquals("10".toIntOrZero, 10)
-    }; testComAha00aCommonsImlicits()
+    }; testComAha00aCommonsImplicits()
 
     def testEnglishConverter(): Unit = {
       import com.aha00a.commons.utils.EnglishCaseConverter
@@ -38,6 +38,7 @@ object CliTest extends App {
       assertEquals(MacroWeekdayName.name, "WeekdayName")
     }; testTraitMacroName()
 
+    //noinspection DuplicatedCode
     def testPageContent(): Unit = {
       import models.PageContent
       {
@@ -192,7 +193,7 @@ object CliTest extends App {
       import com.aha00a.commons.Implicits._
       import models.Blame
 
-      //noinspection ZeroIndexToHead
+      //noinspection ZeroIndexToHead,DuplicatedCode
       def testBlame1(): Unit = {
         class MetaData(val revision: Int)
         assertEquals(new Blame().size, 0)
@@ -286,7 +287,7 @@ object CliTest extends App {
       def testMacroBr(): Unit = {
         import logics.wikis.macros.MacroBr
         val empty = ""
-        val dummy = "aaaa"
+        val dummy = "dummy"
 
         assertEquals(MacroBr.toHtmlString(empty), "<br/>")
         assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
@@ -304,6 +305,7 @@ object CliTest extends App {
 
       import scala.util.Try
 
+      //noinspection TypeAnnotation
       class Calculator(val input: ParserInput) extends Parser {
         def InputLine = rule { Expression ~ EOI }
 
