@@ -271,12 +271,12 @@ object CliTest extends App {
       test(InterpreterVim.Parser("#!Vim cpp"), "cpp", "", false)
       test(InterpreterVim.Parser("#!Vim\n"), "", "", false)
       test(InterpreterVim.Parser("#!Vim cpp\n"), "cpp", "", false)
-      test(InterpreterVim.Parser("#!Vim cpp\nasdf"), "cpp", "asdf", false)
-      test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf"), "cpp", "asdf", false)
-      test(InterpreterVim.Parser("#!Vim cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-      test(InterpreterVim.Parser("#!Vim\n#!cpp\nasdf\nasdf"), "cpp", "asdf\nasdf", false)
-      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf"), "sh", "#!/bin/sh\nasdf", false)
-      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
+      test(InterpreterVim.Parser("#!Vim cpp\n1234"), "cpp", "1234", false)
+      test(InterpreterVim.Parser("#!Vim\n#!cpp\n1234"), "cpp", "1234", false)
+      test(InterpreterVim.Parser("#!Vim cpp\n1234\n1234"), "cpp", "1234\n1234", false)
+      test(InterpreterVim.Parser("#!Vim\n#!cpp\n1234\n1234"), "cpp", "1234\n1234", false)
+      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\n1234"), "sh", "#!/bin/sh\n1234", false)
+      test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\n1234\na\n\nb\n\nc"), "sh", "#!/bin/sh\n1234\na\n\nb\n\nc", false)
     }; testInterpreterVim()
 
 
