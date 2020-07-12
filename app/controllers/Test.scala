@@ -38,13 +38,26 @@ class Test @Inject()(implicit val
     import tests.CliTest
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
-    testPageContent()
+    def testMacroMonths()(implicit wikiContext: WikiContext): Unit = {
+      import logics.wikis.macros.MacroMonths
+      assertEquals(MacroMonths.toHtmlString("1000"),
+        """<ul style="list-style-type: disc;">
+          |<li><a href="1000-01">1000-01</a></li>
+          |<li><a href="1000-02">1000-02</a></li>
+          |<li><a href="1000-03">1000-03</a></li>
+          |<li><a href="1000-04">1000-04</a></li>
+          |<li><a href="1000-05">1000-05</a></li>
+          |<li><a href="1000-06">1000-06</a></li>
+          |<li><a href="1000-07">1000-07</a></li>
+          |<li><a href="1000-08">1000-08</a></li>
+          |<li><a href="1000-09">1000-09</a></li>
+          |<li><a href="1000-10">1000-10</a></li>
+          |<li><a href="1000-11">1000-11</a></li>
+          |<li><a href="1000-12">1000-12</a></li>
+          |</ul>""".stripMargin)
+      assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
+    }; testMacroMonths()
 
-    testTraitMacroName()
-
-    testMacroMonths()
-
-    testHeadingNumber()
 
     testInterpreterVim()
     testInterpreterTable()
@@ -52,154 +65,14 @@ class Test @Inject()(implicit val
     testInterpreterWiki()
 
 
-    testBlame()
     testParboiled()
 
     CliTest.run(testUtil)
     Ok("Ok.")
   }
 
-  def testMacroMonths()(implicit wikiContext: WikiContext): Unit = {
-    assertEquals(MacroMonths.toHtmlString("1000"),
-      """<ul style="list-style-type: disc;">
-        |<li><a href="1000-01">1000-01</a></li>
-        |<li><a href="1000-02">1000-02</a></li>
-        |<li><a href="1000-03">1000-03</a></li>
-        |<li><a href="1000-04">1000-04</a></li>
-        |<li><a href="1000-05">1000-05</a></li>
-        |<li><a href="1000-06">1000-06</a></li>
-        |<li><a href="1000-07">1000-07</a></li>
-        |<li><a href="1000-08">1000-08</a></li>
-        |<li><a href="1000-09">1000-09</a></li>
-        |<li><a href="1000-10">1000-10</a></li>
-        |<li><a href="1000-11">1000-11</a></li>
-        |<li><a href="1000-12">1000-12</a></li>
-        |</ul>""".stripMargin)
-    assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
-  }
 
-  def testTraitMacroName(): Unit = {
-    assertEquals(MacroMonths.name, "Months")
-    assertEquals(MacroCalendar.name, "Calendar")
-    assertEquals(MacroWeekdayName.name, "WeekdayName")
-  }
 
-  def testPageContent(): Unit = {
-    {
-      val pageContent: PageContent = PageContent(
-        """#!read all
-          |#!write aha00a
-          |#!redirect FrontPage""".stripMargin)
-      assertEquals(pageContent.read, Some("all"))
-      assertEquals(pageContent.write, Some("aha00a"))
-      assertEquals(pageContent.redirect, Some("FrontPage"))
-      assertEquals(pageContent.shebang, Array[String]().toSeq)
-      assertEquals(pageContent.content, "")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!read login
-          |#!write login
-          |something""".stripMargin)
-      assertEquals(pageContent.read, Some("login"))
-      assertEquals(pageContent.write, Some("login"))
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List())
-      assertEquals(pageContent.interpreter, None)
-      assertEquals(pageContent.content, "something")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!Wiki
-          |#!Html
-          |something""".stripMargin)
-      assertEquals(pageContent.read, None)
-      assertEquals(pageContent.write, None)
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List("Wiki", "Html"))
-      assertEquals(pageContent.content, "something")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!Paper a b
-          |#!read login
-          |#!write login
-          |something""".stripMargin)
-      assertEquals(pageContent.read, Some("login"))
-      assertEquals(pageContent.write, Some("login"))
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.interpreter, Some("Paper"))
-      assertEquals(pageContent.content, "something")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!read login
-          |#!write login
-          |#!Paper a b
-          |something""".stripMargin)
-      assertEquals(pageContent.read, Some("login"))
-      assertEquals(pageContent.write, Some("login"))
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.interpreter, Some("Paper"))
-      assertEquals(pageContent.content, "something")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!WikiSyntaxPreview Text
-          |some text
-          |""".stripMargin)
-      assertEquals(pageContent.read, None)
-      assertEquals(pageContent.write, None)
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List("WikiSyntaxPreview", "Text"))
-      assertEquals(pageContent.content, "some text")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!WikiSyntaxPreview Html
-          |<h1>h1</h1>
-          |<p>paragraph</p>
-          |""".stripMargin)
-      assertEquals(pageContent.read, None)
-      assertEquals(pageContent.write, None)
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List("WikiSyntaxPreview", "Html"))
-      assertEquals(pageContent.content, "<h1>h1</h1>\n<p>paragraph</p>")
-    }
-    {
-      val pageContent: PageContent = PageContent(
-        """#!WikiSyntaxPreview Vim
-          |#!java
-          |class C {
-          |    private String s = "Hello, java!";
-          |}
-          |""".stripMargin)
-      assertEquals(pageContent.read, None)
-      assertEquals(pageContent.write, None)
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List("WikiSyntaxPreview", "Vim", "java"))
-      assertEquals(pageContent.content, "class C {\n    private String s = \"Hello, java!\";\n}")
-    }
-    {
-      assertEquals("a:b:::c:".split(":", -1).toList, List("a", "b", "", "", "c", ""))
-      val pageContent: PageContent = PageContent(
-        """aaa
-          |[[[#!Vim java
-          |a
-          |
-          |b
-          |
-          |c
-          |]]]
-          |""".stripMargin)
-      assertEquals(pageContent.read, None)
-      assertEquals(pageContent.write, None)
-      assertEquals(pageContent.redirect, None)
-      assertEquals(pageContent.shebang, List[String]())
-      assertEquals(pageContent.content, "aaa\n[[[#!Vim java\na\n\nb\n\nc\n]]]")
-    }
-
-  }
 
   def testInterpreterTable()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
@@ -420,37 +293,6 @@ class Test @Inject()(implicit val
     test(InterpreterVim.Parser("#!Vim\n#!sh\n#!/bin/sh\nasdf\na\n\nb\n\nc"), "sh", "#!/bin/sh\nasdf\na\n\nb\n\nc", false)
   }
 
-  def testHeadingNumber(): Unit = {
-    val headingNumber: HeadingNumber = new HeadingNumber()
-    assertEquals(headingNumber.incrGet(1), "1.")
-    assertEquals(headingNumber.incrGet(1), "2.")
-    assertEquals(headingNumber.incrGet(1), "3.")
-    assertEquals(headingNumber.incrGet(1), "4.")
-    assertEquals(headingNumber.incrGet(2), "4.1.")
-    assertEquals(headingNumber.incrGet(2), "4.2.")
-    assertEquals(headingNumber.incrGet(2), "4.3.")
-    assertEquals(headingNumber.incrGet(1), "5.")
-    assertEquals(headingNumber.incrGet(2), "5.1.")
-    assertEquals(headingNumber.incrGet(2), "5.2.")
-    assertEquals(headingNumber.incrGet(2), "5.3.")
-    assertEquals(headingNumber.incrGet(3), "5.3.1.")
-    assertEquals(headingNumber.incrGet(3), "5.3.2.")
-    assertEquals(headingNumber.incrGet(3), "5.3.3.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.1.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.2.")
-    assertEquals(headingNumber.incrGet(4), "5.3.3.3.")
-    assertEquals(headingNumber.incrGet(1), "6.")
-    assertEquals(headingNumber.incrGet(2), "6.1.")
-    assertEquals(headingNumber.incrGet(2), "6.2.")
-    assertEquals(headingNumber.incrGet(2), "6.3.")
-    assertEquals(headingNumber.incrGet(3), "6.3.1.")
-    assertEquals(headingNumber.incrGet(3), "6.3.2.")
-    assertEquals(headingNumber.incrGet(3), "6.3.3.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.1.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.2.")
-    assertEquals(headingNumber.incrGet(4), "6.3.3.3.")
-  }
-
 
 
   case class Dddd()(implicit database2: Database) {
@@ -468,72 +310,8 @@ class Test @Inject()(implicit val
     Ok("Ok.")
   }
 
-  def testBlame(): Unit = {
-    testBlame1()
-    testBlame2()
-  }
 
-  //noinspection ZeroIndexToHead
-  def testBlame1(): Unit = {
-    class MetaData(val revision: Int)
-    assertEquals(new Blame().size, 0)
 
-    val blame1 = new Blame().next(new MetaData(1), "A".splitLinesSeq())
-    assertEquals(blame1.size, 1)
-    assertEquals(blame1.seqBlameLine(0).metaData.revision, 1)
-    assertEquals(blame1.seqBlameLine(0).item, "A")
-
-    val blame2 = blame1.next(new MetaData(2), "B".splitLinesSeq())
-    assertEquals(blame2.size, 1)
-    assertEquals(blame2.seqBlameLine(0).metaData.revision, 2)
-    assertEquals(blame2.seqBlameLine(0).item, "B")
-
-    val blame3 = blame2.next(new MetaData(3), "a\nb\nc\nd\ne".splitLinesSeq())
-    assertEquals(blame3.size, 5)
-    assertEquals(blame3.seqBlameLine(0).metaData.revision, 3)
-    assertEquals(blame3.seqBlameLine(0).item, "a")
-    assertEquals(blame3.seqBlameLine(1).metaData.revision, 3)
-    assertEquals(blame3.seqBlameLine(1).item, "b")
-    assertEquals(blame3.seqBlameLine(2).metaData.revision, 3)
-    assertEquals(blame3.seqBlameLine(2).item, "c")
-    assertEquals(blame3.seqBlameLine(3).metaData.revision, 3)
-    assertEquals(blame3.seqBlameLine(3).item, "d")
-    assertEquals(blame3.seqBlameLine(4).metaData.revision, 3)
-    assertEquals(blame3.seqBlameLine(4).item, "e")
-
-    val blame4 = blame3.next(new MetaData(4), "a\nb\nd\ne".splitLinesSeq())
-    assertEquals(blame4.size, 4)
-    assertEquals(blame4.seqBlameLine(0).metaData.revision, 3)
-    assertEquals(blame4.seqBlameLine(0).item, "a")
-    assertEquals(blame4.seqBlameLine(1).metaData.revision, 3)
-    assertEquals(blame4.seqBlameLine(1).item, "b")
-    assertEquals(blame4.seqBlameLine(2).metaData.revision, 3)
-    assertEquals(blame4.seqBlameLine(2).item, "d")
-    assertEquals(blame4.seqBlameLine(3).metaData.revision, 3)
-    assertEquals(blame4.seqBlameLine(3).item, "e")
-  }
-
-  //noinspection ZeroIndexToHead
-  def testBlame2(): Unit = {
-    class MetaData(val revision: Int)
-    assertEquals(new Blame().size, 0)
-
-    val blame1 = new Blame().next(new MetaData(1), "1\n1\n1\n2\n2\n2\n2\n1\n1\n1".splitLinesSeq())
-    val blame2 = blame1.next(new MetaData(2), "1\n1\n2\n2\n1\n1".splitLinesSeq())
-    assertEquals(blame2.size, 6)
-    assertEquals(blame2.seqBlameLine(0).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(0).item, "1")
-    assertEquals(blame2.seqBlameLine(1).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(1).item, "1")
-    assertEquals(blame2.seqBlameLine(2).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(2).item, "2")
-    assertEquals(blame2.seqBlameLine(3).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(3).item, "2")
-    assertEquals(blame2.seqBlameLine(4).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(4).item, "1")
-    assertEquals(blame2.seqBlameLine(5).metaData.revision, 1)
-    assertEquals(blame2.seqBlameLine(5).item, "1")
-  }
 
 
   def testParboiled(): Unit = {
