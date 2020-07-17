@@ -137,15 +137,9 @@
                                     ".Tag" : true,
                                     ".Category" : true,
                                     ".Score" : {
-                                        ">= 9" : function(e, n, f, i, $r, c, data) { return n >= 9; },
-                                        ">= 8" : function(e, n, f, i, $r, c, data) { return n >= 8; },
-                                        ">= 7" : function(e, n, f, i, $r, c, data) { return n >= 7; },
-                                        ">= 6" : function(e, n, f, i, $r, c, data) { return n >= 6; },
-                                        ">= 5" : function(e, n, f, i, $r, c, data) { return n >= 5; },
-                                        ">= 4" : function(e, n, f, i, $r, c, data) { return n >= 4; },
-                                        ">= 3" : function(e, n, f, i, $r, c, data) { return n >= 3; },
-                                        ">= 2" : function(e, n, f, i, $r, c, data) { return n >= 2; },
-                                        ">= 1" : function(e, n, f, i, $r, c, data) { return n >= 1; },
+                                        @for(i <- 9 to 1 by -1) {
+                                            ">= @i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
+                                        }
                                     },
                                     ".VisitedLast": false,
                                     ".VisitedFirst": false,
