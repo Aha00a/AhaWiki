@@ -87,7 +87,7 @@
                 </thead>
                 <tbody>
                     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
-                        <tr>
+                        <tr data-i="@i" data-lat="@locationLastVisited.location.latLng.lat" data-lng="@locationLastVisited.location.latLng.lng">
                             @for((s, i) <- locationLastVisited.location.raw.zipWithIndex) {
                                 <td>@{
                                     if(false) {
