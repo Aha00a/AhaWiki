@@ -64,24 +64,24 @@
             }
         </div>
         <div class="tableArea">
-            <table class="simpleTable tablesorter">
+            <table id="mapTable@id" class="simpleTable">
                 <thead>
                     <tr>
                         @for(headerName <- seqHeader) {
-                            <th rowspan="2">@headerName</th>
+                            <th rowspan="2" class="@headerName">@headerName</th>
                         }
                         @if(mapAddressMeters.nonEmpty) {
-                            <th rowspan="2">Distance</th>
+                            <th rowspan="2" class="Distance">Distance</th>
                         }
                         @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
-                            <th colspan="3">Visited</th>
+                            <th colspan="3" class="Visited">Visited</th>
                         }
                     </tr>
                     @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
                         <tr>
-                            <th>Last</th>
-                            <th>First</th>
-                            <th>Count</th>
+                            <th class="VisitedLast">Last</th>
+                            <th class="VisitedFirst">First</th>
+                            <th class="VisitedCount">Count</th>
                         </tr>
                     }
                 </thead>
@@ -123,6 +123,49 @@
             </table>
         </div>
     </div>
+    <script type="text/javascript">
+        $(function () {
+            var mapTableId = 'mapTable@(id)';
+            setTimeout(function () {
+                $('#' + mapTableId)
+                        .tablesorter({
+                            widthFixed : true,
+                            widgets: ["filter"],
+                            widgetOptions : {
+                                filter_onlyAvail : 'Category',
+                                filter_functions : {
+                                    ".Tag" : true,
+                                    ".Category" : true,
+                                    ".Score" : {
+                                        ">= 9" : function(e, n, f, i, $r, c, data) { return n >= 9; },
+                                        ">= 8" : function(e, n, f, i, $r, c, data) { return n >= 8; },
+                                        ">= 7" : function(e, n, f, i, $r, c, data) { return n >= 7; },
+                                        ">= 6" : function(e, n, f, i, $r, c, data) { return n >= 6; },
+                                        ">= 5" : function(e, n, f, i, $r, c, data) { return n >= 5; },
+                                        ">= 4" : function(e, n, f, i, $r, c, data) { return n >= 4; },
+                                        ">= 3" : function(e, n, f, i, $r, c, data) { return n >= 3; },
+                                        ">= 2" : function(e, n, f, i, $r, c, data) { return n >= 2; },
+                                        ">= 1" : function(e, n, f, i, $r, c, data) { return n >= 1; },
+                                    },
+                                    ".VisitedLast": false,
+                                    ".VisitedFirst": false,
+                                    ".VisitedCount": false,
+                                }
+                            },
+                        })
+                        .bind("filterInit", function (e, t) {
+                            console.log('filterInit', e, t);
+                        })
+                        .bind("filterStart", function (e, t) {
+                            console.log('filterStart', e, t);
+                        })
+                        .bind("filterEnd", function (e, t) {
+                            console.log('filterEnd', e, t);
+                        })
+            ;
+            }, 1000);
+        });
+    </script>
     <script type="text/javascript">
         arrayOnGoogleMapLoaded.push(function () {
             var map = new google.maps.Map(document.getElementById('@id'), {
