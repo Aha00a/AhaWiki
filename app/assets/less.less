@@ -937,6 +937,12 @@ html, body {
 			}
 		}
 		>.tableArea {
+			.circle {
+				display: inline-block;
+				width: 10px;
+				height: 10px;
+				border-radius: 100%;
+			}
 			.distance, .count {
 				text-align: right;
 			}
@@ -956,6 +962,18 @@ html, body {
 			left: 50%;
 			margin-top: -(@size )/2 - @thickness;
 			margin-left: -(@size)/2 - @thickness;
+		}
+	}
+}
+
+.Test {
+	&.gradient {
+		table {
+			border-collapse: collapse;
+			td {
+				width: 5px;
+				height: 30px;
+			}
 		}
 	}
 }

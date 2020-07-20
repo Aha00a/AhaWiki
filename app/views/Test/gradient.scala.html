@@ -1,0 +1,68 @@
+@(s: String)(implicit request:play.api.mvc.Request[Any], syncCacheApi: play.api.cache.SyncCacheApi, database: play.api.db.Database, configuration: play.api.Configuration)
+@_baseSkeleton("gradient - Test", "gradient - Test") {
+    <script type="text/javascript">
+        $(function(){
+        });
+    </script>
+} {
+    <div class="Test gradient">
+        <table>
+        @for((name, g) <- Seq(
+            ("ahaWikiMap", com.aha00a.colors.GradientPreset.ahaWikiMap),
+            ("ahaWikiBlame", com.aha00a.colors.GradientPreset.ahaWikiBlame),
+            ("jet", com.aha00a.colors.GradientPreset.jet),
+            ("hsv", com.aha00a.colors.GradientPreset.hsv),
+            ("hot", com.aha00a.colors.GradientPreset.hot),
+            ("spring", com.aha00a.colors.GradientPreset.spring),
+            ("summer", com.aha00a.colors.GradientPreset.summer),
+            ("autumn", com.aha00a.colors.GradientPreset.autumn),
+            ("winter", com.aha00a.colors.GradientPreset.winter),
+            ("bone", com.aha00a.colors.GradientPreset.bone),
+            ("copper", com.aha00a.colors.GradientPreset.copper),
+            ("greys", com.aha00a.colors.GradientPreset.greys),
+            ("yignbu", com.aha00a.colors.GradientPreset.yignbu),
+            ("greens", com.aha00a.colors.GradientPreset.greens),
+            ("yiorrd", com.aha00a.colors.GradientPreset.yiorrd),
+            ("bluered", com.aha00a.colors.GradientPreset.bluered),
+            ("rdbu", com.aha00a.colors.GradientPreset.rdbu),
+            ("picnic", com.aha00a.colors.GradientPreset.picnic),
+            ("rainbow", com.aha00a.colors.GradientPreset.rainbow),
+            ("portland", com.aha00a.colors.GradientPreset.portland),
+            ("blackbody", com.aha00a.colors.GradientPreset.blackbody),
+            ("earth", com.aha00a.colors.GradientPreset.earth),
+            ("electric", com.aha00a.colors.GradientPreset.electric),
+            ("alpha", com.aha00a.colors.GradientPreset.alpha),
+            ("viridis", com.aha00a.colors.GradientPreset.viridis),
+            ("inferno", com.aha00a.colors.GradientPreset.inferno),
+            ("magma", com.aha00a.colors.GradientPreset.magma),
+            ("plasma", com.aha00a.colors.GradientPreset.plasma),
+            ("warm", com.aha00a.colors.GradientPreset.warm),
+            ("cool", com.aha00a.colors.GradientPreset.cool),
+            ("rainbowSoft", com.aha00a.colors.GradientPreset.rainbowSoft),
+            ("bathymetry", com.aha00a.colors.GradientPreset.bathymetry),
+            ("cdom", com.aha00a.colors.GradientPreset.cdom),
+            ("chlorophyll", com.aha00a.colors.GradientPreset.chlorophyll),
+            ("density", com.aha00a.colors.GradientPreset.density),
+            ("freesurfaceBlue", com.aha00a.colors.GradientPreset.freesurfaceBlue),
+            ("freesurfaceRed", com.aha00a.colors.GradientPreset.freesurfaceRed),
+            ("oxygen", com.aha00a.colors.GradientPreset.oxygen),
+            ("par", com.aha00a.colors.GradientPreset.par),
+            ("phase", com.aha00a.colors.GradientPreset.phase),
+            ("salinity", com.aha00a.colors.GradientPreset.salinity),
+            ("temperature", com.aha00a.colors.GradientPreset.temperature),
+            ("turbidity", com.aha00a.colors.GradientPreset.turbidity),
+            ("velocityBlue", com.aha00a.colors.GradientPreset.velocityBlue),
+            ("velocityGreen", com.aha00a.colors.GradientPreset.velocityGreen),
+            ("cubehelix", com.aha00a.colors.GradientPreset.cubehelix)
+        )) {
+            <tr>
+                <th>@name</th>
+            @for(i <- 0 to 200) {
+                <td style="background-color: @(g.getColor(i / 200.0).toCssString)"> </td>
+            }
+            </tr>
+        }
+
+        </table>
+    </div>
+}

@@ -87,27 +87,56 @@
                 </thead>
                 <tbody>
                     @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
-                        <tr data-i="@i" data-lat="@locationLastVisited.location.latLng.lat" data-lng="@locationLastVisited.location.latLng.lng">
+                        <tr
+                            data-i="@i"
+                            data-position='{
+                                "lat": @locationLastVisited.location.latLng.latWithNoise,
+                                "lng": @locationLastVisited.location.latLng.lngWithNoise
+                            }'
+                            data-icon='{
+                                "path": 0 @*google.maps.SymbolPath.CIRCLE*@,
+                                "scale": @(locationLastVisited.location.scale),
+                                "strokeColor": "@(locationLastVisited.location.strokeColor)",
+                                "strokeWeight": 1,
+                                "fillColor": "@(locationLastVisited.location.fillColor)",
+                                "fillOpacity": @(locationLastVisited.location.fillOpacity),
+                                "labelOrigin": {
+                                    "x": 0,
+                                    "y": 2
+                                }                             
+                            }'
+                            data-title='"@locationLastVisited.location.name - @locationLastVisited.location.address"'
+                            data-label='{
+                                "fontWeight": "bold",
+                                "color": "@(locationLastVisited.location.strokeColor)",
+                                "text": "@Html(locationLastVisited.location.name)"
+                            }'
+                        >
                             @for((s, i) <- locationLastVisited.location.raw.zipWithIndex) {
-                                <td>@{
+                                @{
                                     if(false) {
-                                        ""
+                                        <td></td>
                                     } else if(s.isNullOrEmpty) {
-                                        ""
+                                        <td></td>
                                     } else if(seqHeader(i) == "Name") {
                                         if(locationLastVisited.location.exists) {
-                                            <a href={locationLastVisited.location.name}>{locationLastVisited.location.name}</a>
+                                            <td><a href={locationLastVisited.location.name}>{locationLastVisited.location.name}</a></td>
                                         } else {
-                                            locationLastVisited.location.name
+                                            <td>{locationLastVisited.location.name}</td>
                                         }
+                                    } else if(seqHeader(i) == "Score") {
+                                        <td>
+                                            <span class="circle" style={s"background-color: ${locationLastVisited.location.fillColor};"}></span>
+                                            {s}
+                                        </td>
                                     } else if(seqHeader(i) == "Address") {
-                                            <a href={locationLastVisited.location.urlMap} target="_blank">{locationLastVisited.location.address}</a>
+                                            <td><a href={locationLastVisited.location.urlMap} target="_blank">{locationLastVisited.location.address}</a></td>
                                     } else if(s.startsWith("http")){
-                                            <a href={s} target="_blank">Link</a>
+                                        <td><a href={s} target="_blank">Link</a></td>
                                     } else {
-                                        s
+                                        <td>{s}</td>
                                     }
-                                }</td>
+                                }
                             }
                             @if(mapAddressMeters.nonEmpty) {
                                 <td class="distance">@(mapAddressMeters.get(locationLastVisited.location.address).map(m => java.text.NumberFormat.getIntegerInstance.format(m)).getOrElse(""))</td>
@@ -125,38 +154,7 @@
     </div>
     <script type="text/javascript">
         $(function () {
-            var mapTableId = 'mapTable@(id)';
             setTimeout(function () {
-                $('#' + mapTableId)
-                        .tablesorter({
-                            widthFixed : true,
-                            widgets: ["filter"],
-                            widgetOptions : {
-                                filter_onlyAvail : 'Category',
-                                filter_functions : {
-                                    ".Tag" : true,
-                                    ".Category" : true,
-                                    ".Score" : {
-                                        @for(i <- 9 to 1 by -1) {
-                                            ">= @i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
-                                        }
-                                    },
-                                    ".VisitedLast": false,
-                                    ".VisitedFirst": false,
-                                    ".VisitedCount": false,
-                                }
-                            },
-                        })
-                        .bind("filterInit", function (e, t) {
-                            console.log('filterInit', e, t);
-                        })
-                        .bind("filterStart", function (e, t) {
-                            console.log('filterStart', e, t);
-                        })
-                        .bind("filterEnd", function (e, t) {
-                            console.log('filterEnd', e, t);
-                        })
-            ;
             }, 1000);
         });
     </script>
@@ -168,45 +166,72 @@
                 }
             });
 
-            var markers = [];
-            @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
-                (function() {
-                    var marker = new google.maps.Marker({
-                        position: {
-                            lat: @locationLastVisited.location.latLng.latWithNoise,
-                            lng: @locationLastVisited.location.latLng.lngWithNoise
-                        },
-                        map: map,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: @(locationLastVisited.location.scale),
-                            strokeColor: '@(locationLastVisited.location.strokeColor)',
-                            strokeWeight: 1,
-                            fillColor: '@(locationLastVisited.location.fillColor)',
-                            fillOpacity: @(locationLastVisited.location.fillOpacity),
-                            labelOrigin: {
-                                x: 0,
-                                y: 2
+
+            var mapTableId = 'mapTable@(id)';
+            $('#' + mapTableId)
+                    .tablesorter({
+                        widthFixed : true,
+                        widgets: ["filter"],
+                        widgetOptions : {
+                            filter_onlyAvail : 'Category',
+                            filter_functions : {
+                                ".Tag" : true,
+                                ".Category" : true,
+                                ".Score" : {
+                                    @for(i <- 9 to 1 by -1) {
+                                    ">= @i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
+                                    }
+                                },
+                                ".VisitedLast": false,
+                                ".VisitedFirst": false,
+                                ".VisitedCount": false,
                             }
                         },
-                        title: '@locationLastVisited.location.name - @locationLastVisited.location.address',
-                        label: {
-                            fontWeight: 'bold',
-                            color: '@(locationLastVisited.location.strokeColor)',
-                            text: '@Html(locationLastVisited.location.name)',
-                        }
+                    })
+                    .bind("filterInit", function (e, t) {
+                        redrawMap();
+                    })
+                    .bind("filterStart", function (e, t) {
+                    })
+                    .bind("filterEnd", function (e, t) {
+                        redrawMap();
+                    });
+
+            var markers = [];
+            function redrawMap() {
+                $.each(markers, function (i, v) {
+                    v.setMap(null)
+                });
+                markers = [];
+
+                $('#' + mapTableId).find('tr[data-i]:not(.filtered)').each(function (i, v) {
+                    var $v = $(v);
+                    var i = JSON.parse($v.attr('data-i'));
+                    var position = JSON.parse($v.attr('data-position'));
+                    var icon = JSON.parse($v.attr('data-icon'));
+                    var title = JSON.parse($v.attr('data-title'));
+                    var label = JSON.parse($v.attr('data-label'));
+
+                    var marker = new google.maps.Marker({
+                        map: map,
+                        position: position,
+                        icon: icon,
+                        title: title,
+                        label: label
                     });
                     marker.addListener('click', function() {
                         var infowindow = new google.maps.InfoWindow({
-                            content: $('#@(id)_@i').html()
+                            content: $('#@(id)_' + i).html()
                         });
 
                         infowindow.open(marker.get('map'), marker);
                     });
                     markers.push(marker);
-                })();
+                });
+                fitBounds()
             }
 
+            
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function (position) {
                     map.setCenter({
@@ -215,13 +240,16 @@
                     });
                     map.setZoom(17);
                 }, function () {
-                    handleLocationError();
+                    fitBounds();
                 });
             } else {
-                handleLocationError();
+                fitBounds();
             }
 
-            function handleLocationError() {
+            function fitBounds() {
+                if(!markers.length)
+                    return;
+                
                 var bounds = new google.maps.LatLngBounds();
                 for (var i = 0; i < markers.length; i++) {
                     bounds.extend(markers[i].position);

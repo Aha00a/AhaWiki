@@ -7,7 +7,8 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
-import logics.{AhaWikiCache, ApplicationConf}
+import logics.AhaWikiCache
+import logics.ApplicationConf
 import models._
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
@@ -28,14 +29,21 @@ object InterpreterMap extends TraitInterpreter {
                        scoreRaw:String,
                        raw:Seq[String]
                      )(implicit wikiContext: WikiContext) {
+
+    import com.aha00a.colors.Color
+    import com.aha00a.colors.GradientPreset
+
     val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.syncCacheApi, wikiContext.actorAhaWiki, wikiContext.database)
     val isOrigin: Boolean = scoreRaw == originString
 
     val score: Double = if(isOrigin) 10 else scoreRaw.toDoubleOrZero
+
     val fillOpacity: Double = score / 10
-    val strokeColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
-    val fillColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, ${score / 10})"
-    val labelColor: String = s"hsla(${score * 360 / 10}, 100%, 50%, 1)"
+    val color: Color = GradientPreset.ahaWikiMap.getColor(score / 10)
+
+    val strokeColor: String = (color / 1.2).toHashString
+    val fillColor: String = color.toHashString
+    val labelColor: String = color.toHashString
     val scale:Double = score
     val urlMap:String = address.toOption.map(u => s"https://www.google.com/maps/search/${URLEncoder.encode(u, "utf-8")}").getOrElse("")
   }

@@ -5,16 +5,12 @@ import akka.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.EnglishCaseConverter
 import com.aha00a.tests.TestUtil
 import javax.inject.Inject
-import logics.wikis.HeadingNumber
 import logics.wikis.interpreters.InterpreterSchema
-import logics.wikis.interpreters.InterpreterVim
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
-import logics.wikis.macros._
 import models._
 import play.api.Configuration
 import play.api.Logging
@@ -62,6 +58,7 @@ class Test @Inject()(implicit val
     }; testMacroMonths()
 
 
+    //noinspection DuplicatedCode
     def testInterpreterTable()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
@@ -273,6 +270,9 @@ class Test @Inject()(implicit val
   }
 
 
+  def gradient: Action[AnyContent] = Action { implicit request =>
+    Ok(views.html.Test.gradient(""))
+  }
 
 
 

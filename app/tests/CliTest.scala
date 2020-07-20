@@ -1,6 +1,7 @@
 package tests
 
 object CliTest extends App {
+
   import com.aha00a.tests.TestUtil
 
   run(new TestUtil(x => println(x)))
@@ -26,6 +27,34 @@ object CliTest extends App {
       assertEquals(EnglishCaseConverter.pascalCase2TitleCase("TVSeries"), "TV Series")
     }; testEnglishConverter()
 
+    def testDoubleUtil(): Unit = {
+      import com.aha00a.commons.utils.DoubleUtil
+      assertEquals(DoubleUtil.lerp(0, 100, 0.5), 50)
+      assertEquals(DoubleUtil.lerp(100, 200, 0.5), 150)
+      assertEquals(DoubleUtil.lerp(1000, 2000, 0.5), 1500)
+    }; testDoubleUtil()
+
+    def testComAha00aColors(): Unit = {
+      import com.aha00a.colors.Color
+      import com.aha00a.colors.GradientPreset
+
+      val black = Color(0, 0, 0)
+      val white = Color(255, 255, 255)
+      assertEquals(black.toHashString, "#000000")
+      assertEquals(white.toHashString, "#ffffff")
+
+
+      assertEquals(GradientPreset.greys.getColor(0), black)
+      assertEquals(GradientPreset.greys.getColor(0.5), Color(127.5, 127.5, 127.5))
+      assertEquals(GradientPreset.greys.getColor(1), white)
+
+      assertEquals(GradientPreset.alpha.getColor(0), Color(255, 255, 255, 0))
+      assertEquals(GradientPreset.alpha.getColor(0.5), Color(255, 255, 255, 0.5))
+      assertEquals(GradientPreset.alpha.getColor(1), Color(255, 255, 255))
+
+      assertEquals(GradientPreset.ahaWikiMap.getColor(0), Color(255, 255, 255))
+      assertEquals(GradientPreset.ahaWikiMap.reverse().getColor(0), Color(221, 0, 0))
+    }; testComAha00aColors()
 
     def testTraitMacroName(): Unit = {
       import logics.wikis.macros.MacroCalendar
@@ -280,7 +309,7 @@ object CliTest extends App {
     }; testInterpreterVim()
 
 
-    def testWithWikiContext():Unit = {
+    def testWithWikiContext(): Unit = {
       implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, null, null, null, null)
 
       def testMacroBr(): Unit = {
@@ -296,7 +325,6 @@ object CliTest extends App {
 
 
     }; testWithWikiContext()
-
 
 
     def testParboiled(): Unit = {
