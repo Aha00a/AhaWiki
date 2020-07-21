@@ -205,6 +205,11 @@
                                     ">=@i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
                                     }
                                 },
+                                ".Distance" : {
+                                    @for(i <- Seq(100, 200, 300, 400, 500, 1000, 2000, 3000, 5000, 10000)) {
+                                    "<=@i" : function(e, n, f, i, $r, c, data) { return n <= @i; },
+                                    }
+                                },
                                 ".VisitedLast": false,
                                 ".VisitedFirst": false,
                                 ".VisitedCount": false,
