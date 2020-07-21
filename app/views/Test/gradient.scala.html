@@ -58,7 +58,7 @@
             <tr>
                 <th>@name</th>
             @for(i <- 0 to 200) {
-                <td style="background-color: @(g.getColor(i / 200.0).toCssString)"> </td>
+                <td style="background-color: @(g.getColor(i / 200.0).toHashString)"> </td>
             }
             </tr>
         }
