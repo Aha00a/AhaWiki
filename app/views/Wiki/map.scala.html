@@ -173,7 +173,8 @@
 
 
             var mapTableId = 'mapTable@(id)';
-            $('#' + mapTableId)
+            var $mapTable = $('#' + mapTableId);
+            $mapTable
                     .tablesorter({
                         widthFixed : true,
                         widgets: ["filter"],
@@ -201,6 +202,12 @@
                     .bind("filterEnd", function (e, t) {
                         redrawMap();
                     });
+
+            $mapTable.find('tr[data-position]').click(function () {
+                var position = JSON.parse($(this).attr('data-position'));
+                map.setCenter(position);
+                map.setZoom(17);
+            });
 
             var markers = [];
             function redrawMap() {
@@ -236,22 +243,29 @@
                 fitBounds()
             }
 
-            @if(!query.empty) {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(function (position) {
-                        setTimeout(function () {
-                            map.setCenter({
-                                lat: position.coords.latitude,
-                                lng: position.coords.longitude
-                            });
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    setTimeout(function () {
+                        var pos = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        if(!location.search) {
+                            map.setCenter(pos);
                             map.setZoom(17);
-                        }, 2000);
-                    }, function () {
-                        fitBounds();
-                    });
-                } else {
+                        } else {
+                            fitBounds();
+                        }
+
+                        new google.maps.Marker({
+                            map: map,
+                            position: pos,
+                            title: "You are here!"
+                        });
+                    }, 2000);
+                }, function () {
                     fitBounds();
-                }
+                });
             } else {
                 fitBounds();
             }

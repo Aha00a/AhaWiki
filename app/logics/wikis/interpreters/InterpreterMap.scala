@@ -106,7 +106,7 @@ object InterpreterMap extends TraitInterpreter {
         val listDates = Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
         LocationListVisited(l, listDates)
       })
-      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, request.getQueryString(q).getOrElse(""))).toMap
+      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, request.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
       views.html.Wiki.map(
         mapJavaScriptApiKey,
         pageContent.argument.getOrElse(0, ""),
