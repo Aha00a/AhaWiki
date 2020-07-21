@@ -164,6 +164,23 @@
         });
     </script>
     <script type="text/javascript">
+        function distance(position1, position2) {
+            @* https://www.movable-type.co.uk/scripts/latlong.html *@
+            var R = 6371000;
+            var lat1 = position1.lat;
+            var lng1 = position1.lng;
+            var lat2 = position2.lat;
+            var lng2 = position2.lng;
+            var radLat1 = lat1 * Math.PI / 180; // φ, λ in radians
+            var radLat2 = lat2 * Math.PI / 180;
+            var deltaLat = (lat2 - lat1) * Math.PI / 180;
+            var deltaLon = (lng2 - lng1) * Math.PI / 180;
+            var a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) + Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var meters = R * c;
+            return meters;
+        }
+
         arrayOnGoogleMapLoaded.push(function () {
             var map = new google.maps.Map(document.getElementById('@id'), {
                 options: {
@@ -205,8 +222,8 @@
 
             $mapTable.find('tr[data-position]').click(function () {
                 var position = JSON.parse($(this).attr('data-position'));
-                map.setCenter(position);
-                map.setZoom(17);
+                // map.setCenter(position);
+                // map.setZoom(17);
             });
 
             var markers = [];
@@ -245,23 +262,30 @@
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function (position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    new google.maps.Marker({
+                        map: map,
+                        position: pos,
+                        title: "You are here!"
+                    });
+
+                    $mapTable.find('tr[data-position]').map(function(i, v) {
+                        var $v = $(v);
+                        var position = JSON.parse($v.attr('data-position'));
+                        $v.find('td.distance').text(Math.round(distance(pos, position)).toLocaleString());
+                    });
+                    $mapTable.trigger("updateAll", [ true, function () { } ]);
                     setTimeout(function () {
-                        var pos = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
                         if(!location.search) {
                             map.setCenter(pos);
                             map.setZoom(17);
                         } else {
                             fitBounds();
                         }
-
-                        new google.maps.Marker({
-                            map: map,
-                            position: pos,
-                            title: "You are here!"
-                        });
                     }, 2000);
                 }, function () {
                     fitBounds();
