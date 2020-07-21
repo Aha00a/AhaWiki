@@ -6,7 +6,8 @@
         sheetName:String,
         seqHeader: Seq[String],
         seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited],
-        mapAddressMeters: Map[String, Int]
+        mapAddressMeters: Map[String, Int],
+        query: Map[String, String]
 )(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div class="interpreterMap">
@@ -68,7 +69,11 @@
                 <thead>
                     <tr>
                         @for(headerName <- seqHeader) {
-                            <th rowspan="2" class="@headerName">@headerName</th>
+                            @if(query.isDefinedAt(headerName)) {
+                                <th rowspan="2" class="@headerName" data-value="@(query(headerName))">@headerName</th>
+                            } else {
+                                <th rowspan="2" class="@headerName">@headerName</th>
+                            }
                         }
                         @if(mapAddressMeters.nonEmpty) {
                             <th rowspan="2" class="Distance">Distance</th>
@@ -179,7 +184,7 @@
                                 ".Category" : true,
                                 ".Score" : {
                                     @for(i <- 9 to 1 by -1) {
-                                    ">= @i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
+                                    ">=@i" : function(e, n, f, i, $r, c, data) { return n >= @i; },
                                     }
                                 },
                                 ".VisitedLast": false,
@@ -231,17 +236,22 @@
                 fitBounds()
             }
 
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function (position) {
-                    map.setCenter({
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude
+            @if(!query.empty) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        setTimeout(function () {
+                            map.setCenter({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            });
+                            map.setZoom(17);
+                        }, 2000);
+                    }, function () {
+                        fitBounds();
                     });
-                    map.setZoom(17);
-                }, function () {
+                } else {
                     fitBounds();
-                });
+                }
             } else {
                 fitBounds();
             }
