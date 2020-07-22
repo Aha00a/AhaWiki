@@ -2,6 +2,56 @@
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
+    function showSearch() {
+        $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
+        $('.searchBg').click(function () {
+            hideSearch();
+        });
+        $('[name=q]').keydown(function (e) {
+            if (e.keyCode == 27) {
+                hideSearch();
+            }
+        }).focus();
+        $.get(
+                '@routes.Api.pageNames()',
+                {},
+                function (data, textStatus, jqXHR) {
+                    $('[name=q]').autocomplete({
+                        lookup: data,
+                        onSelect: function (suggestion) {
+                            hideSearch();
+                            go('/w/' + suggestion.value);
+                            return false;
+                        }
+                    }).focus();
+                }
+        ).error(function (jqXHR, textStatue, httpStatus) {
+            alert(jqXHR.responseJSON.message);
+        });
+        return false;
+    }
+    function hideSearch() {
+        $('.search, .searchBg').remove();
+    }
+
+    function showWrite() {
+        $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
+        $('.searchBg').click(function () {
+            hideSearch();
+        });
+        $('[name=q]').keydown(function (e) {
+            if (e.keyCode == 27) {
+                hideSearch();
+            }
+        }).focus();
+        return false;
+    }
+
+    function go(s) {
+        location.href = s;
+        return true;
+    }
+
     @for(hotkeys <- Seq(Map(
         'f' -> "go('/')",
         'a' -> "go('/w/AhaWiki')",
@@ -18,59 +68,7 @@
         '/' -> "showSearch()",
         'w' -> "showWrite()"
     ))) {
-
-        function showSearch() {
-            $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
-            $('.searchBg').click(function () {
-                hideSearch();
-            });
-            $('[name=q]').keydown(function (e) {
-                if (e.keyCode == 27) {
-                    hideSearch();
-                }
-            }).focus();
-            $.get(
-                    '@routes.Api.pageNames()',
-                    {},
-                    function (data, textStatus, jqXHR) {
-                        $('[name=q]').autocomplete({
-                            lookup: data,
-                            onSelect: function (suggestion) {
-                                hideSearch();
-                                go('/w/' + suggestion.value);
-                                return false;
-                            }
-                        }).focus();
-                    }
-            ).error(function (jqXHR, textStatue, httpStatus) {
-                alert(jqXHR.responseJSON.message);
-            });
-            return false;
-        }
-        function hideSearch() {
-            $('.search, .searchBg').remove();
-        }
-
-        function showWrite() {
-            $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
-            $('.searchBg').click(function () {
-                hideSearch();
-            });
-            $('[name=q]').keydown(function (e) {
-                if (e.keyCode == 27) {
-                    hideSearch();
-                }
-            }).focus();
-            return false;
-        }
-
-        function go(s) {
-            location.href = s;
-            return true;
-        }
-
         $(function(){
-
             @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {
                 $(document).bind('keydown', '@key', function () { return @Html(hotkeys(key)) });
             }
