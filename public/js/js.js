@@ -12,7 +12,7 @@ location.params = function(params) {
     for (i = 0, len = _params.length; i < len; i++) {
         parts = _params[i].split('=');
         if (! parts[0]) {continue;}
-        obj[parts[0]] = parts[1] || true;
+        obj[parts[0]] = parts.splice(1).join('=') || true;
     }
 
     if (typeof params !== 'object') {return obj;}
