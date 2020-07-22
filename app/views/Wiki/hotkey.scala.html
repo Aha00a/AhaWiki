@@ -1,4 +1,4 @@
-@(supported:String = "")(implicit request: play.api.mvc.Request[Any])
+@()(implicit request: play.api.mvc.Request[Any])
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
@@ -52,26 +52,35 @@
         return true;
     }
 
-    @for(hotkeys <- Seq(Map(
-        'f' -> "go('/')",
-        'a' -> "go('/w/AhaWiki')",
-        'c' -> "go('/w/RecentChanges')",
-        't' -> "go('/w/TitleIndex')",
-        'l' -> "go('/w/PageList')",
-        'm' -> "go('/w/PageMap')",
-        'r' -> "go('/r')",
-        'e' -> "go('?action=edit')",
-        'h' -> "go('?action=history')",
-        'b' -> "go('?action=blame')",
-        's' -> "showSearch()",
-        'g' -> "showSearch()",
-        '/' -> "showSearch()",
-        'w' -> "showWrite()"
-    ))) {
-        $(function(){
-            @for(key <- supported.getOrElse(hotkeys.keys.mkString)) {
-                $(document).bind('keydown', '@key', function () { return @Html(hotkeys(key)) });
-            }
-        });
+    function toggleAction(action) {
+        var value = location.params("action");
+        if (value && value === action)
+            return location.params({action: undefined});
+
+        return location.params({action: action});
     }
+
+    $(function(){
+        $(document).bind('keydown', 'f', function () { return go('/'); });
+
+        $(document).bind('keydown', 'a', function () { return go('/w/AhaWiki'); });
+
+        $(document).bind('keydown', 'c', function () { return go('/w/RecentChanges'); });
+        $(document).bind('keydown', 't', function () { return go('/w/TitleIndex'); });
+        $(document).bind('keydown', 'l', function () { return go('/w/PageList'); });
+
+        $(document).bind('keydown', 'm', function () { return go('/w/PageMap'); });
+
+        $(document).bind('keydown', 'r', function () { return go('/r'); });
+
+        $(document).bind('keydown', 'e', function () { return toggleAction('edit'); });
+        $(document).bind('keydown', 'h', function () { return toggleAction('history'); });
+        $(document).bind('keydown', 'b', function () { return toggleAction('blame'); });
+
+        $(document).bind('keydown', 's', function () { return showSearch(); });
+        $(document).bind('keydown', 'g', function () { return showSearch(); });
+        $(document).bind('keydown', '/', function () { return showSearch(); });
+
+        $(document).bind('keydown', 'w', function () { return showWrite(); });
+    });
 </script>
