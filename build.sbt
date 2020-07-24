@@ -31,6 +31,13 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value %
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
 
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-core",
+  "io.circe" %% "circe-generic",
+  "io.circe" %% "circe-parser"
+).map(_ % "0.12.3")
+
+
 // Adds additional packages into Twirl
 //TwirlKeys.templateImports += "com.example.controllers._"
 

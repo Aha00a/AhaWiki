@@ -31,6 +31,7 @@ GET         /google/oauth/callback             controllers.GoogleOAuth.callback(
 
 GET         /api/pageMap                       controllers.Api.pageMap
 GET         /api/pageNames                     controllers.Api.pageNames
+GET         /api/links                         controllers.Api.links(name)
 
 GET         /feed                              controllers.Feed.index
 GET         /feed.atom                         controllers.Feed.atom
