@@ -35,6 +35,6 @@ location.params = function(params, preventReload) {
     if(!preventReload) {
         location.search = search;
     } else {
-        history.replaceState({}, document.title, location.origin + location.pathname + '?' + search);
+        history.replaceState({}, document.title, '?' + search);
     }
 };
