@@ -1,5 +1,5 @@
 // https://stackoverflow.com/a/28132596/3751968
-location.params = function(params) {
+location.params = function(params, preventReload) {
     var obj = {}, i, parts, len, key, value;
 
     if (typeof params === 'string') {
@@ -31,5 +31,10 @@ location.params = function(params) {
         parts.push(key + (obj[key] === true ? '' : '=' + obj[key]));
     }
 
-    location.search = parts.join('&');
+    var search = parts.join('&');
+    if(!preventReload) {
+        location.search = search;
+    } else {
+        history.replaceState({}, document.title, location.origin + location.pathname + '?' + search);
+    }
 };

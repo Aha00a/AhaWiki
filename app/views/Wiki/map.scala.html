@@ -223,6 +223,21 @@
                     .bind("filterStart", function (e, t) {
                     })
                     .bind("filterEnd", function (e, t) {
+                        console.log(e, t);
+                        var arrayName = $.map(t.$headerIndexed, function (v) {
+                            return $(v).text()
+                        });
+                        var arrayValue = t.lastSearch;
+                        var o = arrayValue.map(function (v, i) {
+                            return {
+                                name: arrayName[i],
+                                value: v !== '' ? v : undefined
+                            };
+                        }).reduce(function (a, v) {
+                            a[v.name] = v.value;
+                            return a;
+                        }, {});
+                        location.params(o, true);
                         redrawMap();
                     });
 
