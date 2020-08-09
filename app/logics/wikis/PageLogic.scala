@@ -18,6 +18,7 @@ object PageLogic {
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
+      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       val request = wikiContext.request
       val author = SessionLogic.getId(request).getOrElse("anonymous")
       val remoteAddress = request.remoteAddressWithXRealIp

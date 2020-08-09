@@ -17,9 +17,9 @@ object AhaWikiCache extends Logging {
   trait CacheEntity {
     val key: String = getClass.getName
 
-    def invalidate()(implicit wikiContext: WikiContext): Unit = {
+    def invalidate()(implicit syncCacheApi: SyncCacheApi): Unit = {
       logger.info(s"Invalidate Cache: $key")
-      wikiContext.syncCacheApi.remove(key)
+      syncCacheApi.remove(key)
     }
   }
 
