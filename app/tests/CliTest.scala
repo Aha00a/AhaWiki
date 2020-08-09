@@ -131,7 +131,9 @@ object CliTest extends App {
     
 
     def testWithWikiContext(): Unit = {
-      implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, null, null, null, null)
+      import logics.AhaWikiInjects
+      implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null)
+      implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, ahaWikiInjects)
 
       def testMacroBr(): Unit = {
         import logics.wikis.macros.MacroBr

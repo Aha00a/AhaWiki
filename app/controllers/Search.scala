@@ -19,6 +19,11 @@ class Search @Inject()(implicit val
                        @Named("db-actor") actorAhaWiki: ActorRef,
                        configuration: Configuration
                       ) extends BaseController {
+
+  import logics.AhaWikiInjects
+
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
+
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
     implicit val wikiContext: WikiContext = WikiContext("")
 
