@@ -26,9 +26,8 @@ class Admin @Inject()(
   executionContext: ExecutionContext
 ) extends BaseController {
   def index(): Action[AnyContent] = Action { implicit request =>
-    import com.aha00a.play.PlayContext
-
-    implicit val playContext: PlayContext = PlayContext()
+    import logics.AhaWikiInjects
+    implicit val playContext: AhaWikiInjects = AhaWikiInjects()
     Ok(views.html.Admin.index())
   }
 }
