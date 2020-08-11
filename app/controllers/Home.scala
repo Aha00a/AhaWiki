@@ -22,6 +22,9 @@ class Home @Inject() (
 
   def random: Action[AnyContent] = Action { implicit request =>
     import java.net.URLEncoder
+
+    import logics.IdProvider
+    implicit val idProvider: IdProvider = IdProvider.createBy(request)
     Redirect(routes.Wiki.view(URLEncoder.encode(PageLogic.getListPageByPermission().random().name, "utf-8"), 0, "")).flashing(request.flash)
   }
 

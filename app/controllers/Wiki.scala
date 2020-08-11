@@ -66,6 +66,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val idProvider: IdProvider = wikiContext.idProvider
 
       val pageFirstRevision = Page.selectFirstRevision(name)
       val pageLastRevision = Page.selectLastRevision(name)
@@ -299,6 +300,7 @@ class Wiki @Inject()(implicit val
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     implicit val wikiContext: WikiContext = WikiContext(name)
+    implicit val idProvider: IdProvider = wikiContext.idProvider
 
     val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
     val secretKey = ApplicationConf().AhaWiki.google.reCAPTCHA.secretKey()
@@ -347,6 +349,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val idProvider: IdProvider = wikiContext.idProvider
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
@@ -366,6 +369,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val idProvider: IdProvider = wikiContext.idProvider
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
@@ -395,6 +399,7 @@ class Wiki @Inject()(implicit val
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
           implicit val wikiContext: WikiContext = WikiContext(pageName)
+          implicit val idProvider: IdProvider = wikiContext.idProvider
           val pageContent = PageContent(page.content)
           if (WikiPermission().isWritable(pageContent)) {
             val extractConvertApplyInterpreterRefresh = new ExtractConvertInjectInterpreterCustom(s => {
@@ -434,6 +439,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
       implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val idProvider: IdProvider = wikiContext.idProvider
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(page), None) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {

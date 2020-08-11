@@ -55,9 +55,17 @@ class ActorAhaWiki @Inject()(implicit
     case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
         Page.selectLastRevision(name) foreach { page =>
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
+          import logics.IdProvider
+          import logics.wikis.RenderingMode
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, syncCacheApi, database, context.self, configuration, new IdProvider {
+            override def getId: Option[String] = None
+          })
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
+          logger.info("toSeqWord")
           logger.info(seq.mkString("(", ")\t(", ")"))
+
+          logger.info("toText")
+          logger.info(Interpreters.toText(page.content))
 
           val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
           Page.updateSimilarPage(name, wordCount)

@@ -13,6 +13,7 @@ import play.api.mvc.Request
 
 object PageLogic {
 
+  import logics.IdProvider
   import models.tables.PageWithoutContentWithSize
 
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
@@ -39,11 +40,11 @@ object PageLogic {
     AhaWikiCache.PageList.get()
   }
 
-  def getListPageByPermission()(implicit request: Request[Any], syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit idProvider: IdProvider, syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
-    val optionId = SessionLogic.getId(request)
+    val optionId = idProvider.getId
     val list: List[PageWithoutContentWithSize] = getListPage()
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))

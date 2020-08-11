@@ -23,15 +23,17 @@ class Diary @Inject()(implicit val
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       configuration: Configuration
                      ) extends BaseController {
-  def write() = Action { implicit request: Request[Any] =>
+  def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     database.withConnection { implicit connection =>
-      val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+      import logics.IdProvider
+      implicit val idProvider: IdProvider = wikiContext.idProvider
 
+      val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
       if (permission.isWritable(PageContent(latestText))) {
         val body =

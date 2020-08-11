@@ -20,7 +20,10 @@ class Search @Inject()(implicit val
                        configuration: Configuration
                       ) extends BaseController {
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
+    import logics.IdProvider
+
     implicit val wikiContext: WikiContext = WikiContext("")
+    implicit val idProvider: IdProvider = wikiContext.idProvider
 
     Ok(views.html.Search.search(
       q,

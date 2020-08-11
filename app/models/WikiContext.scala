@@ -1,8 +1,9 @@
 package models
 
 import akka.actor.ActorRef
-import logics.AhaWikiCache
-import logics.wikis.{PageLogic, RenderingMode}
+import logics.IdProvider
+import logics.wikis.PageLogic
+import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
@@ -17,16 +18,22 @@ object WikiContext {
     syncCacheApi: SyncCacheApi,
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration
-  ): WikiContext = new WikiContext(Seq(name), RenderingMode.Normal)
+    configuration: Configuration,
+  ): WikiContext = {
+    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    new WikiContext(Seq(name), RenderingMode.Normal)
+  }
   def preview(name: String)(
     implicit
     request: Request[Any],
     syncCacheApi: SyncCacheApi,
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration
-  ): WikiContext = new WikiContext(Seq(name), RenderingMode.Preview)
+    configuration: Configuration,
+  ): WikiContext = {
+    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    new WikiContext(Seq(name), RenderingMode.Preview)
+  }
 }
 
 class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
@@ -35,7 +42,8 @@ class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                   val syncCacheApi: SyncCacheApi,
                   val database: Database,
                   val actorAhaWiki: ActorRef,
-                  val configuration: Configuration
+                  val configuration: Configuration,
+                  val idProvider: IdProvider
                  ) {
 
   import models.tables.PageWithoutContentWithSize

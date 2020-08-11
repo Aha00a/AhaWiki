@@ -11,10 +11,17 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
     case "" | null => toHtmlString(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
       import models.tables.PageWithoutContentWithSize
+      import logics.IdProvider
+      import play.api.cache.SyncCacheApi
+      import play.api.db.Database
+      implicit val idProvider: IdProvider = wikiContext.idProvider
+      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
+      implicit val database: Database = wikiContext.database
+
       val list: List[PageWithoutContentWithSize] = wikiContext.listPageByPermission
       list.filter(p => p.name != argument && p.name.startsWith(argument)).map(page => {
         val pageLastRevision = models.tables.Page.selectLastRevision(page.name)
-        if (WikiPermission()(wikiContext.request, wikiContext.syncCacheApi, wikiContext.database).isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
+        if (WikiPermission().isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
           pageLastRevision.map(w => Interpreters.toHtmlString(w.content.replaceFirst("""^= .+""", s"== [${w.name}]"))).getOrElse("Error: " + argument)
         } else {
           MacroError.toHtmlString(s"Permission Denied - [[$name($argument)]]")
