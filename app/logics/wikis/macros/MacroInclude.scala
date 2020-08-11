@@ -11,7 +11,7 @@ object MacroInclude extends TraitMacro {
     import models.WikiContext.Provider
     import play.api.cache.SyncCacheApi
     import play.api.db.Database
-    implicit val idProvider: Provider = wikiContext.provider
+    implicit val provider: Provider = wikiContext.provider
     implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     val pageLastRevision = models.tables.Page.selectLastRevision(argument)

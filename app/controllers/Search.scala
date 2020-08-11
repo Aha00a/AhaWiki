@@ -28,7 +28,7 @@ class Search @Inject()(implicit val
 
     import models.WikiContext.Provider
     implicit val wikiContext: WikiContext = WikiContext("")
-    implicit val idProvider: Provider = wikiContext.provider
+    implicit val provider: Provider = wikiContext.provider
 
     Ok(views.html.Search.search(
       q,

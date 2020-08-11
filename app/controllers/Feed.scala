@@ -52,7 +52,7 @@ class Feed @Inject()(
         </entry>
 
     }
-    implicit val idProvider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider.createBy(request)
 
     val seqPageSorted: Seq[PageWithoutContentWithSize] = PageLogic.getListPageByPermission().sortBy(_.dateTime)
     val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)

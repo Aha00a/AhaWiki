@@ -25,7 +25,7 @@ class Home @Inject() (
 
     import models.WikiContext.Provider
 
-    implicit val idProvider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider.createBy(request)
     Redirect(routes.Wiki.view(URLEncoder.encode(PageLogic.getListPageByPermission().random().name, "utf-8"), 0, "")).flashing(request.flash)
   }
 

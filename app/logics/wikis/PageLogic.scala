@@ -41,11 +41,11 @@ object PageLogic {
     AhaWikiCache.PageList.get()
   }
 
-  def getListPageByPermission()(implicit idProvider: Provider, syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
-    val optionId = idProvider.getId
+    val optionId = provider.getId
     val list: List[PageWithoutContentWithSize] = getListPage()
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))

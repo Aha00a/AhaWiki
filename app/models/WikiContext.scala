@@ -27,7 +27,7 @@ object WikiContext {
     request: Request[Any],
     ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
-    implicit val idProvider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Normal)
   }
 
@@ -36,7 +36,7 @@ object WikiContext {
     request: Request[Any],
     ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
-    implicit val idProvider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Preview)
   }
 }
