@@ -7,6 +7,9 @@
 
 <html lang="en">
     <head>
+        <meta charset="UTF-8"/>
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
         <title>@title - @request.host</title>
 
         <meta itemprop="name" content="@(title)">
@@ -22,10 +25,16 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.css" integrity="sha256-46qynGAkLSFpVbEBog43gvNhfrOj+BmwXdxFgVK/Kvc=" crossorigin="anonymous" />
         <link rel="stylesheet" href="@routes.Assets.versioned("less.css")">
 
+        <script type="text/javascript" src="https://polyfill.io/v3/polyfill.js?version=3.52.1&features=blissfuljs%2Cdefault%2Ces2015%2Ces2016%2Ces2017%2Ces2019%2Ces2018%2Ces5%2Ces6%2Ces7"></script>
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js" integrity="sha256-rsPUGdUPBXgalvIj4YKJrrUlmLXbOb6Cp7cdxn1qeUc=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js" integrity="sha256-Lj47JmDL+qxf6/elCzHQSUFZmJYmqEECssN5LP/ifRM=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js" integrity="sha256-jkaBMXLp+mraE29Q0r6gtTniSfPhS1N0R7YcQwdt7nQ=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js" integrity="sha256-PsW8RLr/0Hdq8VSZyHHLFxO6t3ltKo3L3ULL1xByhhc=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>@*TODO: apply cdn*@
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
 
         <script type="text/x-mathjax-config">
@@ -39,9 +48,7 @@
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js" integrity="sha256-yYfngbEKv4RENfGDvNUqJTqGFcKf31NJEe9OTnnMH3Y=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/config/TeX-AMS_HTML.js" integrity="sha256-MZuxbOGocfrefUyrW6qNzjtj51TdsXJybGQ5F5fjS7A=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>
-        <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>@*TODO: apply cdn*@
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vivagraphjs/0.12.0/vivagraph.min.js" integrity="sha256-kKQdUhGEwWzNj3itlPXnaVunrFXAnCsNbFXLKKUcago=" crossorigin="anonymous"></script>
         @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
             <script type="text/javascript">
@@ -56,16 +63,18 @@
         @if(ApplicationConf().AhaWiki.google.AdSense.adClient()) {
             <script data-ad-client="@(ApplicationConf().AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
-        <script type="text/javascript" src="https://polyfill.io/v3/polyfill.js?version=3.52.1&features=blissfuljs%2Cdefault%2Ces2015%2Ces2016%2Ces2017%2Ces2019%2Ces2018%2Ces5%2Ces6%2Ces7"></script>
+
         <script type="text/javascript" src="/public/js/js.js"></script>
         
         @head
     </head>
     <body class="AhaWiki no-mathjax">
         @body
+
         @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
             <script async defer src="https://maps.googleapis.com/maps/api/js?key=@(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
         }
+
         @_googleAnalytics()
     </body>
 </html>

@@ -1,0 +1,19 @@
+@import logics.AhaWikiInjects
+@()(implicit ahaWikiInjects: AhaWikiInjects, request: play.api.mvc.Request[Any])
+@views.html.Admin._baseAdmin("Admin", "Admin") {
+    <script type="text/babel">
+        function Main() {
+            const useState = React.useState;
+            const [v, setV] = useState(10);
+            return (
+                <div>
+                    <h1>{v}</h1>
+                    <button onClick={() => setV(v + 1)}>incr</button>
+                </div>
+            );
+        }
+        ReactDOM.render(<Main />, document.getElementById('main'));
+    </script>
+} {
+    <div id="main">main</div>
+}

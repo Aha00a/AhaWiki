@@ -23,6 +23,11 @@ class Diary @Inject()(implicit val
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       configuration: Configuration
                      ) extends BaseController {
+
+  import logics.AhaWikiInjects
+
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
+
   def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now

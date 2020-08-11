@@ -28,6 +28,8 @@ GET         /logout                            controllers.Auth.logout
 GET         /google/oauth/login                controllers.GoogleOAuth.login
 GET         /google/oauth/callback             controllers.GoogleOAuth.callback(code:String)
 
+GET         /admin/                            controllers.Admin.index
+
 
 GET         /api/pageMap                       controllers.Api.pageMap
 GET         /api/pageNames                     controllers.Api.pageNames

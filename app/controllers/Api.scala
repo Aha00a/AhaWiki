@@ -29,7 +29,10 @@ class Api @Inject()(
                    ) extends BaseController {
   import io.circe.generic.auto._
   import io.circe.syntax._
+  import logics.AhaWikiInjects
   import models.tables.Link
+
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 

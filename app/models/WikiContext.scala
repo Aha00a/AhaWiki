@@ -1,9 +1,10 @@
 package models
 
 import akka.actor.ActorRef
+import logics.AhaWikiCache
+import logics.AhaWikiInjects
 import logics.IdProvider
-import logics.wikis.PageLogic
-import logics.wikis.RenderingMode
+import logics.wikis.{PageLogic, RenderingMode}
 import logics.wikis.RenderingMode.RenderingMode
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
@@ -15,21 +16,16 @@ object WikiContext {
   def apply(name: String)(
     implicit
     request: Request[Any],
-    syncCacheApi: SyncCacheApi,
-    database: Database,
-    actorAhaWiki: ActorRef,
-    configuration: Configuration,
+    ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
     implicit val idProvider: IdProvider = IdProvider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Normal)
   }
+
   def preview(name: String)(
     implicit
     request: Request[Any],
-    syncCacheApi: SyncCacheApi,
-    database: Database,
-    actorAhaWiki: ActorRef,
-    configuration: Configuration,
+    ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
     implicit val idProvider: IdProvider = IdProvider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Preview)
@@ -39,12 +35,13 @@ object WikiContext {
 class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                  (implicit
                   val request: Request[Any],
-                  val syncCacheApi: SyncCacheApi,
-                  val database: Database,
-                  val actorAhaWiki: ActorRef,
-                  val configuration: Configuration,
+                  val ahaWikiInjects: AhaWikiInjects,
                   val idProvider: IdProvider
                  ) {
+  implicit val syncCacheApi: SyncCacheApi = ahaWikiInjects.syncCacheApi
+  implicit val database: Database = ahaWikiInjects.database
+  implicit val actorAhaWiki: ActorRef = ahaWikiInjects.actorAhaWiki
+  implicit val configuration: Configuration = ahaWikiInjects.configuration
 
   import models.tables.PageWithoutContentWithSize
 

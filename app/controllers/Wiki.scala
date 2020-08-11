@@ -57,6 +57,7 @@ class Wiki @Inject()(implicit val
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
 
   implicit class RichResult(result: Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")

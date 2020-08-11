@@ -55,9 +55,12 @@ class ActorAhaWiki @Inject()(implicit
     case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
         Page.selectLastRevision(name) foreach { page =>
+          import logics.AhaWikiInjects
           import logics.IdProvider
           import logics.wikis.RenderingMode
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, syncCacheApi, database, context.self, configuration, new IdProvider {
+
+          implicit val ahaWikiInjects = AhaWikiInjects()
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new IdProvider {
             override def getId: Option[String] = None
           })
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
@@ -75,9 +78,11 @@ class ActorAhaWiki @Inject()(implicit
     case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
         Page.selectLastRevision(name) foreach { page =>
+          import logics.AhaWikiInjects
           import models.tables.Link
           import models.tables.SchemaOrg
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, syncCacheApi, database, context.self, configuration)
+          implicit val ahaWikiInjects = AhaWikiInjects()
+          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, ahaWikiInjects)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 
