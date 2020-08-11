@@ -36,6 +36,15 @@ object WikiContext {
       override def flashGet(key: String): Option[String] = request.flash.get(key)
       override def host: String = request.host
     }
+
+    def empty: Provider = new Provider {
+      override def getId: Option[String] = None
+      override def locale: Locale = Locale.KOREA
+      override def getQueryString(key: String): Option[String] = None
+      override val remoteAddress: String = "127.0.0.1"
+      override def flashGet(key: String): Option[String] = None
+      override def host: String = ""
+    }
   }
 
   def apply(name: String)(

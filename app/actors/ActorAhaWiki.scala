@@ -48,15 +48,7 @@ class ActorAhaWiki @Inject()(implicit
 
   import ActorAhaWiki._
   import models.WikiContext.Provider
-  val provider: Provider = new Provider {
-    override def getId: Option[String] = None
-    override def locale: Locale = Locale.KOREA
-    override def getQueryString(key: String): Option[String] = None
-    override val remoteAddress: String = "127.0.0.1"
-    override def flashGet(key: String): Option[String] = None
-    override def host: String = ""
-  }
-
+  val provider: Provider = Provider.empty
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
       context.self ! CalculateCosineSimilarity(name, i, length)
