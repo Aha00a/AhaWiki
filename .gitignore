@@ -7,3 +7,4 @@ cache
 /.project
 /.settings
 /RUNNING_PID
+node_modules
