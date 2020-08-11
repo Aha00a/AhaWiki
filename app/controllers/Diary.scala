@@ -35,8 +35,8 @@ class Diary @Inject()(implicit val
     implicit val wikiContext: WikiContext = WikiContext(name)
 
     database.withConnection { implicit connection =>
-      import models.WikiContext.IdProvider
-      implicit val idProvider: IdProvider = wikiContext.idProvider
+      import models.WikiContext.Provider
+      implicit val idProvider: Provider = wikiContext.provider
 
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()

@@ -1,17 +1,17 @@
 package logics.wikis
 
 import logics.{AhaWikiConfig, SessionLogic}
-import models.WikiContext.IdProvider
+import models.WikiContext.Provider
 import models.{PageContent, WikiContext}
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
 object WikiPermission {
-  def apply()(implicit idProvider: IdProvider, syncCacheApi: SyncCacheApi, database:Database): WikiPermission = new WikiPermission()
+  def apply()(implicit idProvider: Provider, syncCacheApi: SyncCacheApi, database:Database): WikiPermission = new WikiPermission()
 }
 
-class WikiPermission(implicit idProvider: IdProvider, syncCacheApi: SyncCacheApi, database:Database) {
+class WikiPermission(implicit idProvider: Provider, syncCacheApi: SyncCacheApi, database:Database) {
   def getReadDirective(pageContent:Option[PageContent]): Array[String] = {
     pageContent.flatMap(_.read).getOrElse(AhaWikiConfig().permission.default.read()).split("""\s*,\s*""")
   }

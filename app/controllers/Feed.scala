@@ -22,7 +22,7 @@ class Feed @Inject()(
   }
 
   def atom: Action[AnyContent] = Action { implicit request =>
-    import models.WikiContext.IdProvider
+    import models.WikiContext.Provider
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
       def toXml: NodeBuffer =
         <title>{title}</title>
@@ -52,7 +52,7 @@ class Feed @Inject()(
         </entry>
 
     }
-    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    implicit val idProvider: Provider = Provider.createBy(request)
 
     val seqPageSorted: Seq[PageWithoutContentWithSize] = PageLogic.getListPageByPermission().sortBy(_.dateTime)
     val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)

@@ -26,9 +26,9 @@ class Search @Inject()(implicit val
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
-    import models.WikiContext.IdProvider
+    import models.WikiContext.Provider
     implicit val wikiContext: WikiContext = WikiContext("")
-    implicit val idProvider: IdProvider = wikiContext.idProvider
+    implicit val idProvider: Provider = wikiContext.provider
 
     Ok(views.html.Search.search(
       q,

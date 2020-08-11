@@ -57,10 +57,10 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
-          import models.WikiContext.IdProvider
+          import models.WikiContext.Provider
 
           implicit val ahaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new IdProvider {
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new Provider {
             override def getId: Option[String] = None
           })
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO

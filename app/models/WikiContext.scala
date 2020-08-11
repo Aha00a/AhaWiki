@@ -5,7 +5,7 @@ import logics.AhaWikiCache
 import logics.AhaWikiInjects
 import logics.wikis.{PageLogic, RenderingMode}
 import logics.wikis.RenderingMode.RenderingMode
-import models.WikiContext.IdProvider
+import models.WikiContext.Provider
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -13,12 +13,12 @@ import play.api.mvc.Request
 import logics.SessionLogic
 
 object WikiContext {
-  object IdProvider {
-    def createBy(request: Request[Any]): IdProvider = new IdProvider {
+  object Provider {
+    def createBy(request: Request[Any]): Provider = new Provider {
       override def getId: Option[String] = SessionLogic.getId(request)
     }
   }
-  trait IdProvider {
+  trait Provider {
     def getId: Option[String]
   }
 
@@ -27,7 +27,7 @@ object WikiContext {
     request: Request[Any],
     ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
-    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    implicit val idProvider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Normal)
   }
 
@@ -36,7 +36,7 @@ object WikiContext {
     request: Request[Any],
     ahaWikiInjects: AhaWikiInjects
   ): WikiContext = {
-    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    implicit val idProvider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Preview)
   }
 }
@@ -45,7 +45,7 @@ class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                  (implicit
                   val request: Request[Any],
                   val ahaWikiInjects: AhaWikiInjects,
-                  val idProvider: IdProvider
+                  val provider: Provider
                  ) {
   implicit val syncCacheApi: SyncCacheApi = ahaWikiInjects.syncCacheApi
   implicit val database: Database = ahaWikiInjects.database

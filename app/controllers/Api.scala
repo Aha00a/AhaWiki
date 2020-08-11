@@ -45,8 +45,8 @@ class Api @Inject()(
   }
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    import models.WikiContext.IdProvider
-    implicit val idProvider: IdProvider = IdProvider.createBy(request)
+    import models.WikiContext.Provider
+    implicit val idProvider: Provider = Provider.createBy(request)
 
     Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
   }
