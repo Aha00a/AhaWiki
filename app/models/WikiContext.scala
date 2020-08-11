@@ -13,13 +13,13 @@ import play.api.mvc.Request
 import logics.SessionLogic
 
 object WikiContext {
+  trait Provider {
+    def getId: Option[String]
+  }
   object Provider {
     def createBy(request: Request[Any]): Provider = new Provider {
       override def getId: Option[String] = SessionLogic.getId(request)
     }
-  }
-  trait Provider {
-    def getId: Option[String]
   }
 
   def apply(name: String)(
