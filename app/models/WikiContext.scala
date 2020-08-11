@@ -1,24 +1,32 @@
 package models
 
 import akka.actor.ActorRef
-import logics.AhaWikiCache
 import logics.AhaWikiInjects
-import logics.wikis.{PageLogic, RenderingMode}
+import logics.SessionLogic
+import logics.wikis.PageLogic
+import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
 import models.WikiContext.Provider
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
-import logics.SessionLogic
+import com.aha00a.play.Implicits._
 
 object WikiContext {
   trait Provider {
+    import java.util.Locale
+
     def getId: Option[String]
+    def locale: Locale
   }
   object Provider {
     def createBy(request: Request[Any]): Provider = new Provider {
+
+      import java.util.Locale
+
       override def getId: Option[String] = SessionLogic.getId(request)
+      override def locale: Locale = request.locale
     }
   }
 

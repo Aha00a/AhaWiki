@@ -1,16 +1,18 @@
 package actors
 
+import java.util.Locale
+
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
-import logics.wikis.interpreters.Interpreters
 import logics.AhaWikiCache
 import logics.ApplicationConf
-import models.tables.Page
+import logics.wikis.interpreters.Interpreters
 import models.LatLng
 import models.WikiContext
+import models.tables.Page
 import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -59,9 +61,10 @@ class ActorAhaWiki @Inject()(implicit
           import logics.wikis.RenderingMode
           import models.WikiContext.Provider
 
-          implicit val ahaWikiInjects = AhaWikiInjects()
+          implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
           implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new Provider {
             override def getId: Option[String] = None
+            override def locale: Locale = Locale.KOREA
           })
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
           logger.info("toSeqWord")
@@ -81,7 +84,7 @@ class ActorAhaWiki @Inject()(implicit
           import logics.AhaWikiInjects
           import models.tables.Link
           import models.tables.SchemaOrg
-          implicit val ahaWikiInjects = AhaWikiInjects()
+          implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
           implicit val wikiContext: WikiContext = WikiContext(page.name)(null, ahaWikiInjects)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)

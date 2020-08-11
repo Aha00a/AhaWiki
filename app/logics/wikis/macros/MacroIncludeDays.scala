@@ -34,7 +34,7 @@ object MacroIncludeDays extends TraitMacro {
           content
             .split("\n")
             .map(_.replaceAll("^(=+ )", "=$1"))
-            .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.request.locale)))
+            .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.provider.locale)))
             .mkString("\n")
         })(wikiContext1)
       }).mkString("\n")

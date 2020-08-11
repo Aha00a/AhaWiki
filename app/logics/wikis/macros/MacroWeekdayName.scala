@@ -3,8 +3,6 @@ package logics.wikis.macros
 import java.time.LocalDate
 import java.time.format.TextStyle
 
-import com.aha00a.play.Implicits._
-import logics.wikis.macros.MacroDayHeader.name
 import models.WikiContext
 
 import scala.util.matching.Regex
@@ -14,7 +12,7 @@ object MacroWeekdayName extends TraitMacro {
 
   override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
     case "" | null => toHtmlString(wikiContext.nameTop)
-    case regex(ymd) => LocalDate.parse(ymd).getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.request.locale)
+    case regex(ymd) => LocalDate.parse(ymd).getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.provider.locale)
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 }
