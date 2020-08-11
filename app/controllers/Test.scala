@@ -31,9 +31,6 @@ class Test @Inject()(implicit val
   import testUtil.assertEquals
 
   def unit: Action[AnyContent] = Action { implicit request =>
-    import tests.CliTest
-
-    CliTest.run(testUtil)
 
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
