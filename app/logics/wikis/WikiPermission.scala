@@ -1,7 +1,7 @@
 package logics.wikis
 
-import logics.IdProvider
 import logics.{AhaWikiConfig, SessionLogic}
+import models.WikiContext.IdProvider
 import models.{PageContent, WikiContext}
 import play.api.cache.SyncCacheApi
 import play.api.db.Database

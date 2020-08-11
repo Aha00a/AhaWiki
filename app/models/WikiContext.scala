@@ -3,16 +3,25 @@ package models
 import akka.actor.ActorRef
 import logics.AhaWikiCache
 import logics.AhaWikiInjects
-import logics.IdProvider
 import logics.wikis.{PageLogic, RenderingMode}
 import logics.wikis.RenderingMode.RenderingMode
+import models.WikiContext.IdProvider
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
-
+import logics.SessionLogic
 
 object WikiContext {
+  object IdProvider {
+    def createBy(request: Request[Any]): IdProvider = new IdProvider {
+      override def getId: Option[String] = SessionLogic.getId(request)
+    }
+  }
+  trait IdProvider {
+    def getId: Option[String]
+  }
+
   def apply(name: String)(
     implicit
     request: Request[Any],

@@ -25,8 +25,8 @@ class Search @Inject()(implicit val
   implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
-    import logics.IdProvider
 
+    import models.WikiContext.IdProvider
     implicit val wikiContext: WikiContext = WikiContext("")
     implicit val idProvider: IdProvider = wikiContext.idProvider
 

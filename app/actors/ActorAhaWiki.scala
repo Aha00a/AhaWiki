@@ -56,8 +56,8 @@ class ActorAhaWiki @Inject()(implicit
       database.withConnection { implicit connection =>
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
-          import logics.IdProvider
           import logics.wikis.RenderingMode
+          import models.WikiContext.IdProvider
 
           implicit val ahaWikiInjects = AhaWikiInjects()
           implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new IdProvider {

@@ -22,7 +22,7 @@ class Feed @Inject()(
   }
 
   def atom: Action[AnyContent] = Action { implicit request =>
-    import logics.IdProvider
+    import models.WikiContext.IdProvider
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
       def toXml: NodeBuffer =
         <title>{title}</title>

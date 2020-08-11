@@ -13,7 +13,7 @@ import play.api.mvc.Request
 
 object PageLogic {
 
-  import logics.IdProvider
+  import models.WikiContext.IdProvider
   import models.tables.PageWithoutContentWithSize
 
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {

@@ -25,6 +25,7 @@ import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
+import models.WikiContext.IdProvider
 import models._
 import models.tables.Page
 import play.api.Configuration
