@@ -8,7 +8,7 @@
         seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited],
         mapAddressMeters: Map[String, Int],
         query: Map[String, String]
-)(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
+)(implicit wikiContext: WikiContext)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div class="interpreterMap">
         <div class="mapArea">
@@ -37,7 +37,7 @@
                                     url: '@routes.Wiki.syncGoogleSpreadsheet()',
                                     method: 'post',
                                     headers: {
-                                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
+                                        @*'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'*@
                                     },
                                     data: {
                                         pageName: '@wikiContext.name',

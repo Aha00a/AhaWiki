@@ -22,7 +22,6 @@ object MacroIncludeDays extends TraitMacro {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
-      implicit val request: Request[Any] = wikiContext.request
       implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
       val set = wikiContext.setPageNameByPermission

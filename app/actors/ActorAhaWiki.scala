@@ -47,6 +47,15 @@ class ActorAhaWiki @Inject()(implicit
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
+  import models.WikiContext.Provider
+  val provider: Provider = new Provider {
+    override def getId: Option[String] = None
+    override def locale: Locale = Locale.KOREA
+    override def getQueryString(key: String): Option[String] = None
+    override val remoteAddress: String = "127.0.0.1"
+    override def flashGet(key: String): Option[String] = None
+    override def host: String = ""
+  }
 
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
@@ -59,13 +68,9 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
-          import models.WikiContext.Provider
 
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(null, ahaWikiInjects, new Provider {
-            override def getId: Option[String] = None
-            override def locale: Locale = Locale.KOREA
-          })
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
           val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
           logger.info("toSeqWord")
           logger.info(seq.mkString("(", ")\t(", ")"))
@@ -82,10 +87,11 @@ class ActorAhaWiki @Inject()(implicit
       database.withConnection { implicit connection =>
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
+          import logics.wikis.RenderingMode
           import models.tables.Link
           import models.tables.SchemaOrg
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = WikiContext(page.name)(null, ahaWikiInjects)
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 

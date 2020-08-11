@@ -2,7 +2,7 @@
 @import play.api.db.Database
 @import play.api.Configuration
 @import logics.ApplicationConf
-@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], syncCacheApi: SyncCacheApi, database:Database, configuration: Configuration)
+@(title: String, description: String)(head: Html)(body: Html)(implicit host: String, syncCacheApi: SyncCacheApi, database:Database, configuration: Configuration)
 <!DOCTYPE html>
 
 <html lang="en">
@@ -10,7 +10,7 @@
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-        <title>@title - @request.host</title>
+        <title>@title - @host</title>
 
         <meta itemprop="name" content="@(title)">
         <meta property="og:title" content="@(title)" />

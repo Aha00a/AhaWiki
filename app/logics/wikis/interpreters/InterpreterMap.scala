@@ -97,7 +97,6 @@ object InterpreterMap extends TraitInterpreter {
       return MacroError.toHtmlString(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
     }
 
-    implicit val request: Request[Any] = wikiContext.request
     implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
@@ -106,7 +105,7 @@ object InterpreterMap extends TraitInterpreter {
         val listDates = Link.selectBacklinkOfDatePage(l.name).map(_.src).sorted(Ordering[String].reverse)
         LocationListVisited(l, listDates)
       })
-      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, request.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
+      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, wikiContext.provider.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
       views.html.Wiki.map(
         mapJavaScriptApiKey,
         pageContent.argument.getOrElse(0, ""),

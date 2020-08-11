@@ -1,6 +1,9 @@
 package models
 
+import java.util.Locale
+
 import akka.actor.ActorRef
+import com.aha00a.play.Implicits._
 import logics.AhaWikiInjects
 import logics.SessionLogic
 import logics.wikis.PageLogic
@@ -11,7 +14,6 @@ import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
-import com.aha00a.play.Implicits._
 
 object WikiContext {
   trait Provider {
@@ -19,14 +21,20 @@ object WikiContext {
 
     def getId: Option[String]
     def locale: Locale
+    def getQueryString(key: String): Option[String]
+    val remoteAddress: String
+    def flashGet(key: String): Option[String]
+    def host: String
   }
+
   object Provider {
     def createBy(request: Request[Any]): Provider = new Provider {
-
-      import java.util.Locale
-
       override def getId: Option[String] = SessionLogic.getId(request)
       override def locale: Locale = request.locale
+      override def getQueryString(key: String): Option[String] = request.getQueryString(key)
+      override val remoteAddress: String = request.remoteAddressWithXRealIp
+      override def flashGet(key: String): Option[String] = request.flash.get(key)
+      override def host: String = request.host
     }
   }
 
@@ -51,7 +59,6 @@ object WikiContext {
 
 class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
                  (implicit
-                  val request: Request[Any],
                   val ahaWikiInjects: AhaWikiInjects,
                   val provider: Provider
                  ) {

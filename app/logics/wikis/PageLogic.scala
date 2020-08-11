@@ -20,11 +20,9 @@ object PageLogic {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
       implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
-      val request = wikiContext.request
-      val author = SessionLogic.getId(request).getOrElse("anonymous")
-      val remoteAddress = request.remoteAddressWithXRealIp
+      val author = wikiContext.provider.getId.getOrElse("anonymous")
       val permRead = PageContent(body).read.getOrElse("")
-      val page = Page(name, revision, dateTime, author, remoteAddress, comment, permRead, body)
+      val page = Page(name, revision, dateTime, author, wikiContext.provider.remoteAddress, comment, permRead, body)
       Page.insert(page)
       wikiContext.actorAhaWiki ! Calculate(name)
       AhaWikiCache.PageList.invalidate()
