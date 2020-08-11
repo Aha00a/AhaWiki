@@ -4,9 +4,10 @@ import org.scalatest.freespec.AnyFreeSpec
 
 class MacroBrSpec extends AnyFreeSpec {
   "name" in {
+    import logics.AhaWikiInjects
     import models.WikiContext
 
-    implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, null, null, null, null)
+    implicit val wikiContext: WikiContext = WikiContext("UnitTest")(null, AhaWikiInjects()(null, null, null, null))
     val empty = ""
     val dummy = "dummy"
     assert(MacroBr.toHtmlString(empty) === "<br/>")
