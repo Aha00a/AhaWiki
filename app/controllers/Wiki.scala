@@ -89,7 +89,7 @@ class Wiki @Inject()(implicit val
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, _, _, _) =>
           val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
-          val regexSchemaColon: Regex = """^schema:$""".r
+          val regexSchemaColon: Regex = """^schema:(.+)$""".r
 
           name match {
             case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
@@ -216,8 +216,9 @@ class Wiki @Inject()(implicit val
             //          case regexDashDashDashDashDay(mm) =>
             //            Ok(mm) // TODO
 
-            //          case regexSchemaColon(schema) =>
-            //            Ok(schema) // TODO
+            case regexSchemaColon(schema) =>
+              val optionNode = SchemaOrg.mapAll.get(schema)
+              Ok(optionNode.map(_.schemaType).getOrElse("None"))
 
             case _ => Ok(name)
               val content =
