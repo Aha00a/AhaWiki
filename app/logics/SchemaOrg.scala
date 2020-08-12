@@ -4,7 +4,7 @@ import java.io.File
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{EnglishCaseConverter, Using}
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import logics.wikis.interpreters.ahaMark.LinkMarkup
 import models.WikiContext
 import play.api.libs.json.{JsLookupResult, JsValue, Json}
 

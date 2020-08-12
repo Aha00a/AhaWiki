@@ -9,7 +9,7 @@ import com.aha00a.tests.TestUtil
 import javax.inject.Inject
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import logics.wikis.interpreters.ahaMark.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import models._
 import play.api.Configuration

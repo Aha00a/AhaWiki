@@ -22,7 +22,7 @@ import logics._
 import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import logics.wikis.interpreters.ahaMark.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
 import models.WikiContext.Provider

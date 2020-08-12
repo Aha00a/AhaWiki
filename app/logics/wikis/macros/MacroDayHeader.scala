@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.utils.DateTimeUtil
-import logics.wikis.interpreters.InterpreterWiki.LinkMarkup
+import logics.wikis.interpreters.ahaMark.LinkMarkup
 import logics.wikis.interpreters.Interpreters
 import models.WikiContext
 
