@@ -18,6 +18,10 @@ trait TraitInterpreter {
 
   def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = Seq()
 
-  def toText(content: String)(implicit wikiContext: WikiContext): String = Jsoup.parse(toHtmlString(content)).text()
+  def toText(content: String)(implicit wikiContext: WikiContext): String = {
+    val document = Jsoup.parse(toHtmlString(content))
+    document.select(".headingNumber").remove()
+    document.text()
+  }
 }
 
