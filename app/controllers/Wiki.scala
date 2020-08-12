@@ -220,14 +220,31 @@ class Wiki @Inject()(implicit val
             //          case regexDashDashDashDashDay(mm) =>
             //            Ok(mm) // TODO
 
+//            case "schema:Schema" =>
             case regexSchemaColon(schema) =>
-              val schemaType = SchemaOrg.mapAll(schema)
-              val content =
-                s"""= ${schemaType.id}
-                   |${schemaType.comment}
-                   |""".stripMargin
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+              val optionSchemaType = SchemaOrg.mapAll.get(schema)
+              optionSchemaType match {
+                case Some(schemaType) =>
+                  val content =
+                    s"""= ${schemaType.id}
+                       |${schemaType.comment}
+                       |""".stripMargin
+                  val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+                  NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+                case _ =>
+                  val content =
+                    s"""= $name
+                       |This page does not exist.
+                       |== Possible actions
+                       | * [[Html(<a href="?action=edit">create page</a>)]]
+                       | * Search ["https://google.com/search?q=$name" $name] on Google
+                       | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
+                       | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
+                       | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
+                       |""".stripMargin
+                  val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+                  NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+              }
 
             case _ => Ok(name)
               val content =
