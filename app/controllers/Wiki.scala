@@ -64,6 +64,10 @@ class Wiki @Inject()(implicit val
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
 
+  import io.circe.generic.auto._
+  import io.circe.syntax._
+  def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
+
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
@@ -217,8 +221,12 @@ class Wiki @Inject()(implicit val
             //            Ok(mm) // TODO
 
             case regexSchemaColon(schema) =>
-              val optionNode = SchemaOrg.mapAll.get(schema)
-              Ok(optionNode.map(_.schemaType).getOrElse("None"))
+              val schemaType = SchemaOrg.mapAll(schema)
+              val content =
+                s"""= ${schemaType.id}
+                   | * type: ${schemaType.schemaType}
+                   |""".stripMargin
+              Ok(schemaType.asJson)
 
             case _ => Ok(name)
               val content =

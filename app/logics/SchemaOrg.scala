@@ -14,7 +14,7 @@ import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
 object SchemaOrg {
-  case class Node(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
+  case class SchemaType(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
     def toXmlSpan(toTitleCase: Boolean = true, classes: Seq[String] = Seq()): Elem = {
       val (title, seqClass) = if (supersededBy.nonEmpty) (
         "Superseded by " + supersededBy.mkString(",") + "\n" + comment,
@@ -55,9 +55,9 @@ object SchemaOrg {
   }
 
 
-  
+
   lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld"))(Codec.UTF8))(_.mkString))
-  lazy val seqAll:Seq[Node] = {
+  lazy val seqAll:Seq[SchemaType] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
       val id = (v \ "id").as[String]
@@ -66,14 +66,14 @@ object SchemaOrg {
       val domainIncludes: Seq[String] = getSeqString(v \ "domainIncludes")
       val comment = (v \ "comment").as[String]
       val supersededBy: Seq[String] = getSeqString(v \ "supersededBy")
-      Node(id, typeStr, subClassOf, domainIncludes, comment, supersededBy)
+      SchemaType(id, typeStr, subClassOf, domainIncludes, comment, supersededBy)
     })
   }
-  lazy val seqClass: Seq[Node] = seqAll.filter(_.schemaType == "Class")
-  lazy val seqProperty: Seq[Node] = seqAll.filter(_.schemaType == "Property")
-  lazy val mapAll: Map[String, Node] = seqAll.map(n => (n.id, n)).toMap
-  lazy val mapClass: Map[String, Node] = seqClass.map(n => (n.id, n)).toMap
-  lazy val mapProperty: Map[String, Node] = seqProperty.map(n => (n.id, n)).toMap
+  lazy val seqClass: Seq[SchemaType] = seqAll.filter(_.schemaType == "Class")
+  lazy val seqProperty: Seq[SchemaType] = seqAll.filter(_.schemaType == "Property")
+  lazy val mapAll: Map[String, SchemaType] = seqAll.map(n => (n.id, n)).toMap
+  lazy val mapClass: Map[String, SchemaType] = seqClass.map(n => (n.id, n)).toMap
+  lazy val mapProperty: Map[String, SchemaType] = seqProperty.map(n => (n.id, n)).toMap
 
   def getHtmlProperties(schema:String, seqPropertyUsed:Seq[String]): Elem = {
     val seqClass = getClassHierarchy(schema)
@@ -84,7 +84,7 @@ object SchemaOrg {
             <h6>Properties of {c}</h6>
             <div>
               {
-                val groupByFirstLetter: Map[Char, Seq[Node]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
+                val groupByFirstLetter: Map[Char, Seq[SchemaType]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
                   <div>
                     {
