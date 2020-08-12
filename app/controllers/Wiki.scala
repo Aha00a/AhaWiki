@@ -70,6 +70,8 @@ class Wiki @Inject()(implicit val
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
+      import logics.wikis.WikiSnippet
+
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       implicit val wikiContext: WikiContext = WikiContext(name)
       implicit val provider: Provider = wikiContext.provider
@@ -97,16 +99,7 @@ class Wiki @Inject()(implicit val
 
           name match {
             case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-              val content =
-                s"""[[DayHeader]]
-                   |This page does not exist.
-                   |== Possible actions
-                   | * [[Html(<a href="?action=edit">create page</a>)]]
-                   | * Search ["https://google.com/search?q=$name" $name] on Google
-                   | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
-                   | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
-                   | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
-                   |""".stripMargin
+              val content = WikiSnippet.notFoundWithDayHeader(name)
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
               NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
@@ -232,31 +225,13 @@ class Wiki @Inject()(implicit val
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                 case _ =>
-                  val content =
-                    s"""= $name
-                       |This page does not exist.
-                       |== Possible actions
-                       | * [[Html(<a href="?action=edit">create page</a>)]]
-                       | * Search ["https://google.com/search?q=$name" $name] on Google
-                       | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
-                       | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
-                       | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
-                       |""".stripMargin
+                  val content = WikiSnippet.notFound(name)
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
               }
 
-            case _ => Ok(name)
-              val content =
-                s"""= $name
-                   |This page does not exist.
-                   |== Possible actions
-                   | * [[Html(<a href="?action=edit">create page</a>)]]
-                   | * Search ["https://google.com/search?q=$name" $name] on Google
-                   | * Search ["https://google.com/search?q=$name wiki" $name wiki] on Google
-                   | * Search ["https://duckduckgo.com/?q=$name" $name] on DuckDuckGo
-                   | * Search ["https://duckduckgo.com/?q=$name wiki" $name wiki] on DuckDuckGo
-                   |""".stripMargin
+            case _ =>
+              val content = WikiSnippet.notFound(name)
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
               NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           }
