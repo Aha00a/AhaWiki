@@ -46,7 +46,7 @@ object InterpreterSchema extends TraitInterpreter {
             logics.SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
               scala.xml.XML.loadString(
                 seqClass.map(c => logics.SchemaOrg.mapClass.get(c)
-                  .map(schemaType => schemaType.toLinkMarkup.toHtmlString(pageNameSet))
+                  .map(schemaType => schemaType.toAhaMarkLink.toHtmlString(pageNameSet))
                   .getOrElse("")
                 ).mkString("<div>", " / ", "</div>")
               )

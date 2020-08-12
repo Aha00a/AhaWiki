@@ -26,7 +26,7 @@ object SchemaOrg {
 
       <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
     }
-    def toLinkMarkup(implicit wikiContext:WikiContext): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toAhaMarkLink(implicit wikiContext:WikiContext): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"
