@@ -224,9 +224,10 @@ class Wiki @Inject()(implicit val
               val schemaType = SchemaOrg.mapAll(schema)
               val content =
                 s"""= ${schemaType.id}
-                   | * type: ${schemaType.schemaType}
+                   |${schemaType.comment}
                    |""".stripMargin
-              Ok(schemaType.asJson)
+              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
             case _ => Ok(name)
               val content =
