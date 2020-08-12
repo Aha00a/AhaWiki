@@ -32,8 +32,6 @@ object ExtractConvertInjectMacro {
     MacroEmbed,
     MacroInclude,
 
-
-    MacroMonths,
     MacroCalendar,
     MacroIncludeDays,
 

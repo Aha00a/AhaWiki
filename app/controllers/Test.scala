@@ -37,25 +37,6 @@ class Test @Inject()(implicit val
 
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
-    def testMacroMonths()(implicit wikiContext: WikiContext): Unit = {
-      import logics.wikis.macros.MacroMonths
-      assertEquals(MacroMonths.toHtmlString("1000"),
-        """<ul style="list-style-type: disc;">
-          |<li><a href="1000-01">1000-01</a></li>
-          |<li><a href="1000-02">1000-02</a></li>
-          |<li><a href="1000-03">1000-03</a></li>
-          |<li><a href="1000-04">1000-04</a></li>
-          |<li><a href="1000-05">1000-05</a></li>
-          |<li><a href="1000-06">1000-06</a></li>
-          |<li><a href="1000-07">1000-07</a></li>
-          |<li><a href="1000-08">1000-08</a></li>
-          |<li><a href="1000-09">1000-09</a></li>
-          |<li><a href="1000-10">1000-10</a></li>
-          |<li><a href="1000-11">1000-11</a></li>
-          |<li><a href="1000-12">1000-12</a></li>
-          |</ul>""".stripMargin)
-      assertEquals(MacroMonths.extractLink("1000"), "1000-01,1000-02,1000-03,1000-04,1000-05,1000-06,1000-07,1000-08,1000-09,1000-10,1000-11,1000-12".split(',').toSeq)
-    }; testMacroMonths()
 
 
     //noinspection DuplicatedCode
