@@ -3,9 +3,12 @@ package logics.wikis.interpreters.ahaMark
 import com.aha00a.commons.utils.RegexUtil
 import models.WikiContext
 
-case class LinkMarkup(uri: String, alias: String = "")(implicit wikiContext: WikiContext) {
+case class LinkMarkup(uri: String, alias: String = "")(implicit wikiContext: WikiContext) extends AhaMark {
 
   import models.tables.Link
+
+  import scala.xml.Elem
+  import scala.xml.XML
 
   lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
   lazy val aliasWithDefault: String = if (alias == null || alias.isEmpty) uriNormalized else alias
@@ -44,4 +47,6 @@ case class LinkMarkup(uri: String, alias: String = "")(implicit wikiContext: Wik
   }
 
   def toLink(src: String) = Link(src, uriNormalized, alias)
+
+  override def toHtml: Elem = XML.loadString(toHtmlString())
 }

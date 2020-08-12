@@ -6,11 +6,8 @@ import scala.xml.Elem
 
 class TraitInterpreterSpec extends AnyFreeSpec {
 
+  import logics.wikis.interpreters.ahaMark.AhaMark
 
-  trait AhaMark {
-    def toHtml: Elem = <div></div>
-    def toText: String = toHtml.text
-  }
 
   case class AhaMarkDocument(seq:Seq[AhaMark]) extends AhaMark {
     override def toHtml: Elem = <div>{seq.map(_.toHtml)}</div>
