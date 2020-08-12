@@ -14,7 +14,14 @@ import scala.io.Codec
 import scala.xml.{Elem, NodeSeq}
 
 object SchemaOrg {
-  case class SchemaType(id:String, schemaType:String, subClassOf: Seq[String], domainIncludes: Seq[String], comment: String, supersededBy: Seq[String]) {
+  case class SchemaType(
+                         id:String,
+                         schemaType:String,
+                         subClassOf: Seq[String],
+                         domainIncludes: Seq[String],
+                         comment: String,
+                         supersededBy: Seq[String]
+                       ) {
     def toXmlSpan(toTitleCase: Boolean = true, classes: Seq[String] = Seq()): Elem = {
       val (title, seqClass) = if (supersededBy.nonEmpty) (
         "Superseded by " + supersededBy.mkString(",") + "\n" + comment,
