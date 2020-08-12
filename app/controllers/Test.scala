@@ -9,7 +9,7 @@ import com.aha00a.tests.TestUtil
 import javax.inject.Inject
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import models._
 import play.api.Configuration
@@ -117,20 +117,20 @@ class Test @Inject()(implicit val
 
 
 
-      assertEquals(InterpreterWiki.extractLinkMarkup("""http://a.com""").toList, Seq(LinkMarkup("""http://a.com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""http://a.com$""").toList, Seq(LinkMarkup("""http://a.com$""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[http://a.com]""").toList, Seq(LinkMarkup("""http://a.com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[http://a.com a com]""").toList, Seq(LinkMarkup("""http://a.com""", """a com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[FrontPage]""").toList, Seq(LinkMarkup("""FrontPage""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[FrontPage Alias]""").toList, Seq(LinkMarkup("""FrontPage""", """Alias""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page"]""").toList, Seq(LinkMarkup("""Some Page""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page" Alias]""").toList, Seq(LinkMarkup("""Some Page""", "Alias")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""http://a.com""").toList, Seq(AhaMarkLink("""http://a.com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""http://a.com$""").toList, Seq(AhaMarkLink("""http://a.com$""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[http://a.com]""").toList, Seq(AhaMarkLink("""http://a.com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[http://a.com a com]""").toList, Seq(AhaMarkLink("""http://a.com""", """a com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[FrontPage]""").toList, Seq(AhaMarkLink("""FrontPage""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[FrontPage Alias]""").toList, Seq(AhaMarkLink("""FrontPage""", """Alias""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage]""").toList, Seq(AhaMarkLink("""wiki:FrontPage""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage Alias]""").toList, Seq(AhaMarkLink("""wiki:FrontPage""", """Alias""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page"]""").toList, Seq(AhaMarkLink("""Some Page""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page" Alias]""").toList, Seq(AhaMarkLink("""Some Page""", "Alias")))
 
       assertEquals(
         InterpreterWiki.extractLinkMarkup("""http://a.com/$   [http://a.com]  [http://a.com a com]""").toList,
-        Seq(LinkMarkup("""http://a.com/$"""), LinkMarkup("""http://a.com"""), LinkMarkup("""http://a.com""", """a com"""))
+        Seq(AhaMarkLink("""http://a.com/$"""), AhaMarkLink("""http://a.com"""), AhaMarkLink("""http://a.com""", """a com"""))
       )
 
       assertEquals(InterpreterWiki.extractLinkMarkup("""\http://a.com""").toList, Seq())
@@ -144,16 +144,16 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.extractLinkMarkup("""\["SomePage"]""").toList, Seq())
       assertEquals(InterpreterWiki.extractLinkMarkup("""\["SomePage" Alias]""").toList, Seq())
 
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com""").toList, Seq(LinkMarkup("""http://a.com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com$""").toList, Seq(LinkMarkup("""http://a.com$""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[http://a.com]""").toList, Seq(LinkMarkup("""http://a.com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[http://a.com a com]""").toList, Seq(LinkMarkup("""http://a.com""", """a com""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage]""").toList, Seq(LinkMarkup("""FrontPage""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage Alias]""").toList, Seq(LinkMarkup("""FrontPage""", """Alias""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""").toList, Seq(LinkMarkup("""wiki:FrontPage""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""").toList, Seq(LinkMarkup("""wiki:FrontPage""", """Alias""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage"]""").toList, Seq(LinkMarkup("""SomePage""")))
-      assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage" Alias]""").toList, Seq(LinkMarkup("""SomePage""", """Alias""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com""").toList, Seq(AhaMarkLink("""http://a.com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\http://a.com$""").toList, Seq(AhaMarkLink("""http://a.com$""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[http://a.com]""").toList, Seq(AhaMarkLink("""http://a.com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[http://a.com a com]""").toList, Seq(AhaMarkLink("""http://a.com""", """a com""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage]""").toList, Seq(AhaMarkLink("""FrontPage""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[FrontPage Alias]""").toList, Seq(AhaMarkLink("""FrontPage""", """Alias""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage]""").toList, Seq(AhaMarkLink("""wiki:FrontPage""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\[wiki:FrontPage Alias]""").toList, Seq(AhaMarkLink("""wiki:FrontPage""", """Alias""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage"]""").toList, Seq(AhaMarkLink("""SomePage""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage" Alias]""").toList, Seq(AhaMarkLink("""SomePage""", """Alias""")))
 
       assertEquals(InterpreterWiki.toSeqLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
       assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))

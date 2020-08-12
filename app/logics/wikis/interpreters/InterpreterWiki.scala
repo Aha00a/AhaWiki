@@ -6,7 +6,7 @@ import models.{PageContent, WikiContext}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 
 
 
@@ -190,7 +190,7 @@ object InterpreterWiki extends TraitInterpreter {
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
     override def process(): Seq[Link] = {
       val seqLinkInterpreter: Seq[Link] = extractConvertInjectInterpreter.extractLink().toList
-      val seqLinkMacro: Seq[Link] = extractConvertInjectMacro.extractLink().map(LinkMarkup(_).toLink(wikiContext.name)).toList
+      val seqLinkMacro: Seq[Link] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
       val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
       seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }
@@ -220,11 +220,11 @@ object InterpreterWiki extends TraitInterpreter {
     val set: Set[String] = wikiContext.setPageNameByPermission
 
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri).toHtmlString()
-      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
-      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri).toHtmlString(set)
-      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias).toHtmlString(set)
-      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias).toHtmlString(set)
+      case regexLink(null, uri , null, null, null, null, null, null) => AhaMarkLink(uri).toHtmlString()
+      case regexLink(null, null, uri , null, null, null, null, null) => AhaMarkLink(uri).toHtmlString(set)
+      case regexLink(null, null, null, uri , null, null, null, null) => AhaMarkLink(uri).toHtmlString(set)
+      case regexLink(null, null, null, null, uri, alias, null, null) => AhaMarkLink(uri, alias).toHtmlString(set)
+      case regexLink(null, null, null, null, null, null, uri, alias) => AhaMarkLink(uri, alias).toHtmlString(set)
 
       case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
       case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
@@ -236,13 +236,13 @@ object InterpreterWiki extends TraitInterpreter {
     })
   }
 
-  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[LinkMarkup] = {
+  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[AhaMarkLink] = {
     regexLink.findAllIn(content).map {
-      case regexLink(null, uri , null, null, null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, uri , null, null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, uri , null, null, null, null) => LinkMarkup(uri)
-      case regexLink(null, null, null, null, uri, alias, null, null) => LinkMarkup(uri, alias)
-      case regexLink(null, null, null, null, null, null, uri, alias) => LinkMarkup(uri, alias)
+      case regexLink(null, uri , null, null, null, null, null, null) => AhaMarkLink(uri)
+      case regexLink(null, null, uri , null, null, null, null, null) => AhaMarkLink(uri)
+      case regexLink(null, null, null, uri , null, null, null, null) => AhaMarkLink(uri)
+      case regexLink(null, null, null, null, uri, alias, null, null) => AhaMarkLink(uri, alias)
+      case regexLink(null, null, null, null, null, null, uri, alias) => AhaMarkLink(uri, alias)
       case _ => null
     }.filter(_ != null)
   }

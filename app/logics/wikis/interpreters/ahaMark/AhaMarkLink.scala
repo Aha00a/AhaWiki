@@ -3,7 +3,7 @@ package logics.wikis.interpreters.ahaMark
 import com.aha00a.commons.utils.RegexUtil
 import models.WikiContext
 
-case class LinkMarkup(uri: String, alias: String = "")(implicit wikiContext: WikiContext) extends AhaMark {
+case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: WikiContext) extends AhaMark {
 
   import models.tables.Link
 

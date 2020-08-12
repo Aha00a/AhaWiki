@@ -5,7 +5,7 @@ import java.time.{DayOfWeek, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.WikiContext
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -29,11 +29,11 @@ object MacroCalendar extends TraitMacro {
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
 
       val set: Set[String] = wikiContext.setPageNameByPermission
-      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => LinkMarkup(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
+      val dates: Seq[String] = (1 to yearMonth.lengthOfMonth()).map(d => AhaMarkLink(f"$argument-$d%02d", f"$d%02d").toHtmlString(set))
       val r = <table class="MacroCalendar simpleTable">
         <thead>
           <tr>
-            <th colspan="7">{scala.xml.XML.loadString(LinkMarkup(s"$y-$m").toHtmlString())}</th>
+            <th colspan="7">{scala.xml.XML.loadString(AhaMarkLink(s"$y-$m").toHtmlString())}</th>
           </tr>
           <tr>
             {

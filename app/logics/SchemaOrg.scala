@@ -4,7 +4,7 @@ import java.io.File
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{EnglishCaseConverter, Using}
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.WikiContext
 import play.api.libs.json.{JsLookupResult, JsValue, Json}
 
@@ -26,7 +26,7 @@ object SchemaOrg {
 
       <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
     }
-    def toLinkMarkup(implicit wikiContext:WikiContext): LinkMarkup = LinkMarkup(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toLinkMarkup(implicit wikiContext:WikiContext): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"

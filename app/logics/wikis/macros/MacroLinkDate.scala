@@ -4,7 +4,7 @@ import java.time.LocalDate
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.{DateTimeUtil, RangeUtil}
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.WikiContext
 
 object MacroLinkDate extends TraitMacro {
@@ -20,7 +20,7 @@ object MacroLinkDate extends TraitMacro {
         s"${l(y)}-${l(s"--$m")}-${l(s"----$d")}",
         ""
       ).mkString("<br/>")
-      val seqLinkAround: Seq[LinkMarkup] = getSeqLinkAround(argument)
+      val seqLinkAround: Seq[AhaMarkLink] = getSeqLinkAround(argument)
       val linkAroundHtml = seqLinkAround.map(_.toHtmlString()).mkString("<br/>")
       s"""
          |<div class="MacroLinkDate around">
@@ -33,9 +33,9 @@ object MacroLinkDate extends TraitMacro {
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 
-  private def getSeqLinkAround(argument: String)(implicit wikiContext: WikiContext): Seq[LinkMarkup] = {
+  private def getSeqLinkAround(argument: String)(implicit wikiContext: WikiContext): Seq[AhaMarkLink] = {
     val localDate: LocalDate = LocalDate.parse(argument)
-    val seqLinkAround: Seq[LinkMarkup] = RangeUtil.around(0, 3).map(i => LinkMarkup(localDate.plusDays(i).toIsoLocalDateString))
+    val seqLinkAround: Seq[AhaMarkLink] = RangeUtil.around(0, 3).map(i => AhaMarkLink(localDate.plusDays(i).toIsoLocalDateString))
     seqLinkAround
   }
 
@@ -47,6 +47,6 @@ object MacroLinkDate extends TraitMacro {
     case _ => Seq()
   }
 
-  def l(s:String)(implicit wikiContext: WikiContext): String = LinkMarkup(s, s.replace("--", "")).toHtmlString()
+  def l(s:String)(implicit wikiContext: WikiContext): String = AhaMarkLink(s, s.replace("--", "")).toHtmlString()
 
 }

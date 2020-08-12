@@ -22,7 +22,7 @@ import logics._
 import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
 import models.WikiContext.Provider
@@ -109,10 +109,10 @@ class Wiki @Inject()(implicit val
             case DateTimeUtil.regexYearDashMonth(y, m) =>
               val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
               val content =
-                s"""= [[Html(${LinkMarkup(y).toHtmlString()})]]-$m
+                s"""= [[Html(${AhaMarkLink(y).toHtmlString()})]]-$m
                    |[[[#!Html
                    |<div class="rightInfoBox">
-                   |${RangeUtil.around(0, 12).map(i => LinkMarkup(localDate.plusMonths(i).toYearDashMonthString).toHtmlString()).mkString("<br/>")}
+                   |${RangeUtil.around(0, 12).map(i => AhaMarkLink(localDate.plusMonths(i).toYearDashMonthString).toHtmlString()).mkString("<br/>")}
                    |</div>
                    |]]]
                    |[[IncludeDays]]
@@ -125,7 +125,7 @@ class Wiki @Inject()(implicit val
                 s"""= $name
                    |[[[#!Html
                    |<div class="rightInfoBox">
-                   |${RangeUtil.around(y.toInt, 10).map(y => LinkMarkup(y.toString).toHtmlString()).mkString("<br/>")}
+                   |${RangeUtil.around(y.toInt, 10).map(y => AhaMarkLink(y.toString).toHtmlString()).mkString("<br/>")}
                    |</div>
                    |]]]
                    |== Calendar
@@ -156,7 +156,7 @@ class Wiki @Inject()(implicit val
                     <tr>
                       {t.map(Some(_)).padTo(5, None).map(d =>
                       <td>
-                        {d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
+                        {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
                       </td>
                     )}
                     </tr>
@@ -196,7 +196,7 @@ class Wiki @Inject()(implicit val
                     <tr>
                       {t.map(Some(_)).padTo(5, None).map(d =>
                       <td>
-                        {d.map(d => scala.xml.XML.loadString(LinkMarkup(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
+                        {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
                       </td>
                     )}
                     </tr>

@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.utils.DateTimeUtil
-import logics.wikis.interpreters.ahaMark.LinkMarkup
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import models.WikiContext
 
@@ -14,7 +14,7 @@ object MacroDayHeader extends TraitMacro {
         Interpreters.toHtmlString(
           s"""
              |[[LinkDate($y-$m-$d)]]
-             |= [[Html(${LinkMarkup(s"$y-$m").toHtmlString()})]]-$d [[WeekdayName($y-$m-$d)]]
+             |= [[Html(${AhaMarkLink(s"$y-$m").toHtmlString()})]]-$d [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop != wikiContext.nameBottom =>
