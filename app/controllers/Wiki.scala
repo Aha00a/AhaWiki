@@ -218,9 +218,13 @@ class Wiki @Inject()(implicit val
               val optionSchemaType = SchemaOrg.mapAll.get(schema)
               optionSchemaType match {
                 case Some(schemaType) =>
+                  import models.tables.SchemaOrg
+                  val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
+                  
                   val content =
                     s"""= ${schemaType.id}
                        |${schemaType.comment}
+                       |${listSchemaOrg.map(_.page).mkString(" * [\"", "\"]\n * [\"", "\"]")}
                        |""".stripMargin
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
