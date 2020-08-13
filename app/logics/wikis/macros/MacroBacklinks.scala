@@ -9,6 +9,10 @@ object MacroBacklinks extends TraitMacro {
     import models.tables.Link
     val listLink: List[Link] = Link.selectDst(wikiContext.name)
     val listLinkFiltered = listLink.filter(l => l.and(wikiContext.pageCanSee))
-    InterpreterWiki.toHtmlString(" * " + listLinkFiltered.map(l => s"""["${l.src}" ${l.src}${if(l.alias.isNullOrEmpty) "" else "(" + l.alias + ")"}] """).mkString(" "))
+    if(0 == listLinkFiltered.length) {
+      ""
+    } else {
+      InterpreterWiki.toHtmlString(" * " + listLinkFiltered.map(l => s"""["${l.src}" ${l.src}${if(l.alias.isNullOrEmpty) "" else "(" + l.alias + ")"}] """).mkString(" "))
+    }
   }}
 }
