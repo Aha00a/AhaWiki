@@ -12,8 +12,6 @@ trait TraitInterpreter {
 
   def toHtmlString(content: String)(implicit wikiContext: WikiContext): String
 
-  def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = content.split("""\s+""")
-
   def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link]
 
   def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = Seq()

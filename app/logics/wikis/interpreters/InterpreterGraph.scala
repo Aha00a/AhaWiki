@@ -24,12 +24,5 @@ object InterpreterGraph extends TraitInterpreter {
     views.html.Wiki.graph(array, enableWikiLink = pageContent.shebang.contains("enableWikiLink")).toString()
   }
 
-
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent: PageContent = PageContent(content)
-    val array = parse(wikiContext, pageContent)
-    array.flatten.toSeq
-  }
-
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

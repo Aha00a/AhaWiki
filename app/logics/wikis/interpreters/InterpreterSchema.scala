@@ -116,13 +116,6 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent: PageContent = createPageContent(content)
-    val parseResult: ParseResult = parse(pageContent)
-
-    Seq("#!" + name, parseResult.schemaClass) ++ parseResult.seqSeqField.flatten.flatMap(_.split("""\s+"""))
-  }
-
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 
   override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {

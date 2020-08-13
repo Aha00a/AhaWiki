@@ -251,11 +251,6 @@ class Wiki @Inject()(implicit val
                     views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                   case None | Some("Wiki") =>
                     val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
-                    if (request.isLocalhost) {
-                      //                    logger.info("Tw" + Stemmer.stemTwitter(page.content).sorted.mkString(","))
-                      //                    logger.info("EJ" + Stemmer.stemSeunjeon(page.content).sorted.mkString(","))
-                      logger.info("SP" + Stemmer.stemSplit(page.content).sorted.mkString(","))
-                    }
                     views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
                   case _ =>
                     val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)

@@ -14,6 +14,7 @@ import models.LatLng
 import models.WikiContext
 import models.tables.Page
 import play.api.Configuration
+import play.api.Environment
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -43,7 +44,8 @@ class ActorAhaWiki @Inject()(implicit
                              database: Database,
                              wsClient: WSClient,
                              executionContext: ExecutionContext,
-                             configuration: Configuration
+                             configuration: Configuration,
+                             environment: Environment
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
@@ -60,17 +62,28 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
+          import play.api.Mode
 
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
           implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
-          val seq: Seq[String] = Interpreters.toSeqWord(page.content) // TODO
-          logger.info("toSeqWord")
-          logger.info(seq.mkString("(", ")\t(", ")"))
-
           logger.info("toText")
-          logger.info(Interpreters.toText(page.content))
+          val plain = Interpreters.toText(page.content)
+            .split("""\s""")
+            .flatMap(_.split("""/"""))
+            .toSeq
+            .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", "")).filterNot(s => s.length < 2)
+            .groupByCount()
 
-          val wordCount = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
+
+          val legacyStem = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
+
+          logger.info("legacyStem")
+          logger.info(legacyStem.toList.sortBy(-_._2).mkString("(", ")\t(", ")"))
+          logger.info("plain")
+          logger.info(plain.toList.sortBy(-_._2).mkString("(", ")\t(", ")"))
+
+          val wordCount = (if(environment.mode == Mode.Prod) {legacyStem} else {plain})
+
           Page.updateSimilarPage(name, wordCount)
         }
       }

@@ -156,37 +156,6 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerToSeqWord(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends HandlerContentIterateBase[Seq[String]](pageContent) {
-    val arrayWord: ArrayBuffer[String] = ArrayBuffer[String]()
-
-    override def emptyLine(): Unit = {}
-
-    override def hr(): Unit = {}
-
-    override def heading(heading: String, title: String, id: String): Unit = {
-      arrayWord += title
-    }
-
-    override def list(indentString: String, style: String, content: String): Unit = {
-      arrayWord += content
-    }
-
-    override def others(s: String): Unit = {
-      if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
-        arrayWord += s // TODO
-      } else {
-        arrayWord += s // TODO
-      }
-    }
-
-    override def result(): Seq[String] = {
-      val seqEci = Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote)
-      val seqWord = arrayWord ++ seqEci.flatMap(_.toSeqWord)
-      val seqWordFiltered = seqWord.filterNot(s => seqEci.exists(eci => eci.contains(s)))
-      seqWordFiltered.toSeq
-    }
-  }
-
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
     override def process(): Seq[Link] = {
       val seqLinkInterpreter: Seq[Link] = extractConvertInjectInterpreter.extractLink().toList
@@ -269,12 +238,6 @@ object InterpreterWiki extends TraitInterpreter {
   override def toHtmlString(content: String)(implicit wikiContext:WikiContext):String = {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerToHtmlString(pageContent)
-    handler.process()
-  }
-
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent: PageContent = PageContent(content)
-    val handler = new HandlerToSeqWord(pageContent)
     handler.process()
   }
 

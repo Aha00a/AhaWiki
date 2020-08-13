@@ -202,7 +202,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
            |        SELECT DISTINCT(src) FROM Link
            |    )
            |    ORDER BY RAND()
-           |    LIMIT 100
+           |    LIMIT 1000
            | """.stripMargin)
       .as(str("name") *)
   }

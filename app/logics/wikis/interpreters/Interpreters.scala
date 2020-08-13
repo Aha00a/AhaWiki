@@ -40,14 +40,7 @@ object Interpreters extends TraitInterpreter {
       .map(_.toHtmlString(content))
       .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
-
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent: PageContent = PageContent(content)
-    getInterpreter(pageContent)
-      .map(_.toSeqWord(content))
-      .getOrElse(Seq())
-  }
-
+  
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)

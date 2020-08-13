@@ -12,9 +12,5 @@ object InterpreterHtml extends TraitInterpreter {
     pageContent.content
   }
 
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    Jsoup.parse(content).text().split("""\s+""")
-  }
-
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
 }

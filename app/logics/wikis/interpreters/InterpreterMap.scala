@@ -118,12 +118,6 @@ object InterpreterMap extends TraitInterpreter {
     }
   }
 
-  override def toSeqWord(content: String)(implicit wikiContext: WikiContext): Seq[String] = {
-    val pageContent: PageContent = PageContent(content)
-    val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
-    seqHeader ++ locations.flatMap(_.raw)
-  }
-
   override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
     // TODO: implement
     Seq()
