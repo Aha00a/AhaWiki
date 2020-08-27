@@ -70,10 +70,11 @@ class ActorAhaWiki @Inject()(implicit
           val plain = Interpreters.toText(page.content)
             .replaceAll("""([a-z])([A-Z])""", "$1 $2")
             .split("""\s""")
-            .map(_.toLowerCase())
-            .flatMap(_.split("""[/@.]"""))
             .toSeq
+            .map(_.toLowerCase())
+            .flatMap(_.split("""[/@.]""").toSeq)
             .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
+            .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
             .filterNot(s => s.length < 2)
             .filterNot(s => s.length > 15)
             .groupByCount()

@@ -79,7 +79,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     database.withConnection { implicit connection =>
       val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
       for ((v, i) <- seq.zipWithIndex) {
-        actorAhaWiki ! CalculateLink(v, i, seq.length)
+        actorAhaWiki ! Calculate(v, i, seq.length)
       }
     }
   })
