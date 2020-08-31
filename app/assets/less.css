@@ -1,0 +1,1820 @@
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: local('Noto Sans KR Light'), local('NotoSansKR-Light'), url(https://fonts.gstatic.com/s/notosanskr/v12/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Noto Sans KR';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Noto Sans KR Bold'), local('NotoSansKR-Bold'), url(https://fonts.gstatic.com/s/notosanskr/v12/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Noto Sans Italic'), local('NotoSans-Italic'), url(https://fonts.gstatic.com/s/notosans/v9/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Noto Sans Bold Italic'), local('NotoSans-BoldItalic'), url(https://fonts.gstatic.com/s/notosans/v9/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Noto Sans'), local('NotoSans'), url(https://fonts.gstatic.com/s/notosans/v9/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Noto Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Noto Sans Bold'), local('NotoSans-Bold'), url(https://fonts.gstatic.com/s/notosans/v9/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Ubuntu Mono Italic'), local('UbuntuMono-Italic'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Ubuntu Mono Bold Italic'), local('UbuntuMono-BoldItalic'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
+}
+@font-face {
+  font-family: 'Ubuntu Mono';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Ubuntu Mono Bold'), local('UbuntuMono-Bold'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
+}
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+}
+.defaultFont {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+}
+.monospace {
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+}
+.AhaWiki a {
+  color: #00b;
+}
+.AhaWiki a[target=_blank]:before {
+  content: url("/public/img/iconLinkExternal.16x16.png");
+  position: relative;
+  top: 4px;
+}
+.AhaWiki a:visited {
+  color: #006;
+}
+.AhaWiki a:hover,
+.AhaWiki a:active {
+  background-color: #ddf;
+}
+.AhaWiki a.missing {
+  color: #a00;
+}
+.AhaWiki a.missing:after {
+  content: "?";
+}
+.AhaWiki a.schema {
+  color: #003;
+}
+.AhaWiki code,
+.AhaWiki kbd,
+.AhaWiki pre,
+.AhaWiki samp,
+.AhaWiki tt {
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+}
+.AhaWiki textarea,
+.AhaWiki pre {
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+}
+.AhaWiki .limitWidth {
+  width: 97%;
+  margin: 0 auto;
+}
+.AhaWiki .aspectRatioWrapper {
+  position: relative;
+}
+.AhaWiki .aspectRatioWrapper .ratio_4_3 {
+  padding-bottom: 75%;
+}
+.AhaWiki .aspectRatioWrapper .ratio_16_9 {
+  padding-bottom: 56.25%;
+}
+.AhaWiki .aspectRatioWrapper .aspectRatioContent {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.AhaWiki .flash {
+  cursor: pointer;
+}
+.AhaWiki .flash .success {
+  color: #007700;
+  background-color: #ddffdd;
+  border: 1px solid #00aa00;
+  padding: 10px;
+}
+.AhaWiki .flash .error {
+  color: #770000;
+  background-color: #ffdddd;
+  border: 1px solid #dd0000;
+  padding: 10px;
+}
+.AhaWiki .flash .info {
+  color: #444400;
+  background-color: #ffffdd;
+  border: 1px solid #aaaa00;
+  padding: 10px;
+}
+.AhaWiki .commonAhaWiki {
+  padding: 0 0 25px 25px;
+}
+.AhaWiki .commonAhaWiki h1,
+.AhaWiki .commonAhaWiki h2,
+.AhaWiki .commonAhaWiki h3,
+.AhaWiki .commonAhaWiki h4,
+.AhaWiki .commonAhaWiki h5,
+.AhaWiki .commonAhaWiki h6 {
+  margin: 0;
+  text-shadow: 1px 1px 2px #99a;
+  word-break: keep-all;
+}
+.AhaWiki .commonAhaWiki h1 .headingNumber,
+.AhaWiki .commonAhaWiki h2 .headingNumber,
+.AhaWiki .commonAhaWiki h3 .headingNumber,
+.AhaWiki .commonAhaWiki h4 .headingNumber,
+.AhaWiki .commonAhaWiki h5 .headingNumber,
+.AhaWiki .commonAhaWiki h6 .headingNumber {
+  text-decoration: none;
+}
+.AhaWiki .commonAhaWiki h2:first-of-type,
+.AhaWiki .commonAhaWiki h3:first-of-type,
+.AhaWiki .commonAhaWiki h4:first-of-type,
+.AhaWiki .commonAhaWiki h5:first-of-type,
+.AhaWiki .commonAhaWiki h6:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .commonAhaWiki h1,
+.AhaWiki .commonAhaWiki h2,
+.AhaWiki .commonAhaWiki h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #cccccc;
+  padding: 5px;
+}
+.AhaWiki .commonAhaWiki h4,
+.AhaWiki .commonAhaWiki h5,
+.AhaWiki .commonAhaWiki h6 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  padding: 3px;
+}
+.AhaWiki .commonAhaWiki h1 {
+  font-size: 2.25em;
+  margin-left: -25px;
+}
+.AhaWiki .commonAhaWiki h2 {
+  font-size: 2em;
+  margin-left: -20px;
+}
+.AhaWiki .commonAhaWiki h3 {
+  font-size: 1.75em;
+  margin-left: -15px;
+}
+.AhaWiki .commonAhaWiki h4 {
+  font-size: 1.5em;
+  margin-left: -10px;
+}
+.AhaWiki .commonAhaWiki h5 {
+  font-size: 1.25em;
+  margin-left: -5px;
+}
+.AhaWiki .commonAhaWiki h6 {
+  font-size: 1em;
+  margin-left: 0;
+}
+.AhaWiki .commonAhaWiki hr {
+  padding: 0;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  margin-left: -25px;
+  height: 0;
+}
+.AhaWiki .commonAhaWiki code {
+  border: 1px solid #99c;
+  background-color: #002;
+  color: #fff;
+  border-radius: 5px;
+  padding: 3px;
+  word-break: break-all;
+}
+.AhaWiki .commonAhaWiki .vim {
+  position: relative;
+  padding-left: 1em;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  overflow: hidden;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang] {
+  border: 2px solid #9999cc;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang]:before {
+  background: #9999cc;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=scala] {
+  border: 2px solid #DC322F;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=scala]:before {
+  background: #DC322F;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=perl] {
+  border: 2px solid #004065;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=perl]:before {
+  background: #004065;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=python] {
+  border: 2px solid #75A8D3;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=python]:before {
+  background: #75A8D3;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=javascript] {
+  border: 2px solid #F0DB4F;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=javascript]:before {
+  background: #F0DB4F;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=css] {
+  border: 2px solid #FF6600;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=css]:before {
+  background: #FF6600;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=html] {
+  border: 2px solid #E44D26;
+}
+.AhaWiki .commonAhaWiki .vim[data-lang=html]:before {
+  background: #E44D26;
+}
+.AhaWiki .commonAhaWiki .vim::before {
+  background: #f00;
+  content: attr(data-lang);
+  -webkit-writing-mode: vertical-lr;
+  -ms-writing-mode: tb-lr;
+  writing-mode: vertical-lr;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 5px 1px;
+  overflow: hidden;
+}
+.AhaWiki .commonAhaWiki pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  background-color: #002;
+  color: #CCCCCC;
+  padding-bottom: 0.5em;
+  padding-left: 1em;
+  padding-top: 0.5em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.AhaWiki .commonAhaWiki pre a {
+  color: #3399ff;
+}
+.AhaWiki .commonAhaWiki pre.text {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  border: 2px solid #9999CC;
+  border-left-width: 15px;
+}
+.AhaWiki .commonAhaWiki blockquote {
+  position: relative;
+  background-color: #f3f3ff;
+  border: 2px solid #99c;
+  border-left-width: 10px;
+  overflow: hidden;
+  padding: 10px 25px;
+  margin: 0 0 1px;
+  line-height: 150%;
+}
+.AhaWiki .commonAhaWiki blockquote p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.AhaWiki .commonAhaWiki blockquote:before,
+.AhaWiki .commonAhaWiki blockquote:after {
+  position: absolute;
+  font-size: 200%;
+  font-family: serif;
+}
+.AhaWiki .commonAhaWiki blockquote:before {
+  left: 3px;
+  top: 5px;
+  content: '“';
+}
+.AhaWiki .commonAhaWiki blockquote:after {
+  top: 5px;
+  right: 3px;
+  content: '”';
+}
+.AhaWiki .commonAhaWiki div.toc {
+  clear: right;
+}
+.AhaWiki .commonAhaWiki div.schema {
+  position: relative;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+  vertical-align: top;
+  display: inline-block;
+  max-width: 50vw;
+}
+.AhaWiki .commonAhaWiki div.schema p {
+  margin-top: 0;
+}
+.AhaWiki .commonAhaWiki div.schema img {
+  min-width: 300px;
+  max-width: 100%;
+}
+.AhaWiki .commonAhaWiki div.toc,
+.AhaWiki .commonAhaWiki div.MacroLinkDate,
+.AhaWiki .commonAhaWiki div.rightInfoBox {
+  position: relative;
+  float: right;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  max-width: 50vw;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+}
+.AhaWiki .commonAhaWiki div.toc p,
+.AhaWiki .commonAhaWiki div.MacroLinkDate p,
+.AhaWiki .commonAhaWiki div.rightInfoBox p {
+  margin-top: 0;
+}
+.AhaWiki .commonAhaWiki div.toc img,
+.AhaWiki .commonAhaWiki div.MacroLinkDate img,
+.AhaWiki .commonAhaWiki div.rightInfoBox img {
+  max-width: 100%;
+}
+.AhaWiki .commonAhaWiki div.MacroLinkDate.around {
+  clear: right;
+}
+.AhaWiki .commonAhaWiki .previewPane div.toc,
+.AhaWiki .commonAhaWiki .previewPane div.schema {
+  max-width: 25vw;
+}
+.AhaWiki .commonAhaWiki .previewPane > ul {
+  padding-left: 0;
+}
+.AhaWiki .commonAhaWiki div.schema {
+  padding-left: 30px;
+}
+.AhaWiki .commonAhaWiki div.schema dl {
+  margin: 0;
+}
+.AhaWiki .commonAhaWiki div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .commonAhaWiki div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .commonAhaWiki div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .commonAhaWiki div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .commonAhaWiki div.schema .unknown,
+.AhaWiki .commonAhaWiki div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .commonAhaWiki div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax {
+  border-collapse: collapse;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+  width: 100%;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax th,
+.AhaWiki .commonAhaWiki .wikiSyntax td {
+  padding: 5px 10px;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax th p:first-of-type,
+.AhaWiki .commonAhaWiki .wikiSyntax td p:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax th p:last-of-type,
+.AhaWiki .commonAhaWiki .wikiSyntax td p:last-of-type {
+  margin-bottom: 0;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax th {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax td {
+  border: 1px solid #ccc;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax tr:hover {
+  background-color: #eee;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax > tbody > tr > td {
+  width: 50%;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax > tbody > tr:hover {
+  background-color: inherit;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax .raw {
+  padding: 10px 10px;
+}
+.AhaWiki .commonAhaWiki .wikiSyntax .preview {
+  padding: 10px 10px 10px 35px;
+}
+.AhaWiki .commonAhaWiki .success {
+  overflow: hidden;
+  color: #007700;
+  background-color: #ddffdd;
+  border: 1px solid #00aa00;
+  padding: 10px;
+}
+.AhaWiki .commonAhaWiki .error {
+  overflow: hidden;
+  color: #770000;
+  background-color: #ffdddd;
+  border: 1px solid #dd0000;
+  padding: 10px;
+}
+.AhaWiki .commonAhaWiki .info {
+  overflow: hidden;
+  color: #444400;
+  background-color: #ffffdd;
+  border: 1px solid #aaaa00;
+  padding: 10px;
+}
+.AhaWiki .wikiContent {
+  padding: 0 0 25px 25px;
+}
+.AhaWiki .wikiContent h1,
+.AhaWiki .wikiContent h2,
+.AhaWiki .wikiContent h3,
+.AhaWiki .wikiContent h4,
+.AhaWiki .wikiContent h5,
+.AhaWiki .wikiContent h6 {
+  margin: 0;
+  text-shadow: 1px 1px 2px #99a;
+  word-break: keep-all;
+}
+.AhaWiki .wikiContent h1 .headingNumber,
+.AhaWiki .wikiContent h2 .headingNumber,
+.AhaWiki .wikiContent h3 .headingNumber,
+.AhaWiki .wikiContent h4 .headingNumber,
+.AhaWiki .wikiContent h5 .headingNumber,
+.AhaWiki .wikiContent h6 .headingNumber {
+  text-decoration: none;
+}
+.AhaWiki .wikiContent h2:first-of-type,
+.AhaWiki .wikiContent h3:first-of-type,
+.AhaWiki .wikiContent h4:first-of-type,
+.AhaWiki .wikiContent h5:first-of-type,
+.AhaWiki .wikiContent h6:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .wikiContent h1,
+.AhaWiki .wikiContent h2,
+.AhaWiki .wikiContent h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #cccccc;
+  padding: 5px;
+}
+.AhaWiki .wikiContent h4,
+.AhaWiki .wikiContent h5,
+.AhaWiki .wikiContent h6 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  padding: 3px;
+}
+.AhaWiki .wikiContent h1 {
+  font-size: 2.25em;
+  margin-left: -25px;
+}
+.AhaWiki .wikiContent h2 {
+  font-size: 2em;
+  margin-left: -20px;
+}
+.AhaWiki .wikiContent h3 {
+  font-size: 1.75em;
+  margin-left: -15px;
+}
+.AhaWiki .wikiContent h4 {
+  font-size: 1.5em;
+  margin-left: -10px;
+}
+.AhaWiki .wikiContent h5 {
+  font-size: 1.25em;
+  margin-left: -5px;
+}
+.AhaWiki .wikiContent h6 {
+  font-size: 1em;
+  margin-left: 0;
+}
+.AhaWiki .wikiContent hr {
+  padding: 0;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  margin-left: -25px;
+  height: 0;
+}
+.AhaWiki .wikiContent code {
+  border: 1px solid #99c;
+  background-color: #002;
+  color: #fff;
+  border-radius: 5px;
+  padding: 3px;
+  word-break: break-all;
+}
+.AhaWiki .wikiContent .vim {
+  position: relative;
+  padding-left: 1em;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  overflow: hidden;
+}
+.AhaWiki .wikiContent .vim[data-lang] {
+  border: 2px solid #9999cc;
+}
+.AhaWiki .wikiContent .vim[data-lang]:before {
+  background: #9999cc;
+}
+.AhaWiki .wikiContent .vim[data-lang=scala] {
+  border: 2px solid #DC322F;
+}
+.AhaWiki .wikiContent .vim[data-lang=scala]:before {
+  background: #DC322F;
+}
+.AhaWiki .wikiContent .vim[data-lang=perl] {
+  border: 2px solid #004065;
+}
+.AhaWiki .wikiContent .vim[data-lang=perl]:before {
+  background: #004065;
+}
+.AhaWiki .wikiContent .vim[data-lang=python] {
+  border: 2px solid #75A8D3;
+}
+.AhaWiki .wikiContent .vim[data-lang=python]:before {
+  background: #75A8D3;
+}
+.AhaWiki .wikiContent .vim[data-lang=javascript] {
+  border: 2px solid #F0DB4F;
+}
+.AhaWiki .wikiContent .vim[data-lang=javascript]:before {
+  background: #F0DB4F;
+}
+.AhaWiki .wikiContent .vim[data-lang=css] {
+  border: 2px solid #FF6600;
+}
+.AhaWiki .wikiContent .vim[data-lang=css]:before {
+  background: #FF6600;
+}
+.AhaWiki .wikiContent .vim[data-lang=html] {
+  border: 2px solid #E44D26;
+}
+.AhaWiki .wikiContent .vim[data-lang=html]:before {
+  background: #E44D26;
+}
+.AhaWiki .wikiContent .vim::before {
+  background: #f00;
+  content: attr(data-lang);
+  -webkit-writing-mode: vertical-lr;
+  -ms-writing-mode: tb-lr;
+  writing-mode: vertical-lr;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 5px 1px;
+  overflow: hidden;
+}
+.AhaWiki .wikiContent pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  background-color: #002;
+  color: #CCCCCC;
+  padding-bottom: 0.5em;
+  padding-left: 1em;
+  padding-top: 0.5em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.AhaWiki .wikiContent pre a {
+  color: #3399ff;
+}
+.AhaWiki .wikiContent pre.text {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  border: 2px solid #9999CC;
+  border-left-width: 15px;
+}
+.AhaWiki .wikiContent blockquote {
+  position: relative;
+  background-color: #f3f3ff;
+  border: 2px solid #99c;
+  border-left-width: 10px;
+  overflow: hidden;
+  padding: 10px 25px;
+  margin: 0 0 1px;
+  line-height: 150%;
+}
+.AhaWiki .wikiContent blockquote p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.AhaWiki .wikiContent blockquote:before,
+.AhaWiki .wikiContent blockquote:after {
+  position: absolute;
+  font-size: 200%;
+  font-family: serif;
+}
+.AhaWiki .wikiContent blockquote:before {
+  left: 3px;
+  top: 5px;
+  content: '“';
+}
+.AhaWiki .wikiContent blockquote:after {
+  top: 5px;
+  right: 3px;
+  content: '”';
+}
+.AhaWiki .wikiContent div.toc {
+  clear: right;
+}
+.AhaWiki .wikiContent div.schema {
+  position: relative;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+  vertical-align: top;
+  display: inline-block;
+  max-width: 50vw;
+}
+.AhaWiki .wikiContent div.schema p {
+  margin-top: 0;
+}
+.AhaWiki .wikiContent div.schema img {
+  min-width: 300px;
+  max-width: 100%;
+}
+.AhaWiki .wikiContent div.toc,
+.AhaWiki .wikiContent div.MacroLinkDate,
+.AhaWiki .wikiContent div.rightInfoBox {
+  position: relative;
+  float: right;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  max-width: 50vw;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+}
+.AhaWiki .wikiContent div.toc p,
+.AhaWiki .wikiContent div.MacroLinkDate p,
+.AhaWiki .wikiContent div.rightInfoBox p {
+  margin-top: 0;
+}
+.AhaWiki .wikiContent div.toc img,
+.AhaWiki .wikiContent div.MacroLinkDate img,
+.AhaWiki .wikiContent div.rightInfoBox img {
+  max-width: 100%;
+}
+.AhaWiki .wikiContent div.MacroLinkDate.around {
+  clear: right;
+}
+.AhaWiki .wikiContent .previewPane div.toc,
+.AhaWiki .wikiContent .previewPane div.schema {
+  max-width: 25vw;
+}
+.AhaWiki .wikiContent .previewPane > ul {
+  padding-left: 0;
+}
+.AhaWiki .wikiContent div.schema {
+  padding-left: 30px;
+}
+.AhaWiki .wikiContent div.schema dl {
+  margin: 0;
+}
+.AhaWiki .wikiContent div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .wikiContent div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .wikiContent div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .wikiContent div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .wikiContent div.schema .unknown,
+.AhaWiki .wikiContent div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .wikiContent div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.AhaWiki .wikiContent .wikiSyntax {
+  border-collapse: collapse;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+  width: 100%;
+}
+.AhaWiki .wikiContent .wikiSyntax th,
+.AhaWiki .wikiContent .wikiSyntax td {
+  padding: 5px 10px;
+}
+.AhaWiki .wikiContent .wikiSyntax th p:first-of-type,
+.AhaWiki .wikiContent .wikiSyntax td p:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .wikiContent .wikiSyntax th p:last-of-type,
+.AhaWiki .wikiContent .wikiSyntax td p:last-of-type {
+  margin-bottom: 0;
+}
+.AhaWiki .wikiContent .wikiSyntax th {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+.AhaWiki .wikiContent .wikiSyntax td {
+  border: 1px solid #ccc;
+}
+.AhaWiki .wikiContent .wikiSyntax tr:hover {
+  background-color: #eee;
+}
+.AhaWiki .wikiContent .wikiSyntax > tbody > tr > td {
+  width: 50%;
+}
+.AhaWiki .wikiContent .wikiSyntax > tbody > tr:hover {
+  background-color: inherit;
+}
+.AhaWiki .wikiContent .wikiSyntax .raw {
+  padding: 10px 10px;
+}
+.AhaWiki .wikiContent .wikiSyntax .preview {
+  padding: 10px 10px 10px 35px;
+}
+.AhaWiki .wikiContent .success {
+  overflow: hidden;
+  color: #007700;
+  background-color: #ddffdd;
+  border: 1px solid #00aa00;
+  padding: 10px;
+}
+.AhaWiki .wikiContent .error {
+  overflow: hidden;
+  color: #770000;
+  background-color: #ffdddd;
+  border: 1px solid #dd0000;
+  padding: 10px;
+}
+.AhaWiki .wikiContent .info {
+  overflow: hidden;
+  color: #444400;
+  background-color: #ffffdd;
+  border: 1px solid #aaaa00;
+  padding: 10px;
+}
+.AhaWiki .gnb,
+.AhaWiki .revisionInfo {
+  clear: right;
+  float: right;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  padding: 10px 10px 10px 20px;
+  text-align: right;
+  color: #222;
+}
+.AhaWiki .gnb .action a,
+.AhaWiki .revisionInfo .action a {
+  display: inline-block;
+  margin: 0 0 0 5px;
+  padding: 5px;
+}
+.AhaWiki .gnb .action .authArea,
+.AhaWiki .revisionInfo .action .authArea,
+.AhaWiki .gnb .action .globalAction,
+.AhaWiki .revisionInfo .action .globalAction,
+.AhaWiki .gnb .action .pageAction,
+.AhaWiki .revisionInfo .action .pageAction {
+  display: inline-block;
+  border-left: 1px solid #ccc;
+}
+.AhaWiki .gnb .action .authArea:first-of-type,
+.AhaWiki .revisionInfo .action .authArea:first-of-type,
+.AhaWiki .gnb .action .globalAction:first-of-type,
+.AhaWiki .revisionInfo .action .globalAction:first-of-type,
+.AhaWiki .gnb .action .pageAction:first-of-type,
+.AhaWiki .revisionInfo .action .pageAction:first-of-type {
+  border-left: none;
+}
+.AhaWiki .gnb a,
+.AhaWiki .revisionInfo a {
+  color: #222;
+}
+.AhaWiki .gnb a i.fas,
+.AhaWiki .revisionInfo a i.fas {
+  margin-right: 5px;
+}
+@media print {
+  .AhaWiki .gnb,
+  .AhaWiki .revisionInfo {
+    display: none;
+  }
+}
+.AhaWiki .revisionInfo {
+  font-style: italic;
+}
+@media screen {
+  .AhaWiki .Paper {
+    background-color: #ddd;
+  }
+}
+.AhaWiki .Paper .gnb,
+.AhaWiki .Paper .revisionInfo {
+  float: none;
+  margin: 0;
+}
+.AhaWiki .MacroEmbed {
+  clear: both;
+}
+.AhaWiki .paperContent {
+  padding: 1mm;
+}
+.AhaWiki .paperContent .page {
+  width: 180mm;
+  height: 267mm;
+  page-break-after: always;
+  font-size: 12px;
+  position: relative;
+  padding: 15mm 15mm 15mm 15mm;
+}
+.AhaWiki .paperContent .page:last-of-type {
+  page-break-after: auto;
+}
+@media screen {
+  .AhaWiki .paperContent .page {
+    margin: 10mm auto;
+    border: 1px solid #000;
+    -webkit-box-shadow: 10px 10px 50px 5px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 10px 10px 50px 5px rgba(0, 0, 0, 0.75);
+    box-shadow: 10px 10px 50px 5px rgba(0, 0, 0, 0.75);
+    background-color: #fff;
+  }
+}
+.AhaWiki .paperContent .page .pageHeader {
+  border-bottom: 1mm solid #000;
+}
+.AhaWiki .paperContent .page .pageHeader .documentId {
+  text-align: right;
+}
+.AhaWiki .paperContent .page .pageFooter {
+  position: absolute;
+  bottom: 15mm;
+  width: 180mm;
+  border-top: 1mm solid #000;
+  padding-top: 3mm;
+}
+.AhaWiki .paperContent .page .pageFooter .pageNo {
+  float: right;
+}
+.AhaWiki .paperContent .page .pageContent {
+  padding: 0 0 25px 25px;
+}
+.AhaWiki .paperContent .page .pageContent h1,
+.AhaWiki .paperContent .page .pageContent h2,
+.AhaWiki .paperContent .page .pageContent h3,
+.AhaWiki .paperContent .page .pageContent h4,
+.AhaWiki .paperContent .page .pageContent h5,
+.AhaWiki .paperContent .page .pageContent h6 {
+  margin: 0;
+  text-shadow: 1px 1px 2px #99a;
+  word-break: keep-all;
+}
+.AhaWiki .paperContent .page .pageContent h1 .headingNumber,
+.AhaWiki .paperContent .page .pageContent h2 .headingNumber,
+.AhaWiki .paperContent .page .pageContent h3 .headingNumber,
+.AhaWiki .paperContent .page .pageContent h4 .headingNumber,
+.AhaWiki .paperContent .page .pageContent h5 .headingNumber,
+.AhaWiki .paperContent .page .pageContent h6 .headingNumber {
+  text-decoration: none;
+}
+.AhaWiki .paperContent .page .pageContent h2:first-of-type,
+.AhaWiki .paperContent .page .pageContent h3:first-of-type,
+.AhaWiki .paperContent .page .pageContent h4:first-of-type,
+.AhaWiki .paperContent .page .pageContent h5:first-of-type,
+.AhaWiki .paperContent .page .pageContent h6:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .paperContent .page .pageContent h1,
+.AhaWiki .paperContent .page .pageContent h2,
+.AhaWiki .paperContent .page .pageContent h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #cccccc;
+  padding: 5px;
+}
+.AhaWiki .paperContent .page .pageContent h4,
+.AhaWiki .paperContent .page .pageContent h5,
+.AhaWiki .paperContent .page .pageContent h6 {
+  margin-top: 10px;
+  margin-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  padding: 3px;
+}
+.AhaWiki .paperContent .page .pageContent h1 {
+  font-size: 2.25em;
+  margin-left: -25px;
+}
+.AhaWiki .paperContent .page .pageContent h2 {
+  font-size: 2em;
+  margin-left: -20px;
+}
+.AhaWiki .paperContent .page .pageContent h3 {
+  font-size: 1.75em;
+  margin-left: -15px;
+}
+.AhaWiki .paperContent .page .pageContent h4 {
+  font-size: 1.5em;
+  margin-left: -10px;
+}
+.AhaWiki .paperContent .page .pageContent h5 {
+  font-size: 1.25em;
+  margin-left: -5px;
+}
+.AhaWiki .paperContent .page .pageContent h6 {
+  font-size: 1em;
+  margin-left: 0;
+}
+.AhaWiki .paperContent .page .pageContent hr {
+  padding: 0;
+  border: none;
+  border-bottom: 1px dashed #ccc;
+  margin-left: -25px;
+  height: 0;
+}
+.AhaWiki .paperContent .page .pageContent code {
+  border: 1px solid #99c;
+  background-color: #002;
+  color: #fff;
+  border-radius: 5px;
+  padding: 3px;
+  word-break: break-all;
+}
+.AhaWiki .paperContent .page .pageContent .vim {
+  position: relative;
+  padding-left: 1em;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  overflow: hidden;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang] {
+  border: 2px solid #9999cc;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang]:before {
+  background: #9999cc;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=scala] {
+  border: 2px solid #DC322F;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=scala]:before {
+  background: #DC322F;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=perl] {
+  border: 2px solid #004065;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=perl]:before {
+  background: #004065;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=python] {
+  border: 2px solid #75A8D3;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=python]:before {
+  background: #75A8D3;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript] {
+  border: 2px solid #F0DB4F;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript]:before {
+  background: #F0DB4F;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=css] {
+  border: 2px solid #FF6600;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=css]:before {
+  background: #FF6600;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=html] {
+  border: 2px solid #E44D26;
+}
+.AhaWiki .paperContent .page .pageContent .vim[data-lang=html]:before {
+  background: #E44D26;
+}
+.AhaWiki .paperContent .page .pageContent .vim::before {
+  background: #f00;
+  content: attr(data-lang);
+  -webkit-writing-mode: vertical-lr;
+  -ms-writing-mode: tb-lr;
+  writing-mode: vertical-lr;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  padding: 5px 1px;
+  overflow: hidden;
+}
+.AhaWiki .paperContent .page .pageContent pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  background-color: #002;
+  color: #CCCCCC;
+  padding-bottom: 0.5em;
+  padding-left: 1em;
+  padding-top: 0.5em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.AhaWiki .paperContent .page .pageContent pre a {
+  color: #3399ff;
+}
+.AhaWiki .paperContent .page .pageContent pre.text {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  border: 2px solid #9999CC;
+  border-left-width: 15px;
+}
+.AhaWiki .paperContent .page .pageContent blockquote {
+  position: relative;
+  background-color: #f3f3ff;
+  border: 2px solid #99c;
+  border-left-width: 10px;
+  overflow: hidden;
+  padding: 10px 25px;
+  margin: 0 0 1px;
+  line-height: 150%;
+}
+.AhaWiki .paperContent .page .pageContent blockquote p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+.AhaWiki .paperContent .page .pageContent blockquote:before,
+.AhaWiki .paperContent .page .pageContent blockquote:after {
+  position: absolute;
+  font-size: 200%;
+  font-family: serif;
+}
+.AhaWiki .paperContent .page .pageContent blockquote:before {
+  left: 3px;
+  top: 5px;
+  content: '“';
+}
+.AhaWiki .paperContent .page .pageContent blockquote:after {
+  top: 5px;
+  right: 3px;
+  content: '”';
+}
+.AhaWiki .paperContent .page .pageContent div.toc {
+  clear: right;
+}
+.AhaWiki .paperContent .page .pageContent div.schema {
+  position: relative;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+  vertical-align: top;
+  display: inline-block;
+  max-width: 50vw;
+}
+.AhaWiki .paperContent .page .pageContent div.schema p {
+  margin-top: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.schema img {
+  min-width: 300px;
+  max-width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent div.toc,
+.AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
+.AhaWiki .paperContent .page .pageContent div.rightInfoBox {
+  position: relative;
+  float: right;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  max-width: 50vw;
+  border: 1px solid #ccc;
+  background-color: #eee;
+  padding: 20px;
+}
+.AhaWiki .paperContent .page .pageContent div.toc p,
+.AhaWiki .paperContent .page .pageContent div.MacroLinkDate p,
+.AhaWiki .paperContent .page .pageContent div.rightInfoBox p {
+  margin-top: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.toc img,
+.AhaWiki .paperContent .page .pageContent div.MacroLinkDate img,
+.AhaWiki .paperContent .page .pageContent div.rightInfoBox img {
+  max-width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
+  clear: right;
+}
+.AhaWiki .paperContent .page .pageContent .previewPane div.toc,
+.AhaWiki .paperContent .page .pageContent .previewPane div.schema {
+  max-width: 25vw;
+}
+.AhaWiki .paperContent .page .pageContent .previewPane > ul {
+  padding-left: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.schema {
+  padding-left: 30px;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl {
+  margin: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .paperContent .page .pageContent div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .paperContent .page .pageContent div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .paperContent .page .pageContent div.schema .unknown,
+.AhaWiki .paperContent .page .pageContent div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .paperContent .page .pageContent div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax {
+  border-collapse: collapse;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+  width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax th,
+.AhaWiki .paperContent .page .pageContent .wikiSyntax td {
+  padding: 5px 10px;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax th p:first-of-type,
+.AhaWiki .paperContent .page .pageContent .wikiSyntax td p:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax th p:last-of-type,
+.AhaWiki .paperContent .page .pageContent .wikiSyntax td p:last-of-type {
+  margin-bottom: 0;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax th {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax td {
+  border: 1px solid #ccc;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax tr:hover {
+  background-color: #eee;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax > tbody > tr > td {
+  width: 50%;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax > tbody > tr:hover {
+  background-color: inherit;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax .raw {
+  padding: 10px 10px;
+}
+.AhaWiki .paperContent .page .pageContent .wikiSyntax .preview {
+  padding: 10px 10px 10px 35px;
+}
+.AhaWiki .paperContent .page .pageContent .success {
+  overflow: hidden;
+  color: #007700;
+  background-color: #ddffdd;
+  border: 1px solid #00aa00;
+  padding: 10px;
+}
+.AhaWiki .paperContent .page .pageContent .error {
+  overflow: hidden;
+  color: #770000;
+  background-color: #ffdddd;
+  border: 1px solid #dd0000;
+  padding: 10px;
+}
+.AhaWiki .paperContent .page .pageContent .info {
+  overflow: hidden;
+  color: #444400;
+  background-color: #ffffdd;
+  border: 1px solid #aaaa00;
+  padding: 10px;
+}
+.AhaWiki .paperContent .page .toc {
+  display: none;
+}
+.AhaWiki .MacroCalendar.simpleTable {
+  display: inline-table;
+  vertical-align: top;
+  margin: 0 20px 20px 0;
+}
+.AhaWiki .MacroCalendar.simpleTable thead tr:first-of-type th {
+  background-color: #eee;
+  padding: 10px 10px;
+}
+.AhaWiki .MacroCalendar.simpleTable td {
+  text-align: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+}
+.AhaWiki .simpleTable {
+  border-collapse: collapse;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+}
+.AhaWiki .simpleTable th,
+.AhaWiki .simpleTable td {
+  padding: 5px 10px;
+}
+.AhaWiki .simpleTable th p:first-of-type,
+.AhaWiki .simpleTable td p:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki .simpleTable th p:last-of-type,
+.AhaWiki .simpleTable td p:last-of-type {
+  margin-bottom: 0;
+}
+.AhaWiki .simpleTable th {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+.AhaWiki .simpleTable td {
+  border: 1px solid #ccc;
+}
+.AhaWiki .simpleTable tr:hover {
+  background-color: #eee;
+}
+.AhaWiki .tablesorter .tablesorter-header {
+  background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
+  background-repeat: no-repeat;
+  background-position: right 5px center;
+  padding-right: 30px;
+  cursor: pointer;
+}
+.AhaWiki .tablesorter .tablesorter-headerAsc {
+  background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+}
+.AhaWiki .tablesorter .tablesorter-headerDesc {
+  background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+}
+.AhaWiki .tablesorter thead td {
+  padding: 1px 4px 4px 4px;
+}
+.AhaWiki .tablesorter thead td input,
+.AhaWiki .tablesorter thead td select {
+  width: 100%;
+  height: 21px;
+  vertical-align: middle;
+}
+.AhaWiki .tablesorter .filtered {
+  display: none;
+}
+.AhaWiki .wikiHistory table {
+  margin-top: 20px;
+}
+.AhaWiki .login form {
+  width: 500px;
+  margin: 100px auto;
+  padding: 50px;
+  border: 1px solid #ccc;
+  background-color: #eee;
+}
+.AhaWiki .login form input {
+  display: block;
+  padding: 10px;
+  margin: 20px;
+  width: 400px;
+  border: 1px solid #ccc;
+}
+.AhaWiki .login form input[type=submit] {
+  display: block;
+  padding: 10px;
+  margin: 20px;
+  width: 424px;
+  background-color: #fff;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  font-weight: bold;
+}
+.AhaWiki .login form .error {
+  color: #770000;
+  background-color: #ffdddd;
+  border: 1px solid #dd0000;
+  padding: 10px;
+}
+.AhaWiki .login form .valid {
+  color: #007700;
+  background-color: #ddffdd;
+  border: 1px solid #00aa00;
+  padding: 10px;
+}
+.AhaWiki .edit .action {
+  float: right;
+}
+.AhaWiki .edit .action a {
+  display: inline-block;
+  margin: 0 0 0 5px;
+  padding: 5px;
+  color: #222;
+}
+.AhaWiki .edit table.layout {
+  width: 100%;
+}
+.AhaWiki .edit table.layout > tbody > tr > td {
+  width: 50%;
+  padding: 20px;
+  vertical-align: top;
+}
+.AhaWiki .edit table.layout > tbody > tr > td textarea {
+  width: 98%;
+  height: 500px;
+}
+.AhaWiki .edit table.layout > tbody > tr > td .previewPane {
+  border: 1px solid #ccc;
+  background: url('/public/img/imageDraftVersion.png');
+}
+.AhaWiki .edit table.layout > tbody > tr > td .previewPane:after {
+  display: block;
+  clear: right;
+  content: '';
+}
+.AhaWiki .edit textarea {
+  display: block;
+  width: 90%;
+  height: 600px;
+  resize: vertical;
+}
+@media print {
+  .AhaWiki .header,
+  .AhaWiki .footer {
+    display: none;
+  }
+}
+.AhaWiki .percentTotal {
+  position: relative;
+  display: inline-block;
+  width: 80px;
+  height: 20px;
+  background-color: #ccc;
+  margin-right: 5px;
+  text-align: center;
+}
+.AhaWiki .percentTotal .percentBar {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 100%;
+  background-color: #000;
+}
+.AhaWiki .percentTotal .percentLabel {
+  color: #fff;
+  top: 0;
+  font-size: 85%;
+  mix-blend-mode: difference;
+}
+.AhaWiki .WikiLine {
+  border: 1px solid #ccc;
+  padding: 1px;
+  margin: 1px;
+}
+.AhaWiki svg.graph {
+  border: 1px solid #ccc;
+}
+.AhaWiki svg.graph g.node text.label {
+  pointer-events: none;
+  opacity: 0.5;
+  font-size: 12px;
+}
+.AhaWiki table.seeAlso {
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+  border-collapse: collapse;
+  width: 100%;
+}
+.AhaWiki table.seeAlso th,
+.AhaWiki table.seeAlso td {
+  padding: 5px 10px;
+}
+.AhaWiki table.seeAlso th p:first-of-type,
+.AhaWiki table.seeAlso td p:first-of-type {
+  margin-top: 0;
+}
+.AhaWiki table.seeAlso th p:last-of-type,
+.AhaWiki table.seeAlso td p:last-of-type {
+  margin-bottom: 0;
+}
+.AhaWiki table.seeAlso th {
+  border: 1px solid #ccc;
+  background-color: #ddd;
+}
+.AhaWiki table.seeAlso td {
+  border: 1px solid #ccc;
+}
+.AhaWiki table.seeAlso tr:hover {
+  background-color: #eee;
+}
+.AhaWiki table.seeAlso td {
+  width: 33%;
+  vertical-align: top;
+  border: 1px solid #ccc;
+  padding: 20px;
+}
+.AhaWiki table.seeAlso tr:hover {
+  background-color: inherit;
+}
+.AhaWiki .searchBg {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: #000;
+  opacity: 0.25;
+}
+.AhaWiki .search {
+  position: fixed;
+  top: 30%;
+  left: 40%;
+  width: 20%;
+}
+.AhaWiki .search form {
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+}
+.AhaWiki .search form input {
+  width: 100%;
+  padding: 10px;
+  font-size: 25px;
+}
+.AhaWiki .autocomplete-suggestions {
+  border: 1px solid #999;
+  background: #fff;
+  cursor: default;
+  overflow: auto;
+}
+.AhaWiki .autocomplete-suggestion {
+  padding: 10px 5px;
+  font-size: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.AhaWiki .autocomplete-selected {
+  background: #f0f0f0;
+}
+.AhaWiki .autocomplete-suggestions strong {
+  font-weight: normal;
+  color: #3399ff;
+}
+.AhaWiki .searchResult .item {
+  padding: 10px;
+}
+.AhaWiki .searchResult .item table.tableSearchResult {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ccc;
+}
+.AhaWiki .searchResult .item table.tableSearchResult td {
+  border: 1px solid #ccc;
+  border-bottom: 1px solid #eee;
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.AhaWiki .searchResult .item table.tableSearchResult td.empty {
+  border: 1px solid #ccc;
+  background-color: #eee;
+  height: 12px;
+}
+.AhaWiki .searchResult .item table.tableSearchResult td.lineNumber {
+  width: 50px;
+  padding: 5px 10px;
+  text-align: right;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.AhaWiki .searchResult .item table.tableSearchResult td.lineContent {
+  padding: 5px;
+}
+.AhaWiki .searchResult .item table.tableSearchResult tr:last-of-type > td {
+  border-bottom: 1px solid #ccc;
+}
+.AhaWiki .diff .d2h-wrapper .d2h-file-header {
+  height: inherit;
+}
+.AhaWiki .diff .d2h-wrapper .d2h-file-header .d2h-file-name-wrapper {
+  font-size: inherit;
+  font-family: inherit;
+}
+.AhaWiki .diff .d2h-wrapper .d2h-diff-table {
+  font-size: inherit;
+  font-family: 'DotumChe', 'Noto Sans KR', monospace;
+}
+.AhaWiki .diff .unifiedDiff {
+  display: none;
+}
+.AhaWiki .blame table.tableBlame {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ccc;
+}
+.AhaWiki .blame table.tableBlame thead {
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+}
+.AhaWiki .blame table.tableBlame th,
+.AhaWiki .blame table.tableBlame td {
+  padding: 5px;
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.AhaWiki .blame table.tableBlame th.lineNumber,
+.AhaWiki .blame table.tableBlame td.lineNumber,
+.AhaWiki .blame table.tableBlame th.lineDateTime,
+.AhaWiki .blame table.tableBlame td.lineDateTime,
+.AhaWiki .blame table.tableBlame th.lineAuthor,
+.AhaWiki .blame table.tableBlame td.lineAuthor,
+.AhaWiki .blame table.tableBlame th.lineComment,
+.AhaWiki .blame table.tableBlame td.lineComment {
+  width: 50px;
+  padding: 5px 10px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.AhaWiki .blame table.tableBlame th.lineNumber,
+.AhaWiki .blame table.tableBlame td.lineNumber {
+  text-align: right;
+}
+.AhaWiki .blame table.tableBlame th.lineContent,
+.AhaWiki .blame table.tableBlame td.lineContent {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-bottom: 1px solid #eee;
+}
+.AhaWiki .blame table.tableBlame th.lineComment,
+.AhaWiki .blame table.tableBlame td.lineComment {
+  background-color: #f7f7f7;
+  border-bottom: 1px solid #eee;
+}
+.AhaWiki .blame table.tableBlame tr:last-of-type > td {
+  border-bottom: 1px solid #ccc;
+}
+.AhaWiki .crawlerPreview {
+  border: 1px solid #ccc;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 70%;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
+}
+.AhaWiki .crawlerPreview > .circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 1000px;
+  border: 20px solid rgba(0, 0, 0, 0.5);
+  border-top: 20px solid rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0);
+  -webkit-animation: spin 2s linear infinite;
+  /* Safari */
+  animation: spin 2s linear infinite;
+}
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.AhaWiki .crawlerPreview img.preview {
+  float: left;
+  min-width: 128px;
+  max-width: 128px;
+  max-height: 128px;
+  height: auto;
+}
+.AhaWiki .crawlerPreview h5 {
+  font-size: 25px;
+  margin-top: 0;
+  margin-bottom: 10px;
+  margin-left: 150px;
+}
+.AhaWiki .crawlerPreview p {
+  margin-left: 150px;
+  max-height: 400px;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+.AhaWiki .interpreterMap {
+  clear: right;
+}
+.AhaWiki .interpreterMap > .mapArea {
+  position: relative;
+}
+.AhaWiki .interpreterMap > .mapArea .googleMapsInfoWindow {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  line-height: 1.5;
+}
+.AhaWiki .interpreterMap > .mapArea .googleMapsInfoWindow .title {
+  font-size: 2em;
+  font-weight: bold;
+}
+.AhaWiki .interpreterMap > .mapArea .googleMapsInfoWindow .score {
+  font-size: 1.5em;
+}
+.AhaWiki .interpreterMap > .mapArea > .sheetLink,
+.AhaWiki .interpreterMap > .mapArea > .refreshLink {
+  position: absolute;
+  background: none #ffffff;
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 2px;
+  box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
+  padding: 9px 12px;
+}
+.AhaWiki .interpreterMap > .mapArea > .sheetLink {
+  top: 10px;
+  right: 110px;
+}
+.AhaWiki .interpreterMap > .mapArea > .refreshLink {
+  top: 10px;
+  right: 60px;
+}
+.AhaWiki .interpreterMap > .tableArea .circle {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 100%;
+}
+.AhaWiki .interpreterMap > .tableArea .distance,
+.AhaWiki .interpreterMap > .tableArea .count {
+  text-align: right;
+}
+.AhaWiki .ahaWikiLoader.bg {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: #000;
+  opacity: 0.25;
+}
+.AhaWiki .ahaWikiLoader.circle {
+  width: 10vmin;
+  height: 10vmin;
+  border-radius: 100vmin;
+  border: 5vmin solid rgba(0, 0, 0, 0.5);
+  border-top: 5vmin solid rgba(255, 255, 255, 0.5);
+  color: rgba(0, 0, 0, 0);
+  -webkit-animation: spin 2s linear infinite;
+  /* Safari */
+  animation: spin 2s linear infinite;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -10vmin;
+  margin-left: -10vmin;
+}
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.Test.gradient table {
+  border-collapse: collapse;
+}
+.Test.gradient table td {
+  width: 5px;
+  height: 30px;
+}
+/*# sourceMappingURL=less.css.map */

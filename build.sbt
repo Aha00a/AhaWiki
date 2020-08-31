@@ -44,5 +44,5 @@ libraryDependencies ++= Seq(
 // Adds additional packages into conf/routes
 // play.sbt.routes.RoutesKeys.routesImport += "com.example.binders._"
 
-includeFilter in (Assets, LessKeys.less) := "*.less"
-excludeFilter in (Assets, LessKeys.less) := "_*.less"
+//includeFilter in (Assets, LessKeys.less) := "*.less"
+//excludeFilter in (Assets, LessKeys.less) := "_*.less"
