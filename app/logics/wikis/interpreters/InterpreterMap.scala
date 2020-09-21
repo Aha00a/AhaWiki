@@ -97,6 +97,8 @@ object InterpreterMap extends TraitInterpreter {
       return MacroError.toHtmlString(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
     }
 
+    implicit val request: Request[Any] = wikiContext.provider.request
+    
     implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
