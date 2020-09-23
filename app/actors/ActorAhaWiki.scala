@@ -1,7 +1,5 @@
 package actors
 
-import java.util.Locale
-
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
@@ -87,7 +85,7 @@ class ActorAhaWiki @Inject()(implicit
           logger.info("plain")
           logger.info(plain.toList.sortBy(-_._2).mkString("(", ")\t(", ")"))
 
-          val wordCount = (if(environment.mode == Mode.Prod) {legacyStem} else {plain})
+          val wordCount = if(environment.mode == Mode.Prod) legacyStem else plain
 
           Page.updateSimilarPage(name, wordCount)
         }
