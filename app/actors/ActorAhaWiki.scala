@@ -3,7 +3,6 @@ package actors
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
-import com.aha00a.stemmers.Stemmer
 import javax.inject.Inject
 import logics.AhaWikiCache
 import logics.ApplicationConf
@@ -60,32 +59,25 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
-          import play.api.Mode
 
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
           implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
-          logger.info("toText")
-          val plain = Interpreters.toText(page.content)
+
+          val text = Interpreters.toText(page.content)
+          val seqWord = text
             .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-            .split("""\s""")
-            .toSeq
-            .map(_.toLowerCase())
+            .toLowerCase()
+            .split("""\s""").toSeq
             .flatMap(_.split("""[/@.]""").toSeq)
             .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
             .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
             .filterNot(s => s.length < 2)
             .filterNot(s => s.length > 15)
-            .groupByCount()
 
-
-          val legacyStem = Stemmer.removeStopWord(Stemmer.stem(page.content)).groupByCount()
-
-          logger.info("legacyStem")
-          logger.info(legacyStem.toList.sortBy(-_._2).mkString("(", ")\t(", ")"))
-          logger.info("plain")
-          logger.info(plain.toList.sortBy(-_._2).mkString("(", ")\t(", ")"))
-
-          val wordCount = if(environment.mode == Mode.Prod) legacyStem else plain
+          val wordCount = seqWord.groupByCount()
+          logger.info(text)
+          logger.info(seqWord.mkString(" "))
+          logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
           Page.updateSimilarPage(name, wordCount)
         }
