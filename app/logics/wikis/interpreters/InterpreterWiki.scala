@@ -98,7 +98,10 @@ object InterpreterWiki extends TraitInterpreter {
       val titleForToc = title
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
+        .replaceAll("""(?<!\\)\["(\S+?)"\]""", "$1")
+        .replaceAll("""(?<!\\)\["(\S+?)"\s(.+?)\]""", "$2")
         .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
+        .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)\]""", "$2")
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
