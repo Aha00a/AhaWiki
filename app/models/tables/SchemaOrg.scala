@@ -53,6 +53,12 @@ object SchemaOrg {
       .map(tables.SchemaOrg.tupled)
   }
 
+  def selectWhereProp(prop: String)(implicit connection: Connection): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE prop = $prop"
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.SchemaOrg.tupled)
+  }
+
   def delete(name: String)(implicit connection:Connection): Int = {
     SQL"DELETE FROM SchemaOrg WHERE page = $name".executeUpdate()
   }

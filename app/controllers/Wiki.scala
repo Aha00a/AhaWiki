@@ -218,15 +218,31 @@ class Wiki @Inject()(implicit val
               optionSchemaType match {
                 case Some(schemaType) =>
                   import models.tables.SchemaOrg
-                  val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
-                  
-                  val content =
+                  val content: String = if(schema(0).isUpper) {
+                    val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
                     s"""= ${schemaType.id}
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
-                       |${listSchemaOrg.map(_.page).map(s => s""" * ["$s"]""").mkString("\n")}
+                       |${listSchemaOrg.map(s => s""" * ["${s.page}"]""").mkString("\n")}
                        |""".stripMargin
+                  } else {
+                    val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
+                    s"""= ${schemaType.id}
+                       |[[[#!Html
+                       |${schemaType.comment}
+                       |]]]
+                       |${listSchemaOrg.groupBy(_.cls).transform((k, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
+                    s"""== ["schema:${t._1}" ${t._1}]
+                       |${t._2.toSeq.sortBy(_._1).map(t2 =>
+                    s"""=== ["${t2._1}"]
+                       |${t2._2.map(s =>
+                    s""" * ["${s.page}"]""").mkString("\n")}
+                       |""".stripMargin).mkString("\n")}
+                       |""".stripMargin).mkString("\n")}
+                       |""".stripMargin
+                  }
+
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                 case _ =>
