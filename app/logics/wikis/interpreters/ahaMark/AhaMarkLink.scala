@@ -20,23 +20,25 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Wi
       import com.aha00a.commons.utils.DateTimeUtil
       import logics.wikis.PageNameLogic
       val external: Boolean = PageNameLogic.isExternal(uri)
-      val href: String = if (external) uriNormalized else s"/w/$uriNormalized"
+      val isStartsWithHash = uriNormalized.startsWith("#")
+      val isStartsWithQuestionMark = uriNormalized.startsWith("?")
+      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank"""" else ""
       val display: String = aliasWithDefault
       val attrCss = if (uriNormalized.startsWith("schema:")) {
         """ class="schema""""
       } else if (
         set.isEmpty ||
-          external ||
-          uriNormalized.startsWith("#") ||
-          uriNormalized.startsWith("?") ||
-          // uriNormalized.matches(DateTimeUtil.regexIsoLocalDate.pattern.pattern()) ||
-          uriNormalized.matches(DateTimeUtil.regexYearDashMonth.pattern.pattern()) ||
-          uriNormalized.matches(DateTimeUtil.regexDashDashDashDashDay.pattern.pattern()) ||
-          uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
-          uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
-          uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
-          set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
+        external ||
+        isStartsWithHash ||
+        isStartsWithQuestionMark ||
+        // uriNormalized.matches(DateTimeUtil.regexIsoLocalDate.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexYearDashMonth.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexDashDashDashDashDay.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
+        set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
       ) {
         ""
       } else {
