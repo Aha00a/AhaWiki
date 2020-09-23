@@ -222,8 +222,10 @@ class Wiki @Inject()(implicit val
                   
                   val content =
                     s"""= ${schemaType.id}
+                       |[[[#!Html
                        |${schemaType.comment}
-                       |${listSchemaOrg.map(_.page).mkString(" * [\"", "\"]\n * [\"", "\"]")}
+                       |]]]
+                       |${listSchemaOrg.map(_.page).map(s => s""" * ["$s"]""").mkString("\n")}
                        |""".stripMargin
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
