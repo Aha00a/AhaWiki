@@ -20,7 +20,7 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Wi
       import com.aha00a.commons.utils.DateTimeUtil
       import logics.wikis.PageNameLogic
       val external: Boolean = PageNameLogic.isExternal(uri)
-      val href: String = if (uriNormalized.startsWith("schema:")) s"./$uriNormalized" else uriNormalized
+      val href: String = if (external) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank"""" else ""
       val display: String = aliasWithDefault
       val attrCss = if (uriNormalized.startsWith("schema:")) {
