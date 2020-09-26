@@ -213,10 +213,11 @@ class Wiki @Inject()(implicit val
             //            Ok(mm) // TODO
 
             case "schema:Schema" =>
+              import com.aha00a.commons.utils.EnglishCaseConverter
               val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("").groupBy(_.cls)
               val content = s"""= Schema
                  |${listSchemaOrg.toSeq.sortBy(_._1).map(k =>
-              s"""== ["schema:${k._1}" ${k._1}] (${k._2.size})
+              s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}] (${k._2.size})
                  |${k._2.toSeq.map(_.page).map(s =>
               s""" * ["${s}"]""").mkString("\n")}
                  |""".stripMargin).mkString("\n")}
