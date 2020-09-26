@@ -213,6 +213,7 @@ class Wiki @Inject()(implicit val
             //            Ok(mm) // TODO
 
 //            case "schema:Schema" =>
+//              SchemaOrg.traverse()
             case regexSchemaColon(schema) =>
               val optionSchemaType = SchemaOrg.mapAll.get(schema)
               optionSchemaType match {
