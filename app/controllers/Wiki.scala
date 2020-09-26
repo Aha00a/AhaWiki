@@ -232,12 +232,12 @@ class Wiki @Inject()(implicit val
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
-                       |${listSchemaOrg.groupBy(_.cls).transform((k, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
+                       |${listSchemaOrg.groupBy(_.cls).transform((k, v) => v.groupBy(_.page)).toSeq.sortBy(_._1).map(t =>
                     s"""== ["schema:${t._1}" ${t._1}]
                        |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["${t2._1}"]
                        |${t2._2.map(s =>
-                    s""" * ["${s.page}"]""").mkString("\n")}
+                    s""" * ["${s.value}"]""").mkString("\n")}
                        |""".stripMargin).mkString("\n")}
                        |""".stripMargin).mkString("\n")}
                        |""".stripMargin
