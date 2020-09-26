@@ -212,8 +212,17 @@ class Wiki @Inject()(implicit val
             //          case regexDashDashDashDashDay(mm) =>
             //            Ok(mm) // TODO
 
-//            case "schema:Schema" =>
-//              SchemaOrg.traverse()
+            case "schema:Schema" =>
+              val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("").groupBy(_.cls)
+              val content = s"""= Schema
+                 |${listSchemaOrg.toSeq.sortBy(_._1).map(k =>
+              s"""== ["schema:${k._1}" ${k._1}] (${k._2.size})
+                 |${k._2.toSeq.map(_.page).map(s =>
+              s""" * ["${s}"]""").mkString("\n")}
+                 |""".stripMargin).mkString("\n")}
+                 |""".stripMargin
+              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
             case regexSchemaColon(schema) =>
               val optionSchemaType = SchemaOrg.mapAll.get(schema)
               optionSchemaType match {
