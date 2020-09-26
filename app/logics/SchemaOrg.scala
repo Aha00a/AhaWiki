@@ -31,7 +31,7 @@ object SchemaOrg {
         classes
       )
 
-      <span title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </span>
+      <a href={"/w/schema:" + id} title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </a>
     }
     def toAhaMarkLink(implicit wikiContext:WikiContext): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
