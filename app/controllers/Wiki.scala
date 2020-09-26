@@ -224,6 +224,7 @@ class Wiki @Inject()(implicit val
                  |""".stripMargin
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
               NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+
             case regexSchemaColon(schema) =>
               val optionSchemaType = SchemaOrg.mapAll.get(schema)
               optionSchemaType match {
