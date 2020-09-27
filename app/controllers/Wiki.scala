@@ -230,6 +230,7 @@ class Wiki @Inject()(implicit val
               NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
             case regexSchemaColon(schema) =>
+              import com.aha00a.commons.utils.EnglishCaseConverter
               val optionSchemaType = SchemaOrg.mapAll.get(schema)
               optionSchemaType match {
                 case Some(schemaType) =>
@@ -252,7 +253,7 @@ class Wiki @Inject()(implicit val
                        |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
                     s"""== ["${t._1}" ${t._1}]
                        |${t._2.toSeq.sortBy(_._1).map(t2 =>
-                    s"""=== ["schema:${t2._1}" ${t2._1}]
+                    s"""=== ["schema:${t2._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t2._1)}]
                        |${t2._2.map(s =>
                     s""" * ["${s.page}"]""").mkString("\n")}
                        |""".stripMargin).mkString("\n")}
