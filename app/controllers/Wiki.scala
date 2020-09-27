@@ -244,11 +244,12 @@ class Wiki @Inject()(implicit val
                        |""".stripMargin
                   } else {
                     val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
+                    val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
                     s"""= ${schemaType.id}
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
-                       |${listSchemaOrg.groupBy(_.cls).transform((k, v) => v.groupBy(_.page)).toSeq.sortBy(_._1).map(t =>
+                       |${listSchemaOrgWithPermission.groupBy(_.cls).transform((k, v) => v.groupBy(_.page)).toSeq.sortBy(_._1).map(t =>
                     s"""== ["schema:${t._1}" ${t._1}]
                        |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["${t2._1}"]
