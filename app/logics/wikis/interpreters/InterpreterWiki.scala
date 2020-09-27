@@ -99,7 +99,7 @@ object InterpreterWiki extends TraitInterpreter {
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
         .replaceAll("""(?<!\\)\["([^"]+?)"\]""", "$1")
-        .replaceAll("""(?<!\\)\["[^"]"\s(.+?)\]""", "$2")
+        .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)\]""", "$2")
         .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
         .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)\]""", "$2")
 
