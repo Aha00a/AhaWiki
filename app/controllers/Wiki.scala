@@ -214,9 +214,13 @@ class Wiki @Inject()(implicit val
 
             case "schema:Schema" =>
               import com.aha00a.commons.utils.EnglishCaseConverter
-              val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("").groupBy(_.cls)
+              val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("")
+              val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
+              val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
+
               val content = s"""= Schema
-                 |${listSchemaOrg.toSeq.sortBy(_._1).map(k =>
+                 |${listSchemaOrgWithPermission.size} page(s).
+                 |${mapSchemaOrg.toSeq.sortBy(_._1).map(k =>
               s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}] (${k._2.size})
                  |${k._2.toSeq.map(_.page).map(s =>
               s""" * ["${s}"]""").mkString("\n")}
