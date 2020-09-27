@@ -249,12 +249,12 @@ class Wiki @Inject()(implicit val
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
-                       |${listSchemaOrgWithPermission.groupBy(_.cls).transform((k, v) => v.groupBy(_.page)).toSeq.sortBy(_._1).map(t =>
-                    s"""== ["schema:${t._1}" ${t._1}]
+                       |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
+                    s"""== ["${t._1}" ${t._1}]
                        |${t._2.toSeq.sortBy(_._1).map(t2 =>
-                    s"""=== ["${t2._1}"]
+                    s"""=== ["schema:${t2._1}" ${t2._1}]
                        |${t2._2.map(s =>
-                    s""" * ["${s.value}"]""").mkString("\n")}
+                    s""" * ["${s.page}"]""").mkString("\n")}
                        |""".stripMargin).mkString("\n")}
                        |""".stripMargin).mkString("\n")}
                        |""".stripMargin
