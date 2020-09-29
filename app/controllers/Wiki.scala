@@ -246,7 +246,7 @@ class Wiki @Inject()(implicit val
                   } else {
                     val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
                     val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-                    s"""= ${schemaType.id}
+                    s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
