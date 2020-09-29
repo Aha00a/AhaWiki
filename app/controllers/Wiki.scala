@@ -237,7 +237,7 @@ class Wiki @Inject()(implicit val
                   import models.tables.SchemaOrg
                   val content: String = if(schema(0).isUpper) {
                     val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
-                    s"""= ${schemaType.id}
+                    s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
                        |[[[#!Html
                        |${schemaType.comment}
                        |]]]
