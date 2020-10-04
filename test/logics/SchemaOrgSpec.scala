@@ -11,7 +11,7 @@ class SchemaOrgSpec extends AnyFreeSpec {
   "SchemaType" - {
     "toXmlSpan" in {
       val schemaType: SchemaOrg.SchemaType = SchemaOrg.mapAll("Movie")
-      assert(schemaType.toXmlSpan().toString() === """<span title="A movie." class="">Movie </span>""")
+      assert(schemaType.toXmlSpan().toString() === """<a href="/w/schema:Movie" title="A movie." class="">Movie </a>""")
     }
   }
 }
