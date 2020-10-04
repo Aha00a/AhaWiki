@@ -7,18 +7,8 @@ class PermissionSpec extends AnyFreeSpec {
   import models.tables.Permission
 
   val permissionAnyAnyRead = Permission(1, 1, """""", """""", Permission.read)
-  val permissionAnyLoggedIn = Permission(1, 1, """""", """.+""", Permission.read)
-
-  "matches" in {
-    import models.tables.Permission
-
-
-    assert(permissionAnyAnyRead.matches("", "", Permission.read))
-    assert(permissionAnyAnyRead.matches("any", "any", Permission.read))
-
-    assert(!permissionAnyLoggedIn.matches("", "", Permission.read))
-    assert(permissionAnyAnyRead.matches("any", "any", Permission.read))
-  }
+  val permissionAnyLoggedInRead = Permission(1, 1, """""", """.+""", Permission.read)
+  val permissionAnyAha00aRead = Permission(1, 1, """""", """aha00a@.+""", Permission.read)
 
   "permitted" in {
     import models.tables.Permission
@@ -29,6 +19,18 @@ class PermissionSpec extends AnyFreeSpec {
     assert(!permissionAnyAnyRead.permitted(Permission.create))
     assert(!permissionAnyAnyRead.permitted(Permission.upload))
     assert(!permissionAnyAnyRead.permitted(Permission.delete))
+  }
+
+
+  "matches" in {
+    import models.tables.Permission
+
+
+    assert(permissionAnyAnyRead.matches("", "", Permission.read))
+    assert(permissionAnyAnyRead.matches("any", "any", Permission.read))
+
+    assert(!permissionAnyLoggedInRead.matches("", "", Permission.read))
+    assert(permissionAnyLoggedInRead.matches("any", "any", Permission.read))
   }
 
 
