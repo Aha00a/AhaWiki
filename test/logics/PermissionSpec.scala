@@ -7,9 +7,9 @@ class PermissionSpec extends AnyFreeSpec {
 
   import models.tables.Permission
 
+  val permissionAnyAha00aRead = Permission(1, 3, """""", """aha00a@.+""", Permission.read)
+  val permissionAnyLoggedInRead = Permission(1, 2, """""", """.+""", Permission.read)
   val permissionAnyAnyRead = Permission(1, 1, """""", """""", Permission.read)
-  val permissionAnyLoggedInRead = Permission(1, 1, """""", """.+""", Permission.read)
-  val permissionAnyAha00aRead = Permission(1, 1, """""", """aha00a@.+""", Permission.read)
 
   "permitted" in {
     assert(permissionAnyAnyRead.permitted(Permission.none))
