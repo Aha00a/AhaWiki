@@ -6,10 +6,19 @@ import models.tables.Permission
 class PermissionSpec extends AnyFreeSpec {
 
   import models.tables.Permission
-
-  val permissionAnyAha00aRead = Permission(1, 3, """""", """aha00a@.+""", Permission.read)
-  val permissionAnyLoggedInRead = Permission(1, 2, """""", """.+""", Permission.read)
-  val permissionAnyAnyRead = Permission(1, 1, """""", """""", Permission.read)
+  var priority = 10000
+  def decrPriority: Int = {
+    priority -= 1
+    priority
+  }
+  val permissionAnyAha00aRead = Permission(1, decrPriority, """""", """aha00a@.+""", Permission.read)
+  val permissionAnyLoggedInRead = Permission(1, decrPriority, """""", """.+""", Permission.read)
+  val permissionAnyAnyRead = Permission(1, decrPriority, """""", """""", Permission.read)
+  val seqPermission: Seq[Permission] = Seq(
+    permissionAnyAnyRead,
+    permissionAnyLoggedInRead,
+    permissionAnyAha00aRead
+  )
 
   "permitted" in {
     assert(permissionAnyAnyRead.permitted(Permission.none))
@@ -30,16 +39,12 @@ class PermissionSpec extends AnyFreeSpec {
   }
 
   "check" - {
-    "anonymous user" in {
-      val seq: Seq[Permission] = Seq(
-        permissionAnyAnyRead,
-        permissionAnyLoggedInRead,
-        permissionAnyAha00aRead
-      ).sortBy(-_.priority)
-      val permissionLogic = new PermissionLogic(seq)
+
+    "anonymous" in {
+      val permissionLogic = new PermissionLogic(seqPermission)
       assert(permissionLogic.check("", "", Permission.read))
-      assert(permissionLogic.check("", "a", Permission.read))
-      assert(permissionLogic.check("a", "a", Permission.read))
+      assert(permissionLogic.check("", "", Permission.read))
+      assert(permissionLogic.check("a", "", Permission.read))
     }
   }
 
