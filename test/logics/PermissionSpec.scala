@@ -11,7 +11,13 @@ class PermissionSpec extends AnyFreeSpec {
     priority -= 1
     priority
   }
-  val permissionAnyAha00aRead = Permission(1, decrPriority, """""", """aha00a@.+""", Permission.read)
+
+  val targetPrivate = "Privete"
+
+  val actorSomeone = "sdfkj"
+  val actorAha00a = """aha00a@.+"""
+
+  val permissionAnyAha00aRead = Permission(1, decrPriority, targetPrivate + """.*""", actorAha00a, Permission.read)
   val permissionAnyLoggedInRead = Permission(1, decrPriority, """""", """.+""", Permission.read)
   val permissionAnyAnyRead = Permission(1, decrPriority, """""", """""", Permission.read)
   val seqPermission: Seq[Permission] = Seq(
@@ -42,9 +48,14 @@ class PermissionSpec extends AnyFreeSpec {
 
     "anonymous" in {
       val permissionLogic = new PermissionLogic(seqPermission)
+
       assert(permissionLogic.check("", "", Permission.read))
       assert(permissionLogic.check("", "", Permission.read))
       assert(permissionLogic.check("a", "", Permission.read))
+      assert(permissionLogic.check("a", actorSomeone, Permission.read))
+      assert(permissionLogic.check(targetPrivate, "", Permission.read))
+      assert(permissionLogic.check(targetPrivate, actorSomeone, Permission.read))
+      assert(permissionLogic.check(targetPrivate, actorAha00a, Permission.read))
     }
   }
 
