@@ -30,7 +30,11 @@ class PermissionSpec extends AnyFreeSpec {
   }
 
   "check" in {
-    val seq: Seq[Permission] = Seq(permissionAnyAnyRead, permissionAnyLoggedInRead, permissionAnyAha00aRead).sortBy(-_.priority)
+    val seq: Seq[Permission] = Seq(
+      permissionAnyAnyRead,
+      permissionAnyLoggedInRead,
+      permissionAnyAha00aRead
+    ).sortBy(-_.priority)
     val permissionLogic = new PermissionLogic(seq)
     assert(permissionLogic.check("", "", 0))
   }
