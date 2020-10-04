@@ -29,14 +29,18 @@ class PermissionSpec extends AnyFreeSpec {
     assert(permissionAnyLoggedInRead.matches("any", "any"))
   }
 
-  "check" in {
-    val seq: Seq[Permission] = Seq(
-      permissionAnyAnyRead,
-      permissionAnyLoggedInRead,
-      permissionAnyAha00aRead
-    ).sortBy(-_.priority)
-    val permissionLogic = new PermissionLogic(seq)
-    assert(permissionLogic.check("", "", 0))
+  "check" - {
+    "anonymous user" in {
+      val seq: Seq[Permission] = Seq(
+        permissionAnyAnyRead,
+        permissionAnyLoggedInRead,
+        permissionAnyAha00aRead
+      ).sortBy(-_.priority)
+      val permissionLogic = new PermissionLogic(seq)
+      assert(permissionLogic.check("", "", Permission.read))
+      assert(permissionLogic.check("", "a", Permission.read))
+      assert(permissionLogic.check("a", "a", Permission.read))
+    }
   }
 
 
