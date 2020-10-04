@@ -1,6 +1,7 @@
 package logics
 
 import org.scalatest.freespec.AnyFreeSpec
+import models.tables.Permission
 
 class PermissionSpec extends AnyFreeSpec {
 
@@ -11,8 +12,6 @@ class PermissionSpec extends AnyFreeSpec {
   val permissionAnyAha00aRead = Permission(1, 1, """""", """aha00a@.+""", Permission.read)
 
   "permitted" in {
-    import models.tables.Permission
-
     assert(permissionAnyAnyRead.permitted(Permission.none))
     assert(permissionAnyAnyRead.permitted(Permission.read))
     assert(!permissionAnyAnyRead.permitted(Permission.edit))
@@ -23,14 +22,17 @@ class PermissionSpec extends AnyFreeSpec {
 
 
   "matches" in {
-    import models.tables.Permission
+    assert(permissionAnyAnyRead.matches("", ""))
+    assert(permissionAnyAnyRead.matches("any", "any"))
 
+    assert(!permissionAnyLoggedInRead.matches("", ""))
+    assert(permissionAnyLoggedInRead.matches("any", "any"))
+  }
 
-    assert(permissionAnyAnyRead.matches("", "", Permission.read))
-    assert(permissionAnyAnyRead.matches("any", "any", Permission.read))
-
-    assert(!permissionAnyLoggedInRead.matches("", "", Permission.read))
-    assert(permissionAnyLoggedInRead.matches("any", "any", Permission.read))
+  "check" in {
+    val seq: Seq[Permission] = Seq(permissionAnyAnyRead, permissionAnyLoggedInRead, permissionAnyAha00aRead).sortBy(-_.priority)
+    val permissionLogic = new PermissionLogic(seq)
+    assert(permissionLogic.check("", "", 0))
   }
 
 

@@ -5,7 +5,7 @@ import java.sql.Connection
 import com.aha00a.commons.Implicits._
 
 case class Permission(seq: Int, priority: Int, target: String, actor: String, action: Int) {
-  def matches(target: String, actor: String, action: Int): Boolean = {
+  def matches(target: String, actor: String): Boolean = {
     if(this.target.isNotNullOrEmpty) {
       if(!this.target.r.matches(target))
         return false;
