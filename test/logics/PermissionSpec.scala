@@ -13,49 +13,20 @@ class PermissionSpec extends AnyFreeSpec {
   }
 
   val targetPrivate = "Private"
-
-  val actorSomeone = "someone"
-  val actorAha00a = """aha00a@.+"""
-
-  val permissionPrivateAha00aAdmin = Permission(1, decrPriority, targetPrivate + ".*", actorAha00a, Permission.admin)
-  val permissionPrivateAnyNone = Permission(1, decrPriority, targetPrivate + ".*", "", Permission.none)
-
-  val permissionAnyAha00aAdmin = Permission(1, decrPriority, "", actorAha00a, Permission.admin)
-  val permissionAnyLoggedInEdit = Permission(1, decrPriority, "", ".+", Permission.edit)
-  val permissionAnyAnyRead = Permission(1, decrPriority, "", "", Permission.read)
-
-  val seqPermission: Seq[Permission] = Seq(
-    permissionPrivateAha00aAdmin,
-    permissionPrivateAnyNone,
-
-    permissionAnyAha00aAdmin,
-    permissionAnyLoggedInEdit,
-    permissionAnyAnyRead,
-    
-  )
-
-  "permitted" in {
-    assert(permissionAnyAnyRead.permitted(Permission.none))
-    assert(permissionAnyAnyRead.permitted(Permission.read))
-    assert(!permissionAnyAnyRead.permitted(Permission.edit))
-    assert(!permissionAnyAnyRead.permitted(Permission.create))
-    assert(!permissionAnyAnyRead.permitted(Permission.upload))
-    assert(!permissionAnyAnyRead.permitted(Permission.delete))
-  }
-
-
-  "matches" in {
-    assert(permissionAnyAnyRead.matches("", ""))
-    assert(permissionAnyAnyRead.matches("any", "any"))
-
-    assert(!permissionAnyLoggedInEdit.matches("", ""))
-    assert(permissionAnyLoggedInEdit.matches("any", "any"))
-  }
+  val actorSomeone = "someone@example.com"
+  val actorAha00a = "aha00a@gmail.com"
 
   "check" - {
 
     "anonymous" in {
-      val permissionLogic = new PermissionLogic(seqPermission)
+      val permissionLogic = new PermissionLogic(Seq(
+        Permission(5, decrPriority, targetPrivate + ".*", "aha00a@.+", Permission.admin),
+        Permission(4, decrPriority, targetPrivate + ".*", "", Permission.none),
+
+        Permission(3, decrPriority, "", "aha00a@.+", Permission.admin),
+        Permission(2, decrPriority, "", ".+", Permission.edit),
+        Permission(1, decrPriority, "", "", Permission.read),
+      ))
 
       val seqAction = Seq(
         Permission.read,
@@ -78,6 +49,4 @@ class PermissionSpec extends AnyFreeSpec {
       assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a , a)) === "11111".map(_ == '1'))
     }
   }
-
-
 }
