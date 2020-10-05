@@ -5,7 +5,8 @@ import models.tables.Permission
 
 class PermissionLogic(seqPermission: Seq[Permission]) {
   val seq: Seq[Permission] = seqPermission.sortBy(-_.priority)
-  def check(target: String, actor: String, action: Int): Boolean = {
-    seq.find(_.matches(target, actor)).exists(_.permitted(action))
+  def permitted(target: String, actor: String, action: Int): Boolean = {
+    val optionPermission = seq.find(_.matches(target, actor))
+    optionPermission.exists(_.permitted(action))
   }
 }

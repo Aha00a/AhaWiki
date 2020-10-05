@@ -12,18 +12,26 @@ class PermissionSpec extends AnyFreeSpec {
     priority
   }
 
-  val targetPrivate = "Privete"
+  val targetPrivate = "Private"
 
-  val actorSomeone = "sdfkj"
+  val actorSomeone = "someone"
   val actorAha00a = """aha00a@.+"""
 
-  val permissionAnyAha00aRead = Permission(1, decrPriority, targetPrivate + """.*""", actorAha00a, Permission.read)
-  val permissionAnyLoggedInRead = Permission(1, decrPriority, """""", """.+""", Permission.read)
-  val permissionAnyAnyRead = Permission(1, decrPriority, """""", """""", Permission.read)
+  val permissionPrivateAha00aAdmin = Permission(1, decrPriority, targetPrivate + ".*", actorAha00a, Permission.admin)
+  val permissionPrivateAnyNone = Permission(1, decrPriority, targetPrivate + ".*", "", Permission.none)
+
+  val permissionAnyAha00aAdmin = Permission(1, decrPriority, "", actorAha00a, Permission.admin)
+  val permissionAnyLoggedInEdit = Permission(1, decrPriority, "", ".+", Permission.edit)
+  val permissionAnyAnyRead = Permission(1, decrPriority, "", "", Permission.read)
+
   val seqPermission: Seq[Permission] = Seq(
+    permissionPrivateAha00aAdmin,
+    permissionPrivateAnyNone,
+
+    permissionAnyAha00aAdmin,
+    permissionAnyLoggedInEdit,
     permissionAnyAnyRead,
-    permissionAnyLoggedInRead,
-    permissionAnyAha00aRead
+    
   )
 
   "permitted" in {
@@ -40,8 +48,8 @@ class PermissionSpec extends AnyFreeSpec {
     assert(permissionAnyAnyRead.matches("", ""))
     assert(permissionAnyAnyRead.matches("any", "any"))
 
-    assert(!permissionAnyLoggedInRead.matches("", ""))
-    assert(permissionAnyLoggedInRead.matches("any", "any"))
+    assert(!permissionAnyLoggedInEdit.matches("", ""))
+    assert(permissionAnyLoggedInEdit.matches("any", "any"))
   }
 
   "check" - {
@@ -49,13 +57,25 @@ class PermissionSpec extends AnyFreeSpec {
     "anonymous" in {
       val permissionLogic = new PermissionLogic(seqPermission)
 
-      assert(permissionLogic.check("", "", Permission.read))
-      assert(permissionLogic.check("", "", Permission.read))
-      assert(permissionLogic.check("a", "", Permission.read))
-      assert(permissionLogic.check("a", actorSomeone, Permission.read))
-      assert(permissionLogic.check(targetPrivate, "", Permission.read))
-      assert(permissionLogic.check(targetPrivate, actorSomeone, Permission.read))
-      assert(permissionLogic.check(targetPrivate, actorAha00a, Permission.read))
+      val seqAction = Seq(
+        Permission.read,
+        Permission.edit,
+        Permission.create,
+        Permission.upload,
+        Permission.delete,
+      )
+
+      assert(seqAction.map(a => permissionLogic.permitted("" , ""          , a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("" , actorSomeone, a)) === "11000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("" , actorAha00a , a)) === "11111".map(_ == '1'))
+
+      assert(seqAction.map(a => permissionLogic.permitted("a", ""          , a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("a", actorSomeone, a)) === "11000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("a", actorAha00a , a)) === "11111".map(_ == '1'))
+
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, ""          , a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a , a)) === "11111".map(_ == '1'))
     }
   }
 
