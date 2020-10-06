@@ -18,7 +18,7 @@ class PermissionSpec extends AnyFreeSpec {
 
   "check" - {
 
-    "anonymous" in {
+    "Open" in {
       val permissionLogic = new PermissionLogic(Seq(
         Permission(5, decrPriority, targetPrivate + ".*", "aha00a@.+", Permission.admin),
         Permission(4, decrPriority, targetPrivate + ".*", "", Permission.none),
@@ -36,17 +36,63 @@ class PermissionSpec extends AnyFreeSpec {
         Permission.delete,
       )
 
-      assert(seqAction.map(a => permissionLogic.permitted("" , ""          , a)) === "10000".map(_ == '1'))
-      assert(seqAction.map(a => permissionLogic.permitted("" , actorSomeone, a)) === "11000".map(_ == '1'))
-      assert(seqAction.map(a => permissionLogic.permitted("" , actorAha00a , a)) === "11111".map(_ == '1'))
-
-      assert(seqAction.map(a => permissionLogic.permitted("a", ""          , a)) === "10000".map(_ == '1'))
-      assert(seqAction.map(a => permissionLogic.permitted("a", actorSomeone, a)) === "11000".map(_ == '1'))
-      assert(seqAction.map(a => permissionLogic.permitted("a", actorAha00a , a)) === "11111".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage", ""          , a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage", actorSomeone, a)) === "11000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage", actorAha00a , a)) === "11111".map(_ == '1'))
 
       assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, ""          , a)) === "00000".map(_ == '1'))
       assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a)) === "00000".map(_ == '1'))
       assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a , a)) === "11111".map(_ == '1'))
+    }
+
+    "Private" in {
+      val permissionLogic = new PermissionLogic(Seq(
+        Permission(1, decrPriority, "FrontPage", "aha00a@gmail.com", Permission.admin),
+        Permission(1, decrPriority, "FrontPage", "", Permission.read),
+        Permission(1, decrPriority, "Memo", "aha00a@gmail.com", Permission.admin),
+        Permission(1, decrPriority, "Memo", "", Permission.read),
+        Permission(1, decrPriority, "", "aha00a@gmail.com", Permission.admin),
+        Permission(1, decrPriority, "", "", Permission.none),
+      ))
+
+      val seqAction = Seq(
+        Permission.read,
+        Permission.edit,
+        Permission.create,
+        Permission.upload,
+        Permission.delete,
+      )
+
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , ""          , a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , actorSomeone, a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , actorAha00a , a)) === "11111".map(_ == '1'))
+
+      assert(seqAction.map(a => permissionLogic.permitted("Memo" , ""          , a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("Memo" , actorSomeone, a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("Memo" , actorAha00a , a)) === "11111".map(_ == '1'))
+
+      assert(seqAction.map(a => permissionLogic.permitted("other" , ""          , a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("other" , actorSomeone, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("other" , actorAha00a , a)) === "11111".map(_ == '1'))
+    }
+
+    "Protected" in {
+      val permissionLogic = new PermissionLogic(Seq(
+        Permission(1, decrPriority, "", "aha00a@gmail.com|people@exmaple.com", Permission.admin),
+        Permission(1, decrPriority, "", "", Permission.none),
+      ))
+
+      val seqAction = Seq(
+        Permission.read,
+        Permission.edit,
+        Permission.create,
+        Permission.upload,
+        Permission.delete,
+      )
+
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , ""          , a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , actorSomeone, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted("FrontPage" , actorAha00a , a)) === "11111".map(_ == '1'))
     }
   }
 }
