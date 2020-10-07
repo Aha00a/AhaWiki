@@ -38,7 +38,7 @@ object Link {
   }
 
   def selectBacklinkOfDatePage(name: String)(implicit connection: Connection): List[Link] = {
-    SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[0-9]|1[12])-([012][0-9]|3[01])'"""
+    SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])'"""
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
