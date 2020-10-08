@@ -21,6 +21,10 @@ case class Permission(seq: Int, priority: Int, target: String, actor: String, ac
   }
 
   def permitted(action: Int): Boolean = this.action >= action
+
+  def toTsvString: String = {
+     Permission.unapply(this).map(_.productIterator.map(_.toString).mkString("\t")).getOrElse("")
+  }
 }
 
 object Permission {
