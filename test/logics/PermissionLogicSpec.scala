@@ -2,7 +2,7 @@ package logics
 
 import org.scalatest.freespec.AnyFreeSpec
 
-class PermissionSpec extends AnyFreeSpec {
+class PermissionLogicSpec extends AnyFreeSpec {
 
   import models.tables.Permission
 
