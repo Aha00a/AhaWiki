@@ -27,7 +27,7 @@ class PermissionSpec extends AnyFreeSpec {
   val actorSomeone = "someone@example.com"
   val actorAha00a = "aha00a@gmail.com"
 
-  val seqAction = Seq(
+  val seqAction: Seq[Int] = Seq(
     Permission.read,
     Permission.edit,
     Permission.create,
