@@ -16,49 +16,49 @@
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 400;
-  src: local('Noto Sans Italic'), local('NotoSans-Italic'), url(https://fonts.gstatic.com/s/notosans/v9/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
+  src: local('Noto Sans Italic'), local('NotoSans-Italic'), url(https://fonts.gstatic.com/s/notosans/v11/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 700;
-  src: local('Noto Sans Bold Italic'), local('NotoSans-BoldItalic'), url(https://fonts.gstatic.com/s/notosans/v9/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
+  src: local('Noto Sans Bold Italic'), local('NotoSans-BoldItalic'), url(https://fonts.gstatic.com/s/notosans/v11/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 400;
-  src: local('Noto Sans'), local('NotoSans'), url(https://fonts.gstatic.com/s/notosans/v9/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
+  src: local('Noto Sans'), local('NotoSans'), url(https://fonts.gstatic.com/s/notosans/v11/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 700;
-  src: local('Noto Sans Bold'), local('NotoSans-Bold'), url(https://fonts.gstatic.com/s/notosans/v9/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
+  src: local('Noto Sans Bold'), local('NotoSans-Bold'), url(https://fonts.gstatic.com/s/notosans/v11/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 400;
-  src: local('Ubuntu Mono Italic'), local('UbuntuMono-Italic'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
+  src: local('Ubuntu Mono Italic'), local('UbuntuMono-Italic'), url(https://fonts.gstatic.com/s/ubuntumono/v10/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 700;
-  src: local('Ubuntu Mono Bold Italic'), local('UbuntuMono-BoldItalic'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
+  src: local('Ubuntu Mono Bold Italic'), local('UbuntuMono-BoldItalic'), url(https://fonts.gstatic.com/s/ubuntumono/v10/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 400;
-  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
+  src: local('Ubuntu Mono'), local('UbuntuMono-Regular'), url(https://fonts.gstatic.com/s/ubuntumono/v10/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 700;
-  src: local('Ubuntu Mono Bold'), local('UbuntuMono-Bold'), url(https://fonts.gstatic.com/s/ubuntumono/v9/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
+  src: local('Ubuntu Mono Bold'), local('UbuntuMono-Bold'), url(https://fonts.gstatic.com/s/ubuntumono/v10/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
 }
 html,
 body {
@@ -104,6 +104,13 @@ body {
 .AhaWiki samp,
 .AhaWiki tt {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
+}
+.AhaWiki s {
+  opacity: 0.5;
+}
+.AhaWiki s:hover {
+  opacity: 0.7;
+  text-decoration: none;
 }
 .AhaWiki textarea,
 .AhaWiki pre {
