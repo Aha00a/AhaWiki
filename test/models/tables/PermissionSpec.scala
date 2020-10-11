@@ -16,5 +16,6 @@ class PermissionSpec extends AnyFreeSpec {
     assert(!permissionAnyGmailRead.matches("", "aha00a@gmail.com"))
     assert(!permissionAnyGmailRead.matches("", "aha00b@gmail.com"))
     assert(!permissionAnyGmailRead.matches("", "aha00a@aharise.com"))
+    assert(permissionAnyGmailRead.actorLevel === 2)
   }
 }
