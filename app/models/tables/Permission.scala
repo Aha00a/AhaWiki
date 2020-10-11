@@ -5,6 +5,11 @@ import java.sql.Connection
 import com.aha00a.commons.Implicits._
 
 case class Permission(seq: Int, priority: Int, target: String, actor: String, action: Int) {
+  lazy val actorLevel: Int = actor match {
+    case "" => 1
+    case _ if(actor contains "@") => 2
+    case _ => 3
+  }
   def matches(target: String, actor: String): Boolean = {
     if(this.target.isNotNullOrEmpty) {
       if(!this.target.r.matches(target))
