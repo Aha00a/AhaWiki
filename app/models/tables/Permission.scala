@@ -46,11 +46,9 @@ case class Permission(seq: Int, target: String, actor: String, action: Int) {
 
   def permitted(action: Int): Boolean = this.action >= action
 
-  def toSeq: Seq[Any] = Seq(seq, priority, target, targetLevel, actor, actorLevel, action)
+  def toTsvString: String = Seq(seq, target, actor, action).map(_.toString).mkString("\t")
 
-  def toTsvString: String = toSeq.map(_.toString).mkString("\t")
-
-  def toDebugString: String = toSeq.map(_.toString.padRight(25)).mkString(" | ")
+  def toDebugString: String = Seq(seq, priority, target, targetLevel, actor, actorLevel, action).map(_.toString.padRight(25)).mkString(" | ")
 }
 
 object Permission {

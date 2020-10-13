@@ -8,9 +8,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
   case class TargetActorAction(target: String, actor: String, action: Int)
 
-  def createPermissionLogicWithLog(seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
+  def createPermissionLogicWithLog(title: String, seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
     val permissionLogic = createPermissionLogic(seqTargetActorAction)
-    System.out.println(permissionLogic.toLogString)
+    System.out.println(permissionLogic.toLogString(title))
     permissionLogic
   }
 
@@ -40,7 +40,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
   "permitted" - {
     "Public" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("Public", Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
         TargetActorAction("", "", Permission.edit),
       ))
@@ -51,7 +51,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     }
 
     "Open" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("Open", Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
         TargetActorAction("", "@gmail.com", Permission.edit),
         TargetActorAction("", "", Permission.read),
@@ -63,7 +63,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     }
 
     "Closed" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("Closed", Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
         TargetActorAction("", "@gmail.com", Permission.edit),
         TargetActorAction("", "", Permission.none),
@@ -75,9 +75,8 @@ class PermissionLogicSpec extends AnyFreeSpec {
     }
 
     "Protected" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("Protected", Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", actorAha00a, Permission.edit),
         TargetActorAction("", actorSomeone, Permission.edit),
         TargetActorAction("", "", Permission.none),
       ))
@@ -88,7 +87,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     }
 
     "Private" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("Private", Seq(
         TargetActorAction("", "aha00a@gmail.com", Permission.admin),
         TargetActorAction("", "", Permission.none),
       ))
@@ -100,7 +99,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
 
     "aha00a" in {
-      val permissionLogic = createPermissionLogicWithLog(Seq(
+      val permissionLogic = createPermissionLogicWithLog("aha00a", Seq(
         TargetActorAction(targetPrivate, "", Permission.read),
         TargetActorAction(targetPrivate + "?", actorAha00a, Permission.admin),
         TargetActorAction(targetPrivate + "?", "", Permission.none),
