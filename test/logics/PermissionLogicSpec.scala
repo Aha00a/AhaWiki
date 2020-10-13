@@ -35,7 +35,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     Permission.delete,
   )
 
-  def to01(b: Boolean): String = if(b) "0" else "1"
+  def to01(b: Boolean): String = if(b) "1" else "0"
 
   "permitted" - {
     "Public" in {
@@ -44,7 +44,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.edit),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)) === "11000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "11001")
       assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)) === "11000".map(_ == '1'))
       assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)) === "11111".map(_ == '1'))
     }
