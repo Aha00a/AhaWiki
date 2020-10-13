@@ -36,6 +36,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
   )
 
   def to01(b: Boolean): String = if(b) "1" else "0"
+  def to01(s: Seq[Boolean]): String = s.map(to01).mkString
 
   "permitted" - {
     "Public" in {
@@ -44,9 +45,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.edit),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
     }
 
     "Open" in {
@@ -56,9 +57,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.read),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "10000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "10000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
     }
 
     "Closed" in {
@@ -68,9 +69,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.none),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
     }
 
     "Protected" in {
@@ -81,9 +82,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.none),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
     }
 
     "Private" in {
@@ -92,9 +93,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
         TargetActorAction("", "", Permission.none),
       ))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
     }
 
 
@@ -109,17 +110,17 @@ class PermissionLogicSpec extends AnyFreeSpec {
       ))
 
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a)).map(to01).mkString === "10000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)).map(to01).mkString === "11000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "10000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a))) === "11000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a))) === "11111")
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorEmpty, a)).map(to01).mkString === "10000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a)).map(to01).mkString === "10000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorEmpty, a))) === "10000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a))) === "10000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a, a))) === "11111")
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorEmpty, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorSomeone, a)).map(to01).mkString === "00000")
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorAha00a, a)).map(to01).mkString === "11111")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorEmpty, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorSomeone, a))) === "00000")
+      assert(to01(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorAha00a, a))) === "11111")
     }
 
   }
