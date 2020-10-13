@@ -4,21 +4,40 @@ import java.sql.Connection
 
 import com.aha00a.commons.Implicits._
 
-case class Permission(seq: Int, priority: Int, target: String, actor: String, action: Int) {
-  lazy val actorLevel: Int = actor match {
+case class Permission(seq: Int, target: String, actor: String, action: Int) {
+  lazy val targetLevel: Int = target match {
     case "" => 1
-    case _ if(!actor.contains("@")) => 2
+    case _ if target.endsWith("?") => 2
     case _ => 3
   }
+
+  lazy val actorLevel: Int = actor match {
+    case "" => 1
+    case _ if actor.startsWith("@") => 2
+    case _ => 3
+  }
+
+  lazy val priority: Int = targetLevel + actorLevel
+
   def matches(target: String, actor: String): Boolean = {
     if(this.target.isNotNullOrEmpty) {
-      if(!this.target.r.matches(target))
-        return false;
+      if(this.target.endsWith("?")) {
+        if(!target.startsWith(this.target.substring(0, this.target.length - 1))) {
+          return false
+        }
+      } else if(this.target != target) {
+        return false
+      }
     }
 
     if(this.actor.isNotNullOrEmpty) {
-      if(!this.actor.r.matches(actor))
-        return false;
+      if(this.actor.startsWith("@")) {
+        if(!actor.endsWith(this.actor)){
+          return false
+        }
+      } else if(this.actor != actor) {
+        return false
+      }
     }
 
     //noinspection RemoveRedundantReturn
@@ -27,9 +46,11 @@ case class Permission(seq: Int, priority: Int, target: String, actor: String, ac
 
   def permitted(action: Int): Boolean = this.action >= action
 
-  def toTsvString: String = {
-     Permission.unapply(this).map(_.productIterator.map(_.toString).mkString("\t")).getOrElse("")
-  }
+  def toSeq: Seq[Any] = Seq(seq, priority, target, targetLevel, actor, actorLevel, action)
+
+  def toTsvString: String = toSeq.map(_.toString).mkString("\t")
+
+  def toDebugString: String = toSeq.map(_.toString.padRight(25)).mkString(" | ")
 }
 
 object Permission {
@@ -55,7 +76,7 @@ object Permission {
 
 
   //noinspection TypeAnnotation
-  def tupled = ((seq: Int, priority: Int, target: _root_.scala.Predef.String, actor: _root_.scala.Predef.String, action: Int) => apply(seq, priority, target, actor, action)).tupled
+  def tupled = (apply _).tupled
 
   def selectWhereValue(value: String)(implicit connection: Connection): List[Permission] = {
     List()

@@ -12,9 +12,12 @@ class PermissionLogic(seqPermission: Seq[Permission]) {
   }
 
   def toTsvString: String = seq.map(_.toTsvString).mkString("\n")
+
+  def toDebugString: String = seq.map(_.toDebugString).mkString("\n")
+
   def toLogString: String = Seq(
-    "=" * 80,
-    toTsvString,
-    "=" * 80
+    "=" * 200,
+    toDebugString,
+    "=" * 200
   ).mkString("\n")
 }

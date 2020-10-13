@@ -16,7 +16,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
   def createPermissionLogic(seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
     new PermissionLogic(seqTargetActorAction.reverse.zipWithIndex.map {
-      case (t, i) => Permission(i + 1, i + 1, t.target, t.actor, t.action)
+      case (t, i) => Permission(i + 1, t.target, t.actor, t.action)
     }.reverse)
   }
 
@@ -24,7 +24,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
   val targetPrivate = "Private"
 
   val actorEmpty = ""
-  val actorSomeone = "someone@example.com"
+  val actorSomeone = "aha00a+someone@gmail.com"
   val actorAha00a = "aha00a@gmail.com"
 
   val seqAction: Seq[Int] = Seq(
@@ -34,6 +34,8 @@ class PermissionLogicSpec extends AnyFreeSpec {
     Permission.upload,
     Permission.delete,
   )
+
+  def to01(b: Boolean): String = if(b) "0" else "1"
 
   "permitted" - {
     "Public" in {
@@ -50,7 +52,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     "Open" in {
       val permissionLogic = createPermissionLogicWithLog(Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", ".+", Permission.edit),
+        TargetActorAction("", "@gmail.com", Permission.edit),
         TargetActorAction("", "", Permission.read),
       ))
 
@@ -62,7 +64,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     "Closed" in {
       val permissionLogic = createPermissionLogicWithLog(Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", ".+", Permission.edit),
+        TargetActorAction("", "@gmail.com", Permission.edit),
         TargetActorAction("", "", Permission.none),
       ))
 
@@ -74,7 +76,8 @@ class PermissionLogicSpec extends AnyFreeSpec {
     "Protected" in {
       val permissionLogic = createPermissionLogicWithLog(Seq(
         TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", actorAha00a + "|" + actorSomeone, Permission.edit),
+        TargetActorAction("", actorAha00a, Permission.edit),
+        TargetActorAction("", actorSomeone, Permission.edit),
         TargetActorAction("", "", Permission.none),
       ))
 
@@ -97,10 +100,11 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "aha00a" in {
       val permissionLogic = createPermissionLogicWithLog(Seq(
-        TargetActorAction(targetPrivate + ".*", actorAha00a, Permission.admin),
-        TargetActorAction(targetPrivate + ".*", "", Permission.none),
+        TargetActorAction(targetPrivate, "", Permission.read),
+        TargetActorAction(targetPrivate + "?", actorAha00a, Permission.admin),
+        TargetActorAction(targetPrivate + "?", "", Permission.none),
         TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", ".+", Permission.edit),
+        TargetActorAction("", "@gmail.com", Permission.edit),
         TargetActorAction("", "", Permission.read),
       ))
 
@@ -109,9 +113,13 @@ class PermissionLogicSpec extends AnyFreeSpec {
       assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorSomeone, a)) === "11000".map(_ == '1'))
       assert(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorAha00a, a)) === "11111".map(_ == '1'))
 
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorEmpty, a)) === "00000".map(_ == '1'))
-      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorEmpty, a)) === "10000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorSomeone, a)) === "10000".map(_ == '1'))
       assert(seqAction.map(a => permissionLogic.permitted(targetPrivate, actorAha00a, a)) === "11111".map(_ == '1'))
+
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorEmpty, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorSomeone, a)) === "00000".map(_ == '1'))
+      assert(seqAction.map(a => permissionLogic.permitted(targetPrivate + "Page", actorAha00a, a)) === "11111".map(_ == '1'))
     }
 
   }

@@ -3,27 +3,57 @@ package models.tables
 import org.scalatest.freespec.AnyFreeSpec
 
 class PermissionSpec extends AnyFreeSpec {
-  "" in {
-    val permissionAnyAnyRead = Permission(1, 1, "", "", Permission.read)
-    val permissionAnyGmailRead = Permission(1, 1, "", "gmail.com", Permission.read)
-    val permissionAnyAha00aGmailAdmin = Permission(1, 1, "", "aha00a@gmail.com", Permission.admin)
+  "matches" - {
+    "Any Any read" in {
+      val permission = Permission(1, "", "", Permission.read)
+      assert(permission.matches("", ""))
+      assert(permission.matches("", "asdf"))
+      assert(permission.matches("asdf", ""))
+      assert(permission.matches("asdf", "asdf"))
+      assert(permission.actorLevel === 1)
+      assert(permission.targetLevel === 1)
+    }
 
-    assert(permissionAnyAnyRead.matches("", ""))
-    assert(permissionAnyAnyRead.matches("", "asdf"))
-    assert(permissionAnyAnyRead.matches("asdf", ""))
-    assert(permissionAnyAnyRead.matches("asdf", "asdf"))
-    assert(permissionAnyAnyRead.actorLevel === 1)
+    "Any @gmail.com read" in {
+      val permission = Permission(1, "", "@gmail.com", Permission.read)
+      assert(!permission.matches("", ""))
+      assert(permission.matches("", "aha00a@gmail.com"))
+      assert(permission.matches("", "aha00b@gmail.com"))
+      assert(!permission.matches("", "aha00a@aharise.com"))
+      assert(permission.actorLevel === 2)
+      assert(permission.targetLevel === 1)
+    }
 
-    assert(!permissionAnyGmailRead.matches("", ""))
-    assert(!permissionAnyGmailRead.matches("", "aha00a@gmail.com"))
-    assert(!permissionAnyGmailRead.matches("", "aha00b@gmail.com"))
-    assert(!permissionAnyGmailRead.matches("", "aha00a@aharise.com"))
-    assert(permissionAnyGmailRead.actorLevel === 2)
+    "Any aha00a@gmail.com admin" in {
+      val permission = Permission(1, "", "aha00a@gmail.com", Permission.admin)
+      assert(!permission.matches("", ""))
+      assert(permission.matches("", "aha00a@gmail.com"))
+      assert(!permission.matches("", "aha00b@gmail.com"))
+      assert(!permission.matches("", "aha00a@aharise.com"))
+      assert(permission.actorLevel === 3)
+      assert(permission.targetLevel === 1)
+    }
 
-    assert(!permissionAnyAha00aGmailAdmin.matches("", ""))
-    assert(permissionAnyAha00aGmailAdmin.matches("", "aha00a@gmail.com"))
-    assert(!permissionAnyAha00aGmailAdmin.matches("", "aha00b@gmail.com"))
-    assert(!permissionAnyAha00aGmailAdmin.matches("", "aha00a@aharise.com"))
-    assert(permissionAnyAha00aGmailAdmin.actorLevel === 3)
+    "Private aha00a@gmail.com admin" in {
+      val permission = Permission(1, "Private", "aha00a@gmail.com", Permission.admin)
+      assert(!permission.matches("", ""))
+      assert(!permission.matches("", "aha00a@gmail.com"))
+      assert(!permission.matches("Private", ""))
+      assert(permission.matches("Private", "aha00a@gmail.com"))
+      assert(!permission.matches("PrivateSomething", "aha00a@gmail.com"))
+      assert(permission.actorLevel === 3)
+      assert(permission.targetLevel === 3)
+    }
+
+    "Private? aha00a@gmail.com admin" in {
+      val permission = Permission(1, "Private?", "aha00a@gmail.com", Permission.admin)
+      assert(!permission.matches("", ""))
+      assert(!permission.matches("", "aha00a@gmail.com"))
+      assert(!permission.matches("Private", ""))
+      assert(permission.matches("Private", "aha00a@gmail.com"))
+      assert(permission.matches("PrivateSomething", "aha00a@gmail.com"))
+      assert(permission.actorLevel === 3)
+      assert(permission.targetLevel === 2)
+    }
   }
 }
