@@ -2,6 +2,8 @@ package models.tables
 
 import java.sql.Connection
 
+import anorm.SqlParser._
+import anorm._
 import com.aha00a.commons.Implicits._
 
 case class Permission(seq: Int, target: String, actor: String, action: Int) {
@@ -76,7 +78,9 @@ object Permission {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def selectWhereValue(value: String)(implicit connection: Connection): List[Permission] = {
-    List()
+  def select()(implicit connection: Connection): List[Permission] = {
+    SQL"SELECT seq, target, actor, action FROM Permission"
+      .as(int("seq") ~ str("target") ~ str("actor") ~ int("action") *).map(flatten)
+      .map(Permission.tupled)
   }
 }

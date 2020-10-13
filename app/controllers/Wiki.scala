@@ -84,6 +84,19 @@ class Wiki @Inject()(implicit val
       val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
       val isReadable = wikiPermission.isReadable(pageLastRevisionContent)
 
+      if(environment.mode == Mode.Dev) {
+        import models.tables.Permission
+        val permissionLogic = new PermissionLogic(Permission.select())
+        val id = SessionLogic.getId(request).getOrElse("")
+        val readable = permissionLogic.permitted(name, id, Permission.read)
+        val editable = permissionLogic.permitted(name, id, Permission.edit)
+
+        logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
+
+        if(isReadable != readable || isWritable != editable)
+          logger.error(s"readable: ${readable} editable: ${editable}")
+      }
+
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
