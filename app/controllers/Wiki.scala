@@ -81,8 +81,8 @@ class Wiki @Inject()(implicit val
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()
-      val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
       val isReadable = wikiPermission.isReadable(pageLastRevisionContent)
+      val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
 
       if(environment.mode == Mode.Dev) {
         import models.tables.Permission
