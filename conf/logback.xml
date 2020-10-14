@@ -32,6 +32,7 @@
   <logger name="actors.ActorAhaWiki" level="INFO" />
   <logger name="com.aha00a.commons.utils.StopWatch" level="INFO" />
   <logger name="com.aha00a.play.utils.GoogleOAuthApi" level="INFO" />
+  <logger name="controllers.Search" level="INFO" />
   <logger name="controllers.Test" level="INFO" />
   <logger name="controllers.Wiki" level="INFO" />
   <logger name="filters.FilterAccessLog" level="INFO" />
