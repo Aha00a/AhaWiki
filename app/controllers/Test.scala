@@ -261,8 +261,9 @@ class Test @Inject()(implicit val
     Ok(views.html.Test.gradient(""))
   }
 
-
-
+  def permission: Action[AnyContent] = Action { implicit request =>
+    Redirect(routes.Search.index("#!read"))
+  }
 }
 
 

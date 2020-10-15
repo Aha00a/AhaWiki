@@ -42,6 +42,7 @@ GET         /test/unit                         controllers.Test.unit
 GET         /test/dbtest                       controllers.Test.dbtest
 GET         /test/filetest                     controllers.Test.filetest
 GET         /test/gradient                     controllers.Test.gradient
+GET         /test/permission                   controllers.Test.permission
 
 GET         /dev/deleteVimCache                controllers.Dev.deleteVimCache(md5:String)
 
