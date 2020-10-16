@@ -35,6 +35,10 @@
                 return false;
             });
 
+            var radiusDefault = 7;
+            var radiusHighlight = 15;
+            var radiusHighlight2 = 10;
+
             var createMarker = function(id) {
                 return Viva.Graph.svg('marker')
                     .attr('id', id)
@@ -45,7 +49,7 @@
                     .attr('markerWidth', "20")
                     .attr('markerHeight', "10")
                     .attr('orient', "auto")
-                    .attr('fill', '#777')
+                    // .attr('fill', nodeColorDefault)
                     ;
             },
             marker = createMarker('Triangle');
@@ -54,28 +58,44 @@
 
 
             var highlightRelatedNodes = function(nodeId, isOn) {
+                var nodeUI = graphics.getNodeUI(nodeId);
+                if(isOn) {
+                    nodeUI.classList.add("hover");
+                } else {
+                    nodeUI.classList.remove("hover");
+                }
+                nodeUI.firstElementChild.attr('r', isOn ? radiusHighlight : radiusDefault);
+
                 graph.forEachLinkedNode(nodeId, function(node, link){
-                    var nodeUI = graphics.getNodeUI(node.id);
-                    var linkUI = graphics.getLinkUI(link.id);
-                    if (nodeUI) {
-                        nodeUI.attr('fill', isOn ? '#f00' : '#333');
+                    var nodeUILinked = graphics.getNodeUI(node.id);
+                    var linkUILinked = graphics.getLinkUI(link.id);
+                    if(isOn) {
+                        nodeUILinked.classList.add('neighbor');
+                        linkUILinked.classList.add('neighbor');
+                        nodeUILinked.firstElementChild.attr('r', isOn ? radiusHighlight2 : radiusDefault);
+                    } else {
+                        nodeUILinked.classList.remove('neighbor');
+                        linkUILinked.classList.remove('neighbor');
+                        nodeUILinked.firstElementChild.attr('r', isOn ? radiusHighlight2 : radiusDefault);
                     }
-                    if (linkUI) {
-                        linkUI.attr('stroke', isOn ? '#f00' : '#333');
-                    }
+
                 });
             };
 
             graphics.node(function(node) {
                 var ui = Viva.Graph.svg('g').attr('class', 'node');
 
-                if(layout.isNodePinned(node)) {
-                    ui.append(Viva.Graph.svg('circle').attr('r', 10).attr('fill', '#00a'));
-                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '13px').attr('y', '5px').attr('fill', '#00a').text(node.id));
-                } else {
-                    ui.append(Viva.Graph.svg('circle').attr('r', 5).attr('fill', '#333'));
-                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '8px').attr('y', '5px').attr('fill', '#333').text(node.id));
-                }
+                // if(layout.isNodePinned(node)) {
+                //     ui.append(Viva.Graph.svg('circle').attr('r', 10).attr('fill', '#00a'));
+                //     ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '13px').attr('y', '5px').attr('fill', '#00a').text(node.id));
+                // } else {
+                    ui.append(Viva.Graph.svg('circle').attr('r', radiusDefault));
+                    ui.append(Viva.Graph.svg('text')
+                            .attr('class', 'label')
+                            .attr('x', '16px')
+                            .attr('y', '5px')
+                            .text(node.id));
+                // }
 
                 $(ui).hover(function() {
                     highlightRelatedNodes(node.id, true);
@@ -101,26 +121,10 @@
             });
 
             graphics.link(function(link){
-                return Viva.Graph.svg('path').attr('stroke', '#777').attr('marker-end', 'url(#Triangle)');
+                return Viva.Graph.svg('path').attr('class', 'link').attr('marker-end', 'url(#Triangle)');
             }).placeLink(function(linkUI, fromPos, toPos) {
                 linkUI.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
             });
-
-            @* TODO: link label
-            graphics.link(function(link){
-                var edge = Viva.Graph.svg('path').attr('stroke', '#777').attr('marker-end', 'url(#Triangle)');
-                var label = Viva.Graph.svg('text').attr('fill', '#777').text('');
-                var g = Viva.Graph.svg('g')
-                g.append(edge);
-                g.append(label);
-                g.edge = edge;
-                g.label = label;
-                return g;
-            }).placeLink(function(linkUI, fromPos, toPos) {
-                linkUI.edge.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
-                linkUI.label.attr("x", (fromPos.x + toPos.x) / 2).attr('y', (fromPos.y + toPos.y) / 2);
-            });
-            *@
 
 
             @for(link <- links) { @link match {

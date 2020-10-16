@@ -1483,10 +1483,47 @@ body {
 .AhaWiki svg.graph {
   border: 1px solid #ccc;
 }
+.AhaWiki svg.graph g.node circle {
+  fill: #777;
+  opacity: 0.8;
+}
 .AhaWiki svg.graph g.node text.label {
   pointer-events: none;
-  opacity: 0.5;
+  opacity: 0.8;
   font-size: 12px;
+  fill: #777;
+  text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+}
+.AhaWiki svg.graph g.node.neighbor circle {
+  fill: #444444;
+}
+.AhaWiki svg.graph g.node.neighbor text.label {
+  pointer-events: none;
+  opacity: 0.9;
+  font-size: 15px;
+  fill: #444444;
+}
+.AhaWiki svg.graph g.node:hover circle,
+.AhaWiki svg.graph g.node.hover circle {
+  fill: #111111;
+}
+.AhaWiki svg.graph g.node:hover text.label,
+.AhaWiki svg.graph g.node.hover text.label {
+  pointer-events: none;
+  opacity: 1;
+  font-size: 20px;
+  fill: #111111;
+}
+.AhaWiki svg.graph g path.link {
+  opacity: 0.5;
+  stroke: #777;
+  stroke-width: 1.5;
+}
+.AhaWiki svg.graph g path.link.neighbor {
+  stroke: #111111;
+}
+.AhaWiki svg.graph marker {
+  fill: #777;
 }
 .AhaWiki table.seeAlso {
   -webkit-box-shadow: 0 0 1em #eee;

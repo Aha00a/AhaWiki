@@ -702,15 +702,74 @@ html, body {
 	}
 
 	svg.graph {
+		@opacityNormal: 0.8;
+		@opacityNeighbor: 0.9;
+		@opacityHover: 1;
+
+		//@nodeColorNormal: #C7CEEA;
+		@nodeColorNormal: #777;
+		@nodeColorNeighbor: darken(@nodeColorNormal, 20%);
+		@nodeColorHover: darken(@nodeColorNormal, 40%);
+
 		border: 1px solid #ccc;
-		g.node {
-			text.label {
-				pointer-events: none;
-				opacity : 0.5;
-				font-size: 12px;
+		g {
+			&.node {
+				& {
+					circle {
+						fill: @nodeColorNormal;
+						opacity: @opacityNormal;
+					}
+
+					text.label {
+						pointer-events: none;
+						opacity: @opacityNormal;
+						font-size: 12px;
+						fill: @nodeColorNormal;
+						text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+
+					}
+				}
+
+				&.neighbor {
+					circle {
+						fill: @nodeColorNeighbor;
+					}
+
+					text.label {
+						pointer-events: none;
+						opacity: @opacityNeighbor;
+						font-size: 15px;
+						fill: @nodeColorNeighbor;
+					}
+				}
+
+				&:hover, &.hover {
+					circle {
+						fill: @nodeColorHover;
+					}
+
+					text.label {
+						pointer-events: none;
+						opacity: @opacityHover;
+						font-size: 20px;
+						fill: @nodeColorHover;
+					}
+				}
+			}
+
+			path.link {
+				& {
+					opacity: 0.5;
+					stroke: @nodeColorNormal;
+					stroke-width: 1.5;
+				}
+				&.neighbor {
+					stroke: @nodeColorHover;
+				}
 			}
 		}
-		path.link {
+		marker {
+			fill: @nodeColorNormal;
 		}
 	}
 
