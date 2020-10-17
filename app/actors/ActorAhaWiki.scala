@@ -73,14 +73,14 @@ class ActorAhaWiki @Inject()(implicit
             .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
             .filterNot(s => s.length < 2)
             .filterNot(s => s.length > 15)
-          val stopWord =
+          val stopWord: Seq[String] =
             """at in on of by to is the
               |gmail com http https
-              |""".split("""\s""").toSeq
-          val seqWordFiltered = seqWord.filter(!stopWord.contains(_))
+              |""".stripMargin.split("""\s""").toSeq
+          val seqWordFiltered = seqWord.filter(w => !stopWord.contains(w))
           val wordCount = seqWordFiltered.groupByCount()
           logger.info(text)
-          logger.info(seqWord.mkString(" "))
+          logger.info(seqWordFiltered.mkString(" "))
           logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
           Page.updateSimilarPage(name, wordCount)
