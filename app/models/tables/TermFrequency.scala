@@ -10,7 +10,7 @@ case class TermFrequency(name:String, term:String, frequency:Int) {
   def this(name:String, kv:(String, Int)) = this(name, kv._1, kv._2)
 }
 
-case class HighScoredTerm(name:String, term:String, frequency1:Float, frequency2:Float)
+case class HighScoredTerm(name:String, term:String, frequency1:Int, frequency2:Int)
 
 object TermFrequency {
   //noinspection TypeAnnotation
@@ -38,7 +38,7 @@ object TermFrequency {
 
   def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection): Seq[HighScoredTerm] = {
     import anorm.SqlParser.flatten
-    import anorm.SqlParser.float
+    import anorm.SqlParser.int
     import anorm.SqlParser.str
 
     import scala.collection.immutable
@@ -53,7 +53,7 @@ object TermFrequency {
             |        tf1.name = {name} AND tf2.name IN ({pageNames})
             |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
         .on(Symbol("name") -> name, Symbol("pageNames") -> similarPageNames)
-        .as(str("name") ~ str("term") ~ float("frequency1") ~ float("frequency2") *).map(flatten)
+        .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
     }
   }
