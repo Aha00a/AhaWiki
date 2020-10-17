@@ -27,7 +27,7 @@ object MacroSimilarPages extends TraitMacro {
         val seqHighScoredTerm: Seq[HighScoredTerm] = TermFrequency.selectHighScoredTerm(name, similarPageNames)
         val mapHighScoredTerm: Map[String, Seq[HighScoredTerm]] = seqHighScoredTerm.groupBy(_.name)
         val highScoredTerms: Map[String, String] = mapHighScoredTerm.view.mapValues(_.map(h => s"${h.term}(${h.frequency1}:${h.frequency2})").mkString(", ")).toMap
-        cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
+        cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "")]] [[Trivial(${{highScoredTerms.getOrElse(c.name2, "")}})]]""").mkString("\n")
       }
     }
   }
