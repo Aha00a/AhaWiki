@@ -48,6 +48,11 @@ class ActorAhaWiki @Inject()(implicit
   import ActorAhaWiki._
   import models.WikiContext.Provider
   val provider: Provider = Provider.empty
+  val seqStopWord: Seq[String] =
+    """at in on of by to is the
+      |gmail com http https
+      |""".stripMargin.split("""\s""").toSeq
+
   def receive: PartialFunction[Any, Unit] = {
     case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
       context.self ! CalculateCosineSimilarity(name, i, length)
@@ -73,11 +78,7 @@ class ActorAhaWiki @Inject()(implicit
             .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
             .filterNot(s => s.length < 2)
             .filterNot(s => s.length > 15)
-          val stopWord: Seq[String] =
-            """at in on of by to is the
-              |gmail com http https
-              |""".stripMargin.split("""\s""").toSeq
-          val seqWordFiltered = seqWord.filter(w => !stopWord.contains(w))
+          val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
           val wordCount = seqWordFiltered.groupByCount()
           logger.info(text)
           logger.info(seqWordFiltered.mkString(" "))
