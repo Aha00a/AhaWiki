@@ -12,7 +12,7 @@ object MacroBacklinks extends TraitMacro {
     if(0 == listLinkFiltered.length) {
       ""
     } else {
-      InterpreterWiki.toHtmlString(" * " + listLinkFiltered.map(l => s"""["${l.src}" ${l.src}${if(l.alias.isNullOrEmpty) "" else "(" + l.alias + ")"}] """).mkString(" "))
+      InterpreterWiki.toHtmlString(listLinkFiltered.map(l => s"""["${l.src}" ${l.src}${if(l.alias.isNullOrEmpty) "" else "(" + l.alias + ")"}]""").mkString(", "))
     }
   }}
 }
