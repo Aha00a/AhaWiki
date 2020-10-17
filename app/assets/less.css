@@ -180,13 +180,6 @@ body {
 .AhaWiki .commonAhaWiki h6 .headingNumber {
   text-decoration: none;
 }
-.AhaWiki .commonAhaWiki h2:first-of-type,
-.AhaWiki .commonAhaWiki h3:first-of-type,
-.AhaWiki .commonAhaWiki h4:first-of-type,
-.AhaWiki .commonAhaWiki h5:first-of-type,
-.AhaWiki .commonAhaWiki h6:first-of-type {
-  margin-top: 0;
-}
 .AhaWiki .commonAhaWiki h1,
 .AhaWiki .commonAhaWiki h2,
 .AhaWiki .commonAhaWiki h3 {
@@ -533,13 +526,6 @@ body {
 .AhaWiki .wikiContent h5 .headingNumber,
 .AhaWiki .wikiContent h6 .headingNumber {
   text-decoration: none;
-}
-.AhaWiki .wikiContent h2:first-of-type,
-.AhaWiki .wikiContent h3:first-of-type,
-.AhaWiki .wikiContent h4:first-of-type,
-.AhaWiki .wikiContent h5:first-of-type,
-.AhaWiki .wikiContent h6:first-of-type {
-  margin-top: 0;
 }
 .AhaWiki .wikiContent h1,
 .AhaWiki .wikiContent h2,
@@ -990,13 +976,6 @@ body {
 .AhaWiki .paperContent .page .pageContent h5 .headingNumber,
 .AhaWiki .paperContent .page .pageContent h6 .headingNumber {
   text-decoration: none;
-}
-.AhaWiki .paperContent .page .pageContent h2:first-of-type,
-.AhaWiki .paperContent .page .pageContent h3:first-of-type,
-.AhaWiki .paperContent .page .pageContent h4:first-of-type,
-.AhaWiki .paperContent .page .pageContent h5:first-of-type,
-.AhaWiki .paperContent .page .pageContent h6:first-of-type {
-  margin-top: 0;
 }
 .AhaWiki .paperContent .page .pageContent h1,
 .AhaWiki .paperContent .page .pageContent h2,
