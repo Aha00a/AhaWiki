@@ -3,6 +3,7 @@ package controllers
 import java.util.Date
 
 import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import javax.inject._
 import logics.PermissionLogic
@@ -12,16 +13,25 @@ import models.PageContent
 import models.WikiContext
 import models.tables.Permission
 import play.api.Configuration
+import play.api.Environment
 import play.api.Logging
 import play.api.cache.SyncCacheApi
+import play.api.db.Database
+import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import scala.concurrent.ExecutionContext
+
 class Search @Inject()(implicit val
-                       controllerComponents: ControllerComponents,
+controllerComponents: ControllerComponents,
                        syncCacheApi: SyncCacheApi,
-                       database: play.api.db.Database,
+                       actorSystem: ActorSystem,
+                       database: Database,
+                       environment: Environment,
                        @Named("db-actor") actorAhaWiki: ActorRef,
-                       configuration: Configuration
+                       configuration: Configuration,
+                       wsClient: WSClient,
+                       executionContext: ExecutionContext
                       ) extends BaseController with Logging {
 
   import logics.AhaWikiInjects
@@ -31,13 +41,14 @@ class Search @Inject()(implicit val
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
     import models.WikiContext.Provider
+    import play.api.Mode
     implicit val wikiContext: WikiContext = WikiContext("")
     implicit val provider: Provider = wikiContext.provider
 
     val wikiPermission = WikiPermission()
-    val permissionLogic = new PermissionLogic(Permission.select())
-
     val id = SessionLogic.getId(request).getOrElse("")
+    val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq()
+    val permissionLogic = new PermissionLogic(seqPermission)
 
     Ok(views.html.Search.search(
       q,
@@ -46,6 +57,7 @@ class Search @Inject()(implicit val
           .filter(sr => {
             val pageContent = PageContent(sr.content)
             val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+
             val readable = permissionLogic.permitted(sr.name, id, Permission.read)
             val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
             if(isReadableFromLegacy != readable)
