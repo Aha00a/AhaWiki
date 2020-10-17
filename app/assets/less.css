@@ -234,6 +234,10 @@ body {
   margin-left: -25px;
   height: 0;
 }
+.AhaWiki .commonAhaWiki li > p {
+  margin: 0;
+  display: inline-block;
+}
 .AhaWiki .commonAhaWiki code {
   border: 1px solid #99c;
   background-color: #002;
@@ -579,6 +583,10 @@ body {
   border-bottom: 1px dashed #ccc;
   margin-left: -25px;
   height: 0;
+}
+.AhaWiki .wikiContent li > p {
+  margin: 0;
+  display: inline-block;
 }
 .AhaWiki .wikiContent code {
   border: 1px solid #99c;
@@ -1028,6 +1036,10 @@ body {
   border-bottom: 1px dashed #ccc;
   margin-left: -25px;
   height: 0;
+}
+.AhaWiki .paperContent .page .pageContent li > p {
+  margin: 0;
+  display: inline-block;
 }
 .AhaWiki .paperContent .page .pageContent code {
   border: 1px solid #99c;
