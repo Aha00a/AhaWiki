@@ -7,6 +7,13 @@
             @Html(logics.AhaWikiCache.Header.get())
         </div>
     </div>
+    @if(wikiContext.ahaWikiInjects.environment.mode == play.api.Mode.Dev) {
+        <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
+            <div class="error">
+                Dev Mode
+            </div>
+        </div>
+    }
     @for(f <- Seq("success", "error")) {
         @if(wikiContext.provider.flashGet(f)) {
             <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">

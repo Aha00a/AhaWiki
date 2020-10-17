@@ -10,18 +10,26 @@ import javax.inject._
 import logics.wikis.{PageLogic, WikiPermission}
 import models.{PageContent, WikiContext}
 import play.api.Configuration
+import play.api.Environment
 import play.api.cache.SyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.db.Database
+import play.api.libs.ws.WSClient
 import play.api.mvc._
+
+import scala.concurrent.ExecutionContext
 
 class Diary @Inject()(implicit val
                       controllerComponents: ControllerComponents,
                       syncCacheApi: SyncCacheApi,
                       actorSystem: ActorSystem,
-                      database: play.api.db.Database,
+                      database: Database,
+                      environment: Environment,
                       @Named("db-actor") actorAhaWiki: ActorRef,
-                      configuration: Configuration
+                      configuration: Configuration,
+                      wsClient: WSClient,
+                      executionContext: ExecutionContext
                      ) extends BaseController {
 
   import logics.AhaWikiInjects

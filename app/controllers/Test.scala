@@ -7,24 +7,32 @@ import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
 import javax.inject.Inject
+import javax.inject.Named
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import models._
 import play.api.Configuration
+import play.api.Environment
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
+import play.api.libs.ws.WSClient
 import play.api.mvc._
+
+import scala.concurrent.ExecutionContext
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
                      syncCacheApi: SyncCacheApi,
-                     system: ActorSystem,
-                     database: play.api.db.Database,
-                     @javax.inject.Named("db-actor") actorAhaWiki: ActorRef,
-                     configuration: Configuration
+                     actorSystem: ActorSystem,
+                     database: Database,
+                     environment: Environment,
+                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     configuration: Configuration,
+                     wsClient: WSClient,
+                     executionContext: ExecutionContext
                     ) extends BaseController with Logging {
   import logics.AhaWikiInjects
 
