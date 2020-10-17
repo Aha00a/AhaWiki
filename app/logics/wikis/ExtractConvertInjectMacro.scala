@@ -25,6 +25,7 @@ object ExtractConvertInjectMacro {
     MacroPageMap,
     MacroSimilarPages,
     MacroBacklinks,
+    MacroYears,
 
     MacroPageCount,
     MacroPercentLinkTitle,

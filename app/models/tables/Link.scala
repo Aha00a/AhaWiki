@@ -30,13 +30,6 @@ object Link {
       .as(long("cnt") single)
   }
 
-
-  def selectBacklink(name: String)(implicit connection: Connection): List[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE dst = $name"
-      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
-  }
-
   def selectBacklinkOfDatePage(name: String)(implicit connection: Connection): List[Link] = {
     SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])'"""
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
@@ -63,6 +56,11 @@ object Link {
     SQL"SELECT src, dst, alias FROM Link WHERE src != '' AND dst != ''"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
+  }
+
+  def selectDistinctDstWhereDstIsYear()(implicit connection: Connection): List[String] = {
+    SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
+      .as(str("dst") *)
   }
 
 
