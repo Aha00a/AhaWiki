@@ -20,9 +20,12 @@ object MacroSimilarPages extends TraitMacro {
         wikiContext.actorAhaWiki ! Calculate(name)
         ""
       } else {
+        import models.tables.HighScoredTerm
         import models.tables.TermFrequency
-        val similarPageNames = cosineSimilarities.map(_.name2)
-        val highScoredTerms = TermFrequency.selectHighScoredTerm(name, similarPageNames).groupBy(_.name).view.mapValues(_.map(_.term).mkString(", ")).toMap
+        val similarPageNames: Seq[String] = cosineSimilarities.map(_.name2)
+        val seqHighScoredTerm: Seq[HighScoredTerm] = TermFrequency.selectHighScoredTerm(name, similarPageNames)
+        val mapHighScoredTerm: Map[String, Seq[HighScoredTerm]] = seqHighScoredTerm.groupBy(_.name)
+        val highScoredTerms: Map[String, String] = mapHighScoredTerm.view.mapValues(_.map(_.term).mkString(", ")).toMap
         cosineSimilarities.map(c => s""" * [[PercentLinkTitle(${c.similarity}, ${c.name2}, "${highScoredTerms.getOrElse(c.name2, "")}")]]""").mkString("\n")
       }
     }
