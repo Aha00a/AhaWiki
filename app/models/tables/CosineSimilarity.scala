@@ -40,7 +40,7 @@ SELECT *
             ) similarity
             FROM (SELECT DISTINCT name FROM TermFrequency) TF3
     ) CS1
-    WHERE similarity > 0
+    WHERE similarity > 0.3
       """.executeUpdate()
 
     SQL"""
