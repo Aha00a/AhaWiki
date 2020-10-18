@@ -24,14 +24,25 @@ object MacroSeeAlso extends TraitMacro {
   def getMarkupRelatedPages(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     import models.tables.Link
     import models.tables.SchemaOrg
+
+    import scala.util.matching.Regex
+
     val seqLink: Seq[Link] = Link.select(name)
     val seqSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
+
+    val year: Regex = """\d{4}""".r
+    val date: Regex = """\d{4}-\d{2}-\d{2}""".r
 
     val seqLinkFiltered: Seq[Link] = (seqLink ++ seqSchemaOrgLink).filter(l => l.and(wikiContext.pageCanSee))
     val seqLinkFilteredExpanded: Seq[Link] = Link.expand(seqLinkFiltered)
     val seqLinkFilteredExpandedFiltered: Seq[Link] = seqLinkFilteredExpanded.filter(l => l.and(wikiContext.pageCanSee))
     val result = seqLinkFilteredExpandedFiltered
+      .filter(l => (l.src, l.dst) match {
+        case (year(), date()) => false
+        case (date(), year()) => false
+        case _ => true
+      })
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
