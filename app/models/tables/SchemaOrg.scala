@@ -66,7 +66,13 @@ object SchemaOrg {
   }
 
   def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page = $pageOrValue OR value = $pageOrValue"
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value != '' AND page = $pageOrValue OR value = $pageOrValue"
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.SchemaOrg.tupled)
+  }
+
+  def selectWherePageOrValueIn(seq: Seq[String])(implicit connection: Connection): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page IN ($seq) OR value IN ($seq)"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }

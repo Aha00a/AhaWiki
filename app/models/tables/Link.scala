@@ -18,6 +18,7 @@ case class Link(src:String, dst:String, alias:String) {
 
   def and(a: String => Boolean):Boolean = a(src) && a(dst)
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
+  def toSeqString(): Seq[String] = Seq(src, dst)
 }
 
 object Link {
@@ -37,11 +38,7 @@ object Link {
   }
 
   def select(name: String)(implicit connection: Connection): List[Link] = {
-    SQL"""SELECT src, dst, alias
-           FROM Link
-           WHERE
-            src != '' AND dst != '' AND (src = $name OR dst = $name)
-        """
+    SQL"""SELECT src, dst, alias FROM Link WHERE src != '' AND dst != '' AND (src = $name OR dst = $name)"""
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
@@ -62,13 +59,11 @@ object Link {
     SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
       .as(str("dst") *)
   }
-
-
-  def expand(seq: Seq[Link])(implicit connection: Connection): Seq[Link] = {
-    val backward: Seq[Link] = seq.flatMap(l => select(l.src))
-    val forward: Seq[Link] = seq.flatMap(l => select(l.dst))
-    val seqExpanded: Seq[Link] = seq ++ backward ++ forward
-    seqExpanded.distinct
+  
+  def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection): Seq[Link] = {
+    SQL"""SELECT src, dst, alias FROM Link WHERE src != '' AND dst != '' AND (src IN ($seq) OR dst IN ($seq))"""
+      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
+      .map(tables.Link.tupled)
   }
 
 

@@ -35,8 +35,12 @@ object MacroSeeAlso extends TraitMacro {
     val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
     val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(l => l.and(wikiContext.pageCanSee))
 
-    val seqLinkFilteredExpanded: Seq[Link] = Link.expand(seqLinkFiltered)
-    val seqLinkFilteredExpandedFiltered: Seq[Link] = seqLinkFilteredExpanded.filter(l => l.and(wikiContext.pageCanSee))
+    val seqName = seqLinkFiltered.flatMap(_.toSeqString()).distinct
+
+    val seqLinkFilteredExpanded: Seq[Link] = Link.selectWhereSrcORDstIn(seqName)
+    val seqLinkFilteredExpanded2: Seq[Link] = SchemaOrg.selectWherePageOrValueIn(seqName).map(s => Link(s.page, s.value, ""))
+
+    val seqLinkFilteredExpandedFiltered: Seq[Link] = (seqLinkFilteredExpanded ++ seqLinkFilteredExpanded2).filter(l => l.and(wikiContext.pageCanSee))
     val result = seqLinkFilteredExpandedFiltered
       .filter(l => (l.src, l.dst) match {
         case (year(), date()) => false
