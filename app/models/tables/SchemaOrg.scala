@@ -41,8 +41,8 @@ object SchemaOrg {
       .map(PropCnt.tupled)
   }
 
-  def selectWhereValue(value: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value = $value"
+  def selectWherePage(page: String)(implicit connection: Connection): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page = $page"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
@@ -55,6 +55,18 @@ object SchemaOrg {
 
   def selectWhereProp(prop: String)(implicit connection: Connection): List[SchemaOrg] = {
     SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE prop = $prop"
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.SchemaOrg.tupled)
+  }
+
+  def selectWhereValue(value: String)(implicit connection: Connection): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value = $value"
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.SchemaOrg.tupled)
+  }
+
+  def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page = $pageOrValue OR value = $pageOrValue"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }

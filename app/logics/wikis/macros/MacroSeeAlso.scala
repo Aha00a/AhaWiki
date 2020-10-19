@@ -27,14 +27,14 @@ object MacroSeeAlso extends TraitMacro {
 
     import scala.util.matching.Regex
 
-    val seqLink: Seq[Link] = Link.select(name)
-    val seqSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
-    val seqSchemaOrgLink = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
-
     val year: Regex = """\d{4}""".r
     val date: Regex = """\d{4}-\d{2}-\d{2}""".r
 
-    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqSchemaOrgLink).filter(l => l.and(wikiContext.pageCanSee))
+    val seqLink: Seq[Link] = Link.select(name)
+
+    val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
+    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(l => l.and(wikiContext.pageCanSee))
+
     val seqLinkFilteredExpanded: Seq[Link] = Link.expand(seqLinkFiltered)
     val seqLinkFilteredExpandedFiltered: Seq[Link] = seqLinkFilteredExpanded.filter(l => l.and(wikiContext.pageCanSee))
     val result = seqLinkFilteredExpandedFiltered
