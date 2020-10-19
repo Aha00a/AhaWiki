@@ -61,6 +61,10 @@ object Link {
   }
   
   def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection): Seq[Link] = {
+    if(seq.isEmpty) {
+      return Seq()
+    }
+
     SQL"""SELECT src, dst, alias FROM Link WHERE src != '' AND dst != '' AND (src IN ($seq) OR dst IN ($seq))"""
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)

@@ -71,7 +71,11 @@ object SchemaOrg {
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWherePageOrValueIn(seq: Seq[String])(implicit connection: Connection): List[SchemaOrg] = {
+  def selectWherePageOrValueIn(seq: Seq[String])(implicit connection: Connection): Seq[SchemaOrg] = {
+    if(seq.isEmpty) {
+      return Seq()
+    }
+
     SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page IN ($seq) OR value IN ($seq)"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
