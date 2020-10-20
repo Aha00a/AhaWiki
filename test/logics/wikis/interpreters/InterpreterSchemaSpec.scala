@@ -8,7 +8,7 @@ import org.scalatest.freespec.AnyFreeSpec
 
 //noinspection NameBooleanParameters
 class InterpreterSchemaSpec extends AnyFreeSpec {
-  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null)
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null, null)
   implicit val wikiContext: WikiContext = new WikiContext(Seq("UnitTest"), RenderingMode.Normal)(ahaWikiInjects, Provider.empty)
 
   "name" in {

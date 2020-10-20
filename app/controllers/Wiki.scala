@@ -231,13 +231,10 @@ class Wiki @Inject()(implicit val
               val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
               val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
 
+
               val content = s"""= Schema
                  |${listSchemaOrgWithPermission.size} page(s).
-                 |${mapSchemaOrg.toSeq.sortBy(_._1).map(k =>
-              s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}] (${k._2.size})
-                 |${k._2.toSeq.map(_.page).map(s =>
-              s""" * ["${s}"]""").mkString("\n")}
-                 |""".stripMargin).mkString("\n")}
+                 |${SchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
                  |""".stripMargin
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
               NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))

@@ -3,15 +3,19 @@ package logics
 import java.io.File
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.{EnglishCaseConverter, Using}
+import com.aha00a.commons.utils.EnglishCaseConverter
+import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.WikiContext
-import play.api.libs.json.{JsLookupResult, JsValue, Json}
+import play.api.libs.json.JsLookupResult
+import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 
 import scala.Ordering.Implicits._
 import scala.collection.mutable
 import scala.io.Codec
-import scala.xml.{Elem, NodeSeq}
+import scala.xml.Elem
+import scala.xml.NodeSeq
 
 object SchemaOrg {
   case class SchemaType(
@@ -58,6 +62,44 @@ object SchemaOrg {
           {c}
         </ul>
       }
+    }
+  }
+
+  def renderExistingPages(map: Map[String, Seq[String]]): String = {
+
+    val defined = renderSchemaClassTreeWithExistingPages(map, jsonTree)
+    val mapCustom = map.filter(e => !mapClass.isDefinedAt(e._1))
+    if(mapCustom.isEmpty) {
+      defined
+    } else {
+      s"""
+         |${defined}
+         |
+         |= Custom
+         |${mapCustom.toSeq.sortBy(_._1).map(k =>
+      s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}]
+         |${k._2.toSeq.map(s =>
+      s""" * ["${s}"]""").mkString(System.lineSeparator)}
+         |""".stripMargin).mkString(System.lineSeparator)}
+         |""".stripMargin
+    }
+
+  }
+
+  def renderSchemaClassTreeWithExistingPages(map: Map[String, Seq[String]], node:JsValue = jsonTree, depth: Int = 1): String = {
+    val id = (node \ "id").as[String]
+    val children = (node \ "children").asOpt[Seq[JsValue]].getOrElse(Seq())
+
+    val seqNodeSeq: Seq[String] = children.map(j => renderSchemaClassTreeWithExistingPages(map, j, depth + 1)).filter(_.nonEmpty)
+    val seq = map.getOrElse(id, Seq())
+    if(seq.isEmpty && seqNodeSeq.isEmpty) {
+      ""
+    } else {
+      s"""${"=" * depth} ["schema:${id}" ${EnglishCaseConverter.pascalCase2TitleCase(id)}]
+         |${if(seq.isEmpty) "" else seq.map(s =>
+      s""" * ["${s}"]""").mkString(System.lineSeparator)}
+         |${seqNodeSeq.mkString(System.lineSeparator)}
+         |""".stripMargin
     }
   }
 
