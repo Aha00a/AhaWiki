@@ -61,7 +61,7 @@ object MacroSeeAlso extends TraitMacro {
 
   def getMarkupSeeAlso(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     s"""
-       |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td>)]]
+       |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td class="pageSuggestion">)]]
        |'''[schema:Schema Schema]'''
        |${getMarkupSchema(name)}
        |
@@ -70,7 +70,7 @@ object MacroSeeAlso extends TraitMacro {
        |
        |'''Backlinks'''
        |[[Backlinks]]
-       |[[Html(</td><td>)]]
+       |[[Html(</td><td class="relatedPages">)]]
        |${getMarkupRelatedPages(name)}
        |[[Html(</td></tr></tbody></table>)]]
        |""".stripMargin

@@ -785,7 +785,18 @@ html, body {
 			width: 33%;
 			vertical-align: top;
 			border: 1px solid #ccc;
-			padding: 20px;
+			@padding: 20px;
+			padding: @padding;
+			&.relatedPages {
+				position: relative;
+				> .aspectRatioWrapper {
+					position: absolute;
+					top: @padding;
+					right: @padding;
+					bottom: @padding;
+					left: @padding;
+				}
+			}
 		}
         tr:hover {
             background-color: inherit;
