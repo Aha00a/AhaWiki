@@ -28,6 +28,7 @@ object AhaWikiCache extends Logging {
     import models.tables.PageWithoutContentWithSize
 
     def get()(implicit syncCacheApi: SyncCacheApi, database: Database): List[PageWithoutContentWithSize] = syncCacheApi.getOrElseUpdate(key, 60.minutes) {
+      logger.info("Cache miss")
       database.withConnection { implicit connection =>
         Page.pageSelectPageList()
       }
@@ -36,6 +37,7 @@ object AhaWikiCache extends Logging {
 
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, 60.minutes) {
+      logger.info("Cache miss")
       wikiContext.database.withConnection { implicit connection =>
         Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).getOrElse(""))
       }
@@ -44,6 +46,7 @@ object AhaWikiCache extends Logging {
 
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, 60.minutes) {
+      logger.info("Cache miss")
       wikiContext.database.withConnection { implicit connection =>
         Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
       }
@@ -52,6 +55,7 @@ object AhaWikiCache extends Logging {
 
   object Config extends CacheEntity {
     def get()(implicit syncCacheApi: SyncCacheApi, database: Database): String = syncCacheApi.getOrElseUpdate(key, 60.minutes) {
+      logger.info("Cache miss")
       database.withConnection { implicit connection =>
         Page.selectLastRevision(".config").map(_.content).getOrElse("")
       }

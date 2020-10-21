@@ -29,16 +29,12 @@
 
   <logger name="play" level="INFO" />
   <logger name="application" level="DEBUG" />
-  <logger name="actors.ActorAhaWiki" level="INFO" />
-  <logger name="com.aha00a.commons.utils.StopWatch" level="INFO" />
-  <logger name="com.aha00a.play.utils.GoogleOAuthApi" level="INFO" />
-  <logger name="controllers.Search" level="INFO" />
-  <logger name="controllers.Test" level="INFO" />
-  <logger name="controllers.Wiki" level="INFO" />
-  <logger name="filters.FilterAccessLog" level="INFO" />
-  <logger name="logics.AhaWikiCache" level="INFO" />
-  <logger name="logics.wikis.interpreters.InterpreterVim" level="INFO" />
-  <logger name="services.ApplicationLifecycleHook" level="INFO" />
+  <logger name="actors" level="INFO" />
+  <logger name="com.aha00a" level="INFO" />
+  <logger name="controllers" level="INFO" />
+  <logger name="filters" level="INFO" />
+  <logger name="logics" level="INFO" />
+  <logger name="services" level="INFO" />
 
   <!-- https://hibernate.atlassian.net/browse/HV-1323 -->
   <logger name="org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator" level="INFO" />
