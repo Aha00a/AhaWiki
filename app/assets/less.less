@@ -388,9 +388,11 @@ html, body {
 			opacity: 0.7;
 		}
 
-        &.schema\:Schema > * > ul {
-            column-width: 400px;
-            column-gap: 50px;
+        &.schema\:Schema, &.TitleIndex {
+            > * > ul {
+                column-width: 400px;
+                column-gap: 50px;
+            }
         }
 	}
 
