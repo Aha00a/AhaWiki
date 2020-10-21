@@ -37,6 +37,7 @@
   <logger name="controllers.Wiki" level="INFO" />
   <logger name="filters.FilterAccessLog" level="INFO" />
   <logger name="logics.AhaWikiCache" level="INFO" />
+  <logger name="logics.wikis.interpreters.InterpreterVim" level="INFO" />
   <logger name="services.ApplicationLifecycleHook" level="INFO" />
 
   <!-- https://hibernate.atlassian.net/browse/HV-1323 -->
