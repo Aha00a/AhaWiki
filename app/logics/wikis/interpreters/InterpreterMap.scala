@@ -21,7 +21,6 @@ object InterpreterMap extends TraitInterpreter {
 
   import models.tables.Link
 
-  val originString: String = "Origin"
   case class Location(
                        name:String,
                        exists: Boolean,
@@ -33,9 +32,7 @@ object InterpreterMap extends TraitInterpreter {
     import com.aha00a.colors.Color
     import com.aha00a.colors.GradientPreset
     
-    val isOrigin: Boolean = scoreRaw == originString
-
-    val score: Double = if(isOrigin) 10 else scoreRaw.toDoubleOrZero
+    val score: Double = scoreRaw.toDoubleOrZero
 
     val fillOpacity: Double = score / 10
     val color: Color = GradientPreset.ahaWikiMap.getColor(score / 10)
