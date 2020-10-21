@@ -127,6 +127,7 @@ class ActorAhaWiki @Inject()(implicit
         })
     }
     case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
+      // TODO: remove
       wsClient
         .url("https://maps.googleapis.com/maps/api/distancematrix/json")
         .withQueryStringParameters(
@@ -144,11 +145,7 @@ class ActorAhaWiki @Inject()(implicit
           )
         })
         .map(metersSeconds => {
-          database.withTransaction { implicit connection =>
-            import models.tables.DistanceCache
-            DistanceCache.replace(src, dst, metersSeconds._1, metersSeconds._2)
-            AhaWikiCache.Distance.set(src, dst, metersSeconds._1)
-          }
+          logger.info(metersSeconds.toString())
         })
     }
     case _ =>

@@ -50,7 +50,7 @@ object InterpreterMap extends TraitInterpreter {
 
   case class LocationSeqVisited(location: Location, seqVisited: Seq[String])
 
-  def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location], Map[String, Int]) = {
+  def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location]) = {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
@@ -73,17 +73,7 @@ object InterpreterMap extends TraitInterpreter {
         )
       })
 
-      val mapAddressMeters: Map[String, Int] = locations.find(_.isOrigin) match {
-        case Some(locationOrigin) =>
-          locations.filter(_.address != locationOrigin.address).map(l => {
-            val meters = AhaWikiCache.Distance.get(locationOrigin.address, l.address)(wikiContext.syncCacheApi, wikiContext.actorAhaWiki, wikiContext.database)
-            (l.address, meters)
-          }).toMap
-        case None =>
-          Map()
-      }
-
-      (head, locations, mapAddressMeters)
+      (head, locations)
     }
   }
 
@@ -100,7 +90,7 @@ object InterpreterMap extends TraitInterpreter {
     implicit val request: Request[Any] = wikiContext.provider.request
     implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
-    val (seqHeader, locations, mapAddressMeters) = parse(pageContent)
+    val (seqHeader, locations) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>
       val seqLink = Link.selectBacklinkOfDatePage(locations.map(_.name))
       val mapDstLink = seqLink.groupBy(_.dst)
@@ -115,7 +105,6 @@ object InterpreterMap extends TraitInterpreter {
         pageContent.argument.getOrElse(1, ""),
         seqHeader,
         seqLocationLastVisited,
-        mapAddressMeters,
         query
       ).toString()
     }

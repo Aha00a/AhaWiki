@@ -88,30 +88,5 @@ object AhaWikiCache extends Logging {
     }
   }
 
-  object Distance {
-    def key(src: String, dst: String): String = "Addr" + src + dst
-
-    def set(src: String, dst: String, meters: Int)(implicit syncCacheApi: SyncCacheApi): Unit = syncCacheApi.set(key(src, dst), meters, 365 days)
-
-    def get(src: String, dst: String)(implicit syncCacheApi: SyncCacheApi, actorAhaWiki: ActorRef, database: Database): Int = {
-      syncCacheApi.get[Int](key(src, dst)) match {
-        case Some(meters) => meters
-        case _ =>
-          database.withConnection { implicit connection =>
-            import models.tables.DistanceCache
-            DistanceCache.select(src, dst) match {
-              case Some(distance) =>
-                val meters = distance.meters
-                AhaWikiCache.Distance.set(src, dst, meters)
-                meters
-              case None =>
-                import actors.ActorAhaWiki
-                actorAhaWiki ! ActorAhaWiki.Distance(src, dst)
-                0
-            }
-          }
-      }
-    }
-  }
 
 }
