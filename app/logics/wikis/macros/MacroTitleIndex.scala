@@ -8,7 +8,7 @@ object MacroTitleIndex extends TraitMacro {
     val listPageName: Seq[String] = wikiContext.seqPageNameByPermission
     InterpreterWiki.toHtmlString {
       listPageName.groupBy(_.charAt(0)).toList.sortBy(_._1).map {
-        case (k, v) => s"== $k\n" + v.map(s => s" * [wiki:$s]").mkString("\n")
+        case (k, v) => s"== $k\n" + v.map(s => s""" * ["$s"]""").mkString("\n")
       }.mkString("\n")
     }}
   }
