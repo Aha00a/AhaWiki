@@ -10,14 +10,10 @@ object MacroBacklinks extends TraitMacro {
       import models.tables.Link
       val listLink: List[Link] = Link.selectDst(wikiContext.name)
       val listLinkFiltered = listLink.filter(l => l.and(wikiContext.pageCanSee))
-      if (0 == listLinkFiltered.length) {
-        ""
-      } else {
-        InterpreterWiki.toHtmlString(listLinkFiltered
-          .map(l => s"""["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
-          .mkString(", ")
-        )
-      }
+      val markup = listLinkFiltered
+        .map(l => s"""["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
+        .mkString(", ")
+      markup.toOption.map(InterpreterWiki.toHtmlString).getOrElse("")
     }
   }
 }
