@@ -94,7 +94,9 @@ object Implicits {
 
   implicit class RichFile(file: File) {
     def usingPrintWriter(f: java.io.File)(op: java.io.PrintWriter => Unit): Unit = {
-      Using(new PrintWriter(f))(op)
+      import java.io.FileOutputStream
+      import java.io.OutputStreamWriter
+      Using(new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))(op)
     }
 
     def writeAll(s1: String): Unit = {
