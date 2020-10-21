@@ -50,7 +50,7 @@ SELECT name2, name1, similarity FROM CosineSimilarity WHERE name2 = $name
   }
 
   def select(name: String)(implicit connection: Connection): List[CosineSimilarity] = {
-    SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC LIMIT 10"
+    SQL"SELECT name1, name2, similarity FROM CosineSimilarity WHERE similarity > 0 AND name1 = $name AND name1 != name2 ORDER BY similarity DESC"
       .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
       .map(tables.CosineSimilarity.tupled)
   }
