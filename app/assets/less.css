@@ -1563,6 +1563,16 @@ body {
   border: 1px solid #ccc;
   padding: 20px;
 }
+.AhaWiki table.seeAlso td.relatedPages {
+  position: relative;
+}
+.AhaWiki table.seeAlso td.relatedPages > .aspectRatioWrapper {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  bottom: 20px;
+  left: 20px;
+}
 .AhaWiki table.seeAlso tr:hover {
   background-color: inherit;
 }
