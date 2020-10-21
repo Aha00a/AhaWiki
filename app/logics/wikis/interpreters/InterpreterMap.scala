@@ -32,8 +32,7 @@ object InterpreterMap extends TraitInterpreter {
 
     import com.aha00a.colors.Color
     import com.aha00a.colors.GradientPreset
-
-    val latLng: LatLng = AhaWikiCache.AddressToLatLng.get(address)(wikiContext.syncCacheApi, wikiContext.actorAhaWiki, wikiContext.database)
+    
     val isOrigin: Boolean = scoreRaw == originString
 
     val score: Double = if(isOrigin) 10 else scoreRaw.toDoubleOrZero
@@ -48,7 +47,7 @@ object InterpreterMap extends TraitInterpreter {
     val urlMap:String = address.toOption.map(u => s"https://www.google.com/maps/search/${URLEncoder.encode(u, "utf-8")}").getOrElse("")
   }
 
-  case class LocationSeqVisited(location: Location, seqVisited: Seq[String])
+  case class LocationSeqVisited(location: Location, latLng: LatLng, seqVisited: Seq[String])
 
   def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location]) = {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
@@ -92,11 +91,22 @@ object InterpreterMap extends TraitInterpreter {
     implicit val database: Database = wikiContext.database
     val (seqHeader, locations) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>
+      import models.tables.GeocodeCache
       val seqLink = Link.selectBacklinkOfDatePage(locations.map(_.name))
       val mapDstLink = seqLink.groupBy(_.dst)
+
+      val seqGeocodeCache = GeocodeCache.select(locations.map(_.address))
+      val mapAddressLatLng: Map[String, LatLng] = seqGeocodeCache.map(g => (g.address, g.latLng)).toMap
       val seqLocationLastVisited = locations.map(l => {
         val seqVisited: Seq[String] = mapDstLink.getOrElse(l.name, Seq()).map(_.src)
-        LocationSeqVisited(l, seqVisited)
+        val latLng = mapAddressLatLng.get(l.address) match {
+          case Some(ll) => ll
+          case _ =>
+            import actors.ActorAhaWiki.Geocode
+            wikiContext.actorAhaWiki ! Geocode(l.address)
+            LatLng.Empty
+        }
+        LocationSeqVisited(l, latLng, seqVisited)
       })
       val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, wikiContext.provider.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
       views.html.Wiki.map(

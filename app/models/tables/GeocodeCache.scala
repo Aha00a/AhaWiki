@@ -20,9 +20,9 @@ object GeocodeCache {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def select(address: String)(implicit connection: Connection): Option[GeocodeCache] = {
-    SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address = $address"
-      .as(str("address") ~ double("lat") ~ double("lng") ~ date("created") singleOpt).map(flatten)
+  def select(seqAddress: Seq[String])(implicit connection: Connection): Seq[GeocodeCache] = {
+    SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address IN ($seqAddress)"
+      .as(str("address") ~ double("lat") ~ double("lng") ~ date("created") *).map(flatten)
       .map(tupled)
   }
 

@@ -122,7 +122,6 @@ class ActorAhaWiki @Inject()(implicit
           database.withTransaction { implicit connection =>
             import models.tables.GeocodeCache
             GeocodeCache.replace(address, latLng)
-            AhaWikiCache.AddressToLatLng.set(address, latLng)
           }
         })
     }

@@ -59,34 +59,5 @@ object AhaWikiCache extends Logging {
   }
 
 
-  object AddressToLatLng {
-    def key(address: String): String = "Addr" + address
-
-    def set(address: String, latLng: LatLng)(implicit syncCacheApi: SyncCacheApi): Unit = syncCacheApi.set(key(address), latLng, 365 days)
-
-    def get(address: String)(implicit syncCacheApi: SyncCacheApi, actorAhaWiki: ActorRef, database: Database): LatLng = {
-      syncCacheApi.get[LatLng](key(address)) match {
-        case Some(latLng) => latLng
-        case _ =>
-          if (!(address == null) && !address.isEmpty) {
-            database.withConnection { implicit connection =>
-              import models.tables.GeocodeCache
-              GeocodeCache.select(address) match {
-                case Some(geocodeCache) =>
-                  val latLng = geocodeCache.latLng
-                  AhaWikiCache.AddressToLatLng.set(address, latLng)
-                  latLng
-                case None =>
-                  actorAhaWiki ! Geocode(address)
-                  LatLng(Double.NaN, Double.NaN)
-              }
-            }
-          } else {
-            LatLng(Double.NaN, Double.NaN)
-          }
-      }
-    }
-  }
-
 
 }

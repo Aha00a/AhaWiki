@@ -90,12 +90,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
+                    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.latLng.lat.isNaN).zipWithIndex) {
                         <tr
                             data-i="@i"
                             data-position='{
-                                "lat": @locationLastVisited.location.latLng.latWithNoise,
-                                "lng": @locationLastVisited.location.latLng.lngWithNoise
+                                "lat": @locationLastVisited.latLng.latWithNoise,
+                                "lng": @locationLastVisited.latLng.lngWithNoise
                             }'
                             data-icon='{
                                 "path": 0 @*google.maps.SymbolPath.CIRCLE*@,
@@ -325,7 +325,7 @@
             }
         });
     </script>
-    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.location.latLng.lat.isNaN).zipWithIndex) {
+    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">
             <div class="googleMapsInfoWindow">
                 <div class="title">@(locationLastVisited.location.name)</div>
