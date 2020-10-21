@@ -14,7 +14,7 @@ object MacroBacklinks extends TraitMacro {
         ""
       } else {
         InterpreterWiki.toHtmlString(listLinkFiltered
-          .map(l => s"""["${l.src}" ${l.src}${if (l.alias.isNullOrEmpty) "" else "(" + l.alias + ")"}]""")
+          .map(l => s"""["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
           .mkString(", ")
         )
       }
