@@ -506,6 +506,10 @@ body {
   font-size: 0.7em;
   opacity: 0.7;
 }
+.AhaWiki .commonAhaWiki.schema\:Schema > * > ul {
+  column-width: 400px;
+  column-gap: 50px;
+}
 .AhaWiki .wikiContent {
   padding: 0 0 25px 25px;
 }
@@ -852,6 +856,10 @@ body {
 .AhaWiki .wikiContent .trivial {
   font-size: 0.7em;
   opacity: 0.7;
+}
+.AhaWiki .wikiContent.schema\:Schema > * > ul {
+  column-width: 400px;
+  column-gap: 50px;
 }
 .AhaWiki .gnb,
 .AhaWiki .revisionInfo {
@@ -1302,6 +1310,10 @@ body {
 .AhaWiki .paperContent .page .pageContent .trivial {
   font-size: 0.7em;
   opacity: 0.7;
+}
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > ul {
+  column-width: 400px;
+  column-gap: 50px;
 }
 .AhaWiki .paperContent .page .toc {
   display: none;

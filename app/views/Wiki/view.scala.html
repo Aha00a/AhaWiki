@@ -50,7 +50,7 @@
         <div class="limitWidth">
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
         </div>
-        <div class="wikiContent">
+        <div class="wikiContent @title">
             <div class="limitWidth">
                 @Html(contentInterpreted)
             </div>
