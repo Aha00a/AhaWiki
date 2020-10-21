@@ -89,7 +89,7 @@ object Implicits {
 
   
 
-  implicit def lambdaToRunnable(f: () => Unit): Runnable = new Runnable() { def run(): Unit = f() }
+  implicit def lambdaToRunnable(f: () => Unit): Runnable = () => f()
 
 
   implicit class RichFile(file: File) {
