@@ -31,8 +31,8 @@ object Link {
       .as(long("cnt") single)
   }
 
-  def selectBacklinkOfDatePage(name: String)(implicit connection: Connection): List[Link] = {
-    SQL"""SELECT src, dst, alias FROM Link WHERE dst = $name AND src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])'"""
+  def selectBacklinkOfDatePage(seqName: Seq[String])(implicit connection: Connection): List[Link] = {
+    SQL"""SELECT src, dst, alias FROM Link WHERE dst IN  ($seqName) AND src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])' ORDER BY dst, src DESC"""
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
