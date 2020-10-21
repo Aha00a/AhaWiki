@@ -5,7 +5,7 @@
         url:String,
         sheetName:String,
         seqHeader: Seq[String],
-        seqLocationLastVisited:Seq[InterpreterMap.LocationSeqVisited],
+        seqLocationWithCalculatedField:Seq[InterpreterMap.LocationWithCalculatedField],
         query: Map[String, String]
 )(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
@@ -77,12 +77,12 @@
                             }
                         }
                         <th rowspan="2" class="Distance">Distance</th>
-                        @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
+                        @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
                             <th colspan="3" class="Visited">Visited</th>
                         }
                     </tr>
                     <tr>
-                        @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
+                        @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
                             <th class="VisitedLast">Last</th>
                             <th class="VisitedFirst">First</th>
                             <th class="VisitedCount">Count</th>
@@ -90,7 +90,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+                    @for((locationLastVisited, i) <- seqLocationWithCalculatedField.filter(!_.latLng.lat.isNaN).zipWithIndex) {
                         <tr
                             data-i="@i"
                             data-position='{
@@ -143,7 +143,7 @@
                                 }
                             }
                             <td class="distance"></td>
-                            @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
+                            @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
                                 <td>@(locationLastVisited.seqVisited.headOption.getOrElse(""))</td>
                                 <td>@(locationLastVisited.seqVisited.lastOption.getOrElse(""))</td>
                                 <td class="count">@(locationLastVisited.seqVisited.length)</td>
@@ -325,7 +325,7 @@
             }
         });
     </script>
-    @for((locationLastVisited, i) <- seqLocationLastVisited.filter(!_.latLng.lat.isNaN).zipWithIndex) {
+    @for((locationLastVisited, i) <- seqLocationWithCalculatedField.filter(!_.latLng.lat.isNaN).zipWithIndex) {
         <script type="text/html" id="@(id)_@i">
             <div class="googleMapsInfoWindow">
                 <div class="title">@(locationLastVisited.location.name)</div>

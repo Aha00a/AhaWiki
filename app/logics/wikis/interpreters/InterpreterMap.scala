@@ -47,7 +47,7 @@ object InterpreterMap extends TraitInterpreter {
     val urlMap:String = address.toOption.map(u => s"https://www.google.com/maps/search/${URLEncoder.encode(u, "utf-8")}").getOrElse("")
   }
 
-  case class LocationSeqVisited(location: Location, latLng: LatLng, seqVisited: Seq[String])
+  case class LocationWithCalculatedField(location: Location, latLng: LatLng, seqVisited: Seq[String])
 
   def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location]) = {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
@@ -97,7 +97,7 @@ object InterpreterMap extends TraitInterpreter {
 
       val seqGeocodeCache = GeocodeCache.select(locations.map(_.address))
       val mapAddressLatLng: Map[String, LatLng] = seqGeocodeCache.map(g => (g.address, g.latLng)).toMap
-      val seqLocationLastVisited = locations.map(l => {
+      val seqLocationWithCalculatedField = locations.map(l => {
         val seqVisited: Seq[String] = mapDstLink.getOrElse(l.name, Seq()).map(_.src)
         val latLng = mapAddressLatLng.get(l.address) match {
           case Some(ll) => ll
@@ -106,7 +106,7 @@ object InterpreterMap extends TraitInterpreter {
             wikiContext.actorAhaWiki ! Geocode(l.address)
             LatLng.Empty
         }
-        LocationSeqVisited(l, latLng, seqVisited)
+        LocationWithCalculatedField(l, latLng, seqVisited)
       })
       val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, wikiContext.provider.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
       views.html.Wiki.map(
@@ -114,7 +114,7 @@ object InterpreterMap extends TraitInterpreter {
         pageContent.argument.getOrElse(0, ""),
         pageContent.argument.getOrElse(1, ""),
         seqHeader,
-        seqLocationLastVisited,
+        seqLocationWithCalculatedField,
         query
       ).toString()
     }
