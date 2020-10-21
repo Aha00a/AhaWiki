@@ -21,12 +21,12 @@ class Home @Inject() (
   }
 
   def random: Action[AnyContent] = Action { implicit request =>
-    import java.net.URLEncoder
-
+    import com.aha00a.commons.utils.UriUtil
     import models.WikiContext.Provider
 
     implicit val provider: Provider = Provider.createBy(request)
-    Redirect(routes.Wiki.view(URLEncoder.encode(PageLogic.getListPageByPermission().random().name, "utf-8"), 0, "")).flashing(request.flash)
+    val name = PageLogic.getListPageByPermission().random().name
+    Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
