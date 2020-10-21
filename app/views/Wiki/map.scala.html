@@ -5,7 +5,7 @@
         url:String,
         sheetName:String,
         seqHeader: Seq[String],
-        seqLocationLastVisited:Seq[InterpreterMap.LocationListVisited],
+        seqLocationLastVisited:Seq[InterpreterMap.LocationSeqVisited],
         mapAddressMeters: Map[String, Int],
         query: Map[String, String]
 )(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
@@ -80,12 +80,12 @@
                         @if(mapAddressMeters.nonEmpty) {
                             <th rowspan="2" class="Distance">Distance</th>
                         }
-                        @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
+                        @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
                             <th colspan="3" class="Visited">Visited</th>
                         }
                     </tr>
                     <tr>
-                        @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
+                        @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
                             <th class="VisitedLast">Last</th>
                             <th class="VisitedFirst">First</th>
                             <th class="VisitedCount">Count</th>
@@ -148,10 +148,10 @@
                             @if(mapAddressMeters.nonEmpty) {
                                 <td class="distance">@(mapAddressMeters.get(locationLastVisited.location.address).map(m => java.text.NumberFormat.getIntegerInstance.format(m)).getOrElse(""))</td>
                             }
-                            @if(seqLocationLastVisited.exists(_.listVisited.nonEmpty)) {
-                                <td>@(locationLastVisited.listVisited.headOption.getOrElse(""))</td>
-                                <td>@(locationLastVisited.listVisited.lastOption.getOrElse(""))</td>
-                                <td class="count">@(locationLastVisited.listVisited.length)</td>
+                            @if(seqLocationLastVisited.exists(_.seqVisited.nonEmpty)) {
+                                <td>@(locationLastVisited.seqVisited.headOption.getOrElse(""))</td>
+                                <td>@(locationLastVisited.seqVisited.lastOption.getOrElse(""))</td>
+                                <td class="count">@(locationLastVisited.seqVisited.length)</td>
                             }
                         </tr>
                     }
