@@ -11,11 +11,12 @@ object MacroBacklinks extends TraitMacro {
       val listLink: List[Link] = Link.selectDst(wikiContext.name)
       val listLinkFiltered = listLink.filter(l => l.and(wikiContext.pageCanSee))
       val markup = listLinkFiltered
-        .map(l => s"""["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
-        .mkString(", ")
+        .map(l => s""" * ["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
+        .mkString("\n")
       markup
         .toOption
         .map(InterpreterWiki.toHtmlString)
+        .map(s => s"""<div class="backlinks"><div>$s</div></div>""".stripMargin )
         .getOrElse("")
     }
   }

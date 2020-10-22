@@ -507,8 +507,9 @@ body {
   opacity: 0.7;
 }
 .AhaWiki .commonAhaWiki.schema\:Schema > * > ul,
-.AhaWiki .commonAhaWiki.TitleIndex > * > ul {
-  column-width: 400px;
+.AhaWiki .commonAhaWiki.TitleIndex > * > ul,
+.AhaWiki .commonAhaWiki .backlinks > * > ul {
+  column-width: 300px;
   column-gap: 50px;
 }
 .AhaWiki .wikiContent {
@@ -859,8 +860,9 @@ body {
   opacity: 0.7;
 }
 .AhaWiki .wikiContent.schema\:Schema > * > ul,
-.AhaWiki .wikiContent.TitleIndex > * > ul {
-  column-width: 400px;
+.AhaWiki .wikiContent.TitleIndex > * > ul,
+.AhaWiki .wikiContent .backlinks > * > ul {
+  column-width: 300px;
   column-gap: 50px;
 }
 .AhaWiki .gnb,
@@ -1314,8 +1316,9 @@ body {
   opacity: 0.7;
 }
 .AhaWiki .paperContent .page .pageContent.schema\:Schema > * > ul,
-.AhaWiki .paperContent .page .pageContent.TitleIndex > * > ul {
-  column-width: 400px;
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > ul,
+.AhaWiki .paperContent .page .pageContent .backlinks > * > ul {
+  column-width: 300px;
   column-gap: 50px;
 }
 .AhaWiki .paperContent .page .toc {
