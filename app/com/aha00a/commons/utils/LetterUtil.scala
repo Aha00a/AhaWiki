@@ -10,8 +10,7 @@ object LetterUtil {
     val regexHangul: Regex = """[가-힣]""".r
     c match {
       case regexHangul() =>
-        val index = (c - 0xAC00) / (21 * 28)
-        (0xAC00 + index * 588).toChar
+        Hangul(Hangul(c).index초성, 0, 0).c
       case _ =>
         Normalizer.normalize(c.toString, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}", "").charAt(0).toUpper
     }
