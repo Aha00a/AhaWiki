@@ -13,7 +13,10 @@ object MacroBacklinks extends TraitMacro {
       val markup = listLinkFiltered
         .map(l => s"""["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
         .mkString(", ")
-      markup.toOption.map(InterpreterWiki.toHtmlString).getOrElse("")
+      markup
+        .toOption
+        .map(InterpreterWiki.toHtmlString)
+        .getOrElse("")
     }
   }
 }
