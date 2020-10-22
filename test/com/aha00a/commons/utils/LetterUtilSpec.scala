@@ -5,6 +5,7 @@ import org.scalatest.freespec.AnyFreeSpec
 class LetterUtilSpec extends AnyFreeSpec {
   "firstLetterForIndex" - {
     import com.aha00a.commons.utils.LetterUtil.firstLetterForIndex
+
     "roman" in {
       assert(firstLetterForIndex("A") === 'A')
       assert(firstLetterForIndex("a") === 'A')
@@ -14,6 +15,11 @@ class LetterUtilSpec extends AnyFreeSpec {
       assert(firstLetterForIndex("Ā") === 'A')
       assert(firstLetterForIndex("ȧ") === 'A')
       assert(firstLetterForIndex("ǒ") === 'O')
+
+      assert(
+        "ÈÉÊËÛÙÏÎÀÂÔèéêëûùïîàâôÇçÃãÕõçÇáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙãõñäëïöüÿÄËÏÖÜÃÕÑâêîôûÂÊÎÔÛ".map(c => firstLetterForIndex(c + "postfix")).mkString ===
+        "EEEEUUIIAAOeeeeuuiiaaoCcAaOocCaeiouyAEIOUYaeiouAEIOUaonaeiouyAEIOUAONaeiouAEIOU".toUpperCase()
+      )
     }
 
     "ko" in {
