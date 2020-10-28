@@ -238,7 +238,7 @@ class Wiki @Inject()(implicit val
                  |${SchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
                  |""".stripMargin
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
             case regexSchemaColon(schema) =>
               import com.aha00a.commons.utils.EnglishCaseConverter
@@ -273,7 +273,7 @@ class Wiki @Inject()(implicit val
                   }
 
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-                  NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+                  Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                 case _ =>
                   val content = WikiSnippet.notFound(name)
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
