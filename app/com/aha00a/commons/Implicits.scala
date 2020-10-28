@@ -99,6 +99,12 @@ object Implicits {
       Using(new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))(op)
     }
 
+    def readAllString(): String = {
+      import scala.io.Codec
+      implicit val codec: Codec = Codec.UTF8
+      Using(scala.io.Source.fromFile(file))(_.mkString)
+    }
+
     def writeAll(s1: String): Unit = {
       usingPrintWriter(file)(_.write(s1))
     }
