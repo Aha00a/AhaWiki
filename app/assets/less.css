@@ -357,8 +357,9 @@ body {
   clear: right;
 }
 .AhaWiki .commonAhaWiki div.schema {
-  position: relative;
-  margin-right: 10px;
+  clear: right;
+  float: right;
+  margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
@@ -373,6 +374,9 @@ body {
 .AhaWiki .commonAhaWiki div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .commonAhaWiki #SeeAlso {
+  clear: right;
 }
 .AhaWiki .commonAhaWiki div.toc,
 .AhaWiki .commonAhaWiki div.MacroLinkDate,
@@ -710,8 +714,9 @@ body {
   clear: right;
 }
 .AhaWiki .wikiContent div.schema {
-  position: relative;
-  margin-right: 10px;
+  clear: right;
+  float: right;
+  margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
@@ -726,6 +731,9 @@ body {
 .AhaWiki .wikiContent div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .wikiContent #SeeAlso {
+  clear: right;
 }
 .AhaWiki .wikiContent div.toc,
 .AhaWiki .wikiContent div.MacroLinkDate,
@@ -1166,8 +1174,9 @@ body {
   clear: right;
 }
 .AhaWiki .paperContent .page .pageContent div.schema {
-  position: relative;
-  margin-right: 10px;
+  clear: right;
+  float: right;
+  margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
@@ -1182,6 +1191,9 @@ body {
 .AhaWiki .paperContent .page .pageContent div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent #SeeAlso {
+  clear: right;
 }
 .AhaWiki .paperContent .page .pageContent div.toc,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
