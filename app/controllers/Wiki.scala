@@ -400,7 +400,7 @@ class Wiki @Inject()(implicit val
 
 
   def delete(): Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
+    database.withTransaction { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val wikiContext: WikiContext = WikiContext(name)
       implicit val provider: Provider = wikiContext.provider
