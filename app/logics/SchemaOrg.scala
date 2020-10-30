@@ -149,6 +149,7 @@ object SchemaOrg {
     </div>
   }
 
+  def getSchemaClass(schema:String): SchemaType = mapClass.getOrElse(schema, SchemaType(schema, "Class", Seq(), Seq(), "", Seq()))
   def getClassHierarchy(schema: String): Seq[String] = {
     mapClass.get(schema).map(v => v.id +: v.subClassOf.flatMap(p => getClassHierarchy(p))).getOrElse(Seq())
   }
