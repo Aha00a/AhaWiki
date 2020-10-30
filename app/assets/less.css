@@ -423,6 +423,9 @@ body {
   border: 1px solid #ccc;
   background-color: #eee;
   padding: 20px;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
 }
 .AhaWiki .commonAhaWiki div.toc p,
 .AhaWiki .commonAhaWiki div.MacroLinkDate p,
@@ -780,6 +783,9 @@ body {
   border: 1px solid #ccc;
   background-color: #eee;
   padding: 20px;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
 }
 .AhaWiki .wikiContent div.toc p,
 .AhaWiki .wikiContent div.MacroLinkDate p,
@@ -1240,6 +1246,9 @@ body {
   border: 1px solid #ccc;
   background-color: #eee;
   padding: 20px;
+  -webkit-box-shadow: 0 0 1em #eee;
+  -moz-box-shadow: 0 0 1em #eee;
+  box-shadow: 0 0 1em #eee;
 }
 .AhaWiki .paperContent .page .pageContent div.toc p,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate p,
