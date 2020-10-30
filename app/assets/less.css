@@ -363,10 +363,13 @@ body {
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
-  padding: 20px;
+  padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 33vw;
+}
+.AhaWiki .commonAhaWiki div.schema h5:first-of-type {
+  margin-top: 0;
 }
 .AhaWiki .commonAhaWiki div.schema p {
   margin-top: 0;
@@ -374,6 +377,37 @@ body {
 .AhaWiki .commonAhaWiki div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .commonAhaWiki div.schema dl {
+  margin: 0;
+}
+.AhaWiki .commonAhaWiki div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .commonAhaWiki div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .commonAhaWiki div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .commonAhaWiki div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .commonAhaWiki div.schema .unknown,
+.AhaWiki .commonAhaWiki div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .commonAhaWiki div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .AhaWiki .commonAhaWiki #SeeAlso {
   clear: right;
@@ -409,40 +443,6 @@ body {
 }
 .AhaWiki .commonAhaWiki .previewPane > ul {
   padding-left: 0;
-}
-.AhaWiki .commonAhaWiki div.schema {
-  padding-left: 30px;
-}
-.AhaWiki .commonAhaWiki div.schema dl {
-  margin: 0;
-}
-.AhaWiki .commonAhaWiki div.schema dl dt {
-  margin-top: 10px;
-}
-.AhaWiki .commonAhaWiki div.schema dl dd {
-  margin-left: 10px;
-  display: inline-block;
-}
-.AhaWiki .commonAhaWiki div.schema ul {
-  list-style-type: none;
-  margin: 0;
-  padding-left: 20px;
-}
-.AhaWiki .commonAhaWiki div.schema .match {
-  color: #00f;
-  font-weight: bold;
-}
-.AhaWiki .commonAhaWiki div.schema .unknown,
-.AhaWiki .commonAhaWiki div.schema .supersededBy {
-  text-decoration: line-through;
-  color: #aaa;
-}
-.AhaWiki .commonAhaWiki div.schema sup {
-  color: #777;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax {
   border-collapse: collapse;
@@ -720,10 +720,13 @@ body {
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
-  padding: 20px;
+  padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 33vw;
+}
+.AhaWiki .wikiContent div.schema h5:first-of-type {
+  margin-top: 0;
 }
 .AhaWiki .wikiContent div.schema p {
   margin-top: 0;
@@ -731,6 +734,37 @@ body {
 .AhaWiki .wikiContent div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .wikiContent div.schema dl {
+  margin: 0;
+}
+.AhaWiki .wikiContent div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .wikiContent div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .wikiContent div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .wikiContent div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .wikiContent div.schema .unknown,
+.AhaWiki .wikiContent div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .wikiContent div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .AhaWiki .wikiContent #SeeAlso {
   clear: right;
@@ -766,40 +800,6 @@ body {
 }
 .AhaWiki .wikiContent .previewPane > ul {
   padding-left: 0;
-}
-.AhaWiki .wikiContent div.schema {
-  padding-left: 30px;
-}
-.AhaWiki .wikiContent div.schema dl {
-  margin: 0;
-}
-.AhaWiki .wikiContent div.schema dl dt {
-  margin-top: 10px;
-}
-.AhaWiki .wikiContent div.schema dl dd {
-  margin-left: 10px;
-  display: inline-block;
-}
-.AhaWiki .wikiContent div.schema ul {
-  list-style-type: none;
-  margin: 0;
-  padding-left: 20px;
-}
-.AhaWiki .wikiContent div.schema .match {
-  color: #00f;
-  font-weight: bold;
-}
-.AhaWiki .wikiContent div.schema .unknown,
-.AhaWiki .wikiContent div.schema .supersededBy {
-  text-decoration: line-through;
-  color: #aaa;
-}
-.AhaWiki .wikiContent div.schema sup {
-  color: #777;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .AhaWiki .wikiContent .wikiSyntax {
   border-collapse: collapse;
@@ -1180,10 +1180,13 @@ body {
   margin-bottom: 10px;
   border: 1px solid #ccc;
   background-color: #eee;
-  padding: 20px;
+  padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 33vw;
+}
+.AhaWiki .paperContent .page .pageContent div.schema h5:first-of-type {
+  margin-top: 0;
 }
 .AhaWiki .paperContent .page .pageContent div.schema p {
   margin-top: 0;
@@ -1191,6 +1194,37 @@ body {
 .AhaWiki .paperContent .page .pageContent div.schema img {
   min-width: 300px;
   max-width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl {
+  margin: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl dt {
+  margin-top: 10px;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl dd {
+  margin-left: 10px;
+  display: inline-block;
+}
+.AhaWiki .paperContent .page .pageContent div.schema ul {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 20px;
+}
+.AhaWiki .paperContent .page .pageContent div.schema .match {
+  color: #00f;
+  font-weight: bold;
+}
+.AhaWiki .paperContent .page .pageContent div.schema .unknown,
+.AhaWiki .paperContent .page .pageContent div.schema .supersededBy {
+  text-decoration: line-through;
+  color: #aaa;
+}
+.AhaWiki .paperContent .page .pageContent div.schema sup {
+  color: #777;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .AhaWiki .paperContent .page .pageContent #SeeAlso {
   clear: right;
@@ -1226,40 +1260,6 @@ body {
 }
 .AhaWiki .paperContent .page .pageContent .previewPane > ul {
   padding-left: 0;
-}
-.AhaWiki .paperContent .page .pageContent div.schema {
-  padding-left: 30px;
-}
-.AhaWiki .paperContent .page .pageContent div.schema dl {
-  margin: 0;
-}
-.AhaWiki .paperContent .page .pageContent div.schema dl dt {
-  margin-top: 10px;
-}
-.AhaWiki .paperContent .page .pageContent div.schema dl dd {
-  margin-left: 10px;
-  display: inline-block;
-}
-.AhaWiki .paperContent .page .pageContent div.schema ul {
-  list-style-type: none;
-  margin: 0;
-  padding-left: 20px;
-}
-.AhaWiki .paperContent .page .pageContent div.schema .match {
-  color: #00f;
-  font-weight: bold;
-}
-.AhaWiki .paperContent .page .pageContent div.schema .unknown,
-.AhaWiki .paperContent .page .pageContent div.schema .supersededBy {
-  text-decoration: line-through;
-  color: #aaa;
-}
-.AhaWiki .paperContent .page .pageContent div.schema sup {
-  color: #777;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax {
   border-collapse: collapse;

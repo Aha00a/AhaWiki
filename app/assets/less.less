@@ -273,16 +273,49 @@ html, body {
 			margin-bottom: 10px;
 			border: 1px solid #ccc;
 			background-color: #eee;
-			padding: 20px;
+			padding: 10px 20px;
 			vertical-align: top;
 			display: inline-block;
 			max-width: 33vw;
+			h5:first-of-type {
+				margin-top: 0;
+			}
 			p {
 				margin-top: 0;
 			}
 			img {
 				min-width: 300px;
 				max-width: 100%;
+			}
+			dl {
+				margin: 0;
+				dt {
+					margin-top: 10px;
+				}
+				dd {
+					margin-left: 10px;
+					display: inline-block;
+				}
+			}
+			ul {
+				list-style-type: none;
+				margin: 0;
+				padding-left: 20px;
+			}
+			.match {
+				color: #00f;
+				font-weight: bold;
+			}
+			.unknown, .supersededBy {
+				text-decoration: line-through;
+				color: #aaa;
+			}
+			sup {
+				color: #777;
+				display: block;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
 			}
 		}
 		#SeeAlso {
@@ -317,39 +350,6 @@ html, body {
 			}
 		}
 
-		div.schema {
-			padding-left: 30px;
-			dl {
-				margin: 0;
-				dt {
-					margin-top: 10px;
-				}
-				dd {
-					margin-left: 10px;
-					display: inline-block;
-				}
-			}
-			ul {
-				list-style-type: none;
-				margin: 0;
-				padding-left: 20px;
-			}
-			.match {
-				color: #00f;
-				font-weight: bold;
-			}
-			.unknown, .supersededBy {
-				text-decoration: line-through;
-				color: #aaa;
-			}
-			sup {
-				color: #777;
-				display: block;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-		}
 
 
 		.wikiSyntax {
