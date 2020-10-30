@@ -400,10 +400,10 @@ class Wiki @Inject()(implicit val
 
 
   def delete(): Action[AnyContent] = Action { implicit request =>
+    val name = Form("name" -> text).bindFromRequest.get
+    implicit val wikiContext: WikiContext = WikiContext(name)
+    implicit val provider: Provider = wikiContext.provider
     database.withTransaction { implicit connection =>
-      val name = Form("name" -> text).bindFromRequest.get
-      implicit val wikiContext: WikiContext = WikiContext(name)
-      implicit val provider: Provider = wikiContext.provider
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
