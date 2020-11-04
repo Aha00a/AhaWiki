@@ -94,7 +94,7 @@ class Wiki @Inject()(implicit val
         logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
 
         if(isReadable != readable || isWritable != editable)
-          logger.error(s"readable: ${readable} editable: ${editable}")
+          logger.error(s"readable: $readable editable: $editable")
       }
 
       //noinspection ScalaUnusedSymbol

@@ -63,11 +63,11 @@ controllerComponents: ControllerComponents,
             val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
 
             if(isReadableFromLegacy != readable) {
-              logger.error(s"${sr.name}\treadable\t${isReadableFromLegacy}\t${readable}")
+              logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
             }
 
             if(isWritableFromLagacy != editable) {
-              logger.error(s"${sr.name}\teditable\t${isWritableFromLagacy}\t${editable}")
+              logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
             }
 
             isReadableFromLegacy

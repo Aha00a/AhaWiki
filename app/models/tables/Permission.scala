@@ -43,7 +43,7 @@ case class Permission(seq: Int, target: String, actor: String, action: Int) {
     }
 
     //noinspection RemoveRedundantReturn
-    return true;
+    return true
   }
 
   def permitted(action: Int): Boolean = this.action >= action

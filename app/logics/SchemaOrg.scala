@@ -73,13 +73,13 @@ object SchemaOrg {
       defined
     } else {
       s"""
-         |${defined}
+         |$defined
          |
          |= Custom
          |${mapCustom.toSeq.sortBy(_._1).map(k =>
       s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}]
          |${k._2.toSeq.map(s =>
-      s""" * ["${s}"]""").mkString(System.lineSeparator)}
+      s""" * ["$s"]""").mkString(System.lineSeparator)}
          |""".stripMargin).mkString(System.lineSeparator)}
          |""".stripMargin
     }
@@ -95,9 +95,9 @@ object SchemaOrg {
     if(seq.isEmpty && seqNodeSeq.isEmpty) {
       ""
     } else {
-      s"""${"=" * depth} ["schema:${id}" ${EnglishCaseConverter.pascalCase2TitleCase(id)}]
+      s"""${"=" * depth} ["schema:$id" ${EnglishCaseConverter.pascalCase2TitleCase(id)}]
          |${if(seq.isEmpty) "" else seq.map(s =>
-      s""" * ["${s}"]""").mkString(System.lineSeparator)}
+      s""" * ["$s"]""").mkString(System.lineSeparator)}
          |${seqNodeSeq.mkString(System.lineSeparator)}
          |""".stripMargin
     }
