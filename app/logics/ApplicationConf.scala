@@ -2,6 +2,8 @@ package logics
 
 import play.api.Configuration
 
+// TODO: fix to use models.tables.Config
+
 object ApplicationConf {
   def apply()(implicit configuration: Configuration) = new ApplicationConf(configuration)
 }

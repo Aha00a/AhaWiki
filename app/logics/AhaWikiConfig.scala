@@ -3,7 +3,7 @@ package logics
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
-// TODO: remove
+// TODO: fix to use models.tables.Config
 
 object AhaWikiConfig {
   def apply()(implicit syncCacheApi: SyncCacheApi, database:Database) = new AhaWikiConfig()
