@@ -3,11 +3,9 @@ package models.tables
 import java.util.Date
 
 import anorm.SqlParser.date
-import anorm.SqlParser.double
 import anorm.SqlParser.flatten
 import anorm.SqlParser.str
 import anorm._
-import models.LatLng
 
 case class Config(k: String, v: String, created: Date, updated: Date)
 
