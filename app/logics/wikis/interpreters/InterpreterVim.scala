@@ -6,9 +6,8 @@ import java.security.MessageDigest
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import logics.AhaWikiConfig
-import models.{PageContent, WikiContext}
-import play.api.Logger
+import models.PageContent
+import models.WikiContext
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
