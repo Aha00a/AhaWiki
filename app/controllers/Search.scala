@@ -57,11 +57,18 @@ controllerComponents: ControllerComponents,
           .filter(sr => {
             val pageContent = PageContent(sr.content)
             val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+            val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
 
             val readable = permissionLogic.permitted(sr.name, id, Permission.read)
             val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
-            if(isReadableFromLegacy != readable)
-              logger.error(s"${sr.name}\t${isReadableFromLegacy}\t${readable}\t${wikiPermission.isWritable(pageContent)}\t${editable}")
+
+            if(isReadableFromLegacy != readable) {
+              logger.error(s"${sr.name}\treadable\t${isReadableFromLegacy}\t${readable}")
+            }
+
+            if(isWritableFromLagacy != editable) {
+              logger.error(s"${sr.name}\teditable\t${isWritableFromLagacy}\t${editable}")
+            }
 
             isReadableFromLegacy
           })
