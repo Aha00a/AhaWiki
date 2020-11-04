@@ -29,6 +29,18 @@ object Implicits {
 
     def toIntOrZero: Int = Try(s.toInt).toOption.getOrElse(0)
     def toDoubleOrZero: Double = Try(s.toDouble).toOption.getOrElse(0)
+    def toBoolGenerously: Boolean = {
+      import scala.util.matching.Regex
+      if(s.isNullOrEmpty)
+        return false
+
+      val regexTrueForOneOfThese: Regex = """^[1tTyY]$""".r
+      s match {
+        case regexTrueForOneOfThese() => true
+        case "true" | "True" | "TRUE" => true
+        case _ => false
+      }
+    }
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
     def splitTabs(): Array[String] = s.split("""\t""")

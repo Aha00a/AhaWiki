@@ -72,9 +72,15 @@ object InterpreterVim extends TraitInterpreter with Logging {
     if(parser.isError) {
       "Error!"
     } else {
+      import models.tables.Config
       implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
-      val colorscheme: String = AhaWikiConfig().interpreter.Vim.colorscheme()
+      val (colorscheme, debug) = database.withConnection { implicit connection =>
+        val colorscheme = Config.getOrElse("InterpreterVim.colorscheme", "ron")
+        val debug = Config.getOrElse("InterpreterVim.debug", "")
+        (colorscheme, debug.toBoolGenerously)
+      }
+
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir: File = getCacheDir
       val cacheFileHtmlRaw: File = getCacheFileHtmlRaw(cacheDir, md5)
@@ -108,7 +114,7 @@ object InterpreterVim extends TraitInterpreter with Logging {
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
         }
 
-        if(!AhaWikiConfig().interpreter.Vim.debug()) {
+        if(debug) {
           cacheFileHtmlRaw.delete()
           cacheFileSh.delete()
           cacheFileText.delete()

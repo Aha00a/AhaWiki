@@ -3,6 +3,8 @@ package logics
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
+// TODO: remove
+
 object AhaWikiConfig {
   def apply()(implicit syncCacheApi: SyncCacheApi, database:Database) = new AhaWikiConfig()
 }
@@ -18,13 +20,6 @@ class AhaWikiConfig(implicit syncCacheApi: SyncCacheApi, database:Database) {
   object google {
     object analytics {
       def trackingId(): String = hocon().getOrElse(fqn, "")
-    }
-  }
-
-  object interpreter {
-    object Vim {
-      def debug(): Boolean = hocon().getOrElse(fqn, default = false)
-      def colorscheme(): String = hocon().getOrElse(fqn, "elflord")
     }
   }
 
