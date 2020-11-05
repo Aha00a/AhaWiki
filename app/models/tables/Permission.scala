@@ -6,7 +6,7 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits._
 
-case class Permission(seq: Int, target: String, actor: String, action: Int) {
+case class Permission(target: String, actor: String, action: Int) {
   lazy val targetLevel: Int = target match {
     case "" => 1
     case _ if target.endsWith("?") => 2
@@ -48,9 +48,9 @@ case class Permission(seq: Int, target: String, actor: String, action: Int) {
 
   def permitted(action: Int): Boolean = this.action >= action
 
-  def toTsvString: String = Seq(seq, target, actor, action).map(_.toString).mkString("\t")
+  def toTsvString: String = Seq(target, actor, action).map(_.toString).mkString("\t")
 
-  def toDebugString: String = Seq(seq, priority, target, targetLevel, actor, actorLevel, action).map(_.toString.padRight(25)).mkString(" | ")
+  def toDebugString: String = Seq(priority, target, targetLevel, actor, actorLevel, action).map(_.toString.padRight(25)).mkString(" | ")
 }
 
 object Permission {
@@ -79,8 +79,8 @@ object Permission {
   def tupled = (apply _).tupled
 
   def select()(implicit connection: Connection): List[Permission] = {
-    SQL"SELECT seq, target, actor, action FROM Permission"
-      .as(int("seq") ~ str("target") ~ str("actor") ~ int("action") *).map(flatten)
+    SQL"SELECT target, actor, action FROM Permission"
+      .as(str("target") ~ str("actor") ~ int("action") *).map(flatten)
       .map(Permission.tupled)
   }
 }

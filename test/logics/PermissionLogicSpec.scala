@@ -16,7 +16,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
   def createPermissionLogic(seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
     new PermissionLogic(seqTargetActorAction.reverse.zipWithIndex.map {
-      case (t, i) => Permission(i + 1, t.target, t.actor, t.action)
+      case (t, i) => Permission(t.target, t.actor, t.action)
     }.reverse)
   }
 
