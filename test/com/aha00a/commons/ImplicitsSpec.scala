@@ -1,26 +1,33 @@
 package com.aha00a.commons
 
+import com.aha00a.commons.Implicits._
 import org.scalatest.freespec.AnyFreeSpec
 
 class ImplicitsSpec extends AnyFreeSpec {
+  "RichBoolean" - {
+    "to01" in {
+      assert(false.to01 === "0")
+      assert(true.to01 === "1")
+    }
+
+    "toYN" in {
+      assert(true.toYN === "Y")
+      assert(false.toYN === "N")
+    }
+  }
+
   "RichString" - {
     "toIntOrZero" in {
-      import com.aha00a.commons.Implicits._
-
       assert("aa".toIntOrZero === 0)
       assert("10".toIntOrZero === 10)
     }
 
     "toDoubleOrZero" in {
-      import com.aha00a.commons.Implicits._
-
       assert("aa".toDoubleOrZero === 0)
       assert("10".toDoubleOrZero === 10)
     }
 
     "toBoolGenerously" in {
-      import com.aha00a.commons.Implicits._
-
       val nullString: String = null
 
       assert(!nullString.toBoolGenerously)

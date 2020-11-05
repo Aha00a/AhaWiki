@@ -4,6 +4,7 @@ import org.scalatest.freespec.AnyFreeSpec
 
 class PermissionLogicSpec extends AnyFreeSpec {
 
+  import com.aha00a.commons.Implicits._
   import models.tables.Permission
 
   def createPermissionLogicWithLog(title: String, seqPermission: Seq[Permission]): PermissionLogic = {
@@ -27,8 +28,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
     Permission.delete,
   )
 
-  def to01(b: Boolean): String = if(b) "1" else "0"
-  def to01(s: Seq[Boolean]): String = s.map(to01).mkString
+  def to01(s: Seq[Boolean]): String = s.map(_.to01).mkString
 
   "permitted" - {
     "Public" in {

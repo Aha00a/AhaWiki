@@ -14,6 +14,11 @@ import scala.util.Random
 import scala.util.Try
 
 object Implicits {
+  implicit class RichBoolean(b:Boolean) {
+    def to01: String = if(b) "1" else "0"
+    def toYN: String = if(b) "Y" else "N"
+  }
+
   implicit class RichString(s:String) {
     def isNullOrEmpty: Boolean = s == null || s.isEmpty
     def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
