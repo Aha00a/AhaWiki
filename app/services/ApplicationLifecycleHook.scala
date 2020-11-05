@@ -28,43 +28,13 @@ class ApplicationLifecycleHook @Inject()(implicit
                                          database: Database,
                                          @Named("db-actor") actorAhaWiki: ActorRef
                                         ) extends Logging {
-
-  import java.sql.Connection
+  logger.info("OnApplicationStarting")
 
   applicationLifecycle.addStopHook { () =>
     logger.info("OnApplicationStop")
     Future.successful(())
   }
 
-  logger.info("OnApplicationStart")
-  actorSystem.scheduler.scheduleOnce(2 second, () => {
-    database.withConnection { implicit connection =>
-      logger.info("OnApplicationStarting")
-
-      insertSeedPages()
-
-      logger.info("OnApplicationStarted")
-    }
-  })
-
-  private def insertSeedPages()(implicit connection: Connection): Unit = {
-    if (0 == Page.selectCount()) {
-      import models.tables.Page
-      def getArrayPageFromFile: Array[Page] = {
-        new File("app/assets/Page").listFiles().map(file => {
-          val name = file.getName
-          implicit val codec: Codec = Codec.UTF8
-          val body = Using(scala.io.Source.fromFile(file))(_.mkString)
-          Page(name, 1, new Date(), "AhaWiki", "127.0.0.1", "initial", "", body)
-        })
-      }
-
-      getArrayPageFromFile.foreach(p => {
-        Page.insert(p)
-        actorAhaWiki ! Calculate(p.name)
-      })
-    }
-  }
 
   actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => {
     database.withConnection { implicit connection =>
@@ -83,4 +53,6 @@ class ApplicationLifecycleHook @Inject()(implicit
       }
     }
   })
+
+  logger.info("OnApplicationStarted")
 }
