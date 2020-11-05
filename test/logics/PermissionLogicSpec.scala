@@ -6,16 +6,14 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
   import models.tables.Permission
 
-  case class TargetActorAction(target: String, actor: String, action: Int)
-
-  def createPermissionLogicWithLog(title: String, seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
-    val permissionLogic = createPermissionLogic(seqTargetActorAction)
+  def createPermissionLogicWithLog(title: String, seqPermission: Seq[Permission]): PermissionLogic = {
+    val permissionLogic = createPermissionLogic(seqPermission)
     System.out.println(permissionLogic.toLogString(title))
     permissionLogic
   }
 
-  def createPermissionLogic(seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
-    new PermissionLogic(seqTargetActorAction.map(t => Permission(t.target, t.actor, t.action)))
+  def createPermissionLogic(seqPermission: Seq[Permission]): PermissionLogic = {
+    new PermissionLogic(seqPermission)
   }
 
   val targetFrontPage = "FrontPage"
@@ -39,8 +37,8 @@ class PermissionLogicSpec extends AnyFreeSpec {
   "permitted" - {
     "Public" in {
       val permissionLogic = createPermissionLogicWithLog("Public", Seq(
-        TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", "", Permission.edit),
+        Permission("", actorAha00a, Permission.admin),
+        Permission("", "", Permission.edit),
       ))
 
       assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "11000")
@@ -50,9 +48,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "Open" in {
       val permissionLogic = createPermissionLogicWithLog("Open", Seq(
-        TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", "@gmail.com", Permission.edit),
-        TargetActorAction("", "", Permission.read),
+        Permission("", actorAha00a, Permission.admin),
+        Permission("", "@gmail.com", Permission.edit),
+        Permission("", "", Permission.read),
       ))
 
       assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "10000")
@@ -62,9 +60,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "Closed" in {
       val permissionLogic = createPermissionLogicWithLog("Closed", Seq(
-        TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", "@gmail.com", Permission.edit),
-        TargetActorAction("", "", Permission.none),
+        Permission("", actorAha00a, Permission.admin),
+        Permission("", "@gmail.com", Permission.edit),
+        Permission("", "", Permission.none),
       ))
 
       assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
@@ -74,9 +72,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "Protected" in {
       val permissionLogic = createPermissionLogicWithLog("Protected", Seq(
-        TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", actorSomeone, Permission.edit),
-        TargetActorAction("", "", Permission.none),
+        Permission("", actorAha00a, Permission.admin),
+        Permission("", actorSomeone, Permission.edit),
+        Permission("", "", Permission.none),
       ))
 
       assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
@@ -86,8 +84,8 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "Private" in {
       val permissionLogic = createPermissionLogicWithLog("Private", Seq(
-        TargetActorAction("", "aha00a@gmail.com", Permission.admin),
-        TargetActorAction("", "", Permission.none),
+        Permission("", "aha00a@gmail.com", Permission.admin),
+        Permission("", "", Permission.none),
       ))
 
       assert(to01(seqAction.map(a => permissionLogic.permitted(targetFrontPage, actorEmpty, a))) === "00000")
@@ -98,12 +96,12 @@ class PermissionLogicSpec extends AnyFreeSpec {
 
     "aha00a" in {
       val permissionLogic = createPermissionLogicWithLog("aha00a", Seq(
-        TargetActorAction(targetPrivate, "", Permission.read),
-        TargetActorAction(targetPrivate + "?", actorAha00a, Permission.admin),
-        TargetActorAction(targetPrivate + "?", "", Permission.none),
-        TargetActorAction("", actorAha00a, Permission.admin),
-        TargetActorAction("", "@gmail.com", Permission.edit),
-        TargetActorAction("", "", Permission.read),
+        Permission(targetPrivate, "", Permission.read),
+        Permission(targetPrivate + "?", actorAha00a, Permission.admin),
+        Permission(targetPrivate + "?", "", Permission.none),
+        Permission("", actorAha00a, Permission.admin),
+        Permission("", "@gmail.com", Permission.edit),
+        Permission("", "", Permission.read),
       ))
 
 
