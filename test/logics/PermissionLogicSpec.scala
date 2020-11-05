@@ -7,13 +7,9 @@ class PermissionLogicSpec extends AnyFreeSpec {
   import models.tables.Permission
 
   def createPermissionLogicWithLog(title: String, seqPermission: Seq[Permission]): PermissionLogic = {
-    val permissionLogic = createPermissionLogic(seqPermission)
+    val permissionLogic = new PermissionLogic(seqPermission)
     System.out.println(permissionLogic.toLogString(title))
     permissionLogic
-  }
-
-  def createPermissionLogic(seqPermission: Seq[Permission]): PermissionLogic = {
-    new PermissionLogic(seqPermission)
   }
 
   val targetFrontPage = "FrontPage"
