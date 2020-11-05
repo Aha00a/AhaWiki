@@ -41,6 +41,7 @@ controllerComponents: ControllerComponents,
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
     import models.WikiContext.Provider
+    import models.tables.SearchResultSummary
     import play.api.Mode
     implicit val wikiContext: WikiContext = WikiContext("")
     implicit val provider: Provider = wikiContext.provider
@@ -50,33 +51,39 @@ controllerComponents: ControllerComponents,
     val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq()
     val permissionLogic = new PermissionLogic(seqPermission)
 
-    Ok(views.html.Search.search(
-      q,
-      q.toOption.map(
-        models.tables.Page.pageSearch(_)
-          .filter(sr => {
-            val pageContent = PageContent(sr.content)
-            val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-            val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
+    var permissionDiff = false
+    val seq: Seq[SearchResultSummary] = q.toOption.map(
+      models.tables.Page.pageSearch(_)
+        .filter(sr => {
+          val pageContent = PageContent(sr.content)
+          val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+          val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
 
-            val readable = permissionLogic.permitted(sr.name, id, Permission.read)
-            val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+          val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+          val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
 
-            if(isReadableFromLegacy != readable) {
-              logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
-            }
+          if(isReadableFromLegacy != readable) {
+            logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
+            permissionDiff = true
+          }
 
-            if(isWritableFromLagacy != editable) {
-              logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
-            }
+          if(isWritableFromLagacy != editable) {
+            logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
+            permissionDiff = true
+          }
 
-            isReadableFromLegacy
-          })
-          .sortBy(_.dateTime)(Ordering[Date].reverse)
-          .partition(_.name == q)
-          .concat()
-          .map(_.summarise(q))
-      ).getOrElse(Seq.empty)
-    ))
+          isReadableFromLegacy
+        })
+        .sortBy(_.dateTime)(Ordering[Date].reverse)
+        .partition(_.name == q)
+        .concat()
+        .map(_.summarise(q))
+    ).getOrElse(Seq.empty)
+
+    if (permissionDiff) {
+      logger.error(permissionLogic.toLogString("permission"))
+    }
+
+    Ok(views.html.Search.search(q, seq))
   }}
 }
