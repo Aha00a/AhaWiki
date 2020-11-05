@@ -15,9 +15,7 @@ class PermissionLogicSpec extends AnyFreeSpec {
   }
 
   def createPermissionLogic(seqTargetActorAction: Seq[TargetActorAction]): PermissionLogic = {
-    new PermissionLogic(seqTargetActorAction.reverse.zipWithIndex.map {
-      case (t, i) => Permission(t.target, t.actor, t.action)
-    }.reverse)
+    new PermissionLogic(seqTargetActorAction.map(t => Permission(t.target, t.actor, t.action)))
   }
 
   val targetFrontPage = "FrontPage"
