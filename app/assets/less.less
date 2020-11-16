@@ -907,6 +907,10 @@ html, body {
 
 
 	.blame {
+		table.tableLegend {
+			border-collapse: collapse;
+			margin: 20px 0;
+		}
 		table.tableBlame {
 			width: 100%;
 			border-collapse: collapse;
@@ -920,13 +924,19 @@ html, body {
 				.monospace;
 				white-space: pre-wrap;
 				word-break: break-word;
-				&.lineNumber, &.lineDateTime, &.lineAuthor, &.lineComment {
-					width: 50px;
+
+				&.lineDateTime, &.lineAuthor, &.lineRevision, &.lineNumber, &.lineComment {
 					padding: 5px 10px;
 					.userSelect(none);
 					white-space: nowrap;
+					background-color: #f7f7f7;
 				}
-				&.lineNumber{
+
+				&.lineDateTime, &.lineAuthor, &.lineNumber, &.lineContent, &.lineComment {
+					border-bottom: 1px solid #eee;
+				}
+
+				&.lineRevision, &.lineNumber {
 					text-align: right;
 				}
 				&.lineContent {
@@ -936,7 +946,6 @@ html, body {
 				}
 				&.lineComment {
 					background-color: #f7f7f7;
-					border-bottom: 1px solid #eee;
 				}
 			}
 			tr:last-of-type {

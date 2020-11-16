@@ -6,24 +6,39 @@
         <div class="limitWidth">
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
             <h1>Blame of <a href="@wikiContext.name">@wikiContext.name</a></h1>
+            <table class="tableLegend">
+                @for(g <- Seq(com.aha00a.colors.GradientPreset.ahaWikiBlame)) {
+                    <tr>
+                        <td style="padding: 5px;">older</td>
+                        @for(i <- 0 to 200) {
+                            <td style="background-color: @(g.getColor(i / 200.0).toHashString)"> </td>
+                        }
+                        <td style="padding: 5px;">newer</td>
+                    </tr>
+                }
+            </table>
             <table class="tableBlame">
                 <thead>
                     <tr>
-                        <th>Rev</th>
                         <th>DateTime</th>
                         <th>Author</th>
+                        <th>Rev</th>
+                        <th>#</th>
                         <th>Content</th>
                         <th>Comment</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @for(blameLine <- blame.seqBlameLine) {
-                        <tr style="background-color: @(mapRevisionColor(blameLine.metaData.revision));">
-                            <td class="lineNumber">
-                                <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
-                            </td>
+                    @for((blameLine, i) <- blame.seqBlameLine.zipWithIndex) {
+                        <tr>
                             <td class="lineDateTime">@blameLine.metaData.toIsoLocalDateTimeString</td>
                             <td class="lineAuthor">@blameLine.metaData.author</td>
+                            <td class="lineRevision" style="background-color: @(mapRevisionColor(blameLine.metaData.revision));">
+                                <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
+                            </td>
+                            <td class="lineNumber">
+                                @i
+                            </td>
                             <td class="lineContent">@blameLine.item</td>
                             <td class="lineComment">@blameLine.metaData.comment</td>
                         </tr>

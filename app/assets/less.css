@@ -3,14 +3,14 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: local('Noto Sans KR Light'), local('NotoSansKR-Light'), url(https://fonts.gstatic.com/s/notosanskr/v12/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
+  src: local('Noto Sans KR Light'), local('NotoSansKR-Light'), url(https://fonts.gstatic.com/s/notosanskr/v13/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans KR';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: local('Noto Sans KR Bold'), local('NotoSansKR-Bold'), url(https://fonts.gstatic.com/s/notosanskr/v12/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
+  src: local('Noto Sans KR Bold'), local('NotoSansKR-Bold'), url(https://fonts.gstatic.com/s/notosanskr/v13/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans';
@@ -1710,6 +1710,10 @@ body {
 .AhaWiki .diff .unifiedDiff {
   display: none;
 }
+.AhaWiki .blame table.tableLegend {
+  border-collapse: collapse;
+  margin: 20px 0;
+}
 .AhaWiki .blame table.tableBlame {
   width: 100%;
   border-collapse: collapse;
@@ -1726,15 +1730,16 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
 }
-.AhaWiki .blame table.tableBlame th.lineNumber,
-.AhaWiki .blame table.tableBlame td.lineNumber,
 .AhaWiki .blame table.tableBlame th.lineDateTime,
 .AhaWiki .blame table.tableBlame td.lineDateTime,
 .AhaWiki .blame table.tableBlame th.lineAuthor,
 .AhaWiki .blame table.tableBlame td.lineAuthor,
+.AhaWiki .blame table.tableBlame th.lineRevision,
+.AhaWiki .blame table.tableBlame td.lineRevision,
+.AhaWiki .blame table.tableBlame th.lineNumber,
+.AhaWiki .blame table.tableBlame td.lineNumber,
 .AhaWiki .blame table.tableBlame th.lineComment,
 .AhaWiki .blame table.tableBlame td.lineComment {
-  width: 50px;
   padding: 5px 10px;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -1743,7 +1748,22 @@ body {
   -ms-user-select: none;
   user-select: none;
   white-space: nowrap;
+  background-color: #f7f7f7;
 }
+.AhaWiki .blame table.tableBlame th.lineDateTime,
+.AhaWiki .blame table.tableBlame td.lineDateTime,
+.AhaWiki .blame table.tableBlame th.lineAuthor,
+.AhaWiki .blame table.tableBlame td.lineAuthor,
+.AhaWiki .blame table.tableBlame th.lineNumber,
+.AhaWiki .blame table.tableBlame td.lineNumber,
+.AhaWiki .blame table.tableBlame th.lineContent,
+.AhaWiki .blame table.tableBlame td.lineContent,
+.AhaWiki .blame table.tableBlame th.lineComment,
+.AhaWiki .blame table.tableBlame td.lineComment {
+  border-bottom: 1px solid #eee;
+}
+.AhaWiki .blame table.tableBlame th.lineRevision,
+.AhaWiki .blame table.tableBlame td.lineRevision,
 .AhaWiki .blame table.tableBlame th.lineNumber,
 .AhaWiki .blame table.tableBlame td.lineNumber {
   text-align: right;
@@ -1757,7 +1777,6 @@ body {
 .AhaWiki .blame table.tableBlame th.lineComment,
 .AhaWiki .blame table.tableBlame td.lineComment {
   background-color: #f7f7f7;
-  border-bottom: 1px solid #eee;
 }
 .AhaWiki .blame table.tableBlame tr:last-of-type > td {
   border-bottom: 1px solid #ccc;
