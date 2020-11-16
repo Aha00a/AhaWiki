@@ -39,19 +39,25 @@ object InterpreterSchema extends TraitInterpreter {
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
 
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
+//        <h5>
+//          {
+//            logics.SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
+//              scala.xml.XML.loadString(
+//                seqClass.map(c => logics.SchemaOrg.mapClass.get(c)
+//                  .map(schemaType => schemaType.toAhaMarkLink.toHtmlString(pageNameSet))
+//                  .getOrElse("")
+//                ).mkString("<div>", " / ", "</div>")
+//              )
+//            })
+//          }
+//        </h5>
+
     val dl =
       <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
         <h5>
-          {
-            logics.SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
-              scala.xml.XML.loadString(
-                seqClass.map(c => logics.SchemaOrg.mapClass.get(c)
-                  .map(schemaType => schemaType.toAhaMarkLink.toHtmlString(pageNameSet))
-                  .getOrElse("")
-                ).mkString("<div>", " / ", "</div>")
-              )
-            })
-          }
+          {scala.xml.XML.loadString(
+            logics.SchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet)
+          )}
         </h5>
         <div>
           {

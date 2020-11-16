@@ -4,7 +4,6 @@ import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import javax.inject.Inject
-import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
 import models.LatLng

@@ -176,7 +176,7 @@ class Test @Inject()(implicit val
         val interpreted =
           """<div class="schema"><dl vocab="http://schema.org/" typeof="Person">
             |        <h5>
-            |          <div><a class="schema" href="/w/schema:Thing">Thing</a> / <a class="schema" href="/w/schema:Person">Person</a></div>
+            |          <a class="schema" href="/w/schema:Person">Person</a>
             |        </h5>
             |        <div>
             |          <div>
@@ -201,7 +201,7 @@ class Test @Inject()(implicit val
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
         assertEquals(Interpreters.toHtmlString(wikiMarkup), interpreted)
 
-        val extractWordResult = Seq("Thing", "/", "Person", "Name", "KIM,", "Aha", "Url", "https://aha00a.com", "Member", "Of", "AhariseNotExists")
+        val extractWordResult = Seq("Person", "Name", "KIM,", "Aha", "Url", "https://aha00a.com", "Member", "Of", "AhariseNotExists")
         assertEquals(Interpreters.toText(wikiMarkup).split(" ").toSeq, extractWordResult)
 
         assertEquals(InterpreterSchema.toSeqLink(schemaMarkup), Seq())

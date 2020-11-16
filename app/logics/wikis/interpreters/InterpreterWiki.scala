@@ -72,7 +72,7 @@ object InterpreterWiki extends TraitInterpreter {
     val headingNumber = new HeadingNumber()
 
     var oldIndent = 0
-    val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (before:State.State, after:State.State) => {
+    val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (_:State.State, after:State.State) => {
       if(after != State.List) {
         while (0 < oldIndent) {
           arrayBuffer += "</ul>"

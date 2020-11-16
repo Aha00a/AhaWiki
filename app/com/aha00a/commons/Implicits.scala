@@ -14,6 +14,11 @@ import scala.util.Random
 import scala.util.Try
 
 object Implicits {
+  implicit class RichBoolean(b:Boolean) {
+    def to01: String = if(b) "1" else "0"
+    def toYN: String = if(b) "Y" else "N"
+  }
+
   implicit class RichString(s:String) {
     def isNullOrEmpty: Boolean = s == null || s.isEmpty
     def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
@@ -29,6 +34,18 @@ object Implicits {
 
     def toIntOrZero: Int = Try(s.toInt).toOption.getOrElse(0)
     def toDoubleOrZero: Double = Try(s.toDouble).toOption.getOrElse(0)
+    def toBoolGenerously: Boolean = {
+      import scala.util.matching.Regex
+      if(s.isNullOrEmpty)
+        return false
+
+      val regexTrueForOneOfThese: Regex = """^[1tTyY]$""".r
+      s match {
+        case regexTrueForOneOfThese() => true
+        case "true" | "True" | "TRUE" => true
+        case _ => false
+      }
+    }
 
     def splitLines(): Array[String] = s.split("""(\r\n|\n)""")
     def splitTabs(): Array[String] = s.split("""\t""")
@@ -73,8 +90,8 @@ object Implicits {
     }
     def random():T = seq(Random.nextInt(seq.size))
     def splitBy(by:(T, T) => Boolean): Iterator[Seq[T]] = {
-      val cutIndice = seq.zipWithIndex.sliding(2).filter(s => by(s.head._1, s.last._1)).map(s => s.head._2).toSeq
-      val ranges = -1 +: cutIndice :+ seq.length - 1
+      val cutIndices = seq.zipWithIndex.sliding(2).filter(s => by(s.head._1, s.last._1)).map(s => s.head._2).toSeq
+      val ranges = -1 +: cutIndices :+ seq.length - 1
       ranges.sliding(2).map(i => seq.slice(i.head + 1, i.last + 1))
     }
   }
@@ -97,6 +114,12 @@ object Implicits {
       import java.io.FileOutputStream
       import java.io.OutputStreamWriter
       Using(new PrintWriter(new OutputStreamWriter(new FileOutputStream(f), "UTF-8")))(op)
+    }
+
+    def readAllString(): String = {
+      import scala.io.Codec
+      implicit val codec: Codec = Codec.UTF8
+      Using(scala.io.Source.fromFile(file))(_.mkString)
     }
 
     def writeAll(s1: String): Unit = {

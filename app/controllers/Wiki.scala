@@ -94,7 +94,7 @@ class Wiki @Inject()(implicit val
         logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
 
         if(isReadable != readable || isWritable != editable)
-          logger.error(s"readable: ${readable} editable: ${editable}")
+          logger.error(s"readable: $readable editable: $editable")
       }
 
       //noinspection ScalaUnusedSymbol
@@ -106,6 +106,7 @@ class Wiki @Inject()(implicit val
           }
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, _, _, _) =>
+          import java.io.File
           val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
 
@@ -237,7 +238,7 @@ class Wiki @Inject()(implicit val
                  |${SchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
                  |""".stripMargin
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
             case regexSchemaColon(schema) =>
               import com.aha00a.commons.utils.EnglishCaseConverter
@@ -272,12 +273,17 @@ class Wiki @Inject()(implicit val
                   }
 
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-                  NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+                  Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
                 case _ =>
                   val content = WikiSnippet.notFound(name)
                   val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
                   NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
               }
+
+            case v if new File("app/assets/Page", v).exists() =>
+              val content = new File("app/assets/Page", v).readAllString()
+              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
 
             case _ =>
               val content = WikiSnippet.notFound(name)
@@ -394,10 +400,10 @@ class Wiki @Inject()(implicit val
 
 
   def delete(): Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      val name = Form("name" -> text).bindFromRequest.get
-      implicit val wikiContext: WikiContext = WikiContext(name)
-      implicit val provider: Provider = wikiContext.provider
+    val name = Form("name" -> text).bindFromRequest.get
+    implicit val wikiContext: WikiContext = WikiContext(name)
+    implicit val provider: Provider = wikiContext.provider
+    database.withTransaction { implicit connection =>
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {

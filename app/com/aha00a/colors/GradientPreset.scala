@@ -1,5 +1,6 @@
 package com.aha00a.colors
 
+//noinspection RedundantDefaultArgument
 object GradientPreset {
 
   //====================================================================================================================

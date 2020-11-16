@@ -30,7 +30,7 @@ object MacroDayHeader extends TraitMacro {
   @scala.annotation.tailrec
   override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
-    case DateTimeUtil.regexIsoLocalDate(y, m, d) => MacroLinkDate.extractLink(body)
+    case DateTimeUtil.regexIsoLocalDate(_, _, _) => MacroLinkDate.extractLink(body)
     case _ => Seq()
   }
 }

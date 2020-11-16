@@ -5,7 +5,7 @@ import org.scalatest.freespec.AnyFreeSpec
 class PermissionSpec extends AnyFreeSpec {
   "matches" - {
     "Any Any read" in {
-      val permission = Permission(1, "", "", Permission.read)
+      val permission = Permission("", "", Permission.read)
       assert(permission.matches("", ""))
       assert(permission.matches("", "asdf"))
       assert(permission.matches("asdf", ""))
@@ -15,7 +15,7 @@ class PermissionSpec extends AnyFreeSpec {
     }
 
     "Any @gmail.com read" in {
-      val permission = Permission(1, "", "@gmail.com", Permission.read)
+      val permission = Permission("", "@gmail.com", Permission.read)
       assert(!permission.matches("", ""))
       assert(permission.matches("", "aha00a@gmail.com"))
       assert(permission.matches("", "aha00b@gmail.com"))
@@ -25,7 +25,7 @@ class PermissionSpec extends AnyFreeSpec {
     }
 
     "Any aha00a@gmail.com admin" in {
-      val permission = Permission(1, "", "aha00a@gmail.com", Permission.admin)
+      val permission = Permission("", "aha00a@gmail.com", Permission.admin)
       assert(!permission.matches("", ""))
       assert(permission.matches("", "aha00a@gmail.com"))
       assert(!permission.matches("", "aha00b@gmail.com"))
@@ -35,7 +35,7 @@ class PermissionSpec extends AnyFreeSpec {
     }
 
     "Private aha00a@gmail.com admin" in {
-      val permission = Permission(1, "Private", "aha00a@gmail.com", Permission.admin)
+      val permission = Permission("Private", "aha00a@gmail.com", Permission.admin)
       assert(!permission.matches("", ""))
       assert(!permission.matches("", "aha00a@gmail.com"))
       assert(!permission.matches("Private", ""))
@@ -46,7 +46,7 @@ class PermissionSpec extends AnyFreeSpec {
     }
 
     "Private? aha00a@gmail.com admin" in {
-      val permission = Permission(1, "Private?", "aha00a@gmail.com", Permission.admin)
+      val permission = Permission("Private?", "aha00a@gmail.com", Permission.admin)
       assert(!permission.matches("", ""))
       assert(!permission.matches("", "aha00a@gmail.com"))
       assert(!permission.matches("Private", ""))
