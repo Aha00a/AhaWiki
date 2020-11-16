@@ -40,8 +40,8 @@
   <logger name="org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator" level="INFO" />
 
   <logger name="org.jdbcdslog.ConnectionLogger" level="INFO" />
-  <logger name="org.jdbcdslog.StatementLogger"  level="INFO" />
-  <logger name="org.jdbcdslog.ResultSetLogger"  level="INFO" />
+  <logger name="org.jdbcdslog.StatementLogger"  level="OFF" />
+  <logger name="org.jdbcdslog.ResultSetLogger"  level="OFF" />
 
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
