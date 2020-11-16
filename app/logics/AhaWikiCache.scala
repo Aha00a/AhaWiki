@@ -24,8 +24,8 @@ object AhaWikiCache extends Logging {
   }
 
   private val durationExpire: FiniteDuration = {
-//    1.millisecond
-    60.minutes
+    1.millisecond
+//    60.minutes
   }
 
   object PageList extends CacheEntity {
