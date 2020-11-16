@@ -77,7 +77,7 @@ object InterpreterSchema extends TraitInterpreter {
                     case v if Seq("image", "logo").contains(key) =>
                       <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
                     case v if PageNameLogic.isExternal(v) =>
-                      <dd property={key}><a href={v} target="_blank">{v}</a></dd>
+                      <dd property={key}><a href={v} target="_blank" rel="noopener">{v}</a></dd>
                     case v =>
                       <dd property={key}><a href={v} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a></dd>
                   }

@@ -19,7 +19,7 @@
             </div>
             @if(url && sheetName) {
                 <div class="sheetLink">
-                    <a href="@url" target="_blank">Data Source</a>
+                    <a href="@url" target="_blank" rel="noopener">Data Source</a>
                 </div>
                 @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Normal) {
                     <div class="refreshLink" id="sync@id" data-url="@url" data-sheet="@sheetName">
@@ -134,9 +134,9 @@
                                             {s}
                                         </td>
                                     } else if(seqHeader(i) == "Address") {
-                                            <td><a href={locationLastVisited.location.urlMap} target="_blank">{locationLastVisited.location.address}</a></td>
+                                            <td><a href={locationLastVisited.location.urlMap} target="_blank" rel="noopener">{locationLastVisited.location.address}</a></td>
                                     } else if(s.startsWith("http")){
-                                        <td><a href={s} target="_blank">Link</a></td>
+                                        <td><a href={s} target="_blank" rel="noopener">Link</a></td>
                                     } else {
                                         <td>{s}</td>
                                     }
@@ -334,7 +334,7 @@
                     @for(v <- locationLastVisited.location.raw.filter(_.isNotNullOrEmpty)) {
                         <div class="rawItem">
                             @if(v.startsWith("http")) {
-                                <a href="@v" target="_blank">@v</a>
+                                <a href="@v" target="_blank" rel="noopener">@v</a>
                             } else {
                                 @v
                             }

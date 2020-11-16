@@ -23,7 +23,7 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Wi
       val isStartsWithHash = uriNormalized.startsWith("#")
       val isStartsWithQuestionMark = uriNormalized.startsWith("?")
       val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
-      val attrTarget: String = if (external) """ target="_blank"""" else ""
+      val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
       val display: String = aliasWithDefault
       val attrCss = if (uriNormalized.startsWith("schema:")) {
         """ class="schema""""
