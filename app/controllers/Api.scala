@@ -60,5 +60,12 @@ class Api @Inject()(
       Ok(seqLink.asJson)
     }
   }
+
+  def selectYmdCountOfFirstRevision(): Action[AnyContent] = Action { implicit request =>
+    database.withConnection { implicit connection =>
+      import models.tables.Page
+      Ok(Page.selectYmdCountOfFirstRevision().asJson)
+    }
+  }
 }
 

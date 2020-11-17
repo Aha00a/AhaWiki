@@ -4,50 +4,51 @@
 # ~~~~
 
 # Home page
-GET         /                                  controllers.Home.index
-GET         /w                                 controllers.Home.index
-GET         /w/                                controllers.Home.index
+GET         /                                         controllers.Home.index
+GET         /w                                        controllers.Home.index
+GET         /w/                                       controllers.Home.index
 
-GET         /robots.txt                        controllers.Home.robotsTxt
-GET         /ads.txt                           controllers.Home.adsTxt
-GET         /r                                 controllers.Home.random
+GET         /robots.txt                               controllers.Home.robotsTxt
+GET         /ads.txt                                  controllers.Home.adsTxt
+GET         /r                                        controllers.Home.random
 
-POST        /diary                             controllers.Diary.write()
+POST        /diary                                    controllers.Diary.write()
 
-GET         /search                            controllers.Search.index(q:String?="")
+GET         /search                                   controllers.Search.index(q:String?="")
 
-GET         /w/*nameEncoded                    controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
-POST        /w/*nameEncoded                    controllers.Wiki.save(nameEncoded:String)
+GET         /w/*nameEncoded                           controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
+POST        /w/*nameEncoded                           controllers.Wiki.save(nameEncoded:String)
 
-POST        /actions/delete                    controllers.Wiki.delete()
-POST        /actions/deleteLastRevision        controllers.Wiki.deleteLastRevision()
-POST        /actions/rename                    controllers.Wiki.rename()
-POST        /actions/syncGoogleSpreadsheet     controllers.Wiki.syncGoogleSpreadsheet()
-POST        /preview                           controllers.Wiki.preview
+POST        /actions/delete                           controllers.Wiki.delete()
+POST        /actions/deleteLastRevision               controllers.Wiki.deleteLastRevision()
+POST        /actions/rename                           controllers.Wiki.rename()
+POST        /actions/syncGoogleSpreadsheet            controllers.Wiki.syncGoogleSpreadsheet()
+POST        /preview                                  controllers.Wiki.preview
 
-GET         /login                             controllers.Auth.login
-GET         /logout                            controllers.Auth.logout
-GET         /google/oauth/login                controllers.GoogleOAuth.login
-GET         /google/oauth/callback             controllers.GoogleOAuth.callback(code:String)
+GET         /login                                    controllers.Auth.login
+GET         /logout                                   controllers.Auth.logout
+GET         /google/oauth/login                       controllers.GoogleOAuth.login
+GET         /google/oauth/callback                    controllers.GoogleOAuth.callback(code:String)
 
-GET         /admin/                            controllers.Admin.index
+GET         /admin/                                   controllers.Admin.index
 
 
-GET         /api/pageMap                       controllers.Api.pageMap
-GET         /api/pageNames                     controllers.Api.pageNames
-GET         /api/links                         controllers.Api.links(name)
+GET         /api/pageMap                              controllers.Api.pageMap
+GET         /api/pageNames                            controllers.Api.pageNames
+GET         /api/links                                controllers.Api.links(name)
+GET         /api/selectYmdCountOfFirstRevision        controllers.Api.selectYmdCountOfFirstRevision()
 
-GET         /feed                              controllers.Feed.index
-GET         /feed.atom                         controllers.Feed.atom
+GET         /feed                                     controllers.Feed.index
+GET         /feed.atom                                controllers.Feed.atom
 
-GET         /test/unit                         controllers.Test.unit
-GET         /test/dbtest                       controllers.Test.dbtest
-GET         /test/filetest                     controllers.Test.filetest
-GET         /test/gradient                     controllers.Test.gradient
-GET         /test/permission                   controllers.Test.permission
+GET         /test/unit                                controllers.Test.unit
+GET         /test/dbtest                              controllers.Test.dbtest
+GET         /test/filetest                            controllers.Test.filetest
+GET         /test/gradient                            controllers.Test.gradient
+GET         /test/permission                          controllers.Test.permission
 
-GET         /dev/deleteVimCache                controllers.Dev.deleteVimCache(md5:String)
+GET         /dev/deleteVimCache                       controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path
-GET         /public/*file                      controllers.Assets.versioned(path="/public", file: Asset)
-GET         /assets/*file                      controllers.Assets.versioned(path="/public", file: Asset)
+GET         /public/*file                             controllers.Assets.versioned(path="/public", file: Asset)
+GET         /assets/*file                             controllers.Assets.versioned(path="/public", file: Asset)

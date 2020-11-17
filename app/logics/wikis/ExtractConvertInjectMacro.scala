@@ -21,6 +21,7 @@ object ExtractConvertInjectMacro {
     MacroTitleIndex,
     MacroRecentChanges,
     MacroRecentChangesList,
+    MacroWikiStatistics,
 
     MacroSeeAlso,
     MacroPageMap,
