@@ -158,6 +158,17 @@ object Page {
       .map(PageWithoutContentWithSize.tupled)
   }
 
+  def selectYmdCountOfFirstRevision()(implicit connection: Connection): Seq[(String, Long)] = {
+    SQL( """SELECT
+           |    DATE_FORMAT(dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
+           |    FROM Page w
+           |    WHERE revision = 1
+           |    GROUP BY DATE_FORMAT(dateTime, '%Y-%m-%d')
+           |    ORDER BY DATE_FORMAT(dateTime, '%Y-%m-%d')
+           |""".stripMargin)
+      .as(str("ymd") ~ long("cnt") *).map(flatten)
+  }
+
   def pageSearch(q:String)(implicit connection: Connection): immutable.Seq[SearchResult] = {
     SQL("""
 SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, w.content
