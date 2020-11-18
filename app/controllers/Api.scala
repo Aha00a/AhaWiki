@@ -61,7 +61,7 @@ class Api @Inject()(
     }
   }
 
-  def selectYmdCountOfFirstRevision(): Action[AnyContent] = Action { implicit request =>
+  def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       import java.util.Date
 
