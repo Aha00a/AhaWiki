@@ -7,6 +7,17 @@
         <div class="ratio_16_9"></div>
         <div class="aspectRatioContent" id="@{id}2"></div>
     </div>
+    <div id="@(id)3">
+        <p>Page count <span class="pageCount">0</span>.</p>
+        <p>Average page length <span class="avgPageSize">0</span> characters.</p>
+        <p>Average growth rate
+            <span class="avgGrowthRateDay">0</span> pages per day,
+            <span class="avgGrowthRateWeek">0</span> pages per week,
+            <span class="avgGrowthRateMonth">0</span> pages per month,
+            <span class="avgGrowthRateYear">0</span> pages per year,
+        </p>
+        <p>Recorded period <span class="recordedPeriod">0</span> days.</p>
+    </div>
     <script type="text/javascript">
         $(function () {
             $.ajax({
@@ -14,10 +25,28 @@
                 method: 'get',
                 data: {},
                 success: function (data, textStatus, jqXHR) {
-                    var arrayDate = data.map(function (v) {return v[0];});
-                    var arrayCount = data.map(function (v) {return v[1];});
+                    var dayjsStart = dayjs(data.arrayArrayYmdCountOfFirstRevision[0][0]);
+                    var dayjsEnd = dayjs(data.arrayArrayYmdCountOfFirstRevision[data.arrayArrayYmdCountOfFirstRevision.length - 1][0]);
+                    var days = dayjsEnd.diff(dayjsStart, 'd');
+                    var duration = dayjs.duration(days, 'days');
+                    console.log(
+                        Array.from(Array(days).keys()).map(v => dayjsStart.add(v, 'd'))
+                    );
+                    var mapYmdCountOfFirstRevision = data.arrayArrayYmdCountOfFirstRevision.reduce((a, v) => {
+                        a[v[0]] = v[1];
+                        return a;
+                    }, {});
+
+                    var arrayObjectExpanded = Array.from(Array(days).keys()).map(v => dayjsStart.add(v, 'd')).map(v => ({
+                        ymd: v.format('YYYY-MM-DD'),
+                        count: mapYmdCountOfFirstRevision[v.format('YYYY-MM-DD')] || 0
+                    }));
+
+
+                    var arrayDate = arrayObjectExpanded.map(function (v) {return v.ymd;});
+                    var arrayCount = arrayObjectExpanded.map(function (v) {return v.count;});
                     var acc = 0;
-                    var arrayAccumulate = data.map(function (v) {return acc += v[1];});
+                    var arrayAccumulate = arrayObjectExpanded.map(function (v) {return acc += v.count;});
 
                     var chart1 = echarts.init(document.getElementById('@{id}1'));
                     var chart2 = echarts.init(document.getElementById('@{id}2'));
@@ -91,6 +120,17 @@
                             chart2.resize();
                         }
                     });
+
+
+
+                    var div3 = $('#@{id}3');
+                    div3.find('.pageCount').text(Math.floor(data.pageCount));
+                    div3.find('.avgPageSize').text(Math.floor(data.totalSize / data.pageCount));
+                    div3.find('.avgGrowthRateDay').text((data.pageCount / days).toFixed(3));
+                    div3.find('.avgGrowthRateWeek').text((data.pageCount / (days / 7)).toFixed(1));
+                    div3.find('.avgGrowthRateMonth').text((data.pageCount / (days / (365.2422 / 12))).toFixed(1));
+                    div3.find('.avgGrowthRateYear').text((data.pageCount / (days /  365.2422)).toFixed(1));
+                    div3.find('.recordedPeriod').text(duration.toISOString());
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     debugger;

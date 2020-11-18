@@ -64,8 +64,16 @@
             <script data-ad-client="@(ApplicationConf().AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.0.0/echarts.min.js" integrity="sha512-ZRdjJAYP8Kij8Lkln9uiGj0jIrMDLAALm1ZB2b3VfV9XJ0nR4zbJmHKB42/A4tgMlZS4DTPnSAmcYRoS0dginA==" crossorigin="anonymous"></script>        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/dayjs.min.js" integrity="sha512-C2m821NxMpJ4Df47O4P/17VPqt0yiK10UmGl59/e5ynRRYiCSBvy0KHJjhp2XIjUJreuR+y3SIhVyiVilhCmcQ==" crossorigin="anonymous"></script>
-        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.0.0/echarts.min.js" integrity="sha512-ZRdjJAYP8Kij8Lkln9uiGj0jIrMDLAALm1ZB2b3VfV9XJ0nR4zbJmHKB42/A4tgMlZS4DTPnSAmcYRoS0dginA==" crossorigin="anonymous"></script>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/dayjs.min.js" integrity="sha512-C2m821NxMpJ4Df47O4P/17VPqt0yiK10UmGl59/e5ynRRYiCSBvy0KHJjhp2XIjUJreuR+y3SIhVyiVilhCmcQ==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/plugin/duration.min.js" integrity="sha512-JhCHgybOeA0T2w9AJmeB56XEK83jD4I6+xvHpRJXzMg2q4cfffsycKfK2h272d3kx1vaatWCZ921byc/hEqbaw==" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/plugin/relativeTime.min.js" integrity="sha512-ZpD5q39qjKdG3a3p8cttXCwl9C7InezFKiIVFaxmethhYdzvYTMxJuqqg3I0WmI5D7G4Qt0HiYfXjagboH8/jQ==" crossorigin="anonymous"></script>
+        <script>
+            dayjs.extend(dayjs_plugin_duration);
+            dayjs.extend(dayjs_plugin_relativeTime);
+        </script>
+
         <script type="text/javascript" src="/public/js/js.js"></script>
         
         @head

@@ -65,28 +65,25 @@ class Api @Inject()(
     database.withConnection { implicit connection =>
       import java.util.Date
 
+      import io.circe.Json
       import models.tables.Page
       import models.tables.PageWithoutContentWithSize
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
       val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
-      selectYmdCountOfFirstRevision.headOption.getOrElse(new Date())
-      selectYmdCountOfFirstRevision.lastOption.getOrElse(new Date())
       val totalSize: Long = seqPage.map(_.size).sum
-      /*
-      Average page size 7558 bytes.
-Average growth rate 4 pages per day.
-Growth rate last week 0 pages per day.
-Recorded period 7643 days (1091 weeks).
-Last data recorded 4 days ago.
-       */
 
-      val value: Map[String, Long] = Map(
-//        "arrayArrayYmdCountOfFirstRevision" -> selectYmdCountOfFirstRevision,
+      val value1: Map[String, Seq[(String, Long)]] = Map(
+        "arrayArrayYmdCountOfFirstRevision" -> selectYmdCountOfFirstRevision,
+      )
+      val value2: Map[String, Long] = Map(
         "totalSize" -> totalSize,
         "pageCount" -> seqPage.length.toLong,
         "count" -> Page.selectCount(),
       )
-      Ok(selectYmdCountOfFirstRevision.asJson)
+      val json1: Json = value1.asJson
+      val json2: Json = value2.asJson
+
+      Ok(json1.deepMerge(json2))
     }
   }
 }
