@@ -63,8 +63,30 @@ class Api @Inject()(
 
   def selectYmdCountOfFirstRevision(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
+      import java.util.Date
+
       import models.tables.Page
-      Ok(Page.selectYmdCountOfFirstRevision().asJson)
+      import models.tables.PageWithoutContentWithSize
+      val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
+      val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
+      selectYmdCountOfFirstRevision.headOption.getOrElse(new Date())
+      selectYmdCountOfFirstRevision.lastOption.getOrElse(new Date())
+      val totalSize: Long = seqPage.map(_.size).sum
+      /*
+      Average page size 7558 bytes.
+Average growth rate 4 pages per day.
+Growth rate last week 0 pages per day.
+Recorded period 7643 days (1091 weeks).
+Last data recorded 4 days ago.
+       */
+
+      val value: Map[String, Long] = Map(
+//        "arrayArrayYmdCountOfFirstRevision" -> selectYmdCountOfFirstRevision,
+        "totalSize" -> totalSize,
+        "pageCount" -> seqPage.length.toLong,
+        "count" -> Page.selectCount(),
+      )
+      Ok(selectYmdCountOfFirstRevision.asJson)
     }
   }
 }
