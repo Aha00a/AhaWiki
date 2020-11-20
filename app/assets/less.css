@@ -368,6 +368,15 @@ body {
   display: inline-block;
   max-width: 33vw;
 }
+@media only screen and (max-width: 768px) {
+  .AhaWiki .commonAhaWiki div.schema {
+    clear: right;
+    float: none;
+    display: block;
+    max-width: initial;
+    margin: 10px 0;
+  }
+}
 .AhaWiki .commonAhaWiki div.schema h5:first-of-type {
   margin-top: 0;
 }
@@ -727,6 +736,15 @@ body {
   vertical-align: top;
   display: inline-block;
   max-width: 33vw;
+}
+@media only screen and (max-width: 768px) {
+  .AhaWiki .wikiContent div.schema {
+    clear: right;
+    float: none;
+    display: block;
+    max-width: initial;
+    margin: 10px 0;
+  }
 }
 .AhaWiki .wikiContent div.schema h5:first-of-type {
   margin-top: 0;
@@ -1190,6 +1208,15 @@ body {
   vertical-align: top;
   display: inline-block;
   max-width: 33vw;
+}
+@media only screen and (max-width: 768px) {
+  .AhaWiki .paperContent .page .pageContent div.schema {
+    clear: right;
+    float: none;
+    display: block;
+    max-width: initial;
+    margin: 10px 0;
+  }
 }
 .AhaWiki .paperContent .page .pageContent div.schema h5:first-of-type {
   margin-top: 0;

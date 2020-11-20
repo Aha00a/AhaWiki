@@ -278,6 +278,15 @@ html, body {
 			display: inline-block;
 			max-width: 33vw;
 
+			@media only screen and (max-width: 768px) {
+				clear: right;
+				float: none;
+				display: block;
+				max-width: initial;
+				margin: 10px 0;
+			}
+
+
 			h5:first-of-type {
 				margin-top: 0;
 			}
