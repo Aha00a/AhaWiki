@@ -1,23 +1,37 @@
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
-    <div class="aspectRatioWrapper">
-        <div class="ratio_16_9"></div>
-        <div class="aspectRatioContent" id="@{id}1"></div>
-    </div>
-    <div class="aspectRatioWrapper">
-        <div class="ratio_16_9"></div>
-        <div class="aspectRatioContent" id="@{id}2"></div>
-    </div>
-    <div id="@(id)3">
-        <p>Page count <span class="pageCount">0</span>.</p>
-        <p>Average page length <span class="avgPageSize">0</span> characters.</p>
-        <p>Average growth rate
-            <span class="avgGrowthRateDay">0</span> pages per day,
-            <span class="avgGrowthRateWeek">0</span> pages per week,
-            <span class="avgGrowthRateMonth">0</span> pages per month,
-            <span class="avgGrowthRateYear">0</span> pages per year,
-        </p>
-        <p>Recorded period <span class="recordedPeriod">0</span> days.</p>
-    </div>
+    <table class="layout" style="width: 100%">
+        <thead>
+            <cols>
+                <col width="50%"/>
+                <col width="50%"/>
+            </cols>
+        </thead>
+        <tr>
+            <td>
+                <div id="@(id)3">
+                    <p>Page count <span class="pageCount">0</span>.</p>
+                    <p>Average page length <span class="avgPageSize">0</span> characters.</p>
+                    <p>Average growth rate
+                        <span class="avgGrowthRateDay">0</span> pages per day,
+                        <span class="avgGrowthRateWeek">0</span> pages per week,
+                        <span class="avgGrowthRateMonth">0</span> pages per month,
+                        <span class="avgGrowthRateYear">0</span> pages per year,
+                    </p>
+                    <p>Recorded period <span class="recordedPeriod">0</span> days.</p>
+                </div>
+            </td>
+            <td>
+                <div class="aspectRatioWrapper">
+                    <div class="ratio_16_9"></div>
+                    <div class="aspectRatioContent" id="@{id}1"></div>
+                </div>
+                <div class="aspectRatioWrapper">
+                    <div class="ratio_16_9"></div>
+                    <div class="aspectRatioContent" id="@{id}2"></div>
+                </div>
+            </td>
+        </tr>
+    </table>
     <script type="text/javascript">
         $(function () {
             $.ajax({
