@@ -366,7 +366,7 @@ body {
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
-  max-width: 33vw;
+  max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .commonAhaWiki div.schema {
@@ -735,7 +735,7 @@ body {
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
-  max-width: 33vw;
+  max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .wikiContent div.schema {
@@ -1207,7 +1207,7 @@ body {
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
-  max-width: 33vw;
+  max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .paperContent .page .pageContent div.schema {
