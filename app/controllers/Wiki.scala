@@ -109,14 +109,7 @@ class Wiki @Inject()(implicit val
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, _, _, _) =>
           import java.io.File
-          val additionalInfo =
-            s"""
-               |== [schema:Schema Schema]
-               |${getMarkupSchema(name)}
-               |
-               |== See Also
-               |[[SeeAlso]]
-               |""".stripMargin
+          val additionalInfo = getAhaMarkAdditionalInfo(name)
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
 
           name match {
@@ -303,14 +296,7 @@ class Wiki @Inject()(implicit val
         case (Some(page), "" | "view", true, _) =>
           try {
             val pageContent: PageContent = PageContent(page.content)
-            val additionalInfo =
-              s"""
-                |== [schema:Schema Schema]
-                |${getMarkupSchema(name)}
-                |                
-                |== See Also
-                |[[SeeAlso]]
-                |""".stripMargin
+            val additionalInfo = getAhaMarkAdditionalInfo(name)
             pageContent.redirect match {
               case Some(directive) =>
                 Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
@@ -365,6 +351,16 @@ class Wiki @Inject()(implicit val
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
       }
     }
+  }
+
+  def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
+    s"""
+       |== [schema:Schema Schema]
+       |${getMarkupSchema(name)}
+       |
+       |== See Also
+       |[[SeeAlso]]
+       |""".stripMargin
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
