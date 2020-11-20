@@ -63,6 +63,8 @@ class Wiki @Inject()(implicit val
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
 
+  import java.sql.Connection
+
   import io.circe.generic.auto._
   import io.circe.syntax._
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
@@ -107,7 +109,14 @@ class Wiki @Inject()(implicit val
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, _, _, _) =>
           import java.io.File
-          val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
+          val additionalInfo =
+            s"""
+               |== [schema:Schema Schema]
+               |${getMarkupSchema(name)}
+               |
+               |== See Also
+               |[[SeeAlso]]
+               |""".stripMargin
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
 
           name match {
@@ -294,7 +303,14 @@ class Wiki @Inject()(implicit val
         case (Some(page), "" | "view", true, _) =>
           try {
             val pageContent: PageContent = PageContent(page.content)
-            val additionalInfo = "\n== See Also\n[[SeeAlso]]\n"
+            val additionalInfo =
+              s"""
+                |== [schema:Schema Schema]
+                |${getMarkupSchema(name)}
+                |                
+                |== See Also
+                |[[SeeAlso]]
+                |""".stripMargin
             pageContent.redirect match {
               case Some(directive) =>
                 Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
@@ -350,6 +366,18 @@ class Wiki @Inject()(implicit val
       }
     }
   }
+
+  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
+    import models.tables.SchemaOrg
+    val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+    val mapClsList = listSchemaOrg.groupBy(_.cls)
+    mapClsList.keys.toSeq.sorted.map(k => {
+      s""" * [schema:$k $k]
+         |${mapClsList(k).map(t => s"""  * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}""".stripMargin
+    }).mkString("\n")
+  }
+
+
 
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")

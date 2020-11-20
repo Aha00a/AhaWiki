@@ -11,16 +11,6 @@ object MacroSeeAlso extends TraitMacro {
     InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop)))
   }}
 
-  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
-    import models.tables.SchemaOrg
-    val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
-    val mapClsList = listSchemaOrg.groupBy(_.cls)
-    mapClsList.keys.toSeq.sorted.map(k => {
-      s""" * [schema:$k $k]
-         |${mapClsList(k).map(t => s"""  * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}""".stripMargin
-    }).mkString("\n")
-  }
-
   def getMarkupRelatedPages(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     import com.aha00a.commons.utils.SeqUtil
     import models.tables.Link
@@ -64,10 +54,6 @@ object MacroSeeAlso extends TraitMacro {
   def getMarkupSeeAlso(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     s"""
        |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td class="pageSuggestion">)]]
-       |
-       |'''[schema:Schema Schema]'''
-       |${getMarkupSchema(name)}
-       |
        |'''Backlinks'''
        |[[Backlinks]]
        |
