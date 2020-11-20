@@ -357,14 +357,16 @@ class Wiki @Inject()(implicit val
     val markupSchema = getMarkupSchema(name)
     markupSchema.toOption match {
       case Some(s) =>
-        s"""== [schema:Schema Schema]
+        s"""
+           |== [schema:Schema Schema]
            |${markupSchema}
            |
            |== See Also
            |[[SeeAlso]]
            |""".stripMargin
       case None =>
-        s"""== See Also
+        s"""
+           |== See Also
            |[[SeeAlso]]
            |""".stripMargin
     }
