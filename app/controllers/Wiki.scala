@@ -354,13 +354,20 @@ class Wiki @Inject()(implicit val
   }
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
-    s"""
-       |== [schema:Schema Schema]
-       |${getMarkupSchema(name)}
-       |
-       |== See Also
-       |[[SeeAlso]]
-       |""".stripMargin
+    val markupSchema = getMarkupSchema(name)
+    markupSchema.toOption match {
+      case Some(s) =>
+        s"""== [schema:Schema Schema]
+           |${markupSchema}
+           |
+           |== See Also
+           |[[SeeAlso]]
+           |""".stripMargin
+      case None =>
+        s"""== See Also
+           |[[SeeAlso]]
+           |""".stripMargin
+    }
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {

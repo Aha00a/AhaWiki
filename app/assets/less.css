@@ -932,6 +932,7 @@ body {
 .AhaWiki .gnb .action ul li,
 .AhaWiki .revisionInfo .action ul li {
   padding: 5px;
+  display: inline-block;
 }
 .AhaWiki .gnb .action a,
 .AhaWiki .revisionInfo .action a {
