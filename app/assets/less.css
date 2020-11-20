@@ -911,32 +911,31 @@ body {
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
-  padding: 10px 10px 10px 20px;
   text-align: right;
   color: #222;
+}
+.AhaWiki .gnb .action,
+.AhaWiki .revisionInfo .action {
+  background-color: #fff;
+  margin-top: 20px;
+}
+.AhaWiki .gnb .action ul,
+.AhaWiki .revisionInfo .action ul {
+  vertical-align: top;
+  display: inline-block;
+  margin: 0;
+  border-left: 1px solid #ccc;
+  list-style-type: none;
+  padding: 0 10px;
+  text-align: left;
+}
+.AhaWiki .gnb .action ul li,
+.AhaWiki .revisionInfo .action ul li {
+  padding: 5px;
 }
 .AhaWiki .gnb .action a,
 .AhaWiki .revisionInfo .action a {
   display: inline-block;
-  margin: 0 0 0 5px;
-  padding: 5px;
-}
-.AhaWiki .gnb .action .authArea,
-.AhaWiki .revisionInfo .action .authArea,
-.AhaWiki .gnb .action .globalAction,
-.AhaWiki .revisionInfo .action .globalAction,
-.AhaWiki .gnb .action .pageAction,
-.AhaWiki .revisionInfo .action .pageAction {
-  display: inline-block;
-  border-left: 1px solid #ccc;
-}
-.AhaWiki .gnb .action .authArea:first-of-type,
-.AhaWiki .revisionInfo .action .authArea:first-of-type,
-.AhaWiki .gnb .action .globalAction:first-of-type,
-.AhaWiki .revisionInfo .action .globalAction:first-of-type,
-.AhaWiki .gnb .action .pageAction:first-of-type,
-.AhaWiki .revisionInfo .action .pageAction:first-of-type {
-  border-left: none;
 }
 .AhaWiki .gnb a,
 .AhaWiki .revisionInfo a {

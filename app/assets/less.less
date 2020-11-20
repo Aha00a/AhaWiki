@@ -429,21 +429,25 @@ html, body {
 		float: right;
 		margin-bottom: 10px;
 		margin-left: 10px;
-		padding: 10px 10px 10px 20px;
 		text-align: right;
 		color: #222;
 		.action {
+			background-color: #fff;
+			margin-top: 20px;
+			ul {
+				vertical-align: top;
+				display: inline-block;
+				margin: 0;
+				border-left: 1px solid #ccc;
+				list-style-type: none;
+				padding: 0 10px;
+				text-align: left;
+				li {
+					padding: 5px;
+				}
+			}
 			a {
 				display: inline-block;
-				margin: 0 0 0 5px;
-				padding: 5px;
-			}
-			.authArea, .globalAction, .pageAction {
-				display: inline-block;
-				border-left: 1px solid #ccc;
-				&:first-of-type {
-					border-left: none;
-				}
 			}
 		}
 		a {

@@ -1,31 +1,51 @@
 @(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
 <div class="gnb">
     <div class="action">
-        <div class="authArea">
+        <ul class="authArea">
             @if(request.session.get("id")) {
-                <i class="fas fa-user-cog"></i> @(request.session.get("id"))
-                <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                <li>
+                    <i class="fas fa-user-cog"></i> @(request.session.get("id"))
+                </li>
+                <li>
+                    <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                </li>
             } else {
-                <a href="@(routes.Auth.login())"><i class="fas fa-sign-in-alt"></i>Login</a>
+                <li>
+                    <a href="@(routes.Auth.login())"><i class="fas fa-sign-in-alt"></i>Login</a>
+                </li>
             }
-        </div>
-        <div class="globalAction">
-            <a href="javascript:showSearch();"><i class="fas fa-search"></i>Search</a>
-            <a href="@routes.Feed.atom()"><i class="fas fa-rss"></i>Atom</a>
+        </ul>
+        <ul class="globalAction">
+            <li>
+                <a href="javascript:showSearch();"><i class="fas fa-search"></i>Search</a>
+            </li>
+            <li>
+                <a href="@routes.Feed.atom()"><i class="fas fa-rss"></i>Atom</a>
+            </li>
             @if(isWritable) {
-                <a href="javascript:showWrite();"><i class="fas fa-signature"></i>Write Log</a>
+                <li>
+                    <a href="javascript:showWrite();"><i class="fas fa-signature"></i>Write Log</a>
+                </li>
             }
-        </div>
-        <div class="pageAction">
+        </ul>
+        <ul class="pageAction">
             @if(wikiFirst != null) {
-                <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
-                <a href="?action=history"><i class="fas fa-history"></i>History</a>
-                <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+                <li>
+                    <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
+                </li>
+                <li>
+                    <a href="?action=history"><i class="fas fa-history"></i>History</a>
+                </li>
+                <li>
+                    <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+                </li>
             }
             @if(isWritable) {
-                <a href="?action=edit"><i class="fas fa-edit"></i>Edit</a>
+                <li>
+                    <a href="?action=edit"><i class="fas fa-edit"></i>Edit</a>
+                </li>
             }
-        </div>
+        </ul>
     </div>
 </div>
 
