@@ -131,6 +131,14 @@ body {
 .AhaWiki .aspectRatioWrapper .ratio_16_9 {
   padding-bottom: 56.25%;
 }
+.AhaWiki .aspectRatioWrapper .responsiveRatio_16_9 {
+  padding-bottom: 56.25%;
+}
+@media all and (orientation: portrait) {
+  .AhaWiki .aspectRatioWrapper .responsiveRatio_16_9 {
+    padding-bottom: 156.25%;
+  }
+}
 .AhaWiki .aspectRatioWrapper .aspectRatioContent {
   position: absolute;
   top: 0;

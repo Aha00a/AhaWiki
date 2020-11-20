@@ -91,10 +91,16 @@ html, body {
 		position: relative;
 
 		.ratio_4_3 {
-			padding-bottom: 75%
+			padding-bottom: 75%;
 		}
 		.ratio_16_9 {
-			padding-bottom: 56.25%
+			padding-bottom: 56.25%;
+		}
+		.responsiveRatio_16_9  {
+			padding-bottom: 56.25%;
+			@media all and (orientation: portrait) {
+				padding-bottom: 156.25%;
+			}
 		}
 		.aspectRatioContent {
 			position: absolute;
