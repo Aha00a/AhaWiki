@@ -33,6 +33,10 @@ html, body {
 	font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
 
+@max1280: ~"(max-width: 1279px)";
+@max800: ~"(max-width: 767px)";
+@max320: ~"(max-width: 319px)";
+
 .AhaWiki {
 	a {
 		color: #00b;
@@ -431,9 +435,11 @@ html, body {
 		margin-left: 10px;
 		text-align: right;
 		color: #222;
+		padding-top: 20px;
+		@media @max800 {
+			display: none;
+		}
 		.action {
-			background-color: #fff;
-			margin-top: 20px;
 			ul {
 				vertical-align: top;
 				display: inline-block;
@@ -446,7 +452,7 @@ html, body {
 				li {
 					padding: 5px;
 					display: inline-block;
-					@media only screen and (max-width: 1280px) {
+					@media @max1280 {
 						display: block;
 					}
 				}

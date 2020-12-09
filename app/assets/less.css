@@ -913,11 +913,13 @@ body {
   margin-left: 10px;
   text-align: right;
   color: #222;
+  padding-top: 20px;
 }
-.AhaWiki .gnb .action,
-.AhaWiki .revisionInfo .action {
-  background-color: #fff;
-  margin-top: 20px;
+@media (max-width: 767px) {
+  .AhaWiki .gnb,
+  .AhaWiki .revisionInfo {
+    display: none;
+  }
 }
 .AhaWiki .gnb .action ul,
 .AhaWiki .revisionInfo .action ul {
@@ -934,7 +936,7 @@ body {
   padding: 5px;
   display: inline-block;
 }
-@media only screen and (max-width: 1280px) {
+@media (max-width: 1279px) {
   .AhaWiki .gnb .action ul li,
   .AhaWiki .revisionInfo .action ul li {
     display: block;
