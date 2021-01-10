@@ -436,9 +436,6 @@ html, body {
 		text-align: right;
 		color: #222;
 		padding-top: 20px;
-		@media @widthTablet {
-			display: none;
-		}
 		.action {
 			ul {
 				vertical-align: top;
@@ -454,6 +451,9 @@ html, body {
 					display: inline-block;
 					@media @widthMonitor {
 						display: block;
+					}
+					@media @widthTablet {
+						display: inline-block;
 					}
 				}
 			}

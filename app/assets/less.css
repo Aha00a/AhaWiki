@@ -915,12 +915,6 @@ body {
   color: #222;
   padding-top: 20px;
 }
-@media (max-width: 767px) {
-  .AhaWiki .gnb,
-  .AhaWiki .revisionInfo {
-    display: none;
-  }
-}
 .AhaWiki .gnb .action ul,
 .AhaWiki .revisionInfo .action ul {
   vertical-align: top;
@@ -940,6 +934,12 @@ body {
   .AhaWiki .gnb .action ul li,
   .AhaWiki .revisionInfo .action ul li {
     display: block;
+  }
+}
+@media (max-width: 767px) {
+  .AhaWiki .gnb .action ul li,
+  .AhaWiki .revisionInfo .action ul li {
+    display: inline-block;
   }
 }
 .AhaWiki .gnb .action a,
