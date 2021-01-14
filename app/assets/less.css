@@ -532,7 +532,7 @@ body {
 }
 .AhaWiki .commonAhaWiki.schema\:Schema > * > ul,
 .AhaWiki .commonAhaWiki.TitleIndex > * > ul,
-.AhaWiki .commonAhaWiki .backlinks > * > ul {
+.AhaWiki .commonAhaWiki .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
 }
@@ -901,7 +901,7 @@ body {
 }
 .AhaWiki .wikiContent.schema\:Schema > * > ul,
 .AhaWiki .wikiContent.TitleIndex > * > ul,
-.AhaWiki .wikiContent .backlinks > * > ul {
+.AhaWiki .wikiContent .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
 }
@@ -1381,7 +1381,7 @@ body {
 }
 .AhaWiki .paperContent .page .pageContent.schema\:Schema > * > ul,
 .AhaWiki .paperContent .page .pageContent.TitleIndex > * > ul,
-.AhaWiki .paperContent .page .pageContent .backlinks > * > ul {
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
 }
