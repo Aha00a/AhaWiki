@@ -358,21 +358,21 @@ class Wiki @Inject()(implicit val
     markupSchema.toOption match {
       case Some(s) =>
         s"""
-           |== [schema:Schema Schema]
+           |== See Also (generated)
+           |=== [schema:Schema Schema]
            |${markupSchema}
            |
-           |== Backlinks
+           |=== Backlinks
            |[[Backlinks]]
            |
-           |== See Also
            |[[SeeAlso]]
            |""".stripMargin
       case None =>
         s"""
-           |== Backlinks
+           |== See Also (generated)
+           |=== Backlinks
            |[[Backlinks]]
            |
-           |== See Also
            |[[SeeAlso]]
            |""".stripMargin
     }
