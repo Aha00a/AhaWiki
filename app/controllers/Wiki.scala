@@ -366,6 +366,7 @@ class Wiki @Inject()(implicit val
            |[[Backlinks]]
            |
            |=== Similar Pages
+           |Similar pages by cosine similarity. Words after page name are term frequency.
            |[[SimilarPages]]
            |
            |=== Adjacent Pages
@@ -379,6 +380,7 @@ class Wiki @Inject()(implicit val
            |[[Backlinks]]
            |
            |=== Similar Pages
+           |Similar pages by cosine similarity. Words after page name are term frequency.
            |[[SimilarPages]]
            |
            |=== Adjacent Pages
