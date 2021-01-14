@@ -11,7 +11,7 @@ object MacroBacklinks extends TraitMacro {
       val listLink: List[Link] = Link.selectDst(wikiContext.name)
       val listLinkFiltered = listLink.filter(l => l.and(wikiContext.pageCanSee))
       val markup = listLinkFiltered
-        .map(l => s""" * ["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
+        .map(l => s""" 1. ["${l.src}" ${l.src}${l.alias.toOption.map(v => s"($v)").getOrElse("")}]""")
         .mkString("\n")
       markup
         .toOption
