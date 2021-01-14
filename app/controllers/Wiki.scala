@@ -365,7 +365,12 @@ class Wiki @Inject()(implicit val
            |=== Backlinks
            |[[Backlinks]]
            |
+           |=== Similar Pages
+           |[[SimilarPages]]
+           |
+           |=== Related Pages
            |[[SeeAlso]]
+           |
            |""".stripMargin
       case None =>
         s"""
@@ -373,7 +378,12 @@ class Wiki @Inject()(implicit val
            |=== Backlinks
            |[[Backlinks]]
            |
+           |=== Similar Pages
+           |[[SimilarPages]]
+           |
+           |=== Related Pages
            |[[SeeAlso]]
+           |
            |""".stripMargin
     }
   }

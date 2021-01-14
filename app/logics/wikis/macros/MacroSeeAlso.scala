@@ -53,15 +53,7 @@ object MacroSeeAlso extends TraitMacro {
 
   def getMarkupSeeAlso(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
     s"""
-       |[[Html(<table class="seeAlso"><thead><tr><th>Page Suggestion</th><th>Related Pages</th></tr></thead><tbody><tr><td class="pageSuggestion">)]]
-       |'''Similar Pages'''
-       |[[SimilarPages]]
-       |
-       |[[Html(</td><td class="relatedPages">)]]
-       |
        |${getMarkupRelatedPages(name)}
-       |
-       |[[Html(</td></tr></tbody></table>)]]
        |""".stripMargin
   }
 
