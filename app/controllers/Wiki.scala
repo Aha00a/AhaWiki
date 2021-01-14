@@ -368,7 +368,7 @@ class Wiki @Inject()(implicit val
            |=== Similar Pages
            |[[SimilarPages]]
            |
-           |=== Related Pages
+           |=== Adjacent Pages
            |[[SeeAlso]]
            |
            |""".stripMargin
@@ -381,7 +381,7 @@ class Wiki @Inject()(implicit val
            |=== Similar Pages
            |[[SimilarPages]]
            |
-           |=== Related Pages
+           |=== Adjacent Pages
            |[[SeeAlso]]
            |
            |""".stripMargin
