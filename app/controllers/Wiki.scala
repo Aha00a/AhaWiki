@@ -361,11 +361,17 @@ class Wiki @Inject()(implicit val
            |== [schema:Schema Schema]
            |${markupSchema}
            |
+           |== Backlinks
+           |[[Backlinks]]
+           |
            |== See Also
            |[[SeeAlso]]
            |""".stripMargin
       case None =>
         s"""
+           |== Backlinks
+           |[[Backlinks]]
+           |
            |== See Also
            |[[SeeAlso]]
            |""".stripMargin
