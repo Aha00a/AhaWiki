@@ -38,7 +38,7 @@ object MacroSeeAlso extends TraitMacro {
         case (date(), year()) => false
         case _ => true
       })
-      .take(300)
+      .take(1000)
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
