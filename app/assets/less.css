@@ -530,11 +530,17 @@ body {
   font-size: 0.7em;
   opacity: 0.7;
 }
+.AhaWiki .commonAhaWiki .columnWidth350 {
+  column-width: 300px;
+  column-gap: 50px;
+  margin-top: 0;
+}
 .AhaWiki .commonAhaWiki.schema\:Schema > * > ul,
 .AhaWiki .commonAhaWiki.TitleIndex > * > ul,
 .AhaWiki .commonAhaWiki .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
+  margin-top: 0;
 }
 .AhaWiki .wikiContent {
   padding: 0 0 25px 25px;
@@ -899,11 +905,17 @@ body {
   font-size: 0.7em;
   opacity: 0.7;
 }
+.AhaWiki .wikiContent .columnWidth350 {
+  column-width: 300px;
+  column-gap: 50px;
+  margin-top: 0;
+}
 .AhaWiki .wikiContent.schema\:Schema > * > ul,
 .AhaWiki .wikiContent.TitleIndex > * > ul,
 .AhaWiki .wikiContent .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
+  margin-top: 0;
 }
 .AhaWiki .gnb,
 .AhaWiki .revisionInfo {
@@ -1379,11 +1391,17 @@ body {
   font-size: 0.7em;
   opacity: 0.7;
 }
+.AhaWiki .paperContent .page .pageContent .columnWidth350 {
+  column-width: 300px;
+  column-gap: 50px;
+  margin-top: 0;
+}
 .AhaWiki .paperContent .page .pageContent.schema\:Schema > * > ul,
 .AhaWiki .paperContent .page .pageContent.TitleIndex > * > ul,
 .AhaWiki .paperContent .page .pageContent .columnWidth350 > * > ul {
   column-width: 300px;
   column-gap: 50px;
+  margin-top: 0;
 }
 .AhaWiki .paperContent .page .toc {
   display: none;

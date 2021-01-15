@@ -414,12 +414,16 @@ html, body {
 			opacity: 0.7;
 		}
 
+		.columnWidth350 {
+			column-width: 300px;
+			column-gap: 50px;
+			margin-top: 0;
+		}
         &.schema\:Schema,
 		&.TitleIndex,
 		.columnWidth350 {
             > * > ul {
-                column-width: 300px;
-                column-gap: 50px;
+				.columnWidth350;
             }
         }
 	}
