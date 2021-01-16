@@ -299,7 +299,9 @@ class Wiki @Inject()(implicit val
             val additionalInfo = getAhaMarkAdditionalInfo(name)
             pageContent.redirect match {
               case Some(directive) =>
-                Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>""")
+                val message = s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>"""
+                val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
+                Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
               case None =>
                 val description = pageContent.content.split("\n", 6).take(5).mkString("\n") + " ..."
                 Ok(pageContent.interpreter match {
