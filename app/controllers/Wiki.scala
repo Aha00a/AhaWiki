@@ -397,8 +397,11 @@ class Wiki @Inject()(implicit val
     val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
-      s""" * [schema:$k $k]
-         |${mapClsList(k).map(t => s"""  * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}""".stripMargin
+      s"""==== [schema:$k $k]
+         |[[Html(<div class="columnWidth350">)]]
+         |${mapClsList(k).map(t => s""" * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
+         |[[Html(</div>)]]
+         |""".stripMargin
     }).mkString("\n")
   }
 
