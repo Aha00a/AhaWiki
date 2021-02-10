@@ -48,7 +48,8 @@ controllerComponents: ControllerComponents,
 
     val wikiPermission = WikiPermission()
     val id = SessionLogic.getId(request).getOrElse("")
-    val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq()
+//    val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq() // TODO: 
+    val seqPermission = Seq()
     val permissionLogic = new PermissionLogic(seqPermission)
 
     var permissionDiff = false

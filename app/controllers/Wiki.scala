@@ -88,7 +88,8 @@ class Wiki @Inject()(implicit val
 
       if(environment.mode == Mode.Dev) {
         import models.tables.Permission
-        val permissionLogic = new PermissionLogic(Permission.select())
+//        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
+        val permissionLogic = new PermissionLogic(Seq())
         val id = SessionLogic.getId(request).getOrElse("")
         val readable = permissionLogic.permitted(name, id, Permission.read)
         val editable = permissionLogic.permitted(name, id, Permission.edit)
