@@ -39,6 +39,8 @@
   <!-- https://hibernate.atlassian.net/browse/HV-1323 -->
   <logger name="org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator" level="INFO" />
 
+  <logger name="play.api.db.evolutions" level="DEBUG" />
+
   <logger name="org.jdbcdslog.ConnectionLogger" level="INFO" />
   <logger name="org.jdbcdslog.StatementLogger"  level="OFF" />
   <logger name="org.jdbcdslog.ResultSetLogger"  level="OFF" />
