@@ -13,15 +13,12 @@ create unique index User_id_uindex on User (id);
 
 create table Site (
     seq int auto_increment,
-    domain VARCHAR(128) not null,
+    name VARCHAR(200) not null,
     constraint Site_pk
         primary key (seq)
 );
 
-create unique index Site_domain_uindex on Site (domain);
-
-insert into Site (domain) VALUES ('');
-
+insert into Site (name) VALUES ('');
 
 create table UserSite (
     user int not null,
@@ -30,6 +27,20 @@ create table UserSite (
     constraint UserSite_Site_seq_fk foreign key (site) references Site (seq),
     constraint UserSite_User_seq_fk foreign key (user) references User (seq)
 );
+
+create table SiteDomain
+(
+    seq int auto_increment,
+    site int not null,
+    domain VARCHAR(255) not null,
+    constraint SiteDomain_pk
+        primary key (seq),
+    constraint SiteDomain_Site_seq_fk
+        foreign key (site) references Site (seq)
+);
+
+create unique index SiteDomain_domain_uindex on SiteDomain (domain);
+
 
 
 alter table TermFrequency drop foreign key fkTermFrequencyName;
@@ -41,6 +52,7 @@ alter table Page add site int default 1 not null first;
 alter table Page drop primary key, add primary key (site, name, revision);
 alter table Page add constraint Page_Site_seq_fk foreign key (site) references Site (seq);
 
+TRUNCATE TermFrequency;
 alter table TermFrequency
     add site int default 1 not null first,
     drop primary key,
@@ -57,6 +69,14 @@ alter table CosineSimilarity
     add constraint fkCosignSimilaritySiteName2PageSiteName foreign key (site, name2) references Page (site, name)
 ;
 
+alter table Link
+    add site int default 1 not null first,
+    drop primary key,
+    add primary key (site, src, dst, alias),
+    add constraint fkLinkSite foreign key (site, src) references Page (site, name)
+;
+
+
 alter table SchemaOrg add site int default 1 not null first;
 alter table SchemaOrg drop primary key, add primary key (site, page, cls, prop, value);
 alter table SchemaOrg add constraint fkTermFrequencyPage foreign key (site, page) references Page (site, name);
@@ -70,6 +90,13 @@ alter table SchemaOrg
     add primary key (page, cls, prop, value),
     drop column site;
 
+alter table Link
+    drop foreign key fkLinkSite,
+    drop primary key,
+    add primary key (src, dst, alias),
+    drop column site;
+
+TRUNCATE CosineSimilarity;
 alter table CosineSimilarity
     drop foreign key fkCosignSimilaritySiteName1PageSiteName,
     drop foreign key fkCosignSimilaritySiteName2PageSiteName,
@@ -77,6 +104,7 @@ alter table CosineSimilarity
     add primary key (name1, name2),
     drop column site;
 
+TRUNCATE TermFrequency;
 alter table TermFrequency
     drop foreign key fkTermFrequencySiteNamePageSiteName,
     drop primary key,
@@ -91,6 +119,8 @@ alter table SchemaOrg add constraint SchemaOrg_Page_name_fk foreign key (page) r
 ALTER TABLE CosineSimilarity ADD CONSTRAINT fkCosineSimilarityName1 FOREIGN KEY (name1) REFERENCES Page(name);
 ALTER TABLE CosineSimilarity ADD CONSTRAINT fkCosineSimilarityName2 FOREIGN KEY (name2) REFERENCES Page(name);
 ALTER TABLE TermFrequency ADD CONSTRAINT fkTermFrequencyName FOREIGN KEY (name) REFERENCES Page(name);
+
+drop table SiteDomain;
 
 drop table UserSite;
 
