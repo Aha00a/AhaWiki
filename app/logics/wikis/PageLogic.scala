@@ -10,36 +10,35 @@ import models._
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
+import models.tables.Page
 
 object PageLogic {
 
   import models.WikiContext.Provider
   import models.tables.PageWithoutContentWithSize
+  import models.tables.Site
 
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
+      import models.tables.Site
       implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
+      implicit val site: Site = wikiContext.site
       val author = wikiContext.provider.getId.getOrElse("anonymous")
       val permRead = PageContent(body).read.getOrElse("")
       val page = Page(name, revision, dateTime, author, wikiContext.provider.remoteAddress, comment, permRead, body)
       Page.insert(page)
-      wikiContext.actorAhaWiki ! Calculate(name)
-      AhaWikiCache.PageList.invalidate()
-      name match {
-        case ".header" => AhaWikiCache.Header.invalidate()
-        case ".footer" => AhaWikiCache.Footer.invalidate()
-        case ".config" => AhaWikiCache.Config.invalidate()
-        case _ =>
-      }
+      wikiContext.actorAhaWiki ! Calculate(site, name)
     }
   }
 
-  def getListPage()(implicit syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
-    AhaWikiCache.PageList.get()
+  def getListPage()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site): List[PageWithoutContentWithSize] = {
+    database.withConnection { implicit connection =>
+      Page.pageSelectPageList()
+    }
   }
 
-  def getListPageByPermission()(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database, site: Site): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()

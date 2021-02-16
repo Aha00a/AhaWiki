@@ -26,65 +26,93 @@ object Link {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def selectCountWhereAlias(alias: String)(implicit connection: Connection): Long = {
-    SQL"SELECT COUNT(*) cnt FROM Link WHERE alias = $alias"
+  def selectCountWhereAlias(alias: String)(implicit connection: Connection, site: Site): Long = {
+    SQL"""SELECT COUNT(*) cnt FROM Link WHERE site = ${site.seq} AND alias = $alias"""
       .as(long("cnt") single)
   }
 
-  def selectBacklinkOfDatePage(seqName: Seq[String])(implicit connection: Connection): List[Link] = {
-    SQL"""SELECT src, dst, alias FROM Link WHERE dst IN  ($seqName) AND src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])' ORDER BY dst, src DESC"""
+  def selectBacklinkOfDatePage(seqName: Seq[String])(implicit connection: Connection, site: Site): List[Link] = {
+    SQL"""
+        SELECT src, dst, alias
+            FROM Link
+            WHERE
+                site = ${site.seq} AND
+                dst IN ($seqName) AND
+                src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])'
+            ORDER BY dst, src DESC
+      """
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
 
-  def select(name: String)(implicit connection: Connection): List[Link] = {
-    SQL"""SELECT src, dst, alias FROM Link WHERE src != '' AND dst != '' AND (src = $name OR dst = $name)"""
+  def select(name: String)(implicit connection: Connection, site: Site): List[Link] = {
+    SQL"""
+        SELECT src, dst, alias
+            FROM Link
+            WHERE
+                site = ${site.seq} AND
+                src != '' AND
+                dst != '' AND
+                (src = $name OR dst = $name)
+      """
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
 
-  def selectDst(dst: String)(implicit connection: Connection): List[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE dst = $dst"
+  def selectDst(dst: String)(implicit connection: Connection, site: Site): List[Link] = {
+    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND dst = $dst"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
 
-  def selectAllButNotEmpty()(implicit connection: Connection): List[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE src != '' AND dst != ''"
+  def selectAllButNotEmpty()(implicit connection: Connection, site: Site): List[Link] = {
+    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND src != '' AND dst != ''"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
 
-  def selectDistinctDstWhereDstIsYear()(implicit connection: Connection): List[String] = {
-    SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
+  def selectDistinctDstWhereDstIsYear()(implicit connection: Connection, site: Site): List[String] = {
+    SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE site = ${site.seq} AND dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
       .as(str("dst") *)
   }
   
-  def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection): Seq[Link] = {
+  def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection, site: Site): Seq[Link] = {
     if(seq.isEmpty) {
       return Seq()
     }
 
-    SQL"""SELECT src, dst, alias FROM Link WHERE src != '' AND dst != '' AND (src IN ($seq) OR dst IN ($seq))"""
+    SQL"""
+        SELECT src, dst, alias
+            FROM Link
+            WHERE
+                site = ${site.seq} AND
+                src != '' AND dst != ''
+                AND (src IN ($seq) OR dst IN ($seq))
+      """
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
       .map(tables.Link.tupled)
   }
 
 
-  def insert(seq: Seq[Link])(implicit connection: Connection): Array[Int] = {
+  def insert(seq: Seq[Link])(implicit connection: Connection, site: Site): Array[Int] = {
     if(seq.isEmpty) {
       Array[Int]()
     } else {
-      val values = seq.map(s => Seq[NamedParameter](Symbol("src") -> s.src, Symbol("dst") -> s.dst, Symbol("alias") -> s.alias))
+      val values = seq.map(s => Seq[NamedParameter](
+        Symbol("site") -> site.seq,
+        Symbol("src") -> s.src,
+        Symbol("dst") -> s.dst,
+        Symbol("alias") -> s.alias
+      ))
       BatchSql(
-        "REPLACE INTO Link (src, dst, alias) values ({src}, {dst}, {alias})",
+        "REPLACE INTO Link (site, src, dst, alias) values ({site}, {src}, {dst}, {alias})",
         values.head,
         values.tail: _*
       ).execute()
     }
   }
 
-  def delete(name: String)(implicit connection:Connection): Int = {
-    SQL"DELETE FROM Link WHERE src = $name".executeUpdate()
+  def delete(name: String)(implicit connection:Connection, site: Site): Int = {
+    SQL"DELETE FROM Link WHERE site = ${site.seq} AND src = $name".executeUpdate()
   }
 }

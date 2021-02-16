@@ -25,12 +25,19 @@ class Home @Inject() (
     import models.WikiContext.Provider
 
     implicit val provider: Provider = Provider.createBy(request)
-    val name = PageLogic.getListPageByPermission().random().name
-    Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
+    database.withConnection { implicit connection =>
+      import models.tables.Site
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      val name = PageLogic.getListPageByPermission().random().name
+      Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
+    }
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
+      import models.tables.Site
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
     }
   }

@@ -42,7 +42,9 @@ controllerComponents: ControllerComponents,
 
     import models.WikiContext.Provider
     import models.tables.SearchResultSummary
+    import models.tables.Site
     import play.api.Mode
+    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     implicit val wikiContext: WikiContext = WikiContext("")
     implicit val provider: Provider = wikiContext.provider
 

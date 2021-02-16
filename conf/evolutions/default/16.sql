@@ -51,6 +51,7 @@ alter table SchemaOrg drop foreign key SchemaOrg_Page_name_fk;
 alter table Page add site int default 1 not null first;
 alter table Page drop primary key, add primary key (site, name, revision);
 alter table Page add constraint Page_Site_seq_fk foreign key (site) references Site (seq);
+alter table Page alter column site drop default;
 
 TRUNCATE TermFrequency;
 alter table TermFrequency
@@ -59,6 +60,8 @@ alter table TermFrequency
     add primary key (site, name, term),
     add constraint fkTermFrequencySiteNamePageSiteName foreign key (site, name) references Page (site, name)
 ;
+alter table TermFrequency alter column site drop default;
+
 
 TRUNCATE CosineSimilarity;
 alter table CosineSimilarity
@@ -68,6 +71,8 @@ alter table CosineSimilarity
     add constraint fkCosignSimilaritySiteName1PageSiteName foreign key (site, name1) references Page (site, name),
     add constraint fkCosignSimilaritySiteName2PageSiteName foreign key (site, name2) references Page (site, name)
 ;
+alter table CosineSimilarity alter column site drop default;
+
 
 alter table Link
     add site int default 1 not null first,
@@ -75,11 +80,13 @@ alter table Link
     add primary key (site, src, dst, alias),
     add constraint fkLinkSite foreign key (site, src) references Page (site, name)
 ;
+alter table Link alter column site drop default;
 
 
 alter table SchemaOrg add site int default 1 not null first;
 alter table SchemaOrg drop primary key, add primary key (site, page, cls, prop, value);
 alter table SchemaOrg add constraint fkTermFrequencyPage foreign key (site, page) references Page (site, name);
+alter table SchemaOrg alter column site drop default;
 
 
 # --- !Downs

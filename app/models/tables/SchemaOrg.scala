@@ -20,13 +20,19 @@ object SchemaOrg {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def insert(seq: Seq[SchemaOrg])(implicit connection: Connection): Array[Int] = {
+  def insert(seq: Seq[SchemaOrg])(implicit connection: Connection, site: Site): Array[Int] = {
     if(seq.isEmpty) {
       Array[Int]()
     } else {
-      val values = seq.map(s => Seq[NamedParameter](Symbol("page") -> s.page, Symbol("cls") -> s.cls, Symbol("prop") -> s.prop, Symbol("value") -> s.value))
+      val values = seq.map(s => Seq[NamedParameter](
+        Symbol("site") -> site.seq,
+        Symbol("page") -> s.page,
+        Symbol("cls") -> s.cls,
+        Symbol("prop") -> s.prop,
+        Symbol("value") -> s.value
+      ))
       BatchSql(
-        "REPLACE INTO SchemaOrg (page, cls, prop, value) values ({page}, {cls}, {prop}, {value})",
+        "REPLACE INTO SchemaOrg (site, page, cls, prop, value) values ({site}, {page}, {cls}, {prop}, {value})",
         values.head,
         values.tail: _*
       ).execute()
@@ -35,53 +41,75 @@ object SchemaOrg {
 
   case class PropCnt(prop: String, cnt: Int)
 
-  def selectPropCountWhereCls(cls: String)(implicit connection: Connection): List[PropCnt] = {
-    SQL"""SELECT prop, COUNT(*) cnt FROM SchemaOrg WHERE cls = $cls AND prop <> '' GROUP BY prop ORDER BY cnt DESC"""
+  def selectPropCountWhereCls(cls: String)(implicit connection: Connection, site: Site): List[PropCnt] = {
+    SQL"""
+        SELECT prop, COUNT(*) cnt
+            FROM SchemaOrg
+            WHERE
+                site = ${site.seq} AND
+                cls = $cls AND
+                prop <> ''
+            GROUP BY prop
+            ORDER BY cnt DESC
+      """
       .as(str("prop") ~ int("cnt") *).map(flatten)
       .map(PropCnt.tupled)
   }
 
-  def selectWherePage(page: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page = $page"
+  def selectWherePage(page: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND page = $page"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWhereCls(cls: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE cls = $cls AND prop = ''"
+  def selectWhereCls(cls: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND cls = $cls AND prop = ''"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWhereProp(prop: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE prop = $prop"
+  def selectWhereProp(prop: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND prop = $prop"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWhereValue(value: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value = $value"
+  def selectWhereValue(value: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND value = $value"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE value != '' AND page = $pageOrValue OR value = $pageOrValue"
+  def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
+    SQL"""
+        SELECT page, cls, prop, value
+            FROM SchemaOrg
+            WHERE
+                site = ${site.seq} AND
+                value != '' AND
+                (page = $pageOrValue OR value = $pageOrValue)
+      """
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def selectWherePageOrValueIn(seq: Seq[String])(implicit connection: Connection): Seq[SchemaOrg] = {
+  def selectWherePageOrValueIn(seq: Seq[String])(implicit connection: Connection, site: Site): Seq[SchemaOrg] = {
     if(seq.isEmpty) {
       return Seq()
     }
 
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE page IN ($seq) OR value IN ($seq)"
+    SQL"""
+        SELECT page, cls, prop, value
+            FROM SchemaOrg
+            WHERE
+                site = ${site.seq} AND
+                (page IN ($seq) OR value IN ($seq))
+      """
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
 
-  def delete(name: String)(implicit connection:Connection): Int = {
-    SQL"DELETE FROM SchemaOrg WHERE page = $name".executeUpdate()
+  def delete(name: String)(implicit connection:Connection, site: Site): Int = {
+    SQL"DELETE FROM SchemaOrg WHERE site = ${site.seq} AND page = $name".executeUpdate()
   }
 }

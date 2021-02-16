@@ -89,6 +89,9 @@ object InterpreterMap extends TraitInterpreter {
     val (seqHeader, locations) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.GeocodeCache
+      import models.tables.Site
+      implicit val site: Site = wikiContext.site
+
       val seqLink = Link.selectBacklinkOfDatePage(locations.map(_.name))
       val mapDstLink = seqLink.groupBy(_.dst)
 

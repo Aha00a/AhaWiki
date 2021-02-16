@@ -36,9 +36,11 @@ class Api @Inject()(
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
-  def pageMap: Action[AnyContent] = Action {
+  def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       import models.tables.Link
+      import models.tables.Site
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val listLink = Random.shuffle(Link.selectAllButNotEmpty()).take(10)
       Ok(listLink.asJson)
     }
@@ -46,15 +48,20 @@ class Api @Inject()(
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
     import models.WikiContext.Provider
+    import models.tables.Site
     implicit val provider: Provider = Provider.createBy(request)
-
-    Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
+    database.withConnection { implicit connection =>
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
+    }
   }
 
 
   def links(name: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       import models.WikiContext
+      import models.tables.Site
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val wikiContext: WikiContext = WikiContext(name)
       val seqLink: Seq[Link] = Link.select(name).filter(_.and(wikiContext.pageCanSee))
       Ok(seqLink.asJson)
@@ -68,6 +75,8 @@ class Api @Inject()(
       import io.circe.Json
       import models.tables.Page
       import models.tables.PageWithoutContentWithSize
+      import models.tables.Site
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
       val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
       val totalSize: Long = seqPage.map(_.size).sum

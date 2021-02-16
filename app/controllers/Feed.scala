@@ -8,6 +8,7 @@ import logics.wikis.PageLogic
 import models.tables.PageWithoutContentWithSize
 import play.api.cache.SyncCacheApi
 import play.api.mvc._
+import models.tables.Site
 
 import scala.xml.{Elem, NodeBuffer}
 
@@ -53,6 +54,9 @@ class Feed @Inject()(
 
     }
     implicit val provider: Provider = Provider.createBy(request)
+    implicit val site: Site = database.withConnection { implicit connection =>
+      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    }
 
     val seqPageSorted: Seq[PageWithoutContentWithSize] = PageLogic.getListPageByPermission().sortBy(_.dateTime)
     val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)

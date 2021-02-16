@@ -33,6 +33,8 @@ object InterpreterSchema extends TraitInterpreter {
 
 
   override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+    import models.tables.Site
+    implicit val site: Site = wikiContext.site
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 

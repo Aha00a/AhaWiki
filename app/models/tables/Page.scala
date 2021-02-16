@@ -50,11 +50,11 @@ object Page {
 
   private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
 
-  def selectCount()(implicit connection: Connection): Long = {
-    SQL("SELECT COUNT(*) cnt FROM Page").as(long("cnt") single)
+  def selectCount()(implicit connection: Connection, site: Site): Long = {
+    SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
   }
 
-  def select(name: String, revision: Int)(implicit connection: Connection): Option[Page] = {
+  def select(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
     if (revision == 0) {
       selectLastRevision(name)
     } else {
@@ -62,159 +62,158 @@ object Page {
     }
   }
 
-  def selectLastRevision(name: String)(implicit connection: Connection): Option[Page] = {
-    SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision DESC LIMIT 1")
-      .on(Symbol("name") -> name)
+  def selectLastRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
+    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision DESC LIMIT 1"
       .as(rowParser singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def selectFirstRevision(name: String)(implicit connection: Connection): Option[Page] = {
-    SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} ORDER BY revision ASC LIMIT 1")
-      .on(Symbol("name") -> name)
+  def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
+    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision ASC LIMIT 1"
       .as(rowParser singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection): Option[Page] = {
-    SQL("SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE name = {name} AND revision = {revision} ORDER BY revision ASC LIMIT 1")
-      .on(Symbol("name") -> name, Symbol("revision") -> revision)
+  def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
+    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision ORDER BY revision ASC LIMIT 1"
       .as(rowParser singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
-  def selectHistory(name: String)(implicit connection: Connection): List[PageWithoutContent] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision DESC"
+  def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
+    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision DESC"
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") *).map(flatten)
       .map(PageWithoutContent.tupled)
   }
 
-  def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection): T = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE name = $name ORDER BY revision ASC"
+  def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection, site: Site): T = {
+    SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision ASC"
       .as(rowParser *).map(flatten)
       .foldLeft(t)((a, v) => f(a, Page.tupled(v)))
   }
 
-  def insert(p: Page)(implicit connection: Connection): Option[Long] = {
+  def insert(p: Page)(implicit connection: Connection, site: Site): Option[Long] = {
     SQL"""
            INSERT INTO Page
-           (name, revision, dateTime, author, remoteAddress, comment, permRead, content) values
-           (${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
+           (site, name, revision, dateTime, author, remoteAddress, comment, permRead, content) values
+           (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
         """.executeInsert()
   }
 
-  def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection: Connection): Int = {
+  def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection: Connection, site: Site): Int = {
     val linkCount = Link.delete(name)
     val cosineSimilarityCount = CosineSimilarity.delete(name)
     val termFrequencyCount = TermFrequency.delete(name)
     linkCount + cosineSimilarityCount + termFrequencyCount
   }
 
-  def deleteWithRelatedData(name:String)(implicit connection: Connection): Int = {
+  def deleteWithRelatedData(name:String)(implicit connection: Connection, site: Site): Int = {
     deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"DELETE FROM Page WHERE name = $name".executeUpdate()
+    SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name".executeUpdate()
   }
 
-  def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection): Int = {
+  def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection, site: Site): Int = {
     deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"DELETE FROM Page WHERE name = $name AND revision = $revision".executeUpdate()
+    SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
   }
 
-  def rename(name: String, newName: String)(implicit connection: Connection): Int = {
+  def rename(name: String, newName: String)(implicit connection: Connection, site: Site): Int = {
     deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"UPDATE Page SET name = $newName WHERE name = $name".executeUpdate()
+    SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
   }
 
-  def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection:Connection): Int = {
+  def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection: Connection, site: Site): Int = {
     TermFrequency.delete(name)
     TermFrequency.insert(name, wordCount)
     CosineSimilarity.recalc(name)
   }
 
-  def updateLink(name: String, seqLink: Seq[Link])(implicit connection:Connection): Array[Int] = {
+  def updateLink(name: String, seqLink: Seq[Link])(implicit connection: Connection, site: Site): Array[Int] = {
     Link.delete(name)
     Link.insert(seqLink)
   }
 
-  def updateSchemaOrg(name:String, seqSchemaOrg: Seq[SchemaOrg])(implicit connection:Connection): Array[Int] = {
+  def updateSchemaOrg(name:String, seqSchemaOrg: Seq[SchemaOrg])(implicit connection: Connection, site: Site): Array[Int] = {
     SchemaOrg.delete(name)
     SchemaOrg.insert(seqSchemaOrg)
   }
 
   // TODO: remove IFNULL(permRead) and fix schema
-  def pageSelectPageList()(implicit connection: Connection): List[PageWithoutContentWithSize] = {
-    SQL( """SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
-           |    FROM Page w
-           |    INNER JOIN (
-           |        SELECT
-           |            name, MAX(revision) revision
-           |            FROM Page
-           |            GROUP BY name
-           |            ORDER BY MAX(dateTime) DESC
-           |    ) NV ON w.name = NV.name AND w.revision = NV.revision
-           |    ORDER BY name
-           |""".stripMargin)
+  def pageSelectPageList()(implicit connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
+    SQL"""
+        SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
+            FROM Page w
+            INNER JOIN (
+                SELECT
+                    site, name, MAX(revision) revision
+                    FROM Page
+                    WHERE site = ${site.seq}
+                    GROUP BY site, name
+                    ORDER BY MAX(dateTime) DESC
+            ) NV ON w.site = NV.site AND w.name = NV.name AND w.revision = NV.revision
+            ORDER BY name
+        """
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
 
-  def selectYmdCountOfFirstRevision()(implicit connection: Connection): Seq[(String, Long)] = {
-    SQL( """SELECT
-           |    DATE_FORMAT(dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
-           |    FROM Page w
-           |    WHERE revision = 1
-           |    GROUP BY DATE_FORMAT(dateTime, '%Y-%m-%d')
-           |    ORDER BY DATE_FORMAT(dateTime, '%Y-%m-%d')
-           |""".stripMargin)
+  def selectYmdCountOfFirstRevision()(implicit connection: Connection, site: Site): Seq[(String, Long)] = {
+    SQL"""SELECT
+               DATE_FORMAT(dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
+               FROM Page w
+               WHERE site = ${site.seq} AND revision = 1
+               GROUP BY DATE_FORMAT(dateTime, '%Y-%m-%d')
+               ORDER BY DATE_FORMAT(dateTime, '%Y-%m-%d')
+           """
       .as(str("ymd") ~ long("cnt") *).map(flatten)
   }
 
-  def pageSearch(q:String)(implicit connection: Connection): immutable.Seq[SearchResult] = {
-    SQL("""
+  def pageSearch(q:String)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
+    SQL"""
 SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, w.content
      FROM Page w
      INNER JOIN (
          SELECT
-             name, MAX(revision) revision
+             site, name, MAX(revision) revision
              FROM Page
-             GROUP BY name
-     ) NV ON w.name = NV.name AND w.revision = NV.revision
+             WHERE site = ${site.seq}
+             GROUP BY site, name
+     ) NV ON w.site = NV.site w.name = NV.name AND w.revision = NV.revision
      WHERE
-         w.name LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci OR
-         w.content LIKE CONCAT('%', {q}, '%') COLLATE utf8mb4_general_ci
-     ORDER BY w.name""")
-      .on(Symbol("q") -> q)
+         w.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
+         w.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
+     ORDER BY w.name"""
       .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
   }
 
 
-  def pageSelectNameWhereNoCosineSimilarity()(implicit connection: Connection): Option[String] = {
-    SQL( """SELECT
-           |    name
-           |    FROM (
-           |        SELECT DISTINCT(name) name FROM Page
-           |    ) w
-           |    WHERE name NOT IN (
-           |        SELECT DISTINCT(name1) FROM CosineSimilarity
-           |    )
-           |    ORDER BY RAND()
-           |    LIMIT 1
-           | """.stripMargin)
+  def pageSelectNameWhereNoCosineSimilarity()(implicit connection: Connection, site: Site): Option[String] = {
+    SQL"""SELECT
+              name
+              FROM (
+                  SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
+              ) w
+              WHERE name NOT IN (
+                  SELECT DISTINCT(name1) FROM CosineSimilarity WHERE site = ${site.seq}
+              )
+              ORDER BY RAND()
+              LIMIT 1
+           """
       .as(str("name") singleOpt)
   }
 
-  def pageSelectNameWhereNoLinkSrc()(implicit connection: Connection): Seq[String] = {
-    SQL( """SELECT
-           |    name
-           |    FROM (
-           |        SELECT DISTINCT(name) name FROM Page
-           |    ) w
-           |    WHERE name NOT IN (
-           |        SELECT DISTINCT(src) FROM Link
-           |    )
-           |    ORDER BY RAND()
-           |    LIMIT 1000
-           | """.stripMargin)
+  def pageSelectNameWhereNoLinkSrc()(implicit connection: Connection, site: Site): Seq[String] = {
+    SQL"""SELECT
+             name
+             FROM (
+                 SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
+             ) w
+             WHERE name NOT IN (
+                 SELECT DISTINCT(src) FROM Link WHERE site = ${site.seq}
+             )
+             ORDER BY RAND()
+             LIMIT 1000
+          """
       .as(str("name") *)
   }
 }

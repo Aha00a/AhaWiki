@@ -15,8 +15,11 @@ object MacroSeeAlso extends TraitMacro {
     import com.aha00a.commons.utils.SeqUtil
     import models.tables.Link
     import models.tables.SchemaOrg
+    import models.tables.Site
 
     import scala.util.matching.Regex
+
+    implicit val site: Site = wikiContext.site
 
     val year: Regex = """\d{4}""".r
     val date: Regex = """\d{4}-\d{2}-\d{2}""".r

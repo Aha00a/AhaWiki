@@ -43,6 +43,10 @@ class Test @Inject()(implicit val
 
   def unit: Action[AnyContent] = Action { implicit request =>
 
+    import models.tables.Site
+    implicit val site: Site = database.withConnection { implicit connection =>
+      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    }
     implicit val wikiContext: WikiContext = WikiContext("UnitTest")
 
 
@@ -266,6 +270,11 @@ class Test @Inject()(implicit val
 
 
   def gradient: Action[AnyContent] = Action { implicit request =>
+    import models.tables.Site
+    implicit val site: Site = database.withConnection { implicit connection =>
+      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    }
+
     Ok(views.html.Test.gradient(""))
   }
 

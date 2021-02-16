@@ -20,6 +20,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.io.Codec
+import models.tables.Site
 
 class ApplicationLifecycleHook @Inject()(implicit
                                          applicationLifecycle: ApplicationLifecycle,
@@ -38,18 +39,21 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 5 minutes)(() => {
     database.withConnection { implicit connection =>
-      Page.pageSelectNameWhereNoCosineSimilarity() match {
-        case Some(s) => actorAhaWiki ! CalculateCosineSimilarity(s)
-        case None => logger.info("None")
+      Site.selectRandom() map { implicit site: Site =>
+        Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
+          actorAhaWiki ! CalculateCosineSimilarity(site, s)
+        }
       }
     }
   })
 
   actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 30 seconds)(() => {
     database.withConnection { implicit connection =>
-      val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
-      for ((v, i) <- seq.zipWithIndex) {
-        actorAhaWiki ! Calculate(v, i, seq.length)
+      Site.selectRandom() map { implicit site: Site =>
+        val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
+        for ((v, i) <- seq.zipWithIndex) {
+          actorAhaWiki ! Calculate(site, v, i, seq.length)
+        }
       }
     }
   })

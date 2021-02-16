@@ -45,6 +45,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
+import logics.wikis.WikiSnippet
+import models.tables.Site
 
 class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -71,7 +73,7 @@ class Wiki @Inject()(implicit val
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import logics.wikis.WikiSnippet
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       implicit val wikiContext: WikiContext = WikiContext(name)
@@ -320,7 +322,7 @@ class Wiki @Inject()(implicit val
           }
           finally {
             if (environment.mode == Mode.Dev && request.isLocalhost)
-              actorAhaWiki ! Calculate(name)
+              actorAhaWiki ! Calculate(site, name)
           }
         case (Some(page), "diff", true, _) =>
           val after = request.getQueryString("after").getOrElse("0").toInt
@@ -356,7 +358,7 @@ class Wiki @Inject()(implicit val
     }
   }
 
-  def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
+  def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: WikiContext, connection: Connection, site: Site): String = {
     val markupSchema = getMarkupSchema(name)
     markupSchema.toOption match {
       case Some(s) =>
@@ -393,7 +395,7 @@ class Wiki @Inject()(implicit val
     }
   }
 
-  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection) = {
+  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection, site: Site) = {
     import models.tables.SchemaOrg
     val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
@@ -410,8 +412,6 @@ class Wiki @Inject()(implicit val
 
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
-    implicit val wikiContext: WikiContext = WikiContext(name)
-    implicit val provider: Provider = wikiContext.provider
 
     val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
     val secretKey = ApplicationConf().AhaWiki.google.reCAPTCHA.secretKey()
@@ -419,6 +419,9 @@ class Wiki @Inject()(implicit val
 
     def doSave() = {
       database.withConnection { implicit connection =>
+        implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+        implicit val wikiContext: WikiContext = WikiContext(name)
+        implicit val provider: Provider = wikiContext.provider
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("")
@@ -458,14 +461,14 @@ class Wiki @Inject()(implicit val
 
   def delete(): Action[AnyContent] = Action { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
-    implicit val wikiContext: WikiContext = WikiContext(name)
-    implicit val provider: Provider = wikiContext.provider
     database.withTransaction { implicit connection =>
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val provider: Provider = wikiContext.provider
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
             Page.deleteWithRelatedData(name)
-            AhaWikiCache.PageList.invalidate()
             Ok("")
           } else {
             Forbidden("")
@@ -479,14 +482,14 @@ class Wiki @Inject()(implicit val
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val wikiContext: WikiContext = WikiContext(name)
       implicit val provider: Provider = wikiContext.provider
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
-            AhaWikiCache.PageList.invalidate()
-            actorAhaWiki ! Calculate(name)
+            actorAhaWiki ! Calculate(site, name)
             Ok("")
           } else {
             Forbidden("")
@@ -506,6 +509,7 @@ class Wiki @Inject()(implicit val
 
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
@@ -548,6 +552,7 @@ class Wiki @Inject()(implicit val
 
   def rename(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
       implicit val wikiContext: WikiContext = WikiContext(name)
       implicit val provider: Provider = wikiContext.provider
@@ -556,8 +561,7 @@ class Wiki @Inject()(implicit val
           if (WikiPermission().isWritable(PageContent(page.content))) {
             Page.rename(name, newName)
             PageLogic.insert(name, 1, new Date(), "redirect", s"#!redirect $newName")
-            AhaWikiCache.PageList.invalidate()
-            actorAhaWiki ! Calculate(newName)
+            actorAhaWiki ! Calculate(site, newName)
             Ok("")
           } else {
             Forbidden("")
@@ -571,8 +575,11 @@ class Wiki @Inject()(implicit val
 
   def preview(): Action[AnyContent] = Action { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
-    implicit val wikiContext: WikiContext = WikiContext.preview(name)
-    Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")
+    database.withConnection { implicit connection =>
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val wikiContext: WikiContext = WikiContext.preview(name)
+      Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")
+    }
   }
 
 }

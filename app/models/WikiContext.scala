@@ -10,6 +10,7 @@ import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
 import models.WikiContext.Provider
+import models.tables.Site
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -52,7 +53,8 @@ object WikiContext {
   def apply(name: String)(
     implicit
     request: Request[Any],
-    ahaWikiInjects: AhaWikiInjects
+    ahaWikiInjects: AhaWikiInjects,
+    site: Site
   ): WikiContext = {
     implicit val provider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Normal)
@@ -61,17 +63,21 @@ object WikiContext {
   def preview(name: String)(
     implicit
     request: Request[Any],
-    ahaWikiInjects: AhaWikiInjects
+    ahaWikiInjects: AhaWikiInjects,
+    site: Site
   ): WikiContext = {
     implicit val provider: Provider = Provider.createBy(request)
     new WikiContext(Seq(name), RenderingMode.Preview)
   }
 }
 
-class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)
+class WikiContext(
+                   val seqName: Seq[String],
+                   val renderingMode: RenderingMode)
                  (implicit
                   val ahaWikiInjects: AhaWikiInjects,
-                  val provider: Provider
+                  val provider: Provider,
+                  val site: Site
                  ) {
   implicit val syncCacheApi: SyncCacheApi = ahaWikiInjects.syncCacheApi
   implicit val database: Database = ahaWikiInjects.database

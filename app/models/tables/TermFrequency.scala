@@ -16,15 +16,20 @@ object TermFrequency {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def insert(name: String, map:Map[String, Int])(implicit connection: Connection): Array[Int] = insert(map.map(kv => new TermFrequency(name, kv)).toSeq)
+  def insert(name: String, map:Map[String, Int])(implicit connection: Connection, site: Site): Array[Int] = insert(map.map(kv => new TermFrequency(name, kv)).toSeq)
 
-  def insert(seqTermFrequency: Seq[TermFrequency])(implicit connection: Connection): Array[Int] = {
+  def insert(seqTermFrequency: Seq[TermFrequency])(implicit connection: Connection, site: Site): Array[Int] = {
     if(seqTermFrequency.isEmpty) {
       Array()
     } else {
-      val values = seqTermFrequency.map(s => Seq[NamedParameter](Symbol("name") -> s.name, Symbol("term") -> s.term, Symbol("frequency") -> s.frequency))
+      val values = seqTermFrequency.map(s => Seq[NamedParameter](
+        Symbol("site") -> site.seq,
+        Symbol("name") -> s.name,
+        Symbol("term") -> s.term,
+        Symbol("frequency") -> s.frequency
+      ))
       BatchSql(
-        "INSERT INTO TermFrequency (name, term, frequency) values ({name}, {term}, {frequency})",
+        "INSERT INTO TermFrequency (site, name, term, frequency) values ({site}, {name}, {term}, {frequency})",
         values.head,
         values.tail: _*
       ).execute()
@@ -32,11 +37,11 @@ object TermFrequency {
   }
 
 
-  def delete(name: String)(implicit connection:Connection): Int = {
-    SQL"DELETE FROM TermFrequency WHERE name = $name".executeUpdate()
+  def delete(name: String)(implicit connection:Connection, site: Site): Int = {
+    SQL"DELETE FROM TermFrequency WHERE site = ${site.seq} AND name = $name".executeUpdate()
   }
 
-  def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection): Seq[HighScoredTerm] = {
+  def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
     import anorm.SqlParser.flatten
     import anorm.SqlParser.int
     import anorm.SqlParser.str
@@ -45,14 +50,15 @@ object TermFrequency {
     if(similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
-      SQL("""SELECT
-            |    tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
-            |    FROM TermFrequency tf1
-            |    INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
-            |    WHERE
-            |        tf1.name = {name} AND tf2.name IN ({pageNames})
-            |    ORDER BY frequency1 + frequency2 DESC""".stripMargin)
-        .on(Symbol("name") -> name, Symbol("pageNames") -> similarPageNames)
+      SQL"""SELECT
+                tf2.name, tf2.term, tf1.frequency frequency1, tf2.frequency frequency2
+                FROM TermFrequency tf1
+                INNER JOIN TermFrequency tf2 ON tf1.term = tf2.term
+                WHERE
+                    tf1.site = ${site.seq} AND tf1.name = $name AND
+                    tf2.site = ${site.seq} AND tf2.name IN ($similarPageNames)
+                ORDER BY frequency1 + frequency2 DESC"""
+//        .on(Symbol("name") -> name, Symbol("pageNames") -> similarPageNames)
         .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
     }

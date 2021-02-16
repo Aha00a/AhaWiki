@@ -1,15 +1,19 @@
 package logics
 
+import models.tables.Site
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 // TODO: fix to use models.tables.Config
 
 object AhaWikiConfig {
-  def apply()(implicit syncCacheApi: SyncCacheApi, database:Database) = new AhaWikiConfig()
+
+  import models.tables.Site
+
+  def apply()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site) = new AhaWikiConfig()
 }
 
-class AhaWikiConfig(implicit syncCacheApi: SyncCacheApi, database:Database) {
+class AhaWikiConfig(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site) {
   object permission {
     object default {
       def read(): String = hocon().getOrElse(fqn, "all")

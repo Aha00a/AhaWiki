@@ -28,40 +28,33 @@ object AhaWikiCache extends Logging {
 //    60.minutes
   }
 
-  object PageList extends CacheEntity {
-
-    import models.tables.PageWithoutContentWithSize
-
-    def get()(implicit syncCacheApi: SyncCacheApi, database: Database): List[PageWithoutContentWithSize] = syncCacheApi.getOrElseUpdate(key, durationExpire) {
-      logger.info("Cache miss: " + key)
-      database.withConnection { implicit connection =>
-        Page.pageSelectPageList()
-      }
-    }
-  }
-
 
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, durationExpire) {
-      logger.info("Cache miss: " + key)
+    def get()(implicit wikiContext: WikiContext): String = {
       wikiContext.database.withConnection { implicit connection =>
+        import models.tables.Site
+        implicit val site: Site = Site.selectWhereDomain(wikiContext.provider.host).getOrElse(Site(-1, ""))
         Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).getOrElse(""))
       }
     }
   }
 
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = wikiContext.syncCacheApi.getOrElseUpdate(key, durationExpire) {
-      logger.info("Cache miss: " + key)
+    def get()(implicit wikiContext: WikiContext): String = {
       wikiContext.database.withConnection { implicit connection =>
+        import models.tables.Site
+        implicit val site: Site = Site.selectWhereDomain(wikiContext.provider.host).getOrElse(Site(-1, ""))
         Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
       }
     }
   }
 
   object Config extends CacheEntity {
-    def get()(implicit syncCacheApi: SyncCacheApi, database: Database): String = syncCacheApi.getOrElseUpdate(key, durationExpire) {
-      logger.info("Cache miss: " + key)
+
+    import models.tables.Site
+    import play.api.mvc.Request
+
+    def get()(implicit syncCacheApi: SyncCacheApi, database: Database, site: Site): String = {
       database.withConnection { implicit connection =>
         Page.selectLastRevision(".config").map(_.content).getOrElse("")
       }

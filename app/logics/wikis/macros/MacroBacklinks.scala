@@ -8,6 +8,8 @@ object MacroBacklinks extends TraitMacro {
     wikiContext.database.withConnection { implicit connection =>
       import com.aha00a.commons.Implicits._
       import models.tables.Link
+      import models.tables.Site
+      implicit val site: Site = wikiContext.site
       val listLink: List[Link] = Link.selectDst(wikiContext.name)
       val listLinkFiltered = listLink.filter(l => l.and(wikiContext.pageCanSee))
       val markup = listLinkFiltered

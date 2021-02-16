@@ -17,17 +17,19 @@ import play.api.db.Database
 import play.api.libs.json.Json
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSClient
+import models.tables.Site
 
 import scala.concurrent.ExecutionContext
 
 object ActorAhaWiki {
+
   def props: Props = Props[ActorAhaWiki]
 
-  case class Calculate(name: String, i: Int = 1, length: Int = 1)
+  case class Calculate(site: Site, name: String, i: Int = 1, length: Int = 1)
 
-  case class CalculateCosineSimilarity(name: String, i: Int = 1, length: Int = 1)
+  case class CalculateCosineSimilarity(site: Site, name: String, i: Int = 1, length: Int = 1)
 
-  case class CalculateLink(name: String, i: Int = 1, length: Int = 1)
+  case class CalculateLink(site: Site, name: String, i: Int = 1, length: Int = 1)
 
   case class Geocode(address: String)
 
@@ -53,19 +55,20 @@ class ActorAhaWiki @Inject()(implicit
       |""".stripMargin.split("""\s""").toSeq
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
-      context.self ! CalculateCosineSimilarity(name, i, length)
-      context.self ! CalculateLink(name, i, length)
+    case Calculate(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
+      context.self ! CalculateCosineSimilarity(site, name, i, length)
+      context.self ! CalculateLink(site, name, i, length)
     }
 
-    case CalculateCosineSimilarity(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
+    case CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
       database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site;
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
 
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider, site)
 
           val text = Interpreters.toText(page.content)
           val seqWord = text
@@ -87,15 +90,16 @@ class ActorAhaWiki @Inject()(implicit
         }
       }
     }
-    case CalculateLink(name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
+    case CalculateLink(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site;
         Page.selectLastRevision(name) foreach { page =>
           import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
           import models.tables.Link
           import models.tables.SchemaOrg
           implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider)
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider, site)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 

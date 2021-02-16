@@ -16,6 +16,9 @@ object MacroSimilarPages extends TraitMacro with Logging {
   def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.CosineSimilarity
+      import models.tables.Site
+      implicit val site: Site = wikiContext.site
+
       val cosineSimilarities: immutable.Seq[CosineSimilarity] = CosineSimilarity
         .select(name)
         .view
@@ -23,11 +26,13 @@ object MacroSimilarPages extends TraitMacro with Logging {
         .take(20)
         .toSeq
       if (cosineSimilarities.isEmpty) {
-        wikiContext.actorAhaWiki ! Calculate(name)
+        wikiContext.actorAhaWiki ! Calculate(wikiContext.site, name)
         ""
       } else {
         import models.tables.HighScoredTerm
+        import models.tables.Site
         import models.tables.TermFrequency
+        implicit val site: Site = wikiContext.site
 
         val similarPageNames: Seq[String] = cosineSimilarities.map(_.name2)
         val seqHighScoredTerm: Seq[HighScoredTerm] = TermFrequency.selectHighScoredTerm(name, similarPageNames)
