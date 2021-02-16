@@ -5,6 +5,7 @@ import javax.inject._
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.PageContent
+import models.tables.Site
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.mvc._
@@ -26,7 +27,6 @@ class Home @Inject() (
 
     implicit val provider: Provider = Provider.createBy(request)
     database.withConnection { implicit connection =>
-      import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val name = PageLogic.getListPageByPermission().random().name
       Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
@@ -35,7 +35,6 @@ class Home @Inject() (
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
