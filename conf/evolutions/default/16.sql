@@ -3,6 +3,8 @@
 
 create table User (
     seq int auto_increment,
+    created DATETIME default NOW() not null,
+    updated DATETIME default NOW() not null,
     id VARCHAR(32) not null,
     nickname VARCHAR(32) not null,
     constraint User_pk primary key (seq)
@@ -13,9 +15,10 @@ create unique index User_id_uindex on User (id);
 
 create table Site (
     seq int auto_increment,
+    created DATETIME default NOW() not null,
+    updated DATETIME default NOW() not null,
     name VARCHAR(200) not null,
-    constraint Site_pk
-        primary key (seq)
+    constraint Site_pk primary key (seq)
 );
 
 insert into Site (name) VALUES ('');
@@ -23,6 +26,7 @@ insert into Site (name) VALUES ('');
 create table UserSite (
     user int not null,
     site int not null,
+    created DATETIME default NOW() not null,
     constraint UserSite_pk primary key (user, site),
     constraint UserSite_Site_seq_fk foreign key (site) references Site (seq),
     constraint UserSite_User_seq_fk foreign key (user) references User (seq)
@@ -30,13 +34,11 @@ create table UserSite (
 
 create table SiteDomain
 (
-    seq int auto_increment,
+    created DATETIME default NOW() not null,
     site int not null,
     domain VARCHAR(255) not null,
-    constraint SiteDomain_pk
-        primary key (seq),
-    constraint SiteDomain_Site_seq_fk
-        foreign key (site) references Site (seq)
+    constraint SiteDomain_pk primary key (site, domain),
+    constraint SiteDomain_Site_seq_fk foreign key (site) references Site (seq)
 );
 
 create unique index SiteDomain_domain_uindex on SiteDomain (domain);
@@ -45,10 +47,9 @@ create table UserEmail
 (
     user int not null,
     email VARCHAR(255) not null,
-    constraint UserEmail_pk
-        primary key (user, email),
-    constraint UserEmail_User_seq_fk
-        foreign key (user) references User (seq)
+    created DATETIME default NOW() not null,
+    constraint UserEmail_pk primary key (user, email),
+    constraint UserEmail_User_seq_fk foreign key (user) references User (seq)
 );
 
 create unique index UserEmail_email_uindex
