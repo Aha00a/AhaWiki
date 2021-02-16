@@ -41,6 +41,20 @@ create table SiteDomain
 
 create unique index SiteDomain_domain_uindex on SiteDomain (domain);
 
+create table UserEmail
+(
+    user int not null,
+    email VARCHAR(255) not null,
+    constraint UserEmail_pk
+        primary key (user, email),
+    constraint UserEmail_User_seq_fk
+        foreign key (user) references User (seq)
+);
+
+create unique index UserEmail_email_uindex
+    on UserEmail (email);
+
+
 
 
 alter table TermFrequency drop foreign key fkTermFrequencyName;
@@ -126,6 +140,8 @@ alter table SchemaOrg add constraint SchemaOrg_Page_name_fk foreign key (page) r
 ALTER TABLE CosineSimilarity ADD CONSTRAINT fkCosineSimilarityName1 FOREIGN KEY (name1) REFERENCES Page(name);
 ALTER TABLE CosineSimilarity ADD CONSTRAINT fkCosineSimilarityName2 FOREIGN KEY (name2) REFERENCES Page(name);
 ALTER TABLE TermFrequency ADD CONSTRAINT fkTermFrequencyName FOREIGN KEY (name) REFERENCES Page(name);
+
+drop table UserEmail;
 
 drop table SiteDomain;
 
