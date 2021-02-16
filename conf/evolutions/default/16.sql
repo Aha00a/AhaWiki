@@ -32,8 +32,7 @@ create table UserSite (
     constraint UserSite_User_seq_fk foreign key (user) references User (seq)
 );
 
-create table SiteDomain
-(
+create table SiteDomain(
     created DATETIME default NOW() not null,
     site int not null,
     domain VARCHAR(255) not null,
@@ -43,8 +42,7 @@ create table SiteDomain
 
 create unique index SiteDomain_domain_uindex on SiteDomain (domain);
 
-create table UserEmail
-(
+create table UserEmail(
     user int not null,
     email VARCHAR(255) not null,
     created DATETIME default NOW() not null,
@@ -52,10 +50,7 @@ create table UserEmail
     constraint UserEmail_User_seq_fk foreign key (user) references User (seq)
 );
 
-create unique index UserEmail_email_uindex
-    on UserEmail (email);
-
-
+create unique index UserEmail_email_uindex on UserEmail (email);
 
 
 alter table TermFrequency drop foreign key fkTermFrequencyName;
