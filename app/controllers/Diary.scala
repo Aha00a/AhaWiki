@@ -3,12 +3,15 @@ package controllers
 import java.time.LocalDateTime
 import java.util.Date
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import javax.inject._
-import logics.wikis.{PageLogic, WikiPermission}
-import models.{PageContent, WikiContext}
+import logics.wikis.PageLogic
+import logics.wikis.WikiPermission
+import models.PageContent
+import models.WikiContext
 import play.api.Configuration
 import play.api.Environment
 import play.api.cache.SyncCacheApi
