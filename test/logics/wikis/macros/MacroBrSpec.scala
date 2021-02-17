@@ -8,9 +8,13 @@ class MacroBrSpec extends AnyFreeSpec {
     import logics.wikis.RenderingMode
     import models.WikiContext
     import models.WikiContext.Provider
+    import models.tables.Site
 
+    implicit val site: Site = Site(-1, "")
     implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null, null)
-    implicit val wikiContext: WikiContext = new WikiContext(Seq("UnitTest"), RenderingMode.Normal)(ahaWikiInjects, Provider.empty)
+    implicit val provider: Provider = Provider.empty
+    implicit val wikiContext: WikiContext = new WikiContext(Seq("UnitTest"), RenderingMode.Normal)
+
     val empty = ""
     val dummy = "dummy"
     assert(MacroBr.toHtmlString(empty) === "<br/>")
