@@ -21,7 +21,8 @@ create table Site (
     constraint Site_pk primary key (seq)
 );
 
-insert into Site (name) VALUES ('');
+insert into Site (name) VALUES ('wiki.aha00a.com');
+insert into Site (name) VALUES ('ahawiki.net');
 
 create table UserSite (
     user int not null,
@@ -41,6 +42,9 @@ create table SiteDomain(
 );
 
 create unique index SiteDomain_domain_uindex on SiteDomain (domain);
+
+insert into SiteDomain (site, domain) VALUES (1, 'wiki.aha00a.com');
+insert into SiteDomain (site, domain) VALUES (2, 'ahawiki.net');
 
 create table UserEmail(
     user int not null,
