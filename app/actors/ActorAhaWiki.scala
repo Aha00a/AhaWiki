@@ -33,8 +33,6 @@ object ActorAhaWiki {
 
   case class Geocode(address: String)
 
-  case class Distance(src: String, dst: String)
-
 }
 
 class ActorAhaWiki @Inject()(implicit
@@ -126,28 +124,6 @@ class ActorAhaWiki @Inject()(implicit
             import models.tables.GeocodeCache
             GeocodeCache.replace(address, latLng)
           }
-        })
-    }
-    case Distance(src, dst) => StopWatch(s"Query Google Distance Matrix Api - $src - $dst") {
-      // TODO: remove
-      wsClient
-        .url("https://maps.googleapis.com/maps/api/distancematrix/json")
-        .withQueryStringParameters(
-          "mode" -> "transit",
-          "origins" -> src,
-          "destinations" -> dst,
-          "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
-        )
-        .get()
-        .map(r => {
-          logger.info(s"$src - $dst - ${r.json}")
-          (
-            (r.json \ "rows" \ 0 \ "elements" \ 0 \ "distance" \ "value").as[Int],
-            (r.json \ "rows" \ 0 \ "elements" \ 0 \ "duration" \ "value").as[Int]
-          )
-        })
-        .map(metersSeconds => {
-          logger.info(metersSeconds.toString())
         })
     }
     case _ =>
