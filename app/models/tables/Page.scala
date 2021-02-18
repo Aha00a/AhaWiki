@@ -178,7 +178,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
              FROM Page
              WHERE site = ${site.seq}
              GROUP BY site, name
-     ) NV ON w.site = NV.site w.name = NV.name AND w.revision = NV.revision
+     ) NV ON w.site = NV.site AND w.name = NV.name AND w.revision = NV.revision
      WHERE
          w.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
