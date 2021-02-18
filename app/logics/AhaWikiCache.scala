@@ -28,7 +28,7 @@ object AhaWikiCache extends Logging {
 //    60.minutes
   }
 
-
+  // TODO: remove
   object Header extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = {
       wikiContext.database.withConnection { implicit connection =>
@@ -39,6 +39,7 @@ object AhaWikiCache extends Logging {
     }
   }
 
+  // TODO: remove
   object Footer extends CacheEntity {
     def get()(implicit wikiContext: WikiContext): String = {
       wikiContext.database.withConnection { implicit connection =>
@@ -49,6 +50,7 @@ object AhaWikiCache extends Logging {
     }
   }
 
+  // TODO: remove
   object Config extends CacheEntity {
 
     import models.tables.Site

@@ -18,6 +18,7 @@ object PageLogic {
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 
+  // TODO: add connection
   def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
@@ -32,6 +33,7 @@ object PageLogic {
     }
   }
 
+  // TODO: add connection
   def getListPage()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site): List[PageWithoutContentWithSize] = {
     database.withConnection { implicit connection =>
       Page.pageSelectPageList()
