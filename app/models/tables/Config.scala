@@ -16,13 +16,18 @@ object Config {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def select(k: String)(implicit connection: Connection): Option[Config] = {
-    SQL"SELECT k, v, created, updated FROM Config WHERE k = $k"
+  def select(k: String)(implicit connection: Connection, site: Site): Option[Config] = {
+    SQL"""
+        SELECT k, v, created, updated
+            FROM Config
+            WHERE site = ${site.seq} AND k = $k"""
       .as(str("k") ~ str("v") ~ date("created") ~ date("updated") singleOpt).map(flatten)
       .map(tupled)
   }
 
-  def getOrElse(k: String, default: String)(implicit connection: Connection): String = select(k).map(_.v).getOrElse(default)
-  
+  def getOrElse(k: String, default: String)(implicit connection: Connection, site: Site): String = select(k).map(_.v).getOrElse(default)
+
+  // TODO: Strongly typed config
+
 }
 
