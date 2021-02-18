@@ -77,9 +77,9 @@ object InterpreterVim extends TraitInterpreter with Logging {
       implicit val database: Database = wikiContext.database
       implicit val site: Site = wikiContext.site
       val (colorscheme, debug) = database.withConnection { implicit connection =>
-        val colorscheme = Config.getOrElse("InterpreterVim.colorscheme", "ron")
-        val debug = Config.getOrElse("InterpreterVim.debug", "")
-        (colorscheme, debug.toBoolGenerously)
+        val colorscheme = Config.Query.InterpreterVim.colorScheme()
+        val debug = Config.Query.InterpreterVim.debug()
+        (colorscheme, debug)
       }
 
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString

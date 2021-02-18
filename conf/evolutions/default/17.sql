@@ -7,7 +7,7 @@ alter table Config
     add primary key (site, k),
     add constraint fkConfigSiteSiteSeq foreign key (site) references Site (seq)
 ;
-alter table TermFrequency alter column site drop default;
+alter table Config alter column site drop default;
 
 # --- !Downs
 

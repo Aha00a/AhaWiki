@@ -6,10 +6,12 @@ import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.str
 import anorm._
+import play.api.Logging
+import com.aha00a.commons.Implicits._
 
 case class Config(k: String, v: String, created: Date, updated: Date)
 
-object Config {
+object Config extends Logging{
 
   import java.sql.Connection
 
@@ -26,8 +28,18 @@ object Config {
   }
 
   def getOrElse(k: String, default: String)(implicit connection: Connection, site: Site): String = select(k).map(_.v).getOrElse(default)
+  def getOrElse(k: String, default: Boolean)(implicit connection: Connection, site: Site): Boolean = getOrElse(k, default.toString).toBoolGenerously
 
-  // TODO: Strongly typed config
+  object Query {
+    private def fqn: String = {
+      val ste = Thread.currentThread.getStackTrace()(2)
+      (ste.getClassName.replace(getClass.getName, "") + ste.getMethodName).replaceAll("\\$", ".")
+    }
 
+    object InterpreterVim {
+      def colorScheme()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "ron")
+      def debug()(implicit connection: Connection, site: Site): Boolean = Config.getOrElse(fqn, default = false)
+    }
+  }
 }
 

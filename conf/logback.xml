@@ -32,6 +32,7 @@
   <logger name="actors" level="INFO" />
   <logger name="com.aha00a" level="INFO" />
   <logger name="controllers" level="INFO" />
+  <logger name="models" level="INFO" />
   <logger name="filters" level="INFO" />
   <logger name="logics" level="INFO" />
   <logger name="services" level="INFO" />
