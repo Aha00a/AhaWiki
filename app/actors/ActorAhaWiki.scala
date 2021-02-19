@@ -44,7 +44,7 @@ class ActorAhaWiki @Inject()(implicit
 
   import ActorAhaWiki._
   import models.WikiContext.Provider
-  val provider: Provider = Provider.empty
+  implicit val provider: Provider = Provider.empty
   val seqStopWord: Seq[String] =
     """at in on of by to is the
       |gmail com http https
@@ -60,11 +60,9 @@ class ActorAhaWiki @Inject()(implicit
       database.withConnection { implicit connection =>
         implicit val implicitSite: Site = site;
         Page.selectLastRevision(name) foreach { page =>
-          import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
 
-          implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider, site)
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)
 
           val text = Interpreters.toText(page.content)
           val seqWord = text
@@ -90,12 +88,10 @@ class ActorAhaWiki @Inject()(implicit
       database.withConnection { implicit connection =>
         implicit val implicitSite: Site = site;
         Page.selectLastRevision(name) foreach { page =>
-          import logics.AhaWikiInjects
           import logics.wikis.RenderingMode
           import models.tables.Link
           import models.tables.SchemaOrg
-          implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)(ahaWikiInjects, provider, site)
+          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 

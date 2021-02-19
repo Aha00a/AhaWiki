@@ -32,10 +32,7 @@ class Test @Inject()(implicit val
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
-  import logics.AhaWikiInjects
-
   val testUtil = new TestUtil(x => logger.error(x.toString))
-  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
 
   import testUtil.assertEquals
 

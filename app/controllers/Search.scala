@@ -33,10 +33,6 @@ controllerComponents: ControllerComponents,
                        executionContext: ExecutionContext
                       ) extends BaseController with Logging {
 
-  import logics.AhaWikiInjects
-
-  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
     import models.WikiContext.Provider

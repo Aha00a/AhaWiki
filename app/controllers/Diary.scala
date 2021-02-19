@@ -33,10 +33,6 @@ class Diary @Inject()(implicit val
                       executionContext: ExecutionContext
                      ) extends BaseController {
 
-  import logics.AhaWikiInjects
-
-  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()
-
   def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest.get
     val now: LocalDateTime = LocalDateTime.now

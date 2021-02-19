@@ -1,5 +1,4 @@
-@import logics.AhaWikiInjects
-@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any], ahaWikiInjects: AhaWikiInjects)
+@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any])
 <!DOCTYPE html>
 
 <html lang="en">
@@ -34,7 +33,7 @@
         @body
 
         @*
-        @_googleAnalytics()(ahaWikiInjects.database)
+        @_googleAnalytics()
         *@
     </body>
 </html>

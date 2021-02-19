@@ -4,7 +4,6 @@ import java.util.Locale
 
 import akka.actor.ActorRef
 import com.aha00a.play.Implicits._
-import logics.AhaWikiInjects
 import logics.SessionLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
@@ -53,7 +52,9 @@ object WikiContext {
   def apply(name: String)(
     implicit
     request: Request[Any],
-    ahaWikiInjects: AhaWikiInjects,
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration,
     site: Site
   ): WikiContext = {
     implicit val provider: Provider = Provider.createBy(request)
@@ -63,7 +64,9 @@ object WikiContext {
   def preview(name: String)(
     implicit
     request: Request[Any],
-    ahaWikiInjects: AhaWikiInjects,
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration,
     site: Site
   ): WikiContext = {
     implicit val provider: Provider = Provider.createBy(request)
@@ -75,14 +78,12 @@ class WikiContext(
                    val seqName: Seq[String],
                    val renderingMode: RenderingMode)
                  (implicit
-                  val ahaWikiInjects: AhaWikiInjects,
+                  val database: Database,
+                  val actorAhaWiki: ActorRef,
+                  val configuration: Configuration,
                   val provider: Provider,
-                  val site: Site
+                  val site: Site,
                  ) {
-  implicit val database: Database = ahaWikiInjects.database
-  implicit val actorAhaWiki: ActorRef = ahaWikiInjects.actorAhaWiki
-  implicit val configuration: Configuration = ahaWikiInjects.configuration
-
   import models.tables.PageWithoutContentWithSize
 
   def name: String = seqName.last
