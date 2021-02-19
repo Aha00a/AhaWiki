@@ -18,7 +18,6 @@ import play.api.mvc.Request
 object WikiContext {
   trait Provider {
     import java.util.Locale
-    val request: Request[Any]
     def getId: Option[String]
     def locale: Locale
     def getQueryString(key: String): Option[String]
@@ -28,8 +27,7 @@ object WikiContext {
   }
 
   object Provider {
-    def createBy(req: Request[Any]): Provider = new Provider {
-      override val request: Request[Any] = req
+    def createBy(request: Request[Any]): Provider = new Provider {
       override def getId: Option[String] = SessionLogic.getId(request)
       override def locale: Locale = request.locale
       override def getQueryString(key: String): Option[String] = request.getQueryString(key)
@@ -39,7 +37,6 @@ object WikiContext {
     }
 
     def empty: Provider = new Provider {
-      override val request: Request[Any] = null
       override def getId: Option[String] = None
       override def locale: Locale = Locale.KOREA
       override def getQueryString(key: String): Option[String] = None

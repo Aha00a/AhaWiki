@@ -1,4 +1,4 @@
-@(title: String, description: String)(head: Html)(body: Html)(implicit request:Request[Any])
+@(title: String, description: String)(head: Html)(body: Html)
 <!DOCTYPE html>
 
 <html lang="en">
@@ -6,7 +6,7 @@
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-        <title>@title - @request.host</title>
+        <title>@title - request.host</title>
 
         <meta itemprop="name" content="@(title)">
         <meta property="og:title" content="@(title)" />

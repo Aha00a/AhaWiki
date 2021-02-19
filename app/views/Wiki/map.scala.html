@@ -7,7 +7,7 @@
         seqHeader: Seq[String],
         seqLocationWithCalculatedField:Seq[InterpreterMap.LocationWithCalculatedField],
         query: Map[String, String]
-)(implicit wikiContext: WikiContext, request: play.api.mvc.Request[Any])
+)(implicit wikiContext: WikiContext)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
     <div class="interpreterMap">
         <div class="mapArea">
@@ -36,9 +36,12 @@
                                     url: '@routes.Wiki.syncGoogleSpreadsheet()',
                                     method: 'post',
                                     headers: {
+                                        @*
+                                        TODO: get CSRF via ajax
                                         @if(request != null) {
                                             'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
                                         }
+                                        *@
                                     },
                                     data: {
                                         pageName: '@wikiContext.name',

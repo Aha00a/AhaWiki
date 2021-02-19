@@ -1,4 +1,4 @@
-@()(implicit request: play.api.mvc.Request[Any])
+@()
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
@@ -35,7 +35,8 @@
     }
 
     function showWrite() {
-        $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@CSRF.formField <input type="text" name="q"/></div>'));
+        // TODO: get CSRF via ajax
+        $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@*CSRF.formField*@ <input type="text" name="q"/></div>'));
         $('.searchBg').click(function () {
             hideSearch();
         });

@@ -1,10 +1,10 @@
-@(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page)(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page)(implicit wikiContext:WikiContext)
 <div class="gnb">
     <div class="action">
         <ul class="authArea">
-            @if(request.session.get("id")) {
+            @if(wikiContext.provider.getId) {
                 <li>
-                    <i class="fas fa-user-cog"></i> @(request.session.get("id"))
+                    <i class="fas fa-user-cog"></i> @(wikiContext.provider.getId)
                 </li>
                 <li>
                     <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>

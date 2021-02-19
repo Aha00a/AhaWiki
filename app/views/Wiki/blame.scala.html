@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:WikiContext, request: play.api.mvc.Request[Any])
+@(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:WikiContext)
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {

@@ -1,4 +1,4 @@
-@(name: String, before:Int, beforeComment:String, after:Int, afterComment:String, unifiedDiff: String)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
+@(name: String, before:Int, beforeComment:String, after:Int, afterComment:String, unifiedDiff: String)(implicit wikiContext: models.WikiContext)
 @_base(name, s"Diff of $name") {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html.min.css" integrity="sha256-g/AR0iN639QFgl5CwIQoH9JOlWFuPJ2L9kRi+sKOmxA=" crossorigin="anonymous" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html-ui.min.js" integrity="sha256-08hEwaeqghdW6TAaEo1EGHDC/mrLMaWl6gRlMqV+54I=" crossorigin="anonymous"></script>

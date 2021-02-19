@@ -270,6 +270,7 @@ class Test @Inject()(implicit val
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }
 
+    implicit val context: WikiContext = WikiContext("") // TODO: To Context
     Ok(views.html.Test.gradient(""))
   }
 
