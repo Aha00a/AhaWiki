@@ -22,7 +22,7 @@ class Home @Inject() (
 
   def random: Action[AnyContent] = Action { implicit request =>
     import com.aha00a.commons.utils.UriUtil
-    import models.WikiContext.Provider
+    import models.ContextWikiPage.Provider
 
     implicit val provider: Provider = Provider()
     database.withConnection { implicit connection =>

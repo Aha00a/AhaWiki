@@ -1,9 +1,9 @@
 package logics.wikis
 
 import logics.{AhaWikiConfig, SessionLogic}
-import models.WikiContext.Provider
+import models.ContextWikiPage.Provider
 import models.tables.Site
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request

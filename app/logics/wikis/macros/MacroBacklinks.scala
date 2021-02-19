@@ -1,10 +1,10 @@
 package logics.wikis.macros
 
 import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroBacklinks extends TraitMacro {
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     wikiContext.database.withConnection { implicit connection =>
       import com.aha00a.commons.Implicits._
       import models.tables.Link

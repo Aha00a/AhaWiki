@@ -2,8 +2,8 @@ package logics
 
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
-import models.Context
-import models.WikiContext
+import models.ContextSite
+import models.ContextWikiPage
 import models.tables.Page
 import models.tables.Site
 import play.api.Logging
@@ -30,9 +30,9 @@ object AhaWikiCache extends Logging {
 
   // TODO: remove
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: Context): String = {
+    def get()(implicit wikiContext: ContextSite): String = {
       wikiContext.database.withConnection { implicit connection =>
-        implicit val context: WikiContext = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
+        implicit val context: ContextWikiPage = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
         implicit val site: Site = context.site
         Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).getOrElse(""))
       }
@@ -41,9 +41,9 @@ object AhaWikiCache extends Logging {
 
   // TODO: remove
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: Context): String = {
+    def get()(implicit wikiContext: ContextSite): String = {
       wikiContext.database.withConnection { implicit connection =>
-        implicit val context: WikiContext = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
+        implicit val context: ContextWikiPage = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
         implicit val site: Site = context.site
         Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
       }

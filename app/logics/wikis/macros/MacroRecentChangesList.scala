@@ -3,7 +3,7 @@ package logics.wikis.macros
 import com.aha00a.supercsv.SupercsvUtil
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
@@ -14,7 +14,7 @@ object MacroRecentChangesList extends TraitMacro {
   import models.tables.PageWithoutContentWithSize
 
   val regexDigits: Regex = """^(\d+)$""".r
-  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {
@@ -24,7 +24,7 @@ object MacroRecentChangesList extends TraitMacro {
     }
   }
 
-  def toHtmlString(list: List[PageWithoutContentWithSize])(implicit wikiContext: WikiContext): String = {
+  def toHtmlString(list: List[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
     InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - ["${p.name}?action=diff&after=${p.revision}" r${p.revision}] - ["${p.name}"] - ${p.comment} by [${p.author}]""").mkString("\n"))
   }
 }

@@ -3,17 +3,17 @@ package logics.wikis.macros
 import actors.ActorAhaWiki.Calculate
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.Logging
 
 import scala.collection.immutable
 
 object MacroSimilarPages extends TraitMacro with Logging {
-  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     InterpreterWiki.toHtmlString(getMarkupSimilarPages(argument.getOrElse(wikiContext.nameTop)))
   }
 
-  def getMarkupSimilarPages(name: String)(implicit wikiContext: WikiContext): String = {
+  def getMarkupSimilarPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.CosineSimilarity
       import models.tables.Site

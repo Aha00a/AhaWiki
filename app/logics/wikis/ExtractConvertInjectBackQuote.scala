@@ -1,7 +1,7 @@
 package logics.wikis
 
 import com.aha00a.commons.Implicits._
-import models.WikiContext
+import models.ContextWikiPage
 
 class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
   override def extract(s: String): String = {
@@ -16,5 +16,5 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
   }
 
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = s"<code>${s.escapeHtml()}</code>"
+  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s"<code>${s.escapeHtml()}</code>"
 }

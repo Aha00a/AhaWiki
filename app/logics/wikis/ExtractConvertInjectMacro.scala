@@ -2,7 +2,7 @@ package logics.wikis
 
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
-import models.WikiContext
+import models.ContextWikiPage
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -77,7 +77,7 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
     })
   }
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = s match {
+  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s match {
     case regex(name, argument) =>
       ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
         name match {
@@ -104,7 +104,7 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
     case _ => "error"
   }
 
-  def extractLink()(implicit wikiContext: WikiContext): Seq[String] = {
+  def extractLink()(implicit wikiContext: ContextWikiPage): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
       case regex(name, argument) => ExtractConvertInjectMacro.mapMacros.get(name)
         .map(_.extractLink(argument))

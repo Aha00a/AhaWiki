@@ -1,4 +1,4 @@
-@(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: WikiContext)
+@(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: ContextWikiPage)
 @*TODO*@
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <script src="//unpkg.com/3d-force-graph"></script>

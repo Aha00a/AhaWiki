@@ -10,7 +10,7 @@ import logics.PermissionLogic
 import logics.SessionLogic
 import logics.wikis.WikiPermission
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 import models.tables.Permission
 import play.api.Configuration
 import play.api.Environment
@@ -35,12 +35,12 @@ controllerComponents: ControllerComponents,
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
-    import models.WikiContext.Provider
+    import models.ContextWikiPage.Provider
     import models.tables.SearchResultSummary
     import models.tables.Site
     import play.api.Mode
     implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-    implicit val wikiContext: WikiContext = WikiContext("")
+    implicit val wikiContext: ContextWikiPage = ContextWikiPage("")
     implicit val provider: Provider = wikiContext.provider
 
     val wikiPermission = WikiPermission()

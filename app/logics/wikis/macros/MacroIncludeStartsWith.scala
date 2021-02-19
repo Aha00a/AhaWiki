@@ -3,14 +3,14 @@ package logics.wikis.macros
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.Interpreters
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroIncludeStartsWith extends TraitMacro {                 // TODO: design & implement
   @scala.annotation.tailrec
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
-      import models.WikiContext.Provider
+      import models.ContextWikiPage.Provider
       import models.tables.PageWithoutContentWithSize
       import models.tables.Site
       import play.api.cache.SyncCacheApi
@@ -31,5 +31,5 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
     }
   }
 
-  override def extractLink(argument: String)(implicit wikiContext: WikiContext): Seq[String] = Seq(argument)
+  override def extractLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[String] = Seq(argument)
 }

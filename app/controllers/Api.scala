@@ -42,7 +42,7 @@ class Api @Inject()(
   }
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    import models.WikiContext.Provider
+    import models.ContextWikiPage.Provider
     import models.tables.Site
     implicit val provider: Provider = Provider()
     database.withConnection { implicit connection =>
@@ -54,10 +54,10 @@ class Api @Inject()(
 
   def links(name: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import models.WikiContext
+      import models.ContextWikiPage
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       val seqLink: Seq[Link] = Link.select(name).filter(_.and(wikiContext.pageCanSee))
       Ok(seqLink.asJson)
     }

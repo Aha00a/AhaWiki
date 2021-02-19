@@ -2,10 +2,10 @@ package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.InterpreterTable
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroPageList extends TraitMacro {
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     import com.aha00a.supercsv.SupercsvUtil
     val th = Seq("Name", "Date", "Size", "Revision", "Author", "Remote Address", "Comment").mkString("\t")
     val table: Seq[Seq[String]] = wikiContext.listPageByPermission.map(t => Seq(

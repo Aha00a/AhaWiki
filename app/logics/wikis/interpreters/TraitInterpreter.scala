@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import models.WikiContext
+import models.ContextWikiPage
 
 trait TraitInterpreter {
 
@@ -10,13 +10,13 @@ trait TraitInterpreter {
 
   val name: String = getClass.getSimpleName.replaceAll("^Interpreter", "").replaceAll("""\$$""", "")
 
-  def toHtmlString(content: String)(implicit wikiContext: WikiContext): String
+  def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String
 
-  def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link]
+  def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link]
 
-  def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = Seq()
+  def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = Seq()
 
-  def toText(content: String)(implicit wikiContext: WikiContext): String = {
+  def toText(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val document = Jsoup.parse(toHtmlString(content))
     document.select(".headingNumber").remove()
     document.text()

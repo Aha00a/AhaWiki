@@ -1,6 +1,6 @@
 package logics.wikis
 
-import models.WikiContext
+import models.ContextWikiPage
 
 // TODO: Refactor this.
 class ExtractConvertInjectInterpreterCustom(converter:String => String) extends ExtractConvertInject {
@@ -16,6 +16,6 @@ class ExtractConvertInjectInterpreterCustom(converter:String => String) extends 
     }
   }
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = converter(s)
+  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = converter(s)
 }
 

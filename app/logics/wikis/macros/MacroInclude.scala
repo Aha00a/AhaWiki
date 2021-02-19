@@ -3,12 +3,12 @@ package logics.wikis.macros
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.Interpreters
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroInclude extends TraitMacro {
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = doApply(argument, s => s)
-  def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
-    import models.WikiContext.Provider
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = doApply(argument, s => s)
+  def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
+    import models.ContextWikiPage.Provider
     import models.tables.Site
     import play.api.cache.SyncCacheApi
     import play.api.db.Database
@@ -23,5 +23,5 @@ object MacroInclude extends TraitMacro {
     }
   }}
 
-  override def extractLink(argument: String)(implicit wikiContext: WikiContext): Seq[String] = Seq(argument)
+  override def extractLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[String] = Seq(argument)
 }

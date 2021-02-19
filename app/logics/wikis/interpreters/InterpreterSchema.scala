@@ -7,7 +7,7 @@ import logics.SchemaOrg
 import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 
 object InterpreterSchema extends TraitInterpreter {
 
@@ -32,7 +32,7 @@ object InterpreterSchema extends TraitInterpreter {
   }
 
 
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     import models.tables.Site
     implicit val site: Site = wikiContext.site
     val pageContent: PageContent = createPageContent(content)
@@ -124,9 +124,9 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
     import models.tables
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)

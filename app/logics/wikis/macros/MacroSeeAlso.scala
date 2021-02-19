@@ -4,14 +4,14 @@ import java.sql.Connection
 
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroSeeAlso extends TraitMacro {
-  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
     InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop)))
   }}
 
-  def getMarkupRelatedPages(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
+  def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
     import com.aha00a.commons.utils.SeqUtil
     import models.tables.Link
     import models.tables.SchemaOrg
@@ -54,7 +54,7 @@ object MacroSeeAlso extends TraitMacro {
   }
 
 
-  def getMarkupSeeAlso(name: String)(implicit wikiContext: WikiContext, connection: Connection): String = {
+  def getMarkupSeeAlso(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
     s"""
        |${getMarkupRelatedPages(name)}
        |""".stripMargin

@@ -7,7 +7,7 @@ import java.security.MessageDigest
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -55,7 +55,7 @@ object InterpreterVim extends TraitInterpreter with Logging {
     }
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext):String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage):String = {
     implicit val codec:Codec = Codec.UTF8
     val pageContent: PageContent = PageContent(content)
 
@@ -142,5 +142,5 @@ object InterpreterVim extends TraitInterpreter with Logging {
 
   def getCacheFileHtml(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".html")
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
 }

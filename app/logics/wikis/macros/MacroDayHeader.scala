@@ -3,11 +3,11 @@ package logics.wikis.macros
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroDayHeader extends TraitMacro {
   @scala.annotation.tailrec
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {
       case "" | null => toHtmlString(wikiContext.nameTop)
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop == wikiContext.nameBottom =>
@@ -28,7 +28,7 @@ object MacroDayHeader extends TraitMacro {
   }
 
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
+  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case DateTimeUtil.regexIsoLocalDate(_, _, _) => MacroLinkDate.extractLink(body)
     case _ => Seq()

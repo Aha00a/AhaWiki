@@ -1,7 +1,7 @@
 package logics.wikis.interpreters
 
 import logics.wikis.macros.MacroError
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 
 object Interpreters extends TraitInterpreter {
 
@@ -34,21 +34,21 @@ object Interpreters extends TraitInterpreter {
     map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toHtmlString(content))
       .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
   
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toSeqLink(content))
       .getOrElse(Seq())
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toSeqSchemaOrg(content))

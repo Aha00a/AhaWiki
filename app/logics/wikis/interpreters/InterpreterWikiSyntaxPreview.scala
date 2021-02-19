@@ -1,12 +1,12 @@
 package logics.wikis.interpreters
 
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 
 object InterpreterWikiSyntaxPreview extends TraitInterpreter {
 
   import models.tables.Link
 
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     val argument = pageContent.argument.mkString(" ")
     val body = pageContent.content
@@ -40,7 +40,7 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
        |</table>""".stripMargin
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     InterpreterWiki.toSeqLink(pageContent.content)
   }

@@ -1,4 +1,4 @@
-@(s: String)(implicit context:Context, database: play.api.db.Database, configuration: play.api.Configuration, site: models.tables.Site)
+@(s: String)(implicit context:ContextSite, database: play.api.db.Database, configuration: play.api.Configuration, site: models.tables.Site)
 @_baseSkeleton("gradient - Test", "gradient - Test") {
     <script type="text/javascript">
         $(function(){

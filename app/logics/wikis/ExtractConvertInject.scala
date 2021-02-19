@@ -1,7 +1,7 @@
 package logics.wikis
 
 import com.aha00a.commons.utils.UuidUtil
-import models.WikiContext
+import models.ContextWikiPage
 
 import scala.collection.GenTraversableOnce
 import scala.collection.mutable.ArrayBuffer
@@ -15,9 +15,9 @@ trait ExtractConvertInject {
 
   def extract(s: String): String
 
-  def convert(s: String)(implicit wikiContext: WikiContext): String
+  def convert(s: String)(implicit wikiContext: ContextWikiPage): String
 
-  def inject(s: String)(implicit wikiContext: WikiContext): String = {
+  def inject(s: String)(implicit wikiContext: ContextWikiPage): String = {
     var result = s
     for ((key, value) <- arrayBuffer) {
       result = result.replace(key, convert(value))

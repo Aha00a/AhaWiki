@@ -4,7 +4,7 @@ import java.io.StringReader
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
@@ -31,7 +31,7 @@ object InterpreterTable extends TraitInterpreter {
     case _ => None
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext:WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
@@ -76,7 +76,7 @@ object InterpreterTable extends TraitInterpreter {
     throw new Exception()
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     // TODO
     Seq()
   }

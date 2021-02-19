@@ -8,14 +8,14 @@ import logics.SessionLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
-import models.WikiContext.Provider
+import models.ContextWikiPage.Provider
 import models.tables.Site
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
-object WikiContext {
+object ContextWikiPage {
   trait Provider {
     import java.util.Locale
     def getId: Option[String]
@@ -53,9 +53,9 @@ object WikiContext {
     actorAhaWiki: ActorRef,
     configuration: Configuration,
     site: Site
-  ): WikiContext = {
+  ): ContextWikiPage = {
     implicit val provider: Provider = Provider()
-    new WikiContext(Seq(name), RenderingMode.Normal)
+    new ContextWikiPage(Seq(name), RenderingMode.Normal)
   }
 
   def preview(name: String)(
@@ -65,13 +65,13 @@ object WikiContext {
     actorAhaWiki: ActorRef,
     configuration: Configuration,
     site: Site
-  ): WikiContext = {
+  ): ContextWikiPage = {
     implicit val provider: Provider = Provider()
-    new WikiContext(Seq(name), RenderingMode.Preview)
+    new ContextWikiPage(Seq(name), RenderingMode.Preview)
   }
 }
 
-class Context()(
+class ContextSite()(
   implicit
   val database: Database,
   val actorAhaWiki: ActorRef,
@@ -79,23 +79,23 @@ class Context()(
   val provider: Provider,
   val site: Site,
 ){
-  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new WikiContext(seqName, renderingMode)
+  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
 }
 
-class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)(
+class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode)(
   implicit
   database: Database,
   actorAhaWiki: ActorRef,
   configuration: Configuration,
   provider: Provider,
   site: Site,
-) extends Context {
+) extends ContextSite {
   import models.tables.PageWithoutContentWithSize
 
   def name: String = seqName.last
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last
-  def push(name: String) = new WikiContext(name +: seqName, renderingMode)
+  def push(name: String) = new ContextWikiPage(name +: seqName, renderingMode)
   lazy val setPageNameAll: Set[String] = PageLogic.getListPage().map(_.name).toSet
   lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)

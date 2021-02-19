@@ -14,12 +14,12 @@ import models.tables.Page
 
 object PageLogic {
 
-  import models.WikiContext.Provider
+  import models.ContextWikiPage.Provider
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 
   // TODO: add connection
-  def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: WikiContext): Unit = {
+  def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: ContextWikiPage): Unit = {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
       import models.tables.Site

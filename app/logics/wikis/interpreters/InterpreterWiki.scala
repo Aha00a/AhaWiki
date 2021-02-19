@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
 import logics.wikis._
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
@@ -22,7 +22,7 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
-  abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: WikiContext) {
+  abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: ContextWikiPage) {
     val extractConvertInjectInterpreter = new ExtractConvertInjectInterpreter()
     val extractConvertInjectMacro = new ExtractConvertInjectMacro()
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
@@ -34,7 +34,7 @@ object InterpreterWiki extends TraitInterpreter {
     def process(): T
   }
 
-  abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[T](pageContent) {
+  abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
@@ -66,7 +66,7 @@ object InterpreterWiki extends TraitInterpreter {
     def result(): T
   }
 
-  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends HandlerContentIterateBase[String](pageContent) {
+  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends HandlerContentIterateBase[String](pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
@@ -159,7 +159,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[Link]](pageContent) {
+  class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[Link]](pageContent) {
     override def process(): Seq[Link] = {
       val seqLinkInterpreter: Seq[Link] = extractConvertInjectInterpreter.extractLink().toList
       val seqLinkMacro: Seq[Link] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
@@ -168,7 +168,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:WikiContext) extends Handler[Seq[SchemaOrg]](pageContent) {
+  class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[SchemaOrg]](pageContent) {
     override def process(): Seq[SchemaOrg] = {
       extractConvertInjectInterpreter.extractSchemaOrg()
     }
@@ -188,7 +188,7 @@ object InterpreterWiki extends TraitInterpreter {
           )
     """.r
 
-  def replaceLink(s:String)(implicit wikiContext:WikiContext):String = {
+  def replaceLink(s:String)(implicit wikiContext:ContextWikiPage):String = {
     val set: Set[String] = wikiContext.setPageNameByPermission
 
     regexLink.replaceAllIn(s, _ match {
@@ -208,7 +208,7 @@ object InterpreterWiki extends TraitInterpreter {
     })
   }
 
-  def extractLinkMarkup(content:String)(implicit wikiContext:WikiContext):Iterator[AhaMarkLink] = {
+  def extractLinkMarkup(content:String)(implicit wikiContext:ContextWikiPage):Iterator[AhaMarkLink] = {
     regexLink.findAllIn(content).map {
       case regexLink(null, uri , null, null, null, null, null, null) => AhaMarkLink(uri)
       case regexLink(null, null, uri , null, null, null, null, null) => AhaMarkLink(uri)
@@ -219,7 +219,7 @@ object InterpreterWiki extends TraitInterpreter {
     }.filter(_ != null)
   }
 
-  def inlineToHtmlString(line: String)(implicit wikiContext:WikiContext): String = {
+  def inlineToHtmlString(line: String)(implicit wikiContext:ContextWikiPage): String = {
     var s = line
     for((regex, replacement) <- List(
       ("""<""".r, "&lt;"),
@@ -238,13 +238,13 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  override def toHtmlString(content: String)(implicit wikiContext:WikiContext):String = {
+  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage):String = {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerToHtmlString(pageContent)
     handler.process()
   }
 
-  override def toSeqLink(content:String)(implicit wikiContext: WikiContext):Seq[Link] = {
+  override def toSeqLink(content:String)(implicit wikiContext: ContextWikiPage):Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
       case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
@@ -255,7 +255,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
       case Some(_) => Seq()

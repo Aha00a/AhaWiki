@@ -6,7 +6,7 @@ import java.time.{LocalDateTime, YearMonth}
 
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
@@ -18,7 +18,7 @@ object MacroIncludeDays extends TraitMacro {
 
   //noinspection ScalaUnusedSymbol
   @scala.annotation.tailrec
-  override def toHtmlString(argument: String)(implicit wikiContext: WikiContext): String = argument match {
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
@@ -26,7 +26,7 @@ object MacroIncludeDays extends TraitMacro {
       val set = wikiContext.setPageNameByPermission
 
       getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains).reverse.map(pageName => {
-        implicit val wikiContext1: WikiContext = wikiContext.push(pageName)
+        implicit val wikiContext1: ContextWikiPage = wikiContext.push(pageName)
         MacroInclude.doApply(pageName, content => {
           val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(pageName).toLocalDateTime
           content
@@ -40,7 +40,7 @@ object MacroIncludeDays extends TraitMacro {
   }
 
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: WikiContext): Seq[String] = body match {
+  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
     case regex(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")

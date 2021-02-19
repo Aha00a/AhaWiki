@@ -1,10 +1,10 @@
 package logics.wikis.macros
 
 import logics.wikis.interpreters.InterpreterWiki
-import models.WikiContext
+import models.ContextWikiPage
 
 object MacroTitleIndex extends TraitMacro {
-  override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
     val listPageName: Seq[String] = wikiContext.seqPageNameByPermission
     InterpreterWiki.toHtmlString {
       import com.aha00a.commons.utils.LetterUtil

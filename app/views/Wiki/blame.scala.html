@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:WikiContext)
+@(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {

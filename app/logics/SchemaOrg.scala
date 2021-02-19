@@ -6,7 +6,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.libs.json.JsLookupResult
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
@@ -37,7 +37,7 @@ object SchemaOrg {
 
       <a href={"/w/schema:" + id} title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </a>
     }
-    def toAhaMarkLink(implicit wikiContext:WikiContext): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toAhaMarkLink(implicit wikiContext:ContextWikiPage): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
 
   def withNameSpace(s: String): String = s"schema:$s"

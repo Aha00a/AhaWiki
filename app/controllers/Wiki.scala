@@ -24,7 +24,7 @@ import logics.wikis.WikiPermission
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import models.WikiContext.Provider
+import models.ContextWikiPage.Provider
 import models._
 import models.tables.Page
 import play.api.Configuration
@@ -75,7 +75,7 @@ class Wiki @Inject()(implicit val
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: Provider = wikiContext.provider
 
       val pageFirstRevision = Page.selectFirstRevision(name)
@@ -357,7 +357,7 @@ class Wiki @Inject()(implicit val
     }
   }
 
-  def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: WikiContext, connection: Connection, site: Site): String = {
+  def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     val markupSchema = getMarkupSchema(name)
     markupSchema.toOption match {
       case Some(s) =>
@@ -394,7 +394,7 @@ class Wiki @Inject()(implicit val
     }
   }
 
-  private def getMarkupSchema(name: String)(implicit wikiContext: WikiContext, connection: Connection, site: Site) = {
+  private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
     import models.tables.SchemaOrg
     val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
@@ -419,7 +419,7 @@ class Wiki @Inject()(implicit val
     def doSave() = {
       database.withConnection { implicit connection =>
         implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-        implicit val wikiContext: WikiContext = WikiContext(name)
+        implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: Provider = wikiContext.provider
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
@@ -462,7 +462,7 @@ class Wiki @Inject()(implicit val
     val name = Form("name" -> text).bindFromRequest.get
     database.withTransaction { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: Provider = wikiContext.provider
       Page.selectLastRevision(name) match {
         case Some(page) =>
@@ -482,7 +482,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: Provider = wikiContext.provider
       Page.selectLastRevision(name) match {
         case Some(page) =>
@@ -512,7 +512,7 @@ class Wiki @Inject()(implicit val
       val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
-          implicit val wikiContext: WikiContext = WikiContext(pageName)
+          implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
           implicit val provider: Provider = wikiContext.provider
           val pageContent = PageContent(page.content)
           if (WikiPermission().isWritable(pageContent)) {
@@ -553,7 +553,7 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: Provider = wikiContext.provider
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(page), None) =>
@@ -576,7 +576,7 @@ class Wiki @Inject()(implicit val
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: WikiContext = WikiContext.preview(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage.preview(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")
     }
   }

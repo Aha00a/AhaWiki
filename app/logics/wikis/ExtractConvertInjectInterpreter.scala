@@ -2,7 +2,7 @@ package logics.wikis
 
 import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
-import models.WikiContext
+import models.ContextWikiPage
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
@@ -21,13 +21,13 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     }
   }
 
-  override def convert(s: String)(implicit wikiContext: WikiContext): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
+  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
 
-  def extractLink()(implicit wikiContext: WikiContext): Seq[Link] = {
+  def extractLink()(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c)).toSeq
   }
 
-  def extractSchemaOrg()(implicit wikiContext: WikiContext): Seq[SchemaOrg] = {
+  def extractSchemaOrg()(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c)).toSeq
   }
 }

@@ -11,7 +11,7 @@ import javax.inject._
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import models.PageContent
-import models.WikiContext
+import models.ContextWikiPage
 import play.api.Configuration
 import play.api.Environment
 import play.api.cache.SyncCacheApi
@@ -39,10 +39,10 @@ class Diary @Inject()(implicit val
     val name: String = now.toIsoLocalDateString
 
     database.withConnection { implicit connection =>
-      import models.WikiContext.Provider
+      import models.ContextWikiPage.Provider
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: WikiContext = WikiContext(name)
+      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: Provider = wikiContext.provider
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()

@@ -7,7 +7,7 @@ import javax.inject.Inject
 import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
 import models.LatLng
-import models.WikiContext
+import models.ContextWikiPage
 import models.tables.Page
 import play.api.Configuration
 import play.api.Environment
@@ -43,7 +43,7 @@ class ActorAhaWiki @Inject()(implicit
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
-  import models.WikiContext.Provider
+  import models.ContextWikiPage.Provider
   implicit val provider: Provider = Provider.empty
   val seqStopWord: Seq[String] =
     """at in on of by to is the
@@ -62,7 +62,7 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.wikis.RenderingMode
 
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)
+          implicit val wikiContext: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
           val text = Interpreters.toText(page.content)
           val seqWord = text
@@ -91,7 +91,7 @@ class ActorAhaWiki @Inject()(implicit
           import logics.wikis.RenderingMode
           import models.tables.Link
           import models.tables.SchemaOrg
-          implicit val wikiContext: WikiContext = new WikiContext(Seq(page.name), RenderingMode.Normal)
+          implicit val wikiContext: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 

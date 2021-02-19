@@ -27,7 +27,7 @@ object InterpreterMap extends TraitInterpreter {
                        address:String,
                        scoreRaw:String,
                        raw:Seq[String]
-                     )(implicit wikiContext: WikiContext) {
+                     )(implicit wikiContext: ContextWikiPage) {
 
     import com.aha00a.colors.Color
     import com.aha00a.colors.GradientPreset
@@ -46,7 +46,7 @@ object InterpreterMap extends TraitInterpreter {
 
   case class LocationWithCalculatedField(location: Location, latLng: LatLng, seqVisited: Seq[String])
 
-  def parse(pageContent: PageContent)(implicit wikiContext: WikiContext): (Seq[String], Seq[Location]) = {
+  def parse(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): (Seq[String], Seq[Location]) = {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
@@ -73,7 +73,7 @@ object InterpreterMap extends TraitInterpreter {
     }
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     implicit val configuration: Configuration = wikiContext.configuration
 
     val pageContent: PageContent = PageContent(content)
@@ -118,7 +118,7 @@ object InterpreterMap extends TraitInterpreter {
     }
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     // TODO: implement
     Seq()
   }

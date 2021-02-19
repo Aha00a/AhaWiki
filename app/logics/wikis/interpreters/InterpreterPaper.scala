@@ -1,13 +1,13 @@
 package logics.wikis.interpreters
 
-import models.{PageContent, WikiContext}
+import models.{PageContent, ContextWikiPage}
 
 object InterpreterPaper extends TraitInterpreter {
 
   import models.tables.Link
 
   //noinspection ZeroIndexToHead
-  override def toHtmlString(content: String)(implicit wikiContext: WikiContext): String = {
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     s"""<div class="paperContent ${pageContent.argument(0)}">""" +
       InterpreterWiki.toHtmlString(pageContent.content).split( """<hr/>""")
@@ -28,7 +28,7 @@ object InterpreterPaper extends TraitInterpreter {
     """</div>"""
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: WikiContext): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     InterpreterWiki.toSeqLink(pageContent.content)
   }
