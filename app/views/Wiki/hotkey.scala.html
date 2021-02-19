@@ -35,16 +35,26 @@
     }
 
     function showWrite() {
-        // TODO: get CSRF via ajax
-        $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post">@*CSRF.formField*@ <input type="text" name="q"/></div>'));
-        $('.searchBg').click(function () {
-            hideSearch();
-        });
-        $('[name=q]').keydown(function (e) {
-            if (e.keyCode == 27) {
-                hideSearch();
+        $.ajax({
+            url: '@routes.Api.csrf()',
+            data: {},
+            success: function (data, textStatus, jqXHR) {
+                var csrfName = data.name;
+                var csrfValue = data.value;
+                $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post"><input type="hidden" name="' + csrfName + '" value="' + csrfValue + '"/><input type="text" name="q"/></div>'));
+                $('.searchBg').click(function () {
+                    hideSearch();
+                });
+                $('[name=q]').keydown(function (e) {
+                    if (e.keyCode == 27) {
+                        hideSearch();
+                    }
+                }).focus();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                debugger;
             }
-        }).focus();
+        });
         return false;
     }
 

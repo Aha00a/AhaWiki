@@ -31,6 +31,12 @@ class Api @Inject()(
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
+  def csrf: Action[AnyContent] = Action { implicit request =>
+    import play.filters.csrf.CSRF
+    val token: Option[CSRF.Token] = CSRF.getToken
+    Ok(token.asJson)
+  }
+
   def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       import models.tables.Link

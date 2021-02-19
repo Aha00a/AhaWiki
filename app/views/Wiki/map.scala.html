@@ -31,36 +31,43 @@
                                 if(!confirm('Do you want re-fetch data from data source?'))
                                     return false;
 
-                                $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>'))
                                 $.ajax({
-                                    url: '@routes.Wiki.syncGoogleSpreadsheet()',
-                                    method: 'post',
-                                    headers: {
-                                        @*
-                                        TODO: get CSRF via ajax
-                                        @if(request != null) {
-                                            'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
-                                        }
-                                        *@
-                                    },
-                                    data: {
-                                        pageName: '@wikiContext.name',
-                                        url: '@url',
-                                        sheetName: '@sheetName',
-                                    },
+                                    url: '@routes.Api.csrf()',
+                                    data: {},
                                     success: function (data, textStatus, jqXHR) {
-                                        $('.ahaWikiLoader').remove();
-                                        if(data === 'NotChanged') {
-                                            alert('Content is not changed.');
-                                            return;
-                                        }
-                                        location.reload();
+                                        var csrfName = data.name;
+                                        var csrfValue = data.value;
+                                        $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>'))
+                                        $.ajax({
+                                            url: '@routes.Wiki.syncGoogleSpreadsheet()',
+                                            method: 'post',
+                                            headers: {
+                                                'Csrf-Token': csrfValue
+                                            },
+                                            data: {
+                                                pageName: '@wikiContext.name',
+                                                url: '@url',
+                                                sheetName: '@sheetName',
+                                            },
+                                            success: function (data, textStatus, jqXHR) {
+                                                $('.ahaWikiLoader').remove();
+                                                if(data === 'NotChanged') {
+                                                    alert('Content is not changed.');
+                                                    return;
+                                                }
+                                                location.reload();
+                                            },
+                                            error: function (jqXHR, textStatus, errorThrown) {
+                                                debugger;
+                                                $('.ahaWikiLoader').remove();
+                                            }
+                                        });
                                     },
-                                    error: function (jqXHR, textStatus, errorThrown) {
+                                    error: function(jqXHR, textStatus, errorThrown) {
                                         debugger;
-                                        $('.ahaWikiLoader').remove();
                                     }
                                 });
+
                                 return false;
                             });
                         });

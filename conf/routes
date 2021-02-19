@@ -33,6 +33,7 @@ GET         /google/oauth/callback                    controllers.GoogleOAuth.ca
 GET         /admin/                                   controllers.Admin.index
 
 
+GET         /api/csrf                                 controllers.Api.csrf
 GET         /api/pageMap                              controllers.Api.pageMap
 GET         /api/pageNames                            controllers.Api.pageNames
 GET         /api/links                                controllers.Api.links(name)
