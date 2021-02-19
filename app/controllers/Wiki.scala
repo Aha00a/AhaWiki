@@ -47,6 +47,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import logics.wikis.WikiSnippet
 import models.tables.Site
+import java.io.File
 
 class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -107,11 +108,11 @@ class Wiki @Inject()(implicit val
         case (None, "edit", _, true) =>
           val content = name match {
             case DateTimeUtil.regexIsoLocalDate(y, m, d) => s"[[DayHeader]]\n * "
+            case v if new File("app/assets/Page", v).exists() => new File("app/assets/Page", v).readAllString()
             case _ => s"""= $name\n"""
           }
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, _, _, _) =>
-          import java.io.File
           val additionalInfo = getAhaMarkAdditionalInfo(name)
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
 
