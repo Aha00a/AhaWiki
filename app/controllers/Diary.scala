@@ -43,7 +43,7 @@ class Diary @Inject()(implicit val
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: RequestWrapper = wikiContext.provider
+      implicit val provider: RequestWrapper = wikiContext.requestWrapper
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
       if (permission.isWritable(PageContent(latestText))) {

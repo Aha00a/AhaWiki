@@ -12,6 +12,6 @@ object MacroMonthName extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case DateTimeUtil.regexDashDashMonth(mm) =>
-      s"""${Month.of(mm.toInt).getDisplayName(TextStyle.FULL, wikiContext.provider.locale)}"""
+      s"""${Month.of(mm.toInt).getDisplayName(TextStyle.FULL, wikiContext.requestWrapper.locale)}"""
   }
 }

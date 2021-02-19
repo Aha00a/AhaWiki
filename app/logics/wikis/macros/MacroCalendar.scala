@@ -36,7 +36,7 @@ object MacroCalendar extends TraitMacro {
           </tr>
           <tr>
             {
-              DayOfWeek.values().map(_.getDisplayName(TextStyle.NARROW, wikiContext.provider.locale)).map(v =>
+              DayOfWeek.values().map(_.getDisplayName(TextStyle.NARROW, wikiContext.requestWrapper.locale)).map(v =>
                 <th>{v}</th>
               )
             }

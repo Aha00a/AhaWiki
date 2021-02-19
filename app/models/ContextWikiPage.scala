@@ -52,7 +52,7 @@ class ContextSite()(
   val database: Database,
   val actorAhaWiki: ActorRef,
   val configuration: Configuration,
-  val provider: RequestWrapper,
+  val requestWrapper: RequestWrapper,
   val site: Site,
 ){
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)

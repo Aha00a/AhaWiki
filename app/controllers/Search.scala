@@ -41,7 +41,7 @@ controllerComponents: ControllerComponents,
     import play.api.Mode
     implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     implicit val wikiContext: ContextWikiPage = ContextWikiPage("")
-    implicit val provider: RequestWrapper = wikiContext.provider
+    implicit val provider: RequestWrapper = wikiContext.requestWrapper
 
     val wikiPermission = WikiPermission()
     val id = SessionLogic.getId(request).getOrElse("")

@@ -15,7 +15,7 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
       import models.tables.Site
       import play.api.cache.SyncCacheApi
       import play.api.db.Database
-      implicit val provider: RequestWrapper = wikiContext.provider
+      implicit val provider: RequestWrapper = wikiContext.requestWrapper
       implicit val database: Database = wikiContext.database
       implicit val site: Site = wikiContext.site
 

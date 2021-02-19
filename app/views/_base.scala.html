@@ -7,7 +7,7 @@
             @Html(logics.AhaWikiCache.Header.get())
         </div>
     </div>
-    @if(wikiContext.provider.host.startsWith("localhost:")) {
+    @if(wikiContext.requestWrapper.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
             <div class="error">
                 localhost
@@ -15,10 +15,10 @@
         </div>
     }
     @for(f <- Seq("success", "error")) {
-        @if(wikiContext.provider.flashGet(f)) {
+        @if(wikiContext.requestWrapper.flashGet(f)) {
             <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
                 <div class="@f">
-                    @Html(wikiContext.provider.flashGet(f).getOrElse(""))
+                    @Html(wikiContext.requestWrapper.flashGet(f).getOrElse(""))
                 </div>
             </div>
         }
@@ -29,4 +29,4 @@
             @Html(logics.AhaWikiCache.Footer.get())
         </div>
     </div>
-}(wikiContext.provider.host, wikiContext.database, wikiContext.configuration, wikiContext.site)
+}(wikiContext.requestWrapper.host, wikiContext.database, wikiContext.configuration, wikiContext.site)

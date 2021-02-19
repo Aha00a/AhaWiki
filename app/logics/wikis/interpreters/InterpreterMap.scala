@@ -106,7 +106,7 @@ object InterpreterMap extends TraitInterpreter {
         }
         LocationWithCalculatedField(l, latLng, seqVisited)
       })
-      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, wikiContext.provider.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
+      val query: Map[String, String] = "Name,Score,Tag,Category,Comment,Address".split(",").map(q => (q, wikiContext.requestWrapper.getQueryString(q).getOrElse(""))).filter(_._2.isNotNullOrEmpty).toMap
       views.html.Wiki.map(
         mapJavaScriptApiKey,
         pageContent.argument.getOrElse(0, ""),

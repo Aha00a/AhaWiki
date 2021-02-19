@@ -2,9 +2,9 @@
 <div class="gnb">
     <div class="action">
         <ul class="authArea">
-            @if(wikiContext.provider.getId) {
+            @if(wikiContext.requestWrapper.getId) {
                 <li>
-                    <i class="fas fa-user-cog"></i> @(wikiContext.provider.getId)
+                    <i class="fas fa-user-cog"></i> @(wikiContext.requestWrapper.getId)
                 </li>
                 <li>
                     <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>
