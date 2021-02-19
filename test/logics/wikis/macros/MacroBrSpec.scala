@@ -11,7 +11,7 @@ class MacroBrSpec extends AnyFreeSpec {
     import models.tables.Site
 
     implicit val site: Site = Site(-1, "")
-    implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null, null)
+    implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null)
     implicit val provider: Provider = Provider.empty
     implicit val wikiContext: WikiContext = new WikiContext(Seq("UnitTest"), RenderingMode.Normal)
 

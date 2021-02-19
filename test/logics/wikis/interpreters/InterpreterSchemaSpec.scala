@@ -10,7 +10,7 @@ import models.tables.Site
 //noinspection NameBooleanParameters
 class InterpreterSchemaSpec extends AnyFreeSpec {
   implicit val site: Site = Site(-1, "")
-  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null, null)
+  implicit val ahaWikiInjects: AhaWikiInjects = AhaWikiInjects()(null, null, null, null)
   implicit val provider: Provider = Provider.empty
   implicit val wikiContext: WikiContext = new WikiContext(Seq("UnitTest"), RenderingMode.Normal)
 
