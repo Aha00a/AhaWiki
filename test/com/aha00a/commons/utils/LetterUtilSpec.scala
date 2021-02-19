@@ -17,7 +17,7 @@ class LetterUtilSpec extends AnyFreeSpec {
       assert(firstLetterForIndex("ǒ") === 'O')
 
       assert(
-        "ÈÉÊËÛÙÏÎÀÂÔèéêëûùïîàâôÇçÃãÕõçÇáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙãõñäëïöüÿÄËÏÖÜÃÕÑâêîôûÂÊÎÔÛ".map(c => firstLetterForIndex(c + "postfix")).mkString ===
+        "ÈÉÊËÛÙÏÎÀÂÔèéêëûùïîàâôÇçÃãÕõçÇáéíóúýÁÉÍÓÚÝàèìòùÀÈÌÒÙãõñäëïöüÿÄËÏÖÜÃÕÑâêîôûÂÊÎÔÛ".map(c => firstLetterForIndex(c.toString + "postfix")).mkString ===
         "EEEEUUIIAAOeeeeuuiiaaoCcAaOocCaeiouyAEIOUYaeiouAEIOUaonaeiouyAEIOUAONaeiouAEIOU".toUpperCase()
       )
     }
