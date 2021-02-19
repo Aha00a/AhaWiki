@@ -270,8 +270,7 @@ class Test @Inject()(implicit val
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }
-    implicit val provider: RequestWrapper = RequestWrapper()
-    implicit val context: ContextSite = new ContextSite()
+    implicit val context: ContextSite = ContextSite()
     Ok(views.html.Test.gradient(""))
   }
 

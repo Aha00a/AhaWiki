@@ -45,6 +45,30 @@ object ContextSite {
       override def host: String = ""
     }
   }
+
+
+  def apply()(
+    implicit
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration,
+    request: Request[Any],
+    site: Site,
+  ): ContextSite = {
+    implicit val provider: RequestWrapper = RequestWrapper()
+    new ContextSite()
+  }
+
+  def empty()(
+    implicit
+    database: Database,
+    actorAhaWiki: ActorRef,
+    configuration: Configuration,
+    site: Site,
+  ): ContextSite = {
+    implicit val provider: RequestWrapper = RequestWrapper.empty
+    new ContextSite()
+  }
 }
 
 class ContextSite()(
