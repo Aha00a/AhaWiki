@@ -265,7 +265,7 @@ class Test @Inject()(implicit val
 
 
   def gradient: Action[AnyContent] = Action { implicit request =>
-    import models.ContextWikiPage.Provider
+    import models.ContextSite.Provider
     import models.tables.Site
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))

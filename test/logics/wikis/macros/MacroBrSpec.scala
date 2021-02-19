@@ -6,7 +6,7 @@ class MacroBrSpec extends AnyFreeSpec {
   "name" in {
     import logics.wikis.RenderingMode
     import models.ContextWikiPage
-    import models.ContextWikiPage.Provider
+    import models.ContextSite.Provider
     import models.tables.Site
 
     implicit val site: Site = Site(-1, "")

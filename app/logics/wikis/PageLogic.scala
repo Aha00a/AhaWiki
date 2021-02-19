@@ -14,7 +14,7 @@ import models.tables.Page
 
 object PageLogic {
 
-  import models.ContextWikiPage.Provider
+  import models.ContextSite.Provider
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 

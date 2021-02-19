@@ -8,7 +8,7 @@ import models.ContextWikiPage
 object MacroInclude extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = doApply(argument, s => s)
   def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
-    import models.ContextWikiPage.Provider
+    import models.ContextSite.Provider
     import models.tables.Site
     import play.api.cache.SyncCacheApi
     import play.api.db.Database

@@ -24,7 +24,7 @@ import logics.wikis.WikiPermission
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.macros.MacroMonthName
-import models.ContextWikiPage.Provider
+import models.ContextSite.Provider
 import models._
 import models.tables.Page
 import play.api.Configuration

@@ -8,14 +8,14 @@ import logics.SessionLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
-import models.ContextWikiPage.Provider
+import models.ContextSite.Provider
 import models.tables.Site
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
-object ContextWikiPage {
+object ContextSite {
   trait Provider {
     import java.util.Locale
     def getId: Option[String]
@@ -45,7 +45,20 @@ object ContextWikiPage {
       override def host: String = ""
     }
   }
+}
 
+class ContextSite()(
+  implicit
+  val database: Database,
+  val actorAhaWiki: ActorRef,
+  val configuration: Configuration,
+  val provider: Provider,
+  val site: Site,
+){
+  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
+}
+
+object ContextWikiPage {
   def apply(name: String)(
     implicit
     request: Request[Any],
@@ -71,16 +84,6 @@ object ContextWikiPage {
   }
 }
 
-class ContextSite()(
-  implicit
-  val database: Database,
-  val actorAhaWiki: ActorRef,
-  val configuration: Configuration,
-  val provider: Provider,
-  val site: Site,
-){
-  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
-}
 
 class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode)(
   implicit

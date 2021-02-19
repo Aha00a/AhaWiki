@@ -35,7 +35,7 @@ controllerComponents: ControllerComponents,
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
-    import models.ContextWikiPage.Provider
+    import models.ContextSite.Provider
     import models.tables.SearchResultSummary
     import models.tables.Site
     import play.api.Mode

@@ -42,7 +42,7 @@ class Api @Inject()(
   }
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    import models.ContextWikiPage.Provider
+    import models.ContextSite.Provider
     import models.tables.Site
     implicit val provider: Provider = Provider()
     database.withConnection { implicit connection =>

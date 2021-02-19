@@ -1,7 +1,7 @@
 package logics.wikis
 
 import logics.{AhaWikiConfig, SessionLogic}
-import models.ContextWikiPage.Provider
+import models.ContextSite.Provider
 import models.tables.Site
 import models.{PageContent, ContextWikiPage}
 import play.api.cache.SyncCacheApi

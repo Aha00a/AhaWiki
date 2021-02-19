@@ -39,7 +39,7 @@ class Diary @Inject()(implicit val
     val name: String = now.toIsoLocalDateString
 
     database.withConnection { implicit connection =>
-      import models.ContextWikiPage.Provider
+      import models.ContextSite.Provider
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)

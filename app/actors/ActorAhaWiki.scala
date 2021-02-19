@@ -43,7 +43,7 @@ class ActorAhaWiki @Inject()(implicit
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
-  import models.ContextWikiPage.Provider
+  import models.ContextSite.Provider
   implicit val provider: Provider = Provider.empty
   val seqStopWord: Seq[String] =
     """at in on of by to is the
