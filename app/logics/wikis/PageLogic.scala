@@ -4,13 +4,10 @@ import java.util.Date
 
 import actors.ActorAhaWiki.Calculate
 import com.aha00a.commons.Implicits._
-import com.aha00a.play.Implicits._
-import logics.{AhaWikiCache, AhaWikiConfig, SessionLogic}
+import logics.AhaWikiConfig
 import models._
-import play.api.cache.SyncCacheApi
-import play.api.db.Database
-import play.api.mvc.Request
 import models.tables.Page
+import play.api.db.Database
 
 object PageLogic {
 
