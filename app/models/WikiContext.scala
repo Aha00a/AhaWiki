@@ -79,7 +79,7 @@ class Context()(
   val provider: Provider,
   val site: Site,
 ){
-
+  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new WikiContext(seqName, renderingMode)
 }
 
 class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)(

@@ -1,11 +1,11 @@
 package logics
 
-import actors.ActorAhaWiki.Geocode
-import akka.actor.ActorRef
+import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
-import models.LatLng
+import models.Context
 import models.WikiContext
 import models.tables.Page
+import models.tables.Site
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
@@ -30,10 +30,10 @@ object AhaWikiCache extends Logging {
 
   // TODO: remove
   object Header extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = {
+    def get()(implicit wikiContext: Context): String = {
       wikiContext.database.withConnection { implicit connection =>
-        import models.tables.Site
-        implicit val site: Site = Site.selectWhereDomain(wikiContext.provider.host).getOrElse(Site(-1, ""))
+        implicit val context: WikiContext = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
+        implicit val site: Site = context.site
         Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).getOrElse(""))
       }
     }
@@ -41,10 +41,10 @@ object AhaWikiCache extends Logging {
 
   // TODO: remove
   object Footer extends CacheEntity {
-    def get()(implicit wikiContext: WikiContext): String = {
+    def get()(implicit wikiContext: Context): String = {
       wikiContext.database.withConnection { implicit connection =>
-        import models.tables.Site
-        implicit val site: Site = Site.selectWhereDomain(wikiContext.provider.host).getOrElse(Site(-1, ""))
+        implicit val context: WikiContext = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
+        implicit val site: Site = context.site
         Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
       }
     }
@@ -54,7 +54,6 @@ object AhaWikiCache extends Logging {
   object Config extends CacheEntity {
 
     import models.tables.Site
-    import play.api.mvc.Request
 
     def get()(implicit database: Database, site: Site): String = {
       database.withConnection { implicit connection =>
