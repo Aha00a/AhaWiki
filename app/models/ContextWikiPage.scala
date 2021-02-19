@@ -135,7 +135,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   database: Database,
   actorAhaWiki: ActorRef,
   configuration: Configuration,
-  provider: RequestWrapper,
+  requestWrapper: RequestWrapper,
   site: Site,
 ) extends ContextSite {
   def name: String = seqName.last
