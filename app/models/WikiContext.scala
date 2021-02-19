@@ -74,16 +74,14 @@ object WikiContext {
   }
 }
 
-class WikiContext(
-                   val seqName: Seq[String],
-                   val renderingMode: RenderingMode)
-                 (implicit
-                  val database: Database,
-                  val actorAhaWiki: ActorRef,
-                  val configuration: Configuration,
-                  val provider: Provider,
-                  val site: Site,
-                 ) {
+class WikiContext(val seqName: Seq[String], val renderingMode: RenderingMode)(
+  implicit
+  val database: Database,
+  val actorAhaWiki: ActorRef,
+  val configuration: Configuration,
+  val provider: Provider,
+  val site: Site,
+) {
   import models.tables.PageWithoutContentWithSize
 
   def name: String = seqName.last
