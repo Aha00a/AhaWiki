@@ -9,9 +9,9 @@ import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
 import models.ContextSite.RequestWrapper
+import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import play.api.Configuration
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.mvc.Request
 
@@ -79,6 +79,12 @@ class ContextSite()(
   val requestWrapper: RequestWrapper,
   val site: Site,
 ){
+  lazy val setPageNameAll: Set[String] = PageLogic.getListPage().map(_.name).toSet
+  lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
+  lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
+  lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
+  def pageCanSee(name: String): Boolean = !setPageNameAll.contains(name) || setPageNameByPermission.contains(name)
+
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
 }
 
@@ -117,17 +123,10 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   provider: RequestWrapper,
   site: Site,
 ) extends ContextSite {
-  import models.tables.PageWithoutContentWithSize
-
   def name: String = seqName.last
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last
   def push(name: String) = new ContextWikiPage(name +: seqName, renderingMode)
-  lazy val setPageNameAll: Set[String] = PageLogic.getListPage().map(_.name).toSet
-  lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
-  lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
-  lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
-  def pageCanSee(name: String): Boolean = !setPageNameAll.contains(name) || setPageNameByPermission.contains(name)
 }
 
 
