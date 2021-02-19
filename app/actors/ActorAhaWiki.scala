@@ -43,8 +43,8 @@ class ActorAhaWiki @Inject()(implicit
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
-  import models.ContextSite.Provider
-  implicit val provider: Provider = Provider.empty
+  import models.ContextSite.RequestWrapper
+  implicit val provider: RequestWrapper = RequestWrapper.empty
   val seqStopWord: Seq[String] =
     """at in on of by to is the
       |gmail com http https

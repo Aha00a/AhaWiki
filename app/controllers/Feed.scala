@@ -22,7 +22,7 @@ class Feed @Inject()(
   }
 
   def atom: Action[AnyContent] = Action { implicit request =>
-    import models.ContextSite.Provider
+    import models.ContextSite.RequestWrapper
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
       def toXml: NodeBuffer =
         <title>{title}</title>
@@ -52,7 +52,7 @@ class Feed @Inject()(
         </entry>
 
     }
-    implicit val provider: Provider = Provider()
+    implicit val provider: RequestWrapper = RequestWrapper()
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }

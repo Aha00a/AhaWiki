@@ -35,13 +35,13 @@ controllerComponents: ControllerComponents,
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
-    import models.ContextSite.Provider
+    import models.ContextSite.RequestWrapper
     import models.tables.SearchResultSummary
     import models.tables.Site
     import play.api.Mode
     implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     implicit val wikiContext: ContextWikiPage = ContextWikiPage("")
-    implicit val provider: Provider = wikiContext.provider
+    implicit val provider: RequestWrapper = wikiContext.provider
 
     val wikiPermission = WikiPermission()
     val id = SessionLogic.getId(request).getOrElse("")

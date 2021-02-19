@@ -8,7 +8,7 @@ import logics.SessionLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
-import models.ContextSite.Provider
+import models.ContextSite.RequestWrapper
 import models.tables.Site
 import play.api.Configuration
 import play.api.cache.SyncCacheApi
@@ -16,7 +16,7 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object ContextSite {
-  trait Provider {
+  trait RequestWrapper {
     import java.util.Locale
     def getId: Option[String]
     def locale: Locale
@@ -26,8 +26,8 @@ object ContextSite {
     def host: String
   }
 
-  object Provider {
-    def apply()(implicit request: Request[Any]): Provider = new Provider {
+  object RequestWrapper {
+    def apply()(implicit request: Request[Any]): RequestWrapper = new RequestWrapper {
       override def getId: Option[String] = SessionLogic.getId(request)
       override def locale: Locale = request.locale
       override def getQueryString(key: String): Option[String] = request.getQueryString(key)
@@ -36,7 +36,7 @@ object ContextSite {
       override def host: String = request.host
     }
 
-    def empty: Provider = new Provider {
+    def empty: RequestWrapper = new RequestWrapper {
       override def getId: Option[String] = None
       override def locale: Locale = Locale.KOREA
       override def getQueryString(key: String): Option[String] = None
@@ -52,7 +52,7 @@ class ContextSite()(
   val database: Database,
   val actorAhaWiki: ActorRef,
   val configuration: Configuration,
-  val provider: Provider,
+  val provider: RequestWrapper,
   val site: Site,
 ){
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
@@ -67,7 +67,7 @@ object ContextWikiPage {
     configuration: Configuration,
     site: Site
   ): ContextWikiPage = {
-    implicit val provider: Provider = Provider()
+    implicit val provider: RequestWrapper = RequestWrapper()
     new ContextWikiPage(Seq(name), RenderingMode.Normal)
   }
 
@@ -79,7 +79,7 @@ object ContextWikiPage {
     configuration: Configuration,
     site: Site
   ): ContextWikiPage = {
-    implicit val provider: Provider = Provider()
+    implicit val provider: RequestWrapper = RequestWrapper()
     new ContextWikiPage(Seq(name), RenderingMode.Preview)
   }
 }
@@ -90,7 +90,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   database: Database,
   actorAhaWiki: ActorRef,
   configuration: Configuration,
-  provider: Provider,
+  provider: RequestWrapper,
   site: Site,
 ) extends ContextSite {
   import models.tables.PageWithoutContentWithSize

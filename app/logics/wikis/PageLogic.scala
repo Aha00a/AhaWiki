@@ -14,7 +14,7 @@ import models.tables.Page
 
 object PageLogic {
 
-  import models.ContextSite.Provider
+  import models.ContextSite.RequestWrapper
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 
@@ -39,7 +39,7 @@ object PageLogic {
     }
   }
 
-  def getListPageByPermission()(implicit provider: Provider, database:Database, site: Site): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: RequestWrapper, database:Database, site: Site): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()

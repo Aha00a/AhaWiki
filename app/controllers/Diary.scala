@@ -39,11 +39,11 @@ class Diary @Inject()(implicit val
     val name: String = now.toIsoLocalDateString
 
     database.withConnection { implicit connection =>
-      import models.ContextSite.Provider
+      import models.ContextSite.RequestWrapper
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: Provider = wikiContext.provider
+      implicit val provider: RequestWrapper = wikiContext.provider
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
       if (permission.isWritable(PageContent(latestText))) {

@@ -10,12 +10,12 @@ object MacroIncludeStartsWith extends TraitMacro {                 // TODO: desi
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case _ => wikiContext.database.withConnection { implicit connection =>
-      import models.ContextSite.Provider
+      import models.ContextSite.RequestWrapper
       import models.tables.PageWithoutContentWithSize
       import models.tables.Site
       import play.api.cache.SyncCacheApi
       import play.api.db.Database
-      implicit val provider: Provider = wikiContext.provider
+      implicit val provider: RequestWrapper = wikiContext.provider
       implicit val database: Database = wikiContext.database
       implicit val site: Site = wikiContext.site
 
