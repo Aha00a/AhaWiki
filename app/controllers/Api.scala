@@ -44,7 +44,7 @@ class Api @Inject()(
   def pageNames: Action[AnyContent] = Action { implicit request =>
     import models.WikiContext.Provider
     import models.tables.Site
-    implicit val provider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider()
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)

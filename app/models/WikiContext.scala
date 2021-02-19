@@ -27,7 +27,7 @@ object WikiContext {
   }
 
   object Provider {
-    def createBy(request: Request[Any]): Provider = new Provider {
+    def apply()(implicit request: Request[Any]): Provider = new Provider {
       override def getId: Option[String] = SessionLogic.getId(request)
       override def locale: Locale = request.locale
       override def getQueryString(key: String): Option[String] = request.getQueryString(key)
@@ -54,7 +54,7 @@ object WikiContext {
     configuration: Configuration,
     site: Site
   ): WikiContext = {
-    implicit val provider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider()
     new WikiContext(Seq(name), RenderingMode.Normal)
   }
 
@@ -66,7 +66,7 @@ object WikiContext {
     configuration: Configuration,
     site: Site
   ): WikiContext = {
-    implicit val provider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider()
     new WikiContext(Seq(name), RenderingMode.Preview)
   }
 }

@@ -265,12 +265,13 @@ class Test @Inject()(implicit val
 
 
   def gradient: Action[AnyContent] = Action { implicit request =>
+    import models.WikiContext.Provider
     import models.tables.Site
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }
-
-    implicit val context: WikiContext = WikiContext("") // TODO: To Context
+    implicit val provider: Provider = Provider()
+    implicit val context: Context = new Context() 
     Ok(views.html.Test.gradient(""))
   }
 

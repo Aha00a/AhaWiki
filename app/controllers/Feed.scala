@@ -52,7 +52,7 @@ class Feed @Inject()(
         </entry>
 
     }
-    implicit val provider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider()
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }

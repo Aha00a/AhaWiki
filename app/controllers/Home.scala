@@ -24,7 +24,7 @@ class Home @Inject() (
     import com.aha00a.commons.utils.UriUtil
     import models.WikiContext.Provider
 
-    implicit val provider: Provider = Provider.createBy(request)
+    implicit val provider: Provider = Provider()
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val name = PageLogic.getListPageByPermission().random().name
