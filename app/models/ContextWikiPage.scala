@@ -15,6 +15,21 @@ import play.api.Configuration
 import play.api.db.Database
 import play.api.mvc.Request
 
+object Context {
+
+}
+class Context()(
+  implicit
+  val database: Database,
+  val actorAhaWiki: ActorRef,
+  val configuration: Configuration,
+  val requestWrapper: RequestWrapper,
+){
+  def toContextSite()(implicit site: Site): ContextSite = {
+    new ContextSite()
+  }
+}
+
 object ContextSite {
   trait RequestWrapper {
     import java.util.Locale
@@ -73,12 +88,12 @@ object ContextSite {
 
 class ContextSite()(
   implicit
-  val database: Database,
-  val actorAhaWiki: ActorRef,
-  val configuration: Configuration,
-  val requestWrapper: RequestWrapper,
+  database: Database,
+  actorAhaWiki: ActorRef,
+  configuration: Configuration,
+  requestWrapper: RequestWrapper,
   val site: Site,
-){
+) extends Context {
   lazy val setPageNameAll: Set[String] = PageLogic.getListPage().map(_.name).toSet
   lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
