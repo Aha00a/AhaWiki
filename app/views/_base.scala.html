@@ -1,4 +1,4 @@
-@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext)
+@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: models.WikiContext, request: play.api.mvc.Request[Any])
 @_baseSkeleton(title, description){
     @head
 } {
@@ -7,10 +7,10 @@
             @Html(logics.AhaWikiCache.Header.get())
         </div>
     </div>
-    @if(wikiContext.ahaWikiInjects.environment.mode == play.api.Mode.Dev) {
+    @if(request.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
             <div class="error">
-                Dev Mode
+                localhost
             </div>
         </div>
     }

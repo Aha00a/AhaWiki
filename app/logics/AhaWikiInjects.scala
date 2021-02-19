@@ -9,7 +9,6 @@ import play.api.db.Database
 case class AhaWikiInjects()(
   implicit
   val database: Database,
-  val environment: Environment,
   val actorAhaWiki: ActorRef,
   val configuration: Configuration
 )

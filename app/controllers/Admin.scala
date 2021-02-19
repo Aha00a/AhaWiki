@@ -18,7 +18,6 @@ class Admin @Inject()(
   controllerComponents: ControllerComponents,
   actorSystem: ActorSystem,
   database: Database,
-  environment: Environment,
   @Named("db-actor") actorAhaWiki: ActorRef,
   configuration: Configuration,
   wsClient: WSClient,

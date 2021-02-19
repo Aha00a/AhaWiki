@@ -40,7 +40,6 @@ class ActorAhaWiki @Inject()(implicit
                              wsClient: WSClient,
                              executionContext: ExecutionContext,
                              configuration: Configuration,
-                             environment: Environment
                             ) extends Actor with Logging {
 
   import ActorAhaWiki._
