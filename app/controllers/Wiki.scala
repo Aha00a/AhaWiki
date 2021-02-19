@@ -51,7 +51,6 @@ import java.io.File
 
 class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
-                     syncCacheApi: SyncCacheApi,
                      actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,

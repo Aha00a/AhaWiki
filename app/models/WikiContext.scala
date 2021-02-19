@@ -79,7 +79,6 @@ class WikiContext(
                   val provider: Provider,
                   val site: Site
                  ) {
-  implicit val syncCacheApi: SyncCacheApi = ahaWikiInjects.syncCacheApi
   implicit val database: Database = ahaWikiInjects.database
   implicit val actorAhaWiki: ActorRef = ahaWikiInjects.actorAhaWiki
   implicit val configuration: Configuration = ahaWikiInjects.configuration

@@ -73,7 +73,6 @@ object InterpreterVim extends TraitInterpreter with Logging {
     } else {
       import models.tables.Config
       import models.tables.Site
-      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
       implicit val site: Site = wikiContext.site
       val (colorscheme, debug) = database.withConnection { implicit connection =>

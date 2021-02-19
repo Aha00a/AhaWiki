@@ -8,7 +8,6 @@ import play.api.db.Database
 
 case class AhaWikiInjects()(
   implicit
-  val syncCacheApi: SyncCacheApi,
   val database: Database,
   val environment: Environment,
   val actorAhaWiki: ActorRef,

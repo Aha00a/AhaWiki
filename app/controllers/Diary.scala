@@ -25,7 +25,6 @@ import scala.concurrent.ExecutionContext
 
 class Diary @Inject()(implicit val
                       controllerComponents: ControllerComponents,
-                      syncCacheApi: SyncCacheApi,
                       actorSystem: ActorSystem,
                       database: Database,
                       environment: Environment,

@@ -1,7 +1,7 @@
 @import models.tables.Site
 @import play.api.cache.SyncCacheApi
 @import play.api.db.Database
-@()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site)
+@()(implicit database:Database, site: Site)
 @for(trackingId <- Seq(logics.AhaWikiConfig().google.analytics.trackingId())) {
     @if(trackingId) {
         <script>

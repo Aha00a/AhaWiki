@@ -1,4 +1,4 @@
-@(s: String)(implicit request:play.api.mvc.Request[Any], syncCacheApi: play.api.cache.SyncCacheApi, database: play.api.db.Database, configuration: play.api.Configuration, site: models.tables.Site)
+@(s: String)(implicit request:play.api.mvc.Request[Any], database: play.api.db.Database, configuration: play.api.Configuration, site: models.tables.Site)
 @_baseSkeleton("gradient - Test", "gradient - Test") {
     <script type="text/javascript">
         $(function(){
@@ -65,4 +65,4 @@
 
         </table>
     </div>
-}(request.host, syncCacheApi, database, configuration, site)
+}(request.host, database, configuration, site)

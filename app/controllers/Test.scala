@@ -25,7 +25,6 @@ import scala.concurrent.ExecutionContext
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
-                     syncCacheApi: SyncCacheApi,
                      actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,
@@ -52,7 +51,7 @@ class Test @Inject()(implicit val
 
 
     //noinspection DuplicatedCode
-    def testInterpreterTable()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    def testInterpreterTable()(implicit request: Request[Any]): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table tsv 1\na\tb"), <table class="InterpreterTable simpleTable"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
@@ -64,7 +63,7 @@ class Test @Inject()(implicit val
       assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
     }; testInterpreterTable()
 
-    def testInterpreterWiki()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    def testInterpreterWiki()(implicit request: Request[Any]): Unit = {
       import models.tables.Link
 
       assertEquals(InterpreterWiki.name, "Wiki")
@@ -160,7 +159,7 @@ class Test @Inject()(implicit val
 
     }; testInterpreterWiki()
 
-    def testInterpreterSchema()(implicit request: Request[Any], syncCacheApi: SyncCacheApi): Unit = {
+    def testInterpreterSchema()(implicit request: Request[Any]): Unit = {
       import models.tables.SchemaOrg
 
       assertEquals(InterpreterSchema.name, "Schema")

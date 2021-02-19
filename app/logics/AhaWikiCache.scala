@@ -56,7 +56,7 @@ object AhaWikiCache extends Logging {
     import models.tables.Site
     import play.api.mvc.Request
 
-    def get()(implicit syncCacheApi: SyncCacheApi, database: Database, site: Site): String = {
+    def get()(implicit database: Database, site: Site): String = {
       database.withConnection { implicit connection =>
         Page.selectLastRevision(".config").map(_.content).getOrElse("")
       }

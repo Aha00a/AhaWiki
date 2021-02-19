@@ -36,7 +36,6 @@ object ActorAhaWiki {
 }
 
 class ActorAhaWiki @Inject()(implicit
-                             syncCacheApi: SyncCacheApi,
                              database: Database,
                              wsClient: WSClient,
                              executionContext: ExecutionContext,

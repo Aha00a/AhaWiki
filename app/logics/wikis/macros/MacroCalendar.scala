@@ -21,7 +21,6 @@ object MacroCalendar extends TraitMacro {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
-      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val database: Database = wikiContext.database
 
       val yearMonth = YearMonth.of(y.toInt, m.toInt)

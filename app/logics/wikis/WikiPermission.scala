@@ -9,10 +9,10 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object WikiPermission {
-  def apply()(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database, site: Site): WikiPermission = new WikiPermission()
+  def apply()(implicit provider: Provider, database:Database, site: Site): WikiPermission = new WikiPermission()
 }
 
-class WikiPermission(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database, site: Site) {
+class WikiPermission(implicit provider: Provider, database:Database, site: Site) {
   def getReadDirective(pageContent:Option[PageContent]): Array[String] = {
     pageContent.flatMap(_.read).getOrElse(AhaWikiConfig().permission.default.read()).split("""\s*,\s*""")
   }

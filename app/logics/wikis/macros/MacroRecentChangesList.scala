@@ -15,7 +15,6 @@ object MacroRecentChangesList extends TraitMacro {
 
   val regexDigits: Regex = """^(\d+)$""".r
   override def toHtmlString(argument:String)(implicit wikiContext: WikiContext): String = {
-    implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {

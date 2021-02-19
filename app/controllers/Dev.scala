@@ -10,7 +10,6 @@ import play.api.mvc._
 class Dev @Inject()(
                      implicit val
                      controllerComponents: ControllerComponents,
-                     syncCacheApi: SyncCacheApi,
                      system: ActorSystem,
                      database:play.api.db.Database,
                      @javax.inject.Named("db-actor") actorAhaWiki: ActorRef

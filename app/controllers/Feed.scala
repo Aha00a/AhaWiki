@@ -15,7 +15,6 @@ import scala.xml.{Elem, NodeBuffer}
 class Feed @Inject()(
                       implicit val
                       controllerComponents: ControllerComponents,
-                      syncCacheApi: SyncCacheApi,
                       database:play.api.db.Database
                     ) extends BaseController {
   def index: Action[AnyContent] = Action {

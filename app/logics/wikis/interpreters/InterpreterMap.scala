@@ -84,7 +84,6 @@ object InterpreterMap extends TraitInterpreter {
     }
 
     implicit val request: Request[Any] = wikiContext.provider.request
-    implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
     implicit val database: Database = wikiContext.database
     val (seqHeader, locations) = parse(pageContent)
     wikiContext.database.withConnection { implicit connection =>

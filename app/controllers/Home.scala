@@ -13,7 +13,6 @@ import play.api.mvc._
 class Home @Inject() (
                        implicit val
                        controllerComponents: ControllerComponents,
-                       syncCacheApi: SyncCacheApi,
                        database:play.api.db.Database,
                        configuration: Configuration
                      ) extends BaseController {

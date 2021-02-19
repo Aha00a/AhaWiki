@@ -15,7 +15,6 @@ import scala.concurrent.ExecutionContext
 class GoogleOAuth @Inject()(
   implicit val
   controllerComponents: ControllerComponents,
-  syncCacheApi: SyncCacheApi,
   wsClient: WSClient,
   executionContext: ExecutionContext,
   configuration: Configuration

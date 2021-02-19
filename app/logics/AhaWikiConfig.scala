@@ -10,10 +10,10 @@ object AhaWikiConfig {
 
   import models.tables.Site
 
-  def apply()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site) = new AhaWikiConfig()
+  def apply()(implicit database:Database, site: Site) = new AhaWikiConfig()
 }
 
-class AhaWikiConfig(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site) {
+class AhaWikiConfig(implicit database:Database, site: Site) {
   object permission {
     object default {
       def read(): String = hocon().getOrElse(fqn, "all")

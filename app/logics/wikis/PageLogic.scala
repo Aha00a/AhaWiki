@@ -23,7 +23,6 @@ object PageLogic {
     wikiContext.database.withConnection { implicit connection =>
       import models.tables.Page
       import models.tables.Site
-      implicit val syncCacheApi: SyncCacheApi = wikiContext.syncCacheApi
       implicit val site: Site = wikiContext.site
       val author = wikiContext.provider.getId.getOrElse("anonymous")
       val permRead = PageContent(body).read.getOrElse("")
@@ -34,13 +33,13 @@ object PageLogic {
   }
 
   // TODO: add connection
-  def getListPage()(implicit syncCacheApi: SyncCacheApi, database:Database, site: Site): List[PageWithoutContentWithSize] = {
+  def getListPage()(implicit database:Database, site: Site): List[PageWithoutContentWithSize] = {
     database.withConnection { implicit connection =>
       Page.pageSelectPageList()
     }
   }
 
-  def getListPageByPermission()(implicit provider: Provider, syncCacheApi: SyncCacheApi, database:Database, site: Site): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: Provider, database:Database, site: Site): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
