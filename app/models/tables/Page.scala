@@ -104,7 +104,8 @@ object Page {
     val linkCount = Link.delete(name)
     val cosineSimilarityCount = CosineSimilarity.delete(name)
     val termFrequencyCount = TermFrequency.delete(name)
-    linkCount + cosineSimilarityCount + termFrequencyCount
+    val schemaOrgCount = SchemaOrg.delete(name)
+    linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount
   }
 
   def deleteWithRelatedData(name:String)(implicit connection: Connection, site: Site): Int = {
