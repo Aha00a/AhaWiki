@@ -110,6 +110,8 @@ class Wiki @Inject()(implicit val
             case _ => s"""= $name\n"""
           }
           Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+        case (None, "edit", _, false) =>
+          Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
         case (None, _, _, _) =>
           val additionalInfo = getAhaMarkAdditionalInfo(name)
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
