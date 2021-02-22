@@ -132,12 +132,7 @@ class Wiki @Inject()(implicit val
             case DateTimeUtil.regexYear(y) =>
               val content =
                 s"""= $name
-                   |[[[#!Html
-                   |<div class="rightInfoBox">
-                   |${RangeUtil.around(y.toInt, 10).map(y => AhaMarkLink(y.toString).toHtmlString()).mkString("<br/>")}
-                   |</div>
-                   |]]]
-                   |== Calendar
+                   |[[NavigationYear]]
                    |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
                    |""".stripMargin
 

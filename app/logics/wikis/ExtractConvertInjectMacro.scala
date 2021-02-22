@@ -43,6 +43,7 @@ object ExtractConvertInjectMacro {
     MacroWeekdayName,
     MacroMonthName,
     MacroNavigationYearMonth,
+    MacroNavigationYear,
 
 
     MacroPeriod,
