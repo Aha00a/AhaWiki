@@ -104,12 +104,9 @@ class Wiki @Inject()(implicit val
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
-          val content = name match {
-            case DateTimeUtil.regexIsoLocalDate(y, m, d) => s"[[DayHeader]]\n * "
-            case v if new File("app/assets/Page", v).exists() => new File("app/assets/Page", v).readAllString()
-            case _ => s"""= $name\n"""
-          }
-          Ok(views.html.Wiki.edit(Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content), ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+          val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
+          val page = Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content)
+          Ok(views.html.Wiki.edit(page, ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
         case (None, "edit", _, false) =>
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
         case (None, _, _, _) =>
