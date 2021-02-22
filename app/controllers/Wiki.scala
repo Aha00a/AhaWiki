@@ -112,7 +112,7 @@ class Wiki @Inject()(implicit val
         case (None, _, _, _) =>
           val additionalInfo = getAhaMarkAdditionalInfo(name)
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
-
+//          DefaultPageLogic.getOption(name)
           name match {
             case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
               val content = WikiSnippet.notFoundWithDayHeader(name)
@@ -122,12 +122,8 @@ class Wiki @Inject()(implicit val
             case DateTimeUtil.regexYearDashMonth(y, m) =>
               val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
               val content =
-                s"""= [[Html(${AhaMarkLink(y).toHtmlString()})]]-$m
-                   |[[[#!Html
-                   |<div class="rightInfoBox">
-                   |${RangeUtil.around(0, 12).map(i => AhaMarkLink(localDate.plusMonths(i).toYearDashMonthString).toHtmlString()).mkString("<br/>")}
-                   |</div>
-                   |]]]
+                s"""= [$y]-$m
+                   |[[NavigationYearMonth]]
                    |[[IncludeDays]]
                    |""".stripMargin
               val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
