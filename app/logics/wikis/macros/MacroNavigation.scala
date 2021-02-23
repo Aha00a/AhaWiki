@@ -8,7 +8,10 @@ object MacroNavigation extends TraitMacro{
     import logics.DefaultPageLogic
     InterpreterWiki.replaceLink(
       "RecentChanges,TitleIndex,PageList,PageMap,WikiStatistics".split(",")
-        .filter(v => wikiContext.setPageNameByPermission.contains(v) || DefaultPageLogic.getOption(v).isDefined)
+        .filter(v => wikiContext.setPageNameByPermission.contains(v) || wikiContext.database.withConnection { implicit connection =>
+          // TODO: remove connection
+          DefaultPageLogic.getOption(v).isDefined
+        })
         .map(name => s"[$name]")
         .mkString(", ")
     )

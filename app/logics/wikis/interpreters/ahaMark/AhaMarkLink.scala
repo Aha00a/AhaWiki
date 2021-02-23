@@ -40,7 +40,10 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
         uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
         set.contains(uriNormalized.replaceAll("""[#?].+$""", "")) ||
-        DefaultPageLogic.getOption(uriNormalized).isDefined
+        wikiContext.database.withConnection { implicit connection =>
+          // TODO: remove connection
+          DefaultPageLogic.getOption(uriNormalized).isDefined
+        }
       ) {
         ""
       } else {

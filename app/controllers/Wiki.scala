@@ -107,184 +107,24 @@ class Wiki @Inject()(implicit val
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
           val page = Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content)
           Ok(views.html.Wiki.edit(page, ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+
         case (None, "edit", _, false) =>
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
+
+
+
         case (None, _, _, _) =>
           val additionalInfo = getAhaMarkAdditionalInfo(name)
           val regexSchemaColon: Regex = """^schema:(.+)$""".r
-//          DefaultPageLogic.getOption(name)
-          name match {
-            case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-              val content = WikiSnippet.notFoundWithDayHeader(name)
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            case DateTimeUtil.regexYearDashMonth(y, m) =>
-              val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
-              val content =
-                s"""= [$y]-$m
-                   |[[NavigationYearMonth]]
-                   |[[IncludeDays]]
-                   |""".stripMargin
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            case DateTimeUtil.regexYear(y) =>
-              val content =
-                s"""= $name
-                   |[[NavigationYear]]
-                   |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
-                   |""".stripMargin
-
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            case DateTimeUtil.regexDashDashMonthDashDay(mm, dd) =>
-              val lastDay: Int = mm.toInt match {
-                case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
-                case 4 | 6 | 9 | 11 => 30
-                case 2 => 29
-              }
-
-              val r = <table class="month simpleTable">
-                <thead>
-                  <tr>
-                    <th colspan="31">
-                      {MacroMonthName.toHtmlString(s"--$mm")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {(1 to lastDay).grouped(5).map(t =>
-                    <tr>
-                      {t.map(Some(_)).padTo(5, None).map(d =>
-                      <td>
-                        {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
-                      </td>
-                    )}
-                    </tr>
-                  )}
-                  </tr>
-                </tbody>
-              </table>
-              val content =
-                s"""= $mm-$dd
-                   |[--$mm $mm]-[----$dd $dd]
-                   |[[[#!Html
-                   |${r.toString()}
-                   |]]]
-                   |""".stripMargin
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-
-            case DateTimeUtil.regexDashDashMonth(mm) =>
-              val lastDay: Int = mm.toInt match {
-                case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
-                case 4 | 6 | 9 | 11 => 30
-                case 2 => 29
-              }
-
-              val r = <table class="month simpleTable">
-                <thead>
-                  <tr>
-                    <th colspan="31">
-                      {MacroMonthName.toHtmlString(s"--$mm")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {(1 to lastDay).grouped(5).map(t =>
-                    <tr>
-                      {t.map(Some(_)).padTo(5, None).map(d =>
-                      <td>
-                        {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
-                      </td>
-                    )}
-                    </tr>
-                  )}
-                  </tr>
-                </tbody>
-              </table>
-              val content =
-                s"""= [[MonthName]]
-                   |[[[#!Html
-                   |${r.toString()}
-                   |]]]
-                   |""".stripMargin
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            //          case regexDashDashDashDashDay(mm) =>
-            //            Ok(mm) // TODO
-
-            case "schema:Schema" =>
-              import com.aha00a.commons.utils.EnglishCaseConverter
-              val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("")
-              val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-              val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
-
-
-              val content = s"""= Schema
-                 |${listSchemaOrgWithPermission.size} page(s).
-                 |${SchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
-                 |""".stripMargin
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            case regexSchemaColon(schema) =>
-              import com.aha00a.commons.utils.EnglishCaseConverter
-              val optionSchemaType = SchemaOrg.mapAll.get(schema)
-              optionSchemaType match {
-                case Some(schemaType) =>
-                  import models.tables.SchemaOrg
-                  val content: String = if(schema(0).isUpper) {
-                    val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
-                    s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
-                       |[[[#!Html
-                       |${schemaType.comment}
-                       |]]]
-                       |${listSchemaOrg.map(s => s""" * ["${s.page}"]""").mkString("\n")}
-                       |""".stripMargin
-                  } else {
-                    val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
-                    val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-                    s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
-                       |[[[#!Html
-                       |${schemaType.comment}
-                       |]]]
-                       |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
-                    s"""== ["${t._1}" ${t._1}]
-                       |${t._2.toSeq.sortBy(_._1).map(t2 =>
-                    s"""=== ["schema:${t2._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t2._1)}]
-                       |${t2._2.map(s =>
-                    s""" * ["${s.page}"]""").mkString("\n")}
-                       |""".stripMargin).mkString("\n")}
-                       |""".stripMargin).mkString("\n")}
-                       |""".stripMargin
-                  }
-
-                  val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-                  Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-                case _ =>
-                  val content = WikiSnippet.notFound(name)
-                  val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-                  NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-              }
-
-            case v if new File("app/assets/Page", v).exists() =>
-              val content = new File("app/assets/Page", v).readAllString()
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-
-            case _ =>
-              val content = WikiSnippet.notFound(name)
-              val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-              NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          }
-
+          DefaultPageLogic.getOption(name).map(content => {
+            val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+          }).getOrElse({
+            val content = WikiSnippet.notFound(name)
+            val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+          })
+          
         case (Some(page), "" | "view", true, _) =>
           try {
             val pageContent: PageContent = PageContent(page.content)
