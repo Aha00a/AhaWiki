@@ -426,9 +426,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.AhaWiki .commonAhaWiki #SeeAlso {
-  clear: right;
-}
 .AhaWiki .commonAhaWiki div.toc,
 .AhaWiki .commonAhaWiki div.MacroLinkDate,
 .AhaWiki .commonAhaWiki div.rightInfoBox {
@@ -808,9 +805,6 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.AhaWiki .wikiContent #SeeAlso {
-  clear: right;
 }
 .AhaWiki .wikiContent div.toc,
 .AhaWiki .wikiContent div.MacroLinkDate,
@@ -1303,9 +1297,6 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.AhaWiki .paperContent .page .pageContent #SeeAlso {
-  clear: right;
-}
 .AhaWiki .paperContent .page .pageContent div.toc,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
 .AhaWiki .paperContent .page .pageContent div.rightInfoBox {
@@ -1652,54 +1643,6 @@ body {
 .AhaWiki svg.graph marker {
   fill: #777;
 }
-.AhaWiki table.seeAlso {
-  -webkit-box-shadow: 0 0 1em #eee;
-  -moz-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
-  border-collapse: collapse;
-  width: 100%;
-}
-.AhaWiki table.seeAlso th,
-.AhaWiki table.seeAlso td {
-  padding: 5px 10px;
-}
-.AhaWiki table.seeAlso th p:first-of-type,
-.AhaWiki table.seeAlso td p:first-of-type {
-  margin-top: 0;
-}
-.AhaWiki table.seeAlso th p:last-of-type,
-.AhaWiki table.seeAlso td p:last-of-type {
-  margin-bottom: 0;
-}
-.AhaWiki table.seeAlso th {
-  border: 1px solid #ccc;
-  background-color: #ddd;
-}
-.AhaWiki table.seeAlso td {
-  border: 1px solid #ccc;
-}
-.AhaWiki table.seeAlso tr:hover {
-  background-color: #eee;
-}
-.AhaWiki table.seeAlso td {
-  width: 33%;
-  vertical-align: top;
-  border: 1px solid #ccc;
-  padding: 20px;
-}
-.AhaWiki table.seeAlso td.relatedPages {
-  position: relative;
-}
-.AhaWiki table.seeAlso td.relatedPages > .aspectRatioWrapper {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  bottom: 20px;
-  left: 20px;
-}
-.AhaWiki table.seeAlso tr:hover {
-  background-color: inherit;
-}
 .AhaWiki .searchBg {
   position: fixed;
   top: 0;
@@ -1991,8 +1934,8 @@ body {
   position: fixed;
   top: 50%;
   left: 50%;
-  margin-top: -10vmin;
-  margin-left: -10vmin;
+  margin-top: -10vmin/2 - 5vmin;
+  margin-left: -10vmin/2 - 5vmin;
 }
 @-webkit-keyframes spin {
   0% {

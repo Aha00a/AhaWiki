@@ -338,9 +338,6 @@ html, body {
 				text-overflow: ellipsis;
 			}
 		}
-		#SeeAlso {
-			clear: right;
-		}
 		div.toc, div.MacroLinkDate, div.rightInfoBox {
 			position: relative;
 			float: right;
@@ -829,32 +826,6 @@ html, body {
 			fill: @nodeColorNormal;
 		}
 	}
-
-	table.seeAlso {
-		.simpleTable;
-		border-collapse: collapse;
-		width: 100%;
-		td {
-			width: 33%;
-			vertical-align: top;
-			border: 1px solid #ccc;
-			@padding: 20px;
-			padding: @padding;
-			&.relatedPages {
-				position: relative;
-				> .aspectRatioWrapper {
-					position: absolute;
-					top: @padding;
-					right: @padding;
-					bottom: @padding;
-					left: @padding;
-				}
-			}
-		}
-        tr:hover {
-            background-color: inherit;
-        }
-    }
 
 	.searchBg {
 		position: fixed;

@@ -23,7 +23,7 @@ object ExtractConvertInjectMacro {
     MacroRecentChangesList,
     MacroWikiStatistics,
 
-    MacroSeeAlso,
+    MacroAdjacentPages,
     MacroPageMap,
     MacroSimilarPages,
     MacroBacklinks,

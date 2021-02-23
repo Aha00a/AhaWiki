@@ -6,7 +6,7 @@ import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 
-object MacroSeeAlso extends TraitMacro {
+object MacroAdjacentPages extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
     InterpreterWiki.toHtmlString(getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop)))
   }}

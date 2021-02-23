@@ -366,7 +366,7 @@ class Wiki @Inject()(implicit val
     val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
 
     s"""
-       |== See Also (generated)
+       |== See Also
        |${markupSchemaWithTitle}
        |
        |${markupBacklinksWithTitle}
@@ -374,7 +374,7 @@ class Wiki @Inject()(implicit val
        |${markupCosineSimilaritiesWithTitle}
        |
        |=== Adjacent Pages
-       |[[SeeAlso]]
+       |[[AdjacentPages]]
        |
        |""".stripMargin
   }
