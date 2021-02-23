@@ -34,7 +34,7 @@ object AhaWikiCache extends Logging {
       wikiContext.database.withConnection { implicit connection =>
         implicit val context: ContextWikiPage = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
         implicit val site: Site = context.site
-        Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).getOrElse(""))
+        Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header")).getOrElse(""))
       }
     }
   }
@@ -45,7 +45,7 @@ object AhaWikiCache extends Logging {
       wikiContext.database.withConnection { implicit connection =>
         implicit val context: ContextWikiPage = wikiContext.toWikiContext(Seq(""), RenderingMode.Normal)
         implicit val site: Site = context.site
-        Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).getOrElse(""))
+        Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).orElse(DefaultPageLogic.getOption(".footer")).getOrElse(""))
       }
     }
   }
