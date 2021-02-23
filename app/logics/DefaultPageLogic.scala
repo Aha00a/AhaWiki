@@ -3,6 +3,7 @@ package logics
 import java.io.File
 
 import com.aha00a.commons.Implicits._
+import scalaz.LazyOption._
 
 object DefaultPageLogic {
   import scalaz._
@@ -12,13 +13,13 @@ object DefaultPageLogic {
 
     title match {
       case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-        LazyOption.lazySome(s"[[DayHeader]]\n")
+        lazySome(s"[[DayHeader]]\n")
       case _ =>
         val file = new File("app/assets/Page", title)
         if(file.exists()) {
-          LazyOption.lazySome(file.readAllString())
+          lazySome(file.readAllString())
         } else {
-          LazyOption.lazyNone
+          lazyNone
         }
     }
   }
