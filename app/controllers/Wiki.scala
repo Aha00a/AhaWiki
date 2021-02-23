@@ -348,40 +348,35 @@ class Wiki @Inject()(implicit val
   }
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
+    import models.tables.CosineSimilarity
+    import models.tables.Link
+
     val markupSchema = getMarkupSchema(name)
-    markupSchema.toOption match {
-      case Some(s) =>
-        s"""
-           |== See Also (generated)
-           |=== [schema:Schema Schema]
-           |${markupSchema}
-           |
-           |=== Backlinks
-           |[[Backlinks]]
-           |
-           |=== Similar Pages
-           |Similar pages by cosine similarity. Words after page name are term frequency.
-           |[[SimilarPages]]
-           |
-           |=== Adjacent Pages
-           |[[SeeAlso]]
-           |
-           |""".stripMargin
-      case None =>
-        s"""
-           |== See Also (generated)
-           |=== Backlinks
-           |[[Backlinks]]
-           |
-           |=== Similar Pages
-           |Similar pages by cosine similarity. Words after page name are term frequency.
-           |[[SimilarPages]]
-           |
-           |=== Adjacent Pages
-           |[[SeeAlso]]
-           |
-           |""".stripMargin
-    }
+    // TODO: refactoring
+    val optionLink: Option[Link] = Link.selectDstLimit1(name)
+    val seqCosineSimilarities: Seq[CosineSimilarity] = CosineSimilarity
+      .select(name)
+      .view
+      .filter(_.and(wikiContext.pageCanSee))
+      .take(1)
+      .toSeq
+
+    val markupSchemaWithTitle = markupSchema.toOption.map(s => s"=== [schema:Schema Schema]\n$s").getOrElse("")
+    val markupBacklinksWithTitle = optionLink.map(s => s"=== Backlinks\n[[Backlinks]]").getOrElse("")
+    val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
+
+    s"""
+       |== See Also (generated)
+       |${markupSchemaWithTitle}
+       |
+       |${markupBacklinksWithTitle}
+       |
+       |${markupCosineSimilaritiesWithTitle}
+       |
+       |=== Adjacent Pages
+       |[[SeeAlso]]
+       |
+       |""".stripMargin
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {

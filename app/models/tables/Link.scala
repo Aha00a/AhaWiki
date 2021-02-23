@@ -65,6 +65,12 @@ object Link {
       .map(tables.Link.tupled)
   }
 
+  def selectDstLimit1(dst: String)(implicit connection: Connection, site: Site): Option[Link] = {
+    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND dst = $dst LIMIT 1"
+      .as(str("src") ~ str("dst") ~ str("alias") singleOpt).map(flatten)
+      .map(tables.Link.tupled)
+  }
+
   def selectAllButNotEmpty()(implicit connection: Connection, site: Site): List[Link] = {
     SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND src != '' AND dst != ''"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
