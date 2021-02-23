@@ -1934,8 +1934,8 @@ body {
   position: fixed;
   top: 50%;
   left: 50%;
-  margin-top: -10vmin/2 - 5vmin;
-  margin-left: -10vmin/2 - 5vmin;
+  margin-top: -10vmin;
+  margin-left: -10vmin;
 }
 @-webkit-keyframes spin {
   0% {

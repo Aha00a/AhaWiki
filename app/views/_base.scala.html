@@ -3,9 +3,7 @@
     @head
 } {
     <div class="header">
-        <div class="limitWidth">
-            @Html(logics.AhaWikiCache.Header.get())
-        </div>
+        @Html(logics.AhaWikiCache.Header.get())
     </div>
     @if(wikiContext.requestWrapper.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
@@ -25,8 +23,6 @@
     }
     @body
     <div class="footer">
-        <div class="limitWidth">
-            @Html(logics.AhaWikiCache.Footer.get())
-        </div>
+        @Html(logics.AhaWikiCache.Footer.get())
     </div>
 }(wikiContext.requestWrapper.host, wikiContext.database, wikiContext.configuration, wikiContext.site)
