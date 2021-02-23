@@ -8,7 +8,7 @@ import models.ContextWikiPage
 
 object MacroSeeAlso extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
-    InterpreterWiki.toHtmlString(getMarkupSeeAlso(argument.getOrElse(wikiContext.nameTop)))
+    InterpreterWiki.toHtmlString(getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop)))
   }}
 
   def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
@@ -52,12 +52,4 @@ object MacroSeeAlso extends TraitMacro {
          |""".stripMargin
     }).getOrElse("")
   }
-
-
-  def getMarkupSeeAlso(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
-    s"""
-       |${getMarkupRelatedPages(name)}
-       |""".stripMargin
-  }
-
 }
