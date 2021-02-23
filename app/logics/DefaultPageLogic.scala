@@ -137,6 +137,7 @@ object DefaultPageLogic {
         )
 
       case regexSchemaColon(schema) =>
+        // TODO: extract macro
         val optionSchemaType = SchemaOrg.mapAll.get(schema)
         optionSchemaType match {
           case Some(schemaType) =>
