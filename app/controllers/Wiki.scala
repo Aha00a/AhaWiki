@@ -75,8 +75,8 @@ class Wiki @Inject()(implicit val
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: RequestWrapper = wikiContext.requestWrapper
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
       val pageFirstRevision = Page.selectFirstRevision(name)
       val pageLastRevision = Page.selectLastRevision(name)
@@ -244,8 +244,8 @@ class Wiki @Inject()(implicit val
     def doSave() = {
       database.withConnection { implicit connection =>
         implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-        implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-        implicit val provider: RequestWrapper = wikiContext.requestWrapper
+        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+        implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("")
@@ -287,8 +287,8 @@ class Wiki @Inject()(implicit val
     val name = Form("name" -> text).bindFromRequest.get
     database.withTransaction { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: RequestWrapper = wikiContext.requestWrapper
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
@@ -307,8 +307,8 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: RequestWrapper = wikiContext.requestWrapper
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
@@ -337,8 +337,8 @@ class Wiki @Inject()(implicit val
       val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
-          implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
-          implicit val provider: RequestWrapper = wikiContext.requestWrapper
+          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
           val pageContent = PageContent(page.content)
           if (WikiPermission().isWritable(pageContent)) {
             val extractConvertApplyInterpreterRefresh = new ExtractConvertInjectInterpreterCustom(s => {
@@ -378,8 +378,8 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      implicit val provider: RequestWrapper = wikiContext.requestWrapper
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(page), None) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
@@ -401,7 +401,7 @@ class Wiki @Inject()(implicit val
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage.preview(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")
     }
   }

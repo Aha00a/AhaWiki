@@ -42,7 +42,7 @@ class Test @Inject()(implicit val
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
     }
-    implicit val wikiContext: ContextWikiPage = ContextWikiPage("UnitTest")
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
 
 

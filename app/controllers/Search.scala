@@ -40,8 +40,8 @@ controllerComponents: ControllerComponents,
     import models.tables.Site
     import play.api.Mode
     implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-    implicit val wikiContext: ContextWikiPage = ContextWikiPage("")
-    implicit val provider: RequestWrapper = wikiContext.requestWrapper
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
+    implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
     val wikiPermission = WikiPermission()
     val id = SessionLogic.getId(request).getOrElse("")

@@ -63,8 +63,8 @@ class Api @Inject()(
       import models.ContextWikiPage
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val wikiContext: ContextWikiPage = ContextWikiPage(name)
-      val seqLink: Seq[Link] = Link.select(name).filter(_.and(wikiContext.pageCanSee))
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      val seqLink: Seq[Link] = Link.select(name).filter(_.and(contextWikiPage.pageCanSee))
       Ok(seqLink.asJson)
     }
   }

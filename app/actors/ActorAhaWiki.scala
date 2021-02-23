@@ -62,7 +62,7 @@ class ActorAhaWiki @Inject()(implicit
         Page.selectLastRevision(name) foreach { page =>
           import logics.wikis.RenderingMode
 
-          implicit val wikiContext: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
           val text = Interpreters.toText(page.content)
           val seqWord = text
@@ -91,7 +91,7 @@ class ActorAhaWiki @Inject()(implicit
           import logics.wikis.RenderingMode
           import models.tables.Link
           import models.tables.SchemaOrg
-          implicit val wikiContext: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
           val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
           Page.updateLink(page.name, seqLink)
 
