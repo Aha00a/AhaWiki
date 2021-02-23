@@ -45,11 +45,7 @@ object DefaultPageLogic {
 
       case DateTimeUtil.regexDashDashMonthDashDay(mm, dd) =>
         // TODO: extract macro
-        val lastDay: Int = mm.toInt match {
-          case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
-          case 4 | 6 | 9 | 11 => 30
-          case 2 => 29
-        }
+        val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
 
         val r = <table class="month simpleTable">
           <thead>
@@ -84,11 +80,7 @@ object DefaultPageLogic {
 
       case DateTimeUtil.regexDashDashMonth(mm) =>
         // TODO: extract macro
-        val lastDay: Int = mm.toInt match {
-          case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
-          case 4 | 6 | 9 | 11 => 30
-          case 2 => 29
-        }
+        val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
 
         val r = <table class="month simpleTable">
           <thead>

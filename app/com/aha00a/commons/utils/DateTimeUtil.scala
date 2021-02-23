@@ -27,4 +27,11 @@ object DateTimeUtil {
       localDate.toDashDashMonthString
     )).getOrElse(Seq(ymd))
   }
+
+  def getLastDay(month: Int): Int = month match {
+    case 1 | 3 | 5 | 7 | 8 | 10 | 12 => 31
+    case 4 | 6 | 9 | 11 => 30
+    case 2 => 29
+    case _ => 0
+  }
 }
