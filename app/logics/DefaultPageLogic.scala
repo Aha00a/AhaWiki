@@ -5,18 +5,20 @@ import java.io.File
 import com.aha00a.commons.Implicits._
 
 object DefaultPageLogic {
-  def getOption(title: String): Option[String] = {
+  import scalaz._
+
+  def getOption(title: String): LazyOption[String] = {
     import com.aha00a.commons.utils.DateTimeUtil
 
     title match {
       case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-        Option(s"[[DayHeader]]\n")
+        LazyOption.lazySome(s"[[DayHeader]]\n")
       case _ =>
         val file = new File("app/assets/Page", title)
         if(file.exists()) {
-          Some(file.readAllString())
+          LazyOption.lazySome(file.readAllString())
         } else {
-          None
+          LazyOption.lazyNone
         }
     }
   }

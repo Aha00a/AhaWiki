@@ -30,6 +30,7 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
