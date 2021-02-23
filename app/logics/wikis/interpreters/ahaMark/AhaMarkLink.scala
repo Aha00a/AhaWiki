@@ -18,6 +18,7 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
       s"""<b>$aliasWithDefault</b>"""
     } else {
       import com.aha00a.commons.utils.DateTimeUtil
+      import logics.DefaultPageLogic
       import logics.wikis.PageNameLogic
       val external: Boolean = PageNameLogic.isExternal(uri)
       val isStartsWithHash = uriNormalized.startsWith("#")
@@ -38,7 +39,8 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
         uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
-        set.contains(uriNormalized.replaceAll("""[#?].+$""", ""))
+        set.contains(uriNormalized.replaceAll("""[#?].+$""", "")) ||
+        DefaultPageLogic.getOption(uriNormalized).isDefined
       ) {
         ""
       } else {
