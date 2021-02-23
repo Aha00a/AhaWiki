@@ -4,9 +4,9 @@ import java.io.File
 
 import com.aha00a.commons.Implicits._
 import scalaz.LazyOption._
+import scalaz._
 
 object DefaultPageLogic {
-  import scalaz._
 
   def getOption(title: String): LazyOption[String] = {
     import com.aha00a.commons.utils.DateTimeUtil
