@@ -40,6 +40,14 @@ object Config extends Logging{
       def colorScheme()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "ron")
       def debug()(implicit connection: Connection, site: Site): Boolean = Config.getOrElse(fqn, default = false)
     }
+
+    // TODO
+    object google {
+      object AdSense {
+        def adClient()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
+        def adsTxtContent()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
+      }
+    }
   }
 }
 
