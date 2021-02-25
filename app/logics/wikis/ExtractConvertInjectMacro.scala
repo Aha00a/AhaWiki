@@ -87,7 +87,6 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
-          case "AhaWikiVersion" => Some(play.core.PlayVersion).map(v => s"""AhaWiki: 0.0.1, Play Framework: ${v.current}, sbt: ${v.sbtVersion}, scala: ${v.scalaVersion}""").getOrElse("")
           case _ =>
             val macroErrorResult = MacroError.toHtmlString(s"$s - Macro not found.")
             wikiContext.renderingMode match {
