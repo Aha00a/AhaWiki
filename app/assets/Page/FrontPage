@@ -1,9 +1,16 @@
-= Front Page
-Welcome to [AhaWiki].
-
+= [[SiteName]]
 [AhaWiki]를 사용해 주셔서 감사합니다.
 
 [.config], [.header], [.footer]를 수정해 주세요.
+
+총 [[PageCount]]개의 문서가 있습니다.
+
+== [RecentChanges]
+최근 수정순 20개 목록입니다. 모든 변경 사항은 [RecentChanges]를 클릭해 주세요.
+[[RecentChangesList(20)]]
+
+
+----
 
 [[Navigation]]
 
