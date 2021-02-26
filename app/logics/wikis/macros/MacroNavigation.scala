@@ -7,7 +7,7 @@ object MacroNavigation extends TraitMacro{
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     import logics.DefaultPageLogic
     InterpreterWiki.replaceLink(
-      "RecentChanges,TitleIndex,PageList,PageMap,WikiStatistics".split(",")
+      "RecentChanges,TitleIndex,PageList,PageMap,WikiStatistics,schema:Schema".split(",")
         .filter(v => wikiContext.setPageNameByPermission.contains(v) || wikiContext.database.withConnection { implicit connection =>
           // TODO: remove connection
           DefaultPageLogic.getOption(v).isDefined
