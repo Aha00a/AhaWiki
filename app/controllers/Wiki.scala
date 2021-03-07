@@ -74,6 +74,8 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
+      logger.info(s"referer - ${request.referer.getOrElse("")}")
+
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
