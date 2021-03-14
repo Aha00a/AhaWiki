@@ -17,6 +17,7 @@ object ExtractConvertInjectMacro {
     MacroImage,
     MacroRuby,
     MacroTrivial,
+    MacroCopyable,
 
     MacroNavigation,
     MacroPageList,

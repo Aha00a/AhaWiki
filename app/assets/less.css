@@ -1000,6 +1000,15 @@ body {
 .AhaWiki .MacroEmbed {
   clear: both;
 }
+.AhaWiki .MacroCopyable {
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  background-color: #eee;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 3px;
+  width: 200px;
+}
 .AhaWiki .paperContent {
   padding: 1mm;
 }
