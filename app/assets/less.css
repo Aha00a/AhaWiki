@@ -234,6 +234,7 @@ body {
   border-bottom: 1px dashed #ccc;
   margin-left: -25px;
   height: 0;
+  clear: both;
 }
 .AhaWiki .commonAhaWiki li > p {
   margin: 0;
@@ -614,6 +615,7 @@ body {
   border-bottom: 1px dashed #ccc;
   margin-left: -25px;
   height: 0;
+  clear: both;
 }
 .AhaWiki .wikiContent li > p {
   margin: 0;
@@ -1105,6 +1107,7 @@ body {
   border-bottom: 1px dashed #ccc;
   margin-left: -25px;
   height: 0;
+  clear: both;
 }
 .AhaWiki .paperContent .page .pageContent li > p {
   margin: 0;
