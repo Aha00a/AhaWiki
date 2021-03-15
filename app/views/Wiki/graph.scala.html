@@ -140,7 +140,9 @@
                 if(node)
                     layout.pinNode(node, true);
             }
-            renderer.run();
+            setTimeout(function() {
+                renderer.run();
+            }, 3000);
             setTimeout(function () {
                 $('.playPause.@(id)').click();
             }, 10000);
