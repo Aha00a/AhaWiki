@@ -227,9 +227,6 @@ object InterpreterWiki extends TraitInterpreter {
       ("""''(.+?)''""".r, "<i>$1</i>"),
       ("""__(.+?)__""".r, "<u>$1</u>"),
       ("""~~(.+?)~~""".r, "<s>$1</s>"),
-      ("""`(.+?)`""".r, "<code>$1</code>"),
-
-      ("""""".r, "")
     )) {
       s = regex.replaceAllIn(s, replacement)
     }
