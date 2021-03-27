@@ -27,6 +27,7 @@ import logics.wikis.macros.MacroMonthName
 import models.ContextSite.RequestWrapper
 import models._
 import models.tables.Page
+import models.tables.Referer
 import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
@@ -82,7 +83,7 @@ class Wiki @Inject()(implicit val
       request
         .refererFromExternal
         .foreach(r => {
-          logger.info(s"refererFromExternal - ${r} -> ${site} ${name}")
+          Referer.insert(site.seq, name, r)
         });
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
