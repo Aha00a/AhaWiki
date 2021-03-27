@@ -74,9 +74,15 @@ class Wiki @Inject()(implicit val
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
-      request.referer//FromExternal
-        .foreach(referer => {
-          logger.info(s"referer - ${referer} -> ${site} ${name}")
+      request
+        .referer
+        .foreach(r => {
+          logger.info(s"referer - ${r} -> ${site} ${name}")
+        });
+      request
+        .refererFromExternal
+        .foreach(r => {
+          logger.info(s"refererFromExternal - ${r} -> ${site} ${name}")
         });
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
