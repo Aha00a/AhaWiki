@@ -47,7 +47,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import logics.wikis.WikiSnippet
 import models.tables.Site
-import java.io.File
 
 class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -74,9 +73,12 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
-      logger.info(s"referer - ${request.referer.getOrElse("")}")
-
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+      request.referer//FromExternal
+        .foreach(referer => {
+          logger.info(s"referer - ${referer} -> ${site} ${name}")
+        });
+
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
