@@ -9,7 +9,7 @@ import anorm.SqlParser.str
 import anorm._
 import models.LatLng
 
-case class Referer(seq: Long, site: Long, name: String, created: Date, url: String) {
+case class Referer(seq: Long, site: Long, name: String, created: Date, url: String, remoteAddress: String) {
 }
 
 object Referer {
@@ -19,8 +19,8 @@ object Referer {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def insert(site: Long, name: String, url: String)(implicit connection: Connection): Int = {
-    SQL"""INSERT INTO Referer (site, name, url) VALUES ($site, $name, $url)""".executeUpdate()
+  def insert(site: Long, name: String, url: String, remoteAddress: String)(implicit connection: Connection): Int = {
+    SQL"""INSERT INTO Referer (site, name, url, remoteAddress) VALUES ($site, $name, $url, $remoteAddress)""".executeUpdate()
   }
 }
 

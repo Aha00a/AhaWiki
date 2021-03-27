@@ -75,15 +75,16 @@ class Wiki @Inject()(implicit val
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+      val remoteAddress = request.remoteAddressWithXRealIp
       request
         .referer
         .foreach(r => {
-          logger.info(s"referer - ${r} -> ${site} ${name}")
+          Referer.insert(site.seq, name, r, remoteAddress)
         });
       request
         .refererFromExternal
         .foreach(r => {
-          Referer.insert(site.seq, name, r)
+          Referer.insert(site.seq, name, r, remoteAddress)
         });
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
