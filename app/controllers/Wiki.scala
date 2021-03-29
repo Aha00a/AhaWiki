@@ -5,6 +5,7 @@ import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.Month
 import java.util.Date
+import java.net.URL
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
@@ -27,7 +28,7 @@ import logics.wikis.macros.MacroMonthName
 import models.ContextSite.RequestWrapper
 import models._
 import models.tables.Page
-import models.tables.Referer
+import models.tables.VisitLog
 import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
@@ -76,16 +77,20 @@ class Wiki @Inject()(implicit val
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       val remoteAddress = request.remoteAddressWithXRealIp
-      request
-        .referer
-        .foreach(r => {
-          Referer.insert(site.seq, name, r, remoteAddress)
-        });
-      request
-        .refererFromExternal
-        .foreach(r => {
-          Referer.insert(site.seq, name, r, remoteAddress)
-        });
+
+      request.referer match {
+        case Some(referer) =>
+          val url = new URL(referer)
+          val authority = url.getAuthority
+          Site.selectWhereDomain(authority) match {
+            case Some(site) if(url.getPath.startsWith("/w/")) =>
+              VisitLog.insert(site.seq, name, remoteAddress, referer, Some(site.seq), url.getPath.substring(3))
+            case _ =>
+              VisitLog.insert(site.seq, name, remoteAddress, referer, None, null)
+          }
+        case _ =>
+          VisitLog.insert(site.seq, name, remoteAddress, null, None, null)
+      }
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -136,7 +141,7 @@ class Wiki @Inject()(implicit val
             val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
             NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           })
-          
+
         case (Some(page), "" | "view", true, _) =>
           try {
             val pageContent: PageContent = PageContent(page.content)
