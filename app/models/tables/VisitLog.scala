@@ -9,7 +9,7 @@ import anorm.SqlParser.str
 import anorm._
 import models.LatLng
 
-case class VisitLog(seq: Long, site: Long, name: String, created: Date, referer: String, remoteAddress: String) {
+case class VisitLog(seq: Long, site: Long, name: String, created: Date, remoteAddress: String, userAgent: String, referer: String, refererSite: Option[Long], refererName: String) {
 }
 
 object VisitLog {
@@ -19,10 +19,10 @@ object VisitLog {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def insert(site: Long, name: String, remoteAddress: String, referer: String, refererSite: Option[Long], refererName: String)(implicit connection: Connection): Int = {
+  def insert(site: Long, name: String, remoteAddress: String, userAgent: String, referer: String, refererSite: Option[Long], refererName: String)(implicit connection: Connection): Int = {
     SQL"""
-      INSERT INTO VisitLog (site, name, remoteAddress, referer, refererSite, refererName)
-      VALUES ($site, $name, $remoteAddress, $referer, $refererSite, $refererName)
+      INSERT INTO VisitLog (site, name, remoteAddress, userAgent, referer, refererSite, refererName)
+      VALUES ($site, $name, $remoteAddress, $userAgent, $referer, $refererSite, $refererName)
     """.executeUpdate()
   }
 }

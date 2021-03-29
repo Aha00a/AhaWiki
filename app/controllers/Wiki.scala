@@ -77,6 +77,7 @@ class Wiki @Inject()(implicit val
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
       val remoteAddress = request.remoteAddressWithXRealIp
+      val userAgent = request.userAgent.getOrElse("")
 
       request.referer match {
         case Some(referer) =>
@@ -84,12 +85,12 @@ class Wiki @Inject()(implicit val
           val authority = url.getAuthority
           Site.selectWhereDomain(authority) match {
             case Some(site) if(url.getPath.startsWith("/w/")) =>
-              VisitLog.insert(site.seq, name, remoteAddress, referer, Some(site.seq), url.getPath.substring(3))
+              VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, Some(site.seq), url.getPath.substring(3))
             case _ =>
-              VisitLog.insert(site.seq, name, remoteAddress, referer, None, null)
+              VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, None, null)
           }
         case _ =>
-          VisitLog.insert(site.seq, name, remoteAddress, null, None, null)
+          VisitLog.insert(site.seq, name, remoteAddress, userAgent, null, None, null)
       }
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
