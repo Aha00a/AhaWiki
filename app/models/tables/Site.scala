@@ -29,6 +29,7 @@ case class Site(seq:Long, name:String) {
 }
 
 object Site {
+  //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
   def selectWhereDomain(domain: String)(implicit connection: Connection): Option[Site] = {
