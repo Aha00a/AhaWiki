@@ -22,9 +22,7 @@ import logics._
 import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
-import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
-import logics.wikis.macros.MacroMonthName
 import models.ContextSite.RequestWrapper
 import models._
 import models.tables.Page
@@ -33,7 +31,6 @@ import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
 import play.api.Mode
-import play.api.cache.SyncCacheApi
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
