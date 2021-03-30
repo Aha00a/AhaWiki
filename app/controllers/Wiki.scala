@@ -2,16 +2,12 @@ package controllers
 
 import java.net.URLDecoder
 import java.net.URLEncoder
-import java.time.LocalDate
-import java.time.Month
 import java.util.Date
 import java.net.URL
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.DateTimeUtil
-import com.aha00a.commons.utils.RangeUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.supercsv.SupercsvUtil
