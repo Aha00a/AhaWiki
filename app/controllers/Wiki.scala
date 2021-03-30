@@ -77,7 +77,7 @@ class Wiki @Inject()(implicit val
           val url = new URL(referer)
           val authority = url.getAuthority
           Site.selectWhereDomain(authority) match {
-            case Some(site) if(url.getPath.startsWith("/w/")) =>
+            case Some(site) if url.getPath.startsWith("/w/") =>
               VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, Some(site.seq), url.getPath.substring(3))
             case _ =>
               VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, None, null)
@@ -218,11 +218,11 @@ class Wiki @Inject()(implicit val
 
     s"""
        |== See Also
-       |${markupSchemaWithTitle}
+       |$markupSchemaWithTitle
        |
-       |${markupBacklinksWithTitle}
+       |$markupBacklinksWithTitle
        |
-       |${markupCosineSimilaritiesWithTitle}
+       |$markupCosineSimilaritiesWithTitle
        |
        |=== Adjacent Pages
        |[[AdjacentPages]]
