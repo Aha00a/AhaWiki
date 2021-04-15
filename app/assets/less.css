@@ -1781,12 +1781,6 @@ body {
 .AhaWiki .blame table.tableBlame th.lineComment,
 .AhaWiki .blame table.tableBlame td.lineComment {
   padding: 5px 10px;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
   white-space: nowrap;
   background-color: #f7f7f7;
 }
