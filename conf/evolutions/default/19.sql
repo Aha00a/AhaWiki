@@ -12,8 +12,8 @@ create table VisitLog
     referer varchar(2048) null,
     refererSite int null,
     refererName varchar(255) null,
-    constraint VisitLog_Page_site_fk1 foreign key (site) references Page (site),
-    constraint VisitLog_Page_site_fk2 foreign key (refererSite) references Page (site)
+    constraint VisitLog_Site_seq_fk foreign key (site) references Site (seq),
+    constraint VisitLog_Site_seq_fk_2 foreign key (refererSite) references Site (seq)
 );
 
 
