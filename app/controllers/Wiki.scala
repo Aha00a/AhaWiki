@@ -22,7 +22,6 @@ import logics.wikis.interpreters.Interpreters
 import models.ContextSite.RequestWrapper
 import models._
 import models.tables.Page
-import models.tables.VisitLog
 import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
@@ -69,22 +68,6 @@ class Wiki @Inject()(implicit val
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
-      val remoteAddress = request.remoteAddressWithXRealIp
-      val userAgent = request.userAgent.getOrElse("")
-
-      request.referer match {
-        case Some(referer) =>
-          val url = new URL(referer)
-          val authority = url.getAuthority
-          Site.selectWhereDomain(authority) match {
-            case Some(site) if url.getPath.startsWith("/w/") =>
-              VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, Some(site.seq), url.getPath.substring(3))
-            case _ =>
-              VisitLog.insert(site.seq, name, remoteAddress, userAgent, referer, None, null)
-          }
-        case _ =>
-          VisitLog.insert(site.seq, name, remoteAddress, userAgent, null, None, null)
-      }
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
