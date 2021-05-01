@@ -1,5 +1,6 @@
 package logics.wikis.interpreters.ahaMark
 
+import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RegexUtil
 import models.ContextWikiPage
 
@@ -49,7 +50,7 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
       } else {
         """ class="missing""""
       }
-      s"""<a href="${RegexUtil.escapeDollar(href)}"$attrTarget$attrCss>${RegexUtil.escapeDollar(display)}</a>"""
+      "<a href=\"" + RegexUtil.escapeDollar(href.escapeHtml()) + "\"" + attrTarget + attrCss + ">" + RegexUtil.escapeDollar(display.escapeHtml()) + "</a>"
     }
   }
 
