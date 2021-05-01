@@ -25,6 +25,7 @@ object MacroIncludeDays extends TraitMacro {
       implicit val database: Database = wikiContext.database
       val set = wikiContext.setPageNameByPermission
 
+      // TODO: connection management
       getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains).reverse.map(pageName => {
         implicit val wikiContext1: ContextWikiPage = wikiContext.push(pageName)
         MacroInclude.doApply(pageName, content => {
