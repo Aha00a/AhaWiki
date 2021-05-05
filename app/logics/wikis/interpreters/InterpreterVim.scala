@@ -105,10 +105,16 @@ object InterpreterVim extends TraitInterpreter with Logging {
 
         if(cacheFileHtmlRaw.exists()) {
           val lines = Using(scala.io.Source.fromFile(cacheFileHtmlRaw))(_.getLines().toSeq)
-          val style = lines.dropWhile(!_.startsWith("<style ")).takeWhile(_ != "</style>").filterNot(_.startsWith("*")).map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre")).mkString("\n") + "</style>"
+          val style = lines.dropWhile(!_.startsWith("<style")).takeWhile(_ != "</style>")
+          val styleReplaced = style
+            .filterNot(l => l.startsWith("*"))
+            .map(_.replaceAll("^(\\.)", s".AhaWiki .wikiContent .class_$md5 pre $$1"))
+            .map(_.replaceAll("^pre", s".AhaWiki .wikiContent .class_$md5 pre"))
+            .map(_.replaceAll("^body", s".AhaWiki .wikiContent .class_$md5 pre"))
+          val styleString = styleReplaced.mkString("\n") + "</style>"
           val pre = lines.dropWhile(!_.startsWith("<pre")).takeWhile(_ != "</pre>").mkString("\n") + "</pre>"
 
-          cacheFileHtml.writeAll(style + pre)
+          cacheFileHtml.writeAll(styleString + pre)
         } else {
           val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines().toSeq)
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
