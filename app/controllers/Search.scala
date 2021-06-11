@@ -51,7 +51,7 @@ controllerComponents: ControllerComponents,
 
     var permissionDiff = false
     val seq: Seq[SearchResultSummary] = q.toOption.map(
-      models.tables.Page.pageSearch(_)
+      q => models.tables.Page.pageSearch(q)
         .filter(sr => {
           val pageContent = PageContent(sr.content)
           val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
@@ -60,12 +60,12 @@ controllerComponents: ControllerComponents,
           val readable = permissionLogic.permitted(sr.name, id, Permission.read)
           val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
 
-          if(isReadableFromLegacy != readable) {
+          if (isReadableFromLegacy != readable) {
             logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
             permissionDiff = true
           }
 
-          if(isWritableFromLagacy != editable) {
+          if (isWritableFromLagacy != editable) {
             logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
             permissionDiff = true
           }
