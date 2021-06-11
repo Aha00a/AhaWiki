@@ -306,23 +306,35 @@ class Test @Inject()(implicit val
       q => {
         import models.tables.SearchResult
         val seqSearchResult: Seq[SearchResult] = models.tables.Page.pageSearch(q)
-        val read = seqSearchResult
-          .filter(sr => {
-            val pageContent = PageContent(sr.content)
-            val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-            val readable = permissionLogic.permitted(sr.name, id, Permission.read)
-            isReadableFromLegacy != readable
-          }).map(_.name)
-        val write = seqSearchResult
-          .filter(sr => {
-            val pageContent = PageContent(sr.content)
-            val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
-            val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
-            isWritableFromLagacy != editable
-          }).map(_.name)
         Map(
-          "read" -> read,
-          "write" -> write,
+          "readLegacyOnly" -> seqSearchResult
+            .filter(sr => {
+              val pageContent = PageContent(sr.content)
+              val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+              val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+              isReadableFromLegacy != readable && isReadableFromLegacy
+            }).map(_.name),
+          "readNewOnly" -> seqSearchResult
+            .filter(sr => {
+              val pageContent = PageContent(sr.content)
+              val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+              val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+              isReadableFromLegacy != readable && readable
+            }).map(_.name),
+          "writeLegacyOnly" -> seqSearchResult
+            .filter(sr => {
+              val pageContent = PageContent(sr.content)
+              val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
+              val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+              isWritableFromLagacy != editable && isWritableFromLagacy
+            }).map(_.name),
+          "writeNewOnly" -> seqSearchResult
+            .filter(sr => {
+              val pageContent = PageContent(sr.content)
+              val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
+              val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+              isWritableFromLagacy != editable && editable
+            }).map(_.name),
         )
       }
     ).getOrElse(Map())
