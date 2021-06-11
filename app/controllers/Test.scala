@@ -1,5 +1,11 @@
 package controllers
 
+import java.util.Date
+
+import logics.PermissionLogic
+import logics.SessionLogic
+import logics.wikis.WikiPermission
+import models.tables.Permission
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import anorm.SQL
@@ -27,6 +33,7 @@ class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
                      actorSystem: ActorSystem,
                      database: Database,
+                     environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
                      wsClient: WSClient,
@@ -274,9 +281,61 @@ class Test @Inject()(implicit val
     Ok(views.html.Test.gradient(""))
   }
 
-  def permission: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.Search.index("#!read"))
-  }
+  def permission: Action[AnyContent] = Action { implicit request =>database.withConnection { implicit connection =>
+
+    import models.ContextSite.RequestWrapper
+    import models.tables.SearchResultSummary
+    import models.tables.Site
+    import play.api.Mode
+    
+    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
+    implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+    val q = "#!read";
+    val wikiPermission = WikiPermission()
+    val id = SessionLogic.getId(request).getOrElse("")
+    val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq() // TODO:
+    val permissionLogic = new PermissionLogic(seqPermission)
+
+    var permissionDiff = false
+    val seq: Seq[SearchResultSummary] = q.toOption.map(
+      q => {
+        val value = models.tables.Page.pageSearch(q)
+          .filter(sr => {
+            val pageContent = PageContent(sr.content)
+            val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+            val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
+
+            val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+            val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+
+            if (isReadableFromLegacy != readable) {
+              logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
+              permissionDiff = true
+            }
+
+            if (isWritableFromLagacy != editable) {
+              logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
+              permissionDiff = true
+            }
+
+            isReadableFromLegacy
+          })
+        value
+          .sortBy(_.dateTime)(Ordering[Date].reverse)
+          .partition(_.name == q)
+          .concat()
+          .map(_.summarise(q))
+      }
+    ).getOrElse(Seq.empty)
+
+    if (permissionDiff) {
+      logger.error(permissionLogic.toLogString("permission"))
+    }
+
+    Ok(views.html.Search.search(q, seq))
+  }}
 }
 
 
