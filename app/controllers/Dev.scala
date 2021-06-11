@@ -15,16 +15,16 @@ class Dev @Inject()(
                      @javax.inject.Named("db-actor") actorAhaWiki: ActorRef
                    ) extends BaseController {
   def deleteVimCache(md5:String): Action[AnyContent] = Action { implicit request =>
-    val result = Redirect(request.refererOrRoot)
-
-    if(InterpreterVim.getCacheFileHtml(InterpreterVim.getCacheDir, md5).delete())
-    {
-      result.flashing("success" -> "Reindex Succeed.")
-    }
-    else
-    {
-      result.flashing("error" -> "Reindex Failed")
-    }
+    Redirect(request.refererOrRoot).flashing(
+      if(InterpreterVim.getCacheFileHtml(InterpreterVim.getCacheDir, md5).delete())
+      {
+        "success" -> "Reindex Succeed."
+      }
+      else
+      {
+        "error" -> "Reindex Failed"
+      }
+    )
   }
 }
 
