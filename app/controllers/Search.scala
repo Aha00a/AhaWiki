@@ -51,31 +51,34 @@ controllerComponents: ControllerComponents,
 
     var permissionDiff = false
     val seq: Seq[SearchResultSummary] = q.toOption.map(
-      q => models.tables.Page.pageSearch(q)
-        .filter(sr => {
-          val pageContent = PageContent(sr.content)
-          val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-          val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
+      q => {
+        val value = models.tables.Page.pageSearch(q)
+          .filter(sr => {
+            val pageContent = PageContent(sr.content)
+            val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
+            val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
 
-          val readable = permissionLogic.permitted(sr.name, id, Permission.read)
-          val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+            val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+            val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
 
-          if (isReadableFromLegacy != readable) {
-            logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
-            permissionDiff = true
-          }
+            if (isReadableFromLegacy != readable) {
+              logger.error(s"${sr.name}\treadable\t$isReadableFromLegacy\t$readable")
+              permissionDiff = true
+            }
 
-          if (isWritableFromLagacy != editable) {
-            logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
-            permissionDiff = true
-          }
+            if (isWritableFromLagacy != editable) {
+              logger.error(s"${sr.name}\teditable\t$isWritableFromLagacy\t$editable")
+              permissionDiff = true
+            }
 
-          isReadableFromLegacy
-        })
-        .sortBy(_.dateTime)(Ordering[Date].reverse)
-        .partition(_.name == q)
-        .concat()
-        .map(_.summarise(q))
+            isReadableFromLegacy
+          })
+        value
+          .sortBy(_.dateTime)(Ordering[Date].reverse)
+          .partition(_.name == q)
+          .concat()
+          .map(_.summarise(q))
+      }
     ).getOrElse(Seq.empty)
 
     if (permissionDiff) {
