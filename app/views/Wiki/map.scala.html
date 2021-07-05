@@ -148,7 +148,7 @@
                                     } else if(s.startsWith("http")){
                                         <td>
                                             {s.split("\\s").zipWithIndex.map {
-                                                case (u, i) => <span style="display: inline-block"><a href={u} target="_blank" rel="noopener">{i + 1}</a></span>
+                                                case (u, i) => <span style="display: inline-block"><a href={u} target="_blank" rel="noopener">{i + 1}</a>&nbsp;</span>
                                                 case _ => ""
                                             }}
                                         </td>
