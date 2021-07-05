@@ -117,7 +117,7 @@
                                 "labelOrigin": {
                                     "x": 0,
                                     "y": 2
-                                }                             
+                                }
                             }'
                             data-title='"@locationLastVisited.location.name - @locationLastVisited.location.address"'
                             data-label='{
@@ -146,7 +146,12 @@
                                     } else if(seqHeader(i) == "Address") {
                                             <td><a href={locationLastVisited.location.urlMap} target="_blank" rel="noopener">{locationLastVisited.location.address}</a></td>
                                     } else if(s.startsWith("http")){
-                                        <td><a href={s} target="_blank" rel="noopener">Link</a></td>
+                                        <td>
+                                            {s.split("\\s").zipWithIndex.map {
+                                                case (u, i) => <span style="display: inline-block"><a href={u} target="_blank" rel="noopener">{i + 1}</a></span>
+                                                case _ => ""
+                                            }}
+                                        </td>
                                     } else {
                                         <td>{s}</td>
                                     }
@@ -325,7 +330,7 @@
             function fitBounds() {
                 if(!markers.length)
                     return;
-                
+
                 var bounds = new google.maps.LatLngBounds();
                 for (var i = 0; i < markers.length; i++) {
                     bounds.extend(markers[i].position);
