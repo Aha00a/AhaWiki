@@ -18,7 +18,7 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
       val uri: String = requestHeader.uri
       if(uri.isNotNullOrEmpty && !uri.startsWith("/public/"))
         logger.info(Seq(
-          requestHeader.host,
+          requestHeader.host.padRight(25),
           requestHeader.remoteAddressWithXRealIp.padRight(15),
           s"${duration}ms".padLeft(7),
           result.header.status,
