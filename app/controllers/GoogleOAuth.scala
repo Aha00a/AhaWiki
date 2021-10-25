@@ -2,9 +2,11 @@ package controllers
 
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleOAuthApi
+
 import javax.inject.Inject
 import logics.{ApplicationConf, SessionLogic}
 import play.api.Configuration
+import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -19,11 +21,15 @@ class GoogleOAuth @Inject()(
   wsClient: WSClient,
   executionContext: ExecutionContext,
   configuration: Configuration
-) extends BaseController {
+) extends BaseController with Logging {
   private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
-    routes.GoogleOAuth.callback("").absoluteURL().replace("?code=", "")
+    val absoluteUrl = routes.GoogleOAuth.callback("").absoluteURL()
+    logger.info("googleApiRedirectUri")
+    logger.info(request.secure.toString)
+    logger.info(absoluteUrl)
+    absoluteUrl.replace("?code=", "")
   }
 
   def login = Action { implicit request =>
