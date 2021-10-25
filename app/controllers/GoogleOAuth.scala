@@ -27,6 +27,7 @@ class GoogleOAuth @Inject()(
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     val absoluteUrl = routes.GoogleOAuth.callback("").absoluteURL()
     logger.info("googleApiRedirectUri")
+    logger.info(request.uri)
     logger.info(request.secure.toString)
     logger.info(absoluteUrl)
     absoluteUrl.replace("?code=", "")
