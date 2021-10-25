@@ -25,7 +25,7 @@ class GoogleOAuth @Inject()(
   private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
-    val absoluteUrl = routes.GoogleOAuth.callback("").absoluteURL()
+    val absoluteUrl = routes.GoogleOAuth.callback("").absoluteURL(secure = true)
     logger.info("googleApiRedirectUri")
     logger.info(request.uri)
     logger.info(request.secure.toString)
