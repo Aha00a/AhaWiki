@@ -3,38 +3,38 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v13/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v21/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans KR';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v13/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v21/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/notosans/v12/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/notosans/v12/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/notosans/v12/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/notosans/v12/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
@@ -177,8 +177,17 @@ body {
 .AhaWiki .commonAhaWiki h5,
 .AhaWiki .commonAhaWiki h6 {
   margin: 0;
-  text-shadow: 1px 1px 2px #99a;
   word-break: keep-all;
+}
+@media screen {
+  .AhaWiki .commonAhaWiki h1,
+  .AhaWiki .commonAhaWiki h2,
+  .AhaWiki .commonAhaWiki h3,
+  .AhaWiki .commonAhaWiki h4,
+  .AhaWiki .commonAhaWiki h5,
+  .AhaWiki .commonAhaWiki h6 {
+    text-shadow: 1px 1px 2px #99a;
+  }
 }
 .AhaWiki .commonAhaWiki h1 .headingNumber,
 .AhaWiki .commonAhaWiki h2 .headingNumber,
@@ -558,8 +567,17 @@ body {
 .AhaWiki .wikiContent h5,
 .AhaWiki .wikiContent h6 {
   margin: 0;
-  text-shadow: 1px 1px 2px #99a;
   word-break: keep-all;
+}
+@media screen {
+  .AhaWiki .wikiContent h1,
+  .AhaWiki .wikiContent h2,
+  .AhaWiki .wikiContent h3,
+  .AhaWiki .wikiContent h4,
+  .AhaWiki .wikiContent h5,
+  .AhaWiki .wikiContent h6 {
+    text-shadow: 1px 1px 2px #99a;
+  }
 }
 .AhaWiki .wikiContent h1 .headingNumber,
 .AhaWiki .wikiContent h2 .headingNumber,
@@ -1059,8 +1077,17 @@ body {
 .AhaWiki .paperContent .page .pageContent h5,
 .AhaWiki .paperContent .page .pageContent h6 {
   margin: 0;
-  text-shadow: 1px 1px 2px #99a;
   word-break: keep-all;
+}
+@media screen {
+  .AhaWiki .paperContent .page .pageContent h1,
+  .AhaWiki .paperContent .page .pageContent h2,
+  .AhaWiki .paperContent .page .pageContent h3,
+  .AhaWiki .paperContent .page .pageContent h4,
+  .AhaWiki .paperContent .page .pageContent h5,
+  .AhaWiki .paperContent .page .pageContent h6 {
+    text-shadow: 1px 1px 2px #99a;
+  }
 }
 .AhaWiki .paperContent .page .pageContent h1 .headingNumber,
 .AhaWiki .paperContent .page .pageContent h2 .headingNumber,
