@@ -396,7 +396,8 @@ class Wiki @Inject()(implicit val
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
-      Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body)}</div></div>""")
+      val additionalInfo = getAhaMarkAdditionalInfo(name)
+      Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")
     }
   }
 
