@@ -152,7 +152,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def result(): String = {
       variableHolderState := State.Normal
-      if (arrayBufferHeading.length > 5)
+      if (arrayBufferHeading.length > 5 + 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
       extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(arrayBuffer.mkString("\n"))))
