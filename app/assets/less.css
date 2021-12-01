@@ -12,6 +12,9 @@
   font-display: swap;
   src: url(https://fonts.gstatic.com/s/notosanskr/v21/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
 }
+.defaultFont {
+  font-family: 'Noto Sans KR', sans-serif;
+}
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
@@ -35,6 +38,9 @@
   font-style: normal;
   font-weight: 700;
   src: url(https://fonts.gstatic.com/s/notosans/v21/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
+}
+.defaultFont {
+  font-family: 'Noto Sans', sans-serif;
 }
 @font-face {
   font-family: 'Ubuntu Mono';
@@ -64,10 +70,6 @@ html,
 body {
   padding: 0;
   margin: 0;
-  font-family: 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans', sans-serif;
-}
-.defaultFont {
   font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
 }
