@@ -23,12 +23,11 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
         userAgent != "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)"
       ) {
         logger.info(Seq(
-          requestHeader.host.padRight(25),
-          requestHeader.remoteAddressWithXRealIp.padRight(15),
-          s"${duration}ms".padLeft(7),
           requestHeader.method,
+          (requestHeader.host + uri).padRight(64),
           result.header.status,
-          uri,
+          s"${duration}ms".padLeft(7),
+          requestHeader.remoteAddressWithXRealIp.padRight(15),
           userAgent,
         ).mkString("\t"))
       }
