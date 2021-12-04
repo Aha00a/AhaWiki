@@ -27,7 +27,7 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
           result.header.status,
           s"${duration}ms".padLeft(7),
           requestHeader.remoteAddressWithXRealIp.padRight(15),
-          (requestHeader.host + uri).padRight(64),
+          requestHeader.host + uri,
           userAgent,
         ).mkString("\t"))
       }
