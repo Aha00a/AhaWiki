@@ -16,16 +16,22 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
       val uri: String = requestHeader.uri
-      if(uri.isNotNullOrEmpty && !uri.startsWith("/public/"))
+      val userAgent = requestHeader.userAgent.getOrElse("")
+      if(
+        uri.isNotNullOrEmpty &&
+        !uri.startsWith("/public/") &&
+        userAgent != "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)"
+      ) {
         logger.info(Seq(
           requestHeader.host.padRight(25),
           requestHeader.remoteAddressWithXRealIp.padRight(15),
           s"${duration}ms".padLeft(7),
-          result.header.status,
           requestHeader.method,
+          result.header.status,
           uri,
-          requestHeader.userAgent.getOrElse(""),
+          userAgent,
         ).mkString("\t"))
+      }
 
       result.withHeaders("Request-Time" -> duration.toString)
     })
