@@ -44,6 +44,7 @@ class ActorAhaWiki @Inject()(implicit
 
   import ActorAhaWiki._
   import models.ContextSite.RequestWrapper
+
   implicit val provider: RequestWrapper = RequestWrapper.empty
   val seqStopWord: Seq[String] =
     """at in on of by to is the
@@ -56,34 +57,35 @@ class ActorAhaWiki @Inject()(implicit
       context.self ! CalculateLink(site, name, i, length)
     }
 
-    case CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
-      database.withConnection { implicit connection =>
-        implicit val implicitSite: Site = site;
-        Page.selectLastRevision(name) foreach { page =>
-          import logics.wikis.RenderingMode
+    case CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) =>
+      StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
+        database.withConnection { implicit connection =>
+          implicit val implicitSite: Site = site;
+          Page.selectLastRevision(name) foreach { page =>
+            import logics.wikis.RenderingMode
 
-          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
-          val text = Interpreters.toText(page.content)
-          val seqWord = text
-            .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-            .toLowerCase()
-            .split("""\s""").toSeq
-            .flatMap(_.split("""[/@.]""").toSeq)
-            .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
-            .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-            .filterNot(s => s.length < 2)
-            .filterNot(s => s.length > 15)
-          val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-          val wordCount = seqWordFiltered.groupByCount()
-          logger.info(text)
-          logger.info(seqWordFiltered.mkString(" "))
-          logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
+            val text = Interpreters.toText(page.content)
+            val seqWord = text
+              .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+              .toLowerCase()
+              .split("""\s""").toSeq
+              .flatMap(_.split("""[/@.]""").toSeq)
+              .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
+              .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
+              .filterNot(s => s.length < 2)
+              .filterNot(s => s.length > 15)
+            val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
+            val wordCount = seqWordFiltered.groupByCount()
+            logger.info(text)
+            logger.info(seqWordFiltered.mkString(" "))
+            logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
-          Page.updateSimilarPage(name, wordCount)
+            Page.updateSimilarPage(name, wordCount)
+          }
         }
       }
-    }
     case CalculateLink(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
       database.withConnection { implicit connection =>
         implicit val implicitSite: Site = site;
