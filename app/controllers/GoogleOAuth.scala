@@ -2,10 +2,13 @@ package controllers
 
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleOAuthApi
+
 import javax.inject.Inject
 import logics.{ApplicationConf, SessionLogic}
 import play.api.Configuration
+import play.api.Logging
 import play.api.cache.SyncCacheApi
+import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
@@ -15,10 +18,11 @@ import scala.concurrent.ExecutionContext
 class GoogleOAuth @Inject()(
   implicit val
   controllerComponents: ControllerComponents,
+  database: Database,
   wsClient: WSClient,
   executionContext: ExecutionContext,
   configuration: Configuration
-) extends BaseController {
+) extends BaseController with Logging {
   private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
@@ -35,6 +39,17 @@ class GoogleOAuth @Inject()(
   def callback(code: String) = Action.async { implicit request =>
     GoogleOAuthApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
       case Some(email) =>
+        database.withConnection { implicit connection =>
+          val user = models.tables.User.selectWhereEmail(email)
+          user match {
+            case Some(user) =>
+              logger.info(user.toString)
+            case None =>
+              val optionSeq = models.tables.User.insert(email)
+              logger.error(optionSeq.toString)
+          }
+        }
+
         Redirect(request.flash.get("redirect").getOrElse("/"))
           .withSession(SessionLogic.login(request, email))
           .flashing("success" -> "Successfully logged in.")
