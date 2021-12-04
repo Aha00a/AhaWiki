@@ -259,7 +259,7 @@ class Wiki @Inject()(implicit val
 
     if (secretKey != "") {
       wsClient.url("https://www.google.com/recaptcha/api/siteverify").post(Map("secret" -> Seq(secretKey), "response" -> Seq(recaptcha), "remoteip" -> Seq(remoteAddress))).map(response => {
-        logger.info(response.body)
+        // logger.info(response.body)
         val json: JsValue = response.json
         if (!(json \ "success").as[Boolean]) {
           val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
