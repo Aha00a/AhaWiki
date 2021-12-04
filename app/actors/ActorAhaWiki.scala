@@ -67,22 +67,24 @@ class ActorAhaWiki @Inject()(implicit
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
             val text = Interpreters.toText(page.content)
-            val seqWord = text
-              .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-              .toLowerCase()
-              .split("""\s""").toSeq
-              .flatMap(_.split("""[/@.]""").toSeq)
-              .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
-              .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-              .filterNot(s => s.length < 2)
-              .filterNot(s => s.length > 15)
-            val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-            val wordCount = seqWordFiltered.groupByCount()
-            logger.info(text)
-            logger.info(seqWordFiltered.mkString(" "))
-            logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
+            if(!text.isNotNullOrEmpty) {
+              val seqWord = text
+                .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+                .toLowerCase()
+                .split("""\s""").toSeq
+                .flatMap(_.split("""[/@.]""").toSeq)
+                .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
+                .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
+                .filterNot(s => s.length < 2)
+                .filterNot(s => s.length > 15)
+              val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
+              val wordCount = seqWordFiltered.groupByCount()
+              logger.info(text)
+              logger.info(seqWordFiltered.mkString(" "))
+              logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
-            Page.updateSimilarPage(name, wordCount)
+              Page.updateSimilarPage(name, wordCount)
+            }
           }
         }
       }
