@@ -349,7 +349,7 @@
                     @for(v <- locationLastVisited.location.raw.filter(_.isNotNullOrEmpty)) {
                         <div class="rawItem">
                             @if(v.startsWith("http")) {
-                                <a href="@v" target="_blank" rel="noopener">@v</a>
+                                @v.split("\\s+").map(w => <a href={w} target="_blank" rel="noopener">{w}</a>)
                             } else {
                                 @v
                             }
