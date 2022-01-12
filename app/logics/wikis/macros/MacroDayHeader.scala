@@ -14,7 +14,7 @@ object MacroDayHeader extends TraitMacro {
         Interpreters.toHtmlString(
           s"""
              |[[LinkDate($y-$m-$d)]]
-             |= [[Html(${AhaMarkLink(s"$y-$m").toHtmlString()})]]-$d [[WeekdayName($y-$m-$d)]]
+             |= ["$y-$m"]-$d [[WeekdayName($y-$m-$d)]]
              |""".stripMargin
         )
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop != wikiContext.nameBottom =>
