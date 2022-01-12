@@ -93,7 +93,6 @@ object InterpreterWiki extends TraitInterpreter {
     override def heading(heading: String, title: String, id: String): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
-      val idNotEmpty = if(id == null) title.replaceAll("""\s+""", "-") else id
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
       val titleForToc = title
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
@@ -102,6 +101,7 @@ object InterpreterWiki extends TraitInterpreter {
         .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)\]""", "$2")
         .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
         .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)\]""", "$2")
+      val idNotEmpty = if(id == null) titleForToc.replaceAll("""\s+""", "-") else id
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
       arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
