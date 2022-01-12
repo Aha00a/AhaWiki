@@ -93,7 +93,7 @@ object InterpreterWiki extends TraitInterpreter {
     override def heading(heading: String, title: String, id: String): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
-      val idNotEmpty = if(id == null) title.replaceAll("""[^\w가-힣]""", "") else id
+      val idNotEmpty = if(id == null) title.replaceAll("""\s+""", "-") else id
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
       val titleForToc = title
         .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
