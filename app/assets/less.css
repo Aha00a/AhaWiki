@@ -78,6 +78,7 @@ body {
 }
 .AhaWiki a {
   color: #00b;
+  word-break: break-word;
 }
 .AhaWiki a[target=_blank]:before {
   content: url("/public/img/iconLinkExternal.16x16.png");
