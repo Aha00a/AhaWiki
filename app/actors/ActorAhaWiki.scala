@@ -67,13 +67,12 @@ class ActorAhaWiki @Inject()(implicit
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
             val text = Interpreters.toText(page.content)
-            if(!text.isNotNullOrEmpty) {
+            if(!text.isNullOrEmpty) {
               val seqWord = text
                 .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+                .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", "")
                 .toLowerCase()
-                .split("""\s""").toSeq
-                .flatMap(_.split("""[/@.]""").toSeq)
-                .map(s => s.replaceAll("""[{\}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", ""))
+                .split("""[ /@.]""").toSeq
                 .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
                 .filterNot(s => s.length < 2)
                 .filterNot(s => s.length > 15)
