@@ -1055,7 +1055,7 @@ html, body {
 					font-size: 1.5em;
 				}
 			}
-			>.sheetLink, >.refreshLink {
+			>.poi, >.sheetLink, >.refreshLink {
 				position: absolute;
 				background: none rgb(255, 255, 255);
 				border: 0;
@@ -1065,6 +1065,28 @@ html, body {
 				border-radius: 2px;
 				box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
                 padding: 9px 12px;
+			}
+			>.poi {
+				top: 10px;
+				left: 160px;
+				.fas {
+					&.fa-store {
+						display: none;
+					}
+					&.fa-store-slash {
+						display: inherit;
+					}
+				}
+				&.on {
+					.fas {
+						&.fa-store {
+							display: inherit;
+						}
+						&.fa-store-slash {
+							display: none;
+						}
+					}
+				}
 			}
 			>.sheetLink {
 				top: 10px;

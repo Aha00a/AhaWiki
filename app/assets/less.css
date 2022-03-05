@@ -3,14 +3,14 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v21/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v25/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans KR';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v21/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v25/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
 }
 .defaultFont {
   font-family: 'Noto Sans KR', sans-serif;
@@ -19,25 +19,25 @@
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v25/o-0OIpQlx3QUlC5A4PNr4ARCQ_w.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v25/o-0TIpQlx3QUlC5A4PNr4Az5ZuyDzWg.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v25/o-0IIpQlx3QUlC5A4PNr5TRF.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/notosans/v21/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v25/o-0NIpQlx3QUlC5A4PNjXhFVZNyE.ttf) format('truetype');
 }
 .defaultFont {
   font-family: 'Noto Sans', sans-serif;
@@ -46,25 +46,25 @@
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v10/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v14/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v10/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v14/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v10/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v14/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v10/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v14/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
 }
 html,
 body {
@@ -1919,6 +1919,7 @@ body {
 .AhaWiki .interpreterMap > .mapArea .googleMapsInfoWindow .score {
   font-size: 1.5em;
 }
+.AhaWiki .interpreterMap > .mapArea > .poi,
 .AhaWiki .interpreterMap > .mapArea > .sheetLink,
 .AhaWiki .interpreterMap > .mapArea > .refreshLink {
   position: absolute;
@@ -1930,6 +1931,22 @@ body {
   border-radius: 2px;
   box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
   padding: 9px 12px;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi {
+  top: 10px;
+  left: 160px;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi .fas.fa-store {
+  display: none;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi .fas.fa-store-slash {
+  display: inherit;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi.on .fas.fa-store {
+  display: inherit;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi.on .fas.fa-store-slash {
+  display: none;
 }
 .AhaWiki .interpreterMap > .mapArea > .sheetLink {
   top: 10px;

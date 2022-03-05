@@ -18,6 +18,32 @@
                 </div>
             </div>
             @if(url && sheetName) {
+                <div class="poi" id="store@id">
+                    <i class="fas fa-store"></i>
+                    <i class="fas fa-store-slash"></i>
+                </div>
+                <script type="text/javascript">
+                    $(function () {
+                        var id = '@id';
+                        $('#store@id').click(function () {
+                            var $this = $(this);
+                            if($this.hasClass('on')) {
+                                objectMap[id].setOptions({
+                                    styles: [
+                                        {
+                                            featureType: "poi.business",
+                                            stylers: [{ visibility: "off" }],
+                                        }
+                                    ],
+                                });
+                            } else {
+                                objectMap[id].setOptions({ styles: [] });
+                            }
+                            $this.toggleClass('on');
+                        });
+                    });
+                </script>
+
                 <div class="sheetLink">
                     <a href="@url" target="_blank" rel="noopener">Data Source</a>
                 </div>
@@ -194,10 +220,14 @@
         }
 
         arrayOnGoogleMapLoaded.push(function () {
-            var map = new google.maps.Map(document.getElementById('@id'), {
-                options: {
-                    gestureHandling: 'greedy'
-                }
+            var id = '@id';
+            var map = new google.maps.Map(document.getElementById(id), {
+                styles: [
+                    {
+                        featureType: "poi.business",
+                        stylers: [{ visibility: "off" }],
+                    }
+                ],
             });
 
 
@@ -338,6 +368,10 @@
 
                 map.fitBounds(bounds);
             }
+            return {
+                id: id,
+                map: map,
+            };
         });
     </script>
     @for((locationLastVisited, i) <- seqLocationWithCalculatedField.filter(!_.latLng.lat.isNaN).zipWithIndex) {

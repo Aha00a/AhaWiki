@@ -54,9 +54,11 @@
         @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
             <script type="text/javascript">
                 var arrayOnGoogleMapLoaded = [];
+                var objectMap = {};
                 function onGoogleMapLoaded() {
                     for (var i = 0; i < arrayOnGoogleMapLoaded.length; i++) {
-                        arrayOnGoogleMapLoaded[i]();
+                        var result = arrayOnGoogleMapLoaded[i]();
+                        objectMap[result.id] = result.map;
                     }
                 }
             </script>
