@@ -105,24 +105,26 @@ class ActorAhaWiki @Inject()(implicit
       }
     }
     case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
-      implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
-      wsClient
-        .url("https://maps.googleapis.com/maps/api/geocode/json")
-        .withQueryStringParameters(
-          "address" -> address,
-          "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
-        )
-        .get()
-        .map(r => {
-          logger.info(s"$address - ${r.json}")
-          (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
-        })
-        .map(latLng => {
-          database.withTransaction { implicit connection =>
-            import models.tables.GeocodeCache
-            GeocodeCache.replace(address, latLng)
-          }
-        })
+      if(address.isNotNullOrEmpty) {
+        implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
+        wsClient
+          .url("https://maps.googleapis.com/maps/api/geocode/json")
+          .withQueryStringParameters(
+            "address" -> address,
+            "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
+          )
+          .get()
+          .map(r => {
+            logger.info(s"$address - ${r.json}")
+            (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
+          })
+          .map(latLng => {
+            database.withTransaction { implicit connection =>
+              import models.tables.GeocodeCache
+              GeocodeCache.replace(address, latLng)
+            }
+          })
+      }
     }
     case _ =>
       logger.error("Unknown")
