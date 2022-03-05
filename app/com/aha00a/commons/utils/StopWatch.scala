@@ -12,7 +12,7 @@ object StopWatch extends Logging {
       logger.info(s"$name\tStarted")
       operation
     } finally {
-      logger.info(s"$name\tDone - ${Duration.between(LocalDateTime.now(), now)}")
+      logger.info(s"$name\tDone - ${Duration.between(now, LocalDateTime.now())}")
     }
   }
 }
