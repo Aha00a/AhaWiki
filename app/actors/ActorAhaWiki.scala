@@ -72,7 +72,7 @@ class ActorAhaWiki @Inject()(implicit
                 .replaceAll("""([a-z])([A-Z])""", "$1 $2")
                 .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", "")
                 .toLowerCase()
-                .split("""[ /@.]""").toSeq
+                .split("""[\s/@.]""").toSeq
                 .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
                 .filterNot(s => s.length < 2)
                 .filterNot(s => s.length > 15)
