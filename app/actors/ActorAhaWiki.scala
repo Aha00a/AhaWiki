@@ -10,9 +10,7 @@ import models.LatLng
 import models.ContextWikiPage
 import models.tables.Page
 import play.api.Configuration
-import play.api.Environment
 import play.api.Logging
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.json.Json
 import play.api.libs.json.Reads
@@ -51,6 +49,7 @@ class ActorAhaWiki @Inject()(implicit
       |gmail com http https
       |""".stripMargin.split("""\s""").toSeq
 
+  //noinspection ScalaUnusedSymbol
   def receive: PartialFunction[Any, Unit] = {
     case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(c.toString) {
@@ -61,7 +60,7 @@ class ActorAhaWiki @Inject()(implicit
     case c@CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(c.toString) {
         database.withConnection { implicit connection =>
-          implicit val implicitSite: Site = site;
+          implicit val implicitSite: Site = site
           Page.selectLastRevision(name) foreach { page =>
             import logics.wikis.RenderingMode
 
@@ -92,7 +91,7 @@ class ActorAhaWiki @Inject()(implicit
     case c@CalculateLink(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(c.toString) {
         database.withConnection { implicit connection =>
-          implicit val implicitSite: Site = site;
+          implicit val implicitSite: Site = site
           Page.selectLastRevision(name) foreach { page =>
             import logics.wikis.RenderingMode
             import models.tables.Link
