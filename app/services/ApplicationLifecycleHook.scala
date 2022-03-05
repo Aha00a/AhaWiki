@@ -36,7 +36,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     Future.successful(())
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(30 seconds, 1 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(25 seconds, 1 minutes)(() => {
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
