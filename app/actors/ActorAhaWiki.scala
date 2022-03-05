@@ -70,7 +70,9 @@ class ActorAhaWiki @Inject()(implicit
             if(!text.isNullOrEmpty) {
               val seqWord = text
                 .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-                .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", "")
+                .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
+                .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
+                .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
                 .toLowerCase()
                 .split("""[\s/@.]""").toSeq
                 .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
@@ -78,7 +80,6 @@ class ActorAhaWiki @Inject()(implicit
                 .filterNot(s => s.length > 15)
               val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
               val wordCount = seqWordFiltered.groupByCount()
-              logger.info(text)
               logger.info(seqWordFiltered.mkString(" "))
               logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
