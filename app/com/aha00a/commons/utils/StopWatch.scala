@@ -9,10 +9,10 @@ object StopWatch extends Logging {
   def apply[T](name:String)(operation: => T): T = {
     val now = LocalDateTime.now()
     try {
-      logger.info(s"Start: $name")
+      logger.info(s"$name\tStarted")
       operation
     } finally {
-      logger.info(s"Done : $name - ${Duration.between(LocalDateTime.now(), now)}")
+      logger.info(s"$name\tDone - ${Duration.between(LocalDateTime.now(), now)}")
     }
   }
 }

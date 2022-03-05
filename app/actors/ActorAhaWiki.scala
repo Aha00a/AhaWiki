@@ -52,13 +52,14 @@ class ActorAhaWiki @Inject()(implicit
       |""".stripMargin.split("""\s""").toSeq
 
   def receive: PartialFunction[Any, Unit] = {
-    case Calculate(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculate($i/$length)") {
-      context.self ! CalculateCosineSimilarity(site, name, i, length)
-      context.self ! CalculateLink(site, name, i, length)
-    }
+    case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
+      StopWatch(c.toString) {
+        context.self ! CalculateCosineSimilarity(site, name, i, length)
+        context.self ! CalculateLink(site, name, i, length)
+      }
 
-    case CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) =>
-      StopWatch(s"$name\tCalculateCosineSimilarity($i/$length)") {
+    case c@CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) =>
+      StopWatch(c.toString) {
         database.withConnection { implicit connection =>
           implicit val implicitSite: Site = site;
           Page.selectLastRevision(name) foreach { page =>
@@ -88,44 +89,46 @@ class ActorAhaWiki @Inject()(implicit
           }
         }
       }
-    case CalculateLink(site: Site, name: String, i: Int, length: Int) => StopWatch(s"$name\tCalculateLink($i/$length)") {
-      database.withConnection { implicit connection =>
-        implicit val implicitSite: Site = site;
-        Page.selectLastRevision(name) foreach { page =>
-          import logics.wikis.RenderingMode
-          import models.tables.Link
-          import models.tables.SchemaOrg
-          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
-          val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-          Page.updateLink(page.name, seqLink)
+    case c@CalculateLink(site: Site, name: String, i: Int, length: Int) =>
+      StopWatch(c.toString) {
+        database.withConnection { implicit connection =>
+          implicit val implicitSite: Site = site;
+          Page.selectLastRevision(name) foreach { page =>
+            import logics.wikis.RenderingMode
+            import models.tables.Link
+            import models.tables.SchemaOrg
+            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+            val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
+            Page.updateLink(page.name, seqLink)
 
-          val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-          Page.updateSchemaOrg(name, seqSchemaOrg)
+            val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+            Page.updateSchemaOrg(name, seqSchemaOrg)
+          }
         }
       }
-    }
-    case Geocode(address) => StopWatch(s"Query Google Geocode - $address") {
-      if(address.isNotNullOrEmpty) {
-        implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
-        wsClient
-          .url("https://maps.googleapis.com/maps/api/geocode/json")
-          .withQueryStringParameters(
-            "address" -> address,
-            "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
-          )
-          .get()
-          .map(r => {
-            logger.info(s"$address - ${r.json}")
-            (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
-          })
-          .map(latLng => {
-            database.withTransaction { implicit connection =>
-              import models.tables.GeocodeCache
-              GeocodeCache.replace(address, latLng)
-            }
-          })
+    case g@Geocode(address) =>
+      StopWatch(g.toString) {
+        if(address.isNotNullOrEmpty) {
+          implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
+          wsClient
+            .url("https://maps.googleapis.com/maps/api/geocode/json")
+            .withQueryStringParameters(
+              "address" -> address,
+              "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
+            )
+            .get()
+            .map(r => {
+              logger.info(s"$address - ${r.json}")
+              (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
+            })
+            .map(latLng => {
+              database.withTransaction { implicit connection =>
+                import models.tables.GeocodeCache
+                GeocodeCache.replace(address, latLng)
+              }
+            })
+        }
       }
-    }
     case _ =>
       logger.error("Unknown")
   }
