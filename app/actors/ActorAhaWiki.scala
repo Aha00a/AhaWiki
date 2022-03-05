@@ -68,7 +68,7 @@ class ActorAhaWiki @Inject()(implicit
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
             val text = Interpreters.toText(page.content)
-            if(!text.isNullOrEmpty) {
+            if (!text.isNullOrEmpty) {
               val seqWord = text
                 .replaceAll("""([a-z])([A-Z])""", "$1 $2")
                 .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
@@ -108,7 +108,7 @@ class ActorAhaWiki @Inject()(implicit
       }
     case g@Geocode(address) =>
       StopWatch(g.toString) {
-        if(address.isNotNullOrEmpty) {
+        if (address.isNotNullOrEmpty) {
           implicit val latLngReads: Reads[LatLng] = Json.reads[LatLng]
           wsClient
             .url("https://maps.googleapis.com/maps/api/geocode/json")
