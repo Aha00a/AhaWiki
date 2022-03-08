@@ -67,7 +67,9 @@
             }, function (data, textStatus, jqXHR) {
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
-                $("[name=text]").css({ height: $previewPane.height()});
+                var height = $(window).innerHeight() - $('.header').innerHeight() - $('.flash').innerHeight() - $('.footer').innerHeight() - 300;
+                $previewPane.css({ height: height, overflowY: 'auto'});
+                $("[name=text]").css({ height: height});
             });
         }
 
