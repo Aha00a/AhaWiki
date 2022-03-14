@@ -77,7 +77,7 @@ body {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
 .AhaWiki a {
-  color: #00b;
+  color: #015ADC;
   word-break: break-word;
 }
 .AhaWiki a[target=_blank]:before {
