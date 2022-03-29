@@ -41,7 +41,7 @@
 
             var match = /\/search\?q=(.+)/.exec(document.referrer);
             if(match && match[1]) {
-                $('.wikiContent').mark(match[1]);
+                $('.wikiContent').mark(decodeURIComponent(match[1]));
             }
         });
     </script>
