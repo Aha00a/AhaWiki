@@ -26,7 +26,7 @@
                                 .append($('<h5/>').text(data.title))
                                 .append($('<p/>').text(data.description))
                         );
-                    },
+                    },
                     error: function(jqXHR, textStatus, errorThrown) {
                         console.log(jqXHR, textStatus, errorThrown);
                         $(document).data(href).remove();
