@@ -60,15 +60,15 @@ class Test @Inject()(implicit val
 
     //noinspection DuplicatedCode
     def testInterpreterTable()(implicit request: Request[Any]): Unit = {
-      assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table tsv 1\na\tb"), <table class="InterpreterTable simpleTable"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table tsv 0 1\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1\na\tb"), <table class="InterpreterTable simpleTable"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv 0 1\na\tb"), <table class="InterpreterTable simpleTable"><tbody><tr><th><div><p>a</p></div></th><td><div><p>b</p></div></td></tr></tbody></table>.toString())
 
-      assertEquals(Interpreters.toHtmlString("#!table tsv some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table tsv 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table tsv 1 tablesorter\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><thead><tr><th><p>a</p></th><th><p>b</p></th></tr></thead><tbody></tbody></table>.toString())
-      assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><p>a</p></th><td><p>b</p></td></tr></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1 tablesorter\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
+      assertEquals(Interpreters.toHtmlString("#!table tsv 0 1 some classes\na\tb"), <table class="InterpreterTable simpleTable some classes"><tbody><tr><th><div><p>a</p></div></th><td><div><p>b</p></div></td></tr></tbody></table>.toString())
     }; testInterpreterTable()
 
     def testInterpreterWiki()(implicit request: Request[Any]): Unit = {
@@ -208,9 +208,10 @@ class Test @Inject()(implicit val
             |              </div>
             |        </div>
             |      </dl></div>""".stripMargin
+        val interpretedWithWiki = s"""<div>$interpreted</div>"""
 
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
-        assertEquals(Interpreters.toHtmlString(wikiMarkup), interpreted)
+        assertEquals(Interpreters.toHtmlString(wikiMarkup), interpretedWithWiki)
 
         val extractWordResult = Seq("Person", "Name", "KIM,", "Aha", "Url", "https://aha00a.com", "Member", "Of", "AhariseNotExists")
         assertEquals(Interpreters.toText(wikiMarkup).split(" ").toSeq, extractWordResult)
