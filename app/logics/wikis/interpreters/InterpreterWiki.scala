@@ -104,7 +104,7 @@ object InterpreterWiki extends TraitInterpreter {
       val idNotEmpty = if(id == null) titleForToc.replaceAll("""\s+""", "-") else id
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""<h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
+      arrayBuffer += s"""</div><div class="$idNotEmpty"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
     }
 
     override def list(indentString: String, style: String, content: String): Unit = {
@@ -155,7 +155,8 @@ object InterpreterWiki extends TraitInterpreter {
       if (arrayBufferHeading.length > 5 + 5)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
-      extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(arrayBuffer.mkString("\n"))))
+      val str = arrayBuffer.mkString("<div>", "\n", "</div>")
+      extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(str)))
     }
   }
 

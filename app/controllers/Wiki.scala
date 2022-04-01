@@ -195,19 +195,19 @@ class Wiki @Inject()(implicit val
       .take(1)
       .toSeq
 
-    val markupSchemaWithTitle = markupSchema.toOption.map(s => s"=== [schema:Schema Schema]\n$s").getOrElse("")
-    val markupBacklinksWithTitle = optionLink.map(s => s"=== Backlinks\n[[Backlinks]]").getOrElse("")
-    val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
+    val markupSchemaWithTitle = markupSchema.toOption.map(s => s"=== [schema:Schema Schema] === #Schema-Generated\n$s").getOrElse("")
+    val markupBacklinksWithTitle = optionLink.map(s => s"=== Backlinks === #Backlinks-Generated\n[[Backlinks]]").getOrElse("")
+    val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages === #Similar-Pages-Generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
 
     s"""
-       |== See Also
+       |== See Also == #See-Also-Generated
        |$markupSchemaWithTitle
        |
        |$markupBacklinksWithTitle
        |
        |$markupCosineSimilaritiesWithTitle
        |
-       |=== Adjacent Pages
+       |=== Adjacent Pages === #Adjacent-Pages-Generated
        |[[AdjacentPages]]
        |
        |""".stripMargin
