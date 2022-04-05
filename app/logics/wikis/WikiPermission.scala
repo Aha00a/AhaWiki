@@ -44,7 +44,7 @@ class WikiPermission(implicit provider: RequestWrapper, database:Database, site:
 
   def allowed(optionId: Option[String], directive: Array[String]): Boolean = {
     optionId match {
-      case Some(id) => directive.exists(s => s == "all" || s == "login" || s == id)
+      case Some(id) => directive.exists(s => s == "all" || s == "login" || s == id || (s.startsWith("@") && id.endsWith(s)))
       case None => directive.contains("all")
     }
   }
