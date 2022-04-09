@@ -343,13 +343,14 @@
                     });
                     $mapTable.trigger("updateAll", [ true, function () { } ]);
                     setTimeout(function () {
-                        if(!location.search) {
-                            map.setCenter(pos);
-                            map.setZoom(17);
-                        } else {
-                            fitBounds();
+                        fitBounds();
+                        if(map.getBounds().contains(pos)) {
+                            setTimeout(function () {
+                                map.setCenter(pos);
+                                map.setZoom(17);
+                            }, 1000);
                         }
-                    }, 2000);
+                    }, 1000);
                 }, function () {
                     fitBounds();
                 });
