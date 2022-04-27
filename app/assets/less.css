@@ -3,14 +3,14 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v25/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v26/Pby7FmXiEBPT4ITbgNA5CgmOelz477IS.otf) format('opentype');
 }
 @font-face {
   font-family: 'Noto Sans KR';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v25/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v26/Pby7FmXiEBPT4ITbgNA5CgmOalv477IS.otf) format('opentype');
 }
 .defaultFont {
   font-family: 'Noto Sans KR', sans-serif;
@@ -269,42 +269,49 @@ body {
 }
 .AhaWiki .commonAhaWiki .vim[data-lang] {
   border: 2px solid #9999cc;
+  background-color: #9999cc;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang]:before {
   background: #9999cc;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=scala] {
   border: 2px solid #DC322F;
+  background-color: #DC322F;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=scala]:before {
   background: #DC322F;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=perl] {
   border: 2px solid #004065;
+  background-color: #004065;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=perl]:before {
   background: #004065;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=python] {
   border: 2px solid #75A8D3;
+  background-color: #75A8D3;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=python]:before {
   background: #75A8D3;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=javascript] {
   border: 2px solid #F0DB4F;
+  background-color: #F0DB4F;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=javascript]:before {
   background: #F0DB4F;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=css] {
   border: 2px solid #FF6600;
+  background-color: #FF6600;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=css]:before {
   background: #FF6600;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=html] {
   border: 2px solid #E44D26;
+  background-color: #E44D26;
 }
 .AhaWiki .commonAhaWiki .vim[data-lang=html]:before {
   background: #E44D26;
@@ -659,42 +666,49 @@ body {
 }
 .AhaWiki .wikiContent .vim[data-lang] {
   border: 2px solid #9999cc;
+  background-color: #9999cc;
 }
 .AhaWiki .wikiContent .vim[data-lang]:before {
   background: #9999cc;
 }
 .AhaWiki .wikiContent .vim[data-lang=scala] {
   border: 2px solid #DC322F;
+  background-color: #DC322F;
 }
 .AhaWiki .wikiContent .vim[data-lang=scala]:before {
   background: #DC322F;
 }
 .AhaWiki .wikiContent .vim[data-lang=perl] {
   border: 2px solid #004065;
+  background-color: #004065;
 }
 .AhaWiki .wikiContent .vim[data-lang=perl]:before {
   background: #004065;
 }
 .AhaWiki .wikiContent .vim[data-lang=python] {
   border: 2px solid #75A8D3;
+  background-color: #75A8D3;
 }
 .AhaWiki .wikiContent .vim[data-lang=python]:before {
   background: #75A8D3;
 }
 .AhaWiki .wikiContent .vim[data-lang=javascript] {
   border: 2px solid #F0DB4F;
+  background-color: #F0DB4F;
 }
 .AhaWiki .wikiContent .vim[data-lang=javascript]:before {
   background: #F0DB4F;
 }
 .AhaWiki .wikiContent .vim[data-lang=css] {
   border: 2px solid #FF6600;
+  background-color: #FF6600;
 }
 .AhaWiki .wikiContent .vim[data-lang=css]:before {
   background: #FF6600;
 }
 .AhaWiki .wikiContent .vim[data-lang=html] {
   border: 2px solid #E44D26;
+  background-color: #E44D26;
 }
 .AhaWiki .wikiContent .vim[data-lang=html]:before {
   background: #E44D26;
@@ -1169,42 +1183,49 @@ body {
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang] {
   border: 2px solid #9999cc;
+  background-color: #9999cc;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang]:before {
   background: #9999cc;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=scala] {
   border: 2px solid #DC322F;
+  background-color: #DC322F;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=scala]:before {
   background: #DC322F;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=perl] {
   border: 2px solid #004065;
+  background-color: #004065;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=perl]:before {
   background: #004065;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=python] {
   border: 2px solid #75A8D3;
+  background-color: #75A8D3;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=python]:before {
   background: #75A8D3;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript] {
   border: 2px solid #F0DB4F;
+  background-color: #F0DB4F;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript]:before {
   background: #F0DB4F;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=css] {
   border: 2px solid #FF6600;
+  background-color: #FF6600;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=css]:before {
   background: #FF6600;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=html] {
   border: 2px solid #E44D26;
+  background-color: #E44D26;
 }
 .AhaWiki .paperContent .page .pageContent .vim[data-lang=html]:before {
   background: #E44D26;
