@@ -67,9 +67,12 @@
             }, function (data, textStatus, jqXHR) {
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
-                var height = $(window).innerHeight() - $('.header').innerHeight() - $('.flash').innerHeight() - $('.footer').innerHeight() - 300;
+                var windowInnerHeight = $(window).innerHeight();
+                var headerInnerHeight = $('.header').innerHeight();
+                var flashInnerHeight = $('.flash').innerHeight();
+                var height = windowInnerHeight - headerInnerHeight - flashInnerHeight - 300;
                 $previewPane.css({ height: height, overflowY: 'auto'});
-                $("[name=text]").css({ height: height});
+                $("[name=text]").css({ height: height - 10}); @* 10px is padding size of textarea *@
             });
         }
 
@@ -164,7 +167,7 @@
                             @CSRF.formField
                             <input type="hidden" name="revision" value="@page.revision"/>
                             <input type="hidden" id="recaptcha" name="recaptcha">
-                            <textarea name="text" style="min-height: 500px;" autofocus="autofocus">@page.content</textarea>
+                            <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
                             <div>
                                 <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
                                 @if(page.revision != 0) {
@@ -175,7 +178,7 @@
                         }
                         </td>
                         <td>
-                            <div class="previewPane"></div>
+                            <div class="previewPane" style="min-height: 500px;"></div>
                         </td>
                     </tr>
                 </table>
