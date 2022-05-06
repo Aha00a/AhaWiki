@@ -552,31 +552,56 @@ body {
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki .columnWidth350 ul {
+.AhaWiki .commonAhaWiki .columnWidth350 ul,
+.AhaWiki .commonAhaWiki .columnWidth350 ol {
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki.schema\:Schema > * > * > ul,
-.AhaWiki .commonAhaWiki.TitleIndex > * > * > ul,
-.AhaWiki .commonAhaWiki .columnWidth350 > * > * > ul {
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki.schema\:Schema > * > * > ul ul,
-.AhaWiki .commonAhaWiki.TitleIndex > * > * > ul ul,
-.AhaWiki .commonAhaWiki .columnWidth350 > * > * > ul ul {
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ul ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ul ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ul ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ol ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ol ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ol ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ul ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ul ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ul ol,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * ol ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * ol ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * ol ol {
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * > ul,
-.AhaWiki .commonAhaWiki.TitleIndex > * > * > * > ul,
-.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * > ul {
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * > ul ul,
-.AhaWiki .commonAhaWiki.TitleIndex > * > * > * > ul ul,
-.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * > ul ul {
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ul ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ul ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ul ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ol ul,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ol ul,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ol ul,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ul ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ul ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ul ol,
+.AhaWiki .commonAhaWiki.schema\:Schema > * > * > * ol ol,
+.AhaWiki .commonAhaWiki.TitleIndex > * > * > * ol ol,
+.AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
 }
 .AhaWiki .wikiContent {
@@ -961,31 +986,56 @@ body {
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .wikiContent .columnWidth350 ul {
+.AhaWiki .wikiContent .columnWidth350 ul,
+.AhaWiki .wikiContent .columnWidth350 ol {
   margin-top: 0;
 }
-.AhaWiki .wikiContent.schema\:Schema > * > * > ul,
-.AhaWiki .wikiContent.TitleIndex > * > * > ul,
-.AhaWiki .wikiContent .columnWidth350 > * > * > ul {
+.AhaWiki .wikiContent.schema\:Schema > * > * ul,
+.AhaWiki .wikiContent.TitleIndex > * > * ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * ol,
+.AhaWiki .wikiContent.TitleIndex > * > * ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .wikiContent.schema\:Schema > * > * > ul ul,
-.AhaWiki .wikiContent.TitleIndex > * > * > ul ul,
-.AhaWiki .wikiContent .columnWidth350 > * > * > ul ul {
+.AhaWiki .wikiContent.schema\:Schema > * > * ul ul,
+.AhaWiki .wikiContent.TitleIndex > * > * ul ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * ul ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * ol ul,
+.AhaWiki .wikiContent.TitleIndex > * > * ol ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * ol ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * ul ol,
+.AhaWiki .wikiContent.TitleIndex > * > * ul ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * ul ol,
+.AhaWiki .wikiContent.schema\:Schema > * > * ol ol,
+.AhaWiki .wikiContent.TitleIndex > * > * ol ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * ol ol {
   margin-top: 0;
 }
-.AhaWiki .wikiContent.schema\:Schema > * > * > * > ul,
-.AhaWiki .wikiContent.TitleIndex > * > * > * > ul,
-.AhaWiki .wikiContent .columnWidth350 > * > * > * > ul {
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ul,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ol,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .wikiContent.schema\:Schema > * > * > * > ul ul,
-.AhaWiki .wikiContent.TitleIndex > * > * > * > ul ul,
-.AhaWiki .wikiContent .columnWidth350 > * > * > * > ul ul {
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ul ul,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ul ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ul ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ol ul,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ol ul,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ol ul,
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ul ol,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ul ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ul ol,
+.AhaWiki .wikiContent.schema\:Schema > * > * > * ol ol,
+.AhaWiki .wikiContent.TitleIndex > * > * > * ol ol,
+.AhaWiki .wikiContent .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
 }
 .AhaWiki .gnb,
@@ -1490,31 +1540,56 @@ body {
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent .columnWidth350 ul {
+.AhaWiki .paperContent .page .pageContent .columnWidth350 ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 ol {
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > ul,
-.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > ul,
-.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > ul {
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > ul ul,
-.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > ul ul,
-.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > ul ul {
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * ol ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * ol ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * ol ol {
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * > ul,
-.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * > ul,
-.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * > ul {
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ol {
   column-width: 300px;
   column-gap: 50px;
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * > ul ul,
-.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * > ul ul,
-.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * > ul ul {
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ul ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ol ul,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ul ol,
+.AhaWiki .paperContent .page .pageContent.schema\:Schema > * > * > * ol ol,
+.AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ol ol,
+.AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
 }
 .AhaWiki .paperContent .page .toc {

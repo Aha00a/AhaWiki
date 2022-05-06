@@ -430,19 +430,23 @@ html, body {
 			column-width: 300px;
 			column-gap: 50px;
 			margin-top: 0;
-			ul {
+			ul, ol {
 				margin-top: 0;
 			}
 		}
         &.schema\:Schema,
 		&.TitleIndex,
 		.columnWidth350 {
-            > * > * > ul {
-				.columnWidth350;
-            }
-            > * > * > * > ul {
-				.columnWidth350;
-            }
+			>* >* {
+				ul, ol {
+					.columnWidth350;
+				}
+				>* {
+					ul, ol {
+						.columnWidth350;
+					}
+				}
+			}
         }
 	}
 

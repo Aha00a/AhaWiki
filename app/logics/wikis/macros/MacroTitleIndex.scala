@@ -9,7 +9,7 @@ object MacroTitleIndex extends TraitMacro {
     InterpreterWiki.toHtmlString {
       import com.aha00a.commons.utils.LetterUtil
       listPageName.groupBy(LetterUtil.firstLetterForIndex).toList.sortBy(_._1).map {
-        case (k, v) => s"== $k\n" + v.map(s => s""" * ["$s"]""").mkString("\n")
+        case (k, v) => s"== $k\n" + v.map(s => s""" 1. ["$s"]""").mkString("\n")
       }.mkString("\n")
     }}
   }
