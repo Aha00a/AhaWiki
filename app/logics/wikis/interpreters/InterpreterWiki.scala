@@ -37,13 +37,15 @@ object InterpreterWiki extends TraitInterpreter {
   abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
-    val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX])\.)\s*(.+)""".r
+    val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
     val regexListUnordered: Regex = """[*-]""".r
     val regexListDecimal: Regex = """\d+\.""".r
     val regexListLowerAlpha: Regex = """[a-z]+\.""".r
     val regexListUpperAlpha: Regex = """[A-Z]+\.""".r
     val regexListLowerRoman: Regex = """[ivx]+\.""".r
     val regexListUpperRoman: Regex = """[IVX]+\.""".r
+    val regexListUpperHangul: Regex = """[가나다라마바사아자차카타파하]+\.""".r
+    val regexListUpperHangulConsonant: Regex = """[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+\.""".r
 
     override def process(): T = {
       for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
@@ -120,6 +122,8 @@ object InterpreterWiki extends TraitInterpreter {
           case regexListUpperRoman() => "upper-roman"
           case regexListLowerAlpha() => "lower-alpha"
           case regexListUpperAlpha() => "upper-alpha"
+          case regexListUpperHangul() => "hangul"
+          case regexListUpperHangulConsonant() => "hangul-consonant"
           case _ => "disc"
         }
         for(_ <- 0 until indent - oldIndent) {
