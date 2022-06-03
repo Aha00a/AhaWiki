@@ -36,6 +36,7 @@ object InterpreterWiki extends TraitInterpreter {
 
   abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
+    val regexHr2: Regex = """^={4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
     val regexListUnordered: Regex = """[*-]""".r
@@ -51,7 +52,8 @@ object InterpreterWiki extends TraitInterpreter {
       for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
         s match {
           case "" => emptyLine()
-          case regexHr() => hr()
+          case regexHr() => hr(s)
+          case regexHr2() => hr2(s)
           case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
           case regexList(indentString, style, _, content) => list(indentString, style, content);
           case _ => others(s)
@@ -61,7 +63,8 @@ object InterpreterWiki extends TraitInterpreter {
     }
 
     def emptyLine(): Unit
-    def hr(): Unit
+    def hr(s: String): Unit
+    def hr2(s: String): Unit
     def heading(heading: String, title: String, id: String): Unit
     def list(indentString: String, style: String, content: String): Unit
     def others(s: String): Unit
@@ -87,9 +90,14 @@ object InterpreterWiki extends TraitInterpreter {
       variableHolderState := State.Normal
     }
 
-    override def hr(): Unit = {
+    override def hr(s: String): Unit = {
       variableHolderState := State.Hr
-      arrayBuffer += """<hr/>"""
+      arrayBuffer += s"""<hr class="hr${s.length}"/>"""
+    }
+
+    override def hr2(s: String): Unit = {
+      variableHolderState := State.Hr
+      arrayBuffer += s"""<hr class="hr${s.length} pageBreakAfterAlways"/>"""
     }
 
     override def heading(heading: String, title: String, id: String): Unit = {

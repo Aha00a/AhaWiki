@@ -247,7 +247,14 @@ body {
   margin-left: -25px;
   height: 0;
   clear: both;
+}
+.AhaWiki .commonAhaWiki hr.pageBreakAfterAlways {
   page-break-after: always;
+}
+@media print {
+  .AhaWiki .commonAhaWiki hr.pageBreakAfterAlways {
+    opacity: 0;
+  }
 }
 .AhaWiki .commonAhaWiki li > p {
   margin: 0;
@@ -682,7 +689,14 @@ body {
   margin-left: -25px;
   height: 0;
   clear: both;
+}
+.AhaWiki .wikiContent hr.pageBreakAfterAlways {
   page-break-after: always;
+}
+@media print {
+  .AhaWiki .wikiContent hr.pageBreakAfterAlways {
+    opacity: 0;
+  }
 }
 .AhaWiki .wikiContent li > p {
   margin: 0;
@@ -1237,7 +1251,14 @@ body {
   margin-left: -25px;
   height: 0;
   clear: both;
+}
+.AhaWiki .paperContent .page .pageContent hr.pageBreakAfterAlways {
   page-break-after: always;
+}
+@media print {
+  .AhaWiki .paperContent .page .pageContent hr.pageBreakAfterAlways {
+    opacity: 0;
+  }
 }
 .AhaWiki .paperContent .page .pageContent li > p {
   margin: 0;

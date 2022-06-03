@@ -184,6 +184,12 @@ html, body {
 			margin-left: -25px;
 			height: 0;
 			clear: both;
+			&.pageBreakAfterAlways {
+				page-break-after: always;
+				@media print {
+					opacity: 0;
+				}
+			}
 		}
 
 		li > p {
