@@ -14,6 +14,7 @@ object InterpreterPaper extends TraitInterpreter {
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">
+             |  <!-- ${index} -->
              |  <div class="pageHeader">
              |    <div class="documentId">${pageContent.argument(1)}</div>
              |  </div>
@@ -21,8 +22,11 @@ object InterpreterPaper extends TraitInterpreter {
              |    <div class="pageNo">${index + 1}</div>
              |  </div>
              |  <div class="pageContent">
-             |    $s
+             |    <div>
+             |      $s
+             |    </div>
              |  </div>
+             |  <!-- ${index} -->
              |</div>""".stripMargin
         }.mkString("\n") +
     """</div>"""
