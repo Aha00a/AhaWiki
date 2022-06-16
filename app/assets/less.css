@@ -338,6 +338,7 @@ body {
   bottom: 0;
   padding: 5px 1px;
   overflow: hidden;
+  word-break: initial;
 }
 .AhaWiki .commonAhaWiki pre {
   margin-top: 0;
@@ -781,6 +782,7 @@ body {
   bottom: 0;
   padding: 5px 1px;
   overflow: hidden;
+  word-break: initial;
 }
 .AhaWiki .wikiContent pre {
   margin-top: 0;
@@ -1344,6 +1346,7 @@ body {
   bottom: 0;
   padding: 5px 1px;
   overflow: hidden;
+  word-break: initial;
 }
 .AhaWiki .paperContent .page .pageContent pre {
   margin-top: 0;
