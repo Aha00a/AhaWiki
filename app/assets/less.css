@@ -172,6 +172,7 @@ body {
 }
 .AhaWiki .commonAhaWiki {
   padding: 0 0 25px 25px;
+  word-break: break-all;
 }
 .AhaWiki .commonAhaWiki h1,
 .AhaWiki .commonAhaWiki h2,
@@ -614,6 +615,7 @@ body {
 }
 .AhaWiki .wikiContent {
   padding: 0 0 25px 25px;
+  word-break: break-all;
 }
 .AhaWiki .wikiContent h1,
 .AhaWiki .wikiContent h2,
@@ -1176,6 +1178,7 @@ body {
 }
 .AhaWiki .paperContent .page .pageContent {
   padding: 0 0 25px 25px;
+  word-break: break-all;
 }
 .AhaWiki .paperContent .page .pageContent h1,
 .AhaWiki .paperContent .page .pageContent h2,
