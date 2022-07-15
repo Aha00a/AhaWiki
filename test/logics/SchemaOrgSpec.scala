@@ -25,7 +25,7 @@ class SchemaOrgSpec extends AnyFreeSpec {
       "Thing" -> Seq("Something"),
     )) ===
       """= ["schema:Thing" Thing]
-        | * ["Something"]
+        | 1. ["Something"]
         |
         |""".stripMargin)
 
@@ -36,23 +36,23 @@ class SchemaOrgSpec extends AnyFreeSpec {
       "WebSite" -> Seq("Site1", "Site2"),
     )) ===
       """= ["schema:Thing" Thing]
-        | * ["Something"]
+        | 1. ["Something"]
         |== ["schema:CreativeWork" Creative Work]
         |
         |=== ["schema:Movie" Movie]
-        | * ["AwesomeMovie1"]
-        | * ["AwesomeMovie2"]
+        | 1. ["AwesomeMovie1"]
+        | 1. ["AwesomeMovie2"]
         |
         |
         |=== ["schema:WebSite" Web Site]
-        | * ["Site1"]
-        | * ["Site2"]
+        | 1. ["Site1"]
+        | 1. ["Site2"]
         |
         |
         |
         |== ["schema:Person" Person]
-        | * ["Someone1"]
-        | * ["Someone2"]
+        | 1. ["Someone1"]
+        | 1. ["Someone2"]
         |
         |
         |""".stripMargin)
@@ -63,13 +63,13 @@ class SchemaOrgSpec extends AnyFreeSpec {
     )) ===
       """
         |= ["schema:Thing" Thing]
-        | * ["Something"]
+        | 1. ["Something"]
         |
         |
         |
         |= Custom
         |== ["schema:CustomClass" Custom Class]
-        | * ["Anything"]
+        | 1. ["Anything"]
         |
         |""".stripMargin)
 
