@@ -134,7 +134,7 @@ object InterpreterSchema extends TraitInterpreter {
     val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
         import models.tables
-        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md_m_d).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
     }
     SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
   }

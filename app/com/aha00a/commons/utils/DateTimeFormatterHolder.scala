@@ -12,8 +12,6 @@ object DateTimeFormatterHolder {
   lazy val year: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy")
   lazy val monthDashDay: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd")
   lazy val dashDashMonthDashDay: DateTimeFormatter = DateTimeFormatter.ofPattern("--MM-dd")
-  lazy val dashDashMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("--MM")
-  lazy val dashDashDashDashDay: DateTimeFormatter = DateTimeFormatter.ofPattern("----dd")
 
   lazy val isoLocalTime: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
 
