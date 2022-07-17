@@ -248,10 +248,8 @@ class Test @Inject()(implicit val
           SchemaOrg("UnitTest", "WebApplication", "applicationCategory", "Wiki"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10-21"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10"),
-          SchemaOrg("UnitTest", "WebApplication", "datePublished", "----21"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "--10-21"),
-          SchemaOrg("UnitTest", "WebApplication", "datePublished", "--10")
         )
       )
     }; testInterpreterSchema()
