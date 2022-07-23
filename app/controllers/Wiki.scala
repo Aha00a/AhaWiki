@@ -144,7 +144,8 @@ class Wiki @Inject()(implicit val
             }
           }
           finally {
-            if (environment.mode == Mode.Dev && request.isLocalhost)
+            //noinspection SimplifyBoolean
+            if (true || environment.mode == Mode.Dev && request.isLocalhost)
               actorAhaWiki ! Calculate(site, name)
           }
         case (Some(page), "diff", true, _) =>
