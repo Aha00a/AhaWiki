@@ -7,7 +7,7 @@ import play.api.mvc._
 
 class Auth @Inject() (val controllerComponents: ControllerComponents) extends BaseController {
   def login: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.GoogleOAuth.login())
+    Redirect(routes.GoogleOAuth.login)
   }
 
   def logout: Action[AnyContent] = Action { implicit request =>

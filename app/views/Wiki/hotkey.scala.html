@@ -13,7 +13,7 @@
             }
         }).focus();
         $.get(
-                '@routes.Api.pageNames()',
+                '@routes.Api.pageNames',
                 {},
                 function (data, textStatus, jqXHR) {
                     $('[name=q]').autocomplete({
@@ -36,7 +36,7 @@
 
     function showWrite() {
         $.ajax({
-            url: '@routes.Api.csrf()',
+            url: '@routes.Api.csrf',
             data: {},
             success: function (data, textStatus, jqXHR) {
                 var csrfName = data.name;

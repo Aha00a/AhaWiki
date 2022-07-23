@@ -7,11 +7,11 @@
                     <i class="fas fa-user-cog"></i> @(wikiContext.requestWrapper.getId)
                 </li>
                 <li>
-                    <a href="@(routes.Auth.logout())"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
                 </li>
             } else {
                 <li>
-                    <a href="@(routes.Auth.login())"><i class="fas fa-sign-in-alt"></i>Login</a>
+                    <a href="@(routes.Auth.login)"><i class="fas fa-sign-in-alt"></i>Login</a>
                 </li>
             }
         </ul>
@@ -20,7 +20,7 @@
                 <a href="javascript:showSearch();"><i class="fas fa-search"></i>Search</a>
             </li>
             <li>
-                <a href="@routes.Feed.atom()"><i class="fas fa-rss"></i>Atom</a>
+                <a href="@routes.Feed.atom"><i class="fas fa-rss"></i>Atom</a>
             </li>
             @if(isWritable) {
                 <li>

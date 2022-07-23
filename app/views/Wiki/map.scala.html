@@ -58,7 +58,7 @@
                                     return false;
 
                                 $.ajax({
-                                    url: '@routes.Api.csrf()',
+                                    url: '@routes.Api.csrf',
                                     data: {},
                                     success: function (data, textStatus, jqXHR) {
                                         var csrfName = data.name;

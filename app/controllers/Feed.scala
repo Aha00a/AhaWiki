@@ -18,7 +18,7 @@ class Feed @Inject()(
                       database:play.api.db.Database
                     ) extends BaseController {
   def index: Action[AnyContent] = Action {
-    Redirect(routes.Feed.atom())
+    Redirect(routes.Feed.atom)
   }
 
   def atom: Action[AnyContent] = Action { implicit request =>
