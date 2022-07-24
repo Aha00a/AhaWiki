@@ -58,14 +58,21 @@ class Api @Inject()(
   }
 
 
-  def links(name: String): Action[AnyContent] = Action { implicit request =>
+  def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
+    import java.net.URLDecoder
+    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
       import models.ContextWikiPage
+      import models.tables.SchemaOrg
       import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
-      val seqLink: Seq[Link] = Link.select(name).filter(_.and(contextWikiPage.pageCanSee))
-      Ok(seqLink.asJson)
+
+      val seqLink: Seq[Link] = Link.select(name)
+      val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
+      val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(_.and(contextWikiPage.pageCanSee))
+
+      Ok(seqLinkFiltered.asJson)
     }
   }
 

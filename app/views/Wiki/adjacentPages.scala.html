@@ -1,0 +1,187 @@
+@(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: ContextWikiPage)
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+    <div class="aspectRatioWrapper">
+        <div class="ratio_16_9"></div>
+        <div class="aspectRatioContent">
+            <svg class="graph @(id)" style="width: 100%; height: 100%"></svg>
+            <a href="#" class="playPause play @(id)" style="position: absolute; bottom: 10px; left: 15px; text-decoration: none;"><i class="fas fa-stop"></i> <span class="linkCount @id">0</span></a>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(function(){
+            var graph = Viva.Graph.graph();
+            var graphics = Viva.Graph.View.svgGraphics();
+            var layout = Viva.Graph.Layout.forceDirected(graph, {
+                springLength: 80,
+                springCoeff: 0.0002
+            });
+            var renderer = Viva.Graph.View.renderer(graph, {
+                layout: layout,
+                graphics: graphics,
+                container: $('.graph.@(id)').get(0)
+            });
+
+            $('.playPause.@(id)').click(function () {
+                var $this = $(this);
+                if($this.hasClass('play')) {
+                    renderer.pause();
+                    $this.removeClass('play');
+                    $this.find('i.fas').removeClass('fa-stop').addClass('fa-play');
+                } else {
+                    renderer.resume();
+                    $this.addClass('play');
+                    $this.find('i.fas').removeClass('fa-play').addClass('fa-stop');
+                }
+                return false;
+            });
+
+            var radiusDefault = 7;
+            var radiusHighlight = 15;
+            var radiusHighlight2 = 10;
+
+            var createMarker = function(id) {
+                return Viva.Graph.svg('marker')
+                    .attr('id', id)
+                    .attr('viewBox', "0 0 20 20")
+                    .attr('refX', "20")
+                    .attr('refY', "10")
+                    .attr('markerUnits', "strokeWidth")
+                    .attr('markerWidth', "20")
+                    .attr('markerHeight', "10")
+                    .attr('orient', "auto")
+                    // .attr('fill', nodeColorDefault)
+                    ;
+            },
+            marker = createMarker('Triangle');
+            marker.append('path').attr('d', 'M 0 0 L 20 10 L 0 20 z');
+            graphics.getSvgRoot().append('defs').append(marker);
+
+
+            var highlightRelatedNodes = function(nodeId, isOn) {
+                var nodeUI = graphics.getNodeUI(nodeId);
+                if(isOn) {
+                    nodeUI.classList.add("hover");
+                } else {
+                    nodeUI.classList.remove("hover");
+                }
+                nodeUI.firstElementChild.attr('r', isOn ? radiusHighlight : radiusDefault);
+
+                graph.forEachLinkedNode(nodeId, function(node, link){
+                    var nodeUILinked = graphics.getNodeUI(node.id);
+                    var linkUILinked = graphics.getLinkUI(link.id);
+                    if(isOn) {
+                        nodeUILinked.classList.add('neighbor');
+                        linkUILinked.classList.add('neighbor');
+                        // nodeUILinked.firstElementChild.attr('r', isOn ? radiusHighlight2 : radiusDefault);
+                    } else {
+                        nodeUILinked.classList.remove('neighbor');
+                        linkUILinked.classList.remove('neighbor');
+                        // nodeUILinked.firstElementChild.attr('r', isOn ? radiusHighlight2 : radiusDefault);
+                    }
+
+                });
+            };
+
+            graphics.node(function(node) {
+                var ui = Viva.Graph.svg('g').attr('class', 'node');
+
+                // if(layout.isNodePinned(node)) {
+                //     ui.append(Viva.Graph.svg('circle').attr('r', 10).attr('fill', '#00a'));
+                //     ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '13px').attr('y', '5px').attr('fill', '#00a').text(node.id));
+                // } else {
+                    ui.append(Viva.Graph.svg('circle').attr('r', radiusDefault));
+                    ui.append(Viva.Graph.svg('text')
+                            .attr('class', 'label')
+                            .attr('x', '16px')
+                            .attr('y', '5px')
+                            .text(node.id));
+                // }
+
+                $(ui).hover(function() {
+                    highlightRelatedNodes(node.id, true);
+                }, function() {
+                    highlightRelatedNodes(node.id, false);
+                });
+                @if(enableWikiLink) {
+                    var timeDown = 0;
+                    $(ui).mousedown(function() {
+                        timeDown = new Date().getTime()
+                    }).mouseup(function() {
+                        var diff = new Date().getTime() - timeDown;
+                        if(diff < 300) {
+                            renderer.pause();
+                            location.href = '/w/' + node.id;
+                        }
+                    });
+                }
+
+                return ui;
+            }).placeNode(function(nodeUI, pos) {
+                nodeUI.attr('transform', 'translate(' + (pos.x) + ',' + (pos.y) +')');
+            });
+
+            graphics.link(function(link){
+                return Viva.Graph.svg('path').attr('class', 'link').attr('marker-end', 'url(#Triangle)');
+            }).placeLink(function(linkUI, fromPos, toPos) {
+                linkUI.attr("d", 'M' + fromPos.x + ',' + fromPos.y + 'L' + toPos.x + ',' + toPos.y);
+            });
+
+            var queueFetch = ['@(wikiContext.name)'];
+            var queueGraph = [];
+
+            function fetchLinks(name) {
+                $.ajax({
+                    url: '/api/links/' + name,
+                    success: function (data, textStatus, jqXHR) {
+                        console.log(name)
+                        queueGraph = queueGraph.concat(data);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(name, jqXHR, textStatus, errorThrown);
+                    }
+                });
+            }
+            setInterval(function () {
+                if(queueFetch.length === 0) {
+                    return;
+                }
+                if(graph.getNodesCount() > 100) {
+                    return;
+                }
+
+                var v = queueFetch.shift();
+                fetchLinks(v);
+            }, 500);
+            setInterval(function () {
+                if(queueGraph.length === 0) {
+                    return;
+                }
+
+                var v = queueGraph.shift();
+                if(!graph.getNode(v.src)) {
+                    graph.addNode(v.src);
+                    queueFetch.push(v.src);
+                }
+                if(!graph.getNode(v.dst)) {
+                    graph.addNode(v.dst);
+                    queueFetch.push(v.dst);
+                }
+                if(!graph.getLink(v.src, v.dst)) {
+                    graph.addLink(v.src, v.dst);
+                }
+                $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
+            }, 50);
+
+            @if(enableWikiLink) {
+                graph.addNode('@(wikiContext.name)');
+                var node = graph.getNode('@(wikiContext.name)');
+                if(node)
+                    layout.pinNode(node, true);
+            }
+            setTimeout(function() {
+                renderer.run();
+            }, 100);
+        });
+    </script>
+
+}

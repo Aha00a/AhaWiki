@@ -98,6 +98,7 @@ class ContextSite()(
   lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
+  def pageExists(name: String): Boolean = setPageNameByPermission.contains(name)
   def pageCanSee(name: String): Boolean = !setPageNameAll.contains(name) || setPageNameByPermission.contains(name)
 
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)

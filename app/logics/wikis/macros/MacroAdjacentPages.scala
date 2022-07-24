@@ -13,7 +13,7 @@ object MacroAdjacentPages extends TraitMacro {
   val date: Regex = """\d{4}-\d{2}-\d{2}""".r
 
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
-    InterpreterWiki.toHtmlString(getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop)))
+    getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop))
   }}
 
   def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
@@ -44,11 +44,6 @@ object MacroAdjacentPages extends TraitMacro {
       .map(l => s"${l.src}->${l.dst}")
       .mkString("\n")
 
-    result.toOption.map(r => {
-      s"""[[[#!Graph enableWikiLink
-         |$r
-         |]]]
-         |""".stripMargin
-    }).getOrElse("")
+    views.html.Wiki.adjacentPages(Array(Array[String]()), true).toString()
   }
 }

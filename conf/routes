@@ -36,7 +36,7 @@ GET         /admin/                                   controllers.Admin.index
 GET         /api/csrf                                 controllers.Api.csrf
 GET         /api/pageMap                              controllers.Api.pageMap
 GET         /api/pageNames                            controllers.Api.pageNames
-GET         /api/links                                controllers.Api.links(name)
+GET         /api/links/*nameEncoded                   controllers.Api.links(nameEncoded)
 GET         /api/statistics                           controllers.Api.statistics()
 
 GET         /feed                                     controllers.Feed.index
