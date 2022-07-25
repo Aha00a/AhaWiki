@@ -25,7 +25,8 @@
             var renderer = Viva.Graph.View.renderer(graph, {
                 layout: layout,
                 graphics: graphics,
-                container: $('.graph.@(id)').get(0)
+                container: $('.graph.@(id)').get(0),
+                interactive: 'node drag', // scroll is disabled!
             });
 
             $('.playPause.@(id)').click(function () {
