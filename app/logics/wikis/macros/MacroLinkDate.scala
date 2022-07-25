@@ -42,8 +42,9 @@ object MacroLinkDate extends TraitMacro {
   @scala.annotation.tailrec
   override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
-    case DateTimeUtil.regexIsoLocalDate(_, _, _) =>
-      DateTimeUtil.expand_ymd_to_ymd_ym_y_md(body)// ++ getSeqLinkAround(body).map(_.uri)
+    case DateTimeUtil.regexYear(y) => (1 to 12).map(m => f"$y-${m.toString.padLeft(2, "0")}")
+    case DateTimeUtil.regexYearDashMonth(_, _) => DateTimeUtil.expand_ym_to_ym_y(body)
+    case DateTimeUtil.regexIsoLocalDate(_, _, _) => DateTimeUtil.expand_ymd_to_ymd_ym_y_md(body)
     case _ => Seq()
   }
 

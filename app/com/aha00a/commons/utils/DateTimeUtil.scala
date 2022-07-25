@@ -17,11 +17,16 @@ object DateTimeUtil {
 
   def nowEpochMicro: Long = Instant.now().toEpochMilli * 1000
 
+  def expand_ym_to_ym_y(ym:String): Seq[String] = {
+    Try(LocalDate.parse(ym, DateTimeFormatterHolder.yearDashMonth)).toOption.map(localDate => Seq(
+      localDate.toYearString,
+      localDate.toYearDashMonthString,
+    )).getOrElse(Seq(ym))
+  }
   def expand_ymd_to_ymd_ym_y_md(ymd:String): Seq[String] = {
     Try(LocalDate.parse(ymd, DateTimeFormatterHolder.isoLocalDate)).toOption.map(localDate => Seq(
       localDate.toIsoLocalDateString,
       localDate.toYearDashMonthString,
-      localDate.toYearString,
       localDate.toDashDashMonthDashDayString,
     )).getOrElse(Seq(ymd))
   }

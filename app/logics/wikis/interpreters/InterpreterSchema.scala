@@ -3,11 +3,10 @@ package logics.wikis.interpreters
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
-import logics.SchemaOrg
 import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
-import models.PageContent
 import models.ContextWikiPage
+import models.PageContent
 
 object InterpreterSchema extends TraitInterpreter {
 
@@ -127,13 +126,11 @@ object InterpreterSchema extends TraitInterpreter {
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
 
   override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
-    import models.tables
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
     val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField.flatMap {
       case key +: tail =>
-        import models.tables
         tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
     }
     SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
