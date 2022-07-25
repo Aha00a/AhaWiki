@@ -144,6 +144,39 @@
 
             var queueGraph = [];
 
+            @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Normal) {
+                setInterval(function () {
+                    if(queueFetch.length === 0) {
+                        return;
+                    }
+                    if(graph.getNodesCount() > limit) {
+                        return;
+                    }
+
+                    var v = queueFetch.shift();
+                    fetchLinks(v);
+                }, 500);
+                setInterval(function () {
+                    if(queueGraph.length === 0) {
+                        return;
+                    }
+
+                    var v = queueGraph.shift();
+                    if(!graph.getNode(v.src)) {
+                        graph.addNode(v.src);
+                        queueFetch.push(v.src);
+                    }
+                    if(!graph.getNode(v.dst)) {
+                        graph.addNode(v.dst);
+                        queueFetch.push(v.dst);
+                    }
+                    if(!graph.getLink(v.src, v.dst)) {
+                        graph.addLink(v.src, v.dst);
+                    }
+                    $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
+                }, 50);
+            }
+
             function fetchLinks(name) {
                 $.ajax({
                     url: '/api/links/' + name,
@@ -156,36 +189,6 @@
                     }
                 });
             }
-            setInterval(function () {
-                if(queueFetch.length === 0) {
-                    return;
-                }
-                if(graph.getNodesCount() > limit) {
-                    return;
-                }
-
-                var v = queueFetch.shift();
-                fetchLinks(v);
-            }, 500);
-            setInterval(function () {
-                if(queueGraph.length === 0) {
-                    return;
-                }
-
-                var v = queueGraph.shift();
-                if(!graph.getNode(v.src)) {
-                    graph.addNode(v.src);
-                    queueFetch.push(v.src);
-                }
-                if(!graph.getNode(v.dst)) {
-                    graph.addNode(v.dst);
-                    queueFetch.push(v.dst);
-                }
-                if(!graph.getLink(v.src, v.dst)) {
-                    graph.addLink(v.src, v.dst);
-                }
-                $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
-            }, 50);
 
             setTimeout(function() { renderer.run(); }, 100);
         });
