@@ -182,7 +182,6 @@
                 $.ajax({
                     url: '/api/links/' + name,
                     success: function (data, textStatus, jqXHR) {
-                        console.log(name)
                         queueGraph = queueGraph.concat(data);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
