@@ -202,15 +202,17 @@ class Wiki @Inject()(implicit val
 
     s"""
        |== See Also == #See-Also-Generated
+       |[[Html(<table class="column2"><tbody><tr><td>)]]
        |$markupSchemaWithTitle
        |
        |$markupBacklinksWithTitle
        |
        |$markupCosineSimilaritiesWithTitle
+       |[[Html(</td><td>)]]
        |
        |=== Adjacent Pages === #Adjacent-Pages-Generated
        |[[AdjacentPages]]
-       |
+       |[[Html(</td></tr></tbody></table>)]]
        |""".stripMargin
   }
 

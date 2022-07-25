@@ -456,6 +456,28 @@ html, body {
 				}
 			}
         }
+
+		table.column2 {
+			width: 100%;
+			> tbody {
+				> tr {
+					> td {
+						width: 50%;
+						@media @widthTablet { width: 100%; display: block; }
+
+						padding: 0;
+						vertical-align: top;
+						&:first-of-type {
+
+						}
+						&:last-of-type {
+							padding-left: 20px;
+							@media @widthTablet { padding-left: 0; }
+						}
+					}
+				}
+			}
+		}
 	}
 
 	.wikiContent {

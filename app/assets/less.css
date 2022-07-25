@@ -614,6 +614,28 @@ body {
 .AhaWiki .commonAhaWiki .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
 }
+.AhaWiki .commonAhaWiki table.column2 {
+  width: 100%;
+}
+.AhaWiki .commonAhaWiki table.column2 > tbody > tr > td {
+  width: 50%;
+  padding: 0;
+  vertical-align: top;
+}
+@media (max-width: 767px) {
+  .AhaWiki .commonAhaWiki table.column2 > tbody > tr > td {
+    width: 100%;
+    display: block;
+  }
+}
+.AhaWiki .commonAhaWiki table.column2 > tbody > tr > td:last-of-type {
+  padding-left: 20px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .commonAhaWiki table.column2 > tbody > tr > td:last-of-type {
+    padding-left: 0;
+  }
+}
 .AhaWiki .wikiContent {
   padding: 0 0 25px 25px;
   word-break: break-all;
@@ -1057,6 +1079,28 @@ body {
 .AhaWiki .wikiContent.TitleIndex > * > * > * ol ol,
 .AhaWiki .wikiContent .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
+}
+.AhaWiki .wikiContent table.column2 {
+  width: 100%;
+}
+.AhaWiki .wikiContent table.column2 > tbody > tr > td {
+  width: 50%;
+  padding: 0;
+  vertical-align: top;
+}
+@media (max-width: 767px) {
+  .AhaWiki .wikiContent table.column2 > tbody > tr > td {
+    width: 100%;
+    display: block;
+  }
+}
+.AhaWiki .wikiContent table.column2 > tbody > tr > td:last-of-type {
+  padding-left: 20px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .wikiContent table.column2 > tbody > tr > td:last-of-type {
+    padding-left: 0;
+  }
 }
 .AhaWiki .gnb,
 .AhaWiki .revisionInfo {
@@ -1621,6 +1665,28 @@ body {
 .AhaWiki .paperContent .page .pageContent.TitleIndex > * > * > * ol ol,
 .AhaWiki .paperContent .page .pageContent .columnWidth350 > * > * > * ol ol {
   margin-top: 0;
+}
+.AhaWiki .paperContent .page .pageContent table.column2 {
+  width: 100%;
+}
+.AhaWiki .paperContent .page .pageContent table.column2 > tbody > tr > td {
+  width: 50%;
+  padding: 0;
+  vertical-align: top;
+}
+@media (max-width: 767px) {
+  .AhaWiki .paperContent .page .pageContent table.column2 > tbody > tr > td {
+    width: 100%;
+    display: block;
+  }
+}
+.AhaWiki .paperContent .page .pageContent table.column2 > tbody > tr > td:last-of-type {
+  padding-left: 20px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .paperContent .page .pageContent table.column2 > tbody > tr > td:last-of-type {
+    padding-left: 0;
+  }
 }
 .AhaWiki .paperContent .page .toc {
   display: none;
