@@ -17,33 +17,9 @@ object MacroAdjacentPages extends TraitMacro {
   }}
 
   def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
-    import com.aha00a.commons.utils.SeqUtil
-    import models.tables.Link
-    import models.tables.SchemaOrg
     import models.tables.Site
     implicit val site: Site = wikiContext.site
 
-    val seqLink: Seq[Link] = Link.select(name)
-    val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
-    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(l => l.and(wikiContext.pageCanSee))
-
-    val seqName = seqLinkFiltered.flatMap(_.toSeqString).distinct
-
-    val seqLinkExpandedByLink: Seq[Link] = Link.selectWhereSrcORDstIn(seqName)
-    val seqLinkExpandedBySchema: Seq[Link] = SchemaOrg.selectWherePageOrValueIn(seqName).map(s => Link(s.page, s.value, ""))
-    val seqLinkMerged = SeqUtil.mergeOneByOne(seqLinkExpandedByLink, seqLinkExpandedBySchema)
-    val seqLinkMergedFiltered: Seq[Link] = seqLinkMerged.filter(l => l.and(wikiContext.pageCanSee))
-
-    val result = seqLinkMergedFiltered
-      .filter(l => (l.src, l.dst) match {
-        case (year(), date()) => false
-        case (date(), year()) => false
-        case _ => true
-      })
-      .take(1000)
-      .map(l => s"${l.src}->${l.dst}")
-      .mkString("\n")
-
-    views.html.Wiki.adjacentPages(Array(Array[String]()), true).toString()
+    views.html.Wiki.adjacentPages(enableWikiLink = true).toString()
   }
 }
