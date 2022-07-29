@@ -70,14 +70,19 @@ object InterpreterTable extends TraitInterpreter {
       val javaListString = reader.read().asScala
       if (null == javaListString)
         return arrayBuffer.toSeq
-      
+
       arrayBuffer += javaListString.toSeq
     }
     throw new Exception()
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
-    // TODO
-    Seq()
+    val pageContent: PageContent = PageContent(content)
+    val shebang = parseShebang(pageContent.argument)
+    shebang.map(shebang => {
+      Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
+        convert(listReader).flatMap(_.filter(_ != null).flatMap(InterpreterWiki.toSeqLink))
+      }
+    }).getOrElse(Seq())
   }
 }
