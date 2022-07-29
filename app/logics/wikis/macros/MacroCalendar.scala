@@ -14,13 +14,13 @@ import play.api.mvc.Request
 import scala.util.matching.Regex
 
 object MacroCalendar extends TraitMacro {
-  val regex: Regex = """^(\d{4})-(\d{2})$""".r
+  import com.aha00a.commons.utils.DateTimeUtil._
 
-  @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
-    case regex(y, m) =>
+    case regexYear(y) => (1 to 12).map(m => toHtmlString(f"$y-$m%02d")).mkString("\n")
+    case regexYearDashMonth(y, m) =>
       implicit val database: Database = wikiContext.database
 
       val yearMonth = YearMonth.of(y.toInt, m.toInt)
@@ -62,7 +62,8 @@ object MacroCalendar extends TraitMacro {
   override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => extractLink(wikiContext.name)
     case "-" => extractLink(wikiContext.name + ",-")
-    case regex(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
+    case regexYear(y) => (1 to 12).map(m => f"$y-$m%02d")
+    case regexYearDashMonth(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }
 }

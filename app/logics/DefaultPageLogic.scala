@@ -39,7 +39,7 @@ object DefaultPageLogic {
         lazySome(
           s"""= $title
              |[[NavigationYear]]
-             |${(1 to 12).map(m => f"[[Calendar($y-$m%02d)]]").mkString}
+             |[[Calendar($y)]]
              |""".stripMargin
         )
 
