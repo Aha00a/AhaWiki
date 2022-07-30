@@ -42,7 +42,7 @@ object SchemaOrg {
 
   def withNameSpace(s: String): String = s"schema:$s"
 
-  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/5.0/tree.pruned.jsonld"))(Codec.UTF8))(_.mkString))
+  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/14.0/tree.pruned.jsonld"))(Codec.UTF8))(_.mkString))
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -105,7 +105,7 @@ object SchemaOrg {
 
 
 
-  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/5.0/all-layers.jsonld"))(Codec.UTF8))(_.mkString))
+  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/14.0/schemaorg-current-https.jsonld"))(Codec.UTF8))(_.mkString))
   lazy val seqAll:Seq[SchemaType] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
@@ -113,7 +113,7 @@ object SchemaOrg {
       val typeStr: String = getSeqString(v \ "type").find(v => v == "Class" || v == "Property").getOrElse("")
       val subClassOf: Seq[String] = getSeqString(v \ "subClassOf")
       val domainIncludes: Seq[String] = getSeqString(v \ "domainIncludes")
-      val comment = (v \ "comment").as[String]
+      val comment = (v \ "comment" \ "value").asOpt[String].getOrElse((v \ "comment").as[String])
       val supersededBy: Seq[String] = getSeqString(v \ "supersededBy")
       SchemaType(id, typeStr, subClassOf, domainIncludes, comment, supersededBy)
     })
