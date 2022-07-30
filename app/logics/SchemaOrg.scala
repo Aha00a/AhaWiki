@@ -42,7 +42,7 @@ object SchemaOrg {
 
   def withNameSpace(s: String): String = s"schema:$s"
 
-  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/tree.jsonld"))(Codec.UTF8))(_.mkString))
+  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/5.0/tree.pruned.jsonld"))(Codec.UTF8))(_.mkString))
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -105,7 +105,7 @@ object SchemaOrg {
 
 
 
-  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/all-layers.jsonld"))(Codec.UTF8))(_.mkString))
+  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/5.0/all-layers.jsonld"))(Codec.UTF8))(_.mkString))
   lazy val seqAll:Seq[SchemaType] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
