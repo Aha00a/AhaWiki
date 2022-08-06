@@ -173,7 +173,7 @@
                                             <td><a href={locationLastVisited.location.urlMap} target="_blank" rel="noopener">{locationLastVisited.location.address}</a></td>
                                     } else if(s.startsWith("http")){
                                         <td>
-                                            {s.split("\\s").zipWithIndex.map {
+                                            {s.split("\\s+").zipWithIndex.map {
                                                 case (u, i) => <span style="display: inline-block"><a href={u} target="_blank" rel="noopener">{i + 1}</a>&nbsp;</span>
                                                 case _ => ""
                                             }}
@@ -185,9 +185,11 @@
                             }
                             <td class="distance"></td>
                             @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
-                                <td>@(locationLastVisited.seqVisited.headOption.getOrElse(""))</td>
-                                <td>@(locationLastVisited.seqVisited.lastOption.getOrElse(""))</td>
-                                <td class="count">@(locationLastVisited.seqVisited.length)</td>
+                                <td>@Html(locationLastVisited.seqVisited.headOption.map(s => s"""<a href="/w/$s">$s</a>""").getOrElse(""))</td>
+                                <td>@Html(locationLastVisited.seqVisited.lastOption.map(s => s"""<a href="/w/$s">$s</a>""").getOrElse(""))</td>
+                                <td class="count">
+                                    <span title="@(locationLastVisited.seqVisited.mkString(","))">@(locationLastVisited.seqVisited.length)</span>
+                                </td>
                             }
                         </tr>
                     }
