@@ -147,6 +147,10 @@
 
             @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Normal) {
                 setInterval(function () {
+                    if(document.hidden) {
+                        console.log('document.hidden');
+                        return;
+                    }
                     if(queueFetch.length === 0) {
                         return;
                     }
