@@ -156,7 +156,7 @@
 
                     var v = queueFetch.shift();
                     fetchLinks(v);
-                }, 500);
+                }, 1000);
                 setInterval(function () {
                     if(queueGraph.length === 0) {
                         return;
@@ -175,7 +175,7 @@
                         graph.addLink(v.src, v.dst);
                     }
                     $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
-                }, 50);
+                }, 100);
             }
 
             function fetchLinks(name) {
