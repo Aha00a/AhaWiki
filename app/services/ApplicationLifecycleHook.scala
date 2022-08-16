@@ -36,7 +36,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     Future.successful(())
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 3 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 7 minutes)(() => {
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
@@ -46,7 +46,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(45 seconds, 5 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(45 seconds, 13 minutes)(() => {
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
