@@ -53,6 +53,6 @@ object GradientPreset {
   lazy val cubehelix = Gradient(Seq(GradientPoint(0, Color(0, 0, 0)), GradientPoint(0.07, Color(22, 5, 59)), GradientPoint(0.13, Color(60, 4, 105)), GradientPoint(0.2, Color(109, 1, 135)), GradientPoint(0.27, Color(161, 0, 147)), GradientPoint(0.33, Color(210, 2, 142)), GradientPoint(0.4, Color(251, 11, 123)), GradientPoint(0.47, Color(255, 29, 97)), GradientPoint(0.53, Color(255, 54, 69)), GradientPoint(0.6, Color(255, 85, 46)), GradientPoint(0.67, Color(255, 120, 34)), GradientPoint(0.73, Color(255, 157, 37)), GradientPoint(0.8, Color(241, 191, 57)), GradientPoint(0.87, Color(224, 220, 93)), GradientPoint(0.93, Color(218, 241, 142)), GradientPoint(1, Color(227, 253, 198))))
   //====================================================================================================================
 
-  lazy val ahaWikiMap = Gradient(Seq(GradientPoint(0, Color(255, 255, 255)), GradientPoint(0.5, Color(255, 210, 0)), GradientPoint(0.75, Color(255, 0, 0)), GradientPoint(1, Color(221, 0, 0))))
+  lazy val ahaWikiMap = Gradient(Seq(GradientPoint(0, Color(255, 255, 255)), GradientPoint(0.33, Color(255, 210, 0)), GradientPoint(0.66, Color(255, 210, 0)), GradientPoint(1, Color(255, 0, 0))))
   lazy val ahaWikiBlame = Gradient(Seq(GradientPoint(0, Color(255, 255, 255)), GradientPoint(0.33, Color(210, 210, 255)), GradientPoint(0.66, Color(255, 210, 0)), GradientPoint(1, Color(255, 100, 100))))
 }
