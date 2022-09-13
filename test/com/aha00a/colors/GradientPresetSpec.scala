@@ -13,6 +13,6 @@ class GradientPresetSpec extends AnyFreeSpec {
     assert(GradientPreset.alpha.getColor(1) === Color(255, 255, 255))
 
     assert(GradientPreset.ahaWikiMap.getColor(0) === Color(255, 255, 255))
-    assert(GradientPreset.ahaWikiMap.reverse().getColor(0) === Color(221, 0, 0))
+    assert(GradientPreset.ahaWikiMap.reverse().getColor(0) === Color(255, 0, 0))
   }
 }
