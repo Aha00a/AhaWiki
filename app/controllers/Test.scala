@@ -1,32 +1,30 @@
 package controllers
 
-import java.util.Date
-
-import logics.PermissionLogic
-import logics.SessionLogic
-import logics.wikis.WikiPermission
-import models.tables.Permission
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
-import javax.inject.Inject
-import javax.inject.Named
+import logics.PermissionLogic
+import logics.SessionLogic
+import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
-import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.interpreters.Interpreters
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models._
+import models.tables.Permission
 import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.util.Date
+import javax.inject.Inject
+import javax.inject.Named
 import scala.concurrent.ExecutionContext
 
 class Test @Inject()(implicit val
@@ -39,7 +37,6 @@ class Test @Inject()(implicit val
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
-  import io.circe.generic.auto._
   import io.circe.syntax._
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
@@ -270,12 +267,32 @@ class Test @Inject()(implicit val
   }
 
   def filetest: Action[AnyContent] = Action { implicit request =>
-    Ok("Ok.")
+    import com.amazonaws.HttpMethod
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    import logics.ApplicationConf
+
+    import java.net.URL
+
+    val applicationConf = ApplicationConf()
+    val credentials = new BasicAWSCredentials(
+      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+    )
+    val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard.withCredentials(new AWSStaticCredentialsProvider(credentials)).withRegion(applicationConf.AhaWiki.aws.AWS_REGION()).build
+
+    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+    val key = "/Iron Man/poster.jpg"
+    val dateExpiration = new Date(new Date().getTime + 1000 * 60 * 5)
+    val url: URL = amazonS3.generatePresignedUrl(bucket, key, dateExpiration, HttpMethod.GET)
+
+    Ok("Ok. - " + url)
   }
 
 
   def gradient: Action[AnyContent] = Action { implicit request =>
-    import models.ContextSite.RequestWrapper
     import models.tables.Site
     implicit val site: Site = database.withConnection { implicit connection =>
       Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))

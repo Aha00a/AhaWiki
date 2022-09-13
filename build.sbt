@@ -31,6 +31,8 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value %
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
+libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
+libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",

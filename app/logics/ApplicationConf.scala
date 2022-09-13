@@ -42,5 +42,13 @@ class ApplicationConf(configuration: Configuration) {
         def secretKey(): String = configuration.getOptional[String](fqn).getOrElse("")
       }
     }
+    object aws {
+      def AWS_REGION(): String = configuration.getOptional[String](fqn).getOrElse("")
+      def AWS_ACCESS_KEY_ID(): String = configuration.getOptional[String](fqn).getOrElse("")
+      def AWS_SECRET_ACCESS_KEY(): String = configuration.getOptional[String](fqn).getOrElse("")
+      object s3 {
+        def bucket(): String = configuration.getOptional[String](fqn).getOrElse("")
+      }
+    }
   }
 }
