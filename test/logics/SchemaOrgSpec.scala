@@ -5,9 +5,9 @@ import org.scalatest.freespec.AnyFreeSpec
 class SchemaOrgSpec extends AnyFreeSpec {
 
   "properties" in {
-    assert(SchemaOrg.mapAll.size == 2381)
-    assert(SchemaOrg.mapClass.size == 818)
-    assert(SchemaOrg.mapProperty.size == 1278)
+    assert(SchemaOrg.mapAll.size == 2801)
+    assert(SchemaOrg.mapClass.size == 893)
+    assert(SchemaOrg.mapProperty.size == 1448)
   }
   "SchemaType" - {
     "toXmlSpan" in {
