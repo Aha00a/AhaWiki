@@ -25,7 +25,8 @@ object Interpreters extends TraitInterpreter {
     InterpreterGraph,
     InterpreterMath,
     InterpreterMap,
-    
+    InterpreterMermaid,
+
     InterpreterSchema,
     null
   ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
@@ -40,7 +41,7 @@ object Interpreters extends TraitInterpreter {
       .map(_.toHtmlString(content))
       .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
-  
+
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)

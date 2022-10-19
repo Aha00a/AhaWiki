@@ -67,6 +67,7 @@
             }, function (data, textStatus, jqXHR) {
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
+                mermaid.init();
                 var windowInnerHeight = $(window).innerHeight();
                 var headerInnerHeight = $('.header').innerHeight();
                 var flashInnerHeight = $('.flash').innerHeight();
