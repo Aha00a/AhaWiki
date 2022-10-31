@@ -127,7 +127,7 @@ object InterpreterVim extends TraitInterpreter with Logging {
         }
       }
 
-      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5)}" class="class_$md5 vim" data-lang="$syntax">""" + Using(scala.io.Source.fromFile(cacheFileHtml))(_.mkString) + """</div>"""
+      s"""<div data-md5="$md5" data-delete="${controllers.routes.Dev.deleteVimCache(md5)}" class="class_$md5 vim notranslate" data-lang="$syntax">""" + Using(scala.io.Source.fromFile(cacheFileHtml))(_.mkString) + """</div>"""
     }
   }
 
