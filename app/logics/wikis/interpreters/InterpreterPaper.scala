@@ -10,7 +10,7 @@ object InterpreterPaper extends TraitInterpreter {
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     s"""<div class="paperContent ${pageContent.argument(0)}">""" +
-      InterpreterWiki.toHtmlString(pageContent.content).split( """<hr/>""")
+      pageContent.content.split("""(?m)^-{4,}$""").map(InterpreterWiki.toHtmlString)
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">
@@ -29,7 +29,7 @@ object InterpreterPaper extends TraitInterpreter {
              |  <!-- ${index} -->
              |</div>""".stripMargin
         }.mkString("\n") +
-    """</div>"""
+      """</div>"""
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
