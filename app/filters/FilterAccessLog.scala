@@ -10,9 +10,9 @@ import javax.inject.Inject
 import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
-val seqRemoteAddressBlocked = Seq("13.59.169.75")
 
 class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionContext) extends Filter with Logging {
+  val seqRemoteAddressBlocked: Seq[String] = Seq("13.59.169.75")
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
