@@ -199,21 +199,26 @@ class Wiki @Inject()(implicit val
     val markupSchemaWithTitle = markupSchema.toOption.map(s => s"=== [schema:Schema Schema] === #Schema-Generated\n$s").getOrElse("")
     val markupBacklinksWithTitle = optionLink.map(s => s"=== Backlinks === #Backlinks-Generated\n[[Backlinks]]").getOrElse("")
     val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages === #Similar-Pages-Generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
+    val seqLinkFiltered = Adjacent.getSeqLinkFiltered(name)
 
-    s"""
-       |== See Also == #See-Also-Generated
-       |[[Html(<table class="column2"><tbody><tr><td>)]]
-       |$markupSchemaWithTitle
-       |
-       |$markupBacklinksWithTitle
-       |
-       |$markupCosineSimilaritiesWithTitle
-       |[[Html(</td><td>)]]
-       |
-       |=== Adjacent Pages === #Adjacent-Pages-Generated
-       |[[AdjacentPages]]
-       |[[Html(</td></tr></tbody></table>)]]
-       |""".stripMargin
+    (markupSchemaWithTitle, markupBacklinksWithTitle, markupCosineSimilaritiesWithTitle, seqLinkFiltered.length) match {
+      case ("", "", "", 0) => ""
+      case _ =>
+        s"""
+           |== See Also == #See-Also-Generated
+           |[[Html(<table class="column2"><tbody><tr><td>)]]
+           |$markupSchemaWithTitle
+           |
+           |$markupBacklinksWithTitle
+           |
+           |$markupCosineSimilaritiesWithTitle
+           |[[Html(</td><td>)]]
+           |
+           |=== Adjacent Pages === #Adjacent-Pages-Generated
+           |[[AdjacentPages]]
+           |[[Html(</td></tr></tbody></table>)]]
+           |""".stripMargin
+    }
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
