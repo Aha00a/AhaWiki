@@ -8,10 +8,6 @@ import java.sql.Connection
 
 object MacroAdjacentPages extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop))
-  }
-
-  def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
     views.html.Wiki.adjacentPages(enableWikiLink = true).toString()
   }
 }
