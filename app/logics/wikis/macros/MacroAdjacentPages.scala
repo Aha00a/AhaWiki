@@ -7,11 +7,6 @@ import models.ContextWikiPage
 import java.sql.Connection
 
 object MacroAdjacentPages extends TraitMacro {
-  import scala.util.matching.Regex
-
-  val year: Regex = """\d{4}""".r
-  val date: Regex = """\d{4}-\d{2}-\d{2}""".r
-
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop))
   }
