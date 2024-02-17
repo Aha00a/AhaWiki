@@ -109,10 +109,9 @@ class Wiki @Inject()(implicit val
 
         case (None, _, _, _) =>
           val additionalInfo = getAhaMarkAdditionalInfo(name)
-          val regexSchemaColon: Regex = """^schema:(.+)$""".r
           DefaultPageLogic.getOption(name).map(content => {
             val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-            Ok(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
           }).getOrElse({
             val content = WikiSnippet.notFound(name)
             val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
