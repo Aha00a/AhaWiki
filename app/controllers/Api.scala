@@ -2,22 +2,18 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-
-import javax.inject._
 import logics.wikis.PageLogic
-import models.Adjacent.getSeqLinkFiltered
-import models.{ContextSite, ContextWikiPage}
+import models.Adjacent
+import models.ContextSite
+import models.tables.Site
 import play.api.Configuration
-import play.api.Environment
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.sql.Connection
+import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.util.Random
-import models.tables.Site
 
 
 class Api @Inject()(
@@ -32,7 +28,6 @@ class Api @Inject()(
                    ) extends BaseController {
   import io.circe.generic.auto._
   import io.circe.syntax._
-  import models.tables.Link
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
@@ -69,14 +64,12 @@ class Api @Inject()(
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
       implicit val contextSite: ContextSite = ContextSite()
-      Ok(getSeqLinkFiltered(name).asJson)
+      Ok(Adjacent.getSeqLinkFiltered(name).asJson)
     }
   }
 
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import java.util.Date
-
       import io.circe.Json
       import models.tables.Page
       import models.tables.PageWithoutContentWithSize
