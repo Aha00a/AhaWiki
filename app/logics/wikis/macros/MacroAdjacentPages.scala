@@ -12,9 +12,9 @@ object MacroAdjacentPages extends TraitMacro {
   val year: Regex = """\d{4}""".r
   val date: Regex = """\d{4}-\d{2}-\d{2}""".r
 
-  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop))
-  }}
+  }
 
   def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
     views.html.Wiki.adjacentPages(enableWikiLink = true).toString()
