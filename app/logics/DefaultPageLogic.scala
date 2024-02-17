@@ -138,7 +138,7 @@ object DefaultPageLogic {
               if(schema(0).isUpper) {
                 val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
                 s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
-                   |[[[#!Html
+                   |[[[#!Markdown
                    |${schemaType.comment}
                    |]]]
                    |== Pages
