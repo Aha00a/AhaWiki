@@ -54,7 +54,7 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
     }
   }
 
-  def toLink(src: String) = Link(src, uriNormalized, alias)
+  def toLink(src: String): Link = Link(src, uriNormalized, alias)
 
   override def toHtml: Elem = XML.loadString(toHtmlString())
 }
