@@ -2,8 +2,11 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+
 import javax.inject._
 import logics.wikis.PageLogic
+import models.Adjacent.getSeqLinkFiltered
+import models.{ContextSite, ContextWikiPage}
 import play.api.Configuration
 import play.api.Environment
 import play.api.cache.SyncCacheApi
@@ -11,8 +14,10 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.sql.Connection
 import scala.concurrent.ExecutionContext
 import scala.util.Random
+import models.tables.Site
 
 
 class Api @Inject()(
@@ -62,17 +67,9 @@ class Api @Inject()(
     import java.net.URLDecoder
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
-      import models.ContextWikiPage
-      import models.tables.SchemaOrg
-      import models.tables.Site
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
-
-      val seqLink: Seq[Link] = Link.select(name)
-      val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
-      val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(_.and(contextWikiPage.pageCanSee))
-
-      Ok(seqLinkFiltered.asJson)
+      implicit val contextSite: ContextSite = ContextSite()
+      Ok(getSeqLinkFiltered(name).asJson)
     }
   }
 
