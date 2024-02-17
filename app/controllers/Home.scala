@@ -36,7 +36,19 @@ class Home @Inject() (
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
 
-      Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(""))
+      Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(
+        """User-agent: *
+          |Disallow: /
+          |
+          |User-agent: Googlebot
+          |Allow: /
+          |
+          |User-agent: Mediapartners-Google
+          |Allow: /
+          |
+          |User-agent: DuckDuckBot
+          |Allow: /
+          |""".stripMargin))
     }
   }
 
