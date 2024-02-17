@@ -1,10 +1,5 @@
 package controllers
 
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.util.Date
-import java.net.URL
-
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
 import com.aha00a.commons.Implicits._
@@ -13,15 +8,16 @@ import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
-import javax.inject._
 import logics._
 import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
+import logics.wikis.WikiSnippet
 import logics.wikis.interpreters.Interpreters
 import models.ContextSite.RequestWrapper
 import models._
 import models.tables.Page
+import models.tables.Site
 import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
@@ -33,14 +29,16 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.util.Date
+import javax.inject._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
-import logics.wikis.WikiSnippet
-import models.tables.Site
 
 class Wiki @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -58,9 +56,6 @@ class Wiki @Inject()(implicit val
   }
 
   import java.sql.Connection
-
-  import io.circe.generic.auto._
-  import io.circe.syntax._
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
@@ -109,14 +104,11 @@ class Wiki @Inject()(implicit val
 
         case (None, _, _, _) =>
           val additionalInfo = getAhaMarkAdditionalInfo(name)
-          DefaultPageLogic.getOption(name).map(content => {
+          def render(content: String) = {
             val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
             NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          }).getOrElse({
-            val content = WikiSnippet.notFound(name)
-            val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          })
+          }
+          DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name)))
 
         case (Some(page), "" | "view", true, _) =>
           try {
