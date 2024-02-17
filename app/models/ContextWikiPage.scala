@@ -15,9 +15,6 @@ import play.api.Configuration
 import play.api.db.Database
 import play.api.mvc.Request
 
-object Context {
-
-}
 class Context()(
   implicit
   val database: Database,
@@ -25,9 +22,6 @@ class Context()(
   val configuration: Configuration,
   val requestWrapper: RequestWrapper,
 ){
-  def toContextSite()(implicit site: Site): ContextSite = {
-    new ContextSite()
-  }
 }
 
 object ContextSite {
@@ -103,7 +97,6 @@ class ContextSite()(
   )}
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
-  def pageExists(name: String): Boolean = setPageNameByPermission.contains(name)
   def pageCanSee(name: String): Boolean = !setPageNameAll.contains(name) || setPageNameByPermission.contains(name)
 
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
