@@ -141,21 +141,25 @@ object DefaultPageLogic {
                    |[[[#!Html
                    |${schemaType.comment}
                    |]]]
+                   |== Pages
+                   |[[Html(<div class="columnWidth350">)]]
                    |${listSchemaOrg.map(s => s""" * ["${s.page}"]""").mkString("\n")}
+                   |[[Html(</div>)]]
                    |""".stripMargin
               } else {
                 val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
                 val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
                 s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
-                   |[[[#!Html
+                   |[[[#!Markdown
                    |${schemaType.comment}
                    |]]]
                    |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
                   s"""== ["${t._1}" ${t._1}]
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["schema:${t2._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t2._1)}]
-                       |${t2._2.map(s =>
-                      s""" * ["${s.page}"]""").mkString("\n")}
+                       |[[Html(<div class="columnWidth350">)]]
+                       |${t2._2.map(s => s""" * ["${s.page}"]""").mkString("\n")}
+                       |[[Html(</div>)]]
                        |""".stripMargin).mkString("\n")}
                      |""".stripMargin).mkString("\n")}
                    |""".stripMargin
