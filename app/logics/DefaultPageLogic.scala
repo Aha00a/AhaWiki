@@ -143,7 +143,7 @@ object DefaultPageLogic {
                    |]]]
                    |== Pages
                    |[[Html(<div class="columnWidth350">)]]
-                   |${listSchemaOrg.map(s => s""" * ["${s.page}"]""").mkString("\n")}
+                   |${listSchemaOrg.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
                    |[[Html(</div>)]]
                    |""".stripMargin
               } else {
@@ -158,7 +158,7 @@ object DefaultPageLogic {
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["schema:${t2._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t2._1)}]
                        |[[Html(<div class="columnWidth350">)]]
-                       |${t2._2.map(s => s""" * ["${s.page}"]""").mkString("\n")}
+                       |${t2._2.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
                        |[[Html(</div>)]]
                        |""".stripMargin).mkString("\n")}
                      |""".stripMargin).mkString("\n")}

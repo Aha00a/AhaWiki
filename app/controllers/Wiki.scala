@@ -219,7 +219,7 @@ class Wiki @Inject()(implicit val
     mapClsList.keys.toSeq.sorted.map(k => {
       s"""==== [schema:$k $k]
          |[[Html(<div class="columnWidth350">)]]
-         |${mapClsList(k).map(t => s""" * [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
+         |${mapClsList(k).map(t => s""" 1. [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
          |[[Html(</div>)]]
          |""".stripMargin
     }).mkString("\n")
