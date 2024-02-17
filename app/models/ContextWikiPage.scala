@@ -94,8 +94,13 @@ class ContextSite()(
   requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
-  lazy val setPageNameAll: Set[String] = PageLogic.getListPage().map(_.name).toSet
-  lazy val listPageByPermission: List[PageWithoutContentWithSize] = PageLogic.getListPageByPermission()
+  lazy val (
+    setPageNameAll: Set[String],
+    listPageByPermission: List[PageWithoutContentWithSize]
+  ) = database.withConnection { implicit connection => (
+    PageLogic.getListPage().map(_.name).toSet,
+    PageLogic.getListPageByPermission()
+  )}
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
   def pageExists(name: String): Boolean = setPageNameByPermission.contains(name)
