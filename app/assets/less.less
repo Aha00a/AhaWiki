@@ -53,10 +53,12 @@ html, body {
 
 		&[target=_blank] {
 			&:before {
-				//noinspection CssUnknownTarget
-				content: url("/public/img/iconLinkExternal.16x16.png");
-				position: relative;
-				top: 4px;
+				content: "\f35d";
+				font-family: "Font Awesome 5 Free", sans-serif;
+				font-weight: 900;
+				display: inline-block;
+				scale: 0.75;
+				vertical-align: bottom;
 			}
 		}
 		&:link{
