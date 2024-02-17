@@ -139,7 +139,7 @@ object DefaultPageLogic {
                 val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
                 s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
                    |[[[#!Markdown
-                   |${schemaType.comment}
+                   |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
                    |== Pages
                    |[[Html(<div class="columnWidth350">)]]
@@ -151,7 +151,7 @@ object DefaultPageLogic {
                 val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
                 s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
                    |[[[#!Markdown
-                   |${schemaType.comment}
+                   |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
                    |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
                   s"""== ["${t._1}" ${t._1}]
