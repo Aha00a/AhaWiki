@@ -265,6 +265,10 @@ body {
     opacity: 0;
   }
 }
+.AhaWiki .commonAhaWiki ul,
+.AhaWiki .commonAhaWiki ol {
+  padding-left: 25px;
+}
 .AhaWiki .commonAhaWiki li > p {
   margin: 0;
   display: inline-block;
@@ -730,6 +734,10 @@ body {
   .AhaWiki .wikiContent hr.pageBreakAfterAlways {
     opacity: 0;
   }
+}
+.AhaWiki .wikiContent ul,
+.AhaWiki .wikiContent ol {
+  padding-left: 25px;
 }
 .AhaWiki .wikiContent li > p {
   margin: 0;
@@ -1317,6 +1325,10 @@ body {
   .AhaWiki .paperContent .page .pageContent hr.pageBreakAfterAlways {
     opacity: 0;
   }
+}
+.AhaWiki .paperContent .page .pageContent ul,
+.AhaWiki .paperContent .page .pageContent ol {
+  padding-left: 25px;
 }
 .AhaWiki .paperContent .page .pageContent li > p {
   margin: 0;
