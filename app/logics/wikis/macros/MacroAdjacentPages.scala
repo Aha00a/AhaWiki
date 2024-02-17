@@ -16,10 +16,7 @@ object MacroAdjacentPages extends TraitMacro {
     getMarkupRelatedPages(argument.getOrElse(wikiContext.nameTop))
   }}
 
-  def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
-    import models.tables.Site
-    implicit val site: Site = wikiContext.site
-
+  def getMarkupRelatedPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
     views.html.Wiki.adjacentPages(enableWikiLink = true).toString()
   }
 }
