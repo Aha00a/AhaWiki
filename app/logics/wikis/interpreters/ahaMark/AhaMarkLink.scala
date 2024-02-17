@@ -4,7 +4,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RegexUtil
 import models.ContextWikiPage
 
-case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: ContextWikiPage) extends AhaMark {
+case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = false)(implicit wikiContext: ContextWikiPage) extends AhaMark {
 
   import models.tables.Link
 
@@ -50,7 +50,8 @@ case class AhaMarkLink(uri: String, alias: String = "")(implicit wikiContext: Co
       } else {
         """ class="missing""""
       }
-      "<a href=\"" + RegexUtil.escapeDollar(href.escapeHtml()) + "\"" + attrTarget + attrCss + ">" + RegexUtil.escapeDollar(display.escapeHtml()) + "</a>"
+      val attrRel = if(noFollow) """ rel="nofollow"""" else ""
+      s"""<a href="${RegexUtil.escapeDollar(href.escapeHtml())}"$attrTarget$attrCss$attrRel>${RegexUtil.escapeDollar(display.escapeHtml())}</a>"""
     }
   }
 

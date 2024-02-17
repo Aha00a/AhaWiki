@@ -35,7 +35,7 @@ object MacroLinkDate extends TraitMacro {
 
   private def getSeqLinkAround(argument: String)(implicit wikiContext: ContextWikiPage): Seq[AhaMarkLink] = {
     val localDate: LocalDate = LocalDate.parse(argument)
-    val seqLinkAround: Seq[AhaMarkLink] = RangeUtil.around(0, 3).map(i => AhaMarkLink(localDate.plusDays(i).toIsoLocalDateString))
+    val seqLinkAround: Seq[AhaMarkLink] = RangeUtil.around(0, 3).map(i => AhaMarkLink(localDate.plusDays(i).toIsoLocalDateString, "", noFollow = true))
     seqLinkAround
   }
 
@@ -48,6 +48,6 @@ object MacroLinkDate extends TraitMacro {
     case _ => Seq()
   }
 
-  def l(s:String)(implicit wikiContext: ContextWikiPage): String = AhaMarkLink(s, s.replace("--", "")).toHtmlString()
+  def l(s:String)(implicit wikiContext: ContextWikiPage): String = AhaMarkLink(s, s.replace("--", ""), noFollow = true).toHtmlString()
 
 }
