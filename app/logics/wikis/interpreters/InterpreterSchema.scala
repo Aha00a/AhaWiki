@@ -80,7 +80,11 @@ object InterpreterSchema extends TraitInterpreter {
                     case v if PageNameLogic.isExternal(v) =>
                       <dd property={key}><a href={v.escapeHtml()} target="_blank" rel="noopener">{v}</a></dd>
                     case v =>
-                      <dd property={key}><a href={v.escapeHtml()} class={if (pageNameSet.contains(v)) "" else "missing"}>{v}</a></dd>
+                      <dd property={key}><a
+                        href={v.escapeHtml()}
+                        class={if (pageNameSet.contains(v)) "" else "missing"}
+                        rel={if (pageNameSet.contains(v)) "" else "nofollow"}
+                      >{v}</a></dd>
                   }
                 }
               </div>

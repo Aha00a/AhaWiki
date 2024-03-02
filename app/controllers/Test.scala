@@ -81,8 +81,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.inlineToHtmlString("""[FrontPage Alias]"""), """<a href="/w/FrontPage">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""[wiki:FrontPage]"""), """<a href="/w/FrontPage">FrontPage</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""[wiki:FrontPage Alias]"""), """<a href="/w/FrontPage">Alias</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""["Some Page"]"""), """<a href="/w/Some Page" class="missing">Some Page</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""["Some Page" Alias]"""), """<a href="/w/Some Page" class="missing">Alias</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""["Some Page"]"""), """<a href="/w/Some Page" class="missing" rel="nofollow">Some Page</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""["Some Page" Alias]"""), """<a href="/w/Some Page" class="missing" rel="nofollow">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""[schema:Schema]"""), """<a href="/w/schema:Schema" class="schema">schema:Schema</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""[schema:Schema Alias]"""), """<a href="/w/schema:Schema" class="schema">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema"]"""), """<a href="/w/schema:Schema" class="schema">schema:Schema</a>""")
@@ -109,8 +109,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.inlineToHtmlString("""\\[FrontPage Alias]"""), """\\<a href="/w/FrontPage">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""\\[wiki:FrontPage]"""), """\\<a href="/w/FrontPage">FrontPage</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""\\[wiki:FrontPage Alias]"""), """\\<a href="/w/FrontPage">Alias</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""\\["Some Page"]"""), """\\<a href="/w/Some Page" class="missing">Some Page</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""\\["Some Page" Alias]"""), """\\<a href="/w/Some Page" class="missing">Alias</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""\\["Some Page"]"""), """\\<a href="/w/Some Page" class="missing" rel="nofollow">Some Page</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""\\["Some Page" Alias]"""), """\\<a href="/w/Some Page" class="missing" rel="nofollow">Alias</a>""")
 
 
       assertEquals(AhaMarkLink("""http://example.com""").toHtmlString(), """<a href="http://example.com" target="_blank" rel="noopener">http://example.com</a>""")
@@ -191,7 +191,7 @@ class Test @Inject()(implicit val
             |                <dt>
             |                  <a href="/w/schema:name" title="The name of the item." class="">Name </a>
             |                </dt>
-            |                <dd property="name"><a href="KIM, Aha" class="missing">KIM, Aha</a></dd>
+            |                <dd property="name"><a href="KIM, Aha" class="missing" rel="nofollow">KIM, Aha</a></dd>
             |              </div><div>
             |                <dt>
             |                  <a href="/w/schema:url" title="URL of the item." class="">Url </a>
@@ -201,7 +201,7 @@ class Test @Inject()(implicit val
             |                <dt>
             |                  <a href="/w/schema:memberOf" title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of </a>
             |                </dt>
-            |                <dd property="memberOf"><a href="AhariseNotExists" class="missing">AhariseNotExists</a></dd>
+            |                <dd property="memberOf"><a href="AhariseNotExists" class="missing" rel="nofollow">AhariseNotExists</a></dd>
             |              </div>
             |        </div>
             |      </dl></div>""".stripMargin
