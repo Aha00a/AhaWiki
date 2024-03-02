@@ -48,7 +48,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       ) {
         ""
       } else {
-        """ class="missing""""
+        """ class="missing" rel="nofollow""""
       }
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
       s"""<a href="${RegexUtil.escapeDollar(href.escapeHtml())}"$attrTarget$attrCss$attrRel>${RegexUtil.escapeDollar(display.escapeHtml())}</a>"""
