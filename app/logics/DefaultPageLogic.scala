@@ -155,10 +155,10 @@ object DefaultPageLogic {
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
                    |[https://schema.org/${schemaType.id}]
-                   |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
-                  s"""== ["${t._1}" ${t._1}]
+                   |${listSchemaOrgWithPermission.groupBy(_.cls).transform((k, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
+                  s"""== ["schema:${t._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t._1)}]
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
-                    s"""=== ["schema:${t2._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t2._1)}]
+                    s"""=== ["${t2._1}" ${t2._1}]
                        |[[Html(<div class="columnWidth350">)]]
                        |${t2._2.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
                        |[[Html(</div>)]]
