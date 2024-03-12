@@ -72,10 +72,11 @@ html, body {
 		}
 		&.missing {
 			color: inherit;
-			text-decoration: underline dotted;
+			text-decoration: underline solid rgba(0,0,0,0.3);
 
 			&:after {
-				content: "?"
+				content: "?";
+				color: rgba(0,0,0,0.5);
 			}
 		}
 		&.schema {

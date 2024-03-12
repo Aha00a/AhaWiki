@@ -101,10 +101,11 @@ body {
 }
 .AhaWiki a.missing {
   color: inherit;
-  text-decoration: underline dotted;
+  text-decoration: underline solid rgba(0, 0, 0, 0.3);
 }
 .AhaWiki a.missing:after {
   content: "?";
+  color: rgba(0, 0, 0, 0.5);
 }
 .AhaWiki a.schema {
   color: #003;
