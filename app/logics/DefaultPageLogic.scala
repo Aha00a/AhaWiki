@@ -141,6 +141,7 @@ object DefaultPageLogic {
                    |[[[#!Markdown
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
+                   |[https://schema.org/${schemaType.id}]
                    |== Pages
                    |[[Html(<div class="columnWidth350">)]]
                    |${listSchemaOrg.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
@@ -153,6 +154,7 @@ object DefaultPageLogic {
                    |[[[#!Markdown
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
+                   |[https://schema.org/${schemaType.id}]
                    |${listSchemaOrgWithPermission.groupBy(_.value).transform((k, v) => v.groupBy(_.cls)).toSeq.sortBy(_._1).map(t =>
                   s"""== ["${t._1}" ${t._1}]
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
