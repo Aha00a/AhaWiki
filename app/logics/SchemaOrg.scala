@@ -35,7 +35,7 @@ object SchemaOrg {
         classes
       )
 
-      <a href={"/w/schema:" + id} title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id} </a>
+      <a href={"/w/schema:" + id} title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id}</a>
     }
     def toAhaMarkLink(implicit wikiContext:ContextWikiPage): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
   }
@@ -135,11 +135,12 @@ object SchemaOrg {
               {
                 val groupByFirstLetter: Map[Char, Seq[SchemaType]] = seqProperty.filter(p => p.domainIncludes.contains(c)).sortBy(_.id).groupBy(p => p.id(0))
                 groupByFirstLetter.keys.toSeq.sorted.map { firstLetter =>
-                  <div>
+                  <ol class="groupedProperties">
                     {
-                      groupByFirstLetter(firstLetter).map(p => p.toXmlSpan(toTitleCase = false, if(seqPropertyUsed.contains(p.id)){Seq("match")}else{Seq("")}))
+                      groupByFirstLetter(firstLetter)
+                        .map(p => <li>{p.toXmlSpan(toTitleCase = false, if(seqPropertyUsed.contains(p.id)){Seq("match")}else{Seq("")})}</li>)
                     }
-                  </div>
+                  </ol>
                 }
               }
             </div>

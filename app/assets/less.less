@@ -396,6 +396,30 @@ html, body {
 			div.toc, div.schema {
 				max-width: 25vw;
 			}
+			div.schema {
+				>div.preview.info {
+					.properties {
+						ol.groupedProperties {
+							margin: 0;
+							list-style-type: none;
+							padding-left: 0;
+							margin-bottom: 5px;
+							li {
+								display: inline-block;
+								margin-right: 5px;
+								&:after {
+									content: ',';
+								}
+								&:last-of-type {
+									&:after {
+										content: '';
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 			>ul {
 				padding-left: 0;
 			}

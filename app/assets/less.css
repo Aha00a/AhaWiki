@@ -501,6 +501,22 @@ body {
 .AhaWiki .commonAhaWiki .previewPane div.schema {
   max-width: 25vw;
 }
+.AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
+  margin: 0;
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 5px;
+}
+.AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
+  display: inline-block;
+  margin-right: 5px;
+}
+.AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:after {
+  content: ',';
+}
+.AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:last-of-type:after {
+  content: '';
+}
 .AhaWiki .commonAhaWiki .previewPane > ul {
   padding-left: 0;
 }
@@ -970,6 +986,22 @@ body {
 .AhaWiki .wikiContent .previewPane div.toc,
 .AhaWiki .wikiContent .previewPane div.schema {
   max-width: 25vw;
+}
+.AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
+  margin: 0;
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 5px;
+}
+.AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
+  display: inline-block;
+  margin-right: 5px;
+}
+.AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:after {
+  content: ',';
+}
+.AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:last-of-type:after {
+  content: '';
 }
 .AhaWiki .wikiContent .previewPane > ul {
   padding-left: 0;
@@ -1561,6 +1593,22 @@ body {
 .AhaWiki .paperContent .page .pageContent .previewPane div.toc,
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema {
   max-width: 25vw;
+}
+.AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
+  margin: 0;
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 5px;
+}
+.AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
+  display: inline-block;
+  margin-right: 5px;
+}
+.AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:after {
+  content: ',';
+}
+.AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li:last-of-type:after {
+  content: '';
 }
 .AhaWiki .paperContent .page .pageContent .previewPane > ul {
   padding-left: 0;
