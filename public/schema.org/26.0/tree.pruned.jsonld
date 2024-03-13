@@ -1,0 +1,3249 @@
+{
+    "id": "Thing",
+    "children": [
+        {
+            "id": "Action",
+            "children": [
+                {
+                    "id": "AchieveAction",
+                    "children": [
+                        {
+                            "id": "LoseAction"
+                        },
+                        {
+                            "id": "TieAction"
+                        },
+                        {
+                            "id": "WinAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "AssessAction",
+                    "children": [
+                        {
+                            "id": "ChooseAction",
+                            "children": [
+                                {
+                                    "id": "VoteAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "IgnoreAction"
+                        },
+                        {
+                            "id": "ReactAction",
+                            "children": [
+                                {
+                                    "id": "AgreeAction"
+                                },
+                                {
+                                    "id": "DisagreeAction"
+                                },
+                                {
+                                    "id": "DislikeAction"
+                                },
+                                {
+                                    "id": "EndorseAction"
+                                },
+                                {
+                                    "id": "LikeAction"
+                                },
+                                {
+                                    "id": "WantAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ReviewAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "ConsumeAction",
+                    "children": [
+                        {
+                            "id": "DrinkAction"
+                        },
+                        {
+                            "id": "EatAction"
+                        },
+                        {
+                            "id": "InstallAction"
+                        },
+                        {
+                            "id": "ListenAction"
+                        },
+                        {
+                            "id": "PlayGameAction"
+                        },
+                        {
+                            "id": "ReadAction"
+                        },
+                        {
+                            "id": "UseAction",
+                            "children": [
+                                {
+                                    "id": "WearAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ViewAction"
+                        },
+                        {
+                            "id": "WatchAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "ControlAction",
+                    "children": [
+                        {
+                            "id": "ActivateAction"
+                        },
+                        {
+                            "id": "DeactivateAction"
+                        },
+                        {
+                            "id": "ResumeAction"
+                        },
+                        {
+                            "id": "SuspendAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "CreateAction",
+                    "children": [
+                        {
+                            "id": "CookAction"
+                        },
+                        {
+                            "id": "DrawAction"
+                        },
+                        {
+                            "id": "FilmAction"
+                        },
+                        {
+                            "id": "PaintAction"
+                        },
+                        {
+                            "id": "PhotographAction"
+                        },
+                        {
+                            "id": "WriteAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "FindAction",
+                    "children": [
+                        {
+                            "id": "CheckAction"
+                        },
+                        {
+                            "id": "DiscoverAction"
+                        },
+                        {
+                            "id": "TrackAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "InteractAction",
+                    "children": [
+                        {
+                            "id": "BefriendAction"
+                        },
+                        {
+                            "id": "CommunicateAction",
+                            "children": [
+                                {
+                                    "id": "AskAction"
+                                },
+                                {
+                                    "id": "CheckInAction"
+                                },
+                                {
+                                    "id": "CheckOutAction"
+                                },
+                                {
+                                    "id": "CommentAction"
+                                },
+                                {
+                                    "id": "InformAction",
+                                    "children": [
+                                        {
+                                            "id": "ConfirmAction"
+                                        },
+                                        {
+                                            "id": "RsvpAction"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "InviteAction"
+                                },
+                                {
+                                    "id": "ReplyAction"
+                                },
+                                {
+                                    "id": "ShareAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "FollowAction"
+                        },
+                        {
+                            "id": "JoinAction"
+                        },
+                        {
+                            "id": "LeaveAction"
+                        },
+                        {
+                            "id": "MarryAction"
+                        },
+                        {
+                            "id": "RegisterAction"
+                        },
+                        {
+                            "id": "SubscribeAction"
+                        },
+                        {
+                            "id": "UnRegisterAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "MoveAction",
+                    "children": [
+                        {
+                            "id": "ArriveAction"
+                        },
+                        {
+                            "id": "DepartAction"
+                        },
+                        {
+                            "id": "TravelAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "OrganizeAction",
+                    "children": [
+                        {
+                            "id": "AllocateAction",
+                            "children": [
+                                {
+                                    "id": "AcceptAction"
+                                },
+                                {
+                                    "id": "AssignAction"
+                                },
+                                {
+                                    "id": "AuthorizeAction"
+                                },
+                                {
+                                    "id": "RejectAction"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ApplyAction"
+                        },
+                        {
+                            "id": "BookmarkAction"
+                        },
+                        {
+                            "id": "PlanAction",
+                            "children": [
+                                {
+                                    "id": "CancelAction"
+                                },
+                                {
+                                    "id": "ReserveAction"
+                                },
+                                {
+                                    "id": "ScheduleAction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "PlayAction",
+                    "children": [
+                        {
+                            "id": "ExerciseAction"
+                        },
+                        {
+                            "id": "PerformAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "SearchAction"
+                },
+                {
+                    "id": "SeekToAction"
+                },
+                {
+                    "id": "SolveMathAction"
+                },
+                {
+                    "id": "TradeAction",
+                    "children": [
+                        {
+                            "id": "BuyAction"
+                        },
+                        {
+                            "id": "DonateAction"
+                        },
+                        {
+                            "id": "OrderAction"
+                        },
+                        {
+                            "id": "PayAction"
+                        },
+                        {
+                            "id": "PreOrderAction"
+                        },
+                        {
+                            "id": "QuoteAction"
+                        },
+                        {
+                            "id": "RentAction"
+                        },
+                        {
+                            "id": "SellAction"
+                        },
+                        {
+                            "id": "TipAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "TransferAction",
+                    "children": [
+                        {
+                            "id": "BorrowAction"
+                        },
+                        {
+                            "id": "DownloadAction"
+                        },
+                        {
+                            "id": "GiveAction"
+                        },
+                        {
+                            "id": "LendAction"
+                        },
+                        {
+                            "id": "MoneyTransfer"
+                        },
+                        {
+                            "id": "ReceiveAction"
+                        },
+                        {
+                            "id": "ReturnAction"
+                        },
+                        {
+                            "id": "SendAction"
+                        },
+                        {
+                            "id": "TakeAction"
+                        }
+                    ]
+                },
+                {
+                    "id": "UpdateAction",
+                    "children": [
+                        {
+                            "id": "AddAction",
+                            "children": [
+                                {
+                                    "id": "InsertAction",
+                                    "children": [
+                                        {
+                                            "id": "AppendAction"
+                                        },
+                                        {
+                                            "id": "PrependAction"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "id": "DeleteAction"
+                        },
+                        {
+                            "id": "ReplaceAction"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "BioChemEntity",
+            "children": [
+                {
+                    "id": "ChemicalSubstance"
+                },
+                {
+                    "id": "Gene"
+                },
+                {
+                    "id": "MolecularEntity"
+                },
+                {
+                    "id": "Protein"
+                }
+            ]
+        },
+        {
+            "id": "CreativeWork",
+            "children": [
+                {
+                    "id": "AmpStory"
+                },
+                {
+                    "id": "ArchiveComponent"
+                },
+                {
+                    "id": "Article",
+                    "children": [
+                        {
+                            "id": "AdvertiserContentArticle"
+                        },
+                        {
+                            "id": "NewsArticle",
+                            "children": [
+                                {
+                                    "id": "AnalysisNewsArticle"
+                                },
+                                {
+                                    "id": "AskPublicNewsArticle"
+                                },
+                                {
+                                    "id": "BackgroundNewsArticle"
+                                },
+                                {
+                                    "id": "OpinionNewsArticle"
+                                },
+                                {
+                                    "id": "ReportageNewsArticle"
+                                },
+                                {
+                                    "id": "ReviewNewsArticle"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Report"
+                        },
+                        {
+                            "id": "SatiricalArticle"
+                        },
+                        {
+                            "id": "ScholarlyArticle",
+                            "children": [
+                                {
+                                    "id": "MedicalScholarlyArticle"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "SocialMediaPosting",
+                            "children": [
+                                {
+                                    "id": "BlogPosting",
+                                    "children": [
+                                        {
+                                            "id": "LiveBlogPosting"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "DiscussionForumPosting"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "TechArticle",
+                            "children": [
+                                {
+                                    "id": "APIReference"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "Atlas"
+                },
+                {
+                    "id": "Blog"
+                },
+                {
+                    "id": "Book",
+                    "children": [
+                        {
+                            "id": "Audiobook"
+                        }
+                    ]
+                },
+                {
+                    "id": "Certification"
+                },
+                {
+                    "id": "Chapter"
+                },
+                {
+                    "id": "Claim"
+                },
+                {
+                    "id": "Clip",
+                    "children": [
+                        {
+                            "id": "MovieClip"
+                        },
+                        {
+                            "id": "RadioClip"
+                        },
+                        {
+                            "id": "TVClip"
+                        },
+                        {
+                            "id": "VideoGameClip"
+                        }
+                    ]
+                },
+                {
+                    "id": "Code"
+                },
+                {
+                    "id": "Collection",
+                    "children": [
+                        {
+                            "id": "ProductCollection"
+                        }
+                    ]
+                },
+                {
+                    "id": "ComicStory",
+                    "children": [
+                        {
+                            "id": "ComicCoverArt"
+                        }
+                    ]
+                },
+                {
+                    "id": "Comment",
+                    "children": [
+                        {
+                            "id": "Answer"
+                        },
+                        {
+                            "id": "CorrectionComment"
+                        },
+                        {
+                            "id": "Question"
+                        }
+                    ]
+                },
+                {
+                    "id": "Conversation"
+                },
+                {
+                    "id": "Course"
+                },
+                {
+                    "id": "CreativeWorkSeason",
+                    "children": [
+                        {
+                            "id": "PodcastSeason"
+                        },
+                        {
+                            "id": "RadioSeason"
+                        },
+                        {
+                            "id": "TVSeason"
+                        }
+                    ]
+                },
+                {
+                    "id": "CreativeWorkSeries",
+                    "children": [
+                        {
+                            "id": "BookSeries"
+                        },
+                        {
+                            "id": "MovieSeries"
+                        },
+                        {
+                            "id": "Periodical",
+                            "children": [
+                                {
+                                    "id": "ComicSeries"
+                                },
+                                {
+                                    "id": "Newspaper"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PodcastSeries"
+                        },
+                        {
+                            "id": "RadioSeries"
+                        },
+                        {
+                            "id": "TVSeries"
+                        },
+                        {
+                            "id": "VideoGameSeries"
+                        }
+                    ]
+                },
+                {
+                    "id": "DataCatalog"
+                },
+                {
+                    "id": "Dataset",
+                    "children": [
+                        {
+                            "id": "DataFeed",
+                            "children": [
+                                {
+                                    "id": "CompleteDataFeed"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "DefinedTermSet",
+                    "children": [
+                        {
+                            "id": "CategoryCodeSet"
+                        }
+                    ]
+                },
+                {
+                    "id": "Diet"
+                },
+                {
+                    "id": "DigitalDocument",
+                    "children": [
+                        {
+                            "id": "NoteDigitalDocument"
+                        },
+                        {
+                            "id": "PresentationDigitalDocument"
+                        },
+                        {
+                            "id": "SpreadsheetDigitalDocument"
+                        },
+                        {
+                            "id": "TextDigitalDocument"
+                        }
+                    ]
+                },
+                {
+                    "id": "Drawing"
+                },
+                {
+                    "id": "EducationalOccupationalCredential"
+                },
+                {
+                    "id": "Episode",
+                    "children": [
+                        {
+                            "id": "PodcastEpisode"
+                        },
+                        {
+                            "id": "RadioEpisode"
+                        },
+                        {
+                            "id": "TVEpisode"
+                        }
+                    ]
+                },
+                {
+                    "id": "ExercisePlan"
+                },
+                {
+                    "id": "Game",
+                    "children": [
+                        {
+                            "id": "VideoGame"
+                        }
+                    ]
+                },
+                {
+                    "id": "Guide"
+                },
+                {
+                    "id": "HowTo",
+                    "children": [
+                        {
+                            "id": "Recipe"
+                        }
+                    ]
+                },
+                {
+                    "id": "HowToDirection"
+                },
+                {
+                    "id": "HowToSection"
+                },
+                {
+                    "id": "HowToStep"
+                },
+                {
+                    "id": "HowToTip"
+                },
+                {
+                    "id": "HyperToc"
+                },
+                {
+                    "id": "HyperTocEntry"
+                },
+                {
+                    "id": "LearningResource",
+                    "children": [
+                        {
+                            "id": "Course"
+                        },
+                        {
+                            "id": "Quiz"
+                        },
+                        {
+                            "id": "Syllabus"
+                        }
+                    ]
+                },
+                {
+                    "id": "Legislation",
+                    "children": [
+                        {
+                            "id": "LegislationObject"
+                        }
+                    ]
+                },
+                {
+                    "id": "Manuscript"
+                },
+                {
+                    "id": "Map"
+                },
+                {
+                    "id": "MathSolver"
+                },
+                {
+                    "id": "MediaObject",
+                    "children": [
+                        {
+                            "id": "3DModel"
+                        },
+                        {
+                            "id": "AmpStory"
+                        },
+                        {
+                            "id": "AudioObject",
+                            "children": [
+                                {
+                                    "id": "AudioObjectSnapshot"
+                                },
+                                {
+                                    "id": "Audiobook"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "DataDownload"
+                        },
+                        {
+                            "id": "ImageObject",
+                            "children": [
+                                {
+                                    "id": "Barcode"
+                                },
+                                {
+                                    "id": "ImageObjectSnapshot"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "LegislationObject"
+                        },
+                        {
+                            "id": "MusicVideoObject"
+                        },
+                        {
+                            "id": "TextObject"
+                        },
+                        {
+                            "id": "VideoObject",
+                            "children": [
+                                {
+                                    "id": "VideoObjectSnapshot"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "MediaReviewItem"
+                },
+                {
+                    "id": "Menu"
+                },
+                {
+                    "id": "MenuSection"
+                },
+                {
+                    "id": "Message",
+                    "children": [
+                        {
+                            "id": "EmailMessage"
+                        }
+                    ]
+                },
+                {
+                    "id": "Movie"
+                },
+                {
+                    "id": "MusicComposition"
+                },
+                {
+                    "id": "MusicPlaylist",
+                    "children": [
+                        {
+                            "id": "MusicAlbum"
+                        },
+                        {
+                            "id": "MusicRelease"
+                        }
+                    ]
+                },
+                {
+                    "id": "MusicRecording"
+                },
+                {
+                    "id": "Painting"
+                },
+                {
+                    "id": "Photograph"
+                },
+                {
+                    "id": "Play"
+                },
+                {
+                    "id": "Poster"
+                },
+                {
+                    "id": "PublicationIssue",
+                    "children": [
+                        {
+                            "id": "ComicIssue"
+                        }
+                    ]
+                },
+                {
+                    "id": "PublicationVolume"
+                },
+                {
+                    "id": "Quotation"
+                },
+                {
+                    "id": "Review",
+                    "children": [
+                        {
+                            "id": "ClaimReview"
+                        },
+                        {
+                            "id": "CriticReview",
+                            "children": [
+                                {
+                                    "id": "ReviewNewsArticle"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "EmployerReview"
+                        },
+                        {
+                            "id": "MediaReview"
+                        },
+                        {
+                            "id": "Recommendation"
+                        },
+                        {
+                            "id": "UserReview"
+                        }
+                    ]
+                },
+                {
+                    "id": "Sculpture"
+                },
+                {
+                    "id": "Season"
+                },
+                {
+                    "id": "SheetMusic"
+                },
+                {
+                    "id": "ShortStory"
+                },
+                {
+                    "id": "SoftwareApplication",
+                    "children": [
+                        {
+                            "id": "MobileApplication"
+                        },
+                        {
+                            "id": "VideoGame"
+                        },
+                        {
+                            "id": "WebApplication"
+                        }
+                    ]
+                },
+                {
+                    "id": "SoftwareSourceCode"
+                },
+                {
+                    "id": "SpecialAnnouncement"
+                },
+                {
+                    "id": "Statement"
+                },
+                {
+                    "id": "TVSeason"
+                },
+                {
+                    "id": "TVSeries"
+                },
+                {
+                    "id": "Thesis"
+                },
+                {
+                    "id": "VisualArtwork",
+                    "children": [
+                        {
+                            "id": "CoverArt",
+                            "children": [
+                                {
+                                    "id": "ComicCoverArt"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "WebContent",
+                    "children": [
+                        {
+                            "id": "HealthTopicContent"
+                        }
+                    ]
+                },
+                {
+                    "id": "WebPage",
+                    "children": [
+                        {
+                            "id": "AboutPage"
+                        },
+                        {
+                            "id": "CheckoutPage"
+                        },
+                        {
+                            "id": "CollectionPage",
+                            "children": [
+                                {
+                                    "id": "MediaGallery",
+                                    "children": [
+                                        {
+                                            "id": "ImageGallery"
+                                        },
+                                        {
+                                            "id": "VideoGallery"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ContactPage"
+                        },
+                        {
+                            "id": "FAQPage"
+                        },
+                        {
+                            "id": "ItemPage"
+                        },
+                        {
+                            "id": "MedicalWebPage"
+                        },
+                        {
+                            "id": "ProfilePage"
+                        },
+                        {
+                            "id": "QAPage"
+                        },
+                        {
+                            "id": "RealEstateListing"
+                        },
+                        {
+                            "id": "SearchResultsPage"
+                        }
+                    ]
+                },
+                {
+                    "id": "WebPageElement",
+                    "children": [
+                        {
+                            "id": "SiteNavigationElement"
+                        },
+                        {
+                            "id": "Table"
+                        },
+                        {
+                            "id": "WPAdBlock"
+                        },
+                        {
+                            "id": "WPFooter"
+                        },
+                        {
+                            "id": "WPHeader"
+                        },
+                        {
+                            "id": "WPSideBar"
+                        }
+                    ]
+                },
+                {
+                    "id": "WebSite"
+                }
+            ]
+        },
+        {
+            "id": "Event",
+            "children": [
+                {
+                    "id": "BusinessEvent"
+                },
+                {
+                    "id": "ChildrensEvent"
+                },
+                {
+                    "id": "ComedyEvent"
+                },
+                {
+                    "id": "CourseInstance"
+                },
+                {
+                    "id": "DanceEvent"
+                },
+                {
+                    "id": "DeliveryEvent"
+                },
+                {
+                    "id": "EducationEvent"
+                },
+                {
+                    "id": "EventSeries"
+                },
+                {
+                    "id": "ExhibitionEvent"
+                },
+                {
+                    "id": "Festival"
+                },
+                {
+                    "id": "FoodEvent"
+                },
+                {
+                    "id": "Hackathon"
+                },
+                {
+                    "id": "LiteraryEvent"
+                },
+                {
+                    "id": "MusicEvent"
+                },
+                {
+                    "id": "PublicationEvent",
+                    "children": [
+                        {
+                            "id": "BroadcastEvent"
+                        },
+                        {
+                            "id": "OnDemandEvent"
+                        }
+                    ]
+                },
+                {
+                    "id": "SaleEvent"
+                },
+                {
+                    "id": "ScreeningEvent"
+                },
+                {
+                    "id": "SocialEvent"
+                },
+                {
+                    "id": "SportsEvent"
+                },
+                {
+                    "id": "TheaterEvent"
+                },
+                {
+                    "id": "UserInteraction",
+                    "children": [
+                        {
+                            "id": "UserBlocks"
+                        },
+                        {
+                            "id": "UserCheckins"
+                        },
+                        {
+                            "id": "UserComments"
+                        },
+                        {
+                            "id": "UserDownloads"
+                        },
+                        {
+                            "id": "UserLikes"
+                        },
+                        {
+                            "id": "UserPageVisits"
+                        },
+                        {
+                            "id": "UserPlays"
+                        },
+                        {
+                            "id": "UserPlusOnes"
+                        },
+                        {
+                            "id": "UserTweets"
+                        }
+                    ]
+                },
+                {
+                    "id": "VisualArtsEvent"
+                }
+            ]
+        },
+        {
+            "id": "Intangible",
+            "children": [
+                {
+                    "id": "ActionAccessSpecification"
+                },
+                {
+                    "id": "AlignmentObject"
+                },
+                {
+                    "id": "Audience",
+                    "children": [
+                        {
+                            "id": "BusinessAudience"
+                        },
+                        {
+                            "id": "EducationalAudience"
+                        },
+                        {
+                            "id": "MedicalAudience",
+                            "children": [
+                                {
+                                    "id": "Patient"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PeopleAudience",
+                            "children": [
+                                {
+                                    "id": "MedicalAudience"
+                                },
+                                {
+                                    "id": "ParentAudience"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Researcher"
+                        }
+                    ]
+                },
+                {
+                    "id": "BedDetails"
+                },
+                {
+                    "id": "Brand"
+                },
+                {
+                    "id": "BroadcastChannel",
+                    "children": [
+                        {
+                            "id": "RadioChannel",
+                            "children": [
+                                {
+                                    "id": "AMRadioChannel"
+                                },
+                                {
+                                    "id": "FMRadioChannel"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "TelevisionChannel"
+                        }
+                    ]
+                },
+                {
+                    "id": "BroadcastFrequencySpecification"
+                },
+                {
+                    "id": "Class"
+                },
+                {
+                    "id": "ComputerLanguage"
+                },
+                {
+                    "id": "ConstraintNode",
+                    "children": [
+                        {
+                            "id": "StatisticalVariable"
+                        }
+                    ]
+                },
+                {
+                    "id": "DataFeedItem"
+                },
+                {
+                    "id": "DefinedTerm",
+                    "children": [
+                        {
+                            "id": "CategoryCode",
+                            "children": [
+                                {
+                                    "id": "MedicalCode"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "Demand"
+                },
+                {
+                    "id": "DigitalDocumentPermission"
+                },
+                {
+                    "id": "EducationalOccupationalProgram",
+                    "children": [
+                        {
+                            "id": "WorkBasedProgram"
+                        }
+                    ]
+                },
+                {
+                    "id": "EnergyConsumptionDetails"
+                },
+                {
+                    "id": "EntryPoint"
+                },
+                {
+                    "id": "Enumeration",
+                    "children": [
+                        {
+                            "id": "AdultOrientedEnumeration"
+                        },
+                        {
+                            "id": "BoardingPolicyType"
+                        },
+                        {
+                            "id": "BookFormatType"
+                        },
+                        {
+                            "id": "BusinessEntityType"
+                        },
+                        {
+                            "id": "BusinessFunction"
+                        },
+                        {
+                            "id": "CarUsageType"
+                        },
+                        {
+                            "id": "CertificationStatusEnumeration"
+                        },
+                        {
+                            "id": "ContactPointOption"
+                        },
+                        {
+                            "id": "DayOfWeek"
+                        },
+                        {
+                            "id": "DeliveryMethod"
+                        },
+                        {
+                            "id": "DigitalDocumentPermissionType"
+                        },
+                        {
+                            "id": "DigitalPlatformEnumeration"
+                        },
+                        {
+                            "id": "EnergyEfficiencyEnumeration",
+                            "children": [
+                                {
+                                    "id": "EUEnergyEfficiencyEnumeration"
+                                },
+                                {
+                                    "id": "EnergyStarEnergyEfficiencyEnumeration"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "EventAttendanceModeEnumeration"
+                        },
+                        {
+                            "id": "GameAvailabilityEnumeration"
+                        },
+                        {
+                            "id": "GamePlayMode"
+                        },
+                        {
+                            "id": "GenderType"
+                        },
+                        {
+                            "id": "GovernmentBenefitsType"
+                        },
+                        {
+                            "id": "HealthAspectEnumeration"
+                        },
+                        {
+                            "id": "ItemAvailability"
+                        },
+                        {
+                            "id": "ItemListOrderType"
+                        },
+                        {
+                            "id": "LegalValueLevel"
+                        },
+                        {
+                            "id": "MapCategoryType"
+                        },
+                        {
+                            "id": "MeasurementMethodEnum"
+                        },
+                        {
+                            "id": "MeasurementTypeEnumeration",
+                            "children": [
+                                {
+                                    "id": "BodyMeasurementTypeEnumeration"
+                                },
+                                {
+                                    "id": "WearableMeasurementTypeEnumeration"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "MediaEnumeration",
+                            "children": [
+                                {
+                                    "id": "IPTCDigitalSourceEnumeration"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "MediaManipulationRatingEnumeration"
+                        },
+                        {
+                            "id": "MedicalEnumeration",
+                            "children": [
+                                {
+                                    "id": "DrugCostCategory"
+                                },
+                                {
+                                    "id": "DrugPregnancyCategory"
+                                },
+                                {
+                                    "id": "DrugPrescriptionStatus"
+                                },
+                                {
+                                    "id": "InfectiousAgentClass"
+                                },
+                                {
+                                    "id": "MedicalAudienceType"
+                                },
+                                {
+                                    "id": "MedicalDevicePurpose"
+                                },
+                                {
+                                    "id": "MedicalEvidenceLevel"
+                                },
+                                {
+                                    "id": "MedicalImagingTechnique"
+                                },
+                                {
+                                    "id": "MedicalObservationalStudyDesign"
+                                },
+                                {
+                                    "id": "MedicalProcedureType"
+                                },
+                                {
+                                    "id": "MedicalSpecialty"
+                                },
+                                {
+                                    "id": "MedicalStudyStatus"
+                                },
+                                {
+                                    "id": "MedicalTrialDesign"
+                                },
+                                {
+                                    "id": "MedicineSystem"
+                                },
+                                {
+                                    "id": "PhysicalExam"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "MerchantReturnEnumeration"
+                        },
+                        {
+                            "id": "MusicAlbumProductionType"
+                        },
+                        {
+                            "id": "MusicAlbumReleaseType"
+                        },
+                        {
+                            "id": "MusicReleaseFormatType"
+                        },
+                        {
+                            "id": "NonprofitType",
+                            "children": [
+                                {
+                                    "id": "NLNonprofitType"
+                                },
+                                {
+                                    "id": "UKNonprofitType"
+                                },
+                                {
+                                    "id": "USNonprofitType"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "OfferItemCondition"
+                        },
+                        {
+                            "id": "PaymentMethod",
+                            "children": [
+                                {
+                                    "id": "PaymentCard",
+                                    "children": [
+                                        {
+                                            "id": "CreditCard"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PhysicalActivityCategory"
+                        },
+                        {
+                            "id": "PriceComponentTypeEnumeration"
+                        },
+                        {
+                            "id": "PriceTypeEnumeration"
+                        },
+                        {
+                            "id": "ProductReturnEnumeration"
+                        },
+                        {
+                            "id": "QualitativeValue",
+                            "children": [
+                                {
+                                    "id": "BedType"
+                                },
+                                {
+                                    "id": "DriveWheelConfigurationValue"
+                                },
+                                {
+                                    "id": "SizeSpecification"
+                                },
+                                {
+                                    "id": "SteeringPositionValue"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "RefundTypeEnumeration"
+                        },
+                        {
+                            "id": "RestrictedDiet"
+                        },
+                        {
+                            "id": "ReturnFeesEnumeration"
+                        },
+                        {
+                            "id": "ReturnLabelSourceEnumeration"
+                        },
+                        {
+                            "id": "ReturnMethodEnumeration"
+                        },
+                        {
+                            "id": "RsvpResponseType"
+                        },
+                        {
+                            "id": "SizeGroupEnumeration",
+                            "children": [
+                                {
+                                    "id": "WearableSizeGroupEnumeration"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "SizeSystemEnumeration",
+                            "children": [
+                                {
+                                    "id": "WearableSizeSystemEnumeration"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Specialty",
+                            "children": [
+                                {
+                                    "id": "MedicalSpecialty"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "StatusEnumeration",
+                            "children": [
+                                {
+                                    "id": "ActionStatusType"
+                                },
+                                {
+                                    "id": "EventStatusType"
+                                },
+                                {
+                                    "id": "GameServerStatus"
+                                },
+                                {
+                                    "id": "LegalForceStatus"
+                                },
+                                {
+                                    "id": "OrderStatus"
+                                },
+                                {
+                                    "id": "PaymentStatusType"
+                                },
+                                {
+                                    "id": "ReservationStatusType"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "WarrantyScope"
+                        }
+                    ]
+                },
+                {
+                    "id": "FloorPlan"
+                },
+                {
+                    "id": "GameServer"
+                },
+                {
+                    "id": "GeospatialGeometry"
+                },
+                {
+                    "id": "Grant",
+                    "children": [
+                        {
+                            "id": "MonetaryGrant"
+                        }
+                    ]
+                },
+                {
+                    "id": "HealthInsurancePlan"
+                },
+                {
+                    "id": "HealthPlanCostSharingSpecification"
+                },
+                {
+                    "id": "HealthPlanFormulary"
+                },
+                {
+                    "id": "HealthPlanNetwork"
+                },
+                {
+                    "id": "Invoice"
+                },
+                {
+                    "id": "ItemList",
+                    "children": [
+                        {
+                            "id": "BreadcrumbList"
+                        },
+                        {
+                            "id": "HowToSection"
+                        },
+                        {
+                            "id": "HowToStep"
+                        },
+                        {
+                            "id": "OfferCatalog"
+                        }
+                    ]
+                },
+                {
+                    "id": "JobPosting"
+                },
+                {
+                    "id": "Language"
+                },
+                {
+                    "id": "ListItem",
+                    "children": [
+                        {
+                            "id": "HowToDirection"
+                        },
+                        {
+                            "id": "HowToItem",
+                            "children": [
+                                {
+                                    "id": "HowToSupply"
+                                },
+                                {
+                                    "id": "HowToTool"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "HowToSection"
+                        },
+                        {
+                            "id": "HowToStep"
+                        },
+                        {
+                            "id": "HowToTip"
+                        }
+                    ]
+                },
+                {
+                    "id": "MediaSubscription"
+                },
+                {
+                    "id": "MenuItem"
+                },
+                {
+                    "id": "MerchantReturnPolicy"
+                },
+                {
+                    "id": "MerchantReturnPolicySeasonalOverride"
+                },
+                {
+                    "id": "Observation"
+                },
+                {
+                    "id": "Occupation"
+                },
+                {
+                    "id": "OccupationalExperienceRequirements"
+                },
+                {
+                    "id": "Offer",
+                    "children": [
+                        {
+                            "id": "AggregateOffer"
+                        },
+                        {
+                            "id": "OfferForLease"
+                        },
+                        {
+                            "id": "OfferForPurchase"
+                        }
+                    ]
+                },
+                {
+                    "id": "Order"
+                },
+                {
+                    "id": "OrderItem"
+                },
+                {
+                    "id": "ParcelDelivery"
+                },
+                {
+                    "id": "Permit",
+                    "children": [
+                        {
+                            "id": "GovernmentPermit"
+                        }
+                    ]
+                },
+                {
+                    "id": "ProductReturnPolicy"
+                },
+                {
+                    "id": "ProgramMembership"
+                },
+                {
+                    "id": "Property"
+                },
+                {
+                    "id": "PropertyValueSpecification"
+                },
+                {
+                    "id": "Quantity",
+                    "children": [
+                        {
+                            "id": "Distance"
+                        },
+                        {
+                            "id": "Duration"
+                        },
+                        {
+                            "id": "Energy"
+                        },
+                        {
+                            "id": "Mass"
+                        }
+                    ]
+                },
+                {
+                    "id": "Rating",
+                    "children": [
+                        {
+                            "id": "AggregateRating",
+                            "children": [
+                                {
+                                    "id": "EmployerAggregateRating"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "EndorsementRating"
+                        }
+                    ]
+                },
+                {
+                    "id": "Reservation",
+                    "children": [
+                        {
+                            "id": "BoatReservation"
+                        },
+                        {
+                            "id": "BusReservation"
+                        },
+                        {
+                            "id": "EventReservation"
+                        },
+                        {
+                            "id": "FlightReservation"
+                        },
+                        {
+                            "id": "FoodEstablishmentReservation"
+                        },
+                        {
+                            "id": "LodgingReservation"
+                        },
+                        {
+                            "id": "RentalCarReservation"
+                        },
+                        {
+                            "id": "ReservationPackage"
+                        },
+                        {
+                            "id": "TaxiReservation"
+                        },
+                        {
+                            "id": "TrainReservation"
+                        }
+                    ]
+                },
+                {
+                    "id": "Role",
+                    "children": [
+                        {
+                            "id": "LinkRole"
+                        },
+                        {
+                            "id": "OrganizationRole",
+                            "children": [
+                                {
+                                    "id": "EmployeeRole"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PerformanceRole"
+                        }
+                    ]
+                },
+                {
+                    "id": "Schedule"
+                },
+                {
+                    "id": "Seat"
+                },
+                {
+                    "id": "Series",
+                    "children": [
+                        {
+                            "id": "CreativeWorkSeries"
+                        },
+                        {
+                            "id": "EventSeries"
+                        }
+                    ]
+                },
+                {
+                    "id": "Service",
+                    "children": [
+                        {
+                            "id": "BroadcastService",
+                            "children": [
+                                {
+                                    "id": "RadioBroadcastService"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "CableOrSatelliteService"
+                        },
+                        {
+                            "id": "FinancialProduct",
+                            "children": [
+                                {
+                                    "id": "BankAccount",
+                                    "children": [
+                                        {
+                                            "id": "DepositAccount"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "CurrencyConversionService"
+                                },
+                                {
+                                    "id": "InvestmentOrDeposit",
+                                    "children": [
+                                        {
+                                            "id": "BrokerageAccount"
+                                        },
+                                        {
+                                            "id": "DepositAccount"
+                                        },
+                                        {
+                                            "id": "InvestmentFund"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "LoanOrCredit",
+                                    "children": [
+                                        {
+                                            "id": "CreditCard"
+                                        },
+                                        {
+                                            "id": "MortgageLoan"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "PaymentCard"
+                                },
+                                {
+                                    "id": "PaymentService"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "FoodService"
+                        },
+                        {
+                            "id": "GovernmentService"
+                        },
+                        {
+                            "id": "Taxi"
+                        },
+                        {
+                            "id": "TaxiService"
+                        },
+                        {
+                            "id": "WebAPI"
+                        }
+                    ]
+                },
+                {
+                    "id": "ServiceChannel"
+                },
+                {
+                    "id": "SpeakableSpecification"
+                },
+                {
+                    "id": "StatisticalPopulation"
+                },
+                {
+                    "id": "StructuredValue",
+                    "children": [
+                        {
+                            "id": "CDCPMDRecord"
+                        },
+                        {
+                            "id": "ContactPoint",
+                            "children": [
+                                {
+                                    "id": "PostalAddress"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "DatedMoneySpecification"
+                        },
+                        {
+                            "id": "DefinedRegion"
+                        },
+                        {
+                            "id": "DeliveryTimeSettings"
+                        },
+                        {
+                            "id": "EngineSpecification"
+                        },
+                        {
+                            "id": "ExchangeRateSpecification"
+                        },
+                        {
+                            "id": "GeoCoordinates"
+                        },
+                        {
+                            "id": "GeoShape",
+                            "children": [
+                                {
+                                    "id": "GeoCircle"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "InteractionCounter"
+                        },
+                        {
+                            "id": "MonetaryAmount"
+                        },
+                        {
+                            "id": "NutritionInformation"
+                        },
+                        {
+                            "id": "OfferShippingDetails"
+                        },
+                        {
+                            "id": "OpeningHoursSpecification"
+                        },
+                        {
+                            "id": "OwnershipInfo"
+                        },
+                        {
+                            "id": "PostalCodeRangeSpecification"
+                        },
+                        {
+                            "id": "PriceSpecification",
+                            "children": [
+                                {
+                                    "id": "CompoundPriceSpecification"
+                                },
+                                {
+                                    "id": "DeliveryChargeSpecification"
+                                },
+                                {
+                                    "id": "PaymentChargeSpecification"
+                                },
+                                {
+                                    "id": "UnitPriceSpecification"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PropertyValue",
+                            "children": [
+                                {
+                                    "id": "LocationFeatureSpecification"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "QuantitativeValue",
+                            "children": [
+                                {
+                                    "id": "Observation"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "QuantitativeValueDistribution",
+                            "children": [
+                                {
+                                    "id": "MonetaryAmountDistribution"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "RepaymentSpecification"
+                        },
+                        {
+                            "id": "ShippingDeliveryTime"
+                        },
+                        {
+                            "id": "ShippingRateSettings"
+                        },
+                        {
+                            "id": "TypeAndQuantityNode"
+                        },
+                        {
+                            "id": "WarrantyPromise"
+                        }
+                    ]
+                },
+                {
+                    "id": "Ticket"
+                },
+                {
+                    "id": "Trip",
+                    "children": [
+                        {
+                            "id": "BoatTrip"
+                        },
+                        {
+                            "id": "BusTrip"
+                        },
+                        {
+                            "id": "Flight"
+                        },
+                        {
+                            "id": "TouristTrip"
+                        },
+                        {
+                            "id": "TrainTrip"
+                        }
+                    ]
+                },
+                {
+                    "id": "VirtualLocation"
+                }
+            ]
+        },
+        {
+            "id": "MedicalEntity",
+            "children": [
+                {
+                    "id": "AnatomicalStructure",
+                    "children": [
+                        {
+                            "id": "Bone"
+                        },
+                        {
+                            "id": "BrainStructure"
+                        },
+                        {
+                            "id": "Joint"
+                        },
+                        {
+                            "id": "Ligament"
+                        },
+                        {
+                            "id": "Muscle"
+                        },
+                        {
+                            "id": "Nerve"
+                        },
+                        {
+                            "id": "Vessel",
+                            "children": [
+                                {
+                                    "id": "Artery"
+                                },
+                                {
+                                    "id": "LymphaticVessel"
+                                },
+                                {
+                                    "id": "Vein"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "AnatomicalSystem"
+                },
+                {
+                    "id": "DrugClass"
+                },
+                {
+                    "id": "DrugCost"
+                },
+                {
+                    "id": "LifestyleModification",
+                    "children": [
+                        {
+                            "id": "Diet"
+                        },
+                        {
+                            "id": "PhysicalActivity",
+                            "children": [
+                                {
+                                    "id": "ExercisePlan"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalCause"
+                },
+                {
+                    "id": "MedicalCondition",
+                    "children": [
+                        {
+                            "id": "InfectiousDisease"
+                        },
+                        {
+                            "id": "MedicalSignOrSymptom",
+                            "children": [
+                                {
+                                    "id": "MedicalSign",
+                                    "children": [
+                                        {
+                                            "id": "VitalSign"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "MedicalSymptom"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalContraindication"
+                },
+                {
+                    "id": "MedicalDevice"
+                },
+                {
+                    "id": "MedicalGuideline",
+                    "children": [
+                        {
+                            "id": "MedicalGuidelineContraindication"
+                        },
+                        {
+                            "id": "MedicalGuidelineRecommendation"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalIndication",
+                    "children": [
+                        {
+                            "id": "ApprovedIndication"
+                        },
+                        {
+                            "id": "PreventionIndication"
+                        },
+                        {
+                            "id": "TreatmentIndication"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalIntangible",
+                    "children": [
+                        {
+                            "id": "DDxElement"
+                        },
+                        {
+                            "id": "DoseSchedule",
+                            "children": [
+                                {
+                                    "id": "MaximumDoseSchedule"
+                                },
+                                {
+                                    "id": "RecommendedDoseSchedule"
+                                },
+                                {
+                                    "id": "ReportedDoseSchedule"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "DrugLegalStatus"
+                        },
+                        {
+                            "id": "DrugStrength"
+                        },
+                        {
+                            "id": "MedicalCode"
+                        },
+                        {
+                            "id": "MedicalConditionStage"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalProcedure",
+                    "children": [
+                        {
+                            "id": "DiagnosticProcedure"
+                        },
+                        {
+                            "id": "PalliativeProcedure"
+                        },
+                        {
+                            "id": "PhysicalExam"
+                        },
+                        {
+                            "id": "SurgicalProcedure"
+                        },
+                        {
+                            "id": "TherapeuticProcedure",
+                            "children": [
+                                {
+                                    "id": "MedicalTherapy",
+                                    "children": [
+                                        {
+                                            "id": "OccupationalTherapy"
+                                        },
+                                        {
+                                            "id": "PalliativeProcedure"
+                                        },
+                                        {
+                                            "id": "PhysicalTherapy"
+                                        },
+                                        {
+                                            "id": "RadiationTherapy"
+                                        },
+                                        {
+                                            "id": "RespiratoryTherapy"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "PsychologicalTreatment"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalRiskEstimator",
+                    "children": [
+                        {
+                            "id": "MedicalRiskCalculator"
+                        },
+                        {
+                            "id": "MedicalRiskScore"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalRiskFactor"
+                },
+                {
+                    "id": "MedicalStudy",
+                    "children": [
+                        {
+                            "id": "MedicalObservationalStudy"
+                        },
+                        {
+                            "id": "MedicalTrial"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalTest",
+                    "children": [
+                        {
+                            "id": "BloodTest"
+                        },
+                        {
+                            "id": "ImagingTest"
+                        },
+                        {
+                            "id": "MedicalTestPanel"
+                        },
+                        {
+                            "id": "PathologyTest"
+                        }
+                    ]
+                },
+                {
+                    "id": "Substance",
+                    "children": [
+                        {
+                            "id": "DietarySupplement"
+                        },
+                        {
+                            "id": "Drug"
+                        }
+                    ]
+                },
+                {
+                    "id": "SuperficialAnatomy"
+                }
+            ]
+        },
+        {
+            "id": "Organization",
+            "children": [
+                {
+                    "id": "Airline"
+                },
+                {
+                    "id": "Consortium"
+                },
+                {
+                    "id": "Corporation"
+                },
+                {
+                    "id": "EducationalOrganization",
+                    "children": [
+                        {
+                            "id": "CollegeOrUniversity"
+                        },
+                        {
+                            "id": "ElementarySchool"
+                        },
+                        {
+                            "id": "HighSchool"
+                        },
+                        {
+                            "id": "MiddleSchool"
+                        },
+                        {
+                            "id": "Preschool"
+                        },
+                        {
+                            "id": "School"
+                        }
+                    ]
+                },
+                {
+                    "id": "FundingScheme"
+                },
+                {
+                    "id": "GovernmentOrganization"
+                },
+                {
+                    "id": "LibrarySystem"
+                },
+                {
+                    "id": "LocalBusiness",
+                    "children": [
+                        {
+                            "id": "AnimalShelter"
+                        },
+                        {
+                            "id": "ArchiveOrganization"
+                        },
+                        {
+                            "id": "AutomotiveBusiness",
+                            "children": [
+                                {
+                                    "id": "AutoBodyShop"
+                                },
+                                {
+                                    "id": "AutoDealer"
+                                },
+                                {
+                                    "id": "AutoPartsStore"
+                                },
+                                {
+                                    "id": "AutoRental"
+                                },
+                                {
+                                    "id": "AutoRepair"
+                                },
+                                {
+                                    "id": "AutoWash"
+                                },
+                                {
+                                    "id": "GasStation"
+                                },
+                                {
+                                    "id": "MotorcycleDealer"
+                                },
+                                {
+                                    "id": "MotorcycleRepair"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ChildCare"
+                        },
+                        {
+                            "id": "Dentist"
+                        },
+                        {
+                            "id": "DryCleaningOrLaundry"
+                        },
+                        {
+                            "id": "EmergencyService",
+                            "children": [
+                                {
+                                    "id": "FireStation"
+                                },
+                                {
+                                    "id": "Hospital"
+                                },
+                                {
+                                    "id": "PoliceStation"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "EmploymentAgency"
+                        },
+                        {
+                            "id": "EntertainmentBusiness",
+                            "children": [
+                                {
+                                    "id": "AdultEntertainment"
+                                },
+                                {
+                                    "id": "AmusementPark"
+                                },
+                                {
+                                    "id": "ArtGallery"
+                                },
+                                {
+                                    "id": "Casino"
+                                },
+                                {
+                                    "id": "ComedyClub"
+                                },
+                                {
+                                    "id": "MovieTheater"
+                                },
+                                {
+                                    "id": "NightClub"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "FinancialService",
+                            "children": [
+                                {
+                                    "id": "AccountingService"
+                                },
+                                {
+                                    "id": "AutomatedTeller"
+                                },
+                                {
+                                    "id": "BankOrCreditUnion"
+                                },
+                                {
+                                    "id": "InsuranceAgency"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "FoodEstablishment",
+                            "children": [
+                                {
+                                    "id": "Bakery"
+                                },
+                                {
+                                    "id": "BarOrPub"
+                                },
+                                {
+                                    "id": "Brewery"
+                                },
+                                {
+                                    "id": "CafeOrCoffeeShop"
+                                },
+                                {
+                                    "id": "Distillery"
+                                },
+                                {
+                                    "id": "FastFoodRestaurant"
+                                },
+                                {
+                                    "id": "IceCreamShop"
+                                },
+                                {
+                                    "id": "Restaurant"
+                                },
+                                {
+                                    "id": "Winery"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "GovernmentOffice",
+                            "children": [
+                                {
+                                    "id": "PostOffice"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "HealthAndBeautyBusiness",
+                            "children": [
+                                {
+                                    "id": "BeautySalon"
+                                },
+                                {
+                                    "id": "DaySpa"
+                                },
+                                {
+                                    "id": "HairSalon"
+                                },
+                                {
+                                    "id": "HealthClub"
+                                },
+                                {
+                                    "id": "NailSalon"
+                                },
+                                {
+                                    "id": "TattooParlor"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "HomeAndConstructionBusiness",
+                            "children": [
+                                {
+                                    "id": "Electrician"
+                                },
+                                {
+                                    "id": "GeneralContractor"
+                                },
+                                {
+                                    "id": "HVACBusiness"
+                                },
+                                {
+                                    "id": "HousePainter"
+                                },
+                                {
+                                    "id": "Locksmith"
+                                },
+                                {
+                                    "id": "MovingCompany"
+                                },
+                                {
+                                    "id": "Plumber"
+                                },
+                                {
+                                    "id": "RoofingContractor"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "InternetCafe"
+                        },
+                        {
+                            "id": "LegalService",
+                            "children": [
+                                {
+                                    "id": "Attorney"
+                                },
+                                {
+                                    "id": "Notary"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Library"
+                        },
+                        {
+                            "id": "LodgingBusiness",
+                            "children": [
+                                {
+                                    "id": "BedAndBreakfast"
+                                },
+                                {
+                                    "id": "Campground"
+                                },
+                                {
+                                    "id": "Hostel"
+                                },
+                                {
+                                    "id": "Hotel"
+                                },
+                                {
+                                    "id": "Motel"
+                                },
+                                {
+                                    "id": "Resort",
+                                    "children": [
+                                        {
+                                            "id": "SkiResort"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "VacationRental"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "MedicalBusiness",
+                            "children": [
+                                {
+                                    "id": "CommunityHealth"
+                                },
+                                {
+                                    "id": "Dentist"
+                                },
+                                {
+                                    "id": "Dermatology"
+                                },
+                                {
+                                    "id": "DietNutrition"
+                                },
+                                {
+                                    "id": "Emergency"
+                                },
+                                {
+                                    "id": "Geriatric"
+                                },
+                                {
+                                    "id": "Gynecologic"
+                                },
+                                {
+                                    "id": "MedicalClinic",
+                                    "children": [
+                                        {
+                                            "id": "CovidTestingFacility"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "Midwifery"
+                                },
+                                {
+                                    "id": "Nursing"
+                                },
+                                {
+                                    "id": "Obstetric"
+                                },
+                                {
+                                    "id": "Oncologic"
+                                },
+                                {
+                                    "id": "Optician"
+                                },
+                                {
+                                    "id": "Optometric"
+                                },
+                                {
+                                    "id": "Otolaryngologic"
+                                },
+                                {
+                                    "id": "Pediatric"
+                                },
+                                {
+                                    "id": "Pharmacy"
+                                },
+                                {
+                                    "id": "Physician",
+                                    "children": [
+                                        {
+                                            "id": "IndividualPhysician"
+                                        },
+                                        {
+                                            "id": "PhysiciansOffice"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "Physiotherapy"
+                                },
+                                {
+                                    "id": "PlasticSurgery"
+                                },
+                                {
+                                    "id": "Podiatric"
+                                },
+                                {
+                                    "id": "PrimaryCare"
+                                },
+                                {
+                                    "id": "Psychiatric"
+                                },
+                                {
+                                    "id": "PublicHealth"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ProfessionalService"
+                        },
+                        {
+                            "id": "RadioStation"
+                        },
+                        {
+                            "id": "RealEstateAgent"
+                        },
+                        {
+                            "id": "RecyclingCenter"
+                        },
+                        {
+                            "id": "SelfStorage"
+                        },
+                        {
+                            "id": "ShoppingCenter"
+                        },
+                        {
+                            "id": "SportsActivityLocation",
+                            "children": [
+                                {
+                                    "id": "BowlingAlley"
+                                },
+                                {
+                                    "id": "ExerciseGym"
+                                },
+                                {
+                                    "id": "GolfCourse"
+                                },
+                                {
+                                    "id": "HealthClub"
+                                },
+                                {
+                                    "id": "PublicSwimmingPool"
+                                },
+                                {
+                                    "id": "SkiResort"
+                                },
+                                {
+                                    "id": "SportsClub"
+                                },
+                                {
+                                    "id": "StadiumOrArena"
+                                },
+                                {
+                                    "id": "TennisComplex"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Store",
+                            "children": [
+                                {
+                                    "id": "AutoPartsStore"
+                                },
+                                {
+                                    "id": "BikeStore"
+                                },
+                                {
+                                    "id": "BookStore"
+                                },
+                                {
+                                    "id": "ClothingStore"
+                                },
+                                {
+                                    "id": "ComputerStore"
+                                },
+                                {
+                                    "id": "ConvenienceStore"
+                                },
+                                {
+                                    "id": "DepartmentStore"
+                                },
+                                {
+                                    "id": "ElectronicsStore"
+                                },
+                                {
+                                    "id": "Florist"
+                                },
+                                {
+                                    "id": "FurnitureStore"
+                                },
+                                {
+                                    "id": "GardenStore"
+                                },
+                                {
+                                    "id": "GroceryStore"
+                                },
+                                {
+                                    "id": "HardwareStore"
+                                },
+                                {
+                                    "id": "HobbyShop"
+                                },
+                                {
+                                    "id": "HomeGoodsStore"
+                                },
+                                {
+                                    "id": "JewelryStore"
+                                },
+                                {
+                                    "id": "LiquorStore"
+                                },
+                                {
+                                    "id": "MensClothingStore"
+                                },
+                                {
+                                    "id": "MobilePhoneStore"
+                                },
+                                {
+                                    "id": "MovieRentalStore"
+                                },
+                                {
+                                    "id": "MusicStore"
+                                },
+                                {
+                                    "id": "OfficeEquipmentStore"
+                                },
+                                {
+                                    "id": "OutletStore"
+                                },
+                                {
+                                    "id": "PawnShop"
+                                },
+                                {
+                                    "id": "PetStore"
+                                },
+                                {
+                                    "id": "ShoeStore"
+                                },
+                                {
+                                    "id": "SportingGoodsStore"
+                                },
+                                {
+                                    "id": "TireShop"
+                                },
+                                {
+                                    "id": "ToyStore"
+                                },
+                                {
+                                    "id": "WholesaleStore"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "TelevisionStation"
+                        },
+                        {
+                            "id": "TouristInformationCenter"
+                        },
+                        {
+                            "id": "TravelAgency"
+                        }
+                    ]
+                },
+                {
+                    "id": "MedicalOrganization",
+                    "children": [
+                        {
+                            "id": "Dentist"
+                        },
+                        {
+                            "id": "DiagnosticLab"
+                        },
+                        {
+                            "id": "Hospital"
+                        },
+                        {
+                            "id": "MedicalClinic"
+                        },
+                        {
+                            "id": "Pharmacy"
+                        },
+                        {
+                            "id": "Physician"
+                        },
+                        {
+                            "id": "VeterinaryCare"
+                        }
+                    ]
+                },
+                {
+                    "id": "NGO"
+                },
+                {
+                    "id": "NewsMediaOrganization"
+                },
+                {
+                    "id": "OnlineBusiness",
+                    "children": [
+                        {
+                            "id": "OnlineStore"
+                        }
+                    ]
+                },
+                {
+                    "id": "PerformingGroup",
+                    "children": [
+                        {
+                            "id": "DanceGroup"
+                        },
+                        {
+                            "id": "MusicGroup"
+                        },
+                        {
+                            "id": "TheaterGroup"
+                        }
+                    ]
+                },
+                {
+                    "id": "PoliticalParty"
+                },
+                {
+                    "id": "Project",
+                    "children": [
+                        {
+                            "id": "FundingAgency"
+                        },
+                        {
+                            "id": "ResearchProject"
+                        }
+                    ]
+                },
+                {
+                    "id": "ResearchOrganization"
+                },
+                {
+                    "id": "SearchRescueOrganization"
+                },
+                {
+                    "id": "SportsOrganization",
+                    "children": [
+                        {
+                            "id": "SportsTeam"
+                        }
+                    ]
+                },
+                {
+                    "id": "WorkersUnion"
+                }
+            ]
+        },
+        {
+            "id": "Person",
+            "children": [
+                {
+                    "id": "Patient"
+                }
+            ]
+        },
+        {
+            "id": "Place",
+            "children": [
+                {
+                    "id": "Accommodation",
+                    "children": [
+                        {
+                            "id": "Apartment"
+                        },
+                        {
+                            "id": "CampingPitch"
+                        },
+                        {
+                            "id": "House",
+                            "children": [
+                                {
+                                    "id": "SingleFamilyResidence"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Room",
+                            "children": [
+                                {
+                                    "id": "HotelRoom"
+                                },
+                                {
+                                    "id": "MeetingRoom"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Suite"
+                        }
+                    ]
+                },
+                {
+                    "id": "AdministrativeArea",
+                    "children": [
+                        {
+                            "id": "City"
+                        },
+                        {
+                            "id": "Country"
+                        },
+                        {
+                            "id": "SchoolDistrict"
+                        },
+                        {
+                            "id": "State"
+                        }
+                    ]
+                },
+                {
+                    "id": "CivicStructure",
+                    "children": [
+                        {
+                            "id": "Airport"
+                        },
+                        {
+                            "id": "Aquarium"
+                        },
+                        {
+                            "id": "Beach"
+                        },
+                        {
+                            "id": "BoatTerminal"
+                        },
+                        {
+                            "id": "Bridge"
+                        },
+                        {
+                            "id": "BusStation"
+                        },
+                        {
+                            "id": "BusStop"
+                        },
+                        {
+                            "id": "Campground"
+                        },
+                        {
+                            "id": "Cemetery"
+                        },
+                        {
+                            "id": "Crematorium"
+                        },
+                        {
+                            "id": "EducationalOrganization"
+                        },
+                        {
+                            "id": "EventVenue"
+                        },
+                        {
+                            "id": "FireStation"
+                        },
+                        {
+                            "id": "GovernmentBuilding",
+                            "children": [
+                                {
+                                    "id": "CityHall"
+                                },
+                                {
+                                    "id": "Courthouse"
+                                },
+                                {
+                                    "id": "DefenceEstablishment"
+                                },
+                                {
+                                    "id": "Embassy"
+                                },
+                                {
+                                    "id": "LegislativeBuilding"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Hospital"
+                        },
+                        {
+                            "id": "MovieTheater"
+                        },
+                        {
+                            "id": "Museum"
+                        },
+                        {
+                            "id": "MusicVenue"
+                        },
+                        {
+                            "id": "Park"
+                        },
+                        {
+                            "id": "ParkingFacility"
+                        },
+                        {
+                            "id": "PerformingArtsTheater"
+                        },
+                        {
+                            "id": "PlaceOfWorship",
+                            "children": [
+                                {
+                                    "id": "BuddhistTemple"
+                                },
+                                {
+                                    "id": "Church",
+                                    "children": [
+                                        {
+                                            "id": "CatholicChurch"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": "HinduTemple"
+                                },
+                                {
+                                    "id": "Mosque"
+                                },
+                                {
+                                    "id": "Synagogue"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Playground"
+                        },
+                        {
+                            "id": "PoliceStation"
+                        },
+                        {
+                            "id": "PublicToilet"
+                        },
+                        {
+                            "id": "RVPark"
+                        },
+                        {
+                            "id": "StadiumOrArena"
+                        },
+                        {
+                            "id": "SubwayStation"
+                        },
+                        {
+                            "id": "TaxiStand"
+                        },
+                        {
+                            "id": "TrainStation"
+                        },
+                        {
+                            "id": "Zoo"
+                        }
+                    ]
+                },
+                {
+                    "id": "Landform",
+                    "children": [
+                        {
+                            "id": "BodyOfWater",
+                            "children": [
+                                {
+                                    "id": "Canal"
+                                },
+                                {
+                                    "id": "LakeBodyOfWater"
+                                },
+                                {
+                                    "id": "OceanBodyOfWater"
+                                },
+                                {
+                                    "id": "Pond"
+                                },
+                                {
+                                    "id": "Reservoir"
+                                },
+                                {
+                                    "id": "RiverBodyOfWater"
+                                },
+                                {
+                                    "id": "SeaBodyOfWater"
+                                },
+                                {
+                                    "id": "Waterfall"
+                                }
+                            ]
+                        },
+                        {
+                            "id": "Continent"
+                        },
+                        {
+                            "id": "Mountain"
+                        },
+                        {
+                            "id": "Volcano"
+                        }
+                    ]
+                },
+                {
+                    "id": "LandmarksOrHistoricalBuildings"
+                },
+                {
+                    "id": "LocalBusiness"
+                },
+                {
+                    "id": "Residence",
+                    "children": [
+                        {
+                            "id": "ApartmentComplex"
+                        },
+                        {
+                            "id": "GatedResidenceCommunity"
+                        }
+                    ]
+                },
+                {
+                    "id": "TouristAttraction"
+                },
+                {
+                    "id": "TouristDestination"
+                }
+            ]
+        },
+        {
+            "id": "Product",
+            "children": [
+                {
+                    "id": "DietarySupplement"
+                },
+                {
+                    "id": "Drug"
+                },
+                {
+                    "id": "IndividualProduct"
+                },
+                {
+                    "id": "ProductCollection"
+                },
+                {
+                    "id": "ProductGroup"
+                },
+                {
+                    "id": "ProductModel"
+                },
+                {
+                    "id": "SomeProducts"
+                },
+                {
+                    "id": "Vehicle",
+                    "children": [
+                        {
+                            "id": "BusOrCoach"
+                        },
+                        {
+                            "id": "Car"
+                        },
+                        {
+                            "id": "Motorcycle"
+                        },
+                        {
+                            "id": "MotorizedBicycle"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "StupidType"
+        },
+        {
+            "id": "Taxon"
+        }
+    ]
+}
