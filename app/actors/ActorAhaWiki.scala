@@ -76,8 +76,9 @@ class ActorAhaWiki @Inject()(implicit
                 .toLowerCase()
                 .split("""[\s/@.]""").toSeq
                 .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-                .filterNot(s => s.length < 3)
+                .filterNot(s => s.length < 2)
                 .filterNot(s => s.length > 15)
+                .filterNot(s => s.matches("""\d{1,2}"""))
               val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
               val wordCount = seqWordFiltered.groupByCount()
               logger.info(seqWordFiltered.mkString(" "))
