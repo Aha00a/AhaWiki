@@ -3,6 +3,7 @@ package filters
 import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import models.tables.Site
 import play.api.Logging
 import play.api.mvc._
 
@@ -11,7 +12,12 @@ import scala.collection.immutable.Seq
 import scala.concurrent.{ExecutionContext, Future}
 
 
-class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionContext) extends Filter with Logging {
+class FilterAccessLog @Inject()(
+    implicit val
+    mat: Materializer,
+    ec: ExecutionContext,
+    database: play.api.db.Database
+) extends Filter with Logging {
   val seqRemoteAddressBlocked: Seq[String] = Seq("13.59.169.75")
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
@@ -29,6 +35,18 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
         s"${requestHeader.scheme}://${requestHeader.host}$uri",
         userAgent,
       ).mkString("\t"))
+      database.withConnection { implicit connection =>
+        implicit val site: Site = Site.selectWhereDomain(requestHeader.host).getOrElse(Site(-1, ""))
+        models.tables.AccessLog.insert(
+          site.seq,
+          requestHeader.method,
+          uri,
+          remoteAddress,
+          userAgent,
+          0,
+          0,
+        )
+      }
       Future(Results.Forbidden)
     } else {
       nextFilter(requestHeader).map(result => {
@@ -47,6 +65,18 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer, ec: ExecutionCon
             s"${requestHeader.scheme}://${requestHeader.host}$uri",
             userAgent,
           ).mkString("\t"))
+          database.withConnection { implicit connection =>
+            implicit val site: Site = Site.selectWhereDomain(requestHeader.host).getOrElse(Site(-1, ""))
+            models.tables.AccessLog.insert(
+              site.seq,
+              requestHeader.method,
+              uri,
+              remoteAddress,
+              userAgent,
+              result.header.status,
+              duration.toInt,
+            )
+          }
         }
         result.withHeaders("Request-Time" -> duration.toString)
       })

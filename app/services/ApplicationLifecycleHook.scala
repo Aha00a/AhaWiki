@@ -57,5 +57,12 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   })
 
+  actorSystem.scheduler.scheduleWithFixedDelay(47 seconds, 11 minutes)(() => {
+    database.withConnection { implicit connection =>
+      val deletedRowCount = models.tables.AccessLog.deleteExpired()
+      logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+    }
+  })
+
   logger.info("OnApplicationStarted")
 }
