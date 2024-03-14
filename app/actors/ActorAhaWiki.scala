@@ -69,6 +69,7 @@ class ActorAhaWiki @Inject()(implicit
             val text = Interpreters.toText(page.content)
             if (!text.isNullOrEmpty) {
               val seqWord = text
+                .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
                 .replaceAll("""([a-z])([A-Z])""", "$1 $2")
                 .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
                 .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
