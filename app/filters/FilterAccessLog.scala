@@ -21,6 +21,7 @@ class FilterAccessLog @Inject()(
   val seqRemoteAddressBlocked: Seq[String] = Seq("13.59.169.75")
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
+    val scheme = requestHeader.scheme
     val host = requestHeader.host
     val uri: String = requestHeader.uri
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
@@ -33,7 +34,7 @@ class FilterAccessLog @Inject()(
         403,
         s"${duration}ms".padLeft(7),
         remoteAddress.padRight(15),
-        s"${requestHeader.scheme}://$host$uri",
+        s"$scheme://$host$uri",
         userAgent,
       ).mkString("\t"))
       database.withConnection { implicit connection =>
@@ -63,7 +64,7 @@ class FilterAccessLog @Inject()(
             result.header.status,
             s"${duration}ms".padLeft(7),
             remoteAddress.padRight(15),
-            s"${requestHeader.scheme}://$host$uri",
+            s"$scheme://$host$uri",
             userAgent,
           ).mkString("\t"))
           database.withConnection { implicit connection =>
