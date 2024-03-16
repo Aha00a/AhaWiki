@@ -24,6 +24,7 @@ class FilterAccessLog @Inject()(
     val scheme = requestHeader.scheme
     val host = requestHeader.host
     val uri: String = requestHeader.uri
+    val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
     if(seqRemoteAddressBlocked.contains(remoteAddress)) {
@@ -34,7 +35,7 @@ class FilterAccessLog @Inject()(
         403,
         s"${duration}ms".padLeft(7),
         remoteAddress.padRight(15),
-        s"$scheme://$host$uri",
+        url,
         userAgent,
       ).mkString("\t"))
       database.withConnection { implicit connection =>
@@ -42,7 +43,10 @@ class FilterAccessLog @Inject()(
         models.tables.AccessLog.insert(
           site.seq,
           requestHeader.method,
+          scheme,
+          host,
           uri,
+          url,
           remoteAddress,
           userAgent,
           0,
@@ -64,7 +68,7 @@ class FilterAccessLog @Inject()(
             result.header.status,
             s"${duration}ms".padLeft(7),
             remoteAddress.padRight(15),
-            s"$scheme://$host$uri",
+            url,
             userAgent,
           ).mkString("\t"))
           database.withConnection { implicit connection =>
@@ -72,7 +76,10 @@ class FilterAccessLog @Inject()(
             models.tables.AccessLog.insert(
               site.seq,
               requestHeader.method,
+              scheme,
+              host,
               uri,
+              url,
               remoteAddress,
               userAgent,
               result.header.status,

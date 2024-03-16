@@ -26,7 +26,10 @@ object AccessLog extends Logging {
   def insert(
     site: Long,
     method: String,
-    path: String,
+    scheme: String,
+    host: String,
+    uri: String,
+    url: String,
     remoteAddress: String,
     userAgent: String,
     status: Int,
@@ -34,9 +37,9 @@ object AccessLog extends Logging {
   )(implicit connection: Connection): Option[Long] = {
     SQL"""
         INSERT INTO AccessLog
-                (site, method, path, remoteAddress, userAgent, status, durationMilli)
+                (site, method, scheme, host, uri, url, remoteAddress, userAgent, status, durationMilli)
             VALUES
-                ($site, $method, $path, $remoteAddress, $userAgent, $status, $durationMilli)
+                ($site, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
     """.executeInsert()
   }
 
