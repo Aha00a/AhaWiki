@@ -7,8 +7,8 @@ create table IpDeny (
     ip           varchar(46)                        not null
 );
 
-create index IpDeny_dateInserted_index on wiki_aha00a_com_dev.IpDeny (dateInserted);
-create index IpDeny_ip_index on wiki_aha00a_com_dev.IpDeny (ip);
+create index IpDeny_dateInserted_index on IpDeny (dateInserted);
+create index IpDeny_ip_index on IpDeny (ip);
 
 INSERT INTO IpDeny (ip) VALUES ('13.59.169.75');
 
