@@ -9,6 +9,7 @@ import play.api.mvc._
 
 import javax.inject.Inject
 import scala.collection.immutable.Seq
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -18,7 +19,6 @@ class FilterAccessLog @Inject()(
     ec: ExecutionContext,
     database: play.api.db.Database
 ) extends Filter with Logging {
-  val seqRemoteAddressBlocked: Seq[String] = Seq("13.59.169.75")
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     val scheme = requestHeader.scheme
@@ -27,7 +27,10 @@ class FilterAccessLog @Inject()(
     val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
-    if(seqRemoteAddressBlocked.contains(remoteAddress)) {
+    val ipDeny = database.withConnection { implicit connection => models.tables.IpDeny.selectLatest(remoteAddress) }
+
+    if (ipDeny.isDefined) {
+      Thread.sleep(60.seconds.toMillis);
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
       logger.info(Seq(
@@ -42,6 +45,7 @@ class FilterAccessLog @Inject()(
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
           site.seq,
+          ipDeny.get.seq,
           requestHeader.method,
           scheme,
           host,
@@ -49,8 +53,8 @@ class FilterAccessLog @Inject()(
           url,
           remoteAddress,
           userAgent,
-          0,
-          0,
+          Results.Forbidden.header.status,
+          duration.toInt,
         )
       }
       Future(Results.Forbidden)
@@ -75,6 +79,7 @@ class FilterAccessLog @Inject()(
             implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
             models.tables.AccessLog.insert(
               site.seq,
+              0,
               requestHeader.method,
               scheme,
               host,
