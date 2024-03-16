@@ -21,9 +21,10 @@ class FilterAccessLog @Inject()(
   val seqRemoteAddressBlocked: Seq[String] = Seq("13.59.169.75")
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
+    val host = requestHeader.host
+    val uri: String = requestHeader.uri
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
-    val uri: String = requestHeader.uri
     if(seqRemoteAddressBlocked.contains(remoteAddress)) {
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
@@ -32,11 +33,11 @@ class FilterAccessLog @Inject()(
         403,
         s"${duration}ms".padLeft(7),
         remoteAddress.padRight(15),
-        s"${requestHeader.scheme}://${requestHeader.host}$uri",
+        s"${requestHeader.scheme}://$host$uri",
         userAgent,
       ).mkString("\t"))
       database.withConnection { implicit connection =>
-        implicit val site: Site = Site.selectWhereDomain(requestHeader.host).getOrElse(Site(-1, ""))
+        implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
           site.seq,
           requestHeader.method,
@@ -62,11 +63,11 @@ class FilterAccessLog @Inject()(
             result.header.status,
             s"${duration}ms".padLeft(7),
             remoteAddress.padRight(15),
-            s"${requestHeader.scheme}://${requestHeader.host}$uri",
+            s"${requestHeader.scheme}://$host$uri",
             userAgent,
           ).mkString("\t"))
           database.withConnection { implicit connection =>
-            implicit val site: Site = Site.selectWhereDomain(requestHeader.host).getOrElse(Site(-1, ""))
+            implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
             models.tables.AccessLog.insert(
               site.seq,
               requestHeader.method,
