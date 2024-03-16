@@ -37,7 +37,7 @@ object MacroSimilarPages extends TraitMacro with Logging {
         val similarPageNames: Seq[String] = cosineSimilarities.map(_.name2)
         val seqHighScoredTerm: Seq[HighScoredTerm] = TermFrequency.selectHighScoredTerm(name, similarPageNames)
         val mapHighScoredTerm: Map[String, Seq[HighScoredTerm]] = seqHighScoredTerm.groupBy(_.name)
-        val highScoredTerms: Map[String, String] = mapHighScoredTerm.view.mapValues(_.map(h => s"${h.term}(${h.frequency1}:${h.frequency2})").mkString(", ")).toMap
+        val highScoredTerms: Map[String, String] = mapHighScoredTerm.view.mapValues(_.take(10).map(h => s"${h.term}(${h.frequency1}:${h.frequency2})").mkString(", ")).toMap
         cosineSimilarities.map(c => s""" 1. [[PercentLinkTitle(${c.similarity}, ${c.name2}, "")]] [[Trivial(${{highScoredTerms.getOrElse(c.name2, "")}})]]""").mkString("\n")
       }
     }
