@@ -52,10 +52,11 @@
 @if(wikiFirst != null && wikiLast != null) {
     <div class="revisionInfo">
         @if(wikiFirst != null) {
-            <div class="first">created by <a href="@(wikiFirst.author)">@(wikiFirst.author)</a> at <a href="?action=history">@(wikiFirst.toIsoLocalDateString)</a></div>
+            <div class="first">created by <a href="@(wikiFirst.author)" rel="nofollow">@(wikiFirst.author)</a> at <a href="?action=history" rel="nofollow">@(wikiFirst.toIsoLocalDateString)</a></div>
         }
         @if(wikiLast != null) {
-            <div class="last">last modified by <a href="@(wikiLast.author)">@(wikiLast.author)</a> at <a href="?action=blame">@(wikiLast.toIsoLocalDateString)</a></div>
+            <div class="last">last modified by <a href="@(wikiLast.author)" rel="nofollow">@(wikiLast.author)</a> at <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
+            <div class="revision">revision: <a href="?action=blame" rel="nofollow">@(wikiLast.revision)</a> </div>
         }
     </div>
 }
