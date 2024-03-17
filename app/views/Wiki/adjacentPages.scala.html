@@ -14,7 +14,7 @@
     </div>
     <script type="text/javascript">
         $(function(){
-            var limit = 50;
+            var limit = 200;
             var graph = Viva.Graph.graph();
             var graphics = Viva.Graph.View.svgGraphics();
             var layout = Viva.Graph.Layout.forceDirected(graph, {
@@ -43,7 +43,7 @@
                 return false;
             });
             $('.more.@(id)').click(function () {
-                limit = graph.getNodesCount() + 50;
+                limit = graph.getNodesCount() + 100;
                 return false;
             });
 
@@ -160,7 +160,7 @@
 
                     var v = queueFetch.shift();
                     fetchLinks(v);
-                }, 1000);
+                }, 500);
                 setInterval(function () {
                     if(queueGraph.length === 0) {
                         return;
@@ -179,7 +179,7 @@
                         graph.addLink(v.src, v.dst);
                     }
                     $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
-                }, 100);
+                }, 10);
             }
 
             function fetchLinks(name) {
