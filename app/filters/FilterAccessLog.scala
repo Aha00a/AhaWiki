@@ -19,6 +19,8 @@ class FilterAccessLog @Inject()(
     ec: ExecutionContext,
     database: play.api.db.Database
 ) extends Filter with Logging {
+  def isUriAttack(uri: String): Boolean = uri.startsWith("/wp-") || Seq("/wp-login.php").contains(uri)
+
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     val scheme = requestHeader.scheme
@@ -58,7 +60,7 @@ class FilterAccessLog @Inject()(
         )
       }
       Future(Results.Forbidden)
-    } else if (Seq("/wp-login.php").contains(uri)) {
+    } else if (isUriAttack(uri)) {
       Thread.sleep(60.seconds.toMillis);
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
