@@ -29,4 +29,8 @@ object IpDeny extends Logging {
       .as(long("seq") ~ str("ip") ~ date("dateInserted") singleOpt).map(flatten)
       .map(tupled)
   }
+
+  def deleteExpired(limit: Int = 1000)(implicit connection: Connection): Int = {
+    SQL"""DELETE FROM IpDeny WHERE dateInserted < DATE_ADD(NOW(), INTERVAL -365 DAY) LIMIT $limit""".executeUpdate()
+  }
 }

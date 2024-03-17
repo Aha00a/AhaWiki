@@ -36,7 +36,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     Future.successful(())
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(15 seconds, 7 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(13 seconds, 13 minutes)(() => {
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
@@ -46,7 +46,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(45 seconds, 13 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(17 seconds, 17 minutes)(() => {
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
@@ -57,10 +57,17 @@ class ApplicationLifecycleHook @Inject()(implicit
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(47 seconds, 11 minutes)(() => {
+  actorSystem.scheduler.scheduleWithFixedDelay(19 seconds, 19 minutes)(() => {
     database.withConnection { implicit connection =>
       val deletedRowCount = models.tables.AccessLog.deleteExpired()
       logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+    }
+  })
+
+  actorSystem.scheduler.scheduleWithFixedDelay(21 seconds, 21 minutes)(() => {
+    database.withConnection { implicit connection =>
+      val deletedRowCount = models.tables.IpDeny.deleteExpired()
+      logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
     }
   })
 
