@@ -25,7 +25,7 @@ case class AccessLog(
 object AccessLog extends Logging {
   def insert(
     site: Long,
-    ipDeny: Long,
+    ipDeny: Option[Long],
     method: String,
     scheme: String,
     host: String,
@@ -40,7 +40,7 @@ object AccessLog extends Logging {
         INSERT INTO AccessLog
                 (site, ipDeny, method, scheme, host, uri, url, remoteAddress, userAgent, status, durationMilli)
             VALUES
-                ($site, ${if(ipDeny == 0) None else ipDeny}, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
+                ($site, $ipDeny, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
     """.executeInsert()
   }
 

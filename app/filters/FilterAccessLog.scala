@@ -45,7 +45,7 @@ class FilterAccessLog @Inject()(
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
           site.seq,
-          ipDeny.get.seq,
+          ipDeny.map(_.seq),
           requestHeader.method,
           scheme,
           host,
@@ -58,39 +58,63 @@ class FilterAccessLog @Inject()(
         )
       }
       Future(Results.Forbidden)
+    } else if (Seq("/wp-login.php").contains(uri)) {
+      Thread.sleep(60.seconds.toMillis);
+      val endTime = System.currentTimeMillis
+      val duration = endTime - startTime
+      logger.info(Seq(
+        requestHeader.method.padRight(7),
+        403,
+        s"${duration}ms".padLeft(7),
+        remoteAddress.padRight(15),
+        url,
+        userAgent,
+      ).mkString("\t"))
+      database.withConnection { implicit connection =>
+        implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
+        val accessLogSeq = models.tables.AccessLog.insert(
+          site.seq,
+          None,
+          requestHeader.method,
+          scheme,
+          host,
+          uri,
+          url,
+          remoteAddress,
+          userAgent,
+          Results.Forbidden.header.status,
+          duration.toInt,
+        )
+        models.tables.IpDeny.insert(remoteAddress, accessLogSeq, uri)
+      }
+      Future(Results.Forbidden)
     } else {
       nextFilter(requestHeader).map(result => {
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
-        if (
-          uri.isNotNullOrEmpty &&
-            !uri.startsWith("/public/") &&
-            userAgent != "Mozilla/5.0+(compatible; UptimeRobot/2.0; http://www.uptimerobot.com/)"
-        ) {
-          logger.info(Seq(
-            requestHeader.method.padRight(7),
-            result.header.status,
-            s"${duration}ms".padLeft(7),
-            remoteAddress.padRight(15),
+        logger.info(Seq(
+          requestHeader.method.padRight(7),
+          result.header.status,
+          s"${duration}ms".padLeft(7),
+          remoteAddress.padRight(15),
+          url,
+          userAgent,
+        ).mkString("\t"))
+        database.withConnection { implicit connection =>
+          implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
+          models.tables.AccessLog.insert(
+            site.seq,
+            None,
+            requestHeader.method,
+            scheme,
+            host,
+            uri,
             url,
+            remoteAddress,
             userAgent,
-          ).mkString("\t"))
-          database.withConnection { implicit connection =>
-            implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
-            models.tables.AccessLog.insert(
-              site.seq,
-              0,
-              requestHeader.method,
-              scheme,
-              host,
-              uri,
-              url,
-              remoteAddress,
-              userAgent,
-              result.header.status,
-              duration.toInt,
-            )
-          }
+            result.header.status,
+            duration.toInt,
+          )
         }
         result.withHeaders("Request-Time" -> duration.toString)
       })

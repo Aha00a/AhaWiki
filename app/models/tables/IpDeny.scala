@@ -16,8 +16,8 @@ case class IpDeny(
 object IpDeny extends Logging {
   def tupled: ((Long, String, Date)) => IpDeny = (apply _).tupled
 
-  def insert(ip: String)(implicit connection: Connection): Option[Long] = {
-    SQL"""INSERT INTO IpDeny (ip) VALUES ($ip)""".executeInsert()
+  def insert(ip: String, accessLog: Option[Long], reason: String)(implicit connection: Connection): Option[Long] = {
+    SQL"""INSERT INTO IpDeny (ip, accessLog, reason) VALUES ($ip, $accessLog, $reason)""".executeInsert()
   }
 
   def selectCount(ip: String)(implicit connection: Connection): Long = {
