@@ -87,7 +87,7 @@ class FilterAccessLog @Inject()(
           Results.Forbidden.header.status,
           duration.toInt,
         )
-        models.tables.IpDeny.insert(remoteAddress, accessLogSeq, uri)
+        models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
       }
       Future(Results.Forbidden)
     } else {
