@@ -3,12 +3,13 @@ package filters
 import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import logics.SessionLogic
 import models.tables.Site
 import play.api.Logging
 import play.api.mvc._
 
+import java.sql.Connection
 import javax.inject.Inject
-import scala.collection.immutable.Seq
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -19,7 +20,7 @@ class FilterAccessLog @Inject()(
     ec: ExecutionContext,
     database: play.api.db.Database
 ) extends Filter with Logging {
-  def isUriAttack(uri: String): Boolean = uri.startsWith("/wp-") || Seq("/wp-login.php").contains(uri)
+  private def isUriAttack(uri: String): Boolean = uri.startsWith("/wp-") || Seq("/wp-login.php").contains(uri)
 
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
@@ -37,7 +38,7 @@ class FilterAccessLog @Inject()(
       val duration = endTime - startTime
       logger.info(Seq(
         requestHeader.method.padRight(7),
-        403,
+        Results.Forbidden.header.status,
         s"${duration}ms".padLeft(7),
         remoteAddress.padRight(15),
         url,
@@ -47,6 +48,7 @@ class FilterAccessLog @Inject()(
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
           site.seq,
+          getUserSeq(requestHeader),
           ipDeny.map(_.seq),
           requestHeader.method,
           scheme,
@@ -76,6 +78,7 @@ class FilterAccessLog @Inject()(
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         val accessLogSeq = models.tables.AccessLog.insert(
           site.seq,
+          getUserSeq(requestHeader),
           None,
           requestHeader.method,
           scheme,
@@ -106,6 +109,7 @@ class FilterAccessLog @Inject()(
           implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
           models.tables.AccessLog.insert(
             site.seq,
+            getUserSeq(requestHeader),
             None,
             requestHeader.method,
             scheme,
@@ -121,5 +125,12 @@ class FilterAccessLog @Inject()(
         result.withHeaders("Request-Time" -> duration.toString)
       })
     }
+  }
+
+  private def getUserSeq(requestHeader: RequestHeader)(implicit connection: Connection): Option[Long] = {
+    SessionLogic
+      .getId(requestHeader)
+      .flatMap(models.tables.User.selectWhereEmail)
+      .map(_.seq)
   }
 }

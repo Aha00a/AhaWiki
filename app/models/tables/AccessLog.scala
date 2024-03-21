@@ -13,6 +13,7 @@ import java.util.Date
 case class AccessLog(
   id: Long,
   site: Long,
+  user: Option[Long],
   dateInserted: Date,
   method: String,
   path: String,
@@ -25,6 +26,7 @@ case class AccessLog(
 object AccessLog extends Logging {
   def insert(
     site: Long,
+    user: Option[Long],
     ipDeny: Option[Long],
     method: String,
     scheme: String,
@@ -38,9 +40,9 @@ object AccessLog extends Logging {
   )(implicit connection: Connection): Option[Long] = {
     SQL"""
         INSERT INTO AccessLog
-                (site, ipDeny, method, scheme, host, uri, url, remoteAddress, userAgent, status, durationMilli)
+                (site, user, ipDeny, method, scheme, host, uri, url, remoteAddress, userAgent, status, durationMilli)
             VALUES
-                ($site, $ipDeny, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
+                ($site, $user, $ipDeny, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
     """.executeInsert()
   }
 

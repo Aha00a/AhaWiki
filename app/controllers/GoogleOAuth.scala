@@ -46,7 +46,7 @@ class GoogleOAuth @Inject()(
               logger.info(user.toString)
             case None =>
               val optionSeq = models.tables.User.insert(email)
-              logger.error(optionSeq.toString)
+              logger.info(optionSeq.toString)
           }
         }
 
