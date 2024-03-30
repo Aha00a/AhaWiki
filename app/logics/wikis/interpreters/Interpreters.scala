@@ -28,8 +28,7 @@ object Interpreters extends TraitInterpreter {
     InterpreterMermaid,
 
     InterpreterSchema,
-    null
-  ).filter(_ != null).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
+  ).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
 
   def getInterpreter(pageContent: PageContent): Option[TraitInterpreter] = {
     map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
