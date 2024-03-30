@@ -19,6 +19,7 @@ object Interpreters extends TraitInterpreter {
     InterpreterText,
     InterpreterMarkdown,
     InterpreterQuote,
+    InterpreterFold,
 
     InterpreterVim,
     InterpreterTable,

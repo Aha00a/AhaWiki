@@ -1,0 +1,5 @@
+@(buttonText: String, html: String)(implicit wikiContext: ContextWikiPage)
+<div class="fold">
+    <button onclick="$(this).parent().find('.content').slideToggle()">@buttonText</button>
+    <div class="content" style="display: none">@Html(html)</div>
+</div>
