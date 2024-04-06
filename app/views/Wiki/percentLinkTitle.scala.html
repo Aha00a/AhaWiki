@@ -1,6 +1,6 @@
 @(percent:Double, link:String, title:String)
 @for(percentString <- Seq("%2.2f".format(percent * 100) + "%")) {
-    <a href="@link"><span class="percentTotal">
+    <a href="@routes.Wiki.view(link)"><span class="percentTotal">
         <span class="percentBar" style="width: @percentString"></span>
         <span class="percentLabel">@percentString</span>
     </span>@link</a>
