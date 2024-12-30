@@ -19,7 +19,7 @@ object CosineSimilarity {
   def tupled = (apply _).tupled
 
   def recalc(name: String)(implicit connection: Connection, site: Site): Int = {
-    SQL"""DELETE FROM CosineSimilarity WHERE site = ${site.seq} AND name1 = $name OR name2 = $name""".executeUpdate()
+    SQL"""DELETE FROM CosineSimilarity WHERE site = ${site.seq} AND (name1 = $name OR name2 = $name)""".executeUpdate()
 
     SQL"""
 REPLACE INTO CosineSimilarity (site, name1, name2, similarity)
