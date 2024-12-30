@@ -19,6 +19,7 @@ trait TraitInterpreter {
   def toText(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val document = Jsoup.parse(toHtmlString(content))
     document.select(".headingNumber").remove()
+    document.select(".schema dt").remove()
     document.text()
   }
 }
