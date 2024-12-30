@@ -66,7 +66,7 @@ SELECT *
                     WHERE site = ${site.seq}
             ) TF3
     ) CS1
-    WHERE similarity > 0.3
+    WHERE similarity > 0.3 AND name1 != name2
       """.executeUpdate()
 
     SQL"""
