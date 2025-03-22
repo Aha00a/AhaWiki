@@ -210,7 +210,7 @@ class Test @Inject()(implicit val
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
         assertEquals(Interpreters.toHtmlString(wikiMarkup), interpretedWithWiki)
 
-        val extractWordResult = Seq("Person", "KIM,", "Aha", "https://aha00a.com", "AhariseNotExists")
+        val extractWordResult = Seq("Person", "Name", "KIM,", "Aha", "Url", "https://aha00a.com", "Member", "Of", "AhariseNotExists")
         assertEquals(Interpreters.toText(wikiMarkup).split(" ").toSeq, extractWordResult)
 
         assertEquals(InterpreterSchema.toSeqLink(schemaMarkup), Seq())
