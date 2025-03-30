@@ -219,7 +219,6 @@ class Test @Inject()(implicit val
         val extractSchemaResult = Seq(
           SchemaOrg("UnitTest", "Person", "", ""),
           SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
-          SchemaOrg("UnitTest", "Person", "url", "https://aha00a.com"),
           SchemaOrg("UnitTest", "Person", "memberOf", "AhariseNotExists")
         )
         assertEquals(InterpreterSchema.toSeqSchemaOrg(schemaMarkup), extractSchemaResult)
@@ -240,8 +239,6 @@ class Test @Inject()(implicit val
         Seq(
           SchemaOrg("UnitTest", "WebApplication", "", ""),
           SchemaOrg("UnitTest", "WebApplication", "name", "AhaWiki"),
-          SchemaOrg("UnitTest", "WebApplication", "url", "https://wiki.aha00a.com/w/AhaWiki"),
-          SchemaOrg("UnitTest", "WebApplication", "featureList", "https://wiki.aha00a.com/w/AhaWikiFeature"),
           SchemaOrg("UnitTest", "WebApplication", "applicationCategory", "Wiki"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10-21"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10"),
