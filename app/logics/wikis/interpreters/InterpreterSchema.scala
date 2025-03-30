@@ -133,10 +133,13 @@ object InterpreterSchema extends TraitInterpreter {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField.flatMap {
-      case key +: tail =>
-        tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
-    }
+    val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField
+      .filterNot(_(1).startsWith("http://"))
+      .filterNot(_(1).startsWith("https://"))
+      .flatMap {
+        case key +: tail =>
+          tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+      }
     SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
   }
 }
