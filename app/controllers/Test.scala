@@ -217,7 +217,7 @@ class Test @Inject()(implicit val
         assertEquals(Interpreters.toSeqLink(wikiMarkup), Seq())
 
         val extractSchemaResult = Seq(
-          SchemaOrg("UnitTest", "Person", "", ""),
+          SchemaOrg("UnitTest", "Person", "", "schema:Person"),
           SchemaOrg("UnitTest", "Person", "name", "KIM, Aha"),
           SchemaOrg("UnitTest", "Person", "memberOf", "AhariseNotExists")
         )
@@ -237,7 +237,7 @@ class Test @Inject()(implicit val
             |""".stripMargin
         ).toList,
         Seq(
-          SchemaOrg("UnitTest", "WebApplication", "", ""),
+          SchemaOrg("UnitTest", "WebApplication", "", "schema:WebApplication"),
           SchemaOrg("UnitTest", "WebApplication", "name", "AhaWiki"),
           SchemaOrg("UnitTest", "WebApplication", "applicationCategory", "Wiki"),
           SchemaOrg("UnitTest", "WebApplication", "datePublished", "2015-10-21"),

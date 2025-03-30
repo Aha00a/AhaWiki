@@ -140,6 +140,6 @@ object InterpreterSchema extends TraitInterpreter {
         case key +: tail =>
           tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
       }
-    SchemaOrg(wikiContext.name, parseResult.schemaClass, "", "") +: seqLinkProperty
+    SchemaOrg(wikiContext.name, parseResult.schemaClass, "", s"schema:${parseResult.schemaClass}") +: seqLinkProperty
   }
 }
