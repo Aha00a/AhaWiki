@@ -75,7 +75,7 @@ object SchemaOrg {
   }
 
   def selectWhereValue(value: String)(implicit connection: Connection, site: Site): List[SchemaOrg] = {
-    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND value = $value"
+    SQL"SELECT page, cls, prop, value FROM SchemaOrg WHERE site = ${site.seq} AND prop <> '' AND value = $value"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
       .map(tables.SchemaOrg.tupled)
   }
