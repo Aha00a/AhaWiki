@@ -229,7 +229,7 @@ object InterpreterWiki extends TraitInterpreter {
       case regexLink(null, null, null, null, uri, alias, null, null) => AhaMarkLink(uri, alias)
       case regexLink(null, null, null, null, null, null, uri, alias) => AhaMarkLink(uri, alias)
       case _ => null
-    }.filter(_ != null)
+    }.filter(_ != null).filterNot(_.uri.startsWith("#"))
   }
 
   def inlineToHtmlString(line: String)(implicit wikiContext:ContextWikiPage): String = {
