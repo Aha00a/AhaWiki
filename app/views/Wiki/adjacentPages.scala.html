@@ -15,7 +15,9 @@
     </div>
     <script type="text/javascript">
         $(function(){
-            var limit = 200;
+            var limit = 500;
+            const intervalFetch = 1000;
+            var intervalAddNodeAndLink = 200;
             var graph = Viva.Graph.graph();
             var graphics = Viva.Graph.View.svgGraphics();
             var layout = Viva.Graph.Layout.forceDirected(graph, {
@@ -148,7 +150,7 @@
             var queueGraph = [];
 
             @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Normal) {
-                setInterval(function () {
+            setInterval(function () {
                     if(document.hidden) {
                         console.log('document.hidden');
                         return;
@@ -162,8 +164,8 @@
 
                     var v = queueFetch.shift();
                     fetchLinks(v);
-                }, 500);
-                setInterval(function () {
+                }, intervalFetch);
+            setInterval(function () {
                     if(queueGraph.length === 0) {
                         return;
                     }
@@ -181,7 +183,7 @@
                         graph.addLink(v.src, v.dst);
                     }
                     $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
-                }, 10);
+                }, intervalAddNodeAndLink);
             }
 
             function fetchLinks(name) {
