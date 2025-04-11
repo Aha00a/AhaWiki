@@ -18,8 +18,15 @@ object Adjacent {
     import models.tables.SchemaOrg
     implicit val site: Site = contextSite.site
     val seqLink: Seq[Link] = Link.select(name)
-    val seqLinkSchemaOrgPageOrValue: Seq[Link] = SchemaOrg.selectWherePageOrValue(name).map(s => Link(s.page, s.value, ""))
-    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue).filter(_.and(contextSite.pageCanSee))
+    val seqSchemaOrg = SchemaOrg.selectWherePageOrValue(name)
+    val seqLinkSchemaOrgPageOrValue: Seq[Link] =
+      seqSchemaOrg.map(s => Link(s.page, s.toPageProp, "")) ++
+      seqSchemaOrg.map(s => Link(s.toPageProp, s.value, ""))
+
+    val seqLinkFiltered: Seq[Link] = (seqLink ++ seqLinkSchemaOrgPageOrValue)
+      .filterNot(_.isIdentical)
+      .distinct
+      .filter(_.and(contextSite.pageCanSee))
     seqLinkFiltered
   }
 }

@@ -14,6 +14,7 @@ case class Link(src:String, dst:String, alias:String) {
 
   import logics.wikis.PageNameLogic
 
+  lazy val isIdentical: Boolean = src == dst
   lazy val isDstExternal: Boolean = PageNameLogic.isExternal(dst)
 
   def and(a: String => Boolean):Boolean = a(src) && a(dst)
@@ -81,7 +82,7 @@ object Link {
     SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE site = ${site.seq} AND dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
       .as(str("dst") *)
   }
-  
+
   def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection, site: Site): Seq[Link] = {
     if(seq.isEmpty) {
       return Seq()

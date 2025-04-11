@@ -1,18 +1,24 @@
 package models.tables
 
 import java.sql.Connection
-
 import anorm.BatchSql
 import anorm.NamedParameter
 import anorm._
 import anorm.SqlParser.flatten
 import anorm.SqlParser.int
 import anorm.SqlParser.str
+import com.aha00a.commons.Implicits.RichString
 import models.tables
 
 case class SchemaOrg(page: String, cls: String, prop: String, value: String) {
-  def and(a: String => Boolean):Boolean = a(page) && a(value)
-  def or(a: String => Boolean):Boolean = a(page) || a(value)
+  def and(a: String => Boolean): Boolean = a(page) && a(value)
+  def or(a: String => Boolean): Boolean = a(page) || a(value)
+
+  private val delimiter = ":"
+  def toPageCls: String = Seq(page, cls).filterNot(_.isNullOrEmpty).mkString(delimiter)
+  def toPageClsProp: String = Seq(page, cls, prop).filterNot(_.isNullOrEmpty).mkString(delimiter)
+  def toPageClsPropValue: String = Seq(page, cls, prop, value).filterNot(_.isNullOrEmpty).mkString(delimiter)
+  def toPageProp: String = Seq(page, prop).filterNot(_.isNullOrEmpty).mkString(delimiter)
 }
 
 object SchemaOrg {
