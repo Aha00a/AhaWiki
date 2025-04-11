@@ -138,7 +138,9 @@ object InterpreterSchema extends TraitInterpreter {
       .filterNot(_(1).startsWith("https://"))
       .flatMap {
         case key +: tail =>
-          tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym_y_md).map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+          tail
+            .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
+            .map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
       }
     SchemaOrg(wikiContext.name, parseResult.schemaClass, "", s"schema:${parseResult.schemaClass}") +: seqLinkProperty
   }

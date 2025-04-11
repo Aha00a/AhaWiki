@@ -23,11 +23,19 @@ object DateTimeUtil {
       localDate.toYearDashMonthString,
     )).getOrElse(Seq(ym))
   }
+
   def expand_ymd_to_ymd_ym_y_md(ymd:String): Seq[String] = {
     Try(LocalDate.parse(ymd, DateTimeFormatterHolder.isoLocalDate)).toOption.map(localDate => Seq(
       localDate.toIsoLocalDateString,
       localDate.toYearDashMonthString,
       localDate.toDashDashMonthDashDayString,
+    )).getOrElse(Seq(ymd))
+  }
+
+  def expand_ymd_to_ymd_ym(ymd:String): Seq[String] = {
+    Try(LocalDate.parse(ymd, DateTimeFormatterHolder.isoLocalDate)).toOption.map(localDate => Seq(
+      localDate.toIsoLocalDateString,
+      localDate.toYearDashMonthString,
     )).getOrElse(Seq(ymd))
   }
 
