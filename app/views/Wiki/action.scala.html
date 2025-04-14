@@ -11,38 +11,38 @@
                 </li>
             } else {
                 <li>
-                    <a href="@(routes.Auth.login)"><i class="fas fa-sign-in-alt"></i>Login</a>
+                    <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
                 </li>
             }
         </ul>
         <ul class="globalAction">
             <li>
-                <a href="javascript:showSearch();"><i class="fas fa-search"></i>Search</a>
+                <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search</a>
             </li>
             <li>
-                <a href="@routes.Feed.atom"><i class="fas fa-rss"></i>Atom</a>
+                <a href="@routes.Feed.atom" rel="nofollow"><i class="fas fa-rss"></i>Atom</a>
             </li>
             @if(isWritable) {
                 <li>
-                    <a href="javascript:showWrite();"><i class="fas fa-signature"></i>Write Log</a>
+                    <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log</a>
                 </li>
             }
         </ul>
         <ul class="pageAction">
             @if(wikiFirst != null) {
                 <li>
-                    <a href="?action=raw"><i class="fas fa-file-alt"></i>Raw</a>
+                    <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
                 </li>
                 <li>
-                    <a href="?action=history"><i class="fas fa-history"></i>History</a>
+                    <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History</a>
                 </li>
                 <li>
-                    <a href="?action=blame"><i class="fas fa-users"></i>Blame</a>
+                    <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame</a>
                 </li>
             }
             @if(isWritable) {
                 <li>
-                    <a href="?action=edit"><i class="fas fa-edit"></i>Edit</a>
+                    <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit</a>
                 </li>
             }
         </ul>
