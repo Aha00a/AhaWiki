@@ -20,7 +20,37 @@ class FilterAccessLog @Inject()(
     ec: ExecutionContext,
     database: play.api.db.Database
 ) extends Filter with Logging {
-  private def isUriAttack(uri: String): Boolean = uri.startsWith("/wp-") || Seq("/wp-login.php").contains(uri)
+  private val toCheckStartsWith = Seq(
+    "/wp",
+    "/wordpress",
+    "/new",
+    "/old",
+    "/backup",
+    "/blog",
+    "/.env"
+  )
+  private val toCheckContains = Seq(
+    "/wp-admin",
+    "/wp-atom",
+    "/wp-comments-post",
+    "/wp-content",
+    "/wp-cron",
+    "/wp-feed",
+    "/wp-feed-rss",
+    "/wp-includes",
+    "/wp-json",
+    "/wp-login.php",
+    "/wp-rss",
+    "/wp-trackback",
+    "/xmlrpc.php",
+  )
+
+  private def isUriAttack(uri: String): Boolean = {
+    //noinspection SimplifyBoolean
+    false ||
+      toCheckStartsWith.exists(uri.startsWith) ||
+      toCheckContains.exists(uri.contains)
+  }
 
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
