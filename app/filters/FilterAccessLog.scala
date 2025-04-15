@@ -27,7 +27,11 @@ class FilterAccessLog @Inject()(
     "/old",
     "/backup",
     "/blog",
-    "/.env"
+    "/config",
+    "/.aws",
+    "/.env",
+    "/.git",
+    "/.vscode",
   )
   private val toCheckContains = Seq(
     "/wp-admin",
@@ -42,6 +46,9 @@ class FilterAccessLog @Inject()(
     "/wp-login.php",
     "/wp-rss",
     "/wp-trackback",
+    "/phpinfo.php",
+    "/php_info.php",
+    "/temp.php",
     "/xmlrpc.php",
   )
 
