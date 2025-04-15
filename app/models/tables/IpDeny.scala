@@ -31,6 +31,18 @@ object IpDeny extends Logging {
   }
 
   def deleteExpired(limit: Int = 1000)(implicit connection: Connection): Int = {
-    SQL"""DELETE FROM IpDeny WHERE dateInserted < DATE_ADD(NOW(), INTERVAL -5 YEAR) LIMIT $limit""".executeUpdate()
+    SQL"""
+        DELETE FROM IpDeny
+            WHERE seq < (
+                SELECT MAX(seq)
+                    FROM (
+                    SELECT seq, dateInserted
+                        FROM IpDeny
+                        ORDER BY seq
+                        LIMIT $limit
+                ) T
+                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -5 YEAR)
+            );
+    """.executeUpdate()
   }
 }
