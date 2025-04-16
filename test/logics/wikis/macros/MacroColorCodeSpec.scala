@@ -8,8 +8,6 @@ import org.scalatest.freespec.AnyFreeSpec
 
 class MacroColorCodeSpec extends AnyFreeSpec {
   "MacroColorCode" in {
-    implicit val site: Site = Site.notFound
-    implicit val provider: RequestWrapper = RequestWrapper.empty
     implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, null)
 
     val empty = ""
