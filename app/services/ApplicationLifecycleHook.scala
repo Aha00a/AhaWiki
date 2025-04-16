@@ -1,26 +1,19 @@
 package services
 
-import java.io.File
-import java.util.Date
-
 import actors.ActorAhaWiki.Calculate
 import actors.ActorAhaWiki.CalculateCosineSimilarity
-import actors.ActorAhaWiki.CalculateLink
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.Using
-import javax.inject._
 import models.tables.Page
+import models.tables.Site
 import play.api.Logging
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
 
+import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.io.Codec
-import models.tables.Site
 
 /*
 List of prime numbers less than 3600
