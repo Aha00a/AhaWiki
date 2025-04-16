@@ -11,7 +11,7 @@
 
 //@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 //.defaultFont {
-//	font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+//	font-family: Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 //}
 
 @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic,700italic);
@@ -19,7 +19,7 @@
 html, body {
 	padding: 0;
 	margin: 0;
-	.defaultFont;
+	.defaultFont();
 }
 
 .boxShadow(@s : 0 0 1em #eee) {
@@ -85,7 +85,7 @@ html, body {
 	}
 
 	code, kbd, pre, samp, tt {
-		.monospace;
+		.monospace();
 	}
 
 	s {
@@ -96,8 +96,6 @@ html, body {
 		}
 	}
 	textarea, pre {
-		-moz-tab-size : 4;
-		-o-tab-size : 4;
 		tab-size : 4;
 	}
 
@@ -379,7 +377,7 @@ html, body {
 			border: 1px solid #ccc;
 			background-color: #eee;
 			padding: 20px;
-			.boxShadow;
+			.boxShadow();
 
 			p {
 				margin-top: 0;
@@ -400,10 +398,9 @@ html, body {
 				>div.preview.info {
 					.properties {
 						ol.groupedProperties {
-							margin: 0;
 							list-style-type: none;
 							padding-left: 0;
-							margin-bottom: 5px;
+							margin: 0 0 5px 0;
 							li {
 								display: inline-block;
 								margin-right: 5px;
@@ -869,7 +866,6 @@ html, body {
 		@opacityNeighbor: 0.9;
 		@opacityHover: 1;
 
-		//@nodeColorNormal: #C7CEEA;
 		@nodeColorNormal: #777;
 		@nodeColorNeighbor: darken(@nodeColorNormal, 20%);
 		@nodeColorHover: darken(@nodeColorNormal, 40%);
@@ -951,7 +947,7 @@ html, body {
 		left: 40%;
 		width: 20%;
 		form {
-			.boxShadow;
+			.boxShadow();
 			input {
 				width: 100%;
 				padding: 10px;
@@ -975,7 +971,7 @@ html, body {
 					border: 1px solid #ccc;
 					border-bottom: 1px solid #eee;
 
-					.monospace;
+					.monospace();
 					white-space: pre-wrap;
 					word-break: break-word;
 
@@ -1038,7 +1034,7 @@ html, body {
 			}
 			th, td {
 				padding: 5px;
-				.monospace;
+				.monospace();
 				white-space: pre-wrap;
 				word-break: break-word;
 
@@ -1081,10 +1077,10 @@ html, body {
 		color: rgba(0, 0, 0, 0);
 		-webkit-animation: spin 2s linear infinite; /* Safari */
 		animation: spin 2s linear infinite;
-		@-webkit-keyframes spin {
-			0% { -webkit-transform: rotate(0deg); }
-			100% { -webkit-transform: rotate(360deg); }
-		}
+		//@-webkit-keyframes spin {
+		//	0% { -webkit-transform: rotate(0deg); }
+		//	100% { -webkit-transform: rotate(360deg); }
+		//}
 
 		@keyframes spin {
 			0% { transform: rotate(0deg); }
@@ -1097,7 +1093,7 @@ html, body {
 		background-color: #fff;
 		padding: 20px;
 		max-width: 70%;
-		.boxShadow;
+		.boxShadow();
 		>.circle {
 			@size: 100px;
 			@thickness: 20px;
@@ -1130,7 +1126,7 @@ html, body {
 		>.mapArea {
 			position: relative;
 			.googleMapsInfoWindow {
-				.defaultFont;
+				.defaultFont();
 				line-height: 1.5;
 				.title {
 					font-size: 2em;

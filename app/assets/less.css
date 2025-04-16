@@ -126,8 +126,6 @@ body {
 }
 .AhaWiki textarea,
 .AhaWiki pre {
-  -moz-tab-size: 4;
-  -o-tab-size: 4;
   tab-size: 4;
 }
 .AhaWiki .limitWidth {
@@ -502,10 +500,9 @@ body {
   max-width: 25vw;
 }
 .AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
-  margin: 0;
   list-style-type: none;
   padding-left: 0;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
 }
 .AhaWiki .commonAhaWiki .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
   display: inline-block;
@@ -988,10 +985,9 @@ body {
   max-width: 25vw;
 }
 .AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
-  margin: 0;
   list-style-type: none;
   padding-left: 0;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
 }
 .AhaWiki .wikiContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
   display: inline-block;
@@ -1607,10 +1603,9 @@ body {
   max-width: 25vw;
 }
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties {
-  margin: 0;
   list-style-type: none;
   padding-left: 0;
-  margin-bottom: 5px;
+  margin: 0 0 5px 0;
 }
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema > div.preview.info .properties ol.groupedProperties li {
   display: inline-block;
@@ -2181,14 +2176,6 @@ body {
   /* Safari */
   animation: spin 2s linear infinite;
 }
-@-webkit-keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-  }
-}
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -2305,14 +2292,6 @@ body {
   left: 50%;
   margin-top: -10vmin;
   margin-left: -10vmin;
-}
-@-webkit-keyframes spin {
-  0% {
-    -webkit-transform: rotate(0deg);
-  }
-  100% {
-    -webkit-transform: rotate(360deg);
-  }
 }
 @keyframes spin {
   0% {
