@@ -31,6 +31,7 @@ import play.api.mvc._
 
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.sql.Connection
 import java.util.Date
 import javax.inject._
 import scala.concurrent.Await
@@ -55,7 +56,6 @@ class Wiki @Inject()(implicit val
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
 
-  import java.sql.Connection
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
