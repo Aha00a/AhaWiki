@@ -41,7 +41,7 @@ class Api @Inject()(
     database.withConnection { implicit connection =>
       import models.tables.Link
       import models.tables.Site
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       val listLink = Random.shuffle(Link.selectAllButNotEmpty()).take(10)
       Ok(listLink.asJson)
     }
@@ -52,7 +52,7 @@ class Api @Inject()(
     import models.tables.Site
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
     }
   }
@@ -62,7 +62,7 @@ class Api @Inject()(
     import java.net.URLDecoder
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       implicit val contextSite: ContextSite = ContextSite()
       Ok(Adjacent.getSeqLinkFiltered(name).asJson)
     }
@@ -74,7 +74,7 @@ class Api @Inject()(
       import models.tables.Page
       import models.tables.PageWithoutContentWithSize
       import models.tables.Site
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
       val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
       val totalSize: Long = seqPage.map(_.size).sum

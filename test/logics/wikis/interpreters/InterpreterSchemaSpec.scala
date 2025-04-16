@@ -8,7 +8,7 @@ import models.tables.Site
 
 //noinspection NameBooleanParameters
 class InterpreterSchemaSpec extends AnyFreeSpec {
-  implicit val site: Site = Site(-1, "")
+  implicit val site: Site = Site.notFound
   implicit val provider: RequestWrapper = RequestWrapper.empty
   implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, null)
 

@@ -79,7 +79,7 @@ mat: Materializer,
     val (optionIpDeny: Option[IpDeny], optionSite) = database.withConnection { implicit connection =>
       (models.tables.IpDeny.selectLatest(remoteAddress), Site.selectWhereDomain(host))
     }
-    implicit val site: Site = optionSite.getOrElse(Site(-1, ""))
+    implicit val site: Site = optionSite.getOrElse(Site.notFound)
 
     if (optionIpDeny.isDefined) {
       Thread.sleep(60.seconds.toMillis)

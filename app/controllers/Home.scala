@@ -26,7 +26,7 @@ class Home @Inject() (
 
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       val name = PageLogic.getListPageByPermission().random().name
       Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
     }
@@ -34,7 +34,7 @@ class Home @Inject() (
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
 
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(
         """User-agent: *

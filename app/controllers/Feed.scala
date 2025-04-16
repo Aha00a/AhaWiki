@@ -54,7 +54,7 @@ class Feed @Inject()(
     }
     implicit val provider: RequestWrapper = RequestWrapper()
     implicit val site: Site = database.withConnection { implicit connection =>
-      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
     }
 
     val seqPageSorted: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>

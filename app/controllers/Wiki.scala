@@ -60,7 +60,7 @@ class Wiki @Inject()(implicit val
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
 
       val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
@@ -236,7 +236,7 @@ class Wiki @Inject()(implicit val
 
     def doSave() = {
       database.withConnection { implicit connection =>
-        implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+        implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
         implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
@@ -283,7 +283,7 @@ class Wiki @Inject()(implicit val
   def delete(): Action[AnyContent] = Action { implicit request =>
     val name = Form("name" -> text).bindFromRequest.get
     database.withTransaction { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
@@ -303,7 +303,7 @@ class Wiki @Inject()(implicit val
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
@@ -330,7 +330,7 @@ class Wiki @Inject()(implicit val
 
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
@@ -373,7 +373,7 @@ class Wiki @Inject()(implicit val
 
   def rename(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -397,7 +397,7 @@ class Wiki @Inject()(implicit val
   def preview(): Action[AnyContent] = Action { implicit request =>
     val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
       val additionalInfo = getAhaMarkAdditionalInfo(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")

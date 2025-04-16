@@ -25,10 +25,12 @@ import scala.collection.immutable
 import scala.util.matching.Regex
 
 case class Site(seq:Long, name:String) {
-  
+  def isNotFound: Boolean = this == Site.notFound
 }
 
 object Site {
+  val notFound: Site = Site(-1, "notFound")
+
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 

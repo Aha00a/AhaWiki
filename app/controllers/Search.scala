@@ -38,7 +38,7 @@ controllerComponents: ControllerComponents,
     import models.ContextSite.RequestWrapper
     import models.tables.SearchResultSummary
     import models.tables.Site
-    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 

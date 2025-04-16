@@ -49,7 +49,7 @@ class Test @Inject()(implicit val
 
     import models.tables.Site
     implicit val site: Site = database.withConnection { implicit connection =>
-      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
     }
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
@@ -291,7 +291,7 @@ class Test @Inject()(implicit val
   def gradient: Action[AnyContent] = Action { implicit request =>
     import models.tables.Site
     implicit val site: Site = database.withConnection { implicit connection =>
-      Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+      Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
     }
     implicit val context: ContextSite = ContextSite()
     Ok(views.html.Test.gradient(""))
@@ -303,7 +303,7 @@ class Test @Inject()(implicit val
     import models.tables.Site
     import play.api.Mode
 
-    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site(-1, ""))
+    implicit val site: Site = Site.selectWhereDomain(request.host).getOrElse(Site.notFound)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 

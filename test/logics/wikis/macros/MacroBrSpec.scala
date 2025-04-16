@@ -9,7 +9,7 @@ class MacroBrSpec extends AnyFreeSpec {
     import models.ContextSite.RequestWrapper
     import models.tables.Site
 
-    implicit val site: Site = Site(-1, "")
+    implicit val site: Site = Site.notFound
     implicit val provider: RequestWrapper = RequestWrapper.empty
     implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, null)
 
