@@ -15,11 +15,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 
 class FilterAccessLog @Inject()(
-    implicit val
-    mat: Materializer,
-    ec: ExecutionContext,
-    database: play.api.db.Database
-) extends Filter with Logging {
+                                 implicit val
+mat: Materializer,
+                                 ec: ExecutionContext,
+                                 database: play.api.db.Database
+                               ) extends Filter with Logging {
   private val toCheckStartsWith = Seq(
     "/wp",
     "/wordpress",
@@ -56,6 +56,17 @@ class FilterAccessLog @Inject()(
     toCheckStartsWith.exists(uri.startsWith) || toCheckContains.exists(uri.contains)
   }
 
+  private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit = {
+    logger.info(Seq(
+      method.padRight(7),
+      status,
+      s"${duration}ms".padLeft(7),
+      remoteAddress.padRight(15),
+      url,
+      userAgent
+    ).mkString("\t"))
+  }
+
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     val scheme = requestHeader.scheme
@@ -67,17 +78,10 @@ class FilterAccessLog @Inject()(
     val ipDeny = database.withConnection { implicit connection => models.tables.IpDeny.selectLatest(remoteAddress) }
 
     if (ipDeny.isDefined) {
-      Thread.sleep(60.seconds.toMillis);
+      Thread.sleep(60.seconds.toMillis)
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
-      logger.info(Seq(
-        requestHeader.method.padRight(7),
-        Results.Forbidden.header.status,
-        s"${duration}ms".padLeft(7),
-        remoteAddress.padRight(15),
-        url,
-        userAgent,
-      ).mkString("\t"))
+      logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
       database.withConnection { implicit connection =>
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
@@ -92,22 +96,15 @@ class FilterAccessLog @Inject()(
           remoteAddress,
           userAgent,
           Results.Forbidden.header.status,
-          duration.toInt,
+          duration.toInt
         )
       }
       Future(Results.Forbidden)
     } else if (isUriAttack(uri)) {
-      Thread.sleep(60.seconds.toMillis);
+      Thread.sleep(60.seconds.toMillis)
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
-      logger.info(Seq(
-        requestHeader.method.padRight(7),
-        403,
-        s"${duration}ms".padLeft(7),
-        remoteAddress.padRight(15),
-        url,
-        userAgent,
-      ).mkString("\t"))
+      logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
       database.withConnection { implicit connection =>
         implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         val accessLogSeq = models.tables.AccessLog.insert(
@@ -122,7 +119,7 @@ class FilterAccessLog @Inject()(
           remoteAddress,
           userAgent,
           Results.Forbidden.header.status,
-          duration.toInt,
+          duration.toInt
         )
         models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
       }
@@ -131,14 +128,7 @@ class FilterAccessLog @Inject()(
       nextFilter(requestHeader).map(result => {
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
-        logger.info(Seq(
-          requestHeader.method.padRight(7),
-          result.header.status,
-          s"${duration}ms".padLeft(7),
-          remoteAddress.padRight(15),
-          url,
-          userAgent,
-        ).mkString("\t"))
+        logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
         database.withConnection { implicit connection =>
           implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
           models.tables.AccessLog.insert(
@@ -153,7 +143,7 @@ class FilterAccessLog @Inject()(
             remoteAddress,
             userAgent,
             result.header.status,
-            duration.toInt,
+            duration.toInt
           )
         }
         result.withHeaders("Request-Time" -> duration.toString)
