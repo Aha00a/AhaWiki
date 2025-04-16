@@ -1,16 +1,13 @@
 package logics.wikis.macros
 
+import com.aha00a.commons.Implicits._
+import models.ContextWikiPage
+import play.api.db.Database
+
 import java.text.SimpleDateFormat
 import java.time.format.TextStyle
-import java.time.{LocalDateTime, YearMonth}
-
-import com.aha00a.commons.Implicits._
-import com.aha00a.play.Implicits._
-import models.ContextWikiPage
-import play.api.cache.SyncCacheApi
-import play.api.db.Database
-import play.api.mvc.Request
-
+import java.time.LocalDateTime
+import java.time.YearMonth
 import scala.util.matching.Regex
 
 object MacroIncludeDays extends TraitMacro {
