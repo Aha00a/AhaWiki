@@ -53,10 +53,7 @@ class FilterAccessLog @Inject()(
   )
 
   private def isUriAttack(uri: String): Boolean = {
-    //noinspection SimplifyBoolean
-    false ||
-      toCheckStartsWith.exists(uri.startsWith) ||
-      toCheckContains.exists(uri.contains)
+    toCheckStartsWith.exists(uri.startsWith) || toCheckContains.exists(uri.contains)
   }
 
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
