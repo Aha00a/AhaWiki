@@ -4,6 +4,7 @@ import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.SessionLogic
+import models.tables.IpDeny
 import models.tables.Site
 import play.api.Logging
 import play.api.mvc._
@@ -75,19 +76,21 @@ mat: Materializer,
     val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
-    val ipDeny = database.withConnection { implicit connection => models.tables.IpDeny.selectLatest(remoteAddress) }
+    val (optionIpDeny: Option[IpDeny], optionSite) = database.withConnection { implicit connection =>
+      (models.tables.IpDeny.selectLatest(remoteAddress), Site.selectWhereDomain(host))
+    }
+    implicit val site: Site = optionSite.getOrElse(Site(-1, ""))
 
-    if (ipDeny.isDefined) {
+    if (optionIpDeny.isDefined) {
       Thread.sleep(60.seconds.toMillis)
       val endTime = System.currentTimeMillis
       val duration = endTime - startTime
       logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
       database.withConnection { implicit connection =>
-        implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         models.tables.AccessLog.insert(
           site.seq,
           getUserSeq(requestHeader),
-          ipDeny.map(_.seq),
+          optionIpDeny.map(_.seq),
           requestHeader.method,
           scheme,
           host,
@@ -106,7 +109,6 @@ mat: Materializer,
       val duration = endTime - startTime
       logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
       database.withConnection { implicit connection =>
-        implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
         val accessLogSeq = models.tables.AccessLog.insert(
           site.seq,
           getUserSeq(requestHeader),
@@ -130,7 +132,6 @@ mat: Materializer,
         val duration = endTime - startTime
         logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
         database.withConnection { implicit connection =>
-          implicit val site: Site = Site.selectWhereDomain(host).getOrElse(Site(-1, ""))
           models.tables.AccessLog.insert(
             site.seq,
             getUserSeq(requestHeader),
