@@ -1,17 +1,13 @@
 package logics.wikis.macros
 
-import java.time.format.TextStyle
-import java.time.{DayOfWeek, YearMonth}
-
 import com.aha00a.commons.Implicits._
-import com.aha00a.play.Implicits._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
-import play.api.mvc.Request
 
-import scala.util.matching.Regex
+import java.time.format.TextStyle
+import java.time.DayOfWeek
+import java.time.YearMonth
 
 object MacroCalendar extends TraitMacro {
   import com.aha00a.commons.utils.DateTimeUtil._
