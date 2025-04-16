@@ -1,10 +1,6 @@
 package models.tables
 
-import anorm.SqlParser.date
-import anorm.SqlParser.flatten
-import anorm.SqlParser.str
 import anorm._
-import com.aha00a.commons.Implicits._
 import play.api.Logging
 
 import java.sql.Connection
