@@ -13,6 +13,7 @@ object ExtractConvertInjectMacro {
     MacroSiteName,
 
     MacroBr,
+    MacroColorCode,
     MacroHtml,
     MacroImage,
     MacroRuby,
