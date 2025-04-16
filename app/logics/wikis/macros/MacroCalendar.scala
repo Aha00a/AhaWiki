@@ -3,11 +3,10 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
-import play.api.db.Database
 
-import java.time.format.TextStyle
 import java.time.DayOfWeek
 import java.time.YearMonth
+import java.time.format.TextStyle
 
 object MacroCalendar extends TraitMacro {
   import com.aha00a.commons.utils.DateTimeUtil._
@@ -17,8 +16,6 @@ object MacroCalendar extends TraitMacro {
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regexYear(y) => (1 to 12).map(m => toHtmlString(f"$y-$m%02d")).mkString("\n")
     case regexYearDashMonth(y, m) =>
-      implicit val database: Database = wikiContext.database
-
       val yearMonth = YearMonth.of(y.toInt, m.toInt)
       val firstPadding: Seq[String] = Seq.fill(yearMonth.atDay(1).getDayOfWeek.getValue - 1)("")
       val lastPadding: Seq[String] = Seq.fill(7 - yearMonth.atEndOfMonth().getDayOfWeek.getValue)("")
