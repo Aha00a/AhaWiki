@@ -8,7 +8,7 @@ import scala.collection.mutable
 import scala.util.matching.Regex
 
 object ExtractConvertInjectMacro {
-  val mapMacros: Map[String, TraitMacro] = Seq(
+  private val mapMacros: Map[String, TraitMacro] = Seq(
 
     MacroSiteName,
 
@@ -58,8 +58,8 @@ object ExtractConvertInjectMacro {
   ).map(m => m.name -> m).toMap
 }
 
-class ExtractConvertInjectMacro() extends ExtractConvertInject {
-  val mapVariable = new mutable.HashMap[String, String]()
+class ExtractConvertInjectMacro extends ExtractConvertInject {
+  private val mapVariable = new mutable.HashMap[String, String]()
 
   val regex: Regex =
     """(?x)
@@ -70,7 +70,7 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
             (.*?)
           \)
         )?
-      \]\]""".r
+      ]]""".r
 
   override def extract(s: String): String = {
     //noinspection ScalaUnusedSymbol
@@ -118,13 +118,13 @@ class ExtractConvertInjectMacro() extends ExtractConvertInject {
     }.toSeq
   }
 
-  def MacroSet(argument: String): String = {
+  private def MacroSet(argument: String): String = {
     val a = argument.split(",", 2)
     mapVariable.put(a(0), a(1))
     ""
   }
 
-  def MacroGet(argument: String): String = {
+  private def MacroGet(argument: String): String = {
     mapVariable.getOrElse(argument, s"Error! $argument")
   }
 
