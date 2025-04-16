@@ -34,6 +34,8 @@ mat: Materializer,
     "/.git",
     "/.vscode",
   )
+
+  //noinspection SpellCheckingInspection
   private val toCheckContains = Seq(
     "/wp-admin",
     "/wp-atom",
