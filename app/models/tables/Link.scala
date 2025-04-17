@@ -27,23 +27,20 @@ object Link {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def selectCountWhereAlias(alias: String)(implicit connection: Connection, site: Site): Long = {
-    SQL"""SELECT COUNT(*) cnt FROM Link WHERE site = ${site.seq} AND alias = $alias"""
-      .as(long("cnt") single)
-  }
-
-  def selectBacklinkOfDatePage(seqName: Seq[String])(implicit connection: Connection, site: Site): List[Link] = {
+  case class DstMaxMinCount(dst: String, max: String, min: String, count: Long)
+  def selectDstMaxMinCountWhereSrcIsDatePage(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[DstMaxMinCount] = {
     SQL"""
-        SELECT src, dst, alias
+        SELECT dst, MAX(src) max, MIN(src) min, COUNT(*) count
             FROM Link
             WHERE
                 site = ${site.seq} AND
                 dst IN ($seqName) AND
                 src REGEXP '[0-9]{4}-(0[1-9]|1[012])-([012][0-9]|3[01])'
-            ORDER BY dst, src DESC
+            GROUP BY dst
+            ORDER BY dst
       """
-      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
+      .as(str("dst") ~ str("max") ~ str("min") ~ long("count") *).map(flatten)
+      .map(DstMaxMinCount.tupled)
   }
 
   def select(name: String)(implicit connection: Connection, site: Site): List[Link] = {

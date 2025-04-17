@@ -1,11 +1,11 @@
 @import logics.wikis.interpreters.InterpreterMap
 @import com.aha00a.commons.Implicits._
 @(
-        mapsJavaScriptAPIKey:String,
-        url:String,
-        sheetName:String,
+        mapsJavaScriptAPIKey: String,
+        url: String,
+        sheetName: String,
         seqHeader: Seq[String],
-        seqLocationWithCalculatedField:Seq[InterpreterMap.LocationWithCalculatedField],
+        seqLocationWithCalculatedField: Seq[InterpreterMap.LocationLatLngDstMaxMinCount],
         query: Map[String, String]
 )(implicit wikiContext: ContextWikiPage)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
@@ -113,12 +113,12 @@
                             }
                         }
                         <th rowspan="2" class="Distance">Distance</th>
-                        @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
+                        @if(seqLocationWithCalculatedField.exists(_.dstMaxMinCount != null)) {
                             <th colspan="3" class="Visited">Visited</th>
                         }
                     </tr>
                     <tr>
-                        @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
+                        @if(seqLocationWithCalculatedField.exists(_.dstMaxMinCount != null)) {
                             <th class="VisitedLast">Last</th>
                             <th class="VisitedFirst">First</th>
                             <th class="VisitedCount">Count</th>
@@ -184,12 +184,18 @@
                                 }
                             }
                             <td class="distance"></td>
-                            @if(seqLocationWithCalculatedField.exists(_.seqVisited.nonEmpty)) {
-                                <td>@Html(locationLastVisited.seqVisited.headOption.map(s => s"""<a href="/w/$s">$s</a>""").getOrElse(""))</td>
-                                <td>@Html(locationLastVisited.seqVisited.lastOption.map(s => s"""<a href="/w/$s">$s</a>""").getOrElse(""))</td>
+                            @if(locationLastVisited.dstMaxMinCount != null) {
+                                <td>@Html(s"""<a href="/w/${locationLastVisited.dstMaxMinCount.max}">${locationLastVisited.dstMaxMinCount.max}</a>""")</td>
+                                <td>@Html(s"""<a href="/w/${locationLastVisited.dstMaxMinCount.min}">${locationLastVisited.dstMaxMinCount.min}</a>""")</td>
                                 <td class="count">
-                                    <span title="@(locationLastVisited.seqVisited.mkString(","))">@(locationLastVisited.seqVisited.length)</span>
+                                    @if(locationLastVisited.dstMaxMinCount.count != 0) {
+                                        @(locationLastVisited.dstMaxMinCount.count)
+                                    }
                                 </td>
+                            } else {
+                                <td></td>
+                                <td></td>
+                                <td></td>
                             }
                         </tr>
                     }
