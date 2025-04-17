@@ -14,8 +14,8 @@ case class Color(r: Double, g: Double, b: Double, a: Double = 1) {
     )
   }
 
-  def *(double:Double) = Color(r * double, g * double, b * double, a)
-  def /(double:Double) = Color(r / double, g / double, b / double, a)
+  def *(double:Double): Color = Color(r * double, g * double, b * double, a)
+  def /(double:Double): Color = Color(r / double, g / double, b / double, a)
 
   def toHashString: String = "#" + ((r.toInt << 16) + (g.toInt << 8) + b.toInt).toHexString.padLeft(6, "0")
 }
