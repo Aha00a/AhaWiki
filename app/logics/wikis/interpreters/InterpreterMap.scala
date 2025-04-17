@@ -16,7 +16,6 @@ import models.tables.Site
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 import play.api.Configuration
-import play.api.db.Database
 
 import java.io.StringReader
 import java.net.URLEncoder

@@ -1,9 +1,9 @@
 package com.aha00a.commons.utils
 
-import java.time.{Duration, LocalDateTime}
-
-import play.api.Logger
 import play.api.Logging
+
+import java.time.Duration
+import java.time.LocalDateTime
 
 object StopWatch extends Logging {
   def apply[T](name:String)(operation: => T): T = {
