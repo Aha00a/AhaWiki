@@ -87,7 +87,7 @@
         @body
 
         @if(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
-            <script async defer src="https://maps.googleapis.com/maps/api/js?loading=async&key=@(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
+            <script async defer src="https://maps.googleapis.com/maps/api/js?loading=async&libraries=marker&key=@(ApplicationConf().AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
         }
 
         @_googleAnalytics()
