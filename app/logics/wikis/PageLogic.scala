@@ -27,16 +27,12 @@ object PageLogic {
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
 
-  def getListPage()(implicit connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
-    Page.pageSelectPageList()
-  }
-
   def getListPageByPermission()(implicit provider: RequestWrapper, database: Database, connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
     val optionId = provider.getId
-    val list: List[PageWithoutContentWithSize] = getListPage()
+    val list: List[PageWithoutContentWithSize] = Page.pageSelectPageList()
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })

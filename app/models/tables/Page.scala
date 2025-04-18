@@ -146,18 +146,19 @@ object Page {
   // TODO: remove IFNULL(permRead) and fix schema
   def pageSelectPageList()(implicit connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
     SQL"""
-        SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, LENGTH(content) size
-            FROM Page w
-            INNER JOIN (
-                SELECT
-                    site, name, MAX(revision) revision
-                    FROM Page
-                    WHERE site = ${site.seq}
-                    GROUP BY site, name
-                    ORDER BY MAX(dateTime) DESC
-            ) NV ON w.site = NV.site AND w.name = NV.name AND w.revision = NV.revision
-            ORDER BY name
-        """
+        SELECT P1.name, P1.revision, P1.dateTime, P1.author, P1.remoteAddress, P1.comment, IFNULL(P1.permRead, '') permRead, LENGTH(P1.content) size
+            FROM Page P1
+            WHERE
+                P1.site = ${site.seq} AND
+                NOT EXISTS (
+                    SELECT 1
+                    FROM Page P2
+                    WHERE P2.site = P1.site
+                      AND P2.name = P1.name
+                      AND P2.revision > P1.revision
+                )
+            ORDER BY P1.name
+    """
       .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
