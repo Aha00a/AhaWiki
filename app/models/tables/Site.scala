@@ -57,4 +57,9 @@ object Site {
       .as(long("seq") ~ str("name") singleOpt).map(flatten)
       .map(Site.tupled)
   }
+
+  def get(host: String)(implicit connection: Connection): Site = {
+    selectWhereDomain(host).getOrElse(Site.notFound)
+  }
+
 }

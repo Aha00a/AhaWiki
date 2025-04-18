@@ -78,10 +78,10 @@ mat: Materializer,
     val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
-    val (optionIpDeny: Option[IpDeny], optionSite) = database.withConnection { implicit connection =>
-      (models.tables.IpDeny.selectLatest(remoteAddress), Site.selectWhereDomain(host))
+    val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
+      (models.tables.IpDeny.selectLatest(remoteAddress), Site.get(host))
     }
-    implicit val site: Site = optionSite.getOrElse(Site.notFound)
+    implicit val site: Site = siteFound
 
     if (optionIpDeny.isDefined) {
       Thread.sleep(60.seconds.toMillis)
