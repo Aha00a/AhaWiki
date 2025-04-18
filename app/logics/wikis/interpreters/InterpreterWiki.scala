@@ -1,12 +1,14 @@
 package logics.wikis.interpreters
 
-import com.aha00a.commons.utils.{DateTimeUtil, RegexUtil, VariableHolder}
+import com.aha00a.commons.utils.RegexUtil
+import com.aha00a.commons.utils.VariableHolder
 import logics.wikis._
-import models.{PageContent, ContextWikiPage}
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
+import models.ContextWikiPage
+import models.PageContent
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
-import logics.wikis.interpreters.ahaMark.AhaMarkLink
 
 
 
@@ -22,7 +24,7 @@ object InterpreterWiki extends TraitInterpreter {
     val Normal, Hr, Heading, List = Value
   }
 
-  abstract class Handler[T](val pageContent: PageContent)(implicit wikiContext: ContextWikiPage) {
+  abstract class Handler[T](val pageContent: PageContent) {
     val extractConvertInjectInterpreter = new ExtractConvertInjectInterpreter()
     val extractConvertInjectMacro = new ExtractConvertInjectMacro()
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
@@ -34,7 +36,7 @@ object InterpreterWiki extends TraitInterpreter {
     def process(): T
   }
 
-  abstract class HandlerContentIterateBase[T](override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[T](pageContent) {
+  abstract class HandlerContentIterateBase[T](override val pageContent: PageContent) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHr2: Regex = """^={4,}$""".r
     val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
