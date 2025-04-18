@@ -1,14 +1,14 @@
 package models.tables
 
-import java.sql.Connection
-
 import anorm.BatchSql
 import anorm.NamedParameter
-import anorm._
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
+import anorm._
 import models.tables
+
+import java.sql.Connection
 
 case class Link(src:String, dst:String, alias:String) {
 
