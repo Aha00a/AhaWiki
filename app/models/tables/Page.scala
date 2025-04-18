@@ -54,6 +54,10 @@ object Page {
     SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
   }
 
+  def selectSeqPageName()(implicit connection: Connection, site: Site): Seq[String] = {
+    SQL"SELECT DISTINCT name FROM Page WHERE site = ${site.seq}".as(str("name") *)
+  }
+
   def select(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
     if (revision == 0) {
       selectLastRevision(name)

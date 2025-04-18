@@ -1,7 +1,6 @@
 package models
 
 import java.util.Locale
-
 import akka.actor.ActorRef
 import com.aha00a.play.Implicits._
 import logics.SessionLogic
@@ -9,6 +8,7 @@ import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
 import models.ContextSite.RequestWrapper
+import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import play.api.Configuration
@@ -92,7 +92,7 @@ class ContextSite()(
     setPageNameAll: Set[String],
     listPageByPermission: List[PageWithoutContentWithSize]
   ) = database.withConnection { implicit connection => (
-    PageLogic.getListPage().map(_.name).toSet,
+    Page.selectSeqPageName().toSet,
     PageLogic.getListPageByPermission()
   )}
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
