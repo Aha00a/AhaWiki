@@ -2,15 +2,24 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import io.circe.Json
+import io.circe.generic.auto._
+import io.circe.syntax._
 import logics.wikis.PageLogic
 import models.Adjacent
 import models.ContextSite
+import models.ContextSite.RequestWrapper
+import models.tables.Link
+import models.tables.Page
+import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import play.api.Configuration
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
+import play.filters.csrf.CSRF
 
+import java.net.URLDecoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.util.Random
@@ -26,21 +35,15 @@ class Api @Inject()(
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                    ) extends BaseController {
-  import io.circe.generic.auto._
-  import io.circe.syntax._
-
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   def csrf: Action[AnyContent] = Action { implicit request =>
-    import play.filters.csrf.CSRF
     val token: Option[CSRF.Token] = CSRF.getToken
     Ok(token.asJson)
   }
 
   def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import models.tables.Link
-      import models.tables.Site
       implicit val site: Site = Site.get(request.host)
       val listLink = Random.shuffle(Link.selectAllButNotEmpty()).take(10)
       Ok(listLink.asJson)
@@ -48,8 +51,6 @@ class Api @Inject()(
   }
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    import models.ContextSite.RequestWrapper
-    import models.tables.Site
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.get(request.host)
@@ -59,7 +60,6 @@ class Api @Inject()(
 
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
-    import java.net.URLDecoder
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.get(request.host)
@@ -70,10 +70,6 @@ class Api @Inject()(
 
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      import io.circe.Json
-      import models.tables.Page
-      import models.tables.PageWithoutContentWithSize
-      import models.tables.Site
       implicit val site: Site = Site.get(request.host)
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
       val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
