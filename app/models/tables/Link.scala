@@ -19,7 +19,6 @@ case class Link(src:String, dst:String, alias:String) {
 
   def and(a: String => Boolean):Boolean = a(src) && a(dst)
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
-  def toSeqString: Seq[String] = Seq(src, dst)
 }
 
 object Link {
