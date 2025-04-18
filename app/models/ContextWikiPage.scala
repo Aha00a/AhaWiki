@@ -88,6 +88,7 @@ class ContextSite()(
   requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
+  //noinspection ScalaWeakerAccess
   lazy val (
     setPageNameAll: Set[String],
     listPageByPermission: List[PageWithoutContentWithSize]
