@@ -80,24 +80,6 @@ object Link {
       .as(str("dst") *)
   }
 
-  def selectWhereSrcORDstIn(seq: Seq[String])(implicit connection: Connection, site: Site): Seq[Link] = {
-    if(seq.isEmpty) {
-      return Seq()
-    }
-
-    SQL"""
-        SELECT src, dst, alias
-            FROM Link
-            WHERE
-                site = ${site.seq} AND
-                src != '' AND dst != ''
-                AND (src IN ($seq) OR dst IN ($seq))
-      """
-      .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
-  }
-
-
   def insert(seq: Seq[Link])(implicit connection: Connection, site: Site): Array[Int] = {
     if(seq.isEmpty) {
       Array[Int]()
