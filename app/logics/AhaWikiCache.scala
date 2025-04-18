@@ -8,10 +8,11 @@ import models.tables.Page
 import models.tables.Site
 import play.api.Logging
 import play.api.cache.SyncCacheApi
-import play.api.db.Database
 
+import java.sql.Connection
 import scala.concurrent.duration._
 
+// TODO: remove
 object AhaWikiCache extends Logging {
 
   trait CacheEntity {
@@ -52,13 +53,8 @@ object AhaWikiCache extends Logging {
 
   // TODO: remove
   object Config extends CacheEntity {
-
-    import models.tables.Site
-
-    def get()(implicit database: Database, site: Site): String = {
-      database.withConnection { implicit connection =>
-        Page.selectLastRevision(".config").map(_.content).getOrElse("")
-      }
+    def get()(implicit connection: Connection, site: Site): String = {
+      Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 

@@ -4,16 +4,18 @@ import models.tables.Site
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
+import java.sql.Connection
+
 // TODO: fix to use models.tables.Config
 
 object AhaWikiConfig {
 
   import models.tables.Site
 
-  def apply()(implicit database:Database, site: Site) = new AhaWikiConfig()
+  def apply()(implicit connection: Connection, site: Site) = new AhaWikiConfig()
 }
 
-class AhaWikiConfig(implicit database:Database, site: Site) {
+class AhaWikiConfig(implicit connection: Connection, site: Site) {
   object permission {
     object default {
       def read(): String = hocon().getOrElse(fqn, "all")
