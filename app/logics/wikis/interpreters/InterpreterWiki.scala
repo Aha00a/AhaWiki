@@ -105,12 +105,12 @@ object InterpreterWiki extends TraitInterpreter {
       val headingLength = heading.length
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
       val titleForToc = title
-        .replaceAll("""(?<!\\)\[wiki:(\S+?)\]""", "$1")
-        .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)\]""", """$2""")
-        .replaceAll("""(?<!\\)\["([^"]+?)"\]""", "$1")
-        .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)\]""", "$2")
-        .replaceAll("""(?<!\\)\[(\S+?)\]""", "$1")
-        .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)\]""", "$2")
+        .replaceAll("""(?<!\\)\[wiki:(\S+?)]""", "$1")
+        .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)]""", """$2""")
+        .replaceAll("""(?<!\\)\["([^"]+?)"]""", "$1")
+        .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)]""", "$2")
+        .replaceAll("""(?<!\\)\[(\S+?)]""", "$1")
+        .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)]""", "$2")
       val idNotEmpty = if(id == null) titleForToc.replaceAll("""\s+""", "-") else id
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
