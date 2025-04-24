@@ -42,8 +42,8 @@
 
   <logger name="play.api.db.evolutions" level="DEBUG" />
 
-  <logger name="org.jdbcdslog.ConnectionLogger" level="OFF" />
-  <logger name="org.jdbcdslog.StatementLogger"  level="INFO" />
+  <logger name="org.jdbcdslog.ConnectionLogger" level="INFO" />
+  <logger name="org.jdbcdslog.StatementLogger"  level="OFF" />
   <logger name="org.jdbcdslog.ResultSetLogger"  level="OFF" />
 
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourselves -->
