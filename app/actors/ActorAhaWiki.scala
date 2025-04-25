@@ -1,22 +1,28 @@
 package actors
 
+import actors.ActorAhaWiki._
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
-import javax.inject.Inject
 import logics.ApplicationConf
+import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
-import models.LatLng
+import models.ContextSite.RequestWrapper
 import models.ContextWikiPage
+import models.LatLng
+import models.tables.GeocodeCache
+import models.tables.Link
 import models.tables.Page
+import models.tables.SchemaOrg
+import models.tables.Site
 import play.api.Configuration
 import play.api.Logging
 import play.api.db.Database
 import play.api.libs.json.Json
 import play.api.libs.json.Reads
 import play.api.libs.ws.WSClient
-import models.tables.Site
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 object ActorAhaWiki {
@@ -40,8 +46,6 @@ class ActorAhaWiki @Inject()(implicit
                              configuration: Configuration,
                             ) extends Actor with Logging {
 
-  import ActorAhaWiki._
-  import models.ContextSite.RequestWrapper
 
   implicit val provider: RequestWrapper = RequestWrapper.empty
   val seqStopWord: Seq[String] =
@@ -62,7 +66,6 @@ class ActorAhaWiki @Inject()(implicit
         database.withConnection { implicit connection =>
           implicit val implicitSite: Site = site
           Page.selectLastRevision(name) foreach { page =>
-            import logics.wikis.RenderingMode
 
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
@@ -95,9 +98,6 @@ class ActorAhaWiki @Inject()(implicit
         database.withConnection { implicit connection =>
           implicit val implicitSite: Site = site
           Page.selectLastRevision(name) foreach { page =>
-            import logics.wikis.RenderingMode
-            import models.tables.Link
-            import models.tables.SchemaOrg
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
             val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
             Page.updateLink(page.name, seqLink)
@@ -124,7 +124,6 @@ class ActorAhaWiki @Inject()(implicit
             })
             .map(latLng => {
               database.withTransaction { implicit connection =>
-                import models.tables.GeocodeCache
                 GeocodeCache.replace(address, latLng)
               }
             })
