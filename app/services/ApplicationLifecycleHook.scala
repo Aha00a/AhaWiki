@@ -1,7 +1,6 @@
 package services
 
 import actors.ActorAhaWiki.Calculate
-import actors.ActorAhaWiki.CalculateCosineSimilarity
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import models.tables.Page
@@ -89,7 +88,7 @@ class ApplicationLifecycleHook @Inject()(implicit
     database.withConnection { implicit connection =>
       Site.selectRandom() map { implicit site: Site =>
         Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
-          actorAhaWiki ! CalculateCosineSimilarity(site, s)
+          actorAhaWiki ! Calculate(site, s)
         }
       }
     }

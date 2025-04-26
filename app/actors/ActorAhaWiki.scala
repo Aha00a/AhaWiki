@@ -31,10 +31,6 @@ object ActorAhaWiki {
 
   case class Calculate(site: Site, name: String, i: Int = 1, length: Int = 1)
 
-  case class CalculateCosineSimilarity(site: Site, name: String, i: Int = 1, length: Int = 1)
-
-  case class CalculateLink(site: Site, name: String, i: Int = 1, length: Int = 1)
-
   case class Geocode(address: String)
 
 }
@@ -57,16 +53,9 @@ class ActorAhaWiki @Inject()(implicit
   def receive: PartialFunction[Any, Unit] = {
     case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(c.toString) {
-        context.self ! CalculateCosineSimilarity(site, name, i, length)
-        context.self ! CalculateLink(site, name, i, length)
-      }
-
-    case c@CalculateCosineSimilarity(site: Site, name: String, i: Int, length: Int) =>
-      StopWatch(c.toString) {
         database.withConnection { implicit connection =>
           implicit val implicitSite: Site = site
           Page.selectLastRevision(name) foreach { page =>
-
             implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
             val text = Interpreters.toText(page.content)
@@ -90,15 +79,7 @@ class ActorAhaWiki @Inject()(implicit
 
               Page.updateSimilarPage(name, wordCount)
             }
-          }
-        }
-      }
-    case c@CalculateLink(site: Site, name: String, i: Int, length: Int) =>
-      StopWatch(c.toString) {
-        database.withConnection { implicit connection =>
-          implicit val implicitSite: Site = site
-          Page.selectLastRevision(name) foreach { page =>
-            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+
             val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
             Page.updateLink(page.name, seqLink)
 
@@ -107,6 +88,7 @@ class ActorAhaWiki @Inject()(implicit
           }
         }
       }
+
     case g@Geocode(address) =>
       StopWatch(g.toString) {
         if (address.isNotNullOrEmpty) {
