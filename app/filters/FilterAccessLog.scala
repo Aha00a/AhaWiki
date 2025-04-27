@@ -86,7 +86,7 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer,
     implicit val site: Site = siteFound
 
     if (optionIpDeny.isDefined) {
-      logger.warn(s"attackDetected\t$remoteAddress\t$url\t$userAgent")
+      logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
