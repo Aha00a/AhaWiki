@@ -25,6 +25,6 @@ object MacroRecentChangesList extends TraitMacro {
   }
 
   def toHtmlString(list: List[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
-    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - ["${p.name}?action=diff&after=${p.revision}" r${p.revision}] - ["${p.name}"] - ${p.comment} by [${p.author}]""").mkString("\n"))
+    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${p.comment} by [${p.author}]""").mkString("\n"))
   }
 }
