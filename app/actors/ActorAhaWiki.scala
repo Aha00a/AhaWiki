@@ -5,17 +5,13 @@ import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.ApplicationConf
-import logics.wikis.RenderingMode
-import logics.wikis.interpreters.Interpreters
+import logics.wikis.PageLogic
 import models.ContextSite.RequestWrapper
-import models.ContextWikiPage
 import models.LatLng
 import models.tables.GeocodeCache
-import models.tables.Link
-import models.tables.Page
-import models.tables.SchemaOrg
 import models.tables.Site
 import play.api.Configuration
+import play.api.Logger
 import play.api.Logging
 import play.api.db.Database
 import play.api.libs.json.Json
@@ -44,48 +40,17 @@ class ActorAhaWiki @Inject()(implicit
 
 
   implicit val provider: RequestWrapper = RequestWrapper.empty
-  val seqStopWord: Seq[String] =
-    """at in on of by to is the
-      |gmail com http https
-      |""".stripMargin.split("""\s""").toSeq
+
 
   //noinspection ScalaUnusedSymbol
   def receive: PartialFunction[Any, Unit] = {
     case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(c.toString) {
         database.withConnection { implicit connection =>
+          implicit val implicitActorRef: ActorAhaWiki = this;
+          implicit val implicitLogger: Logger = logger
           implicit val implicitSite: Site = site
-          Page.selectLastRevision(name) foreach { page =>
-            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
-
-            val text = Interpreters.toText(page.content)
-            if (!text.isNullOrEmpty) {
-              val seqWord = text
-                .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
-                .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-                .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
-                .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
-                .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
-                .toLowerCase()
-                .split("""[\s/@.]""").toSeq
-                .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-                .filterNot(s => s.length < 2)
-                .filterNot(s => s.length > 15)
-                .filterNot(s => s.matches("""\d{1,2}"""))
-              val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-              val wordCount = seqWordFiltered.groupByCount()
-              logger.info(seqWordFiltered.mkString(" "))
-              logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
-
-              Page.updateSimilarPage(name, wordCount)
-            }
-
-            val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-            Page.updateLink(page.name, seqLink)
-
-            val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-            Page.updateSchemaOrg(name, seqSchemaOrg)
-          }
+          PageLogic.calculate(name)
         }
       }
 
@@ -105,10 +70,11 @@ class ActorAhaWiki @Inject()(implicit
               (r.json \ "results" \ 0 \ "geometry" \ "location").as[LatLng]
             })
             .map(latLng => {
-              database.withTransaction { implicit connection =>
+              database.withConnection { implicit connection =>
                 GeocodeCache.replace(address, latLng)
               }
             })
+            .map(i => logger.info(i.toString))
         }
       }
     case _ =>
