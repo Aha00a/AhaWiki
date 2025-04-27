@@ -45,7 +45,7 @@ class ActorAhaWiki @Inject()(implicit
   //noinspection ScalaUnusedSymbol
   def receive: PartialFunction[Any, Unit] = {
     case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
-      StopWatch(c.toString) {
+      StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\t(${i + 1}/$length)") {
         database.withConnection { implicit connection =>
           implicit val implicitActorRef: ActorAhaWiki = this;
           implicit val implicitLogger: Logger = logger

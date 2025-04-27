@@ -86,16 +86,16 @@ object PageLogic {
         val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
         val wordCount = seqWordFiltered.groupByCount()
         val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
-        logger.info(seqWordCountSorted.mkString(" "))
 
-        CalculatedTermFrequency.delete(name)
-        StopWatch(s"Insert TermFrequency\t$name\t${seqWordCountSorted.size}") {
+        StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\tInsert Term Frequency\t${seqWordCountSorted.size}") {
+          CalculatedTermFrequency.delete(name)
           for ((term, frequency) <- seqWordCountSorted) {
             CalculatedTermFrequency.insert(name, term, frequency)
           }
         }
+        logger.info(seqWordCountSorted.mkString(" "))
 
-        StopWatch(s"Calculate CosineSimilarity\t$name") {
+        StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\tCalculate Cosine Similarity") {
           CalculatedCosineSimilarity.recalc(name)
         }
       }
