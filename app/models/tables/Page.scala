@@ -127,22 +127,6 @@ object Page {
     SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
   }
 
-  def updateSimilarPage(name: String, wordCount: Map[String, Int])(implicit connection: Connection, site: Site): Int = {
-    TermFrequency.delete(name)
-    TermFrequency.insert(name, wordCount)
-    CosineSimilarity.recalc(name)
-  }
-
-  def updateLink(name: String, seqLink: Seq[Link])(implicit connection: Connection, site: Site): Array[Int] = {
-    Link.delete(name)
-    Link.insert(seqLink)
-  }
-
-  def updateSchemaOrg(name:String, seqSchemaOrg: Seq[SchemaOrg])(implicit connection: Connection, site: Site): Array[Int] = {
-    SchemaOrg.delete(name)
-    SchemaOrg.insert(seqSchemaOrg)
-  }
-
   // TODO: remove IFNULL(permRead) and fix schema
   def pageSelectPageList()(implicit connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
     SQL"""

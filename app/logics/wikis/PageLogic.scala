@@ -6,9 +6,12 @@ import com.aha00a.commons.Implicits._
 import logics.AhaWikiConfig
 import logics.wikis.interpreters.Interpreters
 import models._
+import models.tables.CosineSimilarity
 import models.tables.Link
 import models.tables.Page
 import models.tables.SchemaOrg
+import models.tables.TermFrequency
+import models.tables.TermFrequency
 import play.api.Configuration
 import play.api.Logger
 import play.api.db.Database
@@ -78,14 +81,18 @@ object PageLogic {
         val wordCount = seqWordFiltered.groupByCount()
         logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
 
-        Page.updateSimilarPage(name, wordCount)
+        TermFrequency.delete(name)
+        TermFrequency.insert(name, wordCount)
+        CosineSimilarity.recalc(name)
       }
 
       val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-      Page.updateLink(page.name, seqLink)
+      Link.delete(name)
+      Link.insert(seqLink)
 
       val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-      Page.updateSchemaOrg(name, seqSchemaOrg)
+      SchemaOrg.delete(name)
+      SchemaOrg.insert(seqSchemaOrg)
     }
   }
 }
