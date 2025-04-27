@@ -2,6 +2,9 @@ package logics.wikis
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor.ActorRef
+import anorm.SqlParser.flatten
+import anorm.SqlParser.int
+import anorm.SqlParser.str
 import anorm.SqlStringInterpolation
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
@@ -20,6 +23,7 @@ import play.api.db.Database
 
 import java.sql.Connection
 import java.util.Date
+import scala.collection.immutable
 
 object PageLogic {
 
@@ -107,11 +111,6 @@ object PageLogic {
   }
 
   def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
-    import anorm.SqlParser.flatten
-    import anorm.SqlParser.int
-    import anorm.SqlParser.str
-
-    import scala.collection.immutable
     if(similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
