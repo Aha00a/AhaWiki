@@ -184,7 +184,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
                   SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
               ) w
               WHERE name NOT IN (
-                  SELECT DISTINCT(name1) FROM CosineSimilarity WHERE site = ${site.seq}
+                  SELECT DISTINCT(name1) FROM CalculatedCosineSimilarity WHERE site = ${site.seq}
               )
               ORDER BY RAND()
               LIMIT 1
