@@ -1,5 +1,7 @@
 package filters
 
+import akka.actor.ActorSystem
+import akka.pattern.after
 import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
@@ -13,13 +15,13 @@ import java.sql.Connection
 import javax.inject.Inject
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Random
 
 
-class FilterAccessLog @Inject()(
-                                 implicit val
-mat: Materializer,
-                                 ec: ExecutionContext,
-                                 database: play.api.db.Database
+class FilterAccessLog @Inject()(implicit val mat: Materializer,
+                                executionContext: ExecutionContext,
+                                database: play.api.db.Database,
+                                actorSystem: ActorSystem,
                                ) extends Filter with Logging {
   private val toCheckStartsWith = Seq(
     "/wp",
@@ -84,50 +86,54 @@ mat: Materializer,
     implicit val site: Site = siteFound
 
     if (optionIpDeny.isDefined) {
-      Thread.sleep(60.seconds.toMillis)
-      val endTime = System.currentTimeMillis
-      val duration = endTime - startTime
-      logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
-      database.withConnection { implicit connection =>
-        models.tables.AccessLog.insert(
-          site.seq,
-          getUserSeq(requestHeader),
-          optionIpDeny.map(_.seq),
-          requestHeader.method,
-          scheme,
-          host,
-          uri,
-          url,
-          remoteAddress,
-          userAgent,
-          Results.Forbidden.header.status,
-          duration.toInt
-        )
-      }
-      Future(Results.Forbidden)
+      logger.warn(s"attackDetected\t$remoteAddress\t$url\t$userAgent")
+      after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
+        val endTime = System.currentTimeMillis
+        val duration = endTime - startTime
+        logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
+        database.withConnection { implicit connection =>
+          models.tables.AccessLog.insert(
+            site.seq,
+            getUserSeq(requestHeader),
+            optionIpDeny.map(_.seq),
+            requestHeader.method,
+            scheme,
+            host,
+            uri,
+            url,
+            remoteAddress,
+            userAgent,
+            Results.Forbidden.header.status,
+            duration.toInt
+          )
+        }
+        Future(Results.Forbidden)
+      })
     } else if (isUriAttack(uri)) {
-      Thread.sleep(60.seconds.toMillis)
-      val endTime = System.currentTimeMillis
-      val duration = endTime - startTime
-      logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
-      database.withConnection { implicit connection =>
-        val accessLogSeq = models.tables.AccessLog.insert(
-          site.seq,
-          getUserSeq(requestHeader),
-          None,
-          requestHeader.method,
-          scheme,
-          host,
-          uri,
-          url,
-          remoteAddress,
-          userAgent,
-          Results.Forbidden.header.status,
-          duration.toInt
-        )
-        models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
-      }
-      Future(Results.Forbidden)
+      logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
+      after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
+        val endTime = System.currentTimeMillis
+        val duration = endTime - startTime
+        logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
+        database.withConnection { implicit connection =>
+          val accessLogSeq = models.tables.AccessLog.insert(
+            site.seq,
+            getUserSeq(requestHeader),
+            None,
+            requestHeader.method,
+            scheme,
+            host,
+            uri,
+            url,
+            remoteAddress,
+            userAgent,
+            Results.Forbidden.header.status,
+            duration.toInt
+          )
+          models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
+        }
+        Future(Results.Forbidden)
+      })
     } else {
       nextFilter(requestHeader).map(result => {
         val endTime = System.currentTimeMillis
