@@ -25,7 +25,7 @@ object ActorAhaWiki {
 
   def props: Props = Props[ActorAhaWiki]
 
-  case class Calculate(site: Site, name: String, i: Int = 1, length: Int = 1)
+  case class Calculate(site: Site, name: String, i: Int = 0, length: Int = 1)
 
   case class Geocode(address: String)
 
