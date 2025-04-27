@@ -2,18 +2,18 @@ package logics.wikis
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor.ActorRef
+import anorm.SqlStringInterpolation
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiConfig
 import logics.wikis.interpreters.Interpreters
+import models.HighScoredTerm
 import models._
-import models.tables.CalculatedTerm
+import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedTermFrequency
-import models.tables.CosineSimilarity
 import models.tables.Link
 import models.tables.Page
 import models.tables.SchemaOrg
-import models.tables.TermFrequency
-import models.tables.TermFrequency
 import play.api.Configuration
 import play.api.Logger
 import play.api.db.Database
@@ -67,39 +67,71 @@ object PageLogic {
 
       val text = Interpreters.toText(page.content)
       if (!text.isNullOrEmpty) {
-        val seqWord = text
-          .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
-          .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-          .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
-          .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
-          .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
-          .toLowerCase()
-          .split("""\s""").toSeq
-          .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-          .filterNot(s => s.length < 2)
-          .filterNot(s => s.length > 15)
-          .filterNot(s => s.matches("""\d{1,2}"""))
-        val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-        val wordCount = seqWordFiltered.groupByCount()
-        logger.info(wordCount.toList.sortBy(-_._2).mkString(" "))
+        StopWatch(s"Calculate TermFrequency, CosineSimilarity\t${name}") {
+          val seqWord = text
+            .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
+            .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+            .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
+            .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
+            .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
+            .toLowerCase()
+            .split("""\s""").toSeq
+            .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
+            .filterNot(s => s.length < 2)
+            .filterNot(s => s.length > 15)
+            .filterNot(s => s.matches("""\d{1,2}"""))
+          val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
+          val wordCount = seqWordFiltered.groupByCount()
+          val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
+          logger.info(seqWordCountSorted.mkString(" "))
 
-        TermFrequency.delete(name)
-        TermFrequency.insert(name, wordCount)
+          CalculatedTermFrequency.delete(name)
+          StopWatch(s"Insert TermFrequency\t${name}\t${seqWordCountSorted.size}") {
+            for ((term, frequency) <- seqWordCountSorted) {
+              CalculatedTermFrequency.insert(name, term, frequency)
+            }
+          }
 
-        CalculatedTermFrequency.delete(name)
-        for ((term, frequency) <- wordCount) {
-          CalculatedTermFrequency.insert(name, term, frequency)
+          StopWatch(s"Calculate CosineSimilarity\t${name}") {
+            CalculatedCosineSimilarity.recalc(name)
+          }
         }
-        CosineSimilarity.recalc(name)
       }
 
-      val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-      Link.delete(name)
-      Link.insert(seqLink)
+      StopWatch(s"Calculate Link, SchemaOrg \t${name}") {
+        val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
+        Link.delete(name)
+        Link.insert(seqLink)
 
-      val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-      SchemaOrg.delete(name)
-      SchemaOrg.insert(seqSchemaOrg)
+        val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+        SchemaOrg.delete(name)
+        SchemaOrg.insert(seqSchemaOrg)
+      }
+    }
+  }
+
+  def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
+    import anorm.SqlParser.flatten
+    import anorm.SqlParser.int
+    import anorm.SqlParser.str
+
+    import scala.collection.immutable
+    if(similarPageNames.isEmpty) {
+      immutable.Seq()
+    } else {
+      SQL"""
+SELECT
+    CTF2.name, CT.term, CTF1.frequency frequency1, CTF2.frequency frequency2
+    FROM CalculatedTermFrequency CTF1
+    INNER JOIN CalculatedTermFrequency CTF2 ON CTF1.term = CTF2.term
+    INNER JOIN CalculatedTerm CT ON CTF1.term = CT.seq
+    WHERE
+        CTF1.site = ${site.seq} AND CTF1.name = $name AND
+        CTF2.site = ${site.seq} AND CTF2.name IN ($similarPageNames)
+    ORDER BY frequency1 + frequency2 DESC
+      """
+        .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)
+        .map(HighScoredTerm.tupled)
     }
   }
 }

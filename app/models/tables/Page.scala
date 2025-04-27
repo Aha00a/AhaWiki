@@ -106,8 +106,8 @@ object Page {
 
   def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection: Connection, site: Site): Int = {
     val linkCount = Link.delete(name)
-    val cosineSimilarityCount = CosineSimilarity.delete(name)
-    val termFrequencyCount = TermFrequency.delete(name)
+    val cosineSimilarityCount = CalculatedCosineSimilarity.delete(name)
+    val termFrequencyCount = CalculatedTermFrequency.delete(name)
     val schemaOrgCount = SchemaOrg.delete(name)
     linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount
   }

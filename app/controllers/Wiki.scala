@@ -16,6 +16,7 @@ import logics.wikis.WikiSnippet
 import logics.wikis.interpreters.Interpreters
 import models.ContextSite.RequestWrapper
 import models._
+import models.tables.CalculatedCosineSimilarity
 import models.tables.Page
 import models.tables.Site
 import play.api.Configuration
@@ -174,13 +175,12 @@ class Wiki @Inject()(implicit val
   }
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
-    import models.tables.CosineSimilarity
     import models.tables.Link
 
     val markupSchema = getMarkupSchema(name)
     // TODO: refactoring
     val optionLink: Option[Link] = Link.selectDstLimit1(name)
-    val seqCosineSimilarities: Seq[CosineSimilarity] = CosineSimilarity
+    val seqCosineSimilarities: Seq[CalculatedCosineSimilarity] = CalculatedCosineSimilarity
       .select(name)
       .view
       .filter(_.and(wikiContext.pageCanSee))

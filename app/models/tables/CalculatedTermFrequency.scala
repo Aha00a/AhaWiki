@@ -7,7 +7,6 @@ import anorm.NamedParameter
 import anorm._
 
 case class CalculatedTermFrequency(name:String, term:Long, frequency:Int)
-//case class HighScoredTerm(name:String, term:String, frequency1:Int, frequency2:Int)
 
 object CalculatedTermFrequency {
   //noinspection TypeAnnotation
