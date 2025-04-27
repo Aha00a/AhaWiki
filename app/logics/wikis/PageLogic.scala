@@ -85,13 +85,13 @@ object PageLogic {
         logger.info(seqWordCountSorted.mkString(" "))
 
         CalculatedTermFrequency.delete(name)
-        StopWatch(s"Insert TermFrequency\t${name}\t${seqWordCountSorted.size}") {
+        StopWatch(s"Insert TermFrequency\t$name\t${seqWordCountSorted.size}") {
           for ((term, frequency) <- seqWordCountSorted) {
             CalculatedTermFrequency.insert(name, term, frequency)
           }
         }
 
-        StopWatch(s"Calculate CosineSimilarity\t${name}") {
+        StopWatch(s"Calculate CosineSimilarity\t$name") {
           CalculatedCosineSimilarity.recalc(name)
         }
       }
