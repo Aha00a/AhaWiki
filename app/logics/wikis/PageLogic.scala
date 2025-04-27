@@ -6,6 +6,8 @@ import com.aha00a.commons.Implicits._
 import logics.AhaWikiConfig
 import logics.wikis.interpreters.Interpreters
 import models._
+import models.tables.CalculatedTerm
+import models.tables.CalculatedTermFrequency
 import models.tables.CosineSimilarity
 import models.tables.Link
 import models.tables.Page
@@ -83,6 +85,11 @@ object PageLogic {
 
         TermFrequency.delete(name)
         TermFrequency.insert(name, wordCount)
+
+        CalculatedTermFrequency.delete(name)
+        for ((term, frequency) <- wordCount) {
+          CalculatedTermFrequency.insert(name, term, frequency)
+        }
         CosineSimilarity.recalc(name)
       }
 

@@ -4,6 +4,7 @@ CREATE TABLE CalculatedTerm (
     dateInserted DATETIME DEFAULT NOW() NOT NULL,
     term VARCHAR(255) NOT NULL UNIQUE
 );
+INSERT INTO CalculatedTerm (term) VALUES ('aha00a');
 
 CREATE TABLE CalculatedTermFrequency (
     site INT NOT NULL,
