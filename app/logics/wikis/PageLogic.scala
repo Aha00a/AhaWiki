@@ -67,46 +67,42 @@ object PageLogic {
 
       val text = Interpreters.toText(page.content)
       if (!text.isNullOrEmpty) {
-        StopWatch(s"Calculate TermFrequency, CosineSimilarity\t${name}") {
-          val seqWord = text
-            .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
-            .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-            .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
-            .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
-            .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
-            .toLowerCase()
-            .split("""\s""").toSeq
-            .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-            .filterNot(s => s.length < 2)
-            .filterNot(s => s.length > 15)
-            .filterNot(s => s.matches("""\d{1,2}"""))
-          val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-          val wordCount = seqWordFiltered.groupByCount()
-          val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
-          logger.info(seqWordCountSorted.mkString(" "))
+        val seqWord = text
+          .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
+          .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+          .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
+          .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
+          .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
+          .toLowerCase()
+          .split("""\s""").toSeq
+          .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
+          .filterNot(s => s.length < 2)
+          .filterNot(s => s.length > 15)
+          .filterNot(s => s.matches("""\d{1,2}"""))
+        val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
+        val wordCount = seqWordFiltered.groupByCount()
+        val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
+        logger.info(seqWordCountSorted.mkString(" "))
 
-          CalculatedTermFrequency.delete(name)
-          StopWatch(s"Insert TermFrequency\t${name}\t${seqWordCountSorted.size}") {
-            for ((term, frequency) <- seqWordCountSorted) {
-              CalculatedTermFrequency.insert(name, term, frequency)
-            }
+        CalculatedTermFrequency.delete(name)
+        StopWatch(s"Insert TermFrequency\t${name}\t${seqWordCountSorted.size}") {
+          for ((term, frequency) <- seqWordCountSorted) {
+            CalculatedTermFrequency.insert(name, term, frequency)
           }
+        }
 
-          StopWatch(s"Calculate CosineSimilarity\t${name}") {
-            CalculatedCosineSimilarity.recalc(name)
-          }
+        StopWatch(s"Calculate CosineSimilarity\t${name}") {
+          CalculatedCosineSimilarity.recalc(name)
         }
       }
 
-      StopWatch(s"Calculate Link, SchemaOrg \t${name}") {
-        val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-        Link.delete(name)
-        Link.insert(seqLink)
+      val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
+      Link.delete(name)
+      Link.insert(seqLink)
 
-        val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-        SchemaOrg.delete(name)
-        SchemaOrg.insert(seqSchemaOrg)
-      }
+      val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+      SchemaOrg.delete(name)
+      SchemaOrg.insert(seqSchemaOrg)
     }
   }
 
