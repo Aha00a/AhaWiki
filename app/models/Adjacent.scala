@@ -19,11 +19,11 @@ object Adjacent {
     implicit val site: Site = contextSite.site
     val seqLink: Seq[Link] = Link.select(name)
     val seqSchemaOrg = SchemaOrg.selectWherePageOrValue(name)
-//    val seqLinkSchemaOrgPageOrValue: Seq[Link] = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
+    val seqLinkSchemaOrgPageOrValue: Seq[Link] = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
 
-    val seqLinkSchemaOrgPageOrValue: Seq[Link] =
-      seqSchemaOrg.map(s => Link(s.page, s.toPageProp, "")) ++
-      seqSchemaOrg.map(s => Link(s.toPageProp, s.value, ""))
+//    val seqLinkSchemaOrgPageOrValue: Seq[Link] =
+//      seqSchemaOrg.map(s => Link(s.page, s.toPageProp, "")) ++
+//      seqSchemaOrg.map(s => Link(s.toPageProp, s.value, ""))
 
 //    val seqLinkSchemaOrgPageOrValue: Seq[Link] =
 //      seqSchemaOrg.map(s => Link(s.page, s.toPageCls, "")) ++
