@@ -8,7 +8,7 @@
             $('.buttonDeleteLastRevision').click(function () {
                 if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
                     return false;
-                
+
                 $.ajax({
                     url: '@routes.Wiki.deleteLastRevision()',
                     method: 'post',
@@ -50,9 +50,7 @@
                             <td><input type="radio" name="before" value="@(history.revision)"/></td>
                             <td><input type="radio" name="after" value="@(history.revision)"/></td>
                             <td>
-                                <a href="?revision=@(history.revision)">
-                                    @(history.revision)
-                                </a>
+                                <a href="?revision=@(history.revision)" rel="nofollow">@(history.revision)</a>
                             </td>
                             <td>@(history.toIsoLocalDateTimeString)</td>
                             <td>@(history.author)</td>
