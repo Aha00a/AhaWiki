@@ -1,19 +1,33 @@
 package logics
 
-import java.io.File
-import java.sql.Connection
-
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import models.ContextWikiPage
 import scalaz.LazyOption._
 import scalaz._
 
+import java.io.File
+import java.sql.Connection
 import scala.util.matching.Regex
 
 object DefaultPageLogic {
 
-  val regexSchemaColon: Regex = """^schema:(.+)$""".r
+  private val regexSchemaColon: Regex = """^schema:(.+)$""".r
+
+  def isDefined(title: String): Boolean = {
+    import com.aha00a.commons.utils.DateTimeUtil
+
+    title match {
+      case DateTimeUtil.regexIsoLocalDate(_, _, _) => true
+      case DateTimeUtil.regexYearDashMonth(_, _) => true
+      case DateTimeUtil.regexYear(_) => true
+      case DateTimeUtil.regexDashDashMonthDashDay(_, _) => true
+      case DateTimeUtil.regexDashDashMonth(_) => true
+      case "schema:Schema" => true
+      case regexSchemaColon(schema) => SchemaOrg.mapAll.isDefinedAt(schema)
+      case _ => new File("app/assets/Page", title).exists()
+    }
+  }
 
   def getOption(title: String)(implicit wikiContext: ContextWikiPage, connection: Connection): LazyOption[String] = {
     import com.aha00a.commons.utils.DateTimeUtil
@@ -24,7 +38,7 @@ object DefaultPageLogic {
     implicit val site: Site = wikiContext.site
 
     title match {
-      case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
+      case DateTimeUtil.regexIsoLocalDate(_, _, _) =>
         lazySome(s"[[DayHeader]]\n")
 
       case DateTimeUtil.regexYearDashMonth(y, m) =>
@@ -35,7 +49,7 @@ object DefaultPageLogic {
              |""".stripMargin
         )
 
-      case DateTimeUtil.regexYear(y) =>
+      case DateTimeUtil.regexYear(_) =>
         lazySome(
           s"""= $title
              |[[NavigationYear]]
@@ -155,7 +169,7 @@ object DefaultPageLogic {
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
                    |]]]
                    |[https://schema.org/${schemaType.id}]
-                   |${listSchemaOrgWithPermission.groupBy(_.cls).transform((k, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
+                   |${listSchemaOrgWithPermission.groupBy(_.cls).transform((_, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
                   s"""== ["schema:${t._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t._1)}]
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["${t2._1}" ${t2._1}]
