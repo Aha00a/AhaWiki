@@ -125,6 +125,8 @@
                         if(diff < 300) {
                             renderer.pause();
                             location.href = '/w/' + node.id;
+                        } else {
+                            fetchLinks(node.id);
                         }
                     });
                 }
@@ -187,6 +189,7 @@
             }
 
             function fetchLinks(name) {
+                console.log('fetching links', name);
                 $.ajax({
                     url: '/api/links/' + name,
                     success: function (data, textStatus, jqXHR) {
