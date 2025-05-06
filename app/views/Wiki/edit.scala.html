@@ -131,6 +131,254 @@
             preview();
         });
     </script>
+    <script>
+        $(function () {
+            const schemaLabelMap = {
+                "Address": "address",
+                "Alma mater": "alumniOf",
+                "Application category": "applicationCategory",
+                "Application subcategory": "applicationSubCategory",
+                "Author": "author",
+                "Awards": "award",
+                "Based on": "isBasedOn",
+                "Book edition": "bookEdition",
+                "Book format": "bookFormat",
+                "Born": "birthDate",
+                "Brand": "brand",
+                "Children": "children",
+                "City": "addressLocality",
+                "Coordinates": "geo",
+                "Country": "countryOfOrigin",
+                "Countries": "countryOfOrigin",
+                "Date": "startDate",
+                "Diagnosis": "diagnosis",
+                "Died": "deathDate",
+                "Dimensions": "depth",
+                "Directed by": "director",
+                "Distributed by": "publisher",
+                "Edited by": "editor",
+                "Founded": "foundingDate",
+                "Founder": "founder",
+                "Headquarters": "location",
+                "ICD-10": "code",
+                "Illustrator": "illustrator",
+                "Industry": "industry",
+                "ISBN": "isbn",
+                "Key people": "employee",
+                "Language": "inLanguage",
+                "License": "license",
+                "Location": "location",
+                "Manufacturer": "manufacturer",
+                "Model": "model",
+                "Music by": "musicBy",
+                "Nationality": "nationality",
+                "Number of employees": "numberOfEmployees",
+                "Number of pages": "numberOfPages",
+                "Occupation": "jobTitle",
+                "Operating system": "operatingSystem",
+                "Organizer": "organizer",
+                "Parents": "parent",
+                "Price": "offers",
+                "Produced by": "producer",
+                "Productioncompany": "productionCompany",
+                "Productioncompanies": "productionCompany",
+                "Production company": "productionCompany",
+                "Production companies": "productionCompany",
+                "Region": "addressRegion",
+                "Release date": "datePublished",
+                "Release dates": "datePublished",
+                "Risk factors": "riskFactor",
+                "Running time": "duration",
+                "Spouse(s)": "spouse",
+                "Starring": "actor",
+                "Treatments": "possibleTreatment",
+                "Version": "softwareVersion",
+                "Website": "url",
+                "Weight": "weight",
+                "Written by": "author",
+            };
+            function convertProperty(property) {
+                return schemaLabelMap[property] ?? property
+            }
+
+            const months = {
+                January: '01', February: '02', March: '03',
+                April: '04', May: '05', June: '06',
+                July: '07', August: '08', September: '09',
+                October: '10', November: '11', December: '12',
+                Jan: '01', Feb: '02', Mar: '03', Apr: '04',
+                Jun: '06', Jul: '07', Aug: '08', Sep: '09',
+                Oct: '10', Nov: '11', Dec: '12'
+            };
+            function convertEnglishDates(text) {
+                return text.replace(/\b([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})\b/g, (match, month, day, year) => {
+                    const mm = months[month];
+                    if (!mm)
+                        return match;
+
+                    const dd = day.padStart(2, '0');
+                    return `${year}-${mm}-${dd}`;
+                });
+            }
+
+            function convertKoreanDates(text) {
+                return text.replace(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/g, (match, year, month, day) => {
+                    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                });
+            }
+
+            const countryMap = {
+                "Australia": "AU",
+                "Brazil": "BR",
+                "Canada": "CA",
+                "China": "CN",
+                "France": "FR",
+                "Germany": "DE",
+                "India": "IN",
+                "Japan": "JP",
+                "Mexico": "MX",
+                "North Korea": "KP",
+                "Russia": "RU",
+                "South Korea": "KR",
+                "United Kingdom": "GB",
+                "United States": "US",
+            };
+            function convertCountryNames(text) {
+                const pattern = new RegExp('\\b(' + Object.keys(countryMap).join('|') + ')\\b', 'g');
+                return text.replace(pattern, match => countryMap[match]);
+            }
+
+            const languageMap = {
+                "Arabic": "ar",
+                "Chinese": "zh",
+                "Dutch": "nl",
+                "English": "en",
+                "French": "fr",
+                "German": "de",
+                "Hindi": "hi",
+                "Italian": "it",
+                "Japanese": "ja",
+                "Korean": "ko",
+                "Portuguese": "pt",
+                "Russian": "ru",
+                "Spanish": "es",
+                "Turkish": "tr",
+                "Vietnamese": "vi",
+            };
+            function convertLanguageNames(text) {
+                const pattern = new RegExp('\\b(' + Object.keys(languageMap).join('|') + ')\\b', 'g');
+                return text.replace(pattern, match => languageMap[match]);
+            }
+
+            function convertPeriodsToISO(text) {
+                return text.replace(/((\d+)\s*(hours?|minutes?|seconds?))/g, '|||$1')
+                    .split('|||')
+                    .map(part => {
+                        const matches = [...part.matchAll(/(\d+)\s*(hours?|minutes?|seconds?)/g)];
+                        if (matches.length === 0) return part;
+                        const isoParts = matches.map(([, value, unit]) => {
+                            if (unit.includes('hour')) return `${value}H`;
+                            if (unit.includes('minute')) return `${value}M`;
+                            if (unit.includes('second')) return `${value}S`;
+                            return '';
+                        });
+                        return `PT${isoParts.join('')}`;
+                    })
+                    .join('');
+            }
+
+            function normalizeValues(text) {
+                return [
+                    convertEnglishDates,
+                    convertKoreanDates,
+                    convertCountryNames,
+                    convertLanguageNames,
+                    convertPeriodsToISO,
+                ].reduce((acc, fn) => fn(acc), text);
+            }
+
+            async function fetchInfoBoxFromWikipedia(page) {
+                const langs = ['en', 'ko', 'ja'];
+                const arrayResult = [];
+
+                for (const lang of langs) {
+                    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(page)}?origin=*`;
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) continue;
+
+                        const html = await res.text();
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        const styleTags = doc.querySelectorAll('style');
+                        styleTags.forEach(tag => tag.remove());
+
+                        const hiddenSpans = doc.querySelectorAll('span[style*="display:none;"], span[style*="display: none;"]');
+                        hiddenSpans.forEach(span => span.remove());
+
+                        const infobox = doc.querySelector('.infobox');
+                        if (!infobox) continue;
+
+                        const rows = infobox.querySelectorAll('tr');
+                        const outputLines = [];
+
+                        for (const row of rows) {
+                            const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
+                            if(thInfoboxAboveSummary) {
+                                outputLines.push(['name', thInfoboxAboveSummary.innerText]);
+                                continue;
+                            }
+
+                            const tdInfoboxImageImg = row.querySelector('td.infobox-image img');
+                            if(tdInfoboxImageImg) {
+                                outputLines.push(['image', tdInfoboxImageImg.src.replace(/^http:/, 'https:')]);
+                                continue;
+                            }
+
+                            const th = row.querySelector('th');
+                            const td = row.querySelector('td');
+
+                            if (th && td) {
+                                const key = th.innerText.trim().replace(/\s+/g, ' ');
+                                const values = td.innerText.trim().split(/\n+/g);
+                                const mappedKey = convertProperty(key);
+                                const line = [mappedKey, ...values.map(normalizeValues)];
+                                outputLines.push(line);
+                            }
+                        }
+
+                        if (outputLines.length > 0) {
+                            arrayResult.push({
+                                lang,
+                                content: outputLines,
+                            });
+                        }
+                    } catch (e) {
+                        console.log(`${lang}`, e);
+                    }
+                }
+                return arrayResult;
+            }
+
+
+            $('.fetchInfoBoxFromWikipedia').click(async () => {
+                const page = prompt('Enter the Wikipedia page name', "@page.name");
+                if (!page)
+                    return;
+
+                const arrayResult = await fetchInfoBoxFromWikipedia(page);
+
+                $('textarea[name=text]')
+                    .insertAtCaret(arrayResult.map(v => `[[[#!Schema ${v.lang}\n${v.content.map(l => l.join('\t')).join('\n')}\n]]]\n`).join('\n\n'))
+                    .change();
+            });
+        });
+    </script>
+
+
+
+
     @if(applicationConf.AhaWiki.google.reCAPTCHA.siteKey() && applicationConf.AhaWiki.google.reCAPTCHA.siteKey()) {
         <script src="https://www.google.com/recaptcha/api.js?render=@(applicationConf.AhaWiki.google.reCAPTCHA.siteKey())"></script>
         <script>
@@ -162,26 +410,38 @@
                     <input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap
                 </label>
                 <table class="layout">
-                    <tr>
-                        <td>
-                        @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
-                            @CSRF.formField
-                            <input type="hidden" name="revision" value="@page.revision"/>
-                            <input type="hidden" id="recaptcha" name="recaptcha">
-                            <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
-                            <div>
-                                <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
-                                @if(page.revision != 0) {
-                                    <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit</label>
-                                }
-                            </div>
-                            <input type="submit" value="Save"/>
-                        }
-                        </td>
-                        <td>
-                            <div class="previewPane" style="min-height: 500px;"></div>
-                        </td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>
+                                <button class="fetchInfoBoxFromWikipedia" type="button"><i class="fab fa-wikipedia-w"></i></button>
+                            </th>
+                            <th>
+
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="left">
+                            @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
+                                @CSRF.formField
+                                <input type="hidden" name="revision" value="@page.revision"/>
+                                <input type="hidden" id="recaptcha" name="recaptcha">
+                                <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
+                                <div>
+                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
+                                    @if(page.revision != 0) {
+                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit</label>
+                                    }
+                                </div>
+                                <input type="submit" value="Save"/>
+                            }
+                            </td>
+                            <td class="right">
+                                <div class="previewPane" style="min-height: 500px;"></div>
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>

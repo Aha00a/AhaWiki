@@ -796,10 +796,19 @@ html, body {
 		}
 		table.layout {
 			width: 100%;
+			border-collapse: collapse;
+			&>thead>tr>th {
+				text-align: left;
+			}
 			&>tbody>tr>td {
 				width: 50%;
-				padding: 20px;
 				vertical-align: top;
+				&.left {
+					padding: 0 10px 0 0;
+				}
+				&.right {
+					padding: 0 0 0 10px;
+				}
 				textarea {
 					width: 98%;
 					height: 500px;
@@ -814,6 +823,7 @@ html, body {
 						content: '';
 					}
 				}
+
 			}
 		}
 		textarea {

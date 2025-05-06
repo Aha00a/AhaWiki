@@ -1887,11 +1887,20 @@ body {
 }
 .AhaWiki .edit table.layout {
   width: 100%;
+  border-collapse: collapse;
+}
+.AhaWiki .edit table.layout > thead > tr > th {
+  text-align: left;
 }
 .AhaWiki .edit table.layout > tbody > tr > td {
   width: 50%;
-  padding: 20px;
   vertical-align: top;
+}
+.AhaWiki .edit table.layout > tbody > tr > td.left {
+  padding: 0 10px 0 0;
+}
+.AhaWiki .edit table.layout > tbody > tr > td.right {
+  padding: 0 0 0 10px;
 }
 .AhaWiki .edit table.layout > tbody > tr > td textarea {
   width: 98%;
