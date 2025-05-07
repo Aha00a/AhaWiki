@@ -191,20 +191,19 @@ object InterpreterWiki extends TraitInterpreter {
 
   val regexLink: Regex =
     """(?x)
-          ((?<!\\)\\)?
+          ((?<!\\)\\)?                                  # 1: Optional escape
           (?:
-            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)    |
-            \[" ([^]"]+) "]                       |
-            \[ ([^]\s]+) ]                        |
-            \[" ([^]"]+) " \s+ ([^]]+) ]          |
-            \[ ([^]\s]+) \s+ ([^]]+) ]
+            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)    |     # 2: URL with scheme (http://...)
+            \[" ([^]"]+) "]                       |     # 3: ["Page"]
+            \[ ([^]\s]+) ]                        |     # 4: [FrontPage]
+            \[" ([^]"]+) " \s+ ([^]]+) ]          |     # 5+6: ["Page" Alias]
+            \[ ([^]\s]+) \s+ ([^]]+) ]                  # 7+8: [Page Alias]
           )
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:ContextWikiPage):String = {
     val set: Set[String] = wikiContext.setPageNameByPermission
 
-    println(s)
     regexLink.replaceAllIn(s, _ match {
       case regexLink(null, uri , null, null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString())
       case regexLink(null, null, uri , null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
