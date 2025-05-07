@@ -99,23 +99,20 @@
             graphics.node(function(node) {
                 var ui = Viva.Graph.svg('g').attr('class', 'node');
 
-                // if(layout.isNodePinned(node)) {
-                //     ui.append(Viva.Graph.svg('circle').attr('r', 10).attr('fill', '#00a'));
-                //     ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '13px').attr('y', '5px').attr('fill', '#00a').text(node.id));
-                // } else {
+                if(layout.isNodePinned(node)) {
+                    ui.append(Viva.Graph.svg('circle').attr('r', radiusHighlight).attr('fill', '#00a'));
+                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '16px').attr('y', '5px').attr('fill', '#00f').text(node.id));
+                } else {
                     ui.append(Viva.Graph.svg('circle').attr('r', radiusDefault));
-                    ui.append(Viva.Graph.svg('text')
-                            .attr('class', 'label')
-                            .attr('x', '16px')
-                            .attr('y', '5px')
-                            .text(node.id));
-                // }
+                    ui.append(Viva.Graph.svg('text').attr('class', 'label').attr('x', '16px').attr('y', '5px').text(node.id));
+                }
 
                 $(ui).hover(function() {
                     highlightRelatedNodes(node.id, true);
                 }, function() {
                     highlightRelatedNodes(node.id, false);
                 });
+
                 @if(enableWikiLink) {
                     var timeDown = 0;
                     $(ui).mousedown(function() {
@@ -193,12 +190,24 @@
                 $.ajax({
                     url: '/api/links/' + name,
                     success: function (data, textStatus, jqXHR) {
+                        if(data.length === 1 && !layout.isNodePinned(graph.getNode(name))) {
+                            removeNodeAndLinks(name);
+                            return;
+                        }
                         queueGraph = queueGraph.concat(data);
                     },
                     error: function (jqXHR, textStatus, errorThrown) {
                         console.log(name, jqXHR, textStatus, errorThrown);
                     }
                 });
+            }
+
+            function removeNodeAndLinks(nodeId) {
+                graph.forEachLinkedNode(nodeId, function(linkedNode, link) {
+                    graph.removeLink(link);
+                });
+                graph.removeNode(nodeId);
+                $('.linkCount.@(id)').text(graph.getNodesCount() + ' Nodes, ' + graph.getLinksCount() + ' Links');
             }
 
             setTimeout(function() { renderer.run(); }, 100);
