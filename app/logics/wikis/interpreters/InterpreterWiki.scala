@@ -1,6 +1,5 @@
 package logics.wikis.interpreters
 
-import com.aha00a.commons.utils.RegexUtil
 import com.aha00a.commons.utils.VariableHolder
 import logics.wikis._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
@@ -190,34 +189,34 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-
   val regexLink: Regex =
     """(?x)
           ((?<!\\)\\)?
           (?:
-            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)          |
-            \[" ([^\]"]+) "\]                           |
-            \[ ([^\]\s]+) \]                            |
-            \[" ([^\]"]+) " \s+ ([^\]]+) \]             |
-            \[ ([^\]\s]+) \s+ ([^\]]+) \]
+            ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)    |
+            \[" ([^]"]+) "]                       |
+            \[ ([^]\s]+) ]                        |
+            \[" ([^]"]+) " \s+ ([^]]+) ]          |
+            \[ ([^]\s]+) \s+ ([^]]+) ]
           )
     """.r
 
   def replaceLink(s:String)(implicit wikiContext:ContextWikiPage):String = {
     val set: Set[String] = wikiContext.setPageNameByPermission
 
+    println(s)
     regexLink.replaceAllIn(s, _ match {
-      case regexLink(null, uri , null, null, null, null, null, null) => AhaMarkLink(uri).toHtmlString()
-      case regexLink(null, null, uri , null, null, null, null, null) => AhaMarkLink(uri).toHtmlString(set)
-      case regexLink(null, null, null, uri , null, null, null, null) => AhaMarkLink(uri).toHtmlString(set)
-      case regexLink(null, null, null, null, uri, alias, null, null) => AhaMarkLink(uri, alias).toHtmlString(set)
-      case regexLink(null, null, null, null, null, null, uri, alias) => AhaMarkLink(uri, alias).toHtmlString(set)
+      case regexLink(null, uri , null, null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString())
+      case regexLink(null, null, uri , null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
+      case regexLink(null, null, null, uri , null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
+      case regexLink(null, null, null, null, uri, alias, null, null) => Regex.quoteReplacement(AhaMarkLink(uri, alias).toHtmlString(set))
+      case regexLink(null, null, null, null, null, null, uri, alias) => Regex.quoteReplacement(AhaMarkLink(uri, alias).toHtmlString(set))
 
-      case regexLink(_   , uri , null, null, null, null, null, null) => RegexUtil.escapeDollar(uri)
-      case regexLink(_   , null, uri , null, null, null, null, null) => RegexUtil.escapeDollar(s"""["$uri"]""")
-      case regexLink(_   , null, null, uri , null, null, null, null) => RegexUtil.escapeDollar(s"[$uri]")
-      case regexLink(_   , null, null, null, uri , alia, null, null) => RegexUtil.escapeDollar(s"""["$uri" $alia]""")
-      case regexLink(_   , null, null, null, null, null, uri , alia) => RegexUtil.escapeDollar(s"""[$uri $alia]""")
+      case regexLink(_   , uri , null, null, null, null, null, null) => Regex.quoteReplacement(uri)
+      case regexLink(_   , null, uri , null, null, null, null, null) => Regex.quoteReplacement(s"""["$uri"]""")
+      case regexLink(_   , null, null, uri , null, null, null, null) => Regex.quoteReplacement(s"[$uri]")
+      case regexLink(_   , null, null, null, uri , alia, null, null) => Regex.quoteReplacement(s"""["$uri" $alia]""")
+      case regexLink(_   , null, null, null, null, null, uri , alia) => Regex.quoteReplacement(s"""[$uri $alia]""")
 
       case value => "wrong : " + value
     })

@@ -150,6 +150,8 @@
                 "Coordinates": "geo",
                 "Country": "countryOfOrigin",
                 "Countries": "countryOfOrigin",
+                "Country of origin": "countryOfOrigin",
+                "Created by": "creator",
                 "Date": "startDate",
                 "Diagnosis": "diagnosis",
                 "Died": "deathDate",
@@ -157,8 +159,10 @@
                 "Directed by": "director",
                 "Distributed by": "publisher",
                 "Edited by": "editor",
+                "Executive producers": "producer",
                 "Founded": "foundingDate",
                 "Founder": "founder",
+                "Genre": "genre",
                 "Headquarters": "location",
                 "ICD-10": "code",
                 "Illustrator": "illustrator",
@@ -172,18 +176,21 @@
                 "Model": "model",
                 "Music by": "musicBy",
                 "Nationality": "nationality",
-                "Number of employees": "numberOfEmployees",
-                "Number of pages": "numberOfPages",
+                "No. of episodes": "numberOfEpisodes",
+                "No. of seasons": "numberOfSeasons",
                 "Occupation": "jobTitle",
                 "Operating system": "operatingSystem",
                 "Organizer": "organizer",
+                "Original language": "inLanguage",
                 "Parents": "parent",
                 "Price": "offers",
                 "Produced by": "producer",
+                "Producers": "producer",
                 "Productioncompany": "productionCompany",
                 "Productioncompanies": "productionCompany",
                 "Production company": "productionCompany",
                 "Production companies": "productionCompany",
+                "Production locations": "contentLocation",
                 "Region": "addressRegion",
                 "Release date": "datePublished",
                 "Release dates": "datePublished",
@@ -196,6 +203,9 @@
                 "Website": "url",
                 "Weight": "weight",
                 "Written by": "author",
+                "Network": "publisher",
+                "Release": "startDate",
+                "Composer": "musicBy",
             };
             function convertProperty(property) {
                 return schemaLabelMap[property] ?? property
@@ -341,7 +351,10 @@
 
                             if (th && td) {
                                 const key = th.innerText.trim().replace(/\s+/g, ' ');
-                                const values = td.innerText.trim().split(/\n+/g);
+                                const tdLi = td.querySelectorAll('li');
+                                const values = tdLi.length
+                                    ? [...tdLi].map(v => v.innerText.trim())
+                                    : td.innerText.trim().split(/\n+/g);
                                 const mappedKey = convertProperty(key);
                                 const line = [mappedKey, ...values.map(normalizeValues)];
                                 outputLines.push(line);
