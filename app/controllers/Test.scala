@@ -191,17 +191,17 @@ class Test @Inject()(implicit val
             |                <dt>
             |                  <a href="/w/schema:name" title="The name of the item." class="">Name</a>
             |                </dt>
-            |                <dd property="name"><a href="KIM, Aha" class="missing" rel="nofollow">KIM, Aha</a></dd>
+            |                <dd property="name"><a rel="nofollow" class="missing" href="/w/KIM, Aha">KIM, Aha</a></dd>
             |              </div><div>
             |                <dt>
             |                  <a href="/w/schema:url" title="URL of the item." class="">Url</a>
             |                </dt>
-            |                <dd property="url"><a href="https://aha00a.com" target="_blank" rel="noopener">https://aha00a.com</a></dd>
+            |                <dd property="url"><a rel="noopener" target="_blank" href="https://aha00a.com">https://aha00a.com</a></dd>
             |              </div><div>
             |                <dt>
             |                  <a href="/w/schema:memberOf" title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of</a>
             |                </dt>
-            |                <dd property="memberOf"><a href="AhariseNotExists" class="missing" rel="nofollow">AhariseNotExists</a></dd>
+            |                <dd property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
             |              </div>
             |        </div>
             |      </dl></div>""".stripMargin

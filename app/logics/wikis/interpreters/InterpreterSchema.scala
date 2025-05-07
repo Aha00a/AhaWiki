@@ -5,8 +5,11 @@ import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
 import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 import models.PageContent
+
+import scala.xml.XML
 
 object InterpreterSchema extends TraitInterpreter {
 
@@ -77,14 +80,8 @@ object InterpreterSchema extends TraitInterpreter {
                   tail.map {
                     case v if Seq("image", "logo").contains(key) =>
                       <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
-                    case v if PageNameLogic.isExternal(v) =>
-                      <dd property={key}><a href={v.escapeHtml()} target="_blank" rel="noopener">{v}</a></dd>
                     case v =>
-                      <dd property={key}><a
-                        href={v.escapeHtml()}
-                        class={if (pageNameSet.contains(v)) "" else "missing"}
-                        rel={if (pageNameSet.contains(v)) "" else "nofollow"}
-                      >{v}</a></dd>
+                      <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
                   }
                 }
               </div>
