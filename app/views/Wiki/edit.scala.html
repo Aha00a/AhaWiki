@@ -93,10 +93,26 @@
                 }
             });
 
+            const ExecCommand = {
+                insertText: text => document.execCommand("insertText", false, text),
+                backspace: () => document.execCommand("delete"),
+                delete: () => document.execCommand("forwardDelete"),
+            };
+            const openClose = [
+                {open: '(', close: ')'},
+                {open: '{', close: '}'},
+                {open: '[', close: ']'},
+                {open: '"', close: '"'},
+                {open: "'", close: "'"},
+                {open: "`", close: "`"},
+            ];
+
             $('textarea[name=text]').bind('keydown', function (e) {
                 var value = this.value;
                 var selectionStart = this.selectionStart;
                 var selectionEnd = this.selectionEnd;
+                const selected = value.substring(selectionStart, selectionEnd);
+
                 if(e.keyCode === 9){
                     if(0 === selectionStart)
                         return;
@@ -104,35 +120,85 @@
                     if(value.length === selectionStart)
                         return;
 
-                    document.execCommand("insertText", false, '\t');
+                    ExecCommand.insertText('\t');
                     return false;
                 }
 
                 if(e.key === '[') {
-                    if(value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[' && value[selectionStart - 3] !== '[') {
-                        document.execCommand("insertText", false, '[\n]');
-                        this.selectionStart = this.selectionEnd = this.selectionStart - 2;
+                    if (value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[') {
+                        if (value[selectionStart - 3] === '[') {
+                            this.selectionStart = this.selectionEnd = selectionEnd;
+                            ExecCommand.delete();
+                            this.selectionStart = selectionStart;
+                            ExecCommand.insertText('[' + selected + '\n]');
+                            this.selectionStart = selectionStart + 1;
+                            this.selectionEnd = selectionEnd + 1;
+                            return false;
+                        } else {
+                            ExecCommand.insertText('[' + selected + '\n]');
+                            this.selectionStart = selectionStart + 1;
+                            this.selectionEnd = selectionEnd + 1;
+                            return false;
+                        }
+                    }
+                }
+
+                if(e.key === '"') {
+                    if(selectionStart === selectionEnd) {
+                        if(value[selectionEnd] === '"') {
+                            this.selectionStart = this.selectionEnd = this.selectionEnd + 1;
+                            return false;
+                        }
+                        ExecCommand.insertText('""');
+                        this.selectionStart = this.selectionEnd = this.selectionStart - 1;
                         return false;
                     }
-                    document.execCommand("insertText", false, '[]');
-                    this.selectionStart = this.selectionEnd = this.selectionStart - 1;
-                    return false;
+                }
+
+                for (const {open, close} of openClose) {
+                    if(e.key === open) {
+                        // ExecCommand.insertText(open + close);
+                        // this.selectionStart = this.selectionEnd = this.selectionStart - 1;
+                        // return false;
+
+                        this.selectionStart = this.selectionEnd = selectionStart;
+                        ExecCommand.insertText(open);
+                        this.selectionStart = this.selectionEnd = selectionEnd + 1;
+                        ExecCommand.insertText(close);
+                        this.selectionStart = selectionStart + 1;
+                        this.selectionEnd = selectionEnd + 1;
+                        return false;
+
+                    }
                 }
 
                 if(e.key === 'Backspace') {
                     console.log(selectionStart, selectionEnd);
                     if(
-                        value[selectionStart - 1] === '[' && value[selectionEnd] === ']'
-                    ) {
-                        document.execCommand("delete");
-                        document.execCommand("forwardDelete");
+                        value[selectionStart - 3] === '[' && value[selectionStart - 2] === '[' && value[selectionStart - 1] === '[' &&
+                        value[selectionEnd] === '\n' &&
+                        value[selectionEnd + 1] === ']' && value[selectionEnd + 2] === ']' && value[selectionEnd + 3] === ']') {
+                        if(value[selectionStart - 4] === '[' && value[selectionEnd + 4] === ']') {
+                            ExecCommand.delete();
+                            ExecCommand.delete();
+                            ExecCommand.backspace();
+                            ExecCommand.insertText('\n');
+                            this.selectionStart = this.selectionEnd = this.selectionStart - 1;
+                            return false;
+                        }
+                        ExecCommand.backspace();
+                        ExecCommand.delete();
+                        ExecCommand.delete();
                         return false;
                     }
-                    if(value[selectionStart - 1] === '[' && value[selectionEnd] === '\n' && value[selectionEnd + 1] === ']') {
-                        document.execCommand("delete");
-                        document.execCommand("forwardDelete");
-                        document.execCommand("forwardDelete");
-                        return false;
+
+
+                    for (const {open, close} of openClose) {
+                        if(value[selectionStart - 1] === open && value[selectionEnd] === close) {
+                            ExecCommand.backspace();
+                            ExecCommand.delete();
+                            return false;
+                        }
                     }
                 }
             });
