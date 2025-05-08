@@ -28,7 +28,7 @@ object InterpreterSchema extends TraitInterpreter {
 
   def parse(pageContent: PageContent): ParseResult = {
     val schemaClass: String = pageContent.argument.headOption.getOrElse("")
-    val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty)
+    val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty).filterNot(_.startsWith("#"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
     ParseResult(schemaClass, seqSeqField)
   }
