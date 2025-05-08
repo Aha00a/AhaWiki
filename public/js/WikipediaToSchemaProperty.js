@@ -20,6 +20,7 @@
         "Country": "countryOfOrigin",
         "Created by": "creator",
         "Date": "startDate",
+        "Developer": "author",
         "Developer(s)": "author",
         "Diagnosis": "diagnosis",
         "Died": "deathDate",
@@ -79,6 +80,13 @@
         "Weight": "weight",
         "Written by": "author",
         "Written in": "programmingLanguage",
+        "각본": "author",
+        "방송 국가": "countryOfOrigin",
+        "방송 채널": "publisher",
+        "연출": "director",
+        "제작": "producer",
+        "제작사": "productionCompany",
+        "출연자": "actor",
     };
     if(typeof window.AhaWiki === "undefined") {
         window.AhaWiki = {};
