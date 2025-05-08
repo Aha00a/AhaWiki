@@ -81,12 +81,21 @@
         "Written by": "author",
         "Written in": "programmingLanguage",
         "각본": "author",
+        "개발자": "author",
+        "라이선스": "license",
+        "발표일": "datePublished",
         "방송 국가": "countryOfOrigin",
         "방송 채널": "publisher",
+        "상태": "status",
+        "언어": "inLanguage",
         "연출": "director",
+        "운영 체제": "operatingSystem",
+        "웹사이트": "url",
         "제작": "producer",
         "제작사": "productionCompany",
+        "종류": "applicationCategory",
         "출연자": "actor",
+        "크기": "size",
     };
     if(typeof window.AhaWiki === "undefined") {
         window.AhaWiki = {};

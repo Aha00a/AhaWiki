@@ -133,6 +133,13 @@
     </script>
     <script type="text/javascript" src="/public/js/WikipediaToSchemaProperty.js"></script>
     <script>
+        function preventXss(html) {
+            const div = document.createElement('div');
+            div.textContent = html;
+            return div.innerHTML;
+        }
+
+
         $(function () {
             const WikipediaToSchemaProperty = window.AhaWiki.WikipediaToSchemaProperty;
             function convertProperty(property) {
@@ -311,7 +318,19 @@
                 const arrayResult = await fetchInfoBoxFromWikipedia(page);
 
                 $('textarea[name=text]')
-                    .insertAtCaret(arrayResult.map(v => `[[[#!Schema ${v.lang}\n${v.content.map(l => l.join('\t')).join('\n')}\n]]]\n`).join('\n\n'))
+                    .insertAtCaret(arrayResult
+                        .filter(v => v.content && Array.isArray(v.content))
+                        .map(v => {
+                            const sanitizedContent = v.content.map(l => l.map(preventXss).join('\t')).join('\n'); // Prevents XSS
+                            return `
+[[[#!Schema
+# ${v.lang} - https://${v.lang}.wikipedia.org/wiki/${encodeURIComponent(page)}
+${sanitizedContent}
+]]]
+                        `.trim() + '\n\n';
+                        })
+                        .join('\n\n'),
+                    )
                     .change();
             });
         });
