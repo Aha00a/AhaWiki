@@ -147,25 +147,28 @@
                 if (!page)
                     return;
 
-                const arrayResult = await Promise.all(['en', 'ko', 'ja'].map(async lang => {
-                    return ({
-                        lang,
-                        arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page)
-                    })
-                }));
+                const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
+                    lang,
+                    arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page),
+                }))))
+                    .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
+                    .map(v => ({...v, content: convertWikipediaToSchemaOrg(v.arrayArrayValue)}))
+                    .filter(v => v.content);
+
+                if(!arrayResult.length) {
+                    alert('No infobox found');
+                    return;
+                }
 
                 $('textarea[name=text]')
                     .insertAtCaret(arrayResult
-                        .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
-                        .map(v => {
-                            return `
+                        .map(v => `
 [[[#!Schema
-${(convertWikipediaToSchemaOrg(v.arrayArrayValue))}
+${v.content}
 # API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
 sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
 ]]]
-                        `.trim() + '\n\n';
-                        })
+                        `.trim() + '\n\n')
                         .join('\n\n'),
                     )
                     .change();
