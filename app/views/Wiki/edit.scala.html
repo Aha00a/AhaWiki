@@ -242,71 +242,70 @@
                 ].reduce((acc, fn) => fn(acc), text);
             }
 
-            async function fetchInfoBoxFromWikipedia(page) {
-                const langs = ['en', 'ko', 'ja'];
-                const arrayResult = [];
+            function convertWikipediaToSchemaOrg(arrayArrayValue) {
+                return arrayArrayValue
+                    .map(([head, ...rest]) => [convertProperty(head), ...(rest.map(normalizeValues))])
+                    .map(l => l.join('\t'))
+                    .join('\n');
+            }
 
-                for (const lang of langs) {
-                    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(page)}?origin=*`;
-                    try {
-                        const res = await fetch(url);
-                        if (!res.ok) continue;
 
-                        const html = await res.text();
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
+            async function fetchInfoBoxFromWikipedia(lang, page) {
+                const url = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(page)}?origin=*`;
+                const arrayArrayValue = [];
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok)
+                        return arrayArrayValue;
 
-                        const styleTags = doc.querySelectorAll('style');
-                        styleTags.forEach(tag => tag.remove());
+                    const html = await res.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
 
-                        const hiddenSpans = doc.querySelectorAll('span[style*="display:none;"], span[style*="display: none;"]');
-                        hiddenSpans.forEach(span => span.remove());
+                    const styleTags = doc.querySelectorAll('style');
+                    styleTags.forEach(tag => tag.remove());
 
-                        const infobox = doc.querySelector('.infobox');
-                        if (!infobox) continue;
+                    const hiddenSpans = doc.querySelectorAll('span[style*="display:none;"], span[style*="display: none;"]');
+                    hiddenSpans.forEach(span => span.remove());
 
-                        const rows = infobox.querySelectorAll('tr');
-                        const outputLines = [];
+                    const infobox = doc.querySelector('.infobox');
+                    if (!infobox)
+                        return arrayArrayValue;
 
-                        for (const row of rows) {
-                            const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
-                            if(thInfoboxAboveSummary) {
-                                outputLines.push(['name', thInfoboxAboveSummary.innerText]);
-                                continue;
-                            }
+                    const rows = infobox.querySelectorAll('tr');
 
-                            const tdInfoboxImageImg = row.querySelector('td.infobox-image img');
-                            if(tdInfoboxImageImg) {
-                                outputLines.push(['image', tdInfoboxImageImg.src.replace(/^http:/, 'https:')]);
-                                continue;
-                            }
-
-                            const th = row.querySelector('th');
-                            const td = row.querySelector('td');
-
-                            if (th && td) {
-                                const key = th.innerText.trim().replace(/\s+/g, ' ');
-                                const tdLi = td.querySelectorAll('li');
-                                const values = tdLi.length
-                                    ? [...tdLi].map(v => v.innerText.trim())
-                                    : td.innerText.trim().split(/\n+/g);
-                                const mappedKey = convertProperty(key);
-                                const line = [mappedKey, ...values.map(normalizeValues)];
-                                outputLines.push(line);
-                            }
+                    for (const row of rows) {
+                        const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
+                        if(thInfoboxAboveSummary) {
+                            arrayArrayValue.push(['name', thInfoboxAboveSummary.innerText]);
+                            continue;
                         }
 
-                        if (outputLines.length > 0) {
-                            arrayResult.push({
-                                lang,
-                                content: outputLines,
-                            });
+                        const tdInfoboxImageImg = row.querySelector('td.infobox-image img');
+                        if(tdInfoboxImageImg) {
+                            arrayArrayValue.push(['image', tdInfoboxImageImg.src.replace(/^http:/, 'https:')]);
+                            continue;
                         }
-                    } catch (e) {
-                        console.log(`${lang}`, e);
+
+                        const th = row.querySelector('th');
+                        const td = row.querySelector('td');
+
+                        if (th && td) {
+                            const key = th.innerText.trim().replace(/\s+/g, ' ');
+                            const tdLi = td.querySelectorAll('li');
+                            const values = tdLi.length
+                                ? [...tdLi].map(v => v.innerText.trim())
+                                : td.innerText.trim().split(/\n+/g);
+                            const line = [key, ...values];
+                            arrayArrayValue.push(line);
+                        }
                     }
+
+                    return arrayArrayValue;
+                } catch (e) {
+                    console.log(`${lang}`, e);
+                    return arrayArrayValue;
                 }
-                return arrayResult;
             }
 
 
@@ -315,13 +314,18 @@
                 if (!page)
                     return;
 
-                const arrayResult = await fetchInfoBoxFromWikipedia(page);
+                const arrayResult = await Promise.all(['en', 'ko', 'ja'].map(async lang => {
+                    return ({
+                        lang,
+                        arrayArrayValue: await fetchInfoBoxFromWikipedia(lang, page)
+                    })
+                }));
 
                 $('textarea[name=text]')
                     .insertAtCaret(arrayResult
-                        .filter(v => v.content && Array.isArray(v.content))
+                        .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
                         .map(v => {
-                            const sanitizedContent = v.content.map(l => l.map(preventXss).join('\t')).join('\n'); // Prevents XSS
+                            const sanitizedContent = convertWikipediaToSchemaOrg(v.arrayArrayValue);
                             return `
 [[[#!Schema
 # ${v.lang} - https://${v.lang}.wikipedia.org/wiki/${encodeURIComponent(page)}
