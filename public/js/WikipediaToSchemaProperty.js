@@ -32,7 +32,7 @@
             const rows = infobox.querySelectorAll('tr');
 
             for (const row of rows) {
-                const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
+                const thInfoboxAboveSummary = row.querySelector('th.infobox-above');
                 if(thInfoboxAboveSummary) {
                     arrayArrayValue.push(['name', thInfoboxAboveSummary.innerText]);
                     continue;
@@ -98,6 +98,7 @@
         "Founded": "foundingDate",
         "Founder": "founder",
         "Genre": "genre",
+        "Genres": "genre",
         "Headquarters": "location",
         "ICD-10": "code",
         "Illustrator": "illustrator",
@@ -109,6 +110,7 @@
         "License": "license",
         "Location": "location",
         "Manufacturer": "manufacturer",
+        "Member of": "memberOf",
         "Model": "model",
         "Music by": "musicBy",
         "Nationality": "nationality",
@@ -116,10 +118,13 @@
         "No. of episodes": "numberOfEpisodes",
         "No. of seasons": "numberOfSeasons",
         "Occupation": "jobTitle",
+        "Occupations": "hasOccupation",
         "Operating system": "operatingSystem",
         "Organizer": "organizer",
+        "Origin": "birthPlace",
         "Original author(s)": "creator",
         "Original language": "inLanguage",
+        "Other names": "alternateName",
         "Parents": "parent",
         "Platform": "runtimePlatform",
         "Price": "offers",
@@ -138,6 +143,7 @@
         "Risk factors": "riskFactor",
         "Running time": "duration",
         "Spouse(s)": "spouse",
+        "Spouses": "spouse",
         "Starring": "actor",
         "Treatments": "possibleTreatment",
         "Type": "applicationCategory",
