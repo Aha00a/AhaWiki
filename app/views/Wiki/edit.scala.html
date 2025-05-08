@@ -140,66 +140,8 @@
         }
 
         $(function () {
-            const convertWikipediaToSchemaOrg = window.AhaWiki.WikipediaToSchema.convertWikipediaToSchemaOrg;
-            async function fetchInfoBoxFromWikipedia(lang, page) {
-                const url = `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(page)}?origin=*`;
-                const arrayArrayValue = [];
-                try {
-                    const res = await fetch(url);
-                    if (!res.ok)
-                        return arrayArrayValue;
-
-                    const html = await res.text();
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    const styleTags = doc.querySelectorAll('style');
-                    styleTags.forEach(tag => tag.remove());
-
-                    const hiddenSpans = doc.querySelectorAll('span[style*="display:none;"], span[style*="display: none;"]');
-                    hiddenSpans.forEach(span => span.remove());
-
-                    const infobox = doc.querySelector('.infobox');
-                    if (!infobox)
-                        return arrayArrayValue;
-
-                    const rows = infobox.querySelectorAll('tr');
-
-                    for (const row of rows) {
-                        const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
-                        if(thInfoboxAboveSummary) {
-                            arrayArrayValue.push(['name', thInfoboxAboveSummary.innerText]);
-                            continue;
-                        }
-
-                        const tdInfoboxImageImg = row.querySelector('td.infobox-image img');
-                        if(tdInfoboxImageImg) {
-                            arrayArrayValue.push(['image', tdInfoboxImageImg.src.replace(/^http:/, 'https:')]);
-                            continue;
-                        }
-
-                        const th = row.querySelector('th');
-                        const td = row.querySelector('td');
-
-                        if (th && td) {
-                            const key = th.innerText.trim().replace(/\s+/g, ' ');
-                            const tdLi = td.querySelectorAll('li');
-                            const values = tdLi.length
-                                ? [...tdLi].map(v => v.innerText.trim())
-                                : td.innerText.trim().split(/\n+/g);
-                            const line = [key, ...values];
-                            arrayArrayValue.push(line);
-                        }
-                    }
-
-                    return arrayArrayValue;
-                } catch (e) {
-                    console.log(`${lang}`, e);
-                    return arrayArrayValue;
-                }
-            }
-
-
+            const wikipediaToSchema = window.AhaWiki.WikipediaToSchema;
+            const convertWikipediaToSchemaOrg = wikipediaToSchema.convertWikipediaToSchemaOrg;
             $('.fetchInfoBoxFromWikipedia').click(async () => {
                 const page = prompt('Enter the Wikipedia page name', "@page.name");
                 if (!page)
@@ -208,7 +150,7 @@
                 const arrayResult = await Promise.all(['en', 'ko', 'ja'].map(async lang => {
                     return ({
                         lang,
-                        arrayArrayValue: await fetchInfoBoxFromWikipedia(lang, page)
+                        arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page)
                     })
                 }));
 
@@ -219,8 +161,8 @@
                             return `
 [[[#!Schema
 ${(convertWikipediaToSchemaOrg(v.arrayArrayValue))}
-
-sameAs\thttps://${v.lang}.wikipedia.org/wiki/${encodeURIComponent(page)}
+# API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
+sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
 ]]]
                         `.trim() + '\n\n';
                         })

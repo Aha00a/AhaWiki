@@ -1,4 +1,70 @@
 (() => {
+    function getApiUrlWikipedia(lang, page) {
+        return `https://${lang}.wikipedia.org/api/rest_v1/page/html/${encodeURIComponent(page)}?origin=*`;
+    }
+
+    function getUrlWikipedia(lang, page) {
+        return `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(page)}`;
+    }
+
+    async function fetchInfoBoxFromWikipedia(lang, page) {
+        const url = getApiUrlWikipedia(lang, page);
+        const arrayArrayValue = [];
+        try {
+            const res = await fetch(url);
+            if (!res.ok)
+                return arrayArrayValue;
+
+            const html = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const styleTags = doc.querySelectorAll('style');
+            styleTags.forEach(tag => tag.remove());
+
+            const hiddenSpans = doc.querySelectorAll('span[style*="display:none;"], span[style*="display: none;"]');
+            hiddenSpans.forEach(span => span.remove());
+
+            const infobox = doc.querySelector('.infobox');
+            if (!infobox)
+                return arrayArrayValue;
+
+            const rows = infobox.querySelectorAll('tr');
+
+            for (const row of rows) {
+                const thInfoboxAboveSummary = row.querySelector('th.infobox-above.summary');
+                if(thInfoboxAboveSummary) {
+                    arrayArrayValue.push(['name', thInfoboxAboveSummary.innerText]);
+                    continue;
+                }
+
+                const tdInfoboxImageImg = row.querySelector('td.infobox-image img');
+                if(tdInfoboxImageImg) {
+                    arrayArrayValue.push(['image', tdInfoboxImageImg.src.replace(/^http:/, 'https:')]);
+                    continue;
+                }
+
+                const th = row.querySelector('th');
+                const td = row.querySelector('td');
+
+                if (th && td) {
+                    const key = th.innerText.trim().replace(/\s+/g, ' ');
+                    const tdLi = td.querySelectorAll('li');
+                    const values = tdLi.length
+                        ? [...tdLi].map(v => v.innerText.trim())
+                        : td.innerText.trim().split(/\n+/g);
+                    const line = [key, ...values];
+                    arrayArrayValue.push(line);
+                }
+            }
+
+            return arrayArrayValue;
+        } catch (e) {
+            console.log(`${lang}`, e);
+            return arrayArrayValue;
+        }
+    }
+
     const WikipediaToSchemaProperty = {
         "Address": "address",
         "Alma mater": "alumniOf",
@@ -111,6 +177,7 @@
             .flatMap(([head, ...rest]) => [
                 removeOriginal || ["# " + head, ...rest],
                 [convertProperty(head), ...(rest.map(normalizeValues))],
+                [],
             ].filter(_ => _))
             .map(l => l.join('\t'))
             .join('\n');
@@ -223,6 +290,9 @@
     }
 
     window.AhaWiki.WikipediaToSchema = {
+        getApiUrlWikipedia,
+        getUrlWikipedia,
+        fetchInfoBoxFromWikipedia,
         isPropertyDefined,
         convertProperty,
         convertWikipediaToSchemaOrg,
