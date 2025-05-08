@@ -157,10 +157,6 @@
 
                 for (const {open, close} of openClose) {
                     if(e.key === open) {
-                        // ExecCommand.insertText(open + close);
-                        // this.selectionStart = this.selectionEnd = this.selectionStart - 1;
-                        // return false;
-
                         this.selectionStart = this.selectionEnd = selectionStart;
                         ExecCommand.insertText(open);
                         this.selectionStart = this.selectionEnd = selectionEnd + 1;
