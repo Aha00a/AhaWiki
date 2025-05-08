@@ -96,6 +96,7 @@
             $('textarea[name=text]').bind('keydown', function (e) {
                 var value = this.value;
                 var selectionStart = this.selectionStart;
+                var selectionEnd = this.selectionEnd;
                 if(e.keyCode === 9){
                     if(0 === selectionStart)
                         return;
@@ -103,18 +104,36 @@
                     if(value.length === selectionStart)
                         return;
 
-                    $(this).insertAtCaret('\t');
+                    document.execCommand("insertText", false, '\t');
                     return false;
                 }
+
                 if(e.key === '[') {
-                    if(value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[') {
-                        $(this).insertAtCaret('[\n]');
+                    if(value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[' && value[selectionStart - 3] !== '[') {
+                        document.execCommand("insertText", false, '[\n]');
                         this.selectionStart = this.selectionEnd = this.selectionStart - 2;
                         return false;
                     }
-                    $(this).insertAtCaret('[]');
+                    document.execCommand("insertText", false, '[]');
                     this.selectionStart = this.selectionEnd = this.selectionStart - 1;
                     return false;
+                }
+
+                if(e.key === 'Backspace') {
+                    console.log(selectionStart, selectionEnd);
+                    if(
+                        value[selectionStart - 1] === '[' && value[selectionEnd] === ']'
+                    ) {
+                        document.execCommand("delete");
+                        document.execCommand("forwardDelete");
+                        return false;
+                    }
+                    if(value[selectionStart - 1] === '[' && value[selectionEnd] === '\n' && value[selectionEnd + 1] === ']') {
+                        document.execCommand("delete");
+                        document.execCommand("forwardDelete");
+                        document.execCommand("forwardDelete");
+                        return false;
+                    }
                 }
             });
             $('textarea[name=text]').bind('input cut paste keydown keyup keypress blur change', function () {
