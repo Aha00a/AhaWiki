@@ -103,9 +103,6 @@
                     if(value.length === selectionStart)
                         return;
 
-                    if(value[selectionStart - 1] === '\n')
-                        return;
-
                     $(this).insertAtCaret('\t');
                     return false;
                 }
