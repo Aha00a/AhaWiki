@@ -1,6 +1,7 @@
 package logics.wikis
 
 import com.aha00a.commons.Implicits._
+import logics.wikis.macros.MacroCopyable
 import models.ContextWikiPage
 
 class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
@@ -9,7 +10,7 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
     val s1 = regexDoubleBackquote.replaceAllIn(s, _ match {
       case regexDoubleBackquote(body) =>
         val uniqueKey = getUniqueKey
-        arrayBuffer += uniqueKey -> <input value={body} class="MacroCopyable" readonly="readonly"/>.toString
+        arrayBuffer += uniqueKey -> MacroCopyable.doToHtmlString(body)
         uniqueKey
       case _ => "error"
     })
