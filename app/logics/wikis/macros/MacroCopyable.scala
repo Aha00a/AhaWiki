@@ -9,7 +9,7 @@ object MacroCopyable extends TraitMacro {
 
   def doToHtmlString(argument: String): String = {
     <div class="MacroCopyable">
-      <input value={argument} readonly="readonly"/>
+      <input class="auto resizeInputToContent" value={argument} readonly="readonly"/>
       <button type="button" aria-label="Copy" onclick={s"window.AhaWiki.Clipboard.copy('$argument')"}>
         <i class="far fa-copy" aria-hidden="true"></i>
       </button>
