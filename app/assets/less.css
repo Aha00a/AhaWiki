@@ -102,6 +102,11 @@ kbd:hover > kbd {
   box-shadow: 0 3px 0 1px #999;
   top: 0;
 }
+@media (max-width: 767px) {
+  kbd {
+    display: none;
+  }
+}
 .AhaWiki a {
   color: #015ADC;
   word-break: break-word;
