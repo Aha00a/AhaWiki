@@ -29,6 +29,14 @@
             if (!infobox)
                 return arrayArrayValue;
 
+            const captions = infobox.querySelectorAll('caption');
+            for (const caption of captions) {
+                const text = caption.innerText.trim();
+                if (text) {
+                    arrayArrayValue.push(['name', text]);
+                }
+            }
+
             const rows = infobox.querySelectorAll('tr');
 
             for (const row of rows) {
@@ -144,6 +152,7 @@
         "Running time": "duration",
         "Spouse(s)": "spouse",
         "Spouses": "spouse",
+        "Stable release": "softwareVersion",
         "Starring": "actor",
         "Treatments": "possibleTreatment",
         "Type": "applicationCategory",
@@ -202,16 +211,50 @@
         Jun: '06', Jul: '07', Aug: '08', Sep: '09',
         Oct: '10', Nov: '11', Dec: '12'
     };
-    function convertEnglishDates(text) {
-        return text.replace(/\b([A-Z][a-z]+)\s+(\d{1,2}),\s+(\d{4})\b/g, (match, month, day, year) => {
-            const mm = months[month];
-            if (!mm)
-                return match;
 
-            const dd = day.padStart(2, '0');
-            return `${year}-${mm}-${dd}`;
-        });
+    // Pattern for "Month Day[,| ] Year" e.g., March 3, 2020 or March 3 2020
+    const regexMonthDayYear = new RegExp([
+        '\\b',                   // Word boundary
+        '([A-Z][a-z]+)',         // Group 1: Month (capitalized word)
+        '\\s+',
+        '(\\d{1,2})',            // Group 2: Day (1 or 2 digits)
+        ',?',                   // Optional comma
+        '\\s+',
+        '(\\d{4})',              // Group 3: Year (4 digits)
+        '\\b'
+    ].join(''), 'g');
+
+    // Pattern for "Day Month Year" e.g., 3 March 2020
+    const regexDayMonthYear = new RegExp([
+        '\\b',
+        '(\\d{1,2})',            // Group 1: Day
+        '\\s+',
+        '([A-Z][a-z]+)',         // Group 2: Month
+        '\\s+',
+        '(\\d{4})',              // Group 3: Year
+        '\\b'
+    ].join(''), 'g');
+
+    function formatDate(year, month, day) {
+        const mm = months[month];
+        if (!mm) return null;
+        const dd = day.padStart(2, '0');
+        return `${year}-${mm}-${dd}`;
     }
+
+    function convertEnglishDates(text) {
+        return text
+            .replace(regexMonthDayYear, (match, month, day, year) => {
+                const formatted = formatDate(year, month, day);
+                return formatted || match;
+            })
+            .replace(regexDayMonthYear, (match, day, month, year) => {
+                const formatted = formatDate(year, month, day);
+                return formatted || match;
+            });
+    }
+
+
 
     function convertKoreanDates(text) {
         return text.replace(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/g, (match, year, month, day) => {
