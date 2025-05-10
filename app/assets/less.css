@@ -1962,7 +1962,6 @@ kbd:hover > kbd {
   padding: 5px 0;
   color: #222;
   text-decoration: none;
-  font-weight: bold;
 }
 .AhaWiki .edit form.form > table.layout > thead > tr > th.action.left,
 .AhaWiki .edit form.form > table.layout > tbody > tr > th.action.left,

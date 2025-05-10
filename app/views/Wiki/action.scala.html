@@ -1,4 +1,5 @@
 @(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page)(implicit wikiContext:ContextWikiPage)
+@kbdHotKey(key: String) = {<kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>}
 <div class="gnb">
     <div class="action">
         <ul class="authArea">
@@ -17,14 +18,14 @@
         </ul>
         <ul class="globalAction">
             <li>
-                <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search</a>
+                <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
             </li>
             <li>
                 <a href="@routes.Feed.atom" rel="nofollow"><i class="fas fa-rss"></i>Atom</a>
             </li>
             @if(isWritable) {
                 <li>
-                    <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log</a>
+                    <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
                 </li>
             }
         </ul>
@@ -34,15 +35,15 @@
                     <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
                 </li>
                 <li>
-                    <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History</a>
+                    <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History@kbdHotKey("H")</a>
                 </li>
                 <li>
-                    <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame</a>
+                    <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame@kbdHotKey("B")</a>
                 </li>
             }
             @if(isWritable) {
                 <li>
-                    <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit</a>
+                    <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit@kbdHotKey("E")</a>
                 </li>
             }
         </ul>
