@@ -135,7 +135,9 @@ kbd {
 
 	.aspectRatioWrapper {
 		position: relative;
-
+		.ratio_1_1 {
+			padding-bottom: 100%;
+		}
 		.ratio_4_3 {
 			padding-bottom: 75%;
 		}
@@ -374,6 +376,25 @@ kbd {
 				dd {
 					margin-left: 10px;
 					display: inline-block;
+				}
+				.address {
+					margin: 5px 0 5px 10px;
+					padding: 10px;
+					border: 1px solid #ccc;
+					background-color: #f7f7f7;
+					dd {
+						margin-left: 0;
+					}
+					img.iconMap {
+						display: inline-block;
+						width: 16px;
+						min-width: 16px;
+						height: 16px;
+						vertical-align: middle;
+					}
+					.aspectRatioWrapper {
+						margin-top: 5px;
+					}
 				}
 			}
 			ul {

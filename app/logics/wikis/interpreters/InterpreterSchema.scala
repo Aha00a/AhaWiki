@@ -3,12 +3,15 @@ package logics.wikis.interpreters
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
+import com.aha00a.commons.utils.UriUtil
+import logics.ApplicationConf
 import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.macros.MacroPeriod
 import models.ContextWikiPage
 import models.PageContent
+import play.api.Configuration
 
 import scala.xml.XML
 
@@ -90,6 +93,28 @@ object InterpreterSchema extends TraitInterpreter {
                         {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
                         (D{MacroPeriod.toHtmlString(v)} from now)
                       </dd>
+                    case v if key.startsWith("address") =>
+                      implicit val configuration: Configuration = wikiContext.configuration
+                      val applicationConf = ApplicationConf()
+                      val mapJavaScriptApiKey = applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+
+                      <div class="address">
+                        <dd property={key}>
+                          {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
+                          <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="GoogleMap"/></a>
+                          <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="NaverMap"/></a>
+                          <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/></a>
+                        </dd>
+                        <div class="aspectRatioWrapper">
+                          <div class="ratio_1_1" ></div>
+                          <div class="aspectRatioContent">
+                            <iframe
+                            width="100%" height="100%" frameborder="0"
+                            allowfullscreen="allowfullscreen"
+                            src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
+                          </div>
+                        </div>
+                      </div>
                     case v =>
                       <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
                   }

@@ -162,6 +162,9 @@ kbd:hover > kbd {
 .AhaWiki .aspectRatioWrapper {
   position: relative;
 }
+.AhaWiki .aspectRatioWrapper .ratio_1_1 {
+  padding-bottom: 100%;
+}
 .AhaWiki .aspectRatioWrapper .ratio_4_3 {
   padding-bottom: 75%;
 }
@@ -472,6 +475,25 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.schema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .commonAhaWiki div.schema dl .address {
+  margin: 5px 0 5px 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+}
+.AhaWiki .commonAhaWiki div.schema dl .address dd {
+  margin-left: 0;
+}
+.AhaWiki .commonAhaWiki div.schema dl .address img.iconMap {
+  display: inline-block;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+.AhaWiki .commonAhaWiki div.schema dl .address .aspectRatioWrapper {
+  margin-top: 5px;
 }
 .AhaWiki .commonAhaWiki div.schema ul {
   list-style-type: none;
@@ -957,6 +979,25 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.schema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .wikiContent div.schema dl .address {
+  margin: 5px 0 5px 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+}
+.AhaWiki .wikiContent div.schema dl .address dd {
+  margin-left: 0;
+}
+.AhaWiki .wikiContent div.schema dl .address img.iconMap {
+  display: inline-block;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+.AhaWiki .wikiContent div.schema dl .address .aspectRatioWrapper {
+  margin-top: 5px;
 }
 .AhaWiki .wikiContent div.schema ul {
   list-style-type: none;
@@ -1591,6 +1632,25 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.schema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl .address {
+  margin: 5px 0 5px 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background-color: #f7f7f7;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl .address dd {
+  margin-left: 0;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl .address img.iconMap {
+  display: inline-block;
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+.AhaWiki .paperContent .page .pageContent div.schema dl .address .aspectRatioWrapper {
+  margin-top: 5px;
 }
 .AhaWiki .paperContent .page .pageContent div.schema ul {
   list-style-type: none;
