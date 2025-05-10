@@ -80,6 +80,28 @@ body {
 .monospace {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
+kbd {
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  margin-left: 3px;
+  margin-right: 3px;
+  top: -2px;
+}
+kbd > kbd {
+  box-shadow: 0 4px 0px 2px #aaa;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  background-color: #f0f0f0;
+  color: #333;
+  padding: 2px 5px;
+  font-size: 0.875em;
+  line-height: 1em;
+}
+kbd:hover > kbd {
+  box-shadow: 0 3px 0 1px #999;
+  top: 0;
+}
 .AhaWiki a {
   color: #015ADC;
   word-break: break-word;
@@ -1892,51 +1914,71 @@ body {
   border: 1px solid #00aa00;
   padding: 10px;
 }
-.AhaWiki .edit .action {
-  float: right;
-}
-.AhaWiki .edit .action a {
-  display: inline-block;
-  margin: 0 0 0 5px;
-  padding: 5px;
-  color: #222;
-}
-.AhaWiki .edit table.layout {
+.AhaWiki .edit form.form > table.layout {
   width: 100%;
   border-collapse: collapse;
 }
-.AhaWiki .edit table.layout > thead > tr > th {
-  text-align: left;
-}
-.AhaWiki .edit table.layout > tbody > tr > td {
-  width: 50%;
+.AhaWiki .edit form.form > table.layout > thead > tr > th,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th,
+.AhaWiki .edit form.form > table.layout > thead > tr > td,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td {
   vertical-align: top;
 }
-.AhaWiki .edit table.layout > tbody > tr > td.left {
-  padding: 0 10px 0 0;
-}
-.AhaWiki .edit table.layout > tbody > tr > td.right {
-  padding: 0 0 0 10px;
-}
-.AhaWiki .edit table.layout > tbody > tr > td textarea {
-  width: 98%;
+.AhaWiki .edit form.form > table.layout > thead > tr > th > textarea,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th > textarea,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th > textarea,
+.AhaWiki .edit form.form > table.layout > thead > tr > td > textarea,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td > textarea,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td > textarea {
+  width: 100%;
   height: 500px;
+  box-sizing: border-box;
 }
-.AhaWiki .edit table.layout > tbody > tr > td .previewPane {
+.AhaWiki .edit form.form > table.layout > thead > tr > th .previewPane,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th .previewPane,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th .previewPane,
+.AhaWiki .edit form.form > table.layout > thead > tr > td .previewPane,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td .previewPane,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td .previewPane {
   border: 1px solid #ccc;
   background: url('/public/img/imageDraftVersion.png');
+  box-sizing: border-box;
 }
-.AhaWiki .edit table.layout > tbody > tr > td .previewPane:after {
-  display: block;
-  clear: right;
-  content: '';
+.AhaWiki .edit form.form > table.layout > thead > tr > th.action > a,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th.action > a,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action > a,
+.AhaWiki .edit form.form > table.layout > thead > tr > td.action > a,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td.action > a,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action > a,
+.AhaWiki .edit form.form > table.layout > thead > tr > th.action > label,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th.action > label,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action > label,
+.AhaWiki .edit form.form > table.layout > thead > tr > td.action > label,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td.action > label,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action > label {
+  display: inline-block;
+  padding: 5px 0;
+  color: #222;
+  text-decoration: none;
+  font-weight: bold;
 }
-.AhaWiki .edit textarea {
-  display: block;
-  width: 90%;
-  height: 600px;
-  resize: vertical;
-  padding: 5px;
+.AhaWiki .edit form.form > table.layout > thead > tr > th.action.left,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th.action.left,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action.left,
+.AhaWiki .edit form.form > table.layout > thead > tr > td.action.left,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td.action.left,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action.left {
+  text-align: left;
+}
+.AhaWiki .edit form.form > table.layout > thead > tr > th.action.right,
+.AhaWiki .edit form.form > table.layout > tbody > tr > th.action.right,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action.right,
+.AhaWiki .edit form.form > table.layout > thead > tr > td.action.right,
+.AhaWiki .edit form.form > table.layout > tbody > tr > td.action.right,
+.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action.right {
+  text-align: right;
 }
 @media print {
   .AhaWiki .header,

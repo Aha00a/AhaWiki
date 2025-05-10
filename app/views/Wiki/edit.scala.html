@@ -1,5 +1,6 @@
 @(page: models.tables.Page, applicationConf: logics.ApplicationConf)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
+@kbdHotKeyAlt(key: String) = {<kbd data-hotkey-alt="@key"><kbd>Alt</kbd><kbd>@key</kbd></kbd>}
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript">
@@ -73,7 +74,7 @@
                 var flashInnerHeight = $('.flash').innerHeight();
                 var height = windowInnerHeight - headerInnerHeight - flashInnerHeight - 300;
                 $previewPane.css({ height: height, overflowY: 'auto'});
-                $("[name=text]").css({ height: height - 10}); @* 10px is padding size of textarea *@
+                $("[name=text]").css({ height: height });
             });
         }
 
@@ -227,7 +228,7 @@
             $('.fetchInfoBoxFromWikipedia').click(async () => {
                 const page = prompt('Enter the Wikipedia page name', "@page.name");
                 if (!page)
-                    return;
+                    return false;
 
                 const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
                     lang,
@@ -239,7 +240,7 @@
 
                 if(!arrayResult.length) {
                     alert('No infobox found');
-                    return;
+                    return false;
                 }
 
                 $('textarea[name=text]')
@@ -254,6 +255,7 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                         .join('\n\n'),
                     )
                     .change();
+                return false;
             });
         });
     </script>
@@ -278,53 +280,96 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
         </script>
     }
 } {
+    <script type="text/javascript">
+        $(function () {
+            $(".edit").keydown(function (e) {
+                if(!e.altKey)
+                    return;
+
+                if(e.key === 'Alt')
+                    return;
+
+                document.querySelectorAll(`kbd[data-hotkey-alt=${e.key.toUpperCase()}]`).forEach(kbd => {
+                    kbd.click();
+                    return false;
+                });
+            });
+        });
+    </script>
     <div class="wikiContent">
         <div class="limitWidth">
             <h1>Edit - <a href="?">@page.name</a></h1>
         </div>
         <div class="limitWidth">
             <div class="edit">
-                <div class="action">
-                    <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename</a>
-                    <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete</a>
-                </div>
-                <label>
-                    <input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap
-                </label>
-                <table class="layout">
-                    <thead>
-                        <tr>
-                            <th>
-                                <button class="fetchInfoBoxFromWikipedia" type="button"><i class="fab fa-wikipedia-w"></i></button>
-                            </th>
-                            <th>
 
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="left">
-                            @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
-                                @CSRF.formField
-                                <input type="hidden" name="revision" value="@page.revision"/>
-                                <input type="hidden" id="recaptcha" name="recaptcha">
-                                <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
-                                <div>
-                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/></label>
+                @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
+                    <table class="layout">
+                        <thead>
+                            <tr>
+                                <td class="action left">
+                                    <label>
+                                        <input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")
+                                    </label>
+                                </td>
+                                <td class="action right">
+                                    <a class="fetchInfoBoxFromWikipedia" type="button">
+                                        <i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")
+                                    </a>
+                                </td>
+                                <td class="action left">
+
+                                </td>
+                                <td class="action right">
                                     @if(page.revision != 0) {
-                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit</label>
+                                        <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename@kbdHotKeyAlt("R")</a>
+                                        <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete@kbdHotKeyAlt("T")</a>
                                     }
-                                </div>
-                                <input type="submit" value="Save"/>
-                            }
-                            </td>
-                            <td class="right">
-                                <div class="previewPane" style="min-height: 500px;"></div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="left" colspan="2" style="width: 50%;">
+                                    @CSRF.formField
+                                    <input type="hidden" name="revision" value="@page.revision"/>
+                                    <input type="hidden" id="recaptcha" name="recaptcha">
+                                    <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
+                                </td>
+                                <td class="right" colspan="2" style="width: 50%;">
+                                    <div class="previewPane" style="min-height: 500px;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td class="action left">
+                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
+
+                                </td>
+                                <td class="action right">
+                                    @if(page.revision != 0) {
+                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
+                                    }
+                                </td>
+                                <td class="action left">
+
+                                </td>
+                                <td class="action right">
+
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="action left" colspan="4">
+                                    <label>
+                                        <input type="submit" value="Save"/>@kbdHotKeyAlt("S")
+                                    </label>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                }
+
             </div>
         </div>
     </div>
