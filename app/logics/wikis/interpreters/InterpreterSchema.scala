@@ -6,6 +6,7 @@ import com.aha00a.commons.utils.EnglishCaseConverter
 import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
+import logics.wikis.macros.MacroPeriod
 import models.ContextWikiPage
 import models.PageContent
 
@@ -80,6 +81,13 @@ object InterpreterSchema extends TraitInterpreter {
                   tail.map {
                     case v if Seq("image", "logo").contains(key) =>
                       <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
+                    case v if Seq("url", "codeRepository", "sameAs").contains(key) =>
+                      <dd property={key}>{XML.loadString(AhaMarkLink(if (v.startsWith("http://") && v.startsWith("https://")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
+                    case v if key.startsWith("date") || key.endsWith("Date") =>
+                      <dd property={key}>
+                        {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
+                        (D{MacroPeriod.toHtmlString(v)} from now)
+                      </dd>
                     case v =>
                       <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
                   }
