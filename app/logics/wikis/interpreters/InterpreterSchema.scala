@@ -82,7 +82,7 @@ object InterpreterSchema extends TraitInterpreter {
                     case v if Seq("image", "logo").contains(key) =>
                       <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
                     case v if Seq("url", "codeRepository", "sameAs").contains(key) =>
-                      <dd property={key}>{XML.loadString(AhaMarkLink(if (v.startsWith("http://") || v.startsWith("https://")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
+                      <dd property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
                     case v if key.startsWith("date") || key.endsWith("Date") =>
                       <dd property={key}>
                         {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
