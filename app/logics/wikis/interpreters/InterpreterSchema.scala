@@ -5,7 +5,6 @@ import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
 import com.aha00a.commons.utils.UriUtil
 import logics.ApplicationConf
-import logics.wikis.PageNameLogic
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.macros.MacroPeriod
@@ -100,7 +99,20 @@ object InterpreterSchema extends TraitInterpreter {
 
                       <div class="address">
                         <dd property={key}>
-                          {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
+                          {
+                            if(v.split("").exists(_.matches("[가-힣]"))) {
+                              val seq = v.split("\\s+").filter(_.isNotNullOrEmpty)
+                              seq
+                                .indices
+                                .map(i => seq.take(i + 1))
+                                .flatMap(seq => Seq(
+                                  XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                  " ",
+                                ))
+                            } else {
+                              XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+                            }
+                          }
                           <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="GoogleMap"/></a>
                           <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="NaverMap"/></a>
                           <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/></a>
