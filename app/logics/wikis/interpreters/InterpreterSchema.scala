@@ -60,9 +60,11 @@ object InterpreterSchema extends TraitInterpreter {
     val dl =
       <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
         <h5>
-          {scala.xml.XML.loadString(
-            logics.SchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet)
-          )}
+          {if (parseResult.schemaClass.isNullOrEmpty) {
+            <div class="error">TODO: Specify Schema Class</div>
+          } else {
+            scala.xml.XML.loadString(logics.SchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
+          }
         </h5>
         <div>
           {
