@@ -63,7 +63,7 @@
                                     success: function (data, textStatus, jqXHR) {
                                         var csrfName = data.name;
                                         var csrfValue = data.value;
-                                        AhaWiki.Loader.on();
+                                        AhaWiki.Loader.open();
                                         $.ajax({
                                             url: '@routes.Wiki.syncGoogleSpreadsheet()',
                                             method: 'post',

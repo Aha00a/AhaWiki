@@ -231,13 +231,14 @@
                     if (!page)
                         return false;
 
+                    AhaWiki.Loader.open();
                     const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
                         lang,
                         arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page),
-                    }))))
-                            .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
-                            .map(v => ({...v, content: convertWikipediaToSchemaOrg(v.arrayArrayValue)}))
-                            .filter(v => v.content);
+                    }))).finally(() => AhaWiki.Loader.close()))
+                        .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
+                        .map(v => ({...v, content: convertWikipediaToSchemaOrg(v.arrayArrayValue)}))
+                        .filter(v => v.content);
 
                     if(!arrayResult.length) {
                         alert('No infobox found');
@@ -245,8 +246,8 @@
                     }
 
                     $('textarea[name=text]')
-                            .insertAtCaret(arrayResult
-                                    .map(v => `
+                        .insertAtCaret(arrayResult
+                        .map(v => `
 [[[#!Schema
 ${v.content}
 # API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
