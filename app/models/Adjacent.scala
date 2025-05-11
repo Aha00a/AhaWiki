@@ -1,13 +1,9 @@
 package models
 
-import akka.actor.ActorRef
-import models.tables.{Link, Site}
-import play.api.Configuration
-import play.api.db.Database
-import play.api.mvc.Request
+import models.tables.Link
+import models.tables.Site
 
 import java.sql.Connection
-import scala.util.Random
 
 object Adjacent {
   def getSeqLinkFiltered(name: String)(

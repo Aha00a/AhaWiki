@@ -18,7 +18,6 @@ import models.tables.CalculatedTermFrequency
 import models.tables.Link
 import models.tables.Page
 import models.tables.SchemaOrg
-import play.api.Configuration
 import play.api.Logger
 import play.api.db.Database
 
@@ -59,7 +58,6 @@ object PageLogic {
     implicit
     database: Database,
     connection: Connection,
-    configuration: Configuration,
     applicationConf: ApplicationConf,
     actorAhaWiki: ActorRef,
     requestWrapper: RequestWrapper,

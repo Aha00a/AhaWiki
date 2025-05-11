@@ -1,14 +1,13 @@
 package controllers
 
 import com.aha00a.commons.Implicits._
-import javax.inject._
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.PageContent
 import models.tables.Site
-import play.api.Configuration
-import play.api.cache.SyncCacheApi
 import play.api.mvc._
+
+import javax.inject._
 
 class Home @Inject() (
                        implicit val

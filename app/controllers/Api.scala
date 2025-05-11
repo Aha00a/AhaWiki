@@ -14,7 +14,6 @@ import models.tables.Link
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
-import play.api.Configuration
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -32,7 +31,6 @@ class Api @Inject()(
                      actorSystem: ActorSystem,
                      database: Database,
                      @Named("db-actor") actorAhaWiki: ActorRef,
-                     configuration: Configuration,
                      applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext

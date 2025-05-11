@@ -1,26 +1,20 @@
 package controllers
 
-import java.util.Date
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import logics.ApplicationConf
-
-import javax.inject._
-import logics.PermissionLogic
-import logics.SessionLogic
 import logics.wikis.WikiPermission
-import models.PageContent
 import models.ContextWikiPage
-import models.tables.Permission
-import play.api.Configuration
+import models.PageContent
 import play.api.Environment
 import play.api.Logging
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.util.Date
+import javax.inject._
 import scala.concurrent.ExecutionContext
 
 class Search @Inject()(implicit val
@@ -29,7 +23,6 @@ controllerComponents: ControllerComponents,
                        database: Database,
                        environment: Environment,
                        @Named("db-actor") actorAhaWiki: ActorRef,
-                       configuration: Configuration,
                        applicationConf: ApplicationConf,
                        wsClient: WSClient,
                        executionContext: ExecutionContext

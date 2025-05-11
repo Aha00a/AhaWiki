@@ -19,7 +19,6 @@ import models._
 import models.tables.CalculatedCosineSimilarity
 import models.tables.Page
 import models.tables.Site
-import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
 import play.api.Mode
@@ -48,7 +47,6 @@ class Wiki @Inject()(implicit val
                      database: Database,
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
-                     configuration: Configuration,
                      applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext

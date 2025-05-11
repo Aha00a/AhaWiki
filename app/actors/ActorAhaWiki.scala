@@ -10,7 +10,6 @@ import models.ContextSite.RequestWrapper
 import models.LatLng
 import models.tables.GeocodeCache
 import models.tables.Site
-import play.api.Configuration
 import play.api.Logger
 import play.api.Logging
 import play.api.db.Database
@@ -35,7 +34,6 @@ class ActorAhaWiki @Inject()(implicit
                              database: Database,
                              wsClient: WSClient,
                              executionContext: ExecutionContext,
-                             configuration: Configuration,
                              applicationConf: ApplicationConf
                             ) extends Actor with Logging {
 

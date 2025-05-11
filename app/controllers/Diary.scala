@@ -1,27 +1,23 @@
 package controllers
 
-import java.time.LocalDateTime
-import java.util.Date
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.ApplicationConf
-
-import javax.inject._
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
-import models.PageContent
 import models.ContextWikiPage
-import play.api.Configuration
-import play.api.Environment
-import play.api.cache.SyncCacheApi
+import models.PageContent
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.time.LocalDateTime
+import java.util.Date
+import javax.inject._
 import scala.concurrent.ExecutionContext
 
 class Diary @Inject()(implicit val
@@ -29,7 +25,6 @@ class Diary @Inject()(implicit val
                       actorSystem: ActorSystem,
                       database: Database,
                       @Named("db-actor") actorAhaWiki: ActorRef,
-                      configuration: Configuration,
                       applicationConf: ApplicationConf,
                       wsClient: WSClient,
                       executionContext: ExecutionContext

@@ -1,6 +1,5 @@
 package models
 
-import java.util.Locale
 import akka.actor.ActorRef
 import com.aha00a.play.Implicits._
 import logics.ApplicationConf
@@ -12,15 +11,15 @@ import models.ContextSite.RequestWrapper
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
-import play.api.Configuration
 import play.api.db.Database
 import play.api.mvc.Request
+
+import java.util.Locale
 
 class Context()(
   implicit
   val database: Database,
   val actorAhaWiki: ActorRef,
-  val configuration: Configuration,
   val applicationConf: ApplicationConf,
   val requestWrapper: RequestWrapper,
 ){
@@ -62,7 +61,6 @@ object ContextSite {
     implicit
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration,
     applicationConf: ApplicationConf,
     request: Request[Any],
     site: Site,
@@ -75,7 +73,6 @@ object ContextSite {
     implicit
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration,
     applicationConf: ApplicationConf,
     site: Site,
   ): ContextSite = {
@@ -88,7 +85,6 @@ class ContextSite()(
   implicit
   database: Database,
   actorAhaWiki: ActorRef,
-  configuration: Configuration,
   applicationConf: ApplicationConf,
   requestWrapper: RequestWrapper,
   val site: Site,
@@ -114,7 +110,6 @@ object ContextWikiPage {
     request: Request[Any],
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration,
     applicationConf: ApplicationConf,
     site: Site
   ): ContextWikiPage = {
@@ -127,7 +122,6 @@ object ContextWikiPage {
     request: Request[Any],
     database: Database,
     actorAhaWiki: ActorRef,
-    configuration: Configuration,
     applicationConf: ApplicationConf,
     site: Site
   ): ContextWikiPage = {
@@ -141,7 +135,6 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   implicit
   database: Database,
   actorAhaWiki: ActorRef,
-  configuration: Configuration,
   applicationConf: ApplicationConf,
   requestWrapper: RequestWrapper,
   site: Site,

@@ -4,13 +4,11 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
 import com.aha00a.commons.utils.UriUtil
-import logics.ApplicationConf
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.macros.MacroPeriod
 import models.ContextWikiPage
 import models.PageContent
-import play.api.Configuration
 
 import scala.xml.XML
 

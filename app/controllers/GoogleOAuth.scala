@@ -2,16 +2,14 @@ package controllers
 
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleOAuthApi
-
-import javax.inject.Inject
-import logics.{ApplicationConf, SessionLogic}
-import play.api.Configuration
+import logics.ApplicationConf
+import logics.SessionLogic
 import play.api.Logging
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 //noinspection TypeAnnotation

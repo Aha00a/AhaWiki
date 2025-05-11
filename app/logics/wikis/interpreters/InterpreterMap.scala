@@ -5,7 +5,6 @@ import com.aha00a.colors.Color
 import com.aha00a.colors.GradientPreset
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
-import logics.ApplicationConf
 import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
 import models._
@@ -15,7 +14,6 @@ import models.tables.Link.DstMaxMinCount
 import models.tables.Site
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
-import play.api.Configuration
 
 import java.io.StringReader
 import java.net.URLEncoder

@@ -16,7 +16,6 @@ import logics.wikis.interpreters.Interpreters
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models._
 import models.tables.Permission
-import play.api.Configuration
 import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
@@ -34,7 +33,6 @@ class Test @Inject()(implicit val
                      database: Database,
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
-                     configuration: Configuration,
                      applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
@@ -277,7 +275,6 @@ class Test @Inject()(implicit val
     import com.amazonaws.auth.BasicAWSCredentials
     import com.amazonaws.services.s3.AmazonS3
     import com.amazonaws.services.s3.AmazonS3ClientBuilder
-    import logics.ApplicationConf
 
     import java.net.URL
 

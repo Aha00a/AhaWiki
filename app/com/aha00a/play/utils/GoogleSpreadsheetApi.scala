@@ -1,6 +1,5 @@
 package com.aha00a.play.utils
 
-import play.api.Configuration
 import play.api.libs.ws.WSClient
 
 import scala.concurrent.duration._
@@ -13,7 +12,7 @@ object GoogleSpreadsheetApi {
     id: String,
     sheetName: String
   )(
-    implicit configuration:Configuration,
+    implicit
     wSClient: WSClient,
     executionContext: ExecutionContext
   ): Future[Seq[Seq[String]]] = wSClient
