@@ -21,8 +21,13 @@
                 <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
             </li>
             <li>
-                <a href="@routes.Feed.atom" rel="nofollow"><i class="fas fa-rss"></i>Atom</a>
+                <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
             </li>
+            @if(false) {
+                <li>
+                    <a href="@routes.Feed.atom" rel="nofollow"><i class="fas fa-rss"></i>Atom</a>
+                </li>
+            }
             @if(isWritable) {
                 <li>
                     <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
