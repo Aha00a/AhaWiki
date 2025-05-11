@@ -9,6 +9,7 @@ import anorm.SqlStringInterpolation
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiConfig
+import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
 import models.HighScoredTerm
 import models._
@@ -59,6 +60,7 @@ object PageLogic {
     database: Database,
     connection: Connection,
     configuration: Configuration,
+    applicationConf: ApplicationConf,
     actorAhaWiki: ActorRef,
     requestWrapper: RequestWrapper,
     logger: Logger,

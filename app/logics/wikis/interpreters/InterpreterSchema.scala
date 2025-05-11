@@ -93,9 +93,7 @@ object InterpreterSchema extends TraitInterpreter {
                         (D{MacroPeriod.toHtmlString(v)} from now)
                       </dd>
                     case v if key.startsWith("address") =>
-                      implicit val configuration: Configuration = wikiContext.configuration
-                      val applicationConf = ApplicationConf()
-                      val mapJavaScriptApiKey = applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+                      val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
 
                       <div class="address">
                         <dd property={key}>

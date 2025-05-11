@@ -6,6 +6,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
+import logics.ApplicationConf
 import logics.PermissionLogic
 import logics.SessionLogic
 import logics.wikis.WikiPermission
@@ -34,6 +35,7 @@ class Test @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
+                     applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
@@ -279,7 +281,6 @@ class Test @Inject()(implicit val
 
     import java.net.URL
 
-    val applicationConf = ApplicationConf()
     val credentials = new BasicAWSCredentials(
       applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
       applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),

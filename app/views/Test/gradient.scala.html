@@ -1,4 +1,5 @@
-@(s: String)(implicit contextSite:ContextSite, database: play.api.db.Database, configuration: play.api.Configuration, site: models.tables.Site)
+@import logics.ApplicationConf
+@(s: String)(implicit contextSite:ContextSite, database: play.api.db.Database, configuration: play.api.Configuration, applicationConf: ApplicationConf, site: models.tables.Site)
 @_baseSkeleton("gradient - Test", "gradient - Test") {
     <script type="text/javascript">
         $(function(){
@@ -65,4 +66,4 @@
 
         </table>
     </div>
-}(contextSite.requestWrapper.host, database, configuration, site)
+}(contextSite.requestWrapper.host, database, configuration, applicationConf, site)

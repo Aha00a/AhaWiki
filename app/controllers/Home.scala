@@ -14,7 +14,7 @@ class Home @Inject() (
                        implicit val
                        controllerComponents: ControllerComponents,
                        database:play.api.db.Database,
-                       configuration: Configuration
+                       applicationConf: ApplicationConf
                      ) extends BaseController {
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
@@ -53,7 +53,7 @@ class Home @Inject() (
   }
 
   def adsTxt: Action[AnyContent] = Action { implicit request =>
-    ApplicationConf().AhaWiki.google.AdSense.adsTxtContent().toOption
+    applicationConf.AhaWiki.google.AdSense.adsTxtContent().toOption
       .map(s => Ok(s))
       .getOrElse(NotFound(""))
   }

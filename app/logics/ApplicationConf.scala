@@ -1,17 +1,14 @@
 package logics
 
+import javax.inject._
 import play.api.Configuration
 
-// TODO: fix to use models.tables.Config
-
-object ApplicationConf {
-  def apply()(implicit configuration: Configuration) = new ApplicationConf(configuration)
-}
-
-class ApplicationConf(configuration: Configuration) {
+@Singleton
+class ApplicationConf @Inject()(configuration: Configuration) {
   private def fqn: String = {
     val ste = Thread.currentThread.getStackTrace()(2)
-    (ste.getClassName.replace(ApplicationConf.getClass.getName, "") + ste.getMethodName).replaceAll("\\$", ".")
+    val classPart = ste.getClassName.replace(getClass.getName, "").replaceFirst("^\\$", "")
+    (classPart + "." + ste.getMethodName).replaceAll("\\$", ".").replaceAll("\\.\\.", ".")
   }
 
   object AhaWiki {
@@ -42,6 +39,7 @@ class ApplicationConf(configuration: Configuration) {
         def secretKey(): String = configuration.getOptional[String](fqn).getOrElse("")
       }
     }
+
     object aws {
       def AWS_REGION(): String = configuration.getOptional[String](fqn).getOrElse("")
       def AWS_ACCESS_KEY_ID(): String = configuration.getOptional[String](fqn).getOrElse("")

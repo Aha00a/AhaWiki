@@ -3,6 +3,7 @@ package models
 import java.util.Locale
 import akka.actor.ActorRef
 import com.aha00a.play.Implicits._
+import logics.ApplicationConf
 import logics.SessionLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
@@ -20,6 +21,7 @@ class Context()(
   val database: Database,
   val actorAhaWiki: ActorRef,
   val configuration: Configuration,
+  val applicationConf: ApplicationConf,
   val requestWrapper: RequestWrapper,
 ){
 }
@@ -61,6 +63,7 @@ object ContextSite {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration,
+    applicationConf: ApplicationConf,
     request: Request[Any],
     site: Site,
   ): ContextSite = {
@@ -73,6 +76,7 @@ object ContextSite {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration,
+    applicationConf: ApplicationConf,
     site: Site,
   ): ContextSite = {
     implicit val provider: RequestWrapper = RequestWrapper.empty
@@ -85,6 +89,7 @@ class ContextSite()(
   database: Database,
   actorAhaWiki: ActorRef,
   configuration: Configuration,
+  applicationConf: ApplicationConf,
   requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
@@ -110,6 +115,7 @@ object ContextWikiPage {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration,
+    applicationConf: ApplicationConf,
     site: Site
   ): ContextWikiPage = {
     implicit val provider: RequestWrapper = RequestWrapper()
@@ -122,6 +128,7 @@ object ContextWikiPage {
     database: Database,
     actorAhaWiki: ActorRef,
     configuration: Configuration,
+    applicationConf: ApplicationConf,
     site: Site
   ): ContextWikiPage = {
     implicit val provider: RequestWrapper = RequestWrapper()
@@ -135,6 +142,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   database: Database,
   actorAhaWiki: ActorRef,
   configuration: Configuration,
+  applicationConf: ApplicationConf,
   requestWrapper: RequestWrapper,
   site: Site,
 ) extends ContextSite {

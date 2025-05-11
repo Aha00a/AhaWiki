@@ -67,12 +67,9 @@ object InterpreterMap extends TraitInterpreter {
   }
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
-    implicit val configuration: Configuration = wikiContext.configuration
-    val applicationConf = ApplicationConf()
-
     val pageContent: PageContent = PageContent(content)
-    val geocodingKey = applicationConf.AhaWiki.google.credentials.api.Geocoding.key()
-    val mapJavaScriptApiKey = applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+    val geocodingKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.Geocoding.key()
+    val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
     if(geocodingKey.isNullOrEmpty || mapJavaScriptApiKey.isNullOrEmpty){
       return MacroError.toHtmlString(s"[[[#!Map Error - Please setup Geocoding and MapsJavaScriptAPI key in your application.conf]]]")
     }

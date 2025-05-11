@@ -1,10 +1,11 @@
 package controllers
 
 import java.util.Date
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
+import logics.ApplicationConf
+
 import javax.inject._
 import logics.PermissionLogic
 import logics.SessionLogic
@@ -29,6 +30,7 @@ controllerComponents: ControllerComponents,
                        environment: Environment,
                        @Named("db-actor") actorAhaWiki: ActorRef,
                        configuration: Configuration,
+                       applicationConf: ApplicationConf,
                        wsClient: WSClient,
                        executionContext: ExecutionContext
                       ) extends BaseController with Logging {

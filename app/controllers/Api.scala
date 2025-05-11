@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
+import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.Adjacent
 import models.ContextSite
@@ -32,6 +33,7 @@ class Api @Inject()(
                      database: Database,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
+                     applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                    ) extends BaseController {

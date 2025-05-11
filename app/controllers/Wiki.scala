@@ -49,6 +49,7 @@ class Wiki @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      configuration: Configuration,
+                     applicationConf: ApplicationConf,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
@@ -96,7 +97,7 @@ class Wiki @Inject()(implicit val
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
           val page = Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content)
-          Ok(views.html.Wiki.edit(page, ApplicationConf())).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+          Ok(views.html.Wiki.edit(page, applicationConf)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -166,7 +167,7 @@ class Wiki @Inject()(implicit val
           val mapRevisionColor = seqRevision.map(v => (v, GradientPreset.ahaWikiBlame.getColor(seqRevision.indexOf(v).toDouble / seqRevision.size).toHashString)).toMap
           Ok(views.html.Wiki.blame(blame, mapRevisionColor, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
 
-        case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page, ApplicationConf())).withHeaderRobotNoIndexNoFollow
+        case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page, applicationConf)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -231,7 +232,7 @@ class Wiki @Inject()(implicit val
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
     val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
-    val secretKey = ApplicationConf().AhaWiki.google.reCAPTCHA.secretKey()
+    val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
     val remoteAddress = request.remoteAddressWithXRealIp
 
     def doSave() = {
@@ -343,7 +344,7 @@ class Wiki @Inject()(implicit val
               if (url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
                 url match {
                   case regexGoogleSpreadsheetUrl(id, _, _, _) =>
-                    val googleSheetsApiKey = ApplicationConf().AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
+                    val googleSheetsApiKey = applicationConf.AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
                     val futureSpreadsheet: Future[Seq[Seq[String]]] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName)
                     val spreadsheet: Seq[Seq[String]] = Await.result(futureSpreadsheet, 5 seconds)
                     s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))}]]]"

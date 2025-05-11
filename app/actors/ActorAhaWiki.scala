@@ -36,6 +36,7 @@ class ActorAhaWiki @Inject()(implicit
                              wsClient: WSClient,
                              executionContext: ExecutionContext,
                              configuration: Configuration,
+                             applicationConf: ApplicationConf
                             ) extends Actor with Logging {
 
 
@@ -62,7 +63,7 @@ class ActorAhaWiki @Inject()(implicit
             .url("https://maps.googleapis.com/maps/api/geocode/json")
             .withQueryStringParameters(
               "address" -> address,
-              "key" -> ApplicationConf().AhaWiki.google.credentials.api.Geocoding.key()
+              "key" -> applicationConf.AhaWiki.google.credentials.api.Geocoding.key()
             )
             .get()
             .map(r => {

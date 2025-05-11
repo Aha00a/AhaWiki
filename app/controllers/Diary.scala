@@ -2,11 +2,12 @@ package controllers
 
 import java.time.LocalDateTime
 import java.util.Date
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import logics.ApplicationConf
+
 import javax.inject._
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
@@ -29,6 +30,7 @@ class Diary @Inject()(implicit val
                       database: Database,
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       configuration: Configuration,
+                      applicationConf: ApplicationConf,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
                      ) extends BaseController {

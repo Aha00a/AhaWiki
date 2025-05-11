@@ -21,9 +21,9 @@ class GoogleOAuth @Inject()(
   database: Database,
   wsClient: WSClient,
   executionContext: ExecutionContext,
-  configuration: Configuration
+  applicationConf: ApplicationConf
 ) extends BaseController with Logging {
-  private val confApi = ApplicationConf().AhaWiki.google.credentials.oAuth
+  private val confApi = applicationConf.AhaWiki.google.credentials.oAuth
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replace("?code=", "")
