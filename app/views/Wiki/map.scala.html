@@ -63,7 +63,7 @@
                                     success: function (data, textStatus, jqXHR) {
                                         var csrfName = data.name;
                                         var csrfValue = data.value;
-                                        $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>'))
+                                        AhaWiki.Loader.on();
                                         $.ajax({
                                             url: '@routes.Wiki.syncGoogleSpreadsheet()',
                                             method: 'post',
@@ -76,7 +76,7 @@
                                                 sheetName: '@sheetName',
                                             },
                                             success: function (data, textStatus, jqXHR) {
-                                                $('.ahaWikiLoader').remove();
+                                                AhaWiki.Loader.close();
                                                 if(data === 'NotChanged') {
                                                     alert('Content is not changed.');
                                                     return;
@@ -85,7 +85,7 @@
                                             },
                                             error: function (jqXHR, textStatus, errorThrown) {
                                                 debugger;
-                                                $('.ahaWikiLoader').remove();
+                                                AhaWiki.Loader.close();
                                             }
                                         });
                                     },
