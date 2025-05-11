@@ -1,8 +1,6 @@
 package logics
 
 import models.tables.Site
-import play.api.cache.SyncCacheApi
-import play.api.db.Database
 
 import java.sql.Connection
 
