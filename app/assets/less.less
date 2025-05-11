@@ -851,46 +851,73 @@ kbd {
 	}
 
 	.edit {
-		form.form {
-			> table.layout {
-				width: 100%;
-				border-collapse: collapse;
+		//div {
+		//	margin: 3px;
+		//	border: 1px solid #ffc0c0;
+		//	padding: 3px;
+		//}
 
-				> thead > tr,
-				> tbody > tr,
-				> tfoot > tr {
-					> th,
-					> td {
-						vertical-align: top;
+		> div.ui {
+			> form {
+				display: flex;
+				flex-direction: row;
+				> div.left,
+				> div.right {
+					min-width: 200px;
+					min-height: 200px;
 
-						> textarea {
-							width: 100%;
-							height: 500px;
-							box-sizing: border-box;
-						}
-
-						.previewPane {
-							border: 1px solid #ccc;
-							//noinspection CssUnknownTarget
-							background: url('/public/img/imageDraftVersion.png');
-							box-sizing: border-box;
-						}
-
-						&.action {
+					> div.toolbar,
+					> div.editorAdditional,
+					> div.previewAdditional  {
+						display: flex;
+						flex-direction: row;
+						>div.toolbarLeft,
+						>div.toolbarRight {
 							> a, > label {
 								display: inline-block;
 								padding: 5px 0;
 								color: #222;
 								text-decoration: none;
 							}
-
-							&.left {
-								text-align: left;
-							}
-
-							&.right {
-								text-align: right;
-							}
+						}
+						> div.toolbarLeft {
+							flex-grow: 1;
+						}
+						> div.toolbarRight {
+							flex-grow: 1;
+							text-align: right;
+						}
+					}
+				}
+				> div.left {
+					width: 50%;
+					> div.editorBody {
+						> textarea {
+							width: 100%;
+							box-sizing: border-box;
+							height: 500px;
+						}
+					}
+				}
+				> div.divider {
+					width: 5px;
+					background-color: #ccc;
+					margin: 0 10px;
+					cursor: ew-resize;
+					&:hover {
+						background-color: #aaa;
+					}
+					&:active {
+						background-color: #888;
+					}
+				}
+				> div.right {
+					flex: 1;
+					>div.preview {
+						> div.previewPane {
+							border: 1px solid #ccc;
+							//noinspection CssUnknownTarget
+							background: url('/public/img/imageDraftVersion.png');
 						}
 					}
 				}

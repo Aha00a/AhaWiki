@@ -1979,70 +1979,96 @@ kbd:hover > kbd {
   border: 1px solid #00aa00;
   padding: 10px;
 }
-.AhaWiki .edit form.form > table.layout {
-  width: 100%;
-  border-collapse: collapse;
+.AhaWiki .edit > div.ui > form {
+  display: flex;
+  flex-direction: row;
 }
-.AhaWiki .edit form.form > table.layout > thead > tr > th,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th,
-.AhaWiki .edit form.form > table.layout > thead > tr > td,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td {
-  vertical-align: top;
+.AhaWiki .edit > div.ui > form > div.left,
+.AhaWiki .edit > div.ui > form > div.right {
+  min-width: 200px;
+  min-height: 200px;
 }
-.AhaWiki .edit form.form > table.layout > thead > tr > th > textarea,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th > textarea,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th > textarea,
-.AhaWiki .edit form.form > table.layout > thead > tr > td > textarea,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td > textarea,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td > textarea {
-  width: 100%;
-  height: 500px;
-  box-sizing: border-box;
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional {
+  display: flex;
+  flex-direction: row;
 }
-.AhaWiki .edit form.form > table.layout > thead > tr > th .previewPane,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th .previewPane,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th .previewPane,
-.AhaWiki .edit form.form > table.layout > thead > tr > td .previewPane,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td .previewPane,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td .previewPane {
-  border: 1px solid #ccc;
-  background: url('/public/img/imageDraftVersion.png');
-  box-sizing: border-box;
-}
-.AhaWiki .edit form.form > table.layout > thead > tr > th.action > a,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th.action > a,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action > a,
-.AhaWiki .edit form.form > table.layout > thead > tr > td.action > a,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td.action > a,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action > a,
-.AhaWiki .edit form.form > table.layout > thead > tr > th.action > label,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th.action > label,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action > label,
-.AhaWiki .edit form.form > table.layout > thead > tr > td.action > label,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td.action > label,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action > label {
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > label {
   display: inline-block;
   padding: 5px 0;
   color: #222;
   text-decoration: none;
 }
-.AhaWiki .edit form.form > table.layout > thead > tr > th.action.left,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th.action.left,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action.left,
-.AhaWiki .edit form.form > table.layout > thead > tr > td.action.left,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td.action.left,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action.left {
-  text-align: left;
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft {
+  flex-grow: 1;
 }
-.AhaWiki .edit form.form > table.layout > thead > tr > th.action.right,
-.AhaWiki .edit form.form > table.layout > tbody > tr > th.action.right,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > th.action.right,
-.AhaWiki .edit form.form > table.layout > thead > tr > td.action.right,
-.AhaWiki .edit form.form > table.layout > tbody > tr > td.action.right,
-.AhaWiki .edit form.form > table.layout > tfoot > tr > td.action.right {
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight {
+  flex-grow: 1;
   text-align: right;
+}
+.AhaWiki .edit > div.ui > form > div.left {
+  width: 50%;
+}
+.AhaWiki .edit > div.ui > form > div.left > div.editorBody > textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 500px;
+}
+.AhaWiki .edit > div.ui > form > div.divider {
+  width: 5px;
+  background-color: #ccc;
+  margin: 0 10px;
+  cursor: ew-resize;
+}
+.AhaWiki .edit > div.ui > form > div.divider:hover {
+  background-color: #aaa;
+}
+.AhaWiki .edit > div.ui > form > div.divider:active {
+  background-color: #888;
+}
+.AhaWiki .edit > div.ui > form > div.right {
+  flex: 1;
+}
+.AhaWiki .edit > div.ui > form > div.right > div.preview > div.previewPane {
+  border: 1px solid #ccc;
+  background: url('/public/img/imageDraftVersion.png');
 }
 @media print {
   .AhaWiki .header,

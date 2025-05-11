@@ -225,36 +225,39 @@
         $(function () {
             const wikipediaToSchema = window.AhaWiki.WikipediaToSchema;
             const convertWikipediaToSchemaOrg = wikipediaToSchema.convertWikipediaToSchemaOrg;
-            $('.fetchInfoBoxFromWikipedia').click(async () => {
-                const page = prompt('Enter the Wikipedia page name', "@page.name");
-                if (!page)
-                    return false;
+            $('.fetchInfoBoxFromWikipedia').click(e => {
+                (async e => {
+                    const page = prompt('Enter the Wikipedia page name', "@page.name");
+                    if (!page)
+                        return false;
 
-                const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
-                    lang,
-                    arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page),
-                }))))
-                    .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
-                    .map(v => ({...v, content: convertWikipediaToSchemaOrg(v.arrayArrayValue)}))
-                    .filter(v => v.content);
+                    const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
+                        lang,
+                        arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page),
+                    }))))
+                            .filter(v => v.arrayArrayValue && Array.isArray(v.arrayArrayValue))
+                            .map(v => ({...v, content: convertWikipediaToSchemaOrg(v.arrayArrayValue)}))
+                            .filter(v => v.content);
 
-                if(!arrayResult.length) {
-                    alert('No infobox found');
-                    return false;
-                }
+                    if(!arrayResult.length) {
+                        alert('No infobox found');
+                        return false;
+                    }
 
-                $('textarea[name=text]')
-                    .insertAtCaret(arrayResult
-                        .map(v => `
+                    $('textarea[name=text]')
+                            .insertAtCaret(arrayResult
+                                    .map(v => `
 [[[#!Schema
 ${v.content}
 # API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
 sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
 ]]]
                         `.trim() + '\n\n')
-                        .join('\n\n'),
-                    )
-                    .change();
+                                    .join('\n\n'),
+                            )
+                            .change();
+                    return false;
+                })(e)
                 return false;
             });
         });
@@ -296,80 +299,95 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
             });
         });
     </script>
+    <script type="text/javascript">
+        $(function () {
+            const divider = document.querySelector('div.ui > form > .divider');
+            const left = document.querySelector('div.ui > form > div.left');
+
+            let isDragging = false;
+            divider.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                document.body.style.userSelect = 'none'; // 텍스트 선택 방지
+            });
+
+            document.addEventListener("mousemove", (e) => {
+                if (!isDragging)
+                    return;
+
+                // TODO: console.log all x coordinates
+                console.log(e.x, left.getBoundingClientRect().left);
+
+
+                const dividerWidthWithMargin = 25;
+                const newWidth = e.clientX - left.getBoundingClientRect().left - dividerWidthWithMargin / 2;
+                left.style.width = `${newWidth}px`;
+            });
+
+            document.addEventListener("mouseup", () => {
+                isDragging = false;
+                document.body.style.userSelect = ''; // 원상 복구
+            });
+        });
+    </script>
     <div class="wikiContent">
         <div class="limitWidth">
             <h1>Edit - <a href="?">@page.name</a></h1>
         </div>
         <div class="limitWidth">
             <div class="edit">
-
-                @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
-                    <table class="layout">
-                        <thead>
-                            <tr>
-                                <td class="action left">
-                                    <label>
-                                        <input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")
-                                    </label>
-                                </td>
-                                <td class="action right">
-                                    <a class="fetchInfoBoxFromWikipedia" type="button">
-                                        <i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")
-                                    </a>
-                                </td>
-                                <td class="action left">
-
-                                </td>
-                                <td class="action right">
+                <div class="ui">
+                    @form(routes.Wiki.save(page.name), Symbol("class") -> "form") {
+                        @CSRF.formField
+                        <input type="hidden" name="revision" value="@page.revision"/>
+                        <input type="hidden" id="recaptcha" name="recaptcha">
+                        <div class="left">
+                            <div class="toolbar">
+                                <div class="toolbarLeft">
+                                    <label><input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")</label>
+                                </div>
+                                <div class="toolbarRight">
+                                    <a class="fetchInfoBoxFromWikipedia" href="#"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>
+                                </div>
+                            </div>
+                            <div class="editorBody">
+                                <textarea name="text" autofocus="autofocus">@page.content</textarea>
+                            </div>
+                            <div class="editorAdditional">
+                                <div class="toolbarLeft">
+                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
+                                    <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
+                                </div>
+                                <div class="toolbarRight">
+                                @if(page.revision != 0) {
+                                    <label><input type="submit" value="Save"/>@kbdHotKeyAlt("S")</label>
+                                }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="right">
+                            <div class="toolbar">
+                                <div class="toolbarLeft">
+                                </div>
+                                <div class="toolbarRight">
                                     @if(page.revision != 0) {
                                         <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename@kbdHotKeyAlt("R")</a>
                                         <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete@kbdHotKeyAlt("T")</a>
                                     }
-                                </td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="left" colspan="2" style="width: 50%;">
-                                    @CSRF.formField
-                                    <input type="hidden" name="revision" value="@page.revision"/>
-                                    <input type="hidden" id="recaptcha" name="recaptcha">
-                                    <textarea name="text" style="min-height: 490px;" autofocus="autofocus">@page.content</textarea>
-                                </td>
-                                <td class="right" colspan="2" style="width: 50%;">
-                                    <div class="previewPane" style="min-height: 500px;"></div>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <td class="action left">
-                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
-
-                                </td>
-                                <td class="action right">
-                                    @if(page.revision != 0) {
-                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
-                                    }
-                                </td>
-                                <td class="action left">
-
-                                </td>
-                                <td class="action right">
-
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="action left" colspan="4">
-                                    <label>
-                                        <input type="submit" value="Save"/>@kbdHotKeyAlt("S")
-                                    </label>
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                }
-
+                                </div>
+                            </div>
+                            <div class="preview">
+                                <div class="previewPane"></div>
+                            </div>
+                            <div class="previewAdditional">
+                                <div class="toolbarLeft">
+                                </div>
+                                <div class="toolbarRight">
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>
