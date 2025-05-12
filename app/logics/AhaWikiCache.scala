@@ -39,8 +39,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         val result = orElse()
         logger.info(s"Cache\tFill\t${key()} = ${result match {
           case s: String => s"${s.replaceAll("\n", "|||").take(200)}... size == ${s.size}"
-          case seq: Seq[Any] => s"Seq[${seq.grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
-          case set: Set[Any] => s"Set[${set.grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${set.size}"
+          case seq: Seq[_] => s"Seq[${seq.take(100).grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
+          case set: Set[_] => s"Set[${set.take(100).grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${set.size}"
           case _ => result.getClass.getName
         }}")
         result

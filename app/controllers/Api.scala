@@ -11,6 +11,7 @@ import logics.SiteLogic
 import logics.wikis.PageLogic
 import models.Adjacent
 import models.ContextSite
+import models.ContextWikiPage
 import models.RequestWrapper
 import models.tables.Link
 import models.tables.Page
@@ -75,12 +76,10 @@ class Api @Inject()(
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
 
+      val seqPage: Seq[PageWithoutContentWithSize] = contextWikiPage.seqPageByPermission
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
-
-      // TODO: fix to apply permission
-      val seqPage: Seq[PageWithoutContentWithSize] = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get()
 
       val totalSize: Long = seqPage.map(_.size).sum
 
@@ -89,9 +88,10 @@ class Api @Inject()(
       )
       val value2: Map[String, Long] = Map(
         "totalSize" -> totalSize,
-        "pageCount" -> seqPage.length.toLong,
-        "count" -> Page.selectCount(),
+        "pageCount" -> seqPage.length,
+        "count" -> seqPage.length,
       )
+
       val json1: Json = value1.asJson
       val json2: Json = value2.asJson
 
