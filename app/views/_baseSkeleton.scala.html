@@ -1,7 +1,5 @@
-@import play.api.db.Database
-@import logics.ApplicationConf
 @import models.ContextSite
-@(title: String, description: String)(head: Html)(body: Html)(implicit host: String, database:Database, applicationConf: ApplicationConf, contextSite: ContextSite)
+@(title: String, description: String)(head: Html)(body: Html)(implicit contextSite: ContextSite)
 <!DOCTYPE html>
 
 <html lang="en">
@@ -9,7 +7,7 @@
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-        <title>@title - @host</title>
+        <title>@title - @contextSite.requestWrapper.host</title>
         <meta name="viewport" content="width=device-width,initial-scale=1">
 
         <meta itemprop="name" content="@(title)">
@@ -47,7 +45,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/config/TeX-AMS_HTML.js" integrity="sha256-MZuxbOGocfrefUyrW6qNzjtj51TdsXJybGQ5F5fjS7A=" crossorigin="anonymous"></script>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/vivagraphjs/0.12.0/vivagraph.min.js" integrity="sha256-kKQdUhGEwWzNj3itlPXnaVunrFXAnCsNbFXLKKUcago=" crossorigin="anonymous"></script>
-        @if(applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
+        @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
             <script type="text/javascript">
                 var arrayOnGoogleMapLoaded = [];
                 var objectMap = {};
@@ -59,8 +57,8 @@
                 }
             </script>
         }
-        @if(applicationConf.AhaWiki.google.AdSense.adClient()) {
-            <script data-ad-client="@(applicationConf.AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+        @if(contextSite.applicationConf.AhaWiki.google.AdSense.adClient()) {
+            <script data-ad-client="@(contextSite.applicationConf.AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.0.0/echarts.min.js" integrity="sha512-ZRdjJAYP8Kij8Lkln9uiGj0jIrMDLAALm1ZB2b3VfV9XJ0nR4zbJmHKB42/A4tgMlZS4DTPnSAmcYRoS0dginA==" crossorigin="anonymous"></script>
@@ -87,8 +85,8 @@
     <body class="AhaWiki no-mathjax">
         @body
 
-        @if(applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
-            <script async defer src="https://maps.googleapis.com/maps/api/js?loading=async&libraries=marker&key=@(applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
+        @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
+            <script async defer src="https://maps.googleapis.com/maps/api/js?loading=async&libraries=marker&key=@(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
         }
 
         @_googleAnalytics()

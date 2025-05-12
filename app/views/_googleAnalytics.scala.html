@@ -1,8 +1,7 @@
 @import models.ContextSite
-@import play.api.db.Database
-@()(implicit database:Database, contextSite: ContextSite)
+@()(implicit contextSite: ContextSite)
 
-@for(trackingId <- database.withConnection { implicit conn =>
+@for(trackingId <- contextSite.database.withConnection { implicit conn =>
     Seq(logics.AhaWikiConfig().google.analytics.trackingId())
 }) {
     @if(trackingId) {

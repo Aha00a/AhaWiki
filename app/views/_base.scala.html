@@ -1,11 +1,11 @@
-@(title: String, description: String)(head: Html)(body: Html)(implicit wikiContext: models.ContextSite)
+@(title: String, description: String)(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
 @_baseSkeleton(title, description){
     @head
 } {
     <div class="header">
-        @Html(wikiContext.ahaWikiCache.Header.get())
+        @Html(contextSite.ahaWikiCache.Header.get())
     </div>
-    @if(wikiContext.requestWrapper.host.startsWith("localhost:")) {
+    @if(contextSite.requestWrapper.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
             <div class="error">
                 localhost
@@ -13,16 +13,16 @@
         </div>
     }
     @for(f <- Seq("success", "error")) {
-        @if(wikiContext.requestWrapper.flashGet(f)) {
+        @if(contextSite.requestWrapper.flashGet(f)) {
             <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
                 <div class="@f">
-                    @Html(wikiContext.requestWrapper.flashGet(f).getOrElse(""))
+                    @Html(contextSite.requestWrapper.flashGet(f).getOrElse(""))
                 </div>
             </div>
         }
     }
     @body
     <div class="footer">
-        @Html(wikiContext.ahaWikiCache.Footer.get())
+        @Html(contextSite.ahaWikiCache.Footer.get())
     </div>
-}(wikiContext.requestWrapper.host, wikiContext.database, wikiContext.applicationConf, wikiContext)
+}(contextSite)
