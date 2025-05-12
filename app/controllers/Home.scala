@@ -21,7 +21,7 @@ class Home @Inject() (
 
   def random: Action[AnyContent] = Action { implicit request =>
     import com.aha00a.commons.utils.UriUtil
-    import models.ContextSite.RequestWrapper
+    import models.RequestWrapper
 
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>

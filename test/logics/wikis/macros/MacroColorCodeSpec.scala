@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import logics.wikis.RenderingMode
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import models.ContextWikiPage
 import models.tables.Site
 import org.scalatest.freespec.AnyFreeSpec

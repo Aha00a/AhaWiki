@@ -4,7 +4,7 @@ import akka.actor.ActorRef
 import logics.ApplicationConf
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import models.tables.Site
 import play.api.db.Database
 import play.api.mvc.Request

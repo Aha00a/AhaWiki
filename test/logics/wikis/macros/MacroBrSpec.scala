@@ -6,7 +6,7 @@ class MacroBrSpec extends AnyFreeSpec {
   "name" in {
     import logics.wikis.RenderingMode
     import models.ContextWikiPage
-    import models.ContextSite.RequestWrapper
+    import models.RequestWrapper
     import models.tables.Site
 
     implicit val site: Site = Site.notFound

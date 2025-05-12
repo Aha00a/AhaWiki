@@ -304,7 +304,7 @@ class Test @Inject()(implicit val
 
   def permission: Action[AnyContent] = Action { implicit request =>database.withConnection { implicit connection =>
 
-    import models.ContextSite.RequestWrapper
+    import models.RequestWrapper
     import models.tables.Site
     import play.api.Mode
 

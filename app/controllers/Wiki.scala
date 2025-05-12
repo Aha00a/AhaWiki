@@ -14,7 +14,7 @@ import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.WikiSnippet
 import logics.wikis.interpreters.Interpreters
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import models._
 import models.tables.CalculatedCosineSimilarity
 import models.tables.Page

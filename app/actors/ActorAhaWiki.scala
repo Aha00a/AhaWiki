@@ -6,7 +6,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.ApplicationConf
 import logics.wikis.PageLogic
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import models.LatLng
 import models.tables.GeocodeCache
 import models.tables.Site

@@ -27,7 +27,7 @@ import scala.collection.immutable
 
 object PageLogic {
 
-  import models.ContextSite.RequestWrapper
+  import models.RequestWrapper
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 

@@ -20,7 +20,7 @@ class Feed @Inject()(
   }
 
   def atom: Action[AnyContent] = Action { implicit request =>
-    import models.ContextSite.RequestWrapper
+    import models.RequestWrapper
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
       def toXml: NodeBuffer =
         <title>{title}</title>

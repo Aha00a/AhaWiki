@@ -2,7 +2,7 @@ package logics.wikis.interpreters
 
 import logics.wikis.RenderingMode
 import models.ContextWikiPage
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import org.scalatest.freespec.AnyFreeSpec
 import models.tables.Site
 

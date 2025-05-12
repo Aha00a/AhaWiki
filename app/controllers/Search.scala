@@ -30,7 +30,7 @@ controllerComponents: ControllerComponents,
 
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
-    import models.ContextSite.RequestWrapper
+    import models.RequestWrapper
     import models.tables.SearchResultSummary
     import models.tables.Site
     implicit val site: Site = Site.get(request.host)

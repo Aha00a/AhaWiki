@@ -9,7 +9,7 @@ import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.Adjacent
 import models.ContextSite
-import models.ContextSite.RequestWrapper
+import models.RequestWrapper
 import models.tables.Link
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
