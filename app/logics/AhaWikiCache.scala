@@ -30,7 +30,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     def keyDefault()(implicit @unused i: I): String = s"${getClass.getName}"
 
     def invalidate()(implicit i: I): Unit = {
-      StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
+      StopWatch(Seq("Cache", "Invalidate", key()).mkString("\t")) {
         syncCacheApi.remove(key())
       }
     }
