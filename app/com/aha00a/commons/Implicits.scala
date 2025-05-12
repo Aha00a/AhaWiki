@@ -93,6 +93,10 @@ object Implicits {
       val ranges = -1 +: cutIndices :+ seq.length - 1
       ranges.sliding(2).map(i => seq.slice(i.head + 1, i.last + 1))
     }
+    def any(p: T => Boolean): Boolean = seq.exists(p)
+    def some(p: T => Boolean): Boolean = seq.exists(p)
+    def all(p: T => Boolean): Boolean = seq.forall(p)
+    def every(p: T => Boolean): Boolean = seq.forall(p)
   }
 
   implicit class RichTuple2IteratorT[T](t:(Iterator[T], Iterator[T])) {
