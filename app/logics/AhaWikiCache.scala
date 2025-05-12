@@ -112,7 +112,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   object Page {
     object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
       override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
-        implicit val site: Site = t2._2
+        implicit val (_, site: Site) = t2
         models.tables.Page.selectSeqPageWithoutContentWithSizeLatest()
       }
     }

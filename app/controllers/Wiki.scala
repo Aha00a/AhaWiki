@@ -241,40 +241,46 @@ class Wiki @Inject()(implicit val
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
-          Forbidden("")
+          Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
+        } else if (revision != latestRevision) {
+          Conflict("revision != latestRevision")
+        } else if (body == latestText) {
+          BadRequest("body == latestText")
         } else {
-          if (revision != latestRevision) {
-            Conflict("")
-          } else {
-            val now = new Date()
-            val dateTime = if (minorEdit) latestTime else now
-            val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
-            PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
+          val now = new Date()
+          val dateTime = if (minorEdit) latestTime else now
+          val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
+          PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
 
-            name match {
-              case ".header" => ahaWikiCache.Header.invalidate()
-              case ".footer" => ahaWikiCache.Footer.invalidate()
-              case ".config" => ahaWikiCache.Config.invalidate()
-            }
-
-            Ok("")
+          name match {
+            case ".header" => ahaWikiCache.Header.invalidate()
+            case ".footer" => ahaWikiCache.Footer.invalidate()
+            case ".config" => ahaWikiCache.Config.invalidate()
+            case _ => // do nothing
           }
+
+          if (revision == 0) {
+            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+          }
+
+          Ok("")
         }
       }
     }
 
-    if (secretKey != "") {
+    if (secretKey.isNotNullOrEmpty && recaptcha.isNotNullOrEmpty) {
       wsClient.url("https://www.google.com/recaptcha/api/siteverify").post(Map(
         "secret" -> Seq(secretKey),
         "response" -> Seq(recaptcha),
         "remoteip" -> Seq(remoteAddress)
       )).map(response => {
-        // logger.info(response.body)
+         logger.info(response.body.replaceAll("""\s+""", " "))
         val json: JsValue = response.json
         if (!(json \ "success").as[Boolean]) {
           val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
           logger.error(s"robot - ${errorCodes.mkString("\t")}")
-          Forbidden("")
+          Forbidden("reCAPTCHA failed")
         } else {
           doSave()
         }

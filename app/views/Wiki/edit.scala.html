@@ -90,6 +90,19 @@
                     location.href = location.pathname;
                 },
                 error: function (jqXHR) {
+                    if(jqXHR.status === 403) {
+                        alert(`Permission denied - ${jqXHR.responseText}`);
+                        return;
+                    }
+                    if(jqXHR.status === 409) {
+                        alert(`Conflict - ${jqXHR.responseText}`);
+                        return;
+                    }
+                    if(jqXHR.status === 400 && jqXHR.responseText === "body == latestText") {
+                        alert("You are trying to save the same content");
+                        return;
+                    }
+
                     alert(jqXHR.statusText);
                 }
             });
@@ -356,12 +369,12 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                             <div class="editorAdditional">
                                 <div class="toolbarLeft">
                                     <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
-                                    <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
+                                    @if(page.revision != 0) {
+                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
+                                    }
                                 </div>
                                 <div class="toolbarRight">
-                                @if(page.revision != 0) {
                                     <label><input type="submit" value="Save"/>@kbdHotKeyAlt("S")</label>
-                                }
                                 </div>
                             </div>
                         </div>
