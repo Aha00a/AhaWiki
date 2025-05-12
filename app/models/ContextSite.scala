@@ -46,13 +46,17 @@ class ContextSite()(
   val requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
+  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+  lazy val setPageName: Set[String] = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().map(_.name).toSet
+
   lazy val seqPageByPermission: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
     PageLogic.getListPageByPermission()(requestWrapper, connection, this)
   }
+
   lazy val seqPageNameByPermission: Seq[String] = seqPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
 
-  def pageCanSee(name: String): Boolean = setPageNameByPermission.contains(name)
+  def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)
 
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
 }
