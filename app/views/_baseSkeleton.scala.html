@@ -1,7 +1,7 @@
 @import play.api.db.Database
 @import logics.ApplicationConf
-@import models.tables.Site
-@(title: String, description: String)(head: Html)(body: Html)(implicit host: String, database:Database, applicationConf: ApplicationConf, site: Site)
+@import models.ContextSite
+@(title: String, description: String)(head: Html)(body: Html)(implicit host: String, database:Database, applicationConf: ApplicationConf, contextSite: ContextSite)
 <!DOCTYPE html>
 
 <html lang="en">

@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.Adjacent
@@ -32,6 +33,7 @@ class Api @Inject()(
                      database: Database,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      applicationConf: ApplicationConf,
+                     ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                    ) extends BaseController {
@@ -54,6 +56,7 @@ class Api @Inject()(
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
       implicit val site: Site = Site.get(request.host)
+      implicit val contextSite: ContextSite = ContextSite()
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
     }
   }

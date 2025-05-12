@@ -1,6 +1,7 @@
 package models
 
 import akka.actor.ActorRef
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.RenderingMode
 import logics.wikis.RenderingMode.RenderingMode
@@ -15,6 +16,7 @@ object ContextWikiPage {
     database: Database,
     actorAhaWiki: ActorRef,
     applicationConf: ApplicationConf,
+    ahaWikiCache: AhaWikiCache,
     site: Site
   ): ContextWikiPage = {
     implicit val provider: RequestWrapper = RequestWrapper()
@@ -27,6 +29,7 @@ object ContextWikiPage {
     database: Database,
     actorAhaWiki: ActorRef,
     applicationConf: ApplicationConf,
+    ahaWikiCache: AhaWikiCache,
     site: Site
   ): ContextWikiPage = {
     implicit val provider: RequestWrapper = RequestWrapper()
@@ -39,6 +42,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   database: Database,
   actorAhaWiki: ActorRef,
   applicationConf: ApplicationConf,
+  ahaWikiCache: AhaWikiCache,
   requestWrapper: RequestWrapper,
   site: Site,
 ) extends ContextSite {

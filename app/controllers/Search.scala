@@ -3,6 +3,7 @@ package controllers
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
@@ -24,6 +25,7 @@ controllerComponents: ControllerComponents,
                        environment: Environment,
                        @Named("db-actor") actorAhaWiki: ActorRef,
                        applicationConf: ApplicationConf,
+                       ahaWikiCache: AhaWikiCache,
                        wsClient: WSClient,
                        executionContext: ExecutionContext
                       ) extends BaseController with Logging {

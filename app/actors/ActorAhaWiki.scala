@@ -4,6 +4,7 @@ import actors.ActorAhaWiki._
 import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.RequestWrapper
@@ -21,32 +22,25 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 object ActorAhaWiki {
-
-  def props: Props = Props[ActorAhaWiki]
-
   case class Calculate(site: Site, name: String, i: Int = 0, length: Int = 1)
-
   case class Geocode(address: String)
-
 }
 
-class ActorAhaWiki @Inject()(implicit
-                             database: Database,
-                             wsClient: WSClient,
-                             executionContext: ExecutionContext,
-                             applicationConf: ApplicationConf
-                            ) extends Actor with Logging {
-
-
+class ActorAhaWiki @Inject()(
+  implicit
+  database: Database,
+  wsClient: WSClient,
+  executionContext: ExecutionContext,
+  applicationConf: ApplicationConf,
+  ahaWikiCache: AhaWikiCache,
+) extends Actor with Logging {
   implicit val provider: RequestWrapper = RequestWrapper.empty
-
 
   //noinspection ScalaUnusedSymbol
   def receive: PartialFunction[Any, Unit] = {
     case c@Calculate(site: Site, name: String, i: Int, length: Int) =>
       StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\t(${i + 1}/$length)") {
         database.withConnection { implicit connection =>
-          implicit val implicitActorRef: ActorAhaWiki = this;
           implicit val implicitLogger: Logger = logger
           implicit val implicitSite: Site = site
           PageLogic.calculate(name)

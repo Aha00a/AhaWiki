@@ -2,7 +2,6 @@ package models
 
 import akka.actor.ActorRef
 import logics.ApplicationConf
-import models.RequestWrapper
 import play.api.db.Database
 
 class Context()(

@@ -1,6 +1,7 @@
 package models
 
 import akka.actor.ActorRef
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode.RenderingMode
@@ -11,12 +12,12 @@ import play.api.db.Database
 import play.api.mvc.Request
 
 object ContextSite {
-
   def apply()(
     implicit
     database: Database,
     actorAhaWiki: ActorRef,
     applicationConf: ApplicationConf,
+    ahaWikiCache: AhaWikiCache,
     request: Request[Any],
     site: Site,
   ): ContextSite = {
@@ -29,6 +30,7 @@ object ContextSite {
     database: Database,
     actorAhaWiki: ActorRef,
     applicationConf: ApplicationConf,
+    ahaWikiCache: AhaWikiCache,
     site: Site,
   ): ContextSite = {
     implicit val provider: RequestWrapper = RequestWrapper.empty
@@ -41,6 +43,7 @@ class ContextSite()(
   database: Database,
   actorAhaWiki: ActorRef,
   applicationConf: ApplicationConf,
+  val ahaWikiCache: AhaWikiCache,
   requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
@@ -51,7 +54,7 @@ class ContextSite()(
     ) = database.withConnection { implicit connection =>
     (
       Page.selectSeqPageName().toSet,
-      PageLogic.getListPageByPermission()
+      PageLogic.getListPageByPermission()(requestWrapper, connection, this)
     )
   }
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)

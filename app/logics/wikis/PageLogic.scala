@@ -8,6 +8,7 @@ import anorm.SqlParser.str
 import anorm.SqlStringInterpolation
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
+import logics.AhaWikiCache
 import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
@@ -42,7 +43,8 @@ object PageLogic {
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
 
-  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): List[PageWithoutContentWithSize] = {
+    implicit val site: Site = contextSite.site
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
@@ -59,6 +61,7 @@ object PageLogic {
     database: Database,
     connection: Connection,
     applicationConf: ApplicationConf,
+    ahaWikiCache: AhaWikiCache,
     actorAhaWiki: ActorRef,
     requestWrapper: RequestWrapper,
     logger: Logger,

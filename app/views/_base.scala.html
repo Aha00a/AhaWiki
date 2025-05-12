@@ -3,7 +3,7 @@
     @head
 } {
     <div class="header">
-        @Html(logics.AhaWikiCache.Header.get())
+        @Html(wikiContext.ahaWikiCache.Header.get())
     </div>
     @if(wikiContext.requestWrapper.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
@@ -23,6 +23,6 @@
     }
     @body
     <div class="footer">
-        @Html(logics.AhaWikiCache.Footer.get())
+        @Html(wikiContext.ahaWikiCache.Footer.get())
     </div>
-}(wikiContext.requestWrapper.host, wikiContext.database, wikiContext.applicationConf, wikiContext.site)
+}(wikiContext.requestWrapper.host, wikiContext.database, wikiContext.applicationConf, wikiContext)

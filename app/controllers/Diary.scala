@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
@@ -26,6 +27,7 @@ class Diary @Inject()(implicit val
                       database: Database,
                       @Named("db-actor") actorAhaWiki: ActorRef,
                       applicationConf: ApplicationConf,
+                      ahaWikiCache: AhaWikiCache,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
                      ) extends BaseController {

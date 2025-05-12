@@ -6,6 +6,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.PermissionLogic
 import logics.SessionLogic
@@ -34,6 +35,7 @@ class Test @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      applicationConf: ApplicationConf,
+                     ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
@@ -295,9 +297,7 @@ class Test @Inject()(implicit val
 
   def gradient: Action[AnyContent] = Action { implicit request =>
     import models.tables.Site
-    implicit val site: Site = database.withConnection { implicit connection =>
-      Site.get(request.host)
-    }
+    implicit val site: Site = database.withConnection { implicit connection => Site.get(request.host) }
     implicit val context: ContextSite = ContextSite()
     Ok(views.html.Test.gradient(""))
   }

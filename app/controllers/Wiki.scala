@@ -48,6 +48,7 @@ class Wiki @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      applicationConf: ApplicationConf,
+                     ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
                     ) extends BaseController with Logging {
@@ -249,6 +250,13 @@ class Wiki @Inject()(implicit val
             val dateTime = if (minorEdit) latestTime else now
             val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
             PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
+
+            name match {
+              case ".header" => ahaWikiCache.Header.invalidate()
+              case ".footer" => ahaWikiCache.Footer.invalidate()
+              case ".config" => ahaWikiCache.Config.invalidate()
+            }
+
             Ok("")
           }
         }

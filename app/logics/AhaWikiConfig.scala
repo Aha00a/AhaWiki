@@ -1,19 +1,19 @@
 package logics
 
-import models.tables.Site
-
-import java.sql.Connection
+import models.ContextSite
 
 // TODO: fix to use models.tables.Config
 
 object AhaWikiConfig {
 
-  import models.tables.Site
-
-  def apply()(implicit connection: Connection, site: Site) = new AhaWikiConfig()
+  def apply()(implicit contextSite: ContextSite) = new AhaWikiConfig()
 }
 
-class AhaWikiConfig(implicit connection: Connection, site: Site) {
+class AhaWikiConfig(implicit contextSite: ContextSite) {
+  def hocon(): Hocon = {
+    new Hocon(contextSite.ahaWikiCache.Config.get())
+  }
+
   object permission {
     object default {
       def read(): String = hocon().getOrElse(fqn, "all")
@@ -25,10 +25,6 @@ class AhaWikiConfig(implicit connection: Connection, site: Site) {
     object analytics {
       def trackingId(): String = hocon().getOrElse(fqn, "")
     }
-  }
-
-  def hocon(): Hocon = {
-    new Hocon(AhaWikiCache.Config.get())
   }
 
   private def fqn: String = {
