@@ -2,9 +2,8 @@ package logics.wikis
 
 import logics.AhaWikiConfig
 import models.ContextSite
-import models.RequestWrapper
 import models.PageContent
-import models.tables.Site
+import models.RequestWrapper
 
 import java.sql.Connection
 
