@@ -18,13 +18,13 @@ object MacroRecentChangesList extends TraitMacro {
     implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {
-      case "" | null => toHtmlString(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc))
-      case regexDigits(i) => toHtmlString(wikiContext.listPageByPermission.sortBy(_.dateTime)(desc).take(i.toInt))
+      case "" | null => toHtmlString(wikiContext.seqPageByPermission.sortBy(_.dateTime)(desc))
+      case regexDigits(i) => toHtmlString(wikiContext.seqPageByPermission.sortBy(_.dateTime)(desc).take(i.toInt))
       case _ => MacroError.toHtmlString(s"Bad argument - [[$name($argument)]]")
     }
   }
 
-  def toHtmlString(list: List[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
+  def toHtmlString(list: Seq[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
     InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${p.comment} by [${p.author}]""").mkString("\n"))
   }
 }

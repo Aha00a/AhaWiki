@@ -43,16 +43,21 @@ object PageLogic {
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
 
-  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): List[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): Seq[PageWithoutContentWithSize] = {
     implicit val site: Site = contextSite.site
+    implicit val tupleDatabaseSite: (Database, Site) = (contextSite.database, site)
+
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
     val optionId = provider.getId
-    val list: List[PageWithoutContentWithSize] = Page.pageSelectPageList()
+
+    val list: Seq[PageWithoutContentWithSize] = contextSite.ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get()
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })
+    // TODO: caching?
+
     listFiltered
   }
 

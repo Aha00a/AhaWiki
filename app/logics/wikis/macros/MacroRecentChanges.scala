@@ -8,7 +8,7 @@ object MacroRecentChanges extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     InterpreterWiki.toHtmlString(
-      wikiContext.listPageByPermission.groupBy(_.year).toList.sortBy(_._1)(desc).map {
+      wikiContext.seqPageByPermission.groupBy(_.year).toList.sortBy(_._1)(desc).map {
         case (year, groupedByYear) =>
           s"== $year\n" +
             groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {

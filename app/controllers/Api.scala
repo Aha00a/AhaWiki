@@ -75,8 +75,13 @@ class Api @Inject()(
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
+      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
-      val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
+
+      // TODO: fix to apply permission
+      val seqPage: Seq[PageWithoutContentWithSize] = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get()
+
       val totalSize: Long = seqPage.map(_.size).sum
 
       val value1: Map[String, Seq[(String, Long)]] = Map(

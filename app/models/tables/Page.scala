@@ -54,10 +54,6 @@ object Page {
     SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
   }
 
-  def selectDistinctSeqPageName()(implicit connection: Connection, site: Site): Seq[String] = {
-    SQL"SELECT DISTINCT name FROM Page WHERE site = ${site.seq}".as(str("name") *)
-  }
-
   def select(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
     if (revision == 0) {
       selectLastRevision(name)
@@ -128,7 +124,7 @@ object Page {
   }
 
   // TODO: remove IFNULL(permRead) and fix schema
-  def pageSelectPageList()(implicit connection: Connection, site: Site): List[PageWithoutContentWithSize] = {
+  def selectSeqPageWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageWithoutContentWithSize] = {
     SQL"""
         SELECT P1.name, P1.revision, P1.dateTime, P1.author, P1.remoteAddress, P1.comment, IFNULL(P1.permRead, '') permRead, LENGTH(P1.content) size
             FROM Page P1

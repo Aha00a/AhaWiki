@@ -5,7 +5,7 @@ import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
 import models.ContextSite
 import models.ContextWikiPage
-import models.tables.Page
+import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import models.tables.SiteDomain
 import play.api.Environment
@@ -112,10 +112,10 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object Page {
-    object SetPageName extends CacheEntity[Set[String], (Database, Site)] {
-      override def orElse()(implicit t2: (Database, Site)): Set[String] = t2._1.withConnection { implicit connection =>
+    object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
+      override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
         implicit val site: Site = t2._2
-        models.tables.Page.selectDistinctSeqPageName().toSet
+        models.tables.Page.selectSeqPageWithoutContentWithSizeLatest()
       }
     }
   }
