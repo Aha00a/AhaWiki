@@ -1,16 +1,14 @@
 package controllers
 
-import java.time.LocalDateTime
-
-import javax.inject.Inject
-import logics.AhaWikiCache
 import logics.wikis.PageLogic
 import models.tables.PageWithoutContentWithSize
-import play.api.cache.SyncCacheApi
-import play.api.mvc._
 import models.tables.Site
+import play.api.mvc._
 
-import scala.xml.{Elem, NodeBuffer}
+import java.time.LocalDateTime
+import javax.inject.Inject
+import scala.xml.Elem
+import scala.xml.NodeBuffer
 
 class Feed @Inject()(
                       implicit val
