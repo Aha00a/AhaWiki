@@ -26,7 +26,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     //noinspection ScalaWeakerAccess
     val durationExpire: FiniteDuration = if (environment.mode == Dev) 5.minute else 1.hour
 
-    def key()(implicit i: I): String = s"${getClass.getName}"
+    def key()(implicit i: I): String
+    def keyDefault()(implicit @unused i: I): String = s"${getClass.getName}"
 
     def invalidate()(implicit i: I): Unit = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
@@ -62,11 +63,13 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
 
   object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
+    override def key()(implicit i: Database): String = keyDefault
     override def orElse()(implicit database: Database): Seq[SiteDomain] = database.withConnection { implicit connection =>
       models.tables.SiteDomain.select()
     }
 
     object Map extends CacheEntityWithDatabase[Map[String, SiteDomain]] {
+      override def key()(implicit i: Database): String = keyDefault
       override def orElse()(implicit database: Database): Map[String, SiteDomain] = {
         SiteDomain.get().map(sd => (sd.domain, sd)).toMap
       }
@@ -74,10 +77,12 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object Site extends CacheEntityWithDatabase[Seq[Site]] {
+    override def key()(implicit i: Database): String = keyDefault
     override def orElse()(implicit database: Database): Seq[Site] = database.withConnection { implicit connection =>
       models.tables.Site.select()
     }
     object Map extends CacheEntityWithDatabase[Map[Long, Site]] {
+      override def key()(implicit i: Database): String = keyDefault
       override def orElse()(implicit database: Database): Map[Long, Site] = {
         Site.get().map(sd => (sd.seq, sd)).toMap
       }
@@ -111,6 +116,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   object Page {
     object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
+      override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
       override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
         implicit val (_, site: Site) = t2
         models.tables.Page.selectSeqPageWithoutContentWithSizeLatest()
