@@ -11,6 +11,8 @@ import models.tables.Site
 import play.api.db.Database
 import play.api.mvc.Request
 
+import scala.reflect.classTag
+
 object ContextSite {
   def apply()(
     implicit
@@ -47,20 +49,15 @@ class ContextSite()(
   val requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
-  //noinspection ScalaWeakerAccess
-  lazy val (
-    setPageNameAll: Set[String],
-    listPageByPermission: List[PageWithoutContentWithSize]
-    ) = database.withConnection { implicit connection =>
-    (
-      Page.selectSeqPageName().toSet,
-      PageLogic.getListPageByPermission()(requestWrapper, connection, this)
-    )
+  val setPageName: Set[String] = ahaWikiCache.Page.SetPageName.get()((database, site), classTag[Set[String]])
+
+  lazy val listPageByPermission: List[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
+    PageLogic.getListPageByPermission()(requestWrapper, connection, this)
   }
   lazy val seqPageNameByPermission: Seq[String] = listPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
 
-  def pageCanSee(name: String): Boolean = !setPageNameAll.contains(name) || setPageNameByPermission.contains(name)
+  def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)
 
   def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
 }

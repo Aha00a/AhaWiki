@@ -54,7 +54,7 @@ object Page {
     SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
   }
 
-  def selectSeqPageName()(implicit connection: Connection, site: Site): Seq[String] = {
+  def selectDistinctSeqPageName()(implicit connection: Connection, site: Site): Seq[String] = {
     SQL"SELECT DISTINCT name FROM Page WHERE site = ${site.seq}".as(str("name") *)
   }
 

@@ -39,7 +39,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         val result = orElse()
         logger.info(s"Cache\tFill\t${key()} = ${result match {
           case s: String => s"${s.replaceAll("\n", "|||").take(200)}... size == ${s.size}"
-          case seq: Seq[Any] => s"[${seq.grouped(5).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
+          case seq: Seq[Any] => s"Seq[${seq.grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
+          case set: Set[Any] => s"Set[${set.grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${set.size}"
           case _ => result.getClass.getName
         }}")
         result
@@ -53,9 +54,14 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     def orElse()(implicit database: Database): T
   }
 
+  trait CacheEntityWithSite[T] extends CacheEntity[T, Site] {
+    override def key()(implicit site: Site): String = s"${getClass.getSimpleName}:${site}"
+  }
+
   trait CacheEntityWithContextSite[T] extends CacheEntity[T, ContextSite] {
     override def key()(implicit contextSite: ContextSite): String = s"${getClass.getSimpleName}:${contextSite.site}"
   }
+
 
   object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
     override def orElse()(implicit database: Database): Seq[SiteDomain] = database.withConnection { implicit connection =>
@@ -86,7 +92,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
-      Interpreters.toHtmlString(Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header").toOption).getOrElse(""))
+      Interpreters.toHtmlString(models.tables.Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header").toOption).getOrElse(""))
     }
   }
 
@@ -94,15 +100,23 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
-      Interpreters.toHtmlString(Page.selectLastRevision(".footer").map(_.content).orElse(DefaultPageLogic.getOption(".footer").toOption).getOrElse(""))
+      Interpreters.toHtmlString(models.tables.Page.selectLastRevision(".footer").map(_.content).orElse(DefaultPageLogic.getOption(".footer").toOption).getOrElse(""))
     }
   }
 
   object Config extends CacheEntityWithContextSite[String] {
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val site: Site = contextSite.site
-      Page.selectLastRevision(".config").map(_.content).getOrElse("")
+      models.tables.Page.selectLastRevision(".config").map(_.content).getOrElse("")
+    }
+  }
+
+  object Page {
+    object SetPageName extends CacheEntity[Set[String], (Database, Site)] {
+      override def orElse()(implicit t2: (Database, Site)): Set[String] = t2._1.withConnection { implicit connection =>
+        implicit val site: Site = t2._2
+        models.tables.Page.selectDistinctSeqPageName().toSet
+      }
     }
   }
 }
-
