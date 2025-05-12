@@ -90,7 +90,7 @@ object InterpreterSchema extends TraitInterpreter {
                         {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
                         (D{MacroPeriod.toHtmlString(v)} from now)
                       </dd>
-                    case v if key.startsWith("address") =>
+                    case v if key.startsWith("address") || key == "location" =>
                       val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
 
                       <div class="address">
@@ -197,6 +197,9 @@ object InterpreterSchema extends TraitInterpreter {
         case "address" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
+        case "location" +: tail =>
+          val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
         case key +: tail =>
           tail
             .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
