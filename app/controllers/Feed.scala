@@ -4,7 +4,6 @@ import akka.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
-import logics.wikis.PageLogic
 import models.ContextSite
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
@@ -28,8 +27,8 @@ class Feed @Inject()(
     Redirect(routes.Feed.atom)
   }
 
+  // TODO: implement
   def atom: Action[AnyContent] = Action { implicit request =>
-    import models.RequestWrapper
     case class Feed(title:String, subtitle:String, linkSelf:String, link:String, id:String, updated:LocalDateTime) {
       def toXml: NodeBuffer =
         <title>{title}</title>
@@ -57,17 +56,14 @@ class Feed @Inject()(
             <email>{author}</email>
           </author>
         </entry>
-
     }
-    implicit val provider: RequestWrapper = RequestWrapper()
+
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextSite: ContextSite = ContextSite()
-    val seqPageSorted: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
-      PageLogic.getListPageByPermission().sortBy(_.dateTime)
-    }
-    val seqListLatest: Seq[PageWithoutContentWithSize] = seqPageSorted.reverse.take(30)
-    val feed = Feed("title", "subtitle", "linkSelf1", "link", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO
-    val entries = seqListLatest.map(p => Entry(p.name, "/w/" + p.name, "/w/" + p.name, p.name, p.localDateTime, p.name, p.name, p.author)) // TODO
+
+    val seqListLatest: Seq[PageWithoutContentWithSize] = contextSite.seqPageByPermission.sortBy(_.dateTime).reverse.take(30)
+    val feed = Feed(site.name, "", s"https://${request.host}", "", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO: id
+    val entries = seqListLatest.map(p => Entry(s"${p.name} - ${site.name}", s"/w/${p.name}", s"/w/${p.name}", p.name, p.localDateTime, p.name, p.name, p.author)) // TODO: summary, content
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}
