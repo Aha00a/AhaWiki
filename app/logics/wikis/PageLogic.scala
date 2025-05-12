@@ -113,8 +113,8 @@ object PageLogic {
     }
   }
 
-  def selectHighScoredTerm(name:String, similarPageNames:Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
-    if(similarPageNames.isEmpty) {
+  def selectHighScoredTerm(name: String, similarPageNames: Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
+    if (similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
       SQL"""
