@@ -55,10 +55,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     def orElse()(implicit database: Database): T
   }
 
-  trait CacheEntityWithSite[T] extends CacheEntity[T, Site] {
-    override def key()(implicit site: Site): String = s"${getClass.getSimpleName}:${site}"
-  }
-
   trait CacheEntityWithContextSite[T] extends CacheEntity[T, ContextSite] {
     override def key()(implicit contextSite: ContextSite): String = s"${getClass.getSimpleName}:${contextSite.site}"
   }
