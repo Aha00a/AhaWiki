@@ -1,5 +1,6 @@
 package logics
 
+import com.aha00a.commons.Implicits.RichSeq
 import models.tables.Site
 import play.api.db.Database
 
@@ -11,4 +12,6 @@ object SiteLogic {
       .flatMap(sd => {ahaWikiCache.Site.Map.get().get(sd.site)})
       .getOrElse(Site.notFound)
   }
+
+  def selectRandom()(implicit database: Database, ahaWikiCache: AhaWikiCache): Site = ahaWikiCache.Site.get().random()
 }

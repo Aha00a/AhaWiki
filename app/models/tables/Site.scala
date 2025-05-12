@@ -35,16 +35,4 @@ object Site {
 //      .map(Site.tupled)
 //  }
 
-  // TODO: fix to use AhaWikiCache
-  def selectRandom()(implicit connection: Connection): Option[Site] = {
-    SQL"""
-        SELECT
-            S.seq, S.name
-            FROM Site S
-            ORDER BY RAND()
-            LIMIT 1
-         """
-      .as(long("seq") ~ str("name") singleOpt).map(flatten)
-      .map(Site.tupled)
-  }
 }

@@ -3,11 +3,17 @@ package services
 import actors.ActorAhaWiki.Calculate
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import logics.AhaWikiCache
+import logics.ApplicationConf
+import logics.SiteLogic
 import models.tables.Page
 import models.tables.Site
+import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
 import play.api.inject.ApplicationLifecycle
+import play.api.libs.ws.WSClient
+import play.api.mvc.ControllerComponents
 
 import javax.inject._
 import scala.concurrent.ExecutionContext
@@ -70,13 +76,19 @@ List of prime numbers less than 3600
 3581, 3583, 3593, 3601
  */
 
-class ApplicationLifecycleHook @Inject()(implicit
-                                         applicationLifecycle: ApplicationLifecycle,
-                                         actorSystem: ActorSystem,
-                                         executionContext: ExecutionContext,
-                                         database: Database,
-                                         @Named("db-actor") actorAhaWiki: ActorRef
-                                        ) extends Logging {
+class ApplicationLifecycleHook @Inject()(
+  implicit
+  applicationLifecycle: ApplicationLifecycle,
+  controllerComponents: ControllerComponents,
+  actorSystem: ActorSystem,
+  database: Database,
+  environment: Environment,
+  @Named("db-actor") actorAhaWiki: ActorRef,
+  applicationConf: ApplicationConf,
+  ahaWikiCache: AhaWikiCache,
+  wsClient: WSClient,
+  executionContext: ExecutionContext
+) extends Logging {
   logger.info("OnApplicationStarting")
 
   applicationLifecycle.addStopHook { () =>
@@ -86,21 +98,19 @@ class ApplicationLifecycleHook @Inject()(implicit
 
   actorSystem.scheduler.scheduleWithFixedDelay(13 seconds, 13 minutes)(() => {
     database.withConnection { implicit connection =>
-      Site.selectRandom() map { implicit site: Site =>
-        Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
-          actorAhaWiki ! Calculate(site, s)
-        }
+      implicit val site: Site = SiteLogic.selectRandom()
+      Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
+        actorAhaWiki ! Calculate(site, s)
       }
     }
   })
 
   actorSystem.scheduler.scheduleWithFixedDelay(17 seconds, 17 minutes)(() => {
     database.withConnection { implicit connection =>
-      Site.selectRandom() map { implicit site: Site =>
-        val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
-        for ((v, i) <- seq.zipWithIndex) {
-          actorAhaWiki ! Calculate(site, v, i, seq.length)
-        }
+      implicit val site: Site = SiteLogic.selectRandom()
+      val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
+      for ((v, i) <- seq.zipWithIndex) {
+        actorAhaWiki ! Calculate(site, v, i, seq.length)
       }
     }
   })
