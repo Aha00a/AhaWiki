@@ -96,15 +96,11 @@ object InterpreterSchema extends TraitInterpreter {
                       <div class="address">
                         <dd property={key}>
                           {
-                            if(v.split("").exists(_.matches("[가-힣]"))) {
-                              val seq = v.split("\\s+").filter(_.isNotNullOrEmpty)
-                              seq
-                                .indices
-                                .map(i => seq.take(i + 1))
-                                .flatMap(seq => Seq(
-                                  XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
-                                  " ",
-                                ))
+                            if(containsKo(v)) {
+                              expandAddress(v).flatMap(seq => Seq(
+                                XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                " ",
+                              ))
                             } else {
                               XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
                             }
@@ -167,6 +163,19 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
+  private def containsKo(v: String): Boolean = v.split("").exists(_.matches("[가-힣]"))
+
+  private def expandAddress(v: String): Seq[Seq[String]] = {
+    v.split("\\s+")
+      .filter(_.isNotNullOrEmpty)
+      .indices
+      .map(i => v
+        .split("\\s+")
+        .filter(_.isNotNullOrEmpty)
+        .take(i + 1)
+      )
+  }
+
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
 
   override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
@@ -177,6 +186,9 @@ object InterpreterSchema extends TraitInterpreter {
       .filterNot(_(1).startsWith("http://"))
       .filterNot(_(1).startsWith("https://"))
       .flatMap {
+        case "address" +: tail =>
+          val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
         case key +: tail =>
           tail
             .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
