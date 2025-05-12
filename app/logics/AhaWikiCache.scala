@@ -16,6 +16,7 @@ import play.api.db.Database
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
@@ -32,7 +33,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         syncCacheApi.remove(key())
       }
     }
-    def get()(implicit i: I, classTag: ClassTag[T]): T = syncCacheApi.getOrElseUpdate(key(), durationExpire)(wrapOrElse)
+    def get()(implicit i: I, @unused classTag: ClassTag[T]): T = syncCacheApi.getOrElseUpdate(key(), durationExpire)(wrapOrElse)
 
     private def wrapOrElse()(implicit i: I): T = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
@@ -66,7 +67,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
 
     object Map extends CacheEntityWithDatabase[Map[String, SiteDomain]] {
-      override def orElse()(implicit database: Database): Map[String, SiteDomain] = database.withConnection { implicit connection =>
+      override def orElse()(implicit database: Database): Map[String, SiteDomain] = {
         SiteDomain.get().map(sd => (sd.domain, sd)).toMap
       }
     }
@@ -77,7 +78,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       models.tables.Site.select()
     }
     object Map extends CacheEntityWithDatabase[Map[Long, Site]] {
-      override def orElse()(implicit database: Database): Map[Long, Site] = database.withConnection { implicit connection =>
+      override def orElse()(implicit database: Database): Map[Long, Site] = {
         Site.get().map(sd => (sd.seq, sd)).toMap
       }
     }
