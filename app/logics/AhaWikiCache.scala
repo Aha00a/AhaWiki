@@ -38,10 +38,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
         val result = orElse()
         logger.info(s"Cache\tFill\t${key()} = ${result match {
-          case s: String => s"${s.replaceAll("\n", "|||").take(200)}... size == ${s.size}"
           case seq: Seq[_] => s"Seq[${seq.take(100).grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
           case set: Set[_] => s"Set[${set.take(100).grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${set.size}"
-          case _ => result.getClass.getName
+          case map: Map[_, _] => s"Map[${map.take(100).grouped(10).map(_.mkString(",")).mkString(",\n")}].size == ${map.size}"
+          case s: String => s"${s.replaceAll("\n", "|||").take(200)}... size == ${s.size}"
+          case _ => s"${result.toString.replaceAll("\n", "|||").take(200)}... size == ${result.toString.length}"
         }}")
         result
       }
