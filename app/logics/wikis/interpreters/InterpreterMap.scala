@@ -108,7 +108,9 @@ object InterpreterMap extends TraitInterpreter {
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
-    // TODO: implement
-    Seq()
+    val pageContent: PageContent = PageContent(content)
+    val (_, seqLocation) = parse(pageContent)
+    val links = seqLocation.filter(l => wikiContext.setPageNameByPermission.contains(l.name)).map(l => Link(wikiContext.nameTop, l.name, ""))
+    links
   }
 }
