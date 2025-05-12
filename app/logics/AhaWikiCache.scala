@@ -7,40 +7,82 @@ import models.ContextSite
 import models.ContextWikiPage
 import models.tables.Page
 import models.tables.Site
+import models.tables.SiteDomain
 import play.api.Environment
 import play.api.Logging
 import play.api.Mode.Dev
 import play.api.cache.SyncCacheApi
+import play.api.db.Database
 
 import javax.inject.Inject
 import javax.inject.Singleton
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 @Singleton
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
-  trait CacheEntity {
-    def key()(implicit contextSite:ContextSite): String = s"${getClass.getSimpleName}:${contextSite.site}"
+  trait CacheEntity[T, I] {
+    //noinspection ScalaWeakerAccess
+    val durationExpire: FiniteDuration = if (environment.mode == Dev) 5.minute else 1.hour
 
-    def invalidate()(implicit contextSite:ContextSite): Unit = {
+    def key()(implicit i: I): String = s"${getClass.getName}"
+
+    def invalidate()(implicit i: I): Unit = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
         syncCacheApi.remove(key())
       }
     }
+    def get()(implicit i: I, classTag: ClassTag[T]): T = syncCacheApi.getOrElseUpdate(key(), durationExpire)(wrapOrElse)
 
-    def get()(implicit contextSite: ContextSite): String = syncCacheApi.getOrElseUpdate(key, durationExpire)(wrapOrElse)
-
-    private def wrapOrElse()(implicit contextSite: ContextSite): String = {
+    private def wrapOrElse()(implicit i: I): T = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
-        orElse()
+        val result = orElse()
+        logger.info(s"Cache\tFill\t${key()} = ${result match {
+          case s: String => s"${s.replaceAll("\n", "|||").take(200)}... size == ${s.size}"
+          case seq: Seq[Any] => s"[${seq.grouped(5).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
+          case _ => result.getClass.getName
+        }}")
+        result
       }
     }
-    def orElse()(implicit contextSite: ContextSite): String
+
+    def orElse()(implicit i: I): T
+  }
+
+  trait CacheEntityWithDatabase[T] extends CacheEntity[T, Database] {
+    def orElse()(implicit database: Database): T
+  }
+
+  trait CacheEntityWithContextSite[T] extends CacheEntity[T, ContextSite] {
+    override def key()(implicit contextSite: ContextSite): String = s"${getClass.getSimpleName}:${contextSite.site}"
+  }
+
+  object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
+    override def orElse()(implicit database: Database): Seq[SiteDomain] = database.withConnection { implicit connection =>
+      models.tables.SiteDomain.select()
+    }
+
+    object Map extends CacheEntityWithDatabase[Map[String, SiteDomain]] {
+      override def orElse()(implicit database: Database): Map[String, SiteDomain] = database.withConnection { implicit connection =>
+        SiteDomain.get().map(sd => (sd.domain, sd)).toMap
+      }
+    }
+  }
+
+  object Site extends CacheEntityWithDatabase[Seq[Site]] {
+    override def orElse()(implicit database: Database): Seq[Site] = database.withConnection { implicit connection =>
+      models.tables.Site.select()
+    }
+    object Map extends CacheEntityWithDatabase[Map[Long, Site]] {
+      override def orElse()(implicit database: Database): Map[Long, Site] = database.withConnection { implicit connection =>
+        Site.get().map(sd => (sd.seq, sd)).toMap
+      }
+    }
   }
 
 
-  private val durationExpire: FiniteDuration = if (environment.mode == Dev) 5.minute else 1.hour
 
-  object Header extends CacheEntity {
+  object Header extends CacheEntityWithContextSite[String] {
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
@@ -48,7 +90,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
   }
 
-  object Footer extends CacheEntity {
+  object Footer extends CacheEntityWithContextSite[String] {
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
@@ -56,10 +98,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
   }
 
-  object Config extends CacheEntity {
+  object Config extends CacheEntityWithContextSite[String] {
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val site: Site = contextSite.site
       Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }
   }
 }
+

@@ -43,8 +43,8 @@ class ContextSite()(
   database: Database,
   actorAhaWiki: ActorRef,
   applicationConf: ApplicationConf,
-  val ahaWikiCache: AhaWikiCache,
-  requestWrapper: RequestWrapper,
+  ahaWikiCache: AhaWikiCache,
+  val requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
   //noinspection ScalaWeakerAccess

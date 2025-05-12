@@ -1,6 +1,7 @@
 package models
 
 import akka.actor.ActorRef
+import logics.AhaWikiCache
 import logics.ApplicationConf
 import play.api.db.Database
 
@@ -9,6 +10,6 @@ class Context()(
   val database: Database,
   val actorAhaWiki: ActorRef,
   val applicationConf: ApplicationConf,
-  val requestWrapper: RequestWrapper,
+  val ahaWikiCache: AhaWikiCache,
 ) {
 }

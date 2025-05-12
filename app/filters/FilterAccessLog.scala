@@ -1,28 +1,44 @@
 package filters
 
+import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
+import logics.AhaWikiCache
+import logics.ApplicationConf
 import logics.SessionLogic
+import logics.SiteLogic
 import models.tables.IpDeny
 import models.tables.Site
+import play.api.Environment
 import play.api.Logging
+import play.api.db.Database
+import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import java.sql.Connection
 import javax.inject.Inject
+import javax.inject.Named
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Random
 
 
-class FilterAccessLog @Inject()(implicit val mat: Materializer,
-                                executionContext: ExecutionContext,
-                                database: play.api.db.Database,
-                                actorSystem: ActorSystem,
-                               ) extends Filter with Logging {
+class FilterAccessLog @Inject()(
+  implicit
+  val mat: Materializer,
+  actorSystem: ActorSystem,
+  database: Database,
+  environment: Environment,
+  @Named("db-actor") actorAhaWiki: ActorRef,
+  applicationConf: ApplicationConf,
+  ahaWikiCache: AhaWikiCache,
+  wsClient: WSClient,
+  executionContext: ExecutionContext
+) extends Filter with Logging {
   private val toCheckStartsWith = Seq(
     "/wp",
     "/wordpress",
@@ -81,7 +97,8 @@ class FilterAccessLog @Inject()(implicit val mat: Materializer,
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
     val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
-      (models.tables.IpDeny.selectLatest(remoteAddress), Site.get(host))
+      implicit val site: Site = SiteLogic.get(requestHeader.host)
+      (models.tables.IpDeny.selectLatest(remoteAddress), site)
     }
     implicit val site: Site = siteFound
 

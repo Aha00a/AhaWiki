@@ -7,6 +7,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SiteLogic
 import logics.wikis.PageLogic
 import models.Adjacent
 import models.ContextSite
@@ -46,17 +47,17 @@ class Api @Inject()(
 
   def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       val listLink = Random.shuffle(Link.selectAllButNotEmpty()).take(10)
       Ok(listLink.asJson)
     }
   }
 
   def pageNames: Action[AnyContent] = Action { implicit request =>
-    implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
+      implicit val requestWrapper: RequestWrapper = RequestWrapper()
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
     }
   }
@@ -65,7 +66,7 @@ class Api @Inject()(
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
       Ok(Adjacent.getSeqLinkFiltered(name).asJson)
     }
@@ -73,7 +74,7 @@ class Api @Inject()(
 
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
       val seqPage: Seq[PageWithoutContentWithSize] = Page.pageSelectPageList()
       val totalSize: Long = seqPage.map(_.size).sum

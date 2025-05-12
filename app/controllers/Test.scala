@@ -10,6 +10,7 @@ import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.PermissionLogic
 import logics.SessionLogic
+import logics.SiteLogic
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterSchema
 import logics.wikis.interpreters.InterpreterWiki
@@ -17,6 +18,7 @@ import logics.wikis.interpreters.Interpreters
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models._
 import models.tables.Permission
+import models.tables.Site
 import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
@@ -48,14 +50,8 @@ class Test @Inject()(implicit val
   import testUtil.assertEquals
 
   def unit: Action[AnyContent] = Action { implicit request =>
-
-    import models.tables.Site
-    implicit val site: Site = database.withConnection { implicit connection =>
-      Site.get(request.host)
-    }
+    implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
-
-
 
     //noinspection DuplicatedCode
     def testInterpreterTable()(implicit request: Request[Any]): Unit = {
@@ -297,8 +293,8 @@ class Test @Inject()(implicit val
 
   def gradient: Action[AnyContent] = Action { implicit request =>
     import models.tables.Site
-    implicit val site: Site = database.withConnection { implicit connection => Site.get(request.host) }
-    implicit val context: ContextSite = ContextSite()
+    implicit val site: Site = SiteLogic.get(request.host)
+    implicit val contextSite: ContextSite = ContextSite()
     Ok(views.html.Test.gradient(""))
   }
 
@@ -308,11 +304,11 @@ class Test @Inject()(implicit val
     import models.tables.Site
     import play.api.Mode
 
-    implicit val site: Site = Site.get(request.host)
+    implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
-    val q = "#!read";
+    val q = "#!read"
     val wikiPermission = WikiPermission()
     val id = SessionLogic.getId(request).getOrElse("")
     val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq() // TODO:

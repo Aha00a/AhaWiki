@@ -6,6 +6,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SiteLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
@@ -40,7 +41,7 @@ class Diary @Inject()(implicit val
     database.withConnection { implicit connection =>
       import models.RequestWrapper
       import models.tables.Site
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))

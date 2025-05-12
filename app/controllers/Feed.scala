@@ -3,6 +3,7 @@ package controllers
 import akka.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SiteLogic
 import logics.wikis.PageLogic
 import models.ContextSite
 import models.tables.PageWithoutContentWithSize
@@ -59,7 +60,7 @@ class Feed @Inject()(
 
     }
     implicit val provider: RequestWrapper = RequestWrapper()
-    implicit val site: Site = database.withConnection { implicit connection => Site.get(request.host) }
+    implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextSite: ContextSite = ContextSite()
     val seqPageSorted: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
       PageLogic.getListPageByPermission().sortBy(_.dateTime)

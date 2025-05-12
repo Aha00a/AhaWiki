@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SiteLogic
 import logics.wikis.PageLogic
 import models.ContextSite
 import models.PageContent
@@ -39,7 +40,7 @@ class Home @Inject() (
 
     implicit val provider: RequestWrapper = RequestWrapper()
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
       val name = PageLogic.getListPageByPermission().random().name
@@ -49,7 +50,7 @@ class Home @Inject() (
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
-      implicit val site: Site = Site.get(request.host)
+      implicit val site: Site = SiteLogic.get(request.host)
 
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(
         """User-agent: *
