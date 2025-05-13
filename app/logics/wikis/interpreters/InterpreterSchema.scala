@@ -3,6 +3,7 @@ package logics.wikis.interpreters
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.DateTimeUtil
 import com.aha00a.commons.utils.EnglishCaseConverter
+import com.aha00a.commons.utils.Hangul
 import com.aha00a.commons.utils.UriUtil
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
@@ -96,7 +97,7 @@ object InterpreterSchema extends TraitInterpreter {
                       <div class="address">
                         <dd property={key}>
                           {
-                            if(containsKo(v)) {
+                            if(Hangul.containsKo(v)) {
                               expandAddress(v).flatMap(seq => Seq(
                                 XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
                                 " ",
@@ -163,16 +164,6 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
-  //noinspection SimplifyBoolean
-  private def containsKo(v: String): Boolean = v.exists(c =>
-    (0xAC00 <= c && c <= 0xD7A3) || // Hangul Syllables (한글 음절)
-    (0x3130 <= c && c <= 0x318F) || // Hangul Compatibility Jamo (한글 호환 자모)
-    (0xA960 <= c && c <= 0xA97C) || // Hangul Jamo Extended-A (한글 자모 확장-A)
-    (0xD7B0 <= c && c <= 0xD7C6) || // Hangul Jamo Extended-B (한글 자모 확장-B)
-    (0x1100 <= c && c <= 0x115F) || // Hangul Jamo (한글 자모)
-    false
-  )
-
   private def expandAddress(v: String): Seq[Seq[String]] = {
     v.split("\\s+")
       .filter(_.isNotNullOrEmpty)
@@ -195,13 +186,13 @@ object InterpreterSchema extends TraitInterpreter {
       .filterNot(_(1).startsWith("https://"))
       .flatMap {
         case "address" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
         case "location" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
         case "foundingLocation" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
         case key +: tail =>
           tail
