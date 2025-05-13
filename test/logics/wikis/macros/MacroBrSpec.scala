@@ -1,18 +1,12 @@
 package logics.wikis.macros
 
+import models.ContextWikiPage
 import org.scalatest.freespec.AnyFreeSpec
+import provider.EmptyContextWikiPage
 
-class MacroBrSpec extends AnyFreeSpec {
+class MacroBrSpec extends AnyFreeSpec with EmptyContextWikiPage{
   "name" in {
-    import logics.wikis.RenderingMode
-    import models.ContextWikiPage
-    import models.RequestWrapper
-    import models.tables.Site
-
-    implicit val site: Site = Site.notFound
-    implicit val provider: RequestWrapper = RequestWrapper.empty
-    implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(
-      null, null, null, null, RequestWrapper.empty, Site.notFound)
+    implicit val contextWikiPage: ContextWikiPage = createContextWikiPage();
 
     val empty = ""
     val dummy = "dummy"
