@@ -5,14 +5,14 @@ import org.scalatest.freespec.AnyFreeSpec
 class SchemaOrgSpec extends AnyFreeSpec {
 
   "properties" in {
-    assert(SchemaOrg.mapAll.size == 2801)
-    assert(SchemaOrg.mapClass.size == 893)
-    assert(SchemaOrg.mapProperty.size == 1448)
+    assert(SchemaOrg.mapAll.size == 2853)
+    assert(SchemaOrg.mapClass.size == 906)
+    assert(SchemaOrg.mapProperty.size == 1469)
   }
   "SchemaType" - {
     "toXmlSpan" in {
       val schemaType: SchemaOrg.SchemaType = SchemaOrg.mapAll("Movie")
-      assert(schemaType.toXmlSpan().toString() === """<a href="/w/schema:Movie" title="A movie." class="">Movie </a>""")
+      assert(schemaType.toXmlSpan().toString() === """<a href="/w/schema:Movie" title="A movie." class="">Movie</a>""")
     }
   }
 
