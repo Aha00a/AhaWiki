@@ -120,6 +120,7 @@
         "ISBN": "isbn",
         "Key people": "employee",
         "Language": "inLanguage",
+        "Launched": "datePublished",
         "License": "license",
         "Location": "location",
         "Manufacturer": "manufacturer",
