@@ -91,7 +91,7 @@ object InterpreterSchema extends TraitInterpreter {
                         {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
                         (D{MacroPeriod.toHtmlString(v)} from now)
                       </dd>
-                    case v if key.startsWith("address") || key == "location" || key.endsWith("Location") =>
+                    case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
                       val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
 
                       <div class="address">
@@ -172,6 +172,7 @@ object InterpreterSchema extends TraitInterpreter {
         .split("\\s+")
         .filter(_.isNotNullOrEmpty)
         .take(i + 1)
+        .toSeq
       )
   }
 
@@ -188,12 +189,15 @@ object InterpreterSchema extends TraitInterpreter {
         case "address" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
+        case "geo" +: tail =>
+          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
+          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "geo", v))
         case "location" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
           seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
         case "foundingLocation" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
+          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "foundingLocation", v))
         case key +: tail =>
           tail
             .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
