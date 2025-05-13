@@ -12,14 +12,11 @@ import play.api.db.Database
 
 trait EmptyContextWikiPage {
   implicit val application: Application = null
-
-  def createContextWikiPage(): ContextWikiPage = {
-    implicit val database: Database = null
-    implicit val actorRef: ActorRef = null
-    implicit val applicationConf: ApplicationConf = null
-    implicit val cache: AhaWikiCache = null
-    implicit val requestWrapper: RequestWrapper = RequestWrapper.empty
-    implicit val site: Site = Site.notFound
-    new ContextWikiPage(Seq(getClass.getName), RenderingMode.Normal)
-  }
+  implicit val database: Database = null
+  implicit val actorRef: ActorRef = null
+  implicit val applicationConf: ApplicationConf = null
+  implicit val cache: AhaWikiCache = null
+  implicit val requestWrapper: RequestWrapper = RequestWrapper.empty
+  implicit val site: Site = Site.notFound
+  implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(getClass.getName), RenderingMode.Normal)
 }
