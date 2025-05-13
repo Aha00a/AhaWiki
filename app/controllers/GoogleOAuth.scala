@@ -33,8 +33,7 @@ class GoogleOAuth @Inject()(
       .flashing("redirect" -> referer)
   }
 
-  //noinspection TypeAnnotation
-  def callback(code: String) = Action.async { implicit request =>
+  def callback(code: String): Action[AnyContent] = Action.async { implicit request =>
     GoogleOAuthApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
       case Some(email) =>
         database.withConnection { implicit connection =>
