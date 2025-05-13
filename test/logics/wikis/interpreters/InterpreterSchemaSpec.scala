@@ -10,7 +10,7 @@ import models.tables.Site
 class InterpreterSchemaSpec extends AnyFreeSpec {
   implicit val site: Site = Site.notFound
   implicit val provider: RequestWrapper = RequestWrapper.empty
-  implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, null)
+  implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, RequestWrapper.empty, Site.notFound)
 
   "name" in {
     assert(InterpreterSchema.name === "Schema")
