@@ -5,13 +5,9 @@ import org.scalatest.freespec.AnyFreeSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import provider.RealContextWikiPage
 
-
-
-
-
-
-class MacroColorCodeSpec extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
+// TODO: fix to use EmptyContextWikiPage
 //class MacroColorCodeSpec extends AnyFreeSpec with EmptyContextWikiPage {
+class MacroColorCodeSpec extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
   "MacroColorCode" in {
 
     implicit val contextWikiPage: ContextWikiPage = createContextWikiPage();
