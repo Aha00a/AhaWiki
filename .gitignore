@@ -1,11 +1,11 @@
-logs
-target
-cache
+/.classpath
 /.idea
 /.idea_modules
-/.classpath
 /.project
 /.settings
 /RUNNING_PID
-node_modules
 /conf/application.local.dev.conf
+cache
+logs
+node_modules
+target
