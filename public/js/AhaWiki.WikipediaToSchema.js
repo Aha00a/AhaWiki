@@ -97,7 +97,6 @@
         "Created by": "creator",
         "Date": "startDate",
         "Developer": "author",
-        "Developer(s)": "author",
         "Diagnosis": "diagnosis",
         "Died": "deathDate",
         "Dimensions": "depth",
@@ -110,7 +109,6 @@
         "Founded": "foundingDate",
         "Founder": "founder",
         "Founders": "founder",
-        "Founder(s)": "founder",
         "Genre": "genre",
         "Genres": "genre",
         "Headquarters": "location",
@@ -137,7 +135,7 @@
         "Operating system": "operatingSystem",
         "Organizer": "organizer",
         "Origin": "birthPlace",
-        "Original author(s)": "creator",
+        "Original author": "creator",
         "Original language": "inLanguage",
         "Other names": "alternateName",
         "Parent organization": "parentOrganization",
@@ -158,7 +156,6 @@
         "Repository": "codeRepository",
         "Risk factors": "riskFactor",
         "Running time": "duration",
-        "Spouse(s)": "spouse",
         "Spouses": "spouse",
         "Stable release": "softwareVersion",
         "Starring": "actor",
@@ -201,7 +198,7 @@
         return arrayArrayValue
             .flatMap(([head, ...rest]) => [
                 removeOriginal || ["# " + head, ...rest],
-                [convertProperty(head), ...(rest.map(normalizeValues))],
+                [convertProperty(normalizeProp(head)), ...(rest.map(normalizeValue))],
                 [],
             ].filter(_ => _))
             .map(l => l.join('\t'))
@@ -210,6 +207,9 @@
 
 
 
+    function normalizeProp(text) {
+        return text.replace(/\(s\)/g, '')
+    }
 
 
     const months = {
@@ -263,8 +263,6 @@
                 return formatted || match;
             });
     }
-
-
 
     function convertKoreanDates(text) {
         return text.replace(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/g, (match, year, month, day) => {
@@ -332,13 +330,18 @@
             .join('');
     }
 
-    function normalizeValues(text) {
+    function removeBracketDigitBracket(text) {
+        return text.replace(/\s*\[\d+]\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function normalizeValue(text) {
         return [
             convertEnglishDates,
             convertKoreanDates,
             convertCountryNames,
             convertLanguageNames,
             convertPeriodsToISO,
+            removeBracketDigitBracket,
         ].reduce((acc, fn) => fn(acc), text);
     }
 
@@ -360,7 +363,7 @@
         convertCountryNames,
         convertLanguageNames,
         convertPeriodsToISO,
-        normalizeValues,
+        normalizeValue,
         WikipediaToSchemaProperty,
     };
 })();
