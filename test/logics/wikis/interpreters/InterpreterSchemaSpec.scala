@@ -5,13 +5,10 @@ import models.ContextWikiPage
 import models.RequestWrapper
 import org.scalatest.freespec.AnyFreeSpec
 import models.tables.Site
+import provider.EmptyContextWikiPage
 
 //noinspection NameBooleanParameters
-class InterpreterSchemaSpec extends AnyFreeSpec {
-  implicit val site: Site = Site.notFound
-  implicit val provider: RequestWrapper = RequestWrapper.empty
-  implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq("UnitTest"), RenderingMode.Normal)(null, null, null, null, RequestWrapper.empty, Site.notFound)
-
+class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "name" in {
     assert(InterpreterSchema.name === "Schema")
   }
