@@ -10,6 +10,10 @@ import java.time.Period
 
 object MacroPeriod extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
+    doToHtmlString(argument)(wikiContext.localDateNow)
+  }
+
+  def doToHtmlString(argument: String)(implicit localDateNow: LocalDate = LocalDate.now()): String = {
     argument
       .toOption
       .map(_.trim.split("""\s*,\s*""").toSeq.filter(_.isNotNullOrEmpty))
@@ -17,7 +21,7 @@ object MacroPeriod extends TraitMacro {
       .flatMap(v => LocalDateUtil.tryParse(v))
       .filter(_ != null)
     match {
-      case Seq(localDate) => between(wikiContext.localDateNow, localDate)
+      case Seq(localDate) => between(localDateNow, localDate)
       case Seq(localDate1, localDate2) => between(localDate1, localDate2)
       case _ => s"[[$name(${argument.orEmpty})]]"
     }
