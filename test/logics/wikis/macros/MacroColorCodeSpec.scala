@@ -1,17 +1,10 @@
 package logics.wikis.macros
 
-import models.ContextWikiPage
 import org.scalatest.freespec.AnyFreeSpec
-import org.scalatestplus.play.guice.GuiceOneAppPerTest
-import provider.RealContextWikiPage
+import provider.EmptyContextWikiPage
 
-// TODO: fix to use EmptyContextWikiPage
-//class MacroColorCodeSpec extends AnyFreeSpec with EmptyContextWikiPage {
-class MacroColorCodeSpec extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
+class MacroColorCodeSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "MacroColorCode" in {
-
-    implicit val contextWikiPage: ContextWikiPage = createContextWikiPage();
-
     val empty = ""
     assert(MacroColorCode.toHtmlString(empty) === "")
     assert(MacroColorCode.toHtmlString("#fff") === """<span class="MacroColorCode"><spen class="preview" style="background-color: #fff"></spen> #fff</span>""")
