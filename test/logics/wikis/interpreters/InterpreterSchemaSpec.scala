@@ -1,13 +1,18 @@
 package logics.wikis.interpreters
 
-import logics.wikis.RenderingMode
 import models.ContextWikiPage
-import models.RequestWrapper
 import org.scalatest.freespec.AnyFreeSpec
-import models.tables.Site
+import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import provider.EmptyContextWikiPage
+import provider.RealContextWikiPage
 
-//noinspection NameBooleanParameters
+class InterpreterSchemaSpecExample extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
+  implicit val contextWikiPage: ContextWikiPage = createContextWikiPage();
+  "name" in {
+    assert(InterpreterSchema.name === "Schema")
+  }
+}
+
 class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "name" in {
     assert(InterpreterSchema.name === "Schema")
