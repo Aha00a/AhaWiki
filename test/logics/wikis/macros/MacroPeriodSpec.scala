@@ -9,12 +9,12 @@ import java.time.LocalDate
 
 class MacroPeriodSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "YYYY-MM-DD" in {
-    val empty = ""
     val sNow = "2025-08-15"
 
     implicit val contextWikiPage: ContextWikiPage = createContextWikiPage(LocalDateUtil.tryParse(sNow).getOrElse(LocalDate.now()))
 
-    assert(MacroPeriod.toHtmlString(empty) === """<div class="error">Argument Error - [[Period()]]</div>""")
+    assert(MacroPeriod.toHtmlString(null) === """[[Period()]]""")
+    assert(MacroPeriod.toHtmlString("") === """[[Period()]]""")
 
     assert(MacroPeriod.toHtmlString(sNow) === "P0D")
 
