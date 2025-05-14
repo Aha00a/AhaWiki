@@ -9,12 +9,12 @@ import org.scalatestplus.play.guice.GuiceOneAppPerTest
 import provider.EmptyContextWikiPage
 import provider.RealContextWikiPage
 
-class InterpreterSchemaSpecExample extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
-  implicit val contextWikiPage: ContextWikiPage = createContextWikiPage()
-  "name" in {
-    assert(InterpreterSchema.name == "Schema")
-  }
-}
+//class InterpreterSchemaSpecExample extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
+//  implicit val contextWikiPage: ContextWikiPage = createContextWikiPage()
+//  "name" in {
+//    assert(InterpreterSchema.name == "Schema")
+//  }
+//}
 
 class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "name" in {
