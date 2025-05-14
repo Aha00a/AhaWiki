@@ -164,7 +164,7 @@ object InterpreterSchema extends TraitInterpreter {
     }
   }
 
-  private def expandAddress(v: String): Seq[Seq[String]] = {
+  def expandAddress(v: String): Seq[Seq[String]] = {
     v.split("\\s+")
       .filter(_.isNotNullOrEmpty)
       .indices
