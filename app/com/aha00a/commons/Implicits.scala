@@ -80,6 +80,7 @@ object Implicits {
 
   implicit class RichPeriod(period: Period) {
     def abs: Period = if(period.isNegative) period.negated() else period
+    def toIso8601: String = period.toString().replaceAll("-", "")
   }
 
   implicit class RichSeq[T](seq:Seq[T]) {

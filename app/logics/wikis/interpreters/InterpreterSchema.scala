@@ -89,7 +89,7 @@ object InterpreterSchema extends TraitInterpreter {
                     case v if key.startsWith("date") || key.endsWith("Date") =>
                       <dd property={key}>
                         {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
-                        (D{MacroPeriod.toHtmlString(v)} from now)
+                        ({MacroPeriod.toHtmlString(v)})
                       </dd>
                     case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
                       val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
