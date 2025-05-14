@@ -35,7 +35,13 @@ object InterpreterSchema extends TraitInterpreter {
     ParseResult(schemaClass, seqSeqField)
   }
 
-  def mergeFields(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String]): Seq[Seq[String]] = {
+  val mapPair: Map[String, String] = Seq(
+    "birthDate" -> "deathDate",
+    "startDate" -> "endDate",
+    "actor" -> "character",
+  ).toMap
+
+  def mergeFields(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String] = mapPair): Seq[Seq[String]] = {
     val (seqSeqFieldNew, skip) = seqSeqField.sliding(2).foldLeft((Seq.empty[Seq[String]], false)) {
       case ((acc, true), _) => (acc, false)
       case ((acc, false), Seq(seqNow, seqNext)) =>

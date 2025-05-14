@@ -31,7 +31,7 @@ class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
   }
 
   "mergeFields" in {
-    val seqSeqField: Seq[Seq[String]] = Seq(
+    InterpreterSchema.mergeFields(Seq(
       Seq("name", "Aha00a"),
       Seq("startDate", "1982-10-23"),
       Seq("endDate", "2099-10-23"),
@@ -46,18 +46,7 @@ class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
       Seq("startDate", "A", "B"),
       Seq("endDate", "C", "D", "E"),
       Seq("location", "do not merge"),
-    )
-
-    val mapPair: Map[String, String] = Seq(
-      "birthDate" -> "deathDate",
-      "startDate" -> "endDate",
-      "actor" -> "character",
-    ).toMap
-
-
-    val merged = InterpreterSchema.mergeFields(seqSeqField, mapPair)
-
-    merged shouldBe Seq(
+    )) shouldBe Seq(
       Seq("name", "Aha00a"),
       Seq("startDate endDate", "1982-10-23", "2099-10-23"),
       Seq("location", "Seoul"),
