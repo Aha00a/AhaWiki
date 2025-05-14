@@ -32,7 +32,8 @@ object InterpreterSchema extends TraitInterpreter {
     val schemaClass: String = pageContent.argument.headOption.getOrElse("")
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty).filterNot(_.startsWith("#"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-    ParseResult(schemaClass, mergeFields(seqSeqField))
+// TODO:    ParseResult(schemaClass, mergeFields(seqSeqField))
+    ParseResult(schemaClass, seqSeqField)
   }
 
   val mapPair: Map[String, String] = Seq(
@@ -119,37 +120,37 @@ object InterpreterSchema extends TraitInterpreter {
                     case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
                       val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
 
-                      <div class="address">
-                        <dd property={key}>
-                          {
-                            if(Hangul.containsKo(v)) {
-                              expandAddress(v).flatMap(seq => Seq(
-                                XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
-                                " ",
-                              ))
-                            } else {
-                              XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+                        <div class="address">
+                          <dd property={key}>
+                            {
+                              if(Hangul.containsKo(v)) {
+                                expandAddress(v).flatMap(seq => Seq(
+                                  XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                  " ",
+                                ))
+                              } else {
+                                XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+                              }
                             }
-                          }
-                          <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="GoogleMap"/></a>
-                          <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="NaverMap"/></a>
-                          <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/></a>
-                        </dd>
-                        <div class="aspectRatioWrapper">
-                          <div class="ratio_1_1" ></div>
-                          <div class="aspectRatioContent">
-                            <iframe
-                            width="100%" height="100%" frameborder="0"
-                            allowfullscreen="allowfullscreen"
-                            src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
+                            <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="GoogleMap"/></a>
+                            <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="NaverMap"/></a>
+                            <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/></a>
+                          </dd>
+                          <div class="aspectRatioWrapper">
+                            <div class="ratio_1_1" ></div>
+                            <div class="aspectRatioContent">
+                              <iframe
+                              width="100%" height="100%" frameborder="0"
+                              allowfullscreen="allowfullscreen"
+                              src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    case v =>
-                      <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
+                      case v =>
+                        <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
+                    }
                   }
-                }
-              </div>
+                </div>
             }
           }
         </div>
