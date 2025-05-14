@@ -30,35 +30,44 @@ class InterpreterSchemaSpec extends AnyFreeSpec with EmptyContextWikiPage {
     ))
   }
 
-  "mergeFields" in {
-    InterpreterSchema.mergeFields(Seq(
-      Seq("name", "Aha00a"),
-      Seq("startDate", "1982-10-23"),
-      Seq("endDate", "2099-10-23"),
-      Seq("location", "Seoul"),
-      Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
-      Seq("character", "Character1", "Character2"),
-      Seq("location", "do not merge"),
-      Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
-      Seq("location", "do not merge"),
-      Seq("character", "Character1", "Character2"),
-      Seq("location", "do not merge"),
-      Seq("startDate", "A", "B"),
-      Seq("endDate", "C", "D", "E"),
-      Seq("location", "do not merge"),
-    )) shouldBe Seq(
-      Seq("name", "Aha00a"),
-      Seq("startDate endDate", "1982-10-23", "2099-10-23"),
-      Seq("location", "Seoul"),
-      Seq("actor character", "Actor1", "Character1", "Actor2", "Character2", "Actor3Alone", ""),
-      Seq("location", "do not merge"),
-      Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
-      Seq("location", "do not merge"),
-      Seq("character", "Character1", "Character2"),
-      Seq("location", "do not merge"),
-      Seq("startDate endDate", "A", "C", "B", "D", "", "E"),
-      Seq("location", "do not merge"),
-    )
+  "mergeFields" - {
+    "simple" in {
+      InterpreterSchema.mergeFields(Seq(
+        Seq("name", "Aha00a"),
+      )) shouldBe Seq(
+        Seq("name", "Aha00a"),
+      )
+    }
+    "complex case" in {
+      InterpreterSchema.mergeFields(Seq(
+        Seq("name", "Aha00a"),
+        Seq("startDate", "1982-10-23"),
+        Seq("endDate", "2099-10-23"),
+        Seq("location", "Seoul"),
+        Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
+        Seq("character", "Character1", "Character2"),
+        Seq("location", "do not merge"),
+        Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
+        Seq("location", "do not merge"),
+        Seq("character", "Character1", "Character2"),
+        Seq("location", "do not merge"),
+        Seq("startDate", "A", "B"),
+        Seq("endDate", "C", "D", "E"),
+        Seq("location", "do not merge"),
+      )) shouldBe Seq(
+        Seq("name", "Aha00a"),
+        Seq("startDate endDate", "1982-10-23", "2099-10-23"),
+        Seq("location", "Seoul"),
+        Seq("actor character", "Actor1", "Character1", "Actor2", "Character2", "Actor3Alone", ""),
+        Seq("location", "do not merge"),
+        Seq("actor", "Actor1", "Actor2", "Actor3Alone"),
+        Seq("location", "do not merge"),
+        Seq("character", "Character1", "Character2"),
+        Seq("location", "do not merge"),
+        Seq("startDate endDate", "A", "C", "B", "D", "", "E"),
+        Seq("location", "do not merge"),
+      )
+    }
   }
 
 

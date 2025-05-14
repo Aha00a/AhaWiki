@@ -32,7 +32,7 @@ object InterpreterSchema extends TraitInterpreter {
     val schemaClass: String = pageContent.argument.headOption.getOrElse("")
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty).filterNot(_.startsWith("#"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-    ParseResult(schemaClass, seqSeqField)
+    ParseResult(schemaClass, mergeFields(seqSeqField))
   }
 
   val mapPair: Map[String, String] = Seq(
@@ -43,7 +43,8 @@ object InterpreterSchema extends TraitInterpreter {
 
   def mergeFields(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String] = mapPair): Seq[Seq[String]] = {
     val (seqSeqFieldNew, skip) = seqSeqField.sliding(2).foldLeft((Seq.empty[Seq[String]], false)) {
-      case ((acc, true), _) => (acc, false)
+      case ((acc, false), Seq(_)) => (acc, false)
+      case ((acc, true), Seq(_, _)) => (acc, false)
       case ((acc, false), Seq(seqNow, seqNext)) =>
         val key1 = seqNow.head
         val key2 = seqNext.head
