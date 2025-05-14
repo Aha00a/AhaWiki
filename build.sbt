@@ -33,12 +33,14 @@ libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
 libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
-
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % "0.12.3")
+
+Compile / doc / sources := Seq.empty
+Test / doc / sources := Seq.empty
 
 
 // Adds additional packages into Twirl
