@@ -1,15 +1,15 @@
 package com.aha00a.commons
 
-import java.io.File
-import java.io.PrintWriter
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.Date
-
 import com.aha00a.commons.utils.DateTimeFormatterHolder
 import com.aha00a.commons.utils.LocalDateTimeUtil
 import com.aha00a.commons.utils.Using
 
+import java.io.File
+import java.io.PrintWriter
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Period
+import java.util.Date
 import scala.util.Random
 import scala.util.Try
 
@@ -78,6 +78,9 @@ object Implicits {
 
   }
 
+  implicit class RichPeriod(period: Period) {
+    def abs: Period = if(period.isNegative) period.negated() else period
+  }
 
   implicit class RichSeq[T](seq:Seq[T]) {
     def getOrElse(i: Int, t:T): T = if(seq.isDefinedAt(i)) seq(i) else t

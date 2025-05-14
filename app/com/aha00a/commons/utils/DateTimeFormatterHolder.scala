@@ -5,11 +5,10 @@ import java.time.format.DateTimeFormatter
 object DateTimeFormatterHolder {
   lazy val isoLocalDateTimeWithMillisec: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
   lazy val isoLocalDateTime: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-
   lazy val isoLocalDate: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
   lazy val yearDashMonth: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
   lazy val year: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy")
+
   lazy val monthDashDay: DateTimeFormatter = DateTimeFormatter.ofPattern("MM-dd")
   lazy val dashDashMonthDashDay: DateTimeFormatter = DateTimeFormatter.ofPattern("--MM-dd")
 

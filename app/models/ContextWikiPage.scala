@@ -9,6 +9,8 @@ import models.tables.Site
 import play.api.db.Database
 import play.api.mvc.Request
 
+import java.time.LocalDate
+
 object ContextWikiPage {
   def apply(name: String)(
     implicit
@@ -45,6 +47,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   ahaWikiCache: AhaWikiCache,
   requestWrapper: RequestWrapper,
   site: Site,
+  val now: LocalDate = LocalDate.now(),
 ) extends ContextSite {
   def name: String = seqName.last
   def nameTop: String = seqName.head
