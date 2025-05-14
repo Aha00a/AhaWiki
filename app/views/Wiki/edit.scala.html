@@ -245,7 +245,7 @@
                         return false;
 
                     AhaWiki.Loader.open();
-                    const arrayResult = (await Promise.all(['en', 'ko', 'ja'].map(async lang => ({
+                    const arrayResult = (await Promise.all(['en', 'ko'/*, 'ja'*/].map(async lang => ({
                         lang,
                         arrayArrayValue: await wikipediaToSchema.fetchInfoBoxFromWikipedia(lang, page),
                     }))).finally(() => AhaWiki.Loader.close()))
