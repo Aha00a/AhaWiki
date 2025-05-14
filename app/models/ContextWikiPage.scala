@@ -47,10 +47,14 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   ahaWikiCache: AhaWikiCache,
   requestWrapper: RequestWrapper,
   site: Site,
-  val now: LocalDate = LocalDate.now(),
+  val localDateNow: LocalDate = LocalDate.now(),
 ) extends ContextSite {
   def name: String = seqName.last
   def nameTop: String = seqName.head
   def nameBottom: String = seqName.last
   def push(name: String) = new ContextWikiPage(name +: seqName, renderingMode)
+
+  def at(localDateNow: LocalDate): ContextWikiPage = {
+    new ContextWikiPage(seqName, renderingMode)(database, actorAhaWiki, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow)
+  }
 }

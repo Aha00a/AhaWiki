@@ -23,6 +23,6 @@ trait EmptyContextWikiPage {
   implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(getClass.getName), RenderingMode.Normal)
 
   def createContextWikiPage(implicit now: LocalDate): ContextWikiPage = {
-    new ContextWikiPage(Seq(getClass.getName), RenderingMode.Normal)
+    contextWikiPage.at(now)
   }
 }
