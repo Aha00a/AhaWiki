@@ -22,6 +22,9 @@ object Implicits {
   implicit class RichString(s:String) {
     def isNullOrEmpty: Boolean = s == null || s.isEmpty
     def isNotNullOrEmpty: Boolean = !s.isNullOrEmpty
+    def or(defaultValue:String ): String = if (s.isNullOrEmpty) defaultValue else s
+    def orEmpty: String = or("")
+
     def toOption: Option[String] = if (s.isNullOrEmpty) None else Some(s)
     def getOrElse(rhs:String): String = toOption.getOrElse(rhs)
 
