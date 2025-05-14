@@ -13,7 +13,9 @@ object MacroPeriod extends TraitMacro {
         val period = Period.between(wikiContext.now, ld)
         val timeQualifier = if(period.isZero) "" else if(period.isNegative) s"${period.abs} ago" else s"$period hence"
         timeQualifier
-      case Array(Some(ld1), Some(ld2)) => Period.between(ld1, ld2).toString
+      case Array(Some(ld1), Some(ld2)) =>
+        val period = Period.between(ld1, ld2)
+        if(period.isZero) "" else period.abs.toString
       case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
     }
   }

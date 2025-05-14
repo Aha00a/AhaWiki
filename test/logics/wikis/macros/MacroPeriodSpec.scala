@@ -20,5 +20,11 @@ class MacroPeriodSpec extends AnyFreeSpec with EmptyContextWikiPage {
 
     assert(MacroPeriod.toHtmlString("2024-08-15") === """P1Y ago""")
     assert(MacroPeriod.toHtmlString("2026-08-15") === """P1Y hence""")
+
+    assert(MacroPeriod.toHtmlString(s"${sNow},${sNow}") === """""")
+    assert(MacroPeriod.toHtmlString(s"${sNow},2024-08-15") === """P1Y""")
+    assert(MacroPeriod.toHtmlString(s"${sNow},2026-08-15") === """P1Y""")
+
+    assert(MacroPeriod.toHtmlString(s"2000-01-01,1999-12-31") === """P1D""")
   }
 }
