@@ -16,15 +16,15 @@ class MacroPeriodSpec extends AnyFreeSpec with EmptyContextWikiPage {
 
     assert(MacroPeriod.toHtmlString(empty) === """<div class="error">Argument Error - [[Period()]]</div>""")
 
-    assert(MacroPeriod.toHtmlString(sNow) === "")
+    assert(MacroPeriod.toHtmlString(sNow) === "P0D")
 
-    assert(MacroPeriod.toHtmlString("2024-08-15") === """P1Y ago""")
-    assert(MacroPeriod.toHtmlString("2026-08-15") === """P1Y hence""")
+    assert(MacroPeriod.toHtmlString("2024-08-15") === "P1Y")
+    assert(MacroPeriod.toHtmlString("2026-08-15") === "P1Y")
 
-    assert(MacroPeriod.toHtmlString(s"${sNow},${sNow}") === """""")
-    assert(MacroPeriod.toHtmlString(s"${sNow},2024-08-15") === """P1Y""")
-    assert(MacroPeriod.toHtmlString(s"${sNow},2026-08-15") === """P1Y""")
+    assert(MacroPeriod.toHtmlString(s"${sNow},${sNow}") === "P0D")
+    assert(MacroPeriod.toHtmlString(s"${sNow},2024-08-15") === "P1Y")
+    assert(MacroPeriod.toHtmlString(s"${sNow},2026-08-15") === "P1Y")
 
-    assert(MacroPeriod.toHtmlString(s"2000-01-01,1999-12-31") === """P1D""")
+    assert(MacroPeriod.toHtmlString(s"2000-01-01,1999-12-31") === "P1D")
   }
 }
