@@ -35,6 +35,24 @@ object InterpreterSchema extends TraitInterpreter {
     ParseResult(schemaClass, seqSeqField)
   }
 
+  def mergeFields(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String]): Seq[Seq[String]] = {
+    val (seqSeqFieldNew, skip) = seqSeqField.sliding(2).foldLeft((Seq.empty[Seq[String]], false)) {
+      case ((acc, true), _) => (acc, false)
+      case ((acc, false), Seq(seqNow, seqNext)) =>
+        val key1 = seqNow.head
+        val key2 = seqNext.head
+
+        mapPair.get(key1).filter(_ == key2) match {
+          case Some(_) =>
+            val mergedValues = seqNow.tail.zipAll(seqNext.tail, "", "").flatMap { case (a, b) => Seq(a, b) }
+            (acc :+ (s"$key1 $key2" +: mergedValues), true)
+          case None =>
+            (acc :+ seqNow, false)
+        }
+    }
+    if (skip) seqSeqFieldNew else seqSeqFieldNew :+ seqSeqField.last
+  }
+
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     import models.tables.Site
