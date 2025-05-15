@@ -9,9 +9,10 @@ object SiteLogic {
     ahaWikiCache.SiteDomain.Map
       .get()
       .get(host)
-      .flatMap(sd => {ahaWikiCache.Site.Map.get().get(sd.site)})
+      .flatMap(sd => ahaWikiCache.Site.Map.get().get(sd.site))
       .getOrElse(Site.notFound)
   }
 
+  def get(seq: Long)(implicit database: Database, ahaWikiCache: AhaWikiCache): Option[Site] = ahaWikiCache.Site.get().find(_.seq == seq)
   def selectRandom()(implicit database: Database, ahaWikiCache: AhaWikiCache): Site = ahaWikiCache.Site.get().random()
 }

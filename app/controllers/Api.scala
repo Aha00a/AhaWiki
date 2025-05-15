@@ -25,20 +25,21 @@ import play.filters.csrf.CSRF
 import java.net.URLDecoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 import scala.util.Random
 
 
 class Api @Inject()(
-                     implicit val
-                     controllerComponents: ControllerComponents,
-                     actorSystem: ActorSystem,
-                     database: Database,
-                     @Named("db-actor") actorAhaWiki: ActorRef,
-                     applicationConf: ApplicationConf,
-                     ahaWikiCache: AhaWikiCache,
-                     wsClient: WSClient,
-                     executionContext: ExecutionContext
-                   ) extends BaseController {
+  implicit val
+  controllerComponents: ControllerComponents,
+  actorSystem: ActorSystem,
+  database: Database,
+  @Named("db-actor") actorAhaWiki: ActorRef,
+  applicationConf: ApplicationConf,
+  ahaWikiCache: AhaWikiCache,
+  wsClient: WSClient,
+  executionContext: ExecutionContext
+) extends BaseController {
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   def csrf: Action[AnyContent] = Action { implicit request =>
@@ -97,6 +98,24 @@ class Api @Inject()(
 
       Ok(json1.deepMerge(json2))
     }
+  }
+
+  def cacheDelete(siteSeq: Long): Action[AnyContent] = Action { implicit request =>
+    SiteLogic.get(siteSeq) foreach { implicit site =>
+      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+      implicit val contextSite: ContextSite = ContextSite()
+      Seq(
+        () => { ahaWikiCache.SiteDomain.invalidate() },
+        () => { ahaWikiCache.SiteDomain.Map.invalidate() },
+        () => { ahaWikiCache.Site.invalidate() },
+        () => { ahaWikiCache.Site.Map.invalidate() },
+        () => { ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate() },
+        () => { ahaWikiCache.Header.invalidate() },
+      ).zipWithIndex foreach { case (f, i) =>
+        actorSystem.scheduler.scheduleOnce((2 * i) second) {f()}
+      }
+    }
+    Ok("ok")
   }
 }
 
