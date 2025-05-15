@@ -1324,6 +1324,7 @@ kbd:hover > kbd {
   background-color: #ddd;
 }
 .AhaWiki .MacroCopyable > .tooltip {
+  display: none;
   position: absolute;
   top: 0;
   right: 0;
