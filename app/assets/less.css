@@ -2064,6 +2064,7 @@ kbd:hover > kbd {
   width: 100%;
   box-sizing: border-box;
   height: 500px;
+  resize: vertical;
 }
 .AhaWiki .edit > div.ui > form > div.divider {
   width: 5px;
