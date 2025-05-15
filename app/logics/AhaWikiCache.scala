@@ -24,7 +24,7 @@ import scala.reflect.ClassTag
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
   trait CacheEntity[T, I] {
     //noinspection ScalaWeakerAccess
-    val durationExpire: FiniteDuration = if (environment.mode == Dev) 5.minute else 1.hour
+    val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 5 minutes
 
     def key()(implicit i: I): String
     def keyDefault()(implicit @unused i: I): String = s"${getClass.getName}"
