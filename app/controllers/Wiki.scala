@@ -259,10 +259,8 @@ class Wiki @Inject()(implicit val
             case _ => // do nothing
           }
 
-          if (revision == 0) {
-            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
-          }
+          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+          ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
 
           Ok("")
         }
@@ -302,6 +300,9 @@ class Wiki @Inject()(implicit val
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
+            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+
             Page.deleteWithRelatedData(name)
             Ok("")
           } else {
@@ -322,6 +323,9 @@ class Wiki @Inject()(implicit val
       Page.selectLastRevision(name) match {
         case Some(page) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
+            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
             actorAhaWiki ! Calculate(site, name)
             Ok("")
@@ -393,6 +397,9 @@ class Wiki @Inject()(implicit val
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(page), None) =>
           if (WikiPermission().isWritable(PageContent(page.content))) {
+            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+
             Page.rename(name, newName)
             PageLogic.insert(name, 1, new Date(), "redirect", s"#!redirect $newName")
             actorAhaWiki ! Calculate(site, newName)
