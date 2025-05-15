@@ -1,11 +1,10 @@
 package logics
 
+import com.aha00a.commons.Implicits._
+import models.tables.Permission
 import org.scalatest.freespec.AnyFreeSpec
 
 class PermissionLogicSpec extends AnyFreeSpec {
-
-  import com.aha00a.commons.Implicits._
-  import models.tables.Permission
 
   def createPermissionLogicWithLog(title: String, seqPermission: Seq[Permission]): PermissionLogic = {
     val permissionLogic = new PermissionLogic(seqPermission)
