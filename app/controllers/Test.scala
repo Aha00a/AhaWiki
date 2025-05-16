@@ -255,9 +255,12 @@ class Test @Inject()(implicit val
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
-    val r: String = f"${free}%,.2f/${total}%,.2f MiB $percent%.2f%%"
-
-    Ok(r)
+    val r: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
+    if(percent < 5) {
+      InsufficientStorage(r)
+    } else {
+      Ok(r)
+    }
   }
 
 
