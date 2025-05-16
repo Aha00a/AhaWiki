@@ -4,6 +4,7 @@ import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
+import zio.json._
 
 import java.sql.Connection
 
@@ -13,6 +14,9 @@ case class Site(seq:Long, name:String) {
 
 object Site {
   val notFound: Site = Site(-1, "notFound")
+
+  implicit val jsonDecoder: JsonDecoder[Site] = DeriveJsonDecoder.gen[Site]
+  implicit val jsonEncoder: JsonEncoder[Site] = DeriveJsonEncoder.gen[Site]
 
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled

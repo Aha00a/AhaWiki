@@ -10,7 +10,7 @@ scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:re
 
 libraryDependencies += guice
 libraryDependencies += jdbc
-libraryDependencies += ehcache
+//libraryDependencies += ehcache
 libraryDependencies += cacheApi
 libraryDependencies += ws
 libraryDependencies += specs2 % Test
@@ -33,6 +33,9 @@ libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
 libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
+libraryDependencies += "com.github.karelcemus" %% "play-redis" % "2.7.0"
+libraryDependencies += "dev.zio" %% "zio-json" % "0.7.3" // DON'T update. Class File version matter
+
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
   "io.circe" %% "circe-generic",

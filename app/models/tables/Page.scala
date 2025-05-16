@@ -1,25 +1,32 @@
 package models.tables
 
-import java.sql.Connection
-import java.util.Date
-
-import anorm._
 import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
+import anorm._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RangeUtil
 import models.WithDateTime
 import models.tables
 
+import java.sql.Connection
+import java.util.Date
 import scala.collection.immutable
 import scala.util.matching.Regex
+import zio.json._
 
 case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
 case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
 case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
+object PageWithoutContentWithSize {
+  import models.JsonEncoderDecoderForDate._
+  implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
+  implicit val jsonEncoder2: JsonEncoder[PageWithoutContentWithSize] = DeriveJsonEncoder.gen[PageWithoutContentWithSize]
 
+  //noinspection TypeAnnotation
+  def tupled = (apply _).tupled
+}
 
 case class SearchResult(name:String, content:String, dateTime: Date) {
 

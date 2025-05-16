@@ -13,6 +13,7 @@ import play.api.Logging
 import play.api.Mode.Dev
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
+import zio.json._
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -34,7 +35,20 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         syncCacheApi.remove(key())
       }
     }
-    def get()(implicit i: I, @unused classTag: ClassTag[T]): T = syncCacheApi.getOrElseUpdate(key(), durationExpire)(wrapOrElse)
+
+    def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
+      val json: String = syncCacheApi.getOrElseUpdate(key(), durationExpire) {
+        wrapOrElse().toJson
+      }
+
+      json.fromJson[T] match {
+        case Left(e) =>
+          logger.error(s"Cache\tParse\t${key()} = $json, $e")
+          throw new RuntimeException(s"Cache\tParse\t${key()} = $json, $e")
+        case Right(t) =>
+          t
+      }
+    }
 
     private def wrapOrElse()(implicit i: I): T = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {

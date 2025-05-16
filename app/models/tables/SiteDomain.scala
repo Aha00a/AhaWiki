@@ -5,6 +5,7 @@ import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
+import zio.json._
 
 import java.sql.Connection
 import java.util.Date
@@ -13,6 +14,10 @@ case class SiteDomain(created: Date, site: Long, domain: String)
 
 object SiteDomain {
   val notFound: SiteDomain = SiteDomain(null, -1, "notFound")
+
+  import models.JsonEncoderDecoderForDate._
+  implicit val jsonDecoder: JsonDecoder[SiteDomain] = DeriveJsonDecoder.gen[SiteDomain]
+  implicit val jsonEncoder: JsonEncoder[SiteDomain] = DeriveJsonEncoder.gen[SiteDomain]
 
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
