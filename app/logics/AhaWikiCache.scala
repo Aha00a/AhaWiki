@@ -106,6 +106,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
 
   object Header extends CacheEntityWithContextSite[String] {
+    override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 1 hour
+
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
@@ -114,6 +116,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object Footer extends CacheEntityWithContextSite[String] {
+    override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 1 hour
+
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
