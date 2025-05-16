@@ -1,5 +1,4 @@
 package controllers
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import anorm.SQL
@@ -25,6 +24,7 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.io.File
 import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
@@ -251,7 +251,13 @@ class Test @Inject()(implicit val
       )
     }; testInterpreterSchema()
 
-    Ok("Ok.")
+    val fileAbsolute = new File(".").getAbsoluteFile
+    val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
+    val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
+    val percent = free / total * 100
+    val r: String = f"${free}%,.2f/${total}%,.2f MiB $percent%.2f%%"
+
+    Ok(r)
   }
 
 
