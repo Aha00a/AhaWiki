@@ -15,7 +15,7 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.util.Date
+import java.time.LocalDateTime
 import javax.inject._
 import scala.concurrent.ExecutionContext
 
@@ -47,7 +47,7 @@ controllerComponents: ControllerComponents,
           val pageContent = PageContent(sr.content)
           wikiPermission.isReadable(pageContent)
         })
-        .sortBy(_.dateTime)(Ordering[Date].reverse)
+        .sortBy(_.dateTime)(Ordering[LocalDateTime].reverse)
         .partition(_.name == q)
         .concat()
         .map(_.summarise(q))

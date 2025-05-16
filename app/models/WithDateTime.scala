@@ -8,9 +8,9 @@ import com.aha00a.commons.utils.DateTimeFormatterHolder
 
 
 trait WithDateTime {
-  val dateTime:Date
+  val dateTime: LocalDateTime
 
-  lazy val localDateTime: LocalDateTime = dateTime.toLocalDateTime
+  lazy val localDateTime: LocalDateTime = dateTime
   lazy val localDate: LocalDate = localDateTime.toLocalDate
   lazy val year: Int = localDate.getYear
   lazy val yearDashMonth: String = localDate.format(DateTimeFormatterHolder.yearDashMonth)

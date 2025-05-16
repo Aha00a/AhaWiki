@@ -32,7 +32,7 @@ import play.api.mvc._
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 import javax.inject._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -95,7 +95,7 @@ class Wiki @Inject()(implicit val
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
-          val page = Page(name, 0, new Date(), "AhaWiki", "127.0.0.1", "", "", content)
+          val page = Page(name, 0, LocalDateTime.now(), "AhaWiki", "127.0.0.1", "", "", content)
           Ok(views.html.Wiki.edit(page, applicationConf)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
@@ -239,7 +239,7 @@ class Wiki @Inject()(implicit val
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-        val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, new Date()))
+        val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
         } else if (revision != latestRevision) {
@@ -247,9 +247,9 @@ class Wiki @Inject()(implicit val
         } else if (body == latestText) {
           BadRequest("body == latestText")
         } else {
-          val now = new Date()
+          val now = LocalDateTime.now()
           val dateTime = if (minorEdit) latestTime else now
-          val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toLocalDateTime.toIsoLocalDateTimeString}" else comment
+          val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toIsoLocalDateTimeString}" else comment
           PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
 
           name match {
@@ -373,7 +373,7 @@ class Wiki @Inject()(implicit val
             })
             val body = extractConvertApplyInterpreterRefresh.inject(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
             if (pageContent.content != body) {
-              PageLogic.insert(pageName, page.revision + 1, new Date(), "Sync Google Spreadsheet", body)
+              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", body)
               Ok("")
             } else {
               Ok("NotChanged")
@@ -401,7 +401,7 @@ class Wiki @Inject()(implicit val
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
 
             Page.rename(name, newName)
-            PageLogic.insert(name, 1, new Date(), "redirect", s"#!redirect $newName")
+            PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", s"#!redirect $newName")
             actorAhaWiki ! Calculate(site, newName)
             Ok("")
           } else {

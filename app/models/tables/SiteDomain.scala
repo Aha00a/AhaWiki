@@ -1,16 +1,17 @@
 package models.tables
 
-import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
+import com.aha00a.play.AnormSqlParser.localDateTime
 import zio.json._
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 
-case class SiteDomain(created: Date, site: Long, domain: String)
+
+case class SiteDomain(created: LocalDateTime, site: Long, domain: String)
 
 object SiteDomain {
   val notFound: SiteDomain = SiteDomain(null, -1, "notFound")
@@ -24,7 +25,7 @@ object SiteDomain {
 
   def select()(implicit connection: Connection): Seq[SiteDomain] = {
     SQL"""SELECT * FROM SiteDomain ORDER BY site"""
-      .as(date("created") ~ long("site") ~ str("domain") *).map(flatten)
+      .as(localDateTime("created") ~ long("site") ~ str("domain") *).map(flatten)
       .map(SiteDomain.tupled)
   }
 }

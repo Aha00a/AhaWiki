@@ -18,7 +18,6 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import java.time.LocalDateTime
-import java.util.Date
 import javax.inject._
 import scala.concurrent.ExecutionContext
 
@@ -53,7 +52,7 @@ class Diary @Inject()(implicit val
           else
             s"$latestText\n * $q"
 
-        PageLogic.insert(name, latestRevision + 1, new Date(), "add item", body)
+        PageLogic.insert(name, latestRevision + 1, LocalDateTime.now(), "add item", body)
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
       } else {
         Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")

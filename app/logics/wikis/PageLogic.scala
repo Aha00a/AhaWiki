@@ -23,7 +23,7 @@ import play.api.Logger
 import play.api.db.Database
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 import scala.collection.immutable
 
 object PageLogic {
@@ -32,7 +32,7 @@ object PageLogic {
   import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 
-  def insert(name: String, revision: Long, dateTime: Date, comment: String, body: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
+  def insert(name: String, revision: Long, dateTime: LocalDateTime, comment: String, body: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
     import models.tables.Page
     import models.tables.Site
     implicit val site: Site = wikiContext.site

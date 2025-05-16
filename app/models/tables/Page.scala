@@ -1,24 +1,24 @@
 package models.tables
 
-import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RangeUtil
+import com.aha00a.play.AnormSqlParser
 import models.WithDateTime
 import models.tables
-
-import java.sql.Connection
-import java.util.Date
-import scala.collection.immutable
-import scala.util.matching.Regex
 import zio.json._
 
-case class Page                        (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: Date, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
+import java.sql.Connection
+import java.time.LocalDateTime
+import scala.collection.immutable
+import scala.util.matching.Regex
+
+case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 object PageWithoutContentWithSize {
   import models.JsonEncoderDecoderForDate._
   implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
@@ -28,7 +28,7 @@ object PageWithoutContentWithSize {
   def tupled = (apply _).tupled
 }
 
-case class SearchResult(name:String, content:String, dateTime: Date) {
+case class SearchResult(name:String, content:String, dateTime: LocalDateTime) {
 
   def summarise(q: String): SearchResultSummary = {
     val lines = content.split("""(\r\n|\n)+""").toSeq
@@ -48,14 +48,14 @@ case class SearchResult(name:String, content:String, dateTime: Date) {
   }
 }
 
-case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: Date)
+case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: LocalDateTime)
 
 
 object Page {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  private val rowParser = str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
+  private val rowParser = str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
     SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
@@ -89,7 +89,7 @@ object Page {
 
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
     SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision DESC"
-      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") *).map(flatten)
+      .as(str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") *).map(flatten)
       .map(PageWithoutContent.tupled)
   }
 
@@ -146,7 +146,7 @@ object Page {
                 )
             ORDER BY P1.name
     """
-      .as(str("name") ~ long("revision") ~ date("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
+      .as(str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
 
@@ -176,7 +176,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
          w.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name"""
-      .as(str("name") ~ str("content") ~ date("dateTime") *).map(flatten).map(SearchResult.tupled)
+      .as(str("name") ~ str("content") ~ AnormSqlParser.localDateTime("dateTime") *).map(flatten).map(SearchResult.tupled)
   }
 
 
