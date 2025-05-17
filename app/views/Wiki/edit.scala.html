@@ -139,21 +139,28 @@
                 }
 
                 if(e.key === '[') {
-                    if (value[selectionStart - 1] === '[' && value[selectionStart - 2] === '[') {
-                        if (value[selectionStart - 3] === '[') {
-                            this.selectionStart = this.selectionEnd = selectionEnd;
-                            ExecCommand.delete();
-                            this.selectionStart = selectionStart;
-                            ExecCommand.insertText('[' + selected + '\n]');
-                            this.selectionStart = selectionStart + 1;
-                            this.selectionEnd = selectionEnd + 1;
-                            return false;
-                        } else {
-                            ExecCommand.insertText('[' + selected + '\n]');
-                            this.selectionStart = selectionStart + 1;
-                            this.selectionEnd = selectionEnd + 1;
-                            return false;
+                    if (value[selectionStart - 1] === '[') {
+                        if (value[selectionStart - 2] === '[') {
+                            if (value[selectionStart - 3] === '[') {
+                                this.selectionStart = this.selectionEnd = selectionEnd;
+                                ExecCommand.delete();
+                                this.selectionStart = selectionStart;
+                                ExecCommand.insertText('[' + selected + '\n]');
+                                this.selectionStart = selectionStart + 1;
+                                this.selectionEnd = selectionEnd + 1;
+                                return false;
+                            } else {
+                                ExecCommand.insertText('[' + selected + '\n]');
+                                this.selectionStart = selectionStart + 1;
+                                this.selectionEnd = selectionEnd + 1;
+                                return false;
+                            }
                         }
+                    } else if (value[selectionStart - 1] === '-' && value[selectionStart - 2] === '-') {
+                        ExecCommand.insertText(`[${dayjs().format('YYYY-MM-DD')} ${dayjs().format('YYYY-MM-DDTHH:mm:ss')}]`);
+                        this.selectionStart = selectionStart + 11;
+                        this.selectionEnd = this.selectionEnd - 1;
+                        return false;
                     }
                 }
 
