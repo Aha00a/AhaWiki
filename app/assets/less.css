@@ -435,7 +435,7 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.toc {
   clear: right;
 }
-.AhaWiki .commonAhaWiki div.schema {
+.AhaWiki .commonAhaWiki div.InterpreterSchema {
   clear: right;
   float: right;
   margin-left: 10px;
@@ -448,7 +448,7 @@ kbd:hover > kbd {
   max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
-  .AhaWiki .commonAhaWiki div.schema {
+  .AhaWiki .commonAhaWiki div.InterpreterSchema {
     clear: right;
     float: none;
     display: block;
@@ -456,60 +456,65 @@ kbd:hover > kbd {
     margin: 10px 0;
   }
 }
-.AhaWiki .commonAhaWiki div.schema h5:first-of-type {
+.AhaWiki .commonAhaWiki div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki div.schema p {
+.AhaWiki .commonAhaWiki div.InterpreterSchema p {
   margin-top: 0;
 }
-.AhaWiki .commonAhaWiki div.schema img {
+.AhaWiki .commonAhaWiki div.InterpreterSchema img {
   min-width: 230px;
   max-width: 100%;
 }
-.AhaWiki .commonAhaWiki div.schema dl {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl {
   margin: 0;
 }
-.AhaWiki .commonAhaWiki div.schema dl dt {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl dt {
   margin-top: 10px;
 }
-.AhaWiki .commonAhaWiki div.schema dl dd {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
 }
-.AhaWiki .commonAhaWiki div.schema dl .address {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #f7f7f7;
 }
-.AhaWiki .commonAhaWiki div.schema dl .address dd {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl .address > dd {
+  display: block;
   margin-left: 0;
 }
-.AhaWiki .commonAhaWiki div.schema dl .address img.iconMap {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl .address > dd > div.mapServiceLinks > a {
+  white-space: nowrap;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl .address img.iconMap {
   display: inline-block;
   width: 16px;
   min-width: 16px;
   height: 16px;
   vertical-align: middle;
 }
-.AhaWiki .commonAhaWiki div.schema dl .address .aspectRatioWrapper {
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl .address .aspectRatioWrapper {
   margin-top: 5px;
+  margin-bottom: 5px;
 }
-.AhaWiki .commonAhaWiki div.schema ul {
+.AhaWiki .commonAhaWiki div.InterpreterSchema ul {
   list-style-type: none;
   margin: 0;
   padding-left: 20px;
 }
-.AhaWiki .commonAhaWiki div.schema .match {
+.AhaWiki .commonAhaWiki div.InterpreterSchema .match {
   color: #00f;
   font-weight: bold;
 }
-.AhaWiki .commonAhaWiki div.schema .unknown,
-.AhaWiki .commonAhaWiki div.schema .supersededBy {
+.AhaWiki .commonAhaWiki div.InterpreterSchema .unknown,
+.AhaWiki .commonAhaWiki div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
   color: #aaa;
 }
-.AhaWiki .commonAhaWiki div.schema sup {
+.AhaWiki .commonAhaWiki div.InterpreterSchema sup {
   color: #777;
   display: block;
   white-space: nowrap;
@@ -939,7 +944,7 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc {
   clear: right;
 }
-.AhaWiki .wikiContent div.schema {
+.AhaWiki .wikiContent div.InterpreterSchema {
   clear: right;
   float: right;
   margin-left: 10px;
@@ -952,7 +957,7 @@ kbd:hover > kbd {
   max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
-  .AhaWiki .wikiContent div.schema {
+  .AhaWiki .wikiContent div.InterpreterSchema {
     clear: right;
     float: none;
     display: block;
@@ -960,60 +965,65 @@ kbd:hover > kbd {
     margin: 10px 0;
   }
 }
-.AhaWiki .wikiContent div.schema h5:first-of-type {
+.AhaWiki .wikiContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
-.AhaWiki .wikiContent div.schema p {
+.AhaWiki .wikiContent div.InterpreterSchema p {
   margin-top: 0;
 }
-.AhaWiki .wikiContent div.schema img {
+.AhaWiki .wikiContent div.InterpreterSchema img {
   min-width: 230px;
   max-width: 100%;
 }
-.AhaWiki .wikiContent div.schema dl {
+.AhaWiki .wikiContent div.InterpreterSchema dl {
   margin: 0;
 }
-.AhaWiki .wikiContent div.schema dl dt {
+.AhaWiki .wikiContent div.InterpreterSchema dl dt {
   margin-top: 10px;
 }
-.AhaWiki .wikiContent div.schema dl dd {
+.AhaWiki .wikiContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
 }
-.AhaWiki .wikiContent div.schema dl .address {
+.AhaWiki .wikiContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #f7f7f7;
 }
-.AhaWiki .wikiContent div.schema dl .address dd {
+.AhaWiki .wikiContent div.InterpreterSchema dl .address > dd {
+  display: block;
   margin-left: 0;
 }
-.AhaWiki .wikiContent div.schema dl .address img.iconMap {
+.AhaWiki .wikiContent div.InterpreterSchema dl .address > dd > div.mapServiceLinks > a {
+  white-space: nowrap;
+}
+.AhaWiki .wikiContent div.InterpreterSchema dl .address img.iconMap {
   display: inline-block;
   width: 16px;
   min-width: 16px;
   height: 16px;
   vertical-align: middle;
 }
-.AhaWiki .wikiContent div.schema dl .address .aspectRatioWrapper {
+.AhaWiki .wikiContent div.InterpreterSchema dl .address .aspectRatioWrapper {
   margin-top: 5px;
+  margin-bottom: 5px;
 }
-.AhaWiki .wikiContent div.schema ul {
+.AhaWiki .wikiContent div.InterpreterSchema ul {
   list-style-type: none;
   margin: 0;
   padding-left: 20px;
 }
-.AhaWiki .wikiContent div.schema .match {
+.AhaWiki .wikiContent div.InterpreterSchema .match {
   color: #00f;
   font-weight: bold;
 }
-.AhaWiki .wikiContent div.schema .unknown,
-.AhaWiki .wikiContent div.schema .supersededBy {
+.AhaWiki .wikiContent div.InterpreterSchema .unknown,
+.AhaWiki .wikiContent div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
   color: #aaa;
 }
-.AhaWiki .wikiContent div.schema sup {
+.AhaWiki .wikiContent div.InterpreterSchema sup {
   color: #777;
   display: block;
   white-space: nowrap;
@@ -1606,7 +1616,7 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.toc {
   clear: right;
 }
-.AhaWiki .paperContent .page .pageContent div.schema {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
   clear: right;
   float: right;
   margin-left: 10px;
@@ -1619,7 +1629,7 @@ kbd:hover > kbd {
   max-width: 40vw;
 }
 @media only screen and (max-width: 768px) {
-  .AhaWiki .paperContent .page .pageContent div.schema {
+  .AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
     clear: right;
     float: none;
     display: block;
@@ -1627,60 +1637,65 @@ kbd:hover > kbd {
     margin: 10px 0;
   }
 }
-.AhaWiki .paperContent .page .pageContent div.schema h5:first-of-type {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent div.schema p {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema p {
   margin-top: 0;
 }
-.AhaWiki .paperContent .page .pageContent div.schema img {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema img {
   min-width: 230px;
   max-width: 100%;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl {
   margin: 0;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl dt {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dt {
   margin-top: 10px;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl dd {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl .address {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
   border: 1px solid #ccc;
   background-color: #f7f7f7;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl .address dd {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address > dd {
+  display: block;
   margin-left: 0;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl .address img.iconMap {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address > dd > div.mapServiceLinks > a {
+  white-space: nowrap;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address img.iconMap {
   display: inline-block;
   width: 16px;
   min-width: 16px;
   height: 16px;
   vertical-align: middle;
 }
-.AhaWiki .paperContent .page .pageContent div.schema dl .address .aspectRatioWrapper {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address .aspectRatioWrapper {
   margin-top: 5px;
+  margin-bottom: 5px;
 }
-.AhaWiki .paperContent .page .pageContent div.schema ul {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema ul {
   list-style-type: none;
   margin: 0;
   padding-left: 20px;
 }
-.AhaWiki .paperContent .page .pageContent div.schema .match {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .match {
   color: #00f;
   font-weight: bold;
 }
-.AhaWiki .paperContent .page .pageContent div.schema .unknown,
-.AhaWiki .paperContent .page .pageContent div.schema .supersededBy {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .unknown,
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
   color: #aaa;
 }
-.AhaWiki .paperContent .page .pageContent div.schema sup {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema sup {
   color: #777;
   display: block;
   white-space: nowrap;

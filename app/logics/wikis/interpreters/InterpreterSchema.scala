@@ -119,23 +119,18 @@ object InterpreterSchema extends TraitInterpreter {
                       </dd>
                     case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
                       val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-
-                        <div class="address">
-                          <dd property={key}>
-                            {
-                              if(Hangul.containsKo(v)) {
-                                expandAddress(v).flatMap(seq => Seq(
-                                  XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
-                                  " ",
-                                ))
-                              } else {
-                                XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
-                              }
+                      <div class="address">
+                        <dd property={key}>
+                          {
+                            if(Hangul.containsKo(v)) {
+                              expandAddress(v).flatMap(seq => Seq(
+                                XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                " ",
+                              ))
+                            } else {
+                              XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
                             }
-                            <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="GoogleMap"/></a>
-                            <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="NaverMap"/></a>
-                            <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/></a>
-                          </dd>
+                          }
                           <div class="aspectRatioWrapper">
                             <div class="ratio_1_1" ></div>
                             <div class="aspectRatioContent">
@@ -145,19 +140,29 @@ object InterpreterSchema extends TraitInterpreter {
                               src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
                             </div>
                           </div>
-                        </div>
-                      case v =>
-                        <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
-                    }
+                          {
+                            if (Hangul.containsKo(v)) {
+                              <div class="mapServiceLinks">
+                                <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="Google Map"/>Google&nbsp;Map</a>
+                                <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="Naver Map"/>Naver&nbsp;Map</a>
+                                <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/>Kakao&nbsp;Map</a>
+                              </div>
+                            }
+                          }
+                        </dd>
+                      </div>
+                    case v =>
+                      <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
                   }
-                </div>
+                }
+              </div>
             }
           }
         </div>
       </dl>
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>
-        val r = <div class="schema">{dl}</div>
+        val r = <div class="schema InterpreterSchema">{dl}</div>
         r.toString()
       case RenderingMode.Preview =>
         val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
@@ -170,7 +175,7 @@ object InterpreterSchema extends TraitInterpreter {
           ""
         }
         val r =
-          <div class="schema">
+          <div class="schema InterpreterSchema">
             {dl}
             <div class="preview info">
               <h6>Recommended Properties</h6>

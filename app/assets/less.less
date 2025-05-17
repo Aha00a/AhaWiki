@@ -337,7 +337,8 @@ kbd {
 		div.toc {
 			clear: right;
 		}
-		div.schema {
+
+		div.InterpreterSchema {
 			clear: right;
 			float: right;
 			margin-left: 10px;
@@ -382,8 +383,14 @@ kbd {
 					padding: 10px;
 					border: 1px solid #ccc;
 					background-color: #f7f7f7;
-					dd {
+					> dd {
+						display: block;
 						margin-left: 0;
+						> div.mapServiceLinks {
+							> a {
+								white-space: nowrap;
+							}
+						}
 					}
 					img.iconMap {
 						display: inline-block;
@@ -394,6 +401,7 @@ kbd {
 					}
 					.aspectRatioWrapper {
 						margin-top: 5px;
+						margin-bottom: 5px;
 					}
 				}
 			}
