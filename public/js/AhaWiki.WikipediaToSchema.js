@@ -76,6 +76,7 @@
     const WikipediaToSchemaProperty = {
         "Address": "address",
         "Alma mater": "alumniOf",
+        "Also known as": "alternateName",
         "Application category": "applicationCategory",
         "Application subcategory": "applicationSubCategory",
         "Area served": "areaServed",
