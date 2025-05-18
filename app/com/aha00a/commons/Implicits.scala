@@ -30,8 +30,8 @@ object Implicits {
 
     def containsIgnoreCase(rhs: String): Boolean = s.toLowerCase().contains(rhs.toLowerCase())
 
-    def escapeHtml(): String = s.replaceAll("<", "&lt;").replaceAll("&", "&amp;").replaceAll(">", "&gt;")
-    def escapeHtmlAttribute(): String = s.replaceAll("\"", "&quot;").replaceAll("&", "&amp;")
+    def escapeHtml(): String = s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    def escapeHtmlAttribute(): String = s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll("\"", "&quot;")
 
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString
