@@ -60,7 +60,7 @@
                     const tdLi = td.querySelectorAll('li');
                     const values = tdLi.length
                         ? [...tdLi].map(v => v.innerText.trim())
-                        : td.innerText.trim().split(/\n+/g);
+                        : td.innerText.trim().split(/\n+/g).flatMap(v => v.split(',').map(v => v.trim()).filter(v => v));
                     const line = [key, ...values];
                     arrayArrayValue.push(line);
                 }
@@ -104,6 +104,7 @@
         "Distributed by": "publisher",
         "Divisions": "department",
         "Edited by": "editor",
+        "Executive producer": "producer",
         "Executive producers": "producer",
         "Formation": "foundingDate",
         "Founded": "foundingDate",
@@ -113,10 +114,10 @@
         "Genres": "genre",
         "Headquarters": "location",
         "ICD-10": "code",
+        "ISBN": "isbn",
         "Illustrator": "illustrator",
         "Industry": "industry",
         "Initial release": "datePublished",
-        "ISBN": "isbn",
         "Key people": "employee",
         "Language": "inLanguage",
         "Launched": "datePublished",
@@ -146,6 +147,7 @@
         "Producers": "producer",
         "Production companies": "productionCompany",
         "Production company": "productionCompany",
+        "Production location": "contentLocation",
         "Production locations": "contentLocation",
         "Productioncompanies": "productionCompany",
         "Productioncompany": "productionCompany",
@@ -188,8 +190,8 @@
         "제작사": "productionCompany",
         "조연출": "director",
         "종류": "applicationCategory",
-        "출연자": "actor",
         "추가 채널": "publisher",
+        "출연자": "actor",
         "크기": "size",
         "편집": "editor",
         "프로듀서": "producer",
