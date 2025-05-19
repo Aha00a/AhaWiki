@@ -19,6 +19,7 @@ import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Random
 
 /*
 List of prime numbers less than 3600
@@ -101,7 +102,9 @@ class ApplicationLifecycleHook @Inject()(
       implicit val site: Site = SiteLogic.selectRandom()
       val seq: Seq[String] = Page.pageSelectNameWhereNoCosineSimilarity()
       for ((v, i) <- seq.zipWithIndex) {
-        actorAhaWiki ! Calculate(site, v, i, seq.length)
+        actorSystem.scheduler.scheduleOnce(((i + 1) * 13) seconds) {
+          actorAhaWiki ! Calculate(site, v, i, seq.length)
+        }
       }
     }
   })
@@ -111,7 +114,9 @@ class ApplicationLifecycleHook @Inject()(
       implicit val site: Site = SiteLogic.selectRandom()
       val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
       for ((v, i) <- seq.zipWithIndex) {
-        actorAhaWiki ! Calculate(site, v, i, seq.length)
+        actorSystem.scheduler.scheduleOnce(((i + 1) * 17) seconds) {
+          actorAhaWiki ! Calculate(site, v, i, seq.length)
+        }
       }
     }
   })
