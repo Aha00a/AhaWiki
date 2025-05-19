@@ -99,8 +99,9 @@ class ApplicationLifecycleHook @Inject()(
   actorSystem.scheduler.scheduleWithFixedDelay(13 seconds, 13 minutes)(() => {
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.selectRandom()
-      Page.pageSelectNameWhereNoCosineSimilarity() map { s =>
-        actorAhaWiki ! Calculate(site, s)
+      val seq: Seq[String] = Page.pageSelectNameWhereNoCosineSimilarity()
+      for ((v, i) <- seq.zipWithIndex) {
+        actorAhaWiki ! Calculate(site, v, i, seq.length)
       }
     }
   })

@@ -180,7 +180,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
   }
 
 
-  def pageSelectNameWhereNoCosineSimilarity()(implicit connection: Connection, site: Site): Option[String] = {
+  def pageSelectNameWhereNoCosineSimilarity()(implicit connection: Connection, site: Site): Seq[String] = {
     SQL"""SELECT
               name
               FROM (
@@ -190,9 +190,9 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
                   SELECT DISTINCT(name1) FROM CalculatedCosineSimilarity WHERE site = ${site.seq}
               )
               ORDER BY RAND()
-              LIMIT 1
+              LIMIT 10
            """
-      .as(str("name") singleOpt)
+      .as(str("name") *)
   }
 
   def pageSelectNameWhereNoLinkSrc()(implicit connection: Connection, site: Site): Seq[String] = {

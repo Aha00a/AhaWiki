@@ -3,10 +3,10 @@ package controllers
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.UriUtil
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
-import logics.wikis.PageLogic
 import models.ContextSite
 import models.PageContent
 import models.tables.Site
@@ -35,17 +35,10 @@ class Home @Inject() (
   }
 
   def random: Action[AnyContent] = Action { implicit request =>
-    import com.aha00a.commons.utils.UriUtil
-    import models.RequestWrapper
-
-    implicit val provider: RequestWrapper = RequestWrapper()
-    database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextSite: ContextSite = ContextSite()
-
-      val name = PageLogic.getListPageByPermission().random().name
-      Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
-    }
+    implicit val site: Site = SiteLogic.get(request.host)
+    val contextSite: ContextSite = ContextSite()
+    val name = contextSite.seqPageByPermission.random().name
+    Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
