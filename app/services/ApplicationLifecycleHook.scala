@@ -97,38 +97,42 @@ class ApplicationLifecycleHook @Inject()(
     Future.successful(())
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(13 seconds, 13 minutes)(() => {
+  def scheduleWithFixedDelay(prime: Int, f: Int => Unit): Unit = {
+    actorSystem.scheduler.scheduleWithFixedDelay(prime seconds, prime minutes)(() => f(prime))
+  }
+
+  scheduleWithFixedDelay(13, prime => {
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.selectRandom()
       val seq: Seq[String] = Page.pageSelectNameWhereNoCosineSimilarity()
       for ((v, i) <- seq.zipWithIndex) {
-        actorSystem.scheduler.scheduleOnce(((i + 1) * 13) seconds) {
+        actorSystem.scheduler.scheduleOnce(((i + 1) * prime) seconds) {
           actorAhaWiki ! Calculate(site, v, i, seq.length)
         }
       }
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(17 seconds, 17 minutes)(() => {
+  scheduleWithFixedDelay(17, prime => {
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.selectRandom()
       val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
       for ((v, i) <- seq.zipWithIndex) {
-        actorSystem.scheduler.scheduleOnce(((i + 1) * 17) seconds) {
+        actorSystem.scheduler.scheduleOnce(((i + 1) * prime) seconds) {
           actorAhaWiki ! Calculate(site, v, i, seq.length)
         }
       }
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(19 seconds, 19 minutes)(() => {
+  scheduleWithFixedDelay(19, _ => {
     database.withConnection { implicit connection =>
       val deletedRowCount = models.tables.AccessLog.deleteExpired()
       logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
     }
   })
 
-  actorSystem.scheduler.scheduleWithFixedDelay(21 seconds, 21 minutes)(() => {
+  scheduleWithFixedDelay(21, _ => {
     database.withConnection { implicit connection =>
       val deletedRowCount = models.tables.IpDeny.deleteExpired()
       logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
