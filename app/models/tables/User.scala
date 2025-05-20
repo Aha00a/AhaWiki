@@ -1,28 +1,13 @@
 package models.tables
 
-import java.sql.Connection
-
-import anorm.SQL
 import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
+import anorm._
 
 import java.sql.Connection
 import java.util.Date
-
-import anorm._
-import anorm.SqlParser.date
-import anorm.SqlParser.flatten
-import anorm.SqlParser.long
-import anorm.SqlParser.str
-import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.RangeUtil
-import models.WithDateTime
-import models.tables
-
-import scala.collection.immutable
-import scala.util.matching.Regex
 
 case class User(seq:Long, created: Date, updated: Date, email: String) {
 
