@@ -9,6 +9,7 @@ import anorm._
 import java.sql.Connection
 import java.util.Date
 
+// TODO: add nickname
 case class User(seq:Long, created: Date, updated: Date, email: String) {
 
 }
