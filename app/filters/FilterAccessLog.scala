@@ -93,7 +93,7 @@ class FilterAccessLog @Inject()(
     val scheme = requestHeader.scheme
     val host = requestHeader.host
     val uri: String = requestHeader.uri
-    val url = s"$scheme://$host$uri"
+    val url = s"$scheme://$host$uri" // TODO: remove
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
     val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>

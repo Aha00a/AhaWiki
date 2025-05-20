@@ -27,8 +27,8 @@ object AccessLog extends Logging {
     method: String,
     scheme: String,
     host: String,
-    uri: String,
-    url: String,
+    uri: String, // TODO: rename to path
+    url: String, // TODO: remove
     remoteAddress: String,
     userAgent: String,
     status: Int,
