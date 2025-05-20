@@ -1,7 +1,8 @@
 package logics
 
+import play.api.mvc.Request
 import play.api.mvc.RequestHeader
-import play.api.mvc.{Request, Session}
+import play.api.mvc.Session
 
 object SessionLogic {
   val sessionKeyId = "id"
