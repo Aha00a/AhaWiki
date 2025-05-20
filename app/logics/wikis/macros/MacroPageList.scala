@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.IpAddressUtil
 import logics.wikis.interpreters.InterpreterTable
 import models.ContextWikiPage
 
@@ -14,7 +15,7 @@ object MacroPageList extends TraitMacro {
       s"${t.size}",
       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
       s"${t.author.map(a => s"[$a]").getOrElse("")}",
-      s"${t.remoteAddress}",
+      s"${IpAddressUtil.mask(t.remoteAddress)}",
       s"${t.comment}"
     ))
 

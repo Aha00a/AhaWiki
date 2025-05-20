@@ -54,7 +54,7 @@
                             </td>
                             <td>@(history.toIsoLocalDateTimeString)</td>
                             <td>@(history.author)</td>
-                            <td>@(history.remoteAddress)</td>
+                            <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td>@(history.comment)</td>
                         </tr>
                     }

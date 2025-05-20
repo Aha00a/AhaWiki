@@ -28,7 +28,7 @@
                     <td>@(page.size)</td>
                     <td>@(page.revision)</td>
                     <td>@(page.author)</td>
-                    <td>@(page.remoteAddress)</td>
+                    <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(page.remoteAddress))</td>
                     <td>@(page.comment)</td>
                 </tr>
             }

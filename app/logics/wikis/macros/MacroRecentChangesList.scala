@@ -1,10 +1,8 @@
 package logics.wikis.macros
 
-import com.aha00a.supercsv.SupercsvUtil
-import logics.wikis.PageLogic
+import com.aha00a.commons.utils.IpAddressUtil
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
-import play.api.cache.SyncCacheApi
 import play.api.db.Database
 
 import scala.util.matching.Regex
@@ -25,6 +23,6 @@ object MacroRecentChangesList extends TraitMacro {
   }
 
   def toHtmlString(list: Seq[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
-    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${p.comment} by [${p.author.getOrElse(p.remoteAddress)}]""").mkString("\n"))
+    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${p.comment} by [${p.author.getOrElse(IpAddressUtil.mask(p.remoteAddress))}]""").mkString("\n"))
   }
 }

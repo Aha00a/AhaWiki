@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import com.aha00a.commons.utils.IpAddressUtil
 import com.aha00a.supercsv.SupercsvUtil
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
@@ -17,7 +18,7 @@ object MacroRecentChanges extends TraitMacro {
                     s"""'''["${t.name}"]'''""",
                     s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
                     s"${t.toIsoLocalDateTimeString}",
-                    s"${t.author.map(a => s"[$a]").getOrElse("")} ${t.remoteAddress}",
+                    s"${t.author.map(a => s"[$a]").getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
                     s"${t.comment}"
                 ))
                 s"""=== $yearMonth
