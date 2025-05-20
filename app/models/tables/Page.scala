@@ -132,7 +132,7 @@ SELECT name, revision, dateTime, U.email author, user, remoteAddress, comment, I
     SQL"""
 SELECT name, revision, dateTime, U.email author, user, remoteAddress, content, comment, IFNULL(permRead, '') permRead
     FROM Page P
-    LEFT JOIN User ON User.seq = P.user
+    LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
     ORDER BY revision ASC
     """
