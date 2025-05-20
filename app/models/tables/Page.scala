@@ -1,12 +1,12 @@
 package models.tables
 
-import anorm.SqlParser.flatten
+import anorm.SqlParser._
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.RangeUtil
-import com.aha00a.play.AnormSqlParser
+import com.aha00a.play.AnormSqlParser._
 import models.WithDateTime
 import models.tables
 import zio.json._
@@ -16,9 +16,9 @@ import java.time.LocalDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, author: String, remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
+case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 object PageWithoutContentWithSize {
   import models.JsonEncoderDecoderForDate._
   implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
@@ -28,7 +28,7 @@ object PageWithoutContentWithSize {
   def tupled = (apply _).tupled
 }
 
-case class SearchResult(name:String, content:String, dateTime: LocalDateTime) {
+case class SearchResult(name: String, dateTime: LocalDateTime, content: String) {
 
   def summarise(q: String): SearchResultSummary = {
     val lines = content.split("""(\r\n|\n)+""").toSeq
@@ -55,7 +55,10 @@ object Page {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  private val rowParser = str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
+  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("author") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
+  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("author") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead")
+  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("author") ~ optionInt("user") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size")
+  private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
     SQL"SELECT COUNT(*) cnt FROM Page WHERE site = ${site.seq}".as(long("cnt") single)
@@ -70,40 +73,79 @@ object Page {
   }
 
   def selectLastRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision DESC LIMIT 1"
-      .as(rowParser singleOpt).map(flatten)
+    //language=sql
+    SQL"""
+SELECT name, revision, dateTime, U.email author, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
+  FROM Page P
+  LEFT JOIN User U ON U.seq = P.user
+  WHERE site = ${site.seq} AND name = $name
+  ORDER BY revision DESC
+  LIMIT 1
+  """
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision ASC LIMIT 1"
-      .as(rowParser singleOpt).map(flatten)
+    //language=sql
+    SQL"""
+SELECT name, revision, dateTime, U.email author, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
+    FROM Page P
+    LEFT JOIN User U ON U.seq = P.user
+    WHERE site = ${site.seq} AND name = $name
+     ORDER BY revision ASC
+     LIMIT 1
+     """
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead, content FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision ORDER BY revision ASC LIMIT 1"
-      .as(rowParser singleOpt).map(flatten)
+    //language=sql
+    SQL"""
+SELECT name, revision, dateTime, U.email author, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
+    FROM Page P
+    LEFT JOIN User U ON U.seq = P.user
+    WHERE site = ${site.seq} AND name = $name AND revision = $revision
+    ORDER BY revision ASC
+    LIMIT 1
+    """
+      .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
   }
 
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, comment, IFNULL(permRead, '') permRead FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision DESC"
-      .as(str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") *).map(flatten)
+    //language=sql
+    SQL"""
+SELECT name, revision, dateTime, U.email author, user, remoteAddress, comment, IFNULL(permRead, '') permRead
+    FROM Page P
+    LEFT JOIN User U ON U.seq = P.user
+    WHERE site = ${site.seq} AND name = $name
+    ORDER BY revision DESC
+    """
+      .as(rowParserPageWithoutContent *).map(flatten)
       .map(PageWithoutContent.tupled)
   }
 
   def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection, site: Site): T = {
-    SQL"SELECT name, revision, dateTime, author, remoteAddress, content, comment, IFNULL(permRead, '') permRead FROM Page WHERE site = ${site.seq} AND name = $name ORDER BY revision ASC"
-      .as(rowParser *).map(flatten)
+    //language=sql
+    SQL"""
+SELECT name, revision, dateTime, U.email author, user, remoteAddress, content, comment, IFNULL(permRead, '') permRead
+    FROM Page P
+    LEFT JOIN User ON User.seq = P.user
+    WHERE site = ${site.seq} AND name = $name
+    ORDER BY revision ASC
+    """
+      .as(rowParserPage *).map(flatten)
       .foldLeft(t)((a, v) => f(a, Page.tupled(v)))
   }
 
   def insert(p: Page)(implicit connection: Connection, site: Site): Option[Long] = {
+    //language=sql
     SQL"""
            INSERT INTO Page
-           (site, name, revision, dateTime, author, remoteAddress, comment, permRead, content) values
-           (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
+           (site, name, revision, dateTime, author, user, remoteAddress, comment, permRead, content) values
+           (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.user.map(_.toString).getOrElse(null)}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
         """.executeInsert()
   }
 
@@ -132,9 +174,11 @@ object Page {
 
   // TODO: remove IFNULL(permRead) and fix schema
   def selectSeqPageWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageWithoutContentWithSize] = {
+    //language=sql
     SQL"""
-        SELECT P1.name, P1.revision, P1.dateTime, P1.author, P1.remoteAddress, P1.comment, IFNULL(P1.permRead, '') permRead, LENGTH(P1.content) size
+        SELECT P1.name, P1.revision, P1.dateTime, U.email author, P1.user, P1.remoteAddress, P1.comment, IFNULL(P1.permRead, '') permRead, LENGTH(P1.content) size
             FROM Page P1
+            LEFT JOIN User U ON U.seq = P1.user
             WHERE
                 P1.site = ${site.seq} AND
                 NOT EXISTS (
@@ -146,7 +190,7 @@ object Page {
                 )
             ORDER BY P1.name
     """
-      .as(str("name") ~ long("revision") ~ AnormSqlParser.localDateTime("dateTime") ~ str("author") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size") *).map(flatten)
+      .as(rowParserPageWithoutContentWithSize *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
   }
 
@@ -162,8 +206,9 @@ object Page {
   }
 
   def pageSearch(q:String)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
+    //language=sql
     SQL"""
-SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFNULL(w.permRead, '') permRead, w.content
+SELECT w.name, w.dateTime, w.content
      FROM Page w
      INNER JOIN (
          SELECT
@@ -176,7 +221,7 @@ SELECT w.name, w.revision, w.dateTime, w.author, w.remoteAddress, w.comment, IFN
          w.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
          w.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
      ORDER BY w.name"""
-      .as(str("name") ~ str("content") ~ AnormSqlParser.localDateTime("dateTime") *).map(flatten).map(SearchResult.tupled)
+      .as(rowParserSearchResult *).map(flatten).map(SearchResult.tupled)
   }
 
 

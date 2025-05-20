@@ -95,7 +95,7 @@ class Wiki @Inject()(implicit val
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
-          val page = Page(name, 0, LocalDateTime.now(), "AhaWiki", "127.0.0.1", "", "", content)
+          val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", "", content)
           Ok(views.html.Wiki.edit(page, applicationConf)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>

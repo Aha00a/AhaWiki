@@ -36,9 +36,10 @@ object PageLogic {
     import models.tables.Page
     import models.tables.Site
     implicit val site: Site = wikiContext.site
-    val author = wikiContext.requestWrapper.getId.getOrElse("anonymous")
+    val author = wikiContext.requestWrapper.getId
+    val user = wikiContext.requestWrapper.getUser
     val permRead = PageContent(body).read.getOrElse("")
-    val page = Page(name, revision, dateTime, author, wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
+    val page = Page(name, revision, dateTime, author, user, wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
     Page.insert(page)
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }

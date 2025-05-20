@@ -5,13 +5,18 @@ import play.api.mvc.RequestHeader
 import play.api.mvc.Session
 
 object SessionLogic {
-  val sessionKeyId = "id"
+  val sessionKeyEmail = "email"
+  val sessionKeyUser = "user"
 
   def getId(request: RequestHeader): Option[String] = {
-    request.session.get(sessionKeyId)
+    request.session.get(sessionKeyEmail)
   }
 
-  def login(request: Request[Any], id: String): Session = {
-    request.session + (sessionKeyId -> id)
+  def getUser(request: RequestHeader): Option[Int] = {
+    request.session.get(sessionKeyUser).map(_.toInt)
+  }
+
+  def login(request: Request[Any], email: String, user: Int): Session = {
+    request.session + (sessionKeyEmail -> email) + (sessionKeyUser -> user.toString)
   }
 }

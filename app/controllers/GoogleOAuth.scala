@@ -36,19 +36,19 @@ class GoogleOAuth @Inject()(
   def callback(code: String): Action[AnyContent] = Action.async { implicit request =>
     GoogleOAuthApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
       case Some(email) =>
-        database.withConnection { implicit connection =>
+        val user = database.withConnection { implicit connection =>
           val user = models.tables.User.selectWhereEmail(email)
           user match {
             case Some(user) =>
-              logger.info(user.toString)
+              user.seq
             case None =>
               val optionSeq = models.tables.User.insert(email)
-              logger.info(optionSeq.toString)
+              optionSeq.get
           }
         }
 
         Redirect(request.flash.get("redirect").getOrElse("/"))
-          .withSession(SessionLogic.login(request, email))
+          .withSession(SessionLogic.login(request, email, user.toInt))
           .flashing("success" -> "Successfully logged in.")
       case None =>
         Redirect(request.flash.get("redirect").getOrElse("/"))

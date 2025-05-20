@@ -8,6 +8,7 @@ import java.util.Locale
 
 trait RequestWrapper {
   def getId: Option[String]
+  def getUser: Option[Int]
   def locale: Locale
   def getQueryString(key: String): Option[String]
   val remoteAddress: String
@@ -18,6 +19,7 @@ trait RequestWrapper {
 object RequestWrapper {
   def apply()(implicit requestHeader: RequestHeader): RequestWrapper = new RequestWrapper {
     override def getId: Option[String] = SessionLogic.getId(requestHeader)
+    override def getUser: Option[Int] = SessionLogic.getUser(requestHeader)
     override def locale: Locale = requestHeader.locale
     override def getQueryString(key: String): Option[String] = requestHeader.getQueryString(key)
     override val remoteAddress: String = requestHeader.remoteAddressWithXRealIp
@@ -27,6 +29,7 @@ object RequestWrapper {
 
   def empty: RequestWrapper = new RequestWrapper {
     override def getId: Option[String] = None
+    override def getUser: Option[Int] = None
     override def locale: Locale = Locale.KOREA
     override def getQueryString(key: String): Option[String] = None
     override val remoteAddress: String = "127.0.0.1"

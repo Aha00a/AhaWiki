@@ -63,7 +63,7 @@ class Feed @Inject()(
 
     val seqListLatest: Seq[PageWithoutContentWithSize] = contextSite.seqPageByPermission.sortBy(_.dateTime).reverse.take(30)
     val feed = Feed(site.name, "", s"https://${request.host}", "", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO: id
-    val entries = seqListLatest.map(p => Entry(s"${p.name} - ${site.name}", s"/w/${p.name}", s"/w/${p.name}", p.name, p.localDateTime, p.name, p.name, p.author)) // TODO: summary, content
+    val entries = seqListLatest.map(p => Entry(s"${p.name} - ${site.name}", s"/w/${p.name}", s"/w/${p.name}", p.name, p.localDateTime, p.name, p.name, p.author.getOrElse(""))) // TODO: summary, content
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}
