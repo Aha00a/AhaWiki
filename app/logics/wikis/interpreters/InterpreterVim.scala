@@ -1,23 +1,23 @@
 package logics.wikis.interpreters
 
+import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.Using
+import models.ContextWikiPage
+import models.PageContent
+import models.tables.Config
+import models.tables.Link
+import models.tables.Site
+import play.api.Logging
+import play.api.db.Database
+
 import java.io.File
 import java.nio.charset.CodingErrorAction
 import java.security.MessageDigest
-
-import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.Using
-import models.PageContent
-import models.ContextWikiPage
-import play.api.Logging
-import play.api.cache.SyncCacheApi
-import play.api.db.Database
-
 import scala.io.Codec
 import scala.sys.process._
 
 object InterpreterVim extends TraitInterpreter with Logging {
 
-  import models.tables.Link
 
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
@@ -71,8 +71,6 @@ object InterpreterVim extends TraitInterpreter with Logging {
     if(parser.isError) {
       "Error!"
     } else {
-      import models.tables.Config
-      import models.tables.Site
       implicit val database: Database = wikiContext.database
       implicit val site: Site = wikiContext.site
       val (colorscheme, debug) = database.withConnection { implicit connection =>
