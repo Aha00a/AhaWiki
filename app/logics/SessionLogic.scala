@@ -1,22 +1,27 @@
 package logics
 
+import models.tables.User
 import play.api.mvc.Request
 import play.api.mvc.RequestHeader
 import play.api.mvc.Session
 
 object SessionLogic {
+  val sessionKeySeq = "seq"
   val sessionKeyEmail = "email"
-  val sessionKeyUser = "user"
+  val sessionKeyNickname = "nickname"
 
-  def getId(request: RequestHeader): Option[String] = {
-    request.session.get(sessionKeyEmail)
+  def getUser(request: RequestHeader): Option[User.IdEmailNickname] = {
+    for {
+      seq <- request.session.get(sessionKeySeq).flatMap(_.toIntOption)
+      email <- request.session.get(sessionKeyEmail)
+      nickname <- request.session.get(sessionKeyNickname)
+    } yield User.IdEmailNickname(seq, email, nickname)
   }
 
-  def getUser(request: RequestHeader): Option[Int] = {
-    request.session.get(sessionKeyUser).map(_.toInt)
-  }
-
-  def login(request: Request[Any], email: String, user: Int): Session = {
-    request.session + (sessionKeyEmail -> email) + (sessionKeyUser -> user.toString)
+  def login(request: Request[Any], user: User.IdEmailNickname): Session = {
+    request.session +
+      (sessionKeySeq -> user.seq.toString) +
+      (sessionKeyEmail -> user.email) +
+      (sessionKeyNickname -> user.nickname)
   }
 }

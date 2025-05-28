@@ -36,10 +36,9 @@ object PageLogic {
     import models.tables.Page
     import models.tables.Site
     implicit val site: Site = wikiContext.site
-    val author = wikiContext.requestWrapper.getId
     val user = wikiContext.requestWrapper.getUser
     val permRead = PageContent(body).read.getOrElse("")
-    val page = Page(name, revision, dateTime, author, user, wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
+    val page = Page(name, revision, dateTime, user.map(_.email), user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
     Page.insert(page)
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
@@ -51,11 +50,11 @@ object PageLogic {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
-    val optionId = provider.getId
+    val optionEmail = provider.getUser.map(_.email)
 
     val list: Seq[PageWithoutContentWithSize] = contextSite.ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get()
     val listFiltered = list.filter(p => {
-      wikiPermission.allowed(optionId, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
+      wikiPermission.allowed(optionEmail, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })
     // TODO: caching?
 

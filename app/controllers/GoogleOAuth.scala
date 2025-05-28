@@ -4,6 +4,7 @@ import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleOAuthApi
 import logics.ApplicationConf
 import logics.SessionLogic
+import models.tables.User
 import play.api.Logging
 import play.api.db.Database
 import play.api.libs.ws.WSClient
@@ -34,28 +35,23 @@ class GoogleOAuth @Inject()(
   }
 
   def callback(code: String): Action[AnyContent] = Action.async { implicit request =>
-    GoogleOAuthApi().retrieveEmailWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri) map {
-      case Some(email) =>
-        val user = database.withConnection { implicit connection =>
-          val user = models.tables.User.selectWhereEmail(email)
-          user match {
-            case Some(user) =>
-              user.seq
-            case None =>
-              val optionSeq = models.tables.User.insert(email)
-              optionSeq.get
-          }
-        }
+    val redirectUrl = request.flash.get("redirect").getOrElse("/")
 
-        Redirect(request.flash.get("redirect").getOrElse("/"))
-          .withSession(SessionLogic.login(request, email, user.toInt))
-          .flashing("success" -> "Successfully logged in.")
-      case None =>
-        Redirect(request.flash.get("redirect").getOrElse("/"))
-          .withNewSession
-          .flashing("error" -> "Auth Failed")
-    }
+    GoogleOAuthApi().retrieveEmailWithCode(
+      code,
+      confApi.clientId(),
+      confApi.clientSecret(),
+      googleApiRedirectUri
+    ).map(_.flatMap(email => database.withConnection { implicit connection => User.selectOrInsert(email) })
+      .map(user => Redirect(redirectUrl)
+        .withSession(SessionLogic.login(request, user))
+        .flashing("success" -> "Successfully logged in.")
+      )
+      .getOrElse(Redirect(redirectUrl)
+        .withNewSession
+        .flashing("error" -> "User creation failed")
+      )
+    )
   }
 }
-
 

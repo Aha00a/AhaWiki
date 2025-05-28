@@ -315,7 +315,7 @@ class Test @Inject()(implicit val
 
     val q = "#!read"
     val wikiPermission = WikiPermission()
-    val id = SessionLogic.getId(request).getOrElse("")
+    val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
     val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq() // TODO:
     val permissionLogic = new PermissionLogic(seqPermission)
 
@@ -328,28 +328,28 @@ class Test @Inject()(implicit val
             .filter(sr => {
               val pageContent = PageContent(sr.content)
               val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-              val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+              val readable = permissionLogic.permitted(sr.name, email, Permission.read)
               isReadableFromLegacy != readable && isReadableFromLegacy
             }).map(_.name),
           "readNewOnly" -> seqSearchResult
             .filter(sr => {
               val pageContent = PageContent(sr.content)
               val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-              val readable = permissionLogic.permitted(sr.name, id, Permission.read)
+              val readable = permissionLogic.permitted(sr.name, email, Permission.read)
               isReadableFromLegacy != readable && readable
             }).map(_.name),
           "writeLegacyOnly" -> seqSearchResult
             .filter(sr => {
               val pageContent = PageContent(sr.content)
               val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
-              val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+              val editable = permissionLogic.permitted(sr.name, email, Permission.edit)
               isWritableFromLagacy != editable && isWritableFromLagacy
             }).map(_.name),
           "writeNewOnly" -> seqSearchResult
             .filter(sr => {
               val pageContent = PageContent(sr.content)
               val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
-              val editable = permissionLogic.permitted(sr.name, id, Permission.edit)
+              val editable = permissionLogic.permitted(sr.name, email, Permission.edit)
               isWritableFromLagacy != editable && editable
             }).map(_.name),
         )

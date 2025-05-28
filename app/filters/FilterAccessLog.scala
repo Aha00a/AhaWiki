@@ -177,10 +177,7 @@ class FilterAccessLog @Inject()(
     }
   }
 
-  private def getUserSeq(requestHeader: RequestHeader)(implicit connection: Connection): Option[Long] = {
-    SessionLogic
-      .getId(requestHeader)
-      .flatMap(models.tables.User.selectWhereEmail)
-      .map(_.seq)
+  private def getUserSeq(requestHeader: RequestHeader): Option[Long] = {
+    SessionLogic.getUser(requestHeader).map(_.seq)
   }
 }

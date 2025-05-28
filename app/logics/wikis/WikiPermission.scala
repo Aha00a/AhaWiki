@@ -37,12 +37,12 @@ class WikiPermission(implicit provider: RequestWrapper, connection: Connection, 
   }
 
   def allowed(directive: Array[String]): Boolean = {
-    val optionId: Option[String] = provider.getId
-    allowed(optionId, directive)
+    val optionEmail: Option[String] = provider.getUser.map(_.email)
+    allowed(optionEmail, directive)
   }
 
-  def allowed(optionId: Option[String], directive: Array[String]): Boolean = {
-    optionId match {
+  def allowed(optionEmail: Option[String], directive: Array[String]): Boolean = {
+    optionEmail match {
       case Some(id) => directive.exists(s => s == "all" || s == "login" || s == id || (s.startsWith("@") && id.endsWith(s)))
       case None => directive.contains("all")
     }

@@ -7,7 +7,7 @@
             @action(false, null, null)
             <h1>@title</h1>
             <p>@(message)</p>
-            @if(!wikiContext.requestWrapper.getId) {
+            @if(!wikiContext.requestWrapper.getUser) {
                 <a href="@(routes.Auth.login)">
                     <i class="fas fa-sign-in-alt"></i>
                     Login
