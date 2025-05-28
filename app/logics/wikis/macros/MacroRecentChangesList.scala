@@ -13,7 +13,6 @@ object MacroRecentChangesList extends TraitMacro {
 
   val regexDigits: Regex = """^(\d+)$""".r
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    implicit val database: Database = wikiContext.database
     def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
     argument match {
       case "" | null => toHtmlString(wikiContext.seqPageByPermission.sortBy(_.dateTime)(desc))
