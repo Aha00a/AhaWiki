@@ -42,7 +42,7 @@ import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 
 class Wiki @Inject()(implicit val
-                     controllerComponents: ControllerComponents,
+controllerComponents: ControllerComponents,
                      actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,
@@ -79,7 +79,7 @@ class Wiki @Inject()(implicit val
 
       if(environment.mode == Mode.Dev) {
         import models.tables.Permission
-//        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
+        //        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
         val permissionLogic = new PermissionLogic(Seq())
         val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
         val readable = permissionLogic.permitted(name, email, Permission.read)
@@ -174,42 +174,56 @@ class Wiki @Inject()(implicit val
     }
   }
 
+  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
+
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     import models.tables.Link
 
-    val markupSchema = getMarkupSchema(name)
-    // TODO: refactoring
-    val optionLink: Option[Link] = Link.selectDstLimit1(name)
-    val seqCosineSimilarities: Seq[CalculatedCosineSimilarity] = CalculatedCosineSimilarity
-      .select(name)
-      .view
-      .filter(_.and(wikiContext.pageCanSee))
-      .take(1)
-      .toSeq
+    val schemaMarkup = getMarkupSchema(name)
+    val hasBacklinks = Link.selectDstLimit1(name).isDefined
+    val similarPages = CalculatedCosineSimilarity.select(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
+    val adjacentPagesCount = Adjacent.getSeqLinkFiltered(name).length
 
-    val markupSchemaWithTitle = markupSchema.toOption.map(s => s"=== [schema:Schema Schema] === #Schema-Generated\n$s").getOrElse("")
-    val markupBacklinksWithTitle = optionLink.map(s => s"=== Backlinks === #Backlinks-Generated\n[[Backlinks]]").getOrElse("")
-    val markupCosineSimilaritiesWithTitle = seqCosineSimilarities.headOption.map(s => s"=== Similar Pages === #Similar-Pages-Generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]").getOrElse("")
-    val seqLinkFiltered = Adjacent.getSeqLinkFiltered(name)
+    val context = MarkupContext(
+      schema = schemaMarkup.toOption.map(generateSchemaMarkup).getOrElse(""),
+      backlinks = hasBacklinks,
+      similarPages = similarPages.nonEmpty,
+      adjacentPages = adjacentPagesCount
+    )
 
-    (markupSchemaWithTitle, markupBacklinksWithTitle, markupCosineSimilaritiesWithTitle, seqLinkFiltered.length) match {
-      case ("", "", "", 0) => ""
-      case _ =>
-        s"""
-           |== See Also == #See-Also-Generated
-           |[[Html(<table class="column2"><tbody><tr><td>)]]
-           |$markupSchemaWithTitle
-           |
-           |$markupBacklinksWithTitle
-           |
-           |$markupCosineSimilaritiesWithTitle
-           |[[Html(</td><td>)]]
-           |
-           |=== Adjacent Pages === #Adjacent-Pages-Generated
-           |[[AdjacentPages]]
-           |[[Html(</td></tr></tbody></table>)]]
-           |""".stripMargin
-    }
+    if (isEmptyMarkup(context)) "" else generateFullMarkup(context)
+  }
+
+  private def generateSchemaMarkup(schema: String): String =
+    s"=== [schema:Schema Schema] === #Schema-Generated\n$schema"
+
+  private def generateBacklinksMarkup: String =
+    "=== Backlinks === #Backlinks-Generated\n[[Backlinks]]"
+
+  private def generateSimilarPagesMarkup: String =
+    "=== Similar Pages === #Similar-Pages-Generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
+
+  private def isEmptyMarkup(context: MarkupContext): Boolean =
+    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0
+
+  private def generateFullMarkup(context: MarkupContext): String = {
+    val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup else ""
+    val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
+
+    s"""
+       |== See Also == #See-Also-Generated
+       |[[Html(<table class="column2"><tbody><tr><td>)]]
+       |${context.schema}
+       |
+       |$backlinksMarkup
+       |
+       |$similarPagesMarkup
+       |[[Html(</td><td>)]]
+       |
+       |=== Adjacent Pages === #Adjacent-Pages-Generated
+       |[[AdjacentPages]]
+       |[[Html(</td></tr></tbody></table>)]]
+       |""".stripMargin
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
@@ -273,7 +287,7 @@ class Wiki @Inject()(implicit val
         "response" -> Seq(recaptcha),
         "remoteip" -> Seq(remoteAddress)
       )).map(response => {
-         logger.info(response.body.replaceAll("""\s+""", " "))
+        logger.info(response.body.replaceAll("""\s+""", " "))
         val json: JsValue = response.json
         if (!(json \ "success").as[Boolean]) {
           val errorCodes: Seq[String] = (json \ "error-codes").as[Seq[String]]
