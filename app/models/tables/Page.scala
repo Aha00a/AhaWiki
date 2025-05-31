@@ -176,19 +176,12 @@ SELECT name, revision, dateTime, U.email author, user, remoteAddress, content, c
   def selectSeqPageWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageWithoutContentWithSize] = {
     //language=sql
     SQL"""
-        SELECT P1.name, P1.revision, P1.dateTime, U.email author, P1.user, P1.remoteAddress, P1.comment, IFNULL(P1.permRead, '') permRead, LENGTH(P1.content) size
-            FROM Page P1
-            LEFT JOIN User U ON U.seq = P1.user
-            WHERE
-                P1.site = ${site.seq} AND
-                NOT EXISTS (
-                    SELECT 1
-                    FROM Page P2
-                    WHERE P2.site = P1.site
-                      AND P2.name = P1.name
-                      AND P2.revision > P1.revision
-                )
-            ORDER BY P1.name
+    SELECT P.name, P.revision, P.dateTime, U.email AS author, P.user, P.remoteAddress, P.comment, IFNULL(P.permRead, '') AS permRead, LENGTH(P.content) size
+        FROM Page P
+        INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
+        LEFT JOIN User U ON U.seq = P.user
+        WHERE P.site = ${site.seq}
+        ORDER BY P.name;
     """
       .as(rowParserPageWithoutContentWithSize *).map(flatten)
       .map(PageWithoutContentWithSize.tupled)
