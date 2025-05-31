@@ -201,19 +201,15 @@ SELECT name, revision, dateTime, U.email author, user, remoteAddress, content, c
   def pageSearch(q:String)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
     //language=sql
     SQL"""
-SELECT w.name, w.dateTime, w.content
-     FROM Page w
-     INNER JOIN (
-         SELECT
-             site, name, MAX(revision) revision
-             FROM Page
-             WHERE site = ${site.seq}
-             GROUP BY site, name
-     ) NV ON w.site = NV.site AND w.name = NV.name AND w.revision = NV.revision
+SELECT P.name, P.dateTime, P.content
+     FROM Page P
+     INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
      WHERE
-         w.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
-         w.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
-     ORDER BY w.name"""
+         P.site = ${site.seq} AND (
+             P.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
+             P.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
+         )
+     ORDER BY P.name"""
       .as(rowParserSearchResult *).map(flatten).map(SearchResult.tupled)
   }
 
