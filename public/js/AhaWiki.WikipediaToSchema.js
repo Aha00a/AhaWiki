@@ -123,6 +123,7 @@
         "Key people": "employee",
         "Language": "inLanguage",
         "Launched": "datePublished",
+        "Licence": "license",
         "License": "license",
         "Location": "location",
         "Manufacturer": "manufacturer",
