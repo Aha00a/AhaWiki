@@ -16,7 +16,7 @@ import scala.xml.XML
 object InterpreterSchema extends TraitInterpreter {
 
   import models.tables.Link
-  import models.tables.SchemaOrg
+  import models.tables.CalculatedSchemaOrg
 
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
 
@@ -73,9 +73,9 @@ object InterpreterSchema extends TraitInterpreter {
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
 //        <h5>
 //          {
-//            logics.SchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
+//            logics.CalculatedSchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
 //              scala.xml.XML.loadString(
-//                seqClass.map(c => logics.SchemaOrg.mapClass.get(c)
+//                seqClass.map(c => logics.CalculatedSchemaOrg.mapClass.get(c)
 //                  .map(schemaType => schemaType.toAhaMarkLink.toHtmlString(pageNameSet))
 //                  .getOrElse("")
 //                ).mkString("<div>", " / ", "</div>")
@@ -90,7 +90,7 @@ object InterpreterSchema extends TraitInterpreter {
           {if (parseResult.schemaClass.isNullOrEmpty) {
             <div class="error">TODO: Specify Schema Class</div>
           } else {
-            scala.xml.XML.loadString(logics.SchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
+            scala.xml.XML.loadString(logics.CalculatedSchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
           }
         </h5>
         <div>
@@ -99,7 +99,7 @@ object InterpreterSchema extends TraitInterpreter {
               <div>
                 <dt>
                   {
-                  logics.SchemaOrg.mapProperty.get(key).map(n => {
+                  logics.CalculatedSchemaOrg.mapProperty.get(key).map(n => {
                       n.toXmlSpan()
                     }).getOrElse{
                       <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
@@ -167,8 +167,8 @@ object InterpreterSchema extends TraitInterpreter {
       case RenderingMode.Preview =>
         val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
           val listPropCount = wikiContext.database.withConnection { implicit connection =>
-            import models.tables.SchemaOrg
-            SchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
+            import models.tables.CalculatedSchemaOrg
+            CalculatedSchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
           }
           listPropCount.filterNot(pc => seqPropertyUsed.contains(pc.prop)).map(pc => s"${pc.prop}(${pc.cnt})").mkString(", ")
         } else {
@@ -181,10 +181,10 @@ object InterpreterSchema extends TraitInterpreter {
               <h6>Recommended Properties</h6>
               {recommendedProperties}
               <h6>Hierarchical Search</h6>
-              {logics.SchemaOrg.getHtmlTree(parseResult.schemaClass)}
+              {logics.CalculatedSchemaOrg.getHtmlTree(parseResult.schemaClass)}
               {
-                if(logics.SchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
-                  <div>{logics.SchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
+                if(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
+                  <div>{logics.CalculatedSchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
                 } else {
 
                 }
@@ -209,31 +209,31 @@ object InterpreterSchema extends TraitInterpreter {
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    val seqLinkProperty: Seq[SchemaOrg] = parseResult.seqSeqField
+    val seqLinkProperty: Seq[CalculatedSchemaOrg] = parseResult.seqSeqField
       .filterNot(_(1).startsWith("http://"))
       .filterNot(_(1).startsWith("https://"))
       .flatMap {
         case "address" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
+          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
         case "geo" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "geo", v))
+          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "geo", v))
         case "location" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
+          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
         case "foundingLocation" +: tail =>
           val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => SchemaOrg(wikiContext.name, parseResult.schemaClass, "foundingLocation", v))
+          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "foundingLocation", v))
         case key +: tail =>
           tail
             .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
-            .map(SchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+            .map(CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
       }
-    SchemaOrg(wikiContext.name, parseResult.schemaClass, "", s"schema:${parseResult.schemaClass}") +: seqLinkProperty
+    CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "", s"schema:${parseResult.schemaClass}") +: seqLinkProperty
   }
 }

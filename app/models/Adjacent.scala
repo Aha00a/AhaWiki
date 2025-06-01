@@ -11,10 +11,10 @@ object Adjacent {
     contextSite: ContextSite,
     connection: Connection,
   ): Seq[Link] = {
-    import models.tables.SchemaOrg
+    import models.tables.CalculatedSchemaOrg
     implicit val site: Site = contextSite.site
     val seqLink: Seq[Link] = Link.select(name)
-    val seqSchemaOrg = SchemaOrg.selectWherePageOrValue(name)
+    val seqSchemaOrg = CalculatedSchemaOrg.selectWherePageOrValue(name)
     val seqLinkSchemaOrgPageOrValue: Seq[Link] = seqSchemaOrg.map(s => Link(s.page, s.value, ""))
 
 //    val seqLinkSchemaOrgPageOrValue: Seq[Link] =

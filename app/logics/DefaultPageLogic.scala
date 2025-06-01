@@ -24,7 +24,7 @@ object DefaultPageLogic {
       case DateTimeUtil.regexDashDashMonthDashDay(_, _) => true
       case DateTimeUtil.regexDashDashMonth(_) => true
       case "schema:Schema" => true
-      case regexSchemaColon(schema) => SchemaOrg.mapAll.isDefinedAt(schema)
+      case regexSchemaColon(schema) => CalculatedSchemaOrg.mapAll.isDefinedAt(schema)
       case _ => new File("app/assets/Page", title).exists()
     }
   }
@@ -131,26 +131,26 @@ object DefaultPageLogic {
 
       case "schema:Schema" =>
         // TODO: extract macro
-        val listSchemaOrg = models.tables.SchemaOrg.selectWhereProp("")
+        val listSchemaOrg = models.tables.CalculatedSchemaOrg.selectWhereProp("")
         val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
         val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
 
         lazySome(
           s"""= Schema
              |${listSchemaOrgWithPermission.size} page(s).
-             |${SchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
+             |${CalculatedSchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
              |""".stripMargin
         )
 
       case regexSchemaColon(schema) =>
         // TODO: extract macro
-        val optionSchemaType = SchemaOrg.mapAll.get(schema)
+        val optionSchemaType = CalculatedSchemaOrg.mapAll.get(schema)
         optionSchemaType match {
           case Some(schemaType) =>
-            import models.tables.SchemaOrg
+            import models.tables.CalculatedSchemaOrg
             lazySome(
               if(schema(0).isUpper) {
-                val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereCls(schema)
+                val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereCls(schema)
                 s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
                    |[[[#!Markdown
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
@@ -162,7 +162,7 @@ object DefaultPageLogic {
                    |[[Html(</div>)]]
                    |""".stripMargin
               } else {
-                val listSchemaOrg: List[SchemaOrg] = models.tables.SchemaOrg.selectWhereProp(schema)
+                val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereProp(schema)
                 val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
                 s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
                    |[[[#!Markdown

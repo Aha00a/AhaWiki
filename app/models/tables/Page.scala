@@ -151,7 +151,7 @@ INSERT INTO Page
     val linkCount = Link.delete(name)
     val cosineSimilarityCount = CalculatedCosineSimilarity.delete(name)
     val termFrequencyCount = CalculatedTermFrequency.delete(name)
-    val schemaOrgCount = SchemaOrg.delete(name)
+    val schemaOrgCount = CalculatedSchemaOrg.delete(name)
     linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount
   }
 

@@ -5,13 +5,13 @@ import org.scalatest.freespec.AnyFreeSpec
 class SchemaOrgSpec extends AnyFreeSpec {
 
   "properties" in {
-    assert(SchemaOrg.mapAll.size == 2853)
-    assert(SchemaOrg.mapClass.size == 906)
-    assert(SchemaOrg.mapProperty.size == 1469)
+    assert(CalculatedSchemaOrg.mapAll.size == 2853)
+    assert(CalculatedSchemaOrg.mapClass.size == 906)
+    assert(CalculatedSchemaOrg.mapProperty.size == 1469)
   }
   "SchemaType" - {
     "toXmlSpan" in {
-      val schemaType: SchemaOrg.SchemaType = SchemaOrg.mapAll("Movie")
+      val schemaType: CalculatedSchemaOrg.SchemaType = CalculatedSchemaOrg.mapAll("Movie")
       assert(schemaType.toXmlSpan().toString() === """<a href="/w/schema:Movie" title="A movie." class="">Movie</a>""")
     }
   }
@@ -19,9 +19,9 @@ class SchemaOrgSpec extends AnyFreeSpec {
 
   "renderExistingPages" in {
 
-    assert(SchemaOrg.renderExistingPages(Map()) === "")
+    assert(CalculatedSchemaOrg.renderExistingPages(Map()) === "")
 
-    assert(SchemaOrg.renderExistingPages(Map(
+    assert(CalculatedSchemaOrg.renderExistingPages(Map(
       "Thing" -> Seq("Something"),
     )) ===
       """= ["schema:Thing" Thing]
@@ -29,7 +29,7 @@ class SchemaOrgSpec extends AnyFreeSpec {
         |
         |""".stripMargin)
 
-    assert(SchemaOrg.renderExistingPages(Map(
+    assert(CalculatedSchemaOrg.renderExistingPages(Map(
       "Thing" -> Seq("Something"),
       "Movie" -> Seq("AwesomeMovie1", "AwesomeMovie2"),
       "Person" -> Seq("Someone1", "Someone2"),
@@ -57,7 +57,7 @@ class SchemaOrgSpec extends AnyFreeSpec {
         |
         |""".stripMargin)
 
-    assert(SchemaOrg.renderExistingPages(Map(
+    assert(CalculatedSchemaOrg.renderExistingPages(Map(
       "Thing" -> Seq("Something"),
       "CustomClass" -> Seq("Anything"),
     )) ===

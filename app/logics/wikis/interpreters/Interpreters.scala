@@ -6,7 +6,7 @@ import models.{PageContent, ContextWikiPage}
 object Interpreters extends TraitInterpreter {
 
   import models.tables.Link
-  import models.tables.SchemaOrg
+  import models.tables.CalculatedSchemaOrg
 
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
@@ -49,7 +49,7 @@ object Interpreters extends TraitInterpreter {
       .getOrElse(Seq())
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toSeqSchemaOrg(content))

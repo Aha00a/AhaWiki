@@ -17,7 +17,7 @@ import scala.io.Codec
 import scala.xml.Elem
 import scala.xml.NodeSeq
 
-object SchemaOrg {
+object CalculatedSchemaOrg {
   case class SchemaType(
                          id:String,
                          schemaType:String,

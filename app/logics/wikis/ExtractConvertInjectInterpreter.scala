@@ -7,7 +7,7 @@ import models.ContextWikiPage
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   import models.tables.Link
-  import models.tables.SchemaOrg
+  import models.tables.CalculatedSchemaOrg
 
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
@@ -27,7 +27,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c)).toSeq
   }
 
-  def extractSchemaOrg()(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
+  def extractSchemaOrg()(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c)).toSeq
   }
 }

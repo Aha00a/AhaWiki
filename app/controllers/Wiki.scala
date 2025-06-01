@@ -227,8 +227,8 @@ controllerComponents: ControllerComponents,
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
-    import models.tables.SchemaOrg
-    val listSchemaOrg = SchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
+    import models.tables.CalculatedSchemaOrg
+    val listSchemaOrg = CalculatedSchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
       s"""==== [schema:$k $k]

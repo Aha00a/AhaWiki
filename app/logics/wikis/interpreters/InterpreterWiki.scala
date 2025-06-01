@@ -15,7 +15,7 @@ import scala.util.matching.Regex
 object InterpreterWiki extends TraitInterpreter {
 
   import models.tables.Link
-  import models.tables.SchemaOrg
+  import models.tables.CalculatedSchemaOrg
 
 
   object State extends Enumeration {
@@ -182,8 +182,8 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[SchemaOrg]](pageContent) {
-    override def process(): Seq[SchemaOrg] = {
+  class HandlerToSeqSchemaOrg(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[CalculatedSchemaOrg]](pageContent) {
+    override def process(): Seq[CalculatedSchemaOrg] = {
       extractConvertInjectInterpreter.extractSchemaOrg()
     }
   }
@@ -265,7 +265,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[SchemaOrg] = {
+  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
       case Some(_) => Seq()

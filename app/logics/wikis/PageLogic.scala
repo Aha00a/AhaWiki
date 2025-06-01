@@ -18,7 +18,7 @@ import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedTermFrequency
 import models.tables.Link
 import models.tables.Page
-import models.tables.SchemaOrg
+import models.tables.CalculatedSchemaOrg
 import play.api.Logger
 import play.api.db.Database
 
@@ -112,9 +112,9 @@ object PageLogic {
       Link.delete(name)
       Link.insert(seqLink)
 
-      val seqSchemaOrg: Seq[SchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-      SchemaOrg.delete(name)
-      SchemaOrg.insert(seqSchemaOrg)
+      val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+      CalculatedSchemaOrg.delete(name)
+      CalculatedSchemaOrg.insert(seqSchemaOrg)
     }
   }
 
