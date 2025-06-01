@@ -5,7 +5,7 @@ import com.aha00a.commons.utils.Using
 import models.ContextWikiPage
 import models.PageContent
 import models.tables.Config
-import models.tables.Link
+import models.tables.CalculatedLink
 import models.tables.Site
 import play.api.Logging
 import play.api.db.Database
@@ -146,5 +146,5 @@ object InterpreterVim extends TraitInterpreter with Logging {
 
   def getCacheFileHtml(cacheDir: File, md5: String): File = new File(cacheDir, md5 + ".html")
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 }

@@ -4,7 +4,7 @@ import models.{PageContent, ContextWikiPage}
 
 object InterpreterText extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
@@ -12,5 +12,5 @@ object InterpreterText extends TraitInterpreter {
     s"""<pre class="text">$contentEscaped</pre>"""
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 }

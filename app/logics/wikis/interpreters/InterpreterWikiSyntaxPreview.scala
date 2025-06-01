@@ -4,7 +4,7 @@ import models.{PageContent, ContextWikiPage}
 
 object InterpreterWikiSyntaxPreview extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
@@ -22,7 +22,7 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
       render(raw, preview)
     }
   }
-  
+
   private def render(raw: String, preview: String): String = {
     s"""<table class="wikiSyntax">
        |    <thead>
@@ -40,7 +40,7 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
        |</table>""".stripMargin
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     InterpreterWiki.toSeqLink(pageContent.content)
   }

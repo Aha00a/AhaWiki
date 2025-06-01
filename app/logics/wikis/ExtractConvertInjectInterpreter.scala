@@ -6,7 +6,7 @@ import models.ContextWikiPage
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
   override def extract(s: String): String = {
@@ -23,7 +23,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
 
-  def extractLink()(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  def extractLink()(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c)).toSeq
   }
 

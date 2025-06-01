@@ -14,7 +14,7 @@ import scala.util.matching.Regex
 
 object InterpreterWiki extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
 
@@ -173,11 +173,11 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[Link]](pageContent) {
-    override def process(): Seq[Link] = {
-      val seqLinkInterpreter: Seq[Link] = extractConvertInjectInterpreter.extractLink().toList
-      val seqLinkMacro: Seq[Link] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
-      val seqLinkWikiText: Seq[Link] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+  class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[CalculatedLink]](pageContent) {
+    override def process(): Seq[CalculatedLink] = {
+      val seqLinkInterpreter: Seq[CalculatedLink] = extractConvertInjectInterpreter.extractLink().toList
+      val seqLinkMacro: Seq[CalculatedLink] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
+      val seqLinkWikiText: Seq[CalculatedLink] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
       seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }
   }
@@ -254,10 +254,10 @@ object InterpreterWiki extends TraitInterpreter {
     handler.process()
   }
 
-  override def toSeqLink(content:String)(implicit wikiContext: ContextWikiPage):Seq[Link] = {
+  override def toSeqLink(content:String)(implicit wikiContext: ContextWikiPage):Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
-      case Some(v) => Seq(Link(wikiContext.nameTop, v, "redirect"))
+      case Some(v) => Seq(CalculatedLink(wikiContext.nameTop, v, "redirect"))
       case None =>
         val pageContent: PageContent = PageContent(content)
         val handler = new HandlerToSeqLink(pageContent)

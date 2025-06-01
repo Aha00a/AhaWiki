@@ -5,7 +5,7 @@ import models.{PageContent, ContextWikiPage}
 
 object Interpreters extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
   val map: Map[String, TraitInterpreter] = Seq(
@@ -42,7 +42,7 @@ object Interpreters extends TraitInterpreter {
       .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)
       .map(_.toSeqLink(content))

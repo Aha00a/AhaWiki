@@ -15,7 +15,7 @@ import scala.xml.XML
 
 object InterpreterSchema extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
   case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
@@ -207,7 +207,7 @@ object InterpreterSchema extends TraitInterpreter {
       )
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 
   override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     val pageContent: PageContent = createPageContent(content)

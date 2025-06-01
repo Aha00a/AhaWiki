@@ -177,10 +177,10 @@ controllerComponents: ControllerComponents,
   private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
-    import models.tables.Link
+    import models.tables.CalculatedLink
 
     val schemaMarkup = getMarkupSchema(name)
-    val hasBacklinks = Link.selectDstLimit1(name).isDefined
+    val hasBacklinks = CalculatedLink.selectDstLimit1(name).isDefined
     val similarPages = CalculatedCosineSimilarity.select(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
     val adjacentPagesCount = Adjacent.getSeqLinkFiltered(name).length
 

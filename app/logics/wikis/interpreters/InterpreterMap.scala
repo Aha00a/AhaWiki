@@ -9,8 +9,8 @@ import logics.wikis.interpreters.InterpreterTable.convert
 import logics.wikis.macros.MacroError
 import models._
 import models.tables.GeocodeCache
-import models.tables.Link
-import models.tables.Link.DstMaxMinCount
+import models.tables.CalculatedLink
+import models.tables.CalculatedLink.DstMaxMinCount
 import models.tables.Site
 import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
@@ -77,7 +77,7 @@ object InterpreterMap extends TraitInterpreter {
     wikiContext.database.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site
 
-      val seqDstMaxMinCount: Seq[DstMaxMinCount] = Link.selectDstMaxMinCountWhereSrcIsDatePage(seqLocation.map(_.name))
+      val seqDstMaxMinCount: Seq[DstMaxMinCount] = CalculatedLink.selectDstMaxMinCountWhereSrcIsDatePage(seqLocation.map(_.name))
       val mapDstMaxMinCount: Map[String, DstMaxMinCount] = seqDstMaxMinCount.map(_.dst).zip(seqDstMaxMinCount).toMap
 
       val seqGeocodeCache: Seq[GeocodeCache] = GeocodeCache.select(seqLocation.map(_.address))
@@ -107,10 +107,10 @@ object InterpreterMap extends TraitInterpreter {
     }
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     val (_, seqLocation) = parse(pageContent)
-    val links = seqLocation.filter(l => wikiContext.setPageNameByPermission.contains(l.name)).map(l => Link(wikiContext.nameTop, l.name, ""))
+    val links = seqLocation.filter(l => wikiContext.setPageNameByPermission.contains(l.name)).map(l => CalculatedLink(wikiContext.nameTop, l.name, ""))
     links
   }
 }

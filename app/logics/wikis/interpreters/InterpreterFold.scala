@@ -6,7 +6,7 @@ import models.PageContent
 
 object InterpreterFold extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
@@ -15,7 +15,7 @@ object InterpreterFold extends TraitInterpreter {
     views.html.Wiki.fold(buttonText, InterpreterWiki.toHtmlString(pageContent.content)).toString()
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     InterpreterWiki.toSeqLink(pageContent.content)
   }

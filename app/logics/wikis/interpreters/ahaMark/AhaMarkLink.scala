@@ -5,7 +5,7 @@ import models.ContextWikiPage
 
 case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = false)(implicit wikiContext: ContextWikiPage) extends AhaMark {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   import scala.xml.Elem
   import scala.xml.XML
@@ -51,7 +51,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
     }
   }
 
-  def toLink(src: String): Link = Link(src, uriNormalized, alias)
+  def toLink(src: String): CalculatedLink = CalculatedLink(src, uriNormalized, alias)
 
   override def toHtml: Elem = XML.loadString(toHtmlString())
 }

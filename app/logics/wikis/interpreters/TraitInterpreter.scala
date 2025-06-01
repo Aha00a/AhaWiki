@@ -4,7 +4,7 @@ import models.ContextWikiPage
 
 trait TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
   import org.jsoup.Jsoup
 
@@ -12,7 +12,7 @@ trait TraitInterpreter {
 
   def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String
 
-  def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link]
+  def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink]
 
   def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = Seq()
 

@@ -148,7 +148,7 @@ INSERT INTO Page
   }
 
   def deleteLinkCosignSimilarityTermFrequency(name: String)(implicit connection: Connection, site: Site): Int = {
-    val linkCount = Link.delete(name)
+    val linkCount = CalculatedLink.delete(name)
     val cosineSimilarityCount = CalculatedCosineSimilarity.delete(name)
     val termFrequencyCount = CalculatedTermFrequency.delete(name)
     val schemaOrgCount = CalculatedSchemaOrg.delete(name)
@@ -244,7 +244,7 @@ SELECT
         SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
     ) w
     WHERE name NOT IN (
-        SELECT DISTINCT(src) FROM Link WHERE site = ${site.seq}
+        SELECT DISTINCT(src) FROM CalculatedLink WHERE site = ${site.seq}
     )
     ORDER BY RAND()
     LIMIT 1000

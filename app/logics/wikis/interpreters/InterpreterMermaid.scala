@@ -5,12 +5,12 @@ import models.PageContent
 
 object InterpreterMermaid extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     """<div class="mermaid">""" + pageContent.content + """</div>"""
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 }

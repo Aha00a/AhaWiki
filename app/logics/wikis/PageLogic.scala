@@ -16,7 +16,7 @@ import models.HighScoredTerm
 import models._
 import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedTermFrequency
-import models.tables.Link
+import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.CalculatedSchemaOrg
 import play.api.Logger
@@ -108,9 +108,9 @@ object PageLogic {
         }
       }
 
-      val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(Link(page.name, "", ""))
-      Link.delete(name)
-      Link.insert(seqLink)
+      val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
+      CalculatedLink.delete(name)
+      CalculatedLink.insert(seqLink)
 
       val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
       CalculatedSchemaOrg.delete(name)

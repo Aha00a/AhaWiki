@@ -13,7 +13,7 @@ import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
 import models.RequestWrapper
-import models.tables.Link
+import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
@@ -50,7 +50,7 @@ class Api @Inject()(
   def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val listLink = Random.shuffle(Link.selectAllButNotEmpty()).take(10)
+      val listLink = Random.shuffle(CalculatedLink.selectAllButNotEmpty()).take(10)
       Ok(listLink.asJson)
     }
   }

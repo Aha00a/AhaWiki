@@ -4,7 +4,7 @@ import models.{PageContent, ContextWikiPage}
 
 object InterpreterPaper extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   //noinspection ZeroIndexToHead
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
@@ -32,7 +32,7 @@ object InterpreterPaper extends TraitInterpreter {
       """</div>"""
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     InterpreterWiki.toSeqLink(pageContent.content)
   }

@@ -67,7 +67,7 @@ class Test @Inject()(implicit val
     }; testInterpreterTable()
 
     def testInterpreterWiki()(implicit request: Request[Any]): Unit = {
-      import models.tables.Link
+      import models.tables.CalculatedLink
 
       assertEquals(InterpreterWiki.name, "Wiki")
 
@@ -164,8 +164,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage"]""").toList, Seq(AhaMarkLink("""SomePage""")))
       assertEquals(InterpreterWiki.extractLinkMarkup("""\\["SomePage" Alias]""").toList, Seq(AhaMarkLink("""SomePage""", """Alias""")))
 
-      assertEquals(InterpreterWiki.toSeqLink("[link]").toList, Seq(Link("UnitTest", "link", "")))
-      assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(Link("UnitTest", "link", "alias"), Link("UnitTest", "b", "")))
+      assertEquals(InterpreterWiki.toSeqLink("[link]").toList, Seq(CalculatedLink("UnitTest", "link", "")))
+      assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(CalculatedLink("UnitTest", "link", "alias"), CalculatedLink("UnitTest", "b", "")))
 
     }; testInterpreterWiki()
 

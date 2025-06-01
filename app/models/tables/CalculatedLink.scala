@@ -10,7 +10,7 @@ import models.tables
 
 import java.sql.Connection
 
-case class Link(src:String, dst:String, alias:String) {
+case class CalculatedLink(src:String, dst:String, alias:String) {
 
   import logics.wikis.PageNameLogic
 
@@ -21,7 +21,7 @@ case class Link(src:String, dst:String, alias:String) {
   def or(a: String => Boolean):Boolean = a(src) || a(dst)
 }
 
-object Link {
+object CalculatedLink {
 
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
@@ -30,7 +30,7 @@ object Link {
   def selectDstMaxMinCountWhereSrcIsDatePage(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[DstMaxMinCount] = {
     SQL"""
         SELECT dst, MAX(src) max, MIN(src) min, COUNT(*) count
-            FROM Link
+            FROM CalculatedLink
             WHERE
                 site = ${site.seq} AND
                 dst IN ($seqName) AND
@@ -42,10 +42,10 @@ object Link {
       .map(DstMaxMinCount.tupled)
   }
 
-  def select(name: String)(implicit connection: Connection, site: Site): List[Link] = {
+  def select(name: String)(implicit connection: Connection, site: Site): List[CalculatedLink] = {
     SQL"""
         SELECT src, dst, alias
-            FROM Link
+            FROM CalculatedLink
             WHERE
                 site = ${site.seq} AND
                 src != '' AND
@@ -53,33 +53,33 @@ object Link {
                 (src = $name OR dst = $name)
       """
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
+      .map(tables.CalculatedLink.tupled)
   }
 
-  def selectDst(dst: String)(implicit connection: Connection, site: Site): List[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND dst = $dst"
+  def selectDst(dst: String)(implicit connection: Connection, site: Site): List[CalculatedLink] = {
+    SQL"SELECT src, dst, alias FROM CalculatedLink WHERE site = ${site.seq} AND dst = $dst"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
+      .map(tables.CalculatedLink.tupled)
   }
 
-  def selectDstLimit1(dst: String)(implicit connection: Connection, site: Site): Option[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND dst = $dst LIMIT 1"
+  def selectDstLimit1(dst: String)(implicit connection: Connection, site: Site): Option[CalculatedLink] = {
+    SQL"SELECT src, dst, alias FROM CalculatedLink WHERE site = ${site.seq} AND dst = $dst LIMIT 1"
       .as(str("src") ~ str("dst") ~ str("alias") singleOpt).map(flatten)
-      .map(tables.Link.tupled)
+      .map(tables.CalculatedLink.tupled)
   }
 
-  def selectAllButNotEmpty()(implicit connection: Connection, site: Site): List[Link] = {
-    SQL"SELECT src, dst, alias FROM Link WHERE site = ${site.seq} AND src != '' AND dst != ''"
+  def selectAllButNotEmpty()(implicit connection: Connection, site: Site): List[CalculatedLink] = {
+    SQL"SELECT src, dst, alias FROM CalculatedLink WHERE site = ${site.seq} AND src != '' AND dst != ''"
       .as(str("src") ~ str("dst") ~ str("alias") *).map(flatten)
-      .map(tables.Link.tupled)
+      .map(tables.CalculatedLink.tupled)
   }
 
   def selectDistinctDstWhereDstIsYear()(implicit connection: Connection, site: Site): List[String] = {
-    SQL"""SELECT DISTINCT(dst) dst FROM Link WHERE site = ${site.seq} AND dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
+    SQL"""SELECT DISTINCT(dst) dst FROM CalculatedLink WHERE site = ${site.seq} AND dst REGEXP '^[0-9]{4}$$' ORDER BY dst DESC"""
       .as(str("dst") *)
   }
 
-  def insert(seq: Seq[Link])(implicit connection: Connection, site: Site): Array[Int] = {
+  def insert(seq: Seq[CalculatedLink])(implicit connection: Connection, site: Site): Array[Int] = {
     if(seq.isEmpty) {
       Array[Int]()
     } else {
@@ -90,7 +90,7 @@ object Link {
         Symbol("alias") -> s.alias
       ))
       BatchSql(
-        "REPLACE INTO Link (site, src, dst, alias) values ({site}, {src}, {dst}, {alias})",
+        "REPLACE INTO CalculatedLink (site, src, dst, alias) values ({site}, {src}, {dst}, {alias})",
         values.head,
         values.tail: _*
       ).execute()
@@ -98,6 +98,6 @@ object Link {
   }
 
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
-    SQL"DELETE FROM Link WHERE site = ${site.seq} AND src = $name".executeUpdate()
+    SQL"DELETE FROM CalculatedLink WHERE site = ${site.seq} AND src = $name".executeUpdate()
   }
 }

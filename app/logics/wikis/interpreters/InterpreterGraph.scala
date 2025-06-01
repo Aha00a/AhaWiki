@@ -7,7 +7,7 @@ import scala.collection.mutable
 
 object InterpreterGraph extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   private def parse(wikiContext: ContextWikiPage, pageContent: PageContent): Array[Array[String]] = {
     val lines = pageContent.content.trim.split("""(\r\n|\n)+""")
@@ -24,5 +24,5 @@ object InterpreterGraph extends TraitInterpreter {
     views.html.Wiki.graph(array, enableWikiLink = pageContent.shebang.contains("enableWikiLink")).toString()
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 }

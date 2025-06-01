@@ -5,12 +5,12 @@ import org.jsoup.Jsoup
 
 object InterpreterHtml extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     pageContent.content
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = Seq()
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()
 }

@@ -14,7 +14,7 @@ import scala.util.matching.Regex
 
 object InterpreterTable extends TraitInterpreter {
 
-  import models.tables.Link
+  import models.tables.CalculatedLink
 
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
@@ -76,7 +76,7 @@ object InterpreterTable extends TraitInterpreter {
     throw new Exception()
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[Link] = {
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     val shebang = parseShebang(pageContent.argument)
     shebang.map(shebang => {
