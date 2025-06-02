@@ -21,7 +21,27 @@
             const selected = value.substring(selectionStart, selectionEnd);
 
             if (e.key === 'Tab') {
-                if (selectionStart === 0 || value.length === selectionStart) return;
+                if (selectionStart === 0 || value.length === selectionStart)
+                    return;
+
+                const lastNewlineIndex = selectionStart === 0 ? -1 : value.lastIndexOf('\n', selectionStart - 1);
+                const currentLine = value.substring(lastNewlineIndex + 1, value.indexOf('\n', selectionStart) === -1 ? value.length : value.indexOf('\n', selectionStart));
+                const listPattern = /^\s+(?:[*-]|(?:\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s/;
+                if (listPattern.test(currentLine)) {
+                    const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
+                    this.selectionStart = lineStart;
+                    this.selectionEnd = lineStart;
+                    const indentation = currentLine.match(/^[\t ]*/)[0];
+                    if (e.shiftKey) {
+                        if (indentation.length > 0) {
+                            ExecCommand.delete();
+                        }
+                    } else {
+                        ExecCommand.insertText(indentation[0] === '\t' ? '\t' : ' ');
+                    }
+                    this.selectionStart = this.selectionEnd = selectionStart + (e.shiftKey ? -1 : 1);
+                    return false;
+                }
                 ExecCommand.insertText('\t');
                 return false;
             }
