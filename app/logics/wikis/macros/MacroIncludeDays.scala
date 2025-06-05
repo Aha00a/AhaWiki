@@ -1,7 +1,9 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
+import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
+import models.tables.Site
 import play.api.db.Database
 
 import java.text.SimpleDateFormat
@@ -20,20 +22,22 @@ object MacroIncludeDays extends TraitMacro {
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
       implicit val database: Database = wikiContext.database
-      val set = wikiContext.setPageNameByPermission
+      implicit val site: Site = wikiContext.site
 
-      // TODO: connection management
-      getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains).reverse.map(pageName => {
-        implicit val wikiContext1: ContextWikiPage = wikiContext.push(pageName)
-        MacroInclude.doApply(pageName, content => {
-          val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(pageName).toLocalDateTime
-          content
+      val set = wikiContext.setPageNameByPermission
+      val seq = getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains)
+      wikiContext.database.withConnection { implicit connection =>
+        val content = models.tables.Page.selectLastRevision(seq).map { p =>
+          val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
+          val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
+          s"== [${p.name}] $weekday\n" + p.content
             .split("\n")
+            .tail
             .map(_.replaceAll("^(=+ )", "=$1"))
-            .map(_.replaceAll("^== (.+)", s"== [$pageName] " + ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)))
             .mkString("\n")
-        })(wikiContext1)
-      }).mkString("\n")
+        }.mkString("\n")
+        Interpreters.toHtmlString(content)
+      }
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 

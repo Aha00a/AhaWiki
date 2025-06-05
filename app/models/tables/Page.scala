@@ -86,6 +86,20 @@ SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, 
       .map(Page.tupled)
   }
 
+  def selectLastRevision(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[Page] = {
+    //language=sql
+    SQL"""
+SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
+    FROM Page P
+    INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
+    LEFT JOIN User U ON U.seq = P.user
+    WHERE P.site = ${site.seq} AND P.name IN ($seqName)
+    ORDER BY P.name DESC
+    """
+      .as(rowParserPage *).map(flatten)
+      .map(Page.tupled)
+  }
+
   def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
