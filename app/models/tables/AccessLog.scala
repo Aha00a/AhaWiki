@@ -43,6 +43,7 @@ object AccessLog extends Logging {
   }
 
   def deleteExpired(limit: Int = 1000)(implicit connection: Connection): Int = {
+    // language=SQL
     SQL"""
         DELETE FROM AccessLog
             WHERE seq < (
@@ -53,7 +54,7 @@ object AccessLog extends Logging {
                         ORDER BY seq
                         LIMIT $limit
                 ) T
-                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -1 YEAR)
+                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -6 MONTH)
             );
     """.executeUpdate()
   }
