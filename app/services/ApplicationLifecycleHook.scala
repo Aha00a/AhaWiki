@@ -101,6 +101,13 @@ class ApplicationLifecycleHook @Inject()(
     actorSystem.scheduler.scheduleWithFixedDelay(prime seconds, prime minutes)(() => f(prime))
   }
 
+  scheduleWithFixedDelay(29, _ => {
+    database.withConnection { implicit connection =>
+      val deletedRowCount = models.tables.AccessLog.deleteExpired()
+      logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+    }
+  })
+
   scheduleWithFixedDelay(31, prime => {
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.selectRandom()
@@ -126,13 +133,6 @@ class ApplicationLifecycleHook @Inject()(
   })
 
   scheduleWithFixedDelay(41, _ => {
-    database.withConnection { implicit connection =>
-      val deletedRowCount = models.tables.AccessLog.deleteExpired()
-      logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-    }
-  })
-
-  scheduleWithFixedDelay(43, _ => {
     database.withConnection { implicit connection =>
       val deletedRowCount = models.tables.IpDeny.deleteExpired()
       logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
