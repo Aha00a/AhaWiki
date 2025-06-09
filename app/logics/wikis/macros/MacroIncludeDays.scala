@@ -26,17 +26,21 @@ object MacroIncludeDays extends TraitMacro {
 
       val set = wikiContext.setPageNameByPermission
       val seq = getSeqDays_yyyy_dash_MM_dash_dd(y.toInt, m.toInt).filter(set.contains)
-      wikiContext.database.withConnection { implicit connection =>
-        val content = models.tables.Page.selectLastRevision(seq).map { p =>
-          val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
-          val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
-          s"== [${p.name}] $weekday\n" + p.content
-            .split("\n")
-            .tail
-            .map(_.replaceAll("^(=+ )", "=$1"))
-            .mkString("\n")
-        }.mkString("\n")
-        Interpreters.toHtmlString(content)
+      if (seq.isEmpty) {
+        ""
+      } else {
+        wikiContext.database.withConnection { implicit connection =>
+          val content = models.tables.Page.selectLastRevision(seq).map { p =>
+            val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
+            val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
+            s"== [${p.name}] $weekday\n" + p.content
+              .split("\n")
+              .tail
+              .map(_.replaceAll("^(=+ )", "=$1"))
+              .mkString("\n")
+          }.mkString("\n")
+          Interpreters.toHtmlString(content)
+        }
       }
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
