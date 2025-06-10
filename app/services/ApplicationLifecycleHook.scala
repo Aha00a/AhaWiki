@@ -8,7 +8,6 @@ import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
-import models.tables.Page
 import models.tables.Site
 import play.api.Environment
 import play.api.Logging
