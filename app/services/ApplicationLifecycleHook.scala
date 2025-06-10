@@ -3,6 +3,8 @@ package services
 import actors.ActorAhaWiki.Calculate
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import com.aha00a.commons.Implicits.RichSeq
+import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
@@ -97,45 +99,38 @@ class ApplicationLifecycleHook @Inject()(
     Future.successful(())
   }
 
-  def scheduleWithFixedDelay(prime: Int, f: Int => Unit): Unit = {
-    actorSystem.scheduler.scheduleWithFixedDelay(prime seconds, prime minutes)(() => f(prime))
+  def scheduleWithRandomInterval(name: String, min: Int, max: Int, f: () => Unit): Unit = {
+    val delay = Random.between(min, max)
+    logger.info(s"Schedule\t$name\tmin\t${min}s\tmax\t${max}s\tdelay\t${delay}s")
+    actorSystem.scheduler.scheduleOnce(delay seconds) {
+      f();
+      scheduleWithRandomInterval(name, min, max, f)
+    }
   }
 
-  scheduleWithFixedDelay(29, _ => {
-    database.withConnection { implicit connection =>
-      val deletedRowCount = models.tables.AccessLog.deleteExpired()
-      logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-    }
-  })
-
-  scheduleWithFixedDelay(31, prime => {
-    database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.selectRandom()
-      val seq: Seq[String] = Page.pageSelectNameWhereNoCosineSimilarity()
-      for ((v, i) <- seq.zipWithIndex) {
-        actorSystem.scheduler.scheduleOnce(((i + 1) * prime) seconds) {
-          actorAhaWiki ! Calculate(site, v, i, seq.length)
+  scheduleWithRandomInterval("deleteExpired", 5, 60, () => {
+    StopWatch("deleteExpired") {
+      StopWatch("deleteExpired\tAccessLog") {
+        database.withConnection { implicit connection =>
+          val deletedRowCount = models.tables.AccessLog.deleteExpired()
+          logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+        }
+      }
+      StopWatch("deleteExpired\tIpDeny") {
+        database.withConnection { implicit connection =>
+          val deletedRowCount = models.tables.IpDeny.deleteExpired()
+          logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
         }
       }
     }
   })
 
-  scheduleWithFixedDelay(37, prime => {
-    database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.selectRandom()
-      val seq: Seq[String] = Page.pageSelectNameWhereNoLinkSrc()
-      for ((v, i) <- seq.zipWithIndex) {
-        actorSystem.scheduler.scheduleOnce(((i + 1) * prime) seconds) {
-          actorAhaWiki ! Calculate(site, v, i, seq.length)
-        }
-      }
-    }
-  })
-
-  scheduleWithFixedDelay(41, _ => {
-    database.withConnection { implicit connection =>
-      val deletedRowCount = models.tables.IpDeny.deleteExpired()
-      logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+  scheduleWithRandomInterval("Calculate", 5, 60 * 10, () => {
+    val site = SiteLogic.selectRandom()
+    implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+    val count = 50
+    ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().shuffle().take(count).zipWithIndex.foreach { case (page, i) =>
+      actorAhaWiki ! Calculate(site, page.name, i, count)
     }
   })
 

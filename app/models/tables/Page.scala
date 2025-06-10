@@ -230,39 +230,4 @@ SELECT P.name, P.dateTime, P.content
      ORDER BY P.name"""
       .as(rowParserSearchResult *).map(flatten).map(SearchResult.tupled)
   }
-
-
-  def pageSelectNameWhereNoCosineSimilarity()(implicit connection: Connection, site: Site): Seq[String] = {
-    //language=sql
-    SQL"""
-SELECT
-    name
-    FROM (
-        SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
-    ) w
-    WHERE name NOT IN (
-        SELECT DISTINCT(name1) FROM CalculatedCosineSimilarity WHERE site = ${site.seq}
-    )
-    ORDER BY RAND()
-    LIMIT 10
-    """
-      .as(str("name") *)
-  }
-
-  def pageSelectNameWhereNoLinkSrc()(implicit connection: Connection, site: Site): Seq[String] = {
-    //language=sql
-    SQL"""
-SELECT
-    name
-    FROM (
-        SELECT DISTINCT(name) name FROM Page WHERE site = ${site.seq}
-    ) w
-    WHERE name NOT IN (
-        SELECT DISTINCT(src) FROM CalculatedLink WHERE site = ${site.seq}
-    )
-    ORDER BY RAND()
-    LIMIT 1000
-    """
-      .as(str("name") *)
-  }
 }

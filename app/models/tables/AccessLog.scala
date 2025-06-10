@@ -42,7 +42,7 @@ object AccessLog extends Logging {
     """.executeInsert()
   }
 
-  def deleteExpired(limit: Int = 1000)(implicit connection: Connection): Int = {
+  def deleteExpired(limit: Int = 10000)(implicit connection: Connection): Int = {
     // language=SQL
     SQL"""
         DELETE FROM AccessLog
