@@ -51,7 +51,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   }
 
-  scheduleWithRandomInterval("deleteExpired", 5, 60 * 5, () => {
+  scheduleWithRandomInterval("deleteExpired", 60 * 1, 60 * 10, () => {
     StopWatch("deleteExpired") {
       database.withConnection { implicit connection =>
         val deletedRowCount = models.tables.AccessLog.deleteExpired()
@@ -64,7 +64,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  scheduleWithRandomInterval("Calculate", 5, 60 * 10, () => {
+  scheduleWithRandomInterval("Calculate", 60, 60 * 20, () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 50
