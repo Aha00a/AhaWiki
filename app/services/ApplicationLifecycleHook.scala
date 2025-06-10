@@ -108,19 +108,15 @@ class ApplicationLifecycleHook @Inject()(
     }
   }
 
-  scheduleWithRandomInterval("deleteExpired", 5, 60, () => {
+  scheduleWithRandomInterval("deleteExpired", 5, 60 * 5, () => {
     StopWatch("deleteExpired") {
-      StopWatch("deleteExpired\tAccessLog") {
-        database.withConnection { implicit connection =>
-          val deletedRowCount = models.tables.AccessLog.deleteExpired()
-          logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-        }
+      database.withConnection { implicit connection =>
+        val deletedRowCount = models.tables.AccessLog.deleteExpired()
+        logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
       }
-      StopWatch("deleteExpired\tIpDeny") {
-        database.withConnection { implicit connection =>
-          val deletedRowCount = models.tables.IpDeny.deleteExpired()
-          logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-        }
+      database.withConnection { implicit connection =>
+        val deletedRowCount = models.tables.IpDeny.deleteExpired()
+        logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
       }
     }
   })
@@ -129,8 +125,9 @@ class ApplicationLifecycleHook @Inject()(
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 50
-    ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().shuffle().take(count).zipWithIndex.foreach { case (page, i) =>
-      actorAhaWiki ! Calculate(site, page.name, i, count)
+    val seq = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().shuffle().take(count)
+    seq.zipWithIndex.foreach { case (page, i) =>
+      actorAhaWiki ! Calculate(site, page.name, i, seq.length)
     }
   })
 
