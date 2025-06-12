@@ -67,7 +67,7 @@ class ApplicationLifecycleHook @Inject()(
   scheduleWithRandomInterval("Calculate", 60, 60 * 20, () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-    val count = 50
+    val count = 10
     val seq = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().shuffle().take(count)
     seq.zipWithIndex.foreach { case (page, i) =>
       actorAhaWiki ! Calculate(site, page.name, i, seq.length)
