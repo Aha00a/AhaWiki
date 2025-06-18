@@ -74,6 +74,7 @@
     }
 
     const WikipediaToSchemaProperty = {
+        "Abbreviation": "alternateName",
         "Address": "address",
         "Alma mater": "alumniOf",
         "Also known as": "alternateName",
@@ -81,6 +82,7 @@
         "Application subcategory": "applicationSubCategory",
         "Area served": "areaServed",
         "Author": "author",
+        "Available in": "inLanguage",
         "Awards": "award",
         "Based on": "isBasedOn",
         "Book edition": "bookEdition",
@@ -174,6 +176,7 @@
         "Weight": "weight",
         "Written by": "author",
         "Written in": "programmingLanguage",
+        "Year started": "datePublished",
         "각본": "author",
         "개발자": "author",
         "기획": "producer",
