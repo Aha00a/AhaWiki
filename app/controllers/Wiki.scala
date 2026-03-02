@@ -63,7 +63,7 @@ controllerComponents: ControllerComponents,
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
 
-      val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+      val name = decodeWikiName(nameEncoded)
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -77,19 +77,7 @@ controllerComponents: ControllerComponents,
       val isReadable = wikiPermission.isReadable(pageLastRevisionContent)
       val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
 
-      if(environment.mode == Mode.Dev) {
-        import models.tables.Permission
-        //        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
-        val permissionLogic = new PermissionLogic(Seq())
-        val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
-        val readable = permissionLogic.permitted(name, email, Permission.read)
-        val editable = permissionLogic.permitted(name, email, Permission.edit)
-
-        logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
-
-        if(isReadable != readable || isWritable != editable)
-          logger.error(s"readable: $readable editable: $editable")
-      }
+      logPermissionMismatchInDev(name, isReadable, isWritable)
 
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
@@ -104,58 +92,12 @@ controllerComponents: ControllerComponents,
 
 
         case (None, _, _, _) =>
-          val additionalInfo = getAhaMarkAdditionalInfo(name)
-          def render(content: String) = {
-            val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-            NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
-          }
-          DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name)))
+          renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
 
         case (Some(page), "" | "view", true, _) =>
-          try {
-            val pageContent: PageContent = PageContent(page.content)
-            val additionalInfo = getAhaMarkAdditionalInfo(name)
-            pageContent.redirect match {
-              case Some(directive) =>
-                val message = s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>"""
-                val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
-                Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
-              case None =>
-                val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
-                Ok(pageContent.interpreter match {
-                  case Some("Paper") =>
-                    val contentInterpreted = Interpreters.toHtmlString(page.content)
-                    views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                  case None | Some("Wiki") =>
-                    val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
-                    views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                  case _ =>
-                    val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
-                    views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
-                })
-            }
-          }
-          finally {
-            //noinspection SimplifyBoolean
-            if (true || environment.mode == Mode.Dev && request.isLocalhost)
-              actorAhaWiki ! Calculate(site, name)
-          }
+          renderReadablePage(page, name, isWritable, pageFirstRevision, pageLastRevision)
         case (Some(page), "diff", true, _) =>
-          val after = request.getQueryString("after").getOrElse("0").toInt
-          val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
-
-          val beforePage = Page.selectSpecificRevision(name, before)
-          val afterPage = Page.selectSpecificRevision(name, after)
-
-          val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
-          val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
-
-          val beforeComment = beforePage.map(_.comment).getOrElse("")
-          val afterComment = afterPage.map(_.comment).getOrElse("")
-
-          val diff = DiffUtils.diff(beforeContent.asJava, afterContent.asJava)
-          val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent.asJava, diff, 10).asScala.mkString("\n")
-          Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+          renderDiffPage(name)
 
         case (Some(page), "raw", true, _) => Ok(page.content).withHeaderRobotNoIndexNoFollow
         case (Some(page), "history", true, _) => Ok(views.html.Wiki.history(name, Page.selectHistory(name))).withHeaderRobotNoIndexNoFollow
@@ -172,6 +114,89 @@ controllerComponents: ControllerComponents,
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
       }
     }
+  }
+
+  private def decodeWikiName(nameEncoded: String): String =
+    URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+
+  private def logPermissionMismatchInDev(name: String, isReadable: Boolean, isWritable: Boolean)(implicit request: Request[AnyContent]): Unit = {
+    if (environment.mode == Mode.Dev) {
+      import models.tables.Permission
+      //        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
+      val permissionLogic = new PermissionLogic(Seq())
+      val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
+      val readable = permissionLogic.permitted(name, email, Permission.read)
+      val editable = permissionLogic.permitted(name, email, Permission.edit)
+
+      logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
+
+      if (isReadable != readable || isWritable != editable)
+        logger.error(s"readable: $readable editable: $editable")
+    }
+  }
+
+  private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[Page], pageLastRevision: Option[Page])
+                               (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
+    val additionalInfo = getAhaMarkAdditionalInfo(name)
+    def render(content: String): Result = {
+      val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
+      NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+    }
+    DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name)))
+  }
+
+  private def renderReadablePage(page: Page,
+                                 name: String,
+                                 isWritable: Boolean,
+                                 pageFirstRevision: Option[Page],
+                                 pageLastRevision: Option[Page])
+                                (implicit request: Request[AnyContent], wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
+    try {
+      val pageContent: PageContent = PageContent(page.content)
+      val additionalInfo = getAhaMarkAdditionalInfo(name)
+      pageContent.redirect match {
+        case Some(directive) =>
+          val message = s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>"""
+          val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
+          Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
+        case None =>
+          val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
+          Ok(pageContent.interpreter match {
+            case Some("Paper") =>
+              val contentInterpreted = Interpreters.toHtmlString(page.content)
+              views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+            case None | Some("Wiki") =>
+              val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
+              views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+            case _ =>
+              val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
+              views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+          })
+      }
+    }
+    finally {
+      //noinspection SimplifyBoolean
+      if (true || environment.mode == Mode.Dev && request.isLocalhost)
+        actorAhaWiki ! Calculate(site, name)
+    }
+  }
+
+  private def renderDiffPage(name: String)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
+    val after = request.getQueryString("after").getOrElse("0").toInt
+    val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
+
+    val beforePage = Page.selectSpecificRevision(name, before)
+    val afterPage = Page.selectSpecificRevision(name, after)
+
+    val beforeContent = beforePage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
+    val afterContent = afterPage.map(_.content).getOrElse("").split("""(\r\n|\n)""").toSeq
+
+    val beforeComment = beforePage.map(_.comment).getOrElse("")
+    val afterComment = afterPage.map(_.comment).getOrElse("")
+
+    val diff = DiffUtils.diff(beforeContent.asJava, afterContent.asJava)
+    val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(name, name, beforeContent.asJava, diff, 10).asScala.mkString("\n")
+    Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaderRobotNoIndexNoFollow
   }
 
   private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
@@ -439,7 +464,6 @@ controllerComponents: ControllerComponents,
   }
 
 }
-
 
 
 
