@@ -65,7 +65,7 @@ controllerComponents: ControllerComponents,
   private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
   private def sanitizeAttachmentPathSegment(v: String): String = {
-    val sanitized = v.replaceAll("[^a-zA-Z0-9._-]", "_")
+    val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
     if (sanitized.nonEmpty) sanitized else "_"
   }
 
