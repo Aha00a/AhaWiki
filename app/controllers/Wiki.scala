@@ -34,6 +34,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.sql.Connection
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject._
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
@@ -60,6 +61,21 @@ controllerComponents: ControllerComponents,
   }
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
+
+  private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+
+  private def sanitizeAttachmentPathSegment(v: String): String = {
+    val sanitized = v.replaceAll("[^a-zA-Z0-9._-]", "_")
+    if (sanitized.nonEmpty) sanitized else "_"
+  }
+
+  private def buildAttachmentObjectKey(siteSeq: Long, pageName: String, originalFileName: String, extension: String, now: LocalDateTime = LocalDateTime.now()): String = {
+    val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
+    val sanitizedOriginalFileName = sanitizeAttachmentPathSegment(originalFileName)
+    val sanitizedExtension = sanitizeAttachmentPathSegment(extension).toLowerCase
+    val formattedDateTime = now.format(attachmentTimestampFormatter)
+    s"Attachment/$siteSeq/$sanitizedPageName/$sanitizedOriginalFileName/$sanitizedOriginalFileName.$formattedDateTime.$sanitizedExtension"
+  }
 
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
@@ -493,7 +509,12 @@ controllerComponents: ControllerComponents,
               case pattern(contentType, base64Data) =>
                 val bytes = Base64.getDecoder.decode(base64Data)
                 val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = s"clipboard/${site.seq}/${pageName.replaceAll("[^a-zA-Z0-9._-]", "_")}/${System.currentTimeMillis()}.${extension}"
+                val objectKey = buildAttachmentObjectKey(
+                  site.seq,
+                  pageName,
+                  originalFileName = "clipboard",
+                  extension = extension,
+                )
 
                 val credentials = new BasicAWSCredentials(
                   applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
@@ -526,4 +547,3 @@ controllerComponents: ControllerComponents,
     })
   }
 }
-
