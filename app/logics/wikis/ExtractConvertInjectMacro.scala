@@ -16,6 +16,7 @@ object ExtractConvertInjectMacro {
     MacroColorCode,
     MacroHtml,
     MacroImage,
+    MacroAttachment,
     MacroRuby,
     MacroTrivial,
     MacroCopyable,
@@ -129,6 +130,5 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   }
 
 }
-
 
 

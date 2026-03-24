@@ -61,8 +61,8 @@
                     pageName: '@(page.name)',
                     dataUrl: results.dataURL
                 }, function (data) {
-                    if (data && data.imageUrl) {
-                        $('textarea').insertAtCaret('[[Image(' + data.imageUrl + ')]]\n');
+                    if (data && data.attachmentMacro) {
+                        $('textarea').insertAtCaret(data.attachmentMacro + '\n');
                         $('textarea[name=text]').change();
                     } else {
                         alert('Image upload failed.');

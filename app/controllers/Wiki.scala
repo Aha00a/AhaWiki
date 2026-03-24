@@ -470,11 +470,9 @@ controllerComponents: ControllerComponents,
     import com.amazonaws.auth.BasicAWSCredentials
     import com.amazonaws.services.s3.AmazonS3
     import com.amazonaws.services.s3.AmazonS3ClientBuilder
-    import com.amazonaws.HttpMethod
     import com.amazonaws.services.s3.model.ObjectMetadata
+    import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
-
-    import java.util.Date
 
     val form = Form(tuple("pageName" -> text, "dataUrl" -> text)).bindFromRequest
     form.fold(_ => BadRequest("invalid form"), {
@@ -514,9 +512,12 @@ controllerComponents: ControllerComponents,
                 val inputStream = new ByteArrayInputStream(bytes)
                 amazonS3.putObject(bucket, objectKey, inputStream, metadata)
 
-                val expiration = new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7)
-                val imageUrl = amazonS3.generatePresignedUrl(bucket, objectKey, expiration, HttpMethod.GET).toString
-                Ok(Json.obj("imageUrl" -> imageUrl))
+                val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                Ok(Json.obj(
+                  "objectKey" -> objectKey,
+                  "attachmentMacro" -> s"[[Attachment($objectKey)]]",
+                  "imageUrl" -> imageUrl,
+                ))
               case _ =>
                 BadRequest("invalid image dataUrl")
             }
@@ -525,5 +526,4 @@ controllerComponents: ControllerComponents,
     })
   }
 }
-
 
