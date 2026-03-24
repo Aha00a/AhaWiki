@@ -29,6 +29,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.io.ByteArrayInputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.sql.Connection
@@ -40,6 +41,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
+import java.util.Base64
 
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
@@ -90,7 +92,6 @@ controllerComponents: ControllerComponents,
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
 
 
-
         case (None, _, _, _) =>
           renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
 
@@ -136,12 +137,14 @@ controllerComponents: ControllerComponents,
   }
 
   private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[Page], pageLastRevision: Option[Page])
-                               (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
+                                (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
     val additionalInfo = getAhaMarkAdditionalInfo(name)
+
     def render(content: String): Result = {
       val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
       NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
     }
+
     DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name)))
   }
 
@@ -263,7 +266,6 @@ controllerComponents: ControllerComponents,
          |""".stripMargin
     }).mkString("\n")
   }
-
 
 
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
@@ -463,8 +465,64 @@ controllerComponents: ControllerComponents,
     }
   }
 
-}
+  def uploadClipboardImage(): Action[AnyContent] = Action { implicit request =>
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    import com.amazonaws.services.s3.model.CannedAccessControlList
+    import com.amazonaws.services.s3.model.ObjectMetadata
+    import play.api.libs.json.Json
 
+    val form = Form(tuple("pageName" -> text, "dataUrl" -> text)).bindFromRequest
+    form.fold(_ => BadRequest("invalid form"), {
+      case (pageName, dataUrl) =>
+        database.withConnection { implicit connection =>
+          implicit val site: Site = SiteLogic.get(request.host)
+          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+          val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
+          if (!WikiPermission().isWritable(PageContent(latestText))) {
+            Forbidden("Permission denied.")
+          } else if (!dataUrl.startsWith("data:image/")) {
+            BadRequest("only image dataUrl is supported")
+          } else {
+            val pattern = """^data:(image/[-+.a-zA-Z0-9]+);base64,(.+)$""".r
+            dataUrl match {
+              case pattern(contentType, base64Data) =>
+                val bytes = Base64.getDecoder.decode(base64Data)
+                val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
+                val objectKey = s"clipboard/${site.seq}/${pageName.replaceAll("[^a-zA-Z0-9._-]", "_")}/${System.currentTimeMillis()}.${extension}"
+
+                val credentials = new BasicAWSCredentials(
+                  applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+                  applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+                )
+                val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
+                  .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                  .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+                  .build()
+
+                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                val metadata = new ObjectMetadata()
+                metadata.setContentType(contentType)
+                metadata.setContentLength(bytes.length)
+
+                val inputStream = new ByteArrayInputStream(bytes)
+                amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                amazonS3.setObjectAcl(bucket, objectKey, CannedAccessControlList.PublicRead)
+
+                val imageUrl = s"https://${bucket}.s3.${applicationConf.AhaWiki.aws.AWS_REGION()}.amazonaws.com/${objectKey}"
+                Ok(Json.obj("imageUrl" -> imageUrl))
+              case _ =>
+                BadRequest("invalid image dataUrl")
+            }
+          }
+        }
+    })
+  }
+}
 
 
 

@@ -56,7 +56,20 @@
                     $(this).remove();
                     $('textarea').focus()
                 }).appendTo('body');
-                $('textarea').insertAtCaret('[[Image(' + results.dataURL + ')]]\n')
+                $.post('/api/uploadClipboardImage', {
+                    csrfToken: $('[name=csrfToken]').val(),
+                    pageName: '@(page.name)',
+                    dataUrl: results.dataURL
+                }, function (data) {
+                    if (data && data.imageUrl) {
+                        $('textarea').insertAtCaret('[[Image(' + data.imageUrl + ')]]\n');
+                        $('textarea[name=text]').change();
+                    } else {
+                        alert('Image upload failed.');
+                    }
+                }).fail(function (jqXHR) {
+                    alert('Image upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                });
             });
         });
     </script>
