@@ -6,13 +6,14 @@
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
     <style>
         .attachmentList {
-            margin: 10px 0 0;
+            margin: 2px 0 0;
             display: flex;
             flex-direction: column;
             gap: 6px;
             max-height: 180px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding: 4px;
+            border: 1px solid #ccc;
         }
         .attachmentList .attachmentItem {
             border: 1px solid #e5e5e5;
@@ -189,7 +190,6 @@
             function renderAttachmentList() {
                 $attachmentList.empty();
                 if (!uploadingMap.size && (!serverAttachments || !serverAttachments.length)) {
-                    $attachmentList.append($('<div/>', { class: 'attachmentEmpty' }).text('첨부파일이 없습니다.'));
                     return;
                 }
 
