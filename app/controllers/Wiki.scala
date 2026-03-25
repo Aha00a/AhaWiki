@@ -76,8 +76,12 @@ controllerComponents: ControllerComponents,
     val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
     val sanitizedOriginalFileName = sanitizeAttachmentPathSegment(originalFileName)
     val sanitizedExtension = sanitizeAttachmentPathSegment(extension).toLowerCase
+    val sanitizedOriginalFileNameWithoutExtension = {
+      val stripped = sanitizedOriginalFileName.stripSuffix(s".$sanitizedExtension")
+      if (stripped.nonEmpty) stripped else sanitizedOriginalFileName
+    }
     val formattedDateTime = now.format(attachmentTimestampFormatter)
-    s"Attachment/$siteSeq/$sanitizedPageName/$sanitizedOriginalFileName/$sanitizedOriginalFileName.$formattedDateTime.$sanitizedExtension"
+    s"Attachment/$siteSeq/$sanitizedPageName/$sanitizedOriginalFileName/${sanitizedOriginalFileNameWithoutExtension}.$formattedDateTime.$sanitizedExtension"
   }
 
   private def toAttachmentMacroArgument(objectKey: String, siteSeq: Long, pageName: String): String = {
