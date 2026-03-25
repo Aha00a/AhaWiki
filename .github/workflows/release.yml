@@ -135,6 +135,26 @@ jobs:
           cp /tmp/ahawiki-artifact/stage.tar.gz ./stage.tar.gz
           cp /tmp/deploy_remote.sh ./deploy_remote.sh
 
+      - name: Get runner public IP
+        run: |
+          set -euo pipefail
+          RUNNER_IP="$(curl -fsS https://checkip.amazonaws.com | tr -d '[:space:]')"
+          echo "RUNNER_IP=${RUNNER_IP}" >> "$GITHUB_ENV"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Allow SSH from runner IP
+        run: |
+          set -euo pipefail
+          aws ec2 authorize-security-group-ingress \
+            --group-id "${{ secrets.AWS_SSH_SECURITY_GROUP_ID }}" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${RUNNER_IP}/32,Description=github-actions-${{ github.run_id }}}]"
+
       - name: Upload artifact and script to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -160,3 +180,16 @@ jobs:
           script: |
             set -euo pipefail
             bash "${APP_DIR}/incoming/deploy_remote.sh" "${RELEASE_ID}"
+
+      - name: Revoke SSH from runner IP
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -z "${RUNNER_IP:-}" ]; then
+            echo "RUNNER_IP is not set; skipping revoke."
+            exit 0
+          fi
+          aws ec2 revoke-security-group-ingress \
+            --group-id "${{ secrets.AWS_SSH_SECURITY_GROUP_ID }}" \
+            --ip-permissions "IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges=[{CidrIp=${RUNNER_IP}/32}]" \
+            || true
