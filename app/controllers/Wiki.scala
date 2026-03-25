@@ -26,12 +26,14 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
 import play.api.libs.json.JsValue
+import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import java.io.ByteArrayInputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.nio.file.Files
 import java.sql.Connection
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -490,6 +492,79 @@ controllerComponents: ControllerComponents,
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
       val additionalInfo = getAhaMarkAdditionalInfo(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")
+    }
+  }
+
+  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    import com.amazonaws.services.s3.model.ObjectMetadata
+    import logics.wikis.macros.S3AttachmentUrlLogic
+    import play.api.libs.json.Json
+
+    val pageNameOption = request.body.dataParts.get("pageName").flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
+    val fileOption = request.body.file("file")
+
+    (pageNameOption, fileOption) match {
+      case (Some(pageName), Some(filePart)) =>
+        database.withConnection { implicit connection =>
+          implicit val site: Site = SiteLogic.get(request.host)
+          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+          val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
+          if (!WikiPermission().isWritable(PageContent(latestText))) {
+            Forbidden("Permission denied.")
+          } else {
+            val originalFileName = filePart.filename.trim
+            if (originalFileName.isEmpty) {
+              BadRequest("invalid file name")
+            } else {
+              val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
+              val objectKey = buildAttachmentObjectKey(
+                site.seq,
+                pageName,
+                originalFileName = originalFileName,
+                extension = if (extension.nonEmpty) extension else "bin",
+              )
+
+              val contentType = filePart.contentType.getOrElse("application/octet-stream")
+              val contentLength = filePart.fileSize
+              val metadata = new ObjectMetadata()
+              metadata.setContentType(contentType)
+              metadata.setContentLength(contentLength)
+
+              val credentials = new BasicAWSCredentials(
+                applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+                applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+              )
+              val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+                .build()
+              val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+
+              val inputStream = Files.newInputStream(filePart.ref.path)
+              try {
+                amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+              } finally {
+                inputStream.close()
+              }
+
+              val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+              Ok(Json.obj(
+                "objectKey" -> objectKey,
+                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                "fileUrl" -> fileUrl,
+                "contentType" -> contentType,
+              ))
+            }
+          }
+        }
+      case _ =>
+        BadRequest("pageName and file are required")
     }
   }
 

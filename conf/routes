@@ -39,6 +39,7 @@ GET           /api/pageNames                        controllers.Api.pageNames
 GET           /api/links/*nameEncoded               controllers.Api.links(nameEncoded)
 GET           /api/statistics                       controllers.Api.statistics()
 POST          /api/uploadClipboardImage             controllers.Wiki.uploadClipboardImage()
+POST          /api/uploadAttachment                 controllers.Wiki.uploadAttachment()
 DELETE        /api/cache/:siteSeq                   controllers.Api.cacheDelete(siteSeq: Long)
 
 GET           /feed                                 controllers.Feed.index

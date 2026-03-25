@@ -4,6 +4,60 @@
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
+    <style>
+        .attachmentUploadQueue {
+            margin: 10px 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .attachmentUploadQueue .uploadItem {
+            border: 1px solid #e5e5e5;
+            border-radius: 6px;
+            padding: 8px;
+            background: #fff;
+            font-size: 12px;
+        }
+        .attachmentUploadQueue .uploadItemMeta {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .attachmentUploadQueue .uploadProgressTrack {
+            height: 6px;
+            border-radius: 4px;
+            background: #ececec;
+            overflow: hidden;
+        }
+        .attachmentUploadQueue .uploadProgressBar {
+            height: 100%;
+            width: 0;
+            background: #3d78ff;
+        }
+        .attachmentUploadQueue .uploadItem.done .uploadProgressBar {
+            background: #2e8b57;
+            width: 100% !important;
+        }
+        .attachmentUploadQueue .uploadItem.failed .uploadProgressBar {
+            background: #d64545;
+            width: 100% !important;
+        }
+        .uploadDragOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+        .uploadDragOverlay.visible { display: flex; }
+    </style>
     <script type="text/javascript">
         $(function(){
             $('.checkboxWrap').change(function () {
@@ -32,6 +86,120 @@
                 });
             };
 
+            const $textarea = $('textarea[name=text]');
+            const $uploadInput = $('#attachmentUploadInput');
+            const $uploadQueue = $('#attachmentUploadQueue');
+            const $uploadDragOverlay = $('#uploadDragOverlay');
+            let globalDragCounter = 0;
+
+            function hasFiles(event) {
+                const dataTransfer = event.originalEvent && event.originalEvent.dataTransfer;
+                const types = dataTransfer && dataTransfer.types;
+                return !!(types && Array.from(types).indexOf('Files') !== -1);
+            }
+
+            function makeQueueItem(file) {
+                const $item = $('<div/>', { class: 'uploadItem' });
+                const $meta = $('<div/>', { class: 'uploadItemMeta' });
+                const $name = $('<strong/>').text(file.name);
+                const $status = $('<span/>').text('대기중');
+                const $track = $('<div/>', { class: 'uploadProgressTrack' });
+                const $bar = $('<div/>', { class: 'uploadProgressBar' });
+                $meta.append($name, $status);
+                $track.append($bar);
+                $item.append($meta, $track);
+                $uploadQueue.prepend($item);
+                return { $item, $status, $bar };
+            }
+
+            function uploadFile(file) {
+                const { $item, $status, $bar } = makeQueueItem(file);
+                const formData = new FormData();
+                formData.append('csrfToken', $('[name=csrfToken]').val());
+                formData.append('pageName', '@(page.name)');
+                formData.append('file', file, file.name);
+
+                return $.ajax({
+                    url: '/api/uploadAttachment',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function () {
+                        const xhr = $.ajaxSettings.xhr();
+                        if (xhr.upload) {
+                            xhr.upload.addEventListener('progress', function (e) {
+                                if (!e.lengthComputable)
+                                    return;
+                                const percent = Math.max(0, Math.min(100, Math.floor((e.loaded / e.total) * 100)));
+                                $bar.css('width', percent + '%');
+                                $status.text('업로드중 ' + percent + '%');
+                            });
+                        }
+                        return xhr;
+                    }
+                }).done(function (data) {
+                    if (data && data.attachmentMacro) {
+                        $textarea.insertAtCaret(data.attachmentMacro + '\n');
+                        $textarea.change();
+                        $item.addClass('done');
+                        $status.text('완료');
+                    } else {
+                        $item.addClass('failed');
+                        $status.text('실패');
+                    }
+                }).fail(function (jqXHR) {
+                    $item.addClass('failed');
+                    $status.text('실패');
+                    alert('File upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                });
+            }
+
+            function uploadFiles(fileList) {
+                const files = Array.from(fileList || []);
+                if (!files.length)
+                    return;
+                files.forEach(uploadFile);
+            }
+
+            $('.openAttachmentUpload').on('click', function (e) {
+                e.preventDefault();
+                $uploadInput.trigger('click');
+            });
+            $uploadInput.on('change', function () {
+                uploadFiles(this.files);
+                $(this).val('');
+            });
+
+            $(document).on('dragenter', function (e) {
+                if (!hasFiles(e))
+                    return;
+                e.preventDefault();
+                globalDragCounter += 1;
+                $uploadDragOverlay.addClass('visible');
+            });
+            $(document).on('dragover', function (e) {
+                if (!hasFiles(e))
+                    return;
+                e.preventDefault();
+            });
+            $(document).on('dragleave', function (e) {
+                if (!hasFiles(e))
+                    return;
+                e.preventDefault();
+                globalDragCounter = Math.max(0, globalDragCounter - 1);
+                if (globalDragCounter === 0)
+                    $uploadDragOverlay.removeClass('visible');
+            });
+            $(document).on('drop', function (e) {
+                if (!hasFiles(e))
+                    return;
+                e.preventDefault();
+                uploadFiles(e.originalEvent.dataTransfer.files);
+                globalDragCounter = 0;
+                $uploadDragOverlay.removeClass('visible');
+            });
+
             $("html").pasteImageReader(function(results) {
                 $.post('/api/uploadClipboardImage', {
                     csrfToken: $('[name=csrfToken]').val(),
@@ -39,8 +207,8 @@
                     dataUrl: results.dataURL
                 }, function (data) {
                     if (data && data.attachmentMacro) {
-                        $('textarea').insertAtCaret(data.attachmentMacro + '\n');
-                        $('textarea[name=text]').change();
+                        $textarea.insertAtCaret(data.attachmentMacro + '\n');
+                        $textarea.change();
                     } else {
                         alert('Image upload failed.');
                     }
@@ -232,6 +400,7 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
         });
     </script>
     <div class="wikiContent">
+        <div id="uploadDragOverlay" class="uploadDragOverlay">파일을 여기에 놓아 업로드</div>
         <div class="limitWidth">
             <h1>Edit - <a href="?">@page.name</a></h1>
         </div>
@@ -249,11 +418,14 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                                 </div>
                                 <div class="toolbarRight">
                                     <a class="fetchInfoBoxFromWikipedia" href="#"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>
+                                    <a class="openAttachmentUpload" href="#"><i class="fas fa-paperclip"></i>Attach@kbdHotKeyAlt("A")</a>
                                 </div>
                             </div>
+                            <input type="file" id="attachmentUploadInput" multiple style="display:none;" />
                             <div class="editorBody">
                                 <textarea name="text" autofocus="autofocus">@page.content</textarea>
                             </div>
+                            <div class="attachmentUploadQueue" id="attachmentUploadQueue"></div>
                             <div class="editorAdditional">
                                 <div class="toolbarLeft">
                                     <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
