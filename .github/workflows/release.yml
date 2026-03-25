@@ -138,9 +138,9 @@ jobs:
       - name: Upload artifact and script to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
           source: "stage.tar.gz,deploy_remote.sh"
           target: "${{ env.APP_DIR }}/incoming"
           overwrite: true
@@ -153,9 +153,9 @@ jobs:
           REDIS_FLUSHDB: ${{ env.REDIS_FLUSHDB }}
           RELEASE_ID: ${{ github.ref_name }}-${{ github.run_number }}-${{ github.sha }}
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_KEY }}
           envs: APP_DIR,HEALTH_PATH,REDIS_FLUSHDB,RELEASE_ID
           script: |
             set -euo pipefail
