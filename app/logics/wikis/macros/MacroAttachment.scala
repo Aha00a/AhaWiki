@@ -41,6 +41,10 @@ object MacroAttachment extends TraitMacro {
         case Seq(pageName, "clipboard", rest @ _*) =>
           val normalizedPagePath = (Seq(sanitizeAttachmentPathSegment(pageName), "clipboard") ++ rest).mkString("/")
           s"$attachmentRoot/${wikiContext.site.seq}/$normalizedPagePath"
+        case Seq(fileName, rest @ _*) =>
+          val sanitizedPageName = sanitizeAttachmentPathSegment(wikiContext.name)
+          val normalizedPagePath = (Seq(sanitizedPageName, sanitizeAttachmentPathSegment(fileName)) ++ rest.map(sanitizeAttachmentPathSegment)).mkString("/")
+          s"$attachmentRoot/${wikiContext.site.seq}/$normalizedPagePath"
         case _ =>
           trimmed
       }
