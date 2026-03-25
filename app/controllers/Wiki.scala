@@ -17,6 +17,7 @@ import logics.wikis.interpreters.Interpreters
 import models.RequestWrapper
 import models._
 import models.tables.CalculatedCosineSimilarity
+import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
 import play.api.Environment
@@ -545,21 +546,43 @@ controllerComponents: ControllerComponents,
                 .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
                 .build()
               val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+              val currentUser = SessionLogic.getUser(request)
+              val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
+              Attachment.insertInitiated(
+                site = site.seq,
+                pageName = pageName,
+                user = currentUser.map(_.seq),
+                uploaderEmail = currentUser.map(_.email),
+                originalFilename = originalFileName,
+                storedFilename = storedFilename,
+                bucket = bucket,
+                objectKey = objectKey,
+                contentType = contentType,
+                fileSize = contentLength,
+              )
 
-              val inputStream = Files.newInputStream(filePart.ref.path)
               try {
-                amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-              } finally {
-                inputStream.close()
-              }
+                val inputStream = Files.newInputStream(filePart.ref.path)
+                try {
+                  val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                  Attachment.markUploaded(objectKey, Option(putResult.getETag))
+                } finally {
+                  inputStream.close()
+                }
 
-              val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-              Ok(Json.obj(
-                "objectKey" -> objectKey,
-                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                "fileUrl" -> fileUrl,
-                "contentType" -> contentType,
-              ))
+                val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                Ok(Json.obj(
+                  "objectKey" -> objectKey,
+                  "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                  "fileUrl" -> fileUrl,
+                  "contentType" -> contentType,
+                ))
+              } catch {
+                case error: Throwable =>
+                  logger.error(s"uploadAttachment failed. objectKey=$objectKey", error)
+                  Attachment.markFailed(objectKey)
+                  InternalServerError("File upload failed.")
+              }
             }
           }
         }
@@ -616,16 +639,42 @@ controllerComponents: ControllerComponents,
                 val metadata = new ObjectMetadata()
                 metadata.setContentType(contentType)
                 metadata.setContentLength(bytes.length)
+                val currentUser = SessionLogic.getUser(request)
+                val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
+                Attachment.insertInitiated(
+                  site = site.seq,
+                  pageName = pageName,
+                  user = currentUser.map(_.seq),
+                  uploaderEmail = currentUser.map(_.email),
+                  originalFilename = "clipboard",
+                  storedFilename = storedFilename,
+                  bucket = bucket,
+                  objectKey = objectKey,
+                  contentType = contentType,
+                  fileSize = bytes.length,
+                )
 
-                val inputStream = new ByteArrayInputStream(bytes)
-                amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                try {
+                  val inputStream = new ByteArrayInputStream(bytes)
+                  try {
+                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
+                  } finally {
+                    inputStream.close()
+                  }
 
-                val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                Ok(Json.obj(
-                  "objectKey" -> objectKey,
-                  "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                  "imageUrl" -> imageUrl,
-                ))
+                  val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                  Ok(Json.obj(
+                    "objectKey" -> objectKey,
+                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                    "imageUrl" -> imageUrl,
+                  ))
+                } catch {
+                  case error: Throwable =>
+                    logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
+                    Attachment.markFailed(objectKey)
+                    InternalServerError("Image upload failed.")
+                }
               case _ =>
                 BadRequest("invalid image dataUrl")
             }
