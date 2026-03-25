@@ -1,0 +1,36 @@
+<svg width="297" height="210" viewBox="0 0 297 210" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="diagonalVaried" patternUnits="userSpaceOnUse" width="220" height="140" patternTransform="rotate(5)">
+
+      <!-- very light thin -->
+      <rect x="0"   y="0" width="10" height="140" fill="#F3F4F6"/>
+
+      <!-- medium thick -->
+      <rect x="50"  y="0" width="48" height="140" fill="#E5E7EB"/>
+
+      <!-- thin darker -->
+      <rect x="120" y="0" width="6" height="140" fill="#D1D5DB"/>
+
+      <!-- wide very light -->
+      <rect x="150" y="0" width="36" height="140" fill="#F3F4F6"/>
+
+    </pattern>
+  </defs>
+
+  <!-- clip for border radius -->
+  <clipPath id="clip">
+    <rect width="297" height="210" rx="10"/>
+  </clipPath>
+
+  <g clip-path="url(#clip)">
+    <!-- background -->
+    <rect width="297" height="210" fill="#FFFFFF"/>
+
+    <!-- pattern -->
+    <rect width="297" height="210" fill="url(#diagonalVaried)"/>
+  </g>
+
+  <!-- subtle border -->
+  <rect x="0.5" y="0.5" width="296" height="209" rx="10"
+        fill="none" stroke="#E5E7EB" stroke-width="1"/>
+</svg>

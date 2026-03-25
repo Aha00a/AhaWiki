@@ -6,6 +6,7 @@ import models.ContextWikiPage
 import scala.util.matching.Regex
 
 object MacroAttachment extends TraitMacro {
+  private val fallbackImagePath: String = "/assets/img/attachmentFallback.svg"
   private val regexWidth: Regex = """(.+),\s*(\d+(px|%)?)$""".r
   private val attachmentRoot: String = "Attachment"
   private val attachmentPathSanitizerRegex: String = "[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]"
@@ -72,7 +73,8 @@ object MacroAttachment extends TraitMacro {
         val extension = fileName.split('.').lastOption.map(_.toLowerCase).getOrElse("")
         val style = widthOption.map(width => s""" style="width: $width"""").getOrElse("")
         if (imageExtensions.contains(extension)) {
-          s"""<img src="$href" alt="${fileName.escapeHtmlAttribute()}"$style/>"""
+          val fallbackImageSrc = fallbackImagePath.escapeHtmlAttribute()
+          s"""<img src="$href" alt="${fileName.escapeHtmlAttribute()}" onerror="this.onerror=null;this.src='$fallbackImageSrc';"$style/>"""
         } else {
           s"""<a href="$href" target="_blank" rel="noopener">${fileName.escapeHtml()}</a>"""
         }
