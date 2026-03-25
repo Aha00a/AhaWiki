@@ -10,13 +10,39 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 4px;
         }
         .attachmentList .attachmentItem {
             border: 1px solid #e5e5e5;
             border-radius: 6px;
-            padding: 8px;
+            padding: 6px;
             background: #fff;
             font-size: 12px;
+        }
+        .attachmentList .attachmentItemBody {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+        .attachmentList .attachmentThumbWrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #f3f3f3;
+            border: 1px solid #e3e3e3;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+        }
+        .attachmentList .attachmentThumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .attachmentList .attachmentItemMeta {
             display: flex;
@@ -40,20 +66,24 @@
         }
         .attachmentList .attachmentActions {
             display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+            gap: 2px;
+            flex-wrap: nowrap;
         }
         .attachmentList .attachmentButton {
-            border: 1px solid #d0d0d0;
-            background: #fafafa;
+            border: 0;
+            background: transparent;
             border-radius: 4px;
-            padding: 2px 7px;
+            padding: 2px 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
+            line-height: 1;
+            color: #4a4a4a;
         }
         .attachmentList .attachmentButton.delete {
             color: #b80000;
-            border-color: #e6bbbb;
+        }
+        .attachmentList .attachmentButton:hover {
+            background: #f3f3f3;
         }
         .attachmentList .attachmentEmpty {
             color: #888;
@@ -136,6 +166,26 @@
                 return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
             }
 
+            function filenameFromObjectKey(objectKey) {
+                if (!objectKey)
+                    return '';
+                const segments = objectKey.split('/');
+                return segments[segments.length - 1] || objectKey;
+            }
+
+            function renderThumbnail(attachment) {
+                const contentType = attachment.contentType || '';
+                const fileUrl = attachment.fileUrl || '';
+                if (contentType.indexOf('image/') === 0 && fileUrl) {
+                    return $('<img/>', {
+                        class: 'attachmentThumb',
+                        src: fileUrl,
+                        alt: attachment.originalFilename || attachment.objectKey
+                    });
+                }
+                return $('<i/>', { class: 'far fa-file' });
+            }
+
             function renderAttachmentList() {
                 $attachmentList.empty();
                 if (!uploadingMap.size && (!serverAttachments || !serverAttachments.length)) {
@@ -145,6 +195,9 @@
 
                 Array.from(uploadingMap.values()).forEach(function (uploading) {
                     const $item = $('<div/>', { class: 'attachmentItem' });
+                    const $body = $('<div/>', { class: 'attachmentItemBody' });
+                    const $thumbWrap = $('<div/>', { class: 'attachmentThumbWrap' }).append($('<i/>', { class: 'fas fa-upload' }));
+                    const $content = $('<div/>', { class: 'attachmentContent' }).css('flex', '1');
                     const $meta = $('<div/>', { class: 'attachmentItemMeta' });
                     const $name = $('<div/>', { class: 'attachmentName' }).text(uploading.originalFilename);
                     const stateClass = uploading.failed ? 'attachmentMeta failed' : 'attachmentMeta uploading';
@@ -155,17 +208,25 @@
 
                     $track.append($bar);
                     $meta.append($name);
-                    $item.append($meta, $subMeta, $track);
+                    $content.append($meta, $subMeta, $track);
+                    $body.append($thumbWrap, $content);
+                    $item.append($body);
                     $attachmentList.append($item);
                 });
 
                 serverAttachments.forEach(function (attachment) {
                     const $item = $('<div/>', { class: 'attachmentItem' });
+                    const $body = $('<div/>', { class: 'attachmentItemBody' });
+                    const $thumbWrap = $('<div/>', { class: 'attachmentThumbWrap' }).append(renderThumbnail(attachment));
+                    const $content = $('<div/>', { class: 'attachmentContent' }).css('flex', '1');
                     const $meta = $('<div/>', { class: 'attachmentItemMeta' });
-                    const $name = $('<div/>', { class: 'attachmentName' }).text(attachment.originalFilename || attachment.objectKey);
+                    const displayName = filenameFromObjectKey(attachment.objectKey) || attachment.originalFilename || attachment.objectKey;
+                    const $name = $('<div/>', { class: 'attachmentName' }).text(displayName);
                     const $actions = $('<div/>', { class: 'attachmentActions' });
-                    const $insert = $('<button/>', { type: 'button', class: 'attachmentButton insert' }).text('삽입');
-                    const $delete = $('<button/>', { type: 'button', class: 'attachmentButton delete' }).text('삭제');
+                    const $insert = $('<button/>', { type: 'button', class: 'attachmentButton insert', title: '삽입' })
+                        .html('<i class="fas fa-file-import"></i>');
+                    const $delete = $('<button/>', { type: 'button', class: 'attachmentButton delete', title: '삭제' })
+                        .html('<i class="fas fa-trash-alt"></i>');
                     const $subMeta = $('<div/>', { class: 'attachmentMeta' }).text((attachment.contentType || '') + ' · ' + formatFileSize(attachment.fileSize || 0));
 
                     $insert.on('click', function () {
@@ -191,7 +252,9 @@
 
                     $actions.append($insert, $delete);
                     $meta.append($name, $actions);
-                    $item.append($meta, $subMeta);
+                    $content.append($meta, $subMeta);
+                    $body.append($thumbWrap, $content);
+                    $item.append($body);
                     $attachmentList.append($item);
                 });
             }
