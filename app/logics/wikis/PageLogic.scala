@@ -38,7 +38,7 @@ object PageLogic {
     implicit val site: Site = wikiContext.site
     val user = wikiContext.requestWrapper.getUser
     val permRead = PageContent(body).read.getOrElse("")
-    val page = Page(name, revision, dateTime, user.map(_.email), user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
+    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, permRead, body)
     Page.insert(page)
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }

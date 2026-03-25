@@ -156,8 +156,8 @@ SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, content
     //language=sql
     SQL"""
 INSERT INTO Page
-    (site, name, revision, dateTime, author, user, remoteAddress, comment, permRead, content) values
-    (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.author}, ${p.user.map(_.toString).getOrElse(null)}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
+    (site, name, revision, dateTime, user, remoteAddress, comment, permRead, content) values
+    (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.user.map(_.toString).getOrElse(null)}, ${p.remoteAddress}, ${p.comment}, ${p.permRead}, ${p.content})
     """.executeInsert()
   }
 
