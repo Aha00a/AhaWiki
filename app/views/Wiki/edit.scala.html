@@ -5,43 +5,71 @@
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
     <style>
-        .attachmentUploadQueue {
+        .attachmentList {
             margin: 10px 0 0;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-        .attachmentUploadQueue .uploadItem {
+        .attachmentList .attachmentItem {
             border: 1px solid #e5e5e5;
             border-radius: 6px;
             padding: 8px;
             background: #fff;
             font-size: 12px;
         }
-        .attachmentUploadQueue .uploadItemMeta {
+        .attachmentList .attachmentItemMeta {
             display: flex;
             justify-content: space-between;
             gap: 8px;
-            margin-bottom: 6px;
+            align-items: center;
         }
-        .attachmentUploadQueue .uploadProgressTrack {
+        .attachmentList .attachmentName {
+            font-weight: 700;
+            word-break: break-all;
+        }
+        .attachmentList .attachmentMeta {
+            color: #666;
+            margin-top: 4px;
+        }
+        .attachmentList .attachmentMeta.uploading {
+            color: #1b63d8;
+        }
+        .attachmentList .attachmentMeta.failed {
+            color: #b80000;
+        }
+        .attachmentList .attachmentActions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .attachmentList .attachmentButton {
+            border: 1px solid #d0d0d0;
+            background: #fafafa;
+            border-radius: 4px;
+            padding: 2px 7px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .attachmentList .attachmentButton.delete {
+            color: #b80000;
+            border-color: #e6bbbb;
+        }
+        .attachmentList .attachmentEmpty {
+            color: #888;
+            font-size: 12px;
+        }
+        .attachmentList .uploadProgressTrack {
             height: 6px;
             border-radius: 4px;
             background: #ececec;
             overflow: hidden;
+            margin-top: 6px;
         }
-        .attachmentUploadQueue .uploadProgressBar {
+        .attachmentList .uploadProgressBar {
             height: 100%;
             width: 0;
             background: #3d78ff;
-        }
-        .attachmentUploadQueue .uploadItem.done .uploadProgressBar {
-            background: #2e8b57;
-            width: 100% !important;
-        }
-        .attachmentUploadQueue .uploadItem.failed .uploadProgressBar {
-            background: #d64545;
-            width: 100% !important;
         }
         .uploadDragOverlay {
             position: fixed;
@@ -88,9 +116,11 @@
 
             const $textarea = $('textarea[name=text]');
             const $uploadInput = $('#attachmentUploadInput');
-            const $uploadQueue = $('#attachmentUploadQueue');
+            const $attachmentList = $('#attachmentList');
             const $uploadDragOverlay = $('#uploadDragOverlay');
             let globalDragCounter = 0;
+            let serverAttachments = [];
+            const uploadingMap = new Map();
 
             function hasFiles(event) {
                 const dataTransfer = event.originalEvent && event.originalEvent.dataTransfer;
@@ -98,22 +128,94 @@
                 return !!(types && Array.from(types).indexOf('Files') !== -1);
             }
 
-            function makeQueueItem(file) {
-                const $item = $('<div/>', { class: 'uploadItem' });
-                const $meta = $('<div/>', { class: 'uploadItemMeta' });
-                const $name = $('<strong/>').text(file.name);
-                const $status = $('<span/>').text('대기중');
-                const $track = $('<div/>', { class: 'uploadProgressTrack' });
-                const $bar = $('<div/>', { class: 'uploadProgressBar' });
-                $meta.append($name, $status);
-                $track.append($bar);
-                $item.append($meta, $track);
-                $uploadQueue.prepend($item);
-                return { $item, $status, $bar };
+            function formatFileSize(bytes) {
+                if (bytes < 1024)
+                    return bytes + ' B';
+                if (bytes < 1024 * 1024)
+                    return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            }
+
+            function renderAttachmentList() {
+                $attachmentList.empty();
+                if (!uploadingMap.size && (!serverAttachments || !serverAttachments.length)) {
+                    $attachmentList.append($('<div/>', { class: 'attachmentEmpty' }).text('첨부파일이 없습니다.'));
+                    return;
+                }
+
+                Array.from(uploadingMap.values()).forEach(function (uploading) {
+                    const $item = $('<div/>', { class: 'attachmentItem' });
+                    const $meta = $('<div/>', { class: 'attachmentItemMeta' });
+                    const $name = $('<div/>', { class: 'attachmentName' }).text(uploading.originalFilename);
+                    const stateClass = uploading.failed ? 'attachmentMeta failed' : 'attachmentMeta uploading';
+                    const stateText = uploading.failed ? '업로드 실패' : ('업로드중 ' + uploading.progress + '%');
+                    const $subMeta = $('<div/>', { class: stateClass }).text(stateText);
+                    const $track = $('<div/>', { class: 'uploadProgressTrack' });
+                    const $bar = $('<div/>', { class: 'uploadProgressBar' }).css('width', (uploading.progress || 0) + '%');
+
+                    $track.append($bar);
+                    $meta.append($name);
+                    $item.append($meta, $subMeta, $track);
+                    $attachmentList.append($item);
+                });
+
+                serverAttachments.forEach(function (attachment) {
+                    const $item = $('<div/>', { class: 'attachmentItem' });
+                    const $meta = $('<div/>', { class: 'attachmentItemMeta' });
+                    const $name = $('<div/>', { class: 'attachmentName' }).text(attachment.originalFilename || attachment.objectKey);
+                    const $actions = $('<div/>', { class: 'attachmentActions' });
+                    const $insert = $('<button/>', { type: 'button', class: 'attachmentButton insert' }).text('삽입');
+                    const $delete = $('<button/>', { type: 'button', class: 'attachmentButton delete' }).text('삭제');
+                    const $subMeta = $('<div/>', { class: 'attachmentMeta' }).text((attachment.contentType || '') + ' · ' + formatFileSize(attachment.fileSize || 0));
+
+                    $insert.on('click', function () {
+                        if (!attachment.attachmentMacro)
+                            return;
+                        $textarea.insertAtCaret(attachment.attachmentMacro + '\n');
+                        $textarea.change();
+                    });
+
+                    $delete.on('click', function () {
+                        if (!confirm('첨부파일을 삭제하시겠습니까?'))
+                            return;
+                        $.post('/api/deleteAttachment', {
+                            csrfToken: $('[name=csrfToken]').val(),
+                            pageName: '@(page.name)',
+                            objectKey: attachment.objectKey
+                        }).done(function () {
+                            loadAttachments();
+                        }).fail(function (jqXHR) {
+                            alert('Attachment delete failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                        });
+                    });
+
+                    $actions.append($insert, $delete);
+                    $meta.append($name, $actions);
+                    $item.append($meta, $subMeta);
+                    $attachmentList.append($item);
+                });
+            }
+
+            function loadAttachments() {
+                $.get('/api/pageAttachments', { pageName: '@(page.name)' })
+                    .done(function (data) {
+                        serverAttachments = data && data.attachments ? data.attachments : [];
+                        renderAttachmentList();
+                    })
+                    .fail(function (jqXHR) {
+                        alert('Attachment list load failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                    });
             }
 
             function uploadFile(file) {
-                const { $item, $status, $bar } = makeQueueItem(file);
+                const uploadId = Date.now() + '-' + Math.random().toString(36).slice(2);
+                uploadingMap.set(uploadId, {
+                    originalFilename: file.name,
+                    progress: 0,
+                    failed: false
+                });
+                renderAttachmentList();
+
                 const formData = new FormData();
                 formData.append('csrfToken', $('[name=csrfToken]').val());
                 formData.append('pageName', '@(page.name)');
@@ -132,8 +234,12 @@
                                 if (!e.lengthComputable)
                                     return;
                                 const percent = Math.max(0, Math.min(100, Math.floor((e.loaded / e.total) * 100)));
-                                $bar.css('width', percent + '%');
-                                $status.text('업로드중 ' + percent + '%');
+                                const uploading = uploadingMap.get(uploadId);
+                                if (!uploading)
+                                    return;
+                                uploading.progress = percent;
+                                uploadingMap.set(uploadId, uploading);
+                                renderAttachmentList();
                             });
                         }
                         return xhr;
@@ -142,15 +248,19 @@
                     if (data && data.attachmentMacro) {
                         $textarea.insertAtCaret(data.attachmentMacro + '\n');
                         $textarea.change();
-                        $item.addClass('done');
-                        $status.text('완료');
                     } else {
-                        $item.addClass('failed');
-                        $status.text('실패');
+                        alert('File upload failed.');
                     }
+                    uploadingMap.delete(uploadId);
+                    loadAttachments();
                 }).fail(function (jqXHR) {
-                    $item.addClass('failed');
-                    $status.text('실패');
+                    const uploading = uploadingMap.get(uploadId);
+                    if (uploading) {
+                        uploading.progress = 100;
+                        uploading.failed = true;
+                        uploadingMap.set(uploadId, uploading);
+                        renderAttachmentList();
+                    }
                     alert('File upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
                 });
             }
@@ -170,6 +280,7 @@
                 uploadFiles(this.files);
                 $(this).val('');
             });
+            loadAttachments();
 
             $(document).on('dragenter', function (e) {
                 if (!hasFiles(e))
@@ -209,6 +320,7 @@
                     if (data && data.attachmentMacro) {
                         $textarea.insertAtCaret(data.attachmentMacro + '\n');
                         $textarea.change();
+                        loadAttachments();
                     } else {
                         alert('Image upload failed.');
                     }
@@ -425,7 +537,7 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                             <div class="editorBody">
                                 <textarea name="text" autofocus="autofocus">@page.content</textarea>
                             </div>
-                            <div class="attachmentUploadQueue" id="attachmentUploadQueue"></div>
+                            <div class="attachmentList" id="attachmentList"></div>
                             <div class="editorAdditional">
                                 <div class="toolbarLeft">
                                     <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>

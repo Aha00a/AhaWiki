@@ -595,6 +595,91 @@ controllerComponents: ControllerComponents,
     }
   }
 
+  def pageAttachments(): Action[AnyContent] = Action { implicit request =>
+    import play.api.libs.json.Json
+
+    val pageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
+    if (pageName.isEmpty) {
+      BadRequest("pageName is required")
+    } else {
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+        implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+        val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
+        if (!WikiPermission().isWritable(PageContent(latestText))) {
+          Forbidden("Permission denied.")
+        } else {
+          val attachments = Attachment.selectUploadedByPage(site.seq, pageName)
+          Ok(Json.obj(
+            "attachments" -> attachments.map(attachment => Json.obj(
+              "objectKey" -> attachment.objectKey,
+              "originalFilename" -> attachment.originalFilename,
+              "contentType" -> attachment.contentType,
+              "fileSize" -> attachment.fileSize,
+              "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
+            ))
+          ))
+        }
+      }
+    }
+  }
+
+  def deleteAttachment(): Action[AnyContent] = Action { implicit request =>
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    import play.api.libs.json.Json
+
+    val form = Form(tuple("pageName" -> text, "objectKey" -> text)).bindFromRequest
+    form.fold(_ => BadRequest("invalid form"), {
+      case (pageNameRaw, objectKeyRaw) =>
+        val pageName = pageNameRaw.trim
+        val objectKey = objectKeyRaw.trim
+        if (pageName.isEmpty || objectKey.isEmpty) {
+          BadRequest("pageName and objectKey are required")
+        } else {
+          database.withConnection { implicit connection =>
+            implicit val site: Site = SiteLogic.get(request.host)
+            implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+            implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+            val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
+            if (!WikiPermission().isWritable(PageContent(latestText))) {
+              Forbidden("Permission denied.")
+            } else {
+              Attachment.selectByObjectKey(site.seq, pageName, objectKey) match {
+                case None =>
+                  NotFound("Attachment not found")
+                case Some(_) =>
+                  val credentials = new BasicAWSCredentials(
+                    applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+                    applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+                  )
+                  val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
+                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                    .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+                    .build()
+                  val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+
+                  try {
+                    amazonS3.deleteObject(bucket, objectKey)
+                    Attachment.markDeleted(objectKey)
+                    Ok(Json.obj("ok" -> true))
+                  } catch {
+                    case error: Throwable =>
+                      logger.error(s"deleteAttachment failed. objectKey=$objectKey", error)
+                      InternalServerError("Attachment delete failed.")
+                  }
+              }
+            }
+          }
+        }
+    })
+  }
+
   def uploadClipboardImage(): Action[AnyContent] = Action { implicit request =>
     import com.amazonaws.auth.AWSStaticCredentialsProvider
     import com.amazonaws.auth.BasicAWSCredentials
