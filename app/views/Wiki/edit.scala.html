@@ -33,29 +33,6 @@
             };
 
             $("html").pasteImageReader(function(results) {
-                $('<div/>').css({
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-                }).append(
-                    $('<div/>').css({
-                        backgroundSize: 'contain',
-                        backgroundImage: 'url(' + results.dataURL + ')',
-                        backgroundPosition: 'center',
-                        backgroundRepeat: 'no-repeat',
-                        position: 'fixed',
-                        top: '100px',
-                        left: '100px',
-                        right: '100px',
-                        bottom: '100px'
-                    })
-                ).click(function () {
-                    $(this).remove();
-                    $('textarea').focus()
-                }).appendTo('body');
                 $.post('/api/uploadClipboardImage', {
                     csrfToken: $('[name=csrfToken]').val(),
                     pageName: '@(page.name)',

@@ -7,6 +7,8 @@ import scala.util.matching.Regex
 
 object MacroAttachment extends TraitMacro {
   private val regexWidth: Regex = """(.+),\s*(\d+(px|%)?)$""".r
+  private val attachmentRoot: String = "Attachment"
+  private val attachmentPathSanitizerRegex: String = "[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]"
   private val imageExtensions: Set[String] = Set(
     "png",
     "jpg",
@@ -21,14 +23,39 @@ object MacroAttachment extends TraitMacro {
     "ico",
   )
 
+  private def sanitizeAttachmentPathSegment(v: String): String = {
+    val sanitized = v.replaceAll(attachmentPathSanitizerRegex, "_")
+    if (sanitized.nonEmpty) sanitized else "_"
+  }
+
+  private def normalizeObjectKey(rawObjectKey: String)(implicit wikiContext: ContextWikiPage): String = {
+    val trimmed = rawObjectKey.trim.stripPrefix("/")
+    if (trimmed.startsWith(s"$attachmentRoot/")) {
+      trimmed
+    } else {
+      val segments = trimmed.split("/").toSeq.filter(_.nonEmpty)
+      segments match {
+        case Seq("clipboard", _*) =>
+          val sanitizedPageName = sanitizeAttachmentPathSegment(wikiContext.name)
+          s"$attachmentRoot/${wikiContext.site.seq}/$sanitizedPageName/$trimmed"
+        case Seq(pageName, "clipboard", rest @ _*) =>
+          val normalizedPagePath = (Seq(sanitizeAttachmentPathSegment(pageName), "clipboard") ++ rest).mkString("/")
+          s"$attachmentRoot/${wikiContext.site.seq}/$normalizedPagePath"
+        case _ =>
+          trimmed
+      }
+    }
+  }
+
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
-    val (objectKey, widthOption) = argument match {
+    val (rawObjectKey, widthOption) = argument match {
       case regexWidth(key, width, null) => (key.trim, Some(s"${width}px"))
       case regexWidth(key, width, unit) => (key.trim, Some(s"$width$unit"))
       case _ => (argument.trim, None)
     }
+    val objectKey = normalizeObjectKey(rawObjectKey)
 
-    if (objectKey.isEmpty) {
+    if (rawObjectKey.isEmpty) {
       return MacroError.toHtmlString("Attachment object key is empty.")
     }
 

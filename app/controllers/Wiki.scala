@@ -77,6 +77,18 @@ controllerComponents: ControllerComponents,
     s"Attachment/$siteSeq/$sanitizedPageName/$sanitizedOriginalFileName/$sanitizedOriginalFileName.$formattedDateTime.$sanitizedExtension"
   }
 
+  private def toAttachmentMacroArgument(objectKey: String, siteSeq: Long, pageName: String): String = {
+    val sitePrefix = s"Attachment/$siteSeq/"
+    val pagePrefix = s"$sitePrefix${sanitizeAttachmentPathSegment(pageName)}/"
+    if (objectKey.startsWith(pagePrefix)) {
+      objectKey.stripPrefix(pagePrefix)
+    } else if (objectKey.startsWith(sitePrefix)) {
+      objectKey.stripPrefix(sitePrefix)
+    } else {
+      objectKey
+    }
+  }
+
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
@@ -536,7 +548,7 @@ controllerComponents: ControllerComponents,
                 val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
                 Ok(Json.obj(
                   "objectKey" -> objectKey,
-                  "attachmentMacro" -> s"[[Attachment($objectKey)]]",
+                  "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
                   "imageUrl" -> imageUrl,
                 ))
               case _ =>
