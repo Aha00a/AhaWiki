@@ -12,6 +12,10 @@ class ApplicationConf @Inject()(configuration: Configuration) {
   }
 
   object AhaWiki {
+    object accessLog {
+      def sampleRate(): Double = configuration.getOptional[Double](fqn).getOrElse(0.5)
+    }
+
     object google {
       object credentials {
         object oAuth {

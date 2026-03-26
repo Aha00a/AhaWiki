@@ -54,7 +54,7 @@ object AccessLog extends Logging {
                         ORDER BY seq
                         LIMIT $limit
                 ) T
-                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -3 MONTH)
+                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -1 MONTH)
             );
     """.executeUpdate()
   }

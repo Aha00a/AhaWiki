@@ -39,6 +39,8 @@ class FilterAccessLog @Inject()(
   wsClient: WSClient,
   executionContext: ExecutionContext
 ) extends Filter with Logging {
+  private val accessLogSampleRate = applicationConf.AhaWiki.accessLog.sampleRate().max(0.0).min(1.0)
+
   private val toCheckStartsWith = Seq(
     "/wp",
     "/wordpress",
@@ -86,6 +88,16 @@ class FilterAccessLog @Inject()(
       url,
       userAgent
     ).mkString("\t"))
+  }
+
+  private def shouldInsertAccessLog(status: Int): Boolean = {
+    if (300 <= status && status < 400) {
+      false
+    } else if (400 <= status) {
+      true
+    } else {
+      Random.nextDouble() <= accessLogSampleRate
+    }
   }
 
   private def insertAccessLogIfSiteFound(
@@ -191,21 +203,25 @@ class FilterAccessLog @Inject()(
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
         logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
-        database.withConnection { implicit connection =>
-          insertAccessLogIfSiteFound(
-            site,
-            getUserSeq(requestHeader),
-            None,
-            requestHeader.method,
-            scheme,
-            host,
-            uri,
-            url,
-            remoteAddress,
-            userAgent,
-            result.header.status,
-            duration.toInt
-          )
+        if (shouldInsertAccessLog(result.header.status)) {
+          database.withConnection { implicit connection =>
+            insertAccessLogIfSiteFound(
+              site,
+              getUserSeq(requestHeader),
+              None,
+              requestHeader.method,
+              scheme,
+              host,
+              uri,
+              url,
+              remoteAddress,
+              userAgent,
+              result.header.status,
+              duration.toInt
+            )
+          }
+        } else {
+          logger.debug(s"Skip AccessLog insert by policy: status=${result.header.status}")
         }
         result.withHeaders("Request-Time" -> duration.toString)
       })
