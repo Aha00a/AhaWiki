@@ -3,14 +3,14 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzrQySLPg9A.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzrQySLPg9A.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans KR';
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzg01SLPg9A.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzg01SLPg9A.ttf) format('truetype');
 }
 .defaultFont {
   font-family: 'Noto Sans KR', sans-serif;
@@ -20,28 +20,28 @@
   font-style: italic;
   font-weight: 400;
   font-stretch: normal;
-  src: url(https://fonts.gstatic.com/s/notosans/v39/o-0kIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevHtVtX57DGjDU1QDce2VDSzQ.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v42/o-0kIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevHtVtX57DGjDU1QDce2VDSzQ.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 700;
   font-stretch: normal;
-  src: url(https://fonts.gstatic.com/s/notosans/v39/o-0kIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevHtVtX57DGjDU1QNAZ2VDSzQ.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v42/o-0kIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevHtVtX57DGjDU1QNAZ2VDSzQ.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 400;
   font-stretch: normal;
-  src: url(https://fonts.gstatic.com/s/notosans/v39/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6Vc.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v42/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyD9A-9a6Vc.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Noto Sans';
   font-style: normal;
   font-weight: 700;
   font-stretch: normal;
-  src: url(https://fonts.gstatic.com/s/notosans/v39/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyAaBO9a6Vc.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/notosans/v42/o-0mIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjcz6L1SoM-jCpoiyAaBO9a6Vc.ttf) format('truetype');
 }
 .defaultFont {
   font-family: 'Noto Sans', sans-serif;
@@ -50,25 +50,25 @@
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v17/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v19/KFOhCneDtsqEr0keqCMhbCc_OsbSlQ.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: italic;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v17/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v19/KFO8CneDtsqEr0keqCMhbCc_Mn33hY9uew.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 400;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v17/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v19/KFOjCneDtsqEr0keqCMhbCc6CsE.ttf) format('truetype');
 }
 @font-face {
   font-family: 'Ubuntu Mono';
   font-style: normal;
   font-weight: 700;
-  src: url(https://fonts.gstatic.com/s/ubuntumono/v17/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
+  src: url(https://fonts.gstatic.com/s/ubuntumono/v19/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
 }
 html,
 body {
@@ -1225,6 +1225,39 @@ kbd:hover > kbd {
     padding-left: 0;
   }
 }
+@media (max-width: 767px) {
+  .AhaWiki .limitWidth {
+    width: auto;
+    margin: 0 12px;
+  }
+  .AhaWiki .commonAhaWiki {
+    padding: 0 0 20px 12px;
+  }
+  .AhaWiki .commonAhaWiki h1,
+  .AhaWiki .commonAhaWiki h2,
+  .AhaWiki .commonAhaWiki h3,
+  .AhaWiki .commonAhaWiki h4,
+  .AhaWiki .commonAhaWiki h5,
+  .AhaWiki .commonAhaWiki h6 {
+    margin-left: 0;
+  }
+  .AhaWiki .commonAhaWiki hr {
+    margin-left: 0;
+  }
+  .AhaWiki .commonAhaWiki div.toc,
+  .AhaWiki .commonAhaWiki div.MacroLinkDate,
+  .AhaWiki .commonAhaWiki div.rightInfoBox {
+    float: none;
+    max-width: none;
+    margin-left: 0;
+  }
+  .AhaWiki .commonAhaWiki table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
 .AhaWiki .gnb,
 .AhaWiki .revisionInfo {
   clear: right;
@@ -1278,6 +1311,23 @@ kbd:hover > kbd {
   .AhaWiki .gnb,
   .AhaWiki .revisionInfo {
     display: none;
+  }
+}
+@media (max-width: 767px) {
+  .AhaWiki .gnb,
+  .AhaWiki .revisionInfo {
+    float: none;
+    margin-left: 0;
+    padding-top: 10px;
+  }
+  .AhaWiki .revisionInfo {
+    float: right;
+  }
+  .AhaWiki .gnb .action ul {
+    display: block;
+    border-left: none;
+    border-top: 1px solid #ccc;
+    padding: 8px 0;
   }
 }
 .AhaWiki .revisionInfo {
@@ -2008,9 +2058,28 @@ kbd:hover > kbd {
   border: 1px solid #00aa00;
   padding: 10px;
 }
+@media (max-width: 767px) {
+  .AhaWiki .login form {
+    box-sizing: border-box;
+    width: auto;
+    margin: 30px 12px;
+    padding: 20px;
+  }
+  .AhaWiki .login form input,
+  .AhaWiki .login form input[type=submit] {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 12px 0;
+  }
+}
 .AhaWiki .edit > div.ui > form {
   display: flex;
   flex-direction: row;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form {
+    flex-direction: column;
+  }
 }
 .AhaWiki .edit > div.ui > form > div.left,
 .AhaWiki .edit > div.ui > form > div.right {
@@ -2086,6 +2155,14 @@ kbd:hover > kbd {
   background-color: #ccc;
   margin: 0 10px;
   cursor: ew-resize;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.divider {
+    width: auto;
+    height: 5px;
+    margin: 10px 0;
+    cursor: ns-resize;
+  }
 }
 .AhaWiki .edit > div.ui > form > div.divider:hover {
   background-color: #aaa;
@@ -2207,6 +2284,12 @@ kbd:hover > kbd {
   width: 100%;
   padding: 10px;
   font-size: 25px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .search {
+    left: 10%;
+    width: 80%;
+  }
 }
 .AhaWiki .autocomplete-suggestions {
   border: 1px solid #999;

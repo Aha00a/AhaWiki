@@ -572,6 +572,37 @@ kbd {
 		.commonAhaWiki;
 	}
 
+	@media @widthTablet {
+		.limitWidth {
+			width: auto;
+			margin: 0 12px;
+		}
+		.commonAhaWiki {
+			padding: 0 0 20px 12px;
+
+			h1, h2, h3, h4, h5, h6 {
+				margin-left: 0;
+			}
+
+			hr {
+				margin-left: 0;
+			}
+
+			div.toc, div.MacroLinkDate, div.rightInfoBox {
+				float: none;
+				max-width: none;
+				margin-left: 0;
+			}
+
+			table {
+				display: block;
+				max-width: 100%;
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+		}
+	}
+
 	.gnb, .revisionInfo {
 		clear: right;
 		float: right;
@@ -613,6 +644,23 @@ kbd {
 		}
 		@media print {
 			display: none;
+		}
+	}
+
+	@media @widthTablet {
+		.gnb, .revisionInfo {
+			float: none;
+			margin-left: 0;
+			padding-top: 10px;
+		}
+		.revisionInfo {
+			float: right;
+		}
+		.gnb .action ul {
+			display: block;
+			border-left: none;
+			border-top: 1px solid #ccc;
+			padding: 8px 0;
 		}
 	}
 
@@ -872,6 +920,22 @@ kbd {
 		}
 	}
 
+	@media @widthTablet {
+		.login form {
+			box-sizing: border-box;
+			width: auto;
+			margin: 30px 12px;
+			padding: 20px;
+
+			input,
+			input[type=submit] {
+				box-sizing: border-box;
+				width: 100%;
+				margin: 12px 0;
+			}
+		}
+	}
+
 	.edit {
 		//div {
 		//	margin: 3px;
@@ -883,6 +947,9 @@ kbd {
 			> form {
 				display: flex;
 				flex-direction: row;
+				@media @widthTablet {
+					flex-direction: column;
+				}
 				> div.left,
 				> div.right {
 					min-width: 200px;
@@ -927,6 +994,12 @@ kbd {
 					background-color: #ccc;
 					margin: 0 10px;
 					cursor: ew-resize;
+					@media @widthTablet {
+						width: auto;
+						height: 5px;
+						margin: 10px 0;
+						cursor: ns-resize;
+					}
 					&:hover {
 						background-color: #aaa;
 					}
@@ -1076,6 +1149,12 @@ kbd {
 				padding: 10px;
 				font-size: 25px;
 			}
+		}
+	}
+	@media @widthTablet {
+		.search {
+			left: 10%;
+			width: 80%;
 		}
 	}
 	.autocomplete-suggestions { border: 1px solid #999; background: #fff; cursor: default; overflow: auto; }
