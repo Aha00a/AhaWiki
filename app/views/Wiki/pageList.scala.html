@@ -1,4 +1,5 @@
 @(listPage: List[models.tables.PageWithoutContentWithSize])
+@userHref(nickname: String) = @{logics.wikis.UserPageLogic.href(nickname)}
 <script type="text/javascript">
     $(function(){
         $(".simpleTable").tablesorter();
@@ -27,7 +28,7 @@
                     <td>@(page.toIsoLocalDateTimeString)</td>
                     <td>@(page.size)</td>
                     <td>@(page.revision)</td>
-                    <td>@(page.nickname)</td>
+                    <td>@page.nickname.map { nickname => <a href="@userHref(nickname)" rel="nofollow">@nickname</a> }.getOrElse("Anonymous")</td>
                     <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(page.remoteAddress))</td>
                     <td>@(page.comment)</td>
                 </tr>

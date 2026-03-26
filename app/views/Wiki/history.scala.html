@@ -1,4 +1,5 @@
 @(title: String, listHistory: List[models.tables.PageWithoutContent])(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
+@userHref(nickname: String) = @{logics.wikis.UserPageLogic.href(nickname)}
 @_base(title, s"history of $title") {
     @hotkey()
     <script type="text/javascript">
@@ -53,7 +54,7 @@
                                 <a href="?revision=@(history.revision)" rel="nofollow">@(history.revision)</a>
                             </td>
                             <td>@(history.toIsoLocalDateTimeString)</td>
-                            <td>@(history.nickname)</td>
+                            <td>@history.nickname.map { nickname => <a href="@userHref(nickname)" rel="nofollow">@nickname</a> }.getOrElse("Anonymous")</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td>@(history.comment)</td>
                         </tr>
