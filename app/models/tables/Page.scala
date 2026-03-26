@@ -77,10 +77,10 @@ object Page {
     SQL"""
 SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
     FROM Page P
-    INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name = $name
     ORDER BY revision DESC
+    LIMIT 1
     """
       .as(rowParserPage singleOpt).map(flatten)
       .map(Page.tupled)
@@ -91,9 +91,13 @@ SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, 
     SQL"""
 SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
     FROM Page P
-    INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name IN ($seqName)
+      AND P.revision = (
+        SELECT MAX(P2.revision)
+        FROM Page P2
+        WHERE P2.site = P.site AND P2.name = P.name
+      )
     ORDER BY P.name DESC
     """
       .as(rowParserPage *).map(flatten)
@@ -194,7 +198,12 @@ INSERT INTO Page
 SELECT
     P.name, P.revision, P.dateTime, U.nickname AS author, P.user, P.remoteAddress, P.comment, IFNULL(P.permRead, '') AS permRead, LENGTH(P.content) size
     FROM Page P
-    INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
+    INNER JOIN (
+        SELECT site, name, MAX(revision) AS revision
+        FROM Page
+        WHERE site = ${site.seq}
+        GROUP BY site, name
+    ) SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq}
     ORDER BY P.name;
@@ -221,7 +230,12 @@ SELECT
     SQL"""
 SELECT P.name, P.dateTime, P.content
      FROM Page P
-     INNER JOIN SitePageNameRevision SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
+     INNER JOIN (
+        SELECT site, name, MAX(revision) AS revision
+        FROM Page
+        WHERE site = ${site.seq}
+        GROUP BY site, name
+     ) SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
      WHERE
          P.site = ${site.seq} AND (
              P.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
