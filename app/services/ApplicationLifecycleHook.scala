@@ -51,6 +51,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   }
 
+  // 만료된 데이터 삭제 스케쥴러: 1~10분 간격으로 AccessLog와 IpDeny 테이블에서 만료된 레코드를 삭제합니다.
   scheduleWithRandomInterval("deleteExpired", 60 * 1, 60 * 10, () => {
     StopWatch("deleteExpired") {
       database.withConnection { implicit connection =>
@@ -64,6 +65,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
+  // 페이지 계산 스케쥴러: 1~20분 간격으로 랜덤 사이트를 선택하여 최신 페이지 10개에 대해 계산 작업을 ActorAhaWiki에 요청합니다.
   scheduleWithRandomInterval("Calculate", 60, 60 * 20, () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
