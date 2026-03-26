@@ -11,6 +11,7 @@ object ExtractConvertInjectMacro {
   private val mapMacros: Map[String, TraitMacro] = Seq(
 
     MacroSiteName,
+    MacroUptime,
 
     MacroBr,
     MacroColorCode,
