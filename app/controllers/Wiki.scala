@@ -194,7 +194,8 @@ controllerComponents: ControllerComponents,
       val additionalInfo = getAhaMarkAdditionalInfo(name)
       pageContent.redirect match {
         case Some(directive) =>
-          val message = s"""Redirected from <a href="${page.name}?action=edit">${page.name}</a>"""
+          val redirectFromEditLink = s"/w/${URLEncoder.encode(page.name, "utf-8").replace("+", "%20")}?action=edit"
+          val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
           Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
         case None =>
