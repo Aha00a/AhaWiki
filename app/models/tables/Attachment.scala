@@ -22,7 +22,7 @@ object Attachment {
   def insertInitiated(
     site: Long,
     pageName: String,
-    user: Option[Int],
+    user: Option[Long],
     uploaderEmail: Option[String],
     originalFilename: String,
     storedFilename: String,

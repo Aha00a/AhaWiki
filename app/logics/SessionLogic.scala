@@ -12,7 +12,7 @@ object SessionLogic {
 
   def getUser(request: RequestHeader): Option[User.IdEmailNickname] = {
     for {
-      seq <- request.session.get(sessionKeySeq).flatMap(_.toIntOption)
+      seq <- request.session.get(sessionKeySeq).flatMap(_.toLongOption)
       email <- request.session.get(sessionKeyEmail)
       nickname <- request.session.get(sessionKeyNickname)
     } yield User.IdEmailNickname(seq, email, nickname)

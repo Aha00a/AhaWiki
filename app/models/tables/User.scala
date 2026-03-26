@@ -2,7 +2,6 @@ package models.tables
 
 import anorm.SqlParser.date
 import anorm.SqlParser.flatten
-import anorm.SqlParser.int
 import anorm.SqlParser.long
 import anorm.SqlParser.scalar
 import anorm.SqlParser.str
@@ -12,12 +11,12 @@ import java.sql.Connection
 import java.util.Date
 import scala.annotation.tailrec
 
-case class User(seq:Int, created: Date, updated: Date, email: String, nickname: String) {
+case class User(seq: Long, created: Date, updated: Date, email: String, nickname: String) {
   def toIdEmailNickname: User.IdEmailNickname = User.IdEmailNickname(seq, email, nickname)
 }
 
 object User {
-  case class IdEmailNickname(seq: Int, email: String, nickname: String)
+  case class IdEmailNickname(seq: Long, email: String, nickname: String)
 
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
@@ -29,11 +28,11 @@ object User {
             FROM User U
             WHERE U.email = $email
          """
-      .as(int("seq") ~ date("created") ~ date("updated") ~ str("email") ~ str("nickname") singleOpt).map(flatten)
+      .as(long("seq") ~ date("created") ~ date("updated") ~ str("email") ~ str("nickname") singleOpt).map(flatten)
       .map(User.tupled)
   }
 
-  def insert(email: String)(implicit connection: Connection): Option[(Int, String)] = {
+  def insert(email: String)(implicit connection: Connection): Option[(Long, String)] = {
     val base = email.takeWhile(_ != '@').take(3).toLowerCase
 
     def generateSuffix(): String =
@@ -47,14 +46,14 @@ object User {
       s"${base}_${generateSuffix()}"
 
     @tailrec
-    def tryInsert(attempt: Int): Option[(Int, String)] = {
+    def tryInsert(attempt: Int): Option[(Long, String)] = {
       if (attempt >= 100)
         None
       else {
         val nickname = generateNickname()
         try {
           SQL"""INSERT INTO User (email, nickname) VALUES ($email, $nickname)"""
-            .executeInsert(scalar[Int].singleOpt)
+            .executeInsert(scalar[Long].singleOpt)
             .map(id => (id, nickname))
         } catch {
           case _: java.sql.SQLIntegrityConstraintViolationException =>

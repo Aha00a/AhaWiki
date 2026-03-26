@@ -16,9 +16,9 @@ import java.time.LocalDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
+case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, permRead: String) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 object PageWithoutContentWithSize {
   import models.JsonEncoderDecoderForDate._
   implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
@@ -55,9 +55,9 @@ object Page {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
-  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead")
-  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionInt("user") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size")
+  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
+  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead")
+  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size")
   private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
