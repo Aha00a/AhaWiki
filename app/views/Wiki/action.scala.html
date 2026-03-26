@@ -61,10 +61,10 @@
 @if(wikiFirst != null && wikiLast != null) {
     <div class="revisionInfo">
         @if(wikiFirst != null) {
-            <div class="first">created by @wikiFirst.nickname.map { nickname => Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous")) at <a href="?action=history" rel="nofollow">@(wikiFirst.toIsoLocalDateString)</a></div>
+            <div class="first">created by @wikiFirst.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous")) at <a href="?action=history" rel="nofollow">@(wikiFirst.toIsoLocalDateString)</a></div>
         }
         @if(wikiLast != null) {
-            <div class="last">last modified by @wikiLast.nickname.map { nickname => Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous")) at <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
+            <div class="last">last modified by @wikiLast.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous")) at <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
             <div class="revision">revision: <a href="?action=blame" rel="nofollow">@(wikiLast.revision)</a> </div>
         }
     </div>
