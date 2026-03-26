@@ -5,6 +5,7 @@
 /.settings
 /RUNNING_PID
 /conf/application.local.dev.conf
+/conf/wiki.aha00a.com.conf
 cache
 logs
 node_modules
