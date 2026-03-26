@@ -88,6 +88,41 @@ class FilterAccessLog @Inject()(
     ).mkString("\t"))
   }
 
+  private def insertAccessLogIfSiteFound(
+    site: Site,
+    user: Option[Long],
+    ipDeny: Option[Long],
+    method: String,
+    scheme: String,
+    host: String,
+    uri: String,
+    url: String,
+    remoteAddress: String,
+    userAgent: String,
+    status: Int,
+    duration: Int,
+  )(implicit connection: Connection): Option[Long] = {
+    if (site.isNotFound) {
+      logger.warn(s"Skip AccessLog insert: site not found for host=$host, uri=$uri, remoteAddress=$remoteAddress")
+      None
+    } else {
+      models.tables.AccessLog.insert(
+        site.seq,
+        user,
+        ipDeny,
+        method,
+        scheme,
+        host,
+        uri,
+        url,
+        remoteAddress,
+        userAgent,
+        status,
+        duration
+      )
+    }
+  }
+
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val startTime = System.currentTimeMillis
     val scheme = requestHeader.scheme
@@ -109,8 +144,8 @@ class FilterAccessLog @Inject()(
         val duration = endTime - startTime
         logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
         database.withConnection { implicit connection =>
-          models.tables.AccessLog.insert(
-            site.seq,
+          insertAccessLogIfSiteFound(
+            site,
             getUserSeq(requestHeader),
             optionIpDeny.map(_.seq),
             requestHeader.method,
@@ -133,8 +168,8 @@ class FilterAccessLog @Inject()(
         val duration = endTime - startTime
         logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
         database.withConnection { implicit connection =>
-          val accessLogSeq = models.tables.AccessLog.insert(
-            site.seq,
+          val accessLogSeq = insertAccessLogIfSiteFound(
+            site,
             getUserSeq(requestHeader),
             None,
             requestHeader.method,
@@ -157,8 +192,8 @@ class FilterAccessLog @Inject()(
         val duration = endTime - startTime
         logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
         database.withConnection { implicit connection =>
-          models.tables.AccessLog.insert(
-            site.seq,
+          insertAccessLogIfSiteFound(
+            site,
             getUserSeq(requestHeader),
             None,
             requestHeader.method,

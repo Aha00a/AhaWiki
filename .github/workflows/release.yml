@@ -3,7 +3,7 @@ name: release-deploy
 on:
   push:
     tags:
-      - "v*"
+      - "vdisabled*"
   workflow_dispatch:
 
 permissions:
