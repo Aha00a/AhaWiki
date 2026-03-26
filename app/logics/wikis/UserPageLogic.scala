@@ -10,4 +10,7 @@ object UserPageLogic {
 
   def href(nickname: String): String =
     "/w/" + URLEncoder.encode(pageName(nickname), StandardCharsets.UTF_8.toString).replace("+", "%20")
+
+  def toHtmlString(nickname: String)(implicit wikiContext: models.ContextWikiPage): String =
+    logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(wikiMarkup(nickname))
 }

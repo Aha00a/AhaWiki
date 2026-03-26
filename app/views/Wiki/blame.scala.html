@@ -1,5 +1,4 @@
 @(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
-@userHref(nickname: String) = @{logics.wikis.UserPageLogic.href(nickname)}
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
     @views.html.Wiki.hotkey()
 } {
@@ -33,7 +32,7 @@
                     @for((blameLine, i) <- blame.seqBlameLine.zipWithIndex) {
                         <tr>
                             <td class="lineDateTime">@blameLine.metaData.toIsoLocalDateTimeString</td>
-                            <td class="lineNickname"><a href="@userHref(blameLine.metaData.nickname)" rel="nofollow">@blameLine.metaData.nickname</a></td>
+                            <td class="lineNickname">@Html(logics.wikis.UserPageLogic.toHtmlString(blameLine.metaData.nickname))</td>
                             <td class="lineRevision" style="background-color: @(mapRevisionColor(blameLine.metaData.revision));">
                                 <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
                             </td>
