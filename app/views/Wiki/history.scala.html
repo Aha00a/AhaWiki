@@ -41,7 +41,7 @@
                         <th colspan="2"><input type="submit" value="Diff"/></th>
                         <th width="50px">revision</th>
                         <th width="200px">Date</th>
-                        <th width="200px">Author</th>
+                        <th width="200px">Nickname</th>
                         <th width="100px">IP</th>
                         <th>Comment</th>
                     </tr>
@@ -53,7 +53,7 @@
                                 <a href="?revision=@(history.revision)" rel="nofollow">@(history.revision)</a>
                             </td>
                             <td>@(history.toIsoLocalDateTimeString)</td>
-                            <td>@(history.author)</td>
+                            <td>@(history.nickname)</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td>@(history.comment)</td>
                         </tr>

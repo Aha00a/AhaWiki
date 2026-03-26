@@ -16,9 +16,9 @@ import java.time.LocalDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, author: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
+case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, content: String) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String) extends WithDateTime
+case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Int], remoteAddress: String, comment: String, permRead: String, size: Long) extends WithDateTime
 object PageWithoutContentWithSize {
   import models.JsonEncoderDecoderForDate._
   implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
@@ -55,9 +55,9 @@ object Page {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("author") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
-  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("author") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead")
-  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("author") ~ optionInt("user") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size")
+  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead") ~ str("content")
+  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionInt("user") ~str("remoteAddress") ~ str("comment") ~ str("permRead")
+  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionInt("user") ~ str("remoteAddress") ~ str("comment") ~ str("permRead") ~ long("size")
   private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
@@ -75,7 +75,7 @@ object Page {
   def selectLastRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
+SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name = $name
@@ -89,7 +89,7 @@ SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, 
   def selectLastRevision(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[Page] = {
     //language=sql
     SQL"""
-SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
+SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress, comment, IFNULL(permRead, '') AS permRead, content
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name IN ($seqName)
@@ -107,7 +107,7 @@ SELECT P.name, P.revision, dateTime, U.nickname AS author, user, remoteAddress, 
   def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
+SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -121,7 +121,7 @@ SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment
   def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
+SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, IFNULL(permRead, '') permRead, content
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name AND revision = $revision
@@ -133,7 +133,7 @@ SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment, IFNULL(permRead, '') permRead
+SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, IFNULL(permRead, '') permRead
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -146,7 +146,7 @@ SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, comment
   def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection, site: Site): T = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname author, user, remoteAddress, content, comment, IFNULL(permRead, '') permRead
+SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, content, comment, IFNULL(permRead, '') permRead
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -196,7 +196,7 @@ INSERT INTO Page
     //language=sql
     SQL"""
 SELECT
-    P.name, P.revision, P.dateTime, U.nickname AS author, P.user, P.remoteAddress, P.comment, IFNULL(P.permRead, '') AS permRead, LENGTH(P.content) size
+    P.name, P.revision, P.dateTime, U.nickname AS nickname, P.user, P.remoteAddress, P.comment, IFNULL(P.permRead, '') AS permRead, LENGTH(P.content) size
     FROM Page P
     INNER JOIN (
         SELECT site, name, MAX(revision) AS revision

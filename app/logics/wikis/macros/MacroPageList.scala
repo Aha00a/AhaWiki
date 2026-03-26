@@ -14,7 +14,7 @@ object MacroPageList extends TraitMacro {
       s"${t.localDateTime.toIsoLocalDateTimeString}",
       s"${t.size}",
       s"""[[Html(<a href="${t.name}?action=diff&after=${t.revision}">${t.revision}</a>)]]""",
-      s"${t.author.map(a => s"[$a]").getOrElse("")}",
+      s"${t.nickname.map(a => s"[$a]").getOrElse("")}",
       s"${IpAddressUtil.mask(t.remoteAddress)}",
       s"${t.comment}"
     ))

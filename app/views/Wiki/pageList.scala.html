@@ -13,7 +13,7 @@
                 <th width="200px">Date</th>
                 <th width="100px">Size</th>
                 <th width="50px">Version</th>
-                <th width="200px">Author</th>
+                <th width="200px">Nickname</th>
                 <th width="100px">IP</th>
                 <th>Comment</th>
             </tr>
@@ -27,7 +27,7 @@
                     <td>@(page.toIsoLocalDateTimeString)</td>
                     <td>@(page.size)</td>
                     <td>@(page.revision)</td>
-                    <td>@(page.author)</td>
+                    <td>@(page.nickname)</td>
                     <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(page.remoteAddress))</td>
                     <td>@(page.comment)</td>
                 </tr>
@@ -35,4 +35,3 @@
         </tbody>
     </table>
 </div>
-

@@ -18,7 +18,7 @@ object MacroRecentChanges extends TraitMacro {
                     s"""'''["${t.name}"]'''""",
                     s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
                     s"${t.toIsoLocalDateTimeString}",
-                    s"${t.author.map(a => s"[$a]").getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
+                    s"${t.nickname.map(a => s"[$a]").getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
                     s"${t.comment}"
                 ))
                 s"""=== $yearMonth
