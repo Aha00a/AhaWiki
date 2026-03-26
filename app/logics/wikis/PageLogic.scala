@@ -101,7 +101,7 @@ object PageLogic {
             CalculatedTermFrequency.insert(name, term, frequency)
           }
         }
-        logger.info(seqWordCountSorted.mkString(" "))
+        logger.info(seqWordCountSorted.take(10).mkString(" "))
 
         StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\tCalculate Cosine Similarity") {
           CalculatedCosineSimilarity.recalc(name)
