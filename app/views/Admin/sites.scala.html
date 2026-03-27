@@ -1,8 +1,9 @@
 @(seqSite: Seq[models.tables.Site])
 @views.html.Admin._baseAdmin("All Sites", "Manage all sites") {
+    <script type="module" src="/public/js/babel/admin.js"></script>
 } {
-    <div id="main" style="padding: 20px;">
-        <h1>All Sites</h1>
+    <div id="main" data-admin-page="sites" style="padding: 20px;">
+        <h1>All Sites (Fallback)</h1>
         <table class="simpleTable">
             <thead>
                 <tr>
