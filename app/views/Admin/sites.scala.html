@@ -2,23 +2,18 @@
 @views.html.Admin._baseAdmin("All Sites", "Manage all sites") {
     <script type="module" src="/public/js/babel/admin.js"></script>
 } {
-    <div id="main" data-admin-page="sites" style="padding: 20px;">
-        <h1>All Sites (Fallback)</h1>
-        <table class="simpleTable">
-            <thead>
-                <tr>
-                    <th>Seq</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                @for(site <- seqSite) {
-                    <tr>
-                        <td>@site.seq</td>
-                        <td>@site.name</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+    <div id="main" data-admin-page="sites" style="padding: 20px; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; color: #4c6ef5;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(76, 110, 245, 0.2); border-top-color: #4c6ef5; animation: adminSpinner 0.8s linear infinite;"></div>
+            <div style="font-size: 16px; color: #1f2937; font-weight: 600;">사이트 목록 로딩 중...</div>
+            <div style="font-size: 13px; color: #6b7280;">잠시만 기다려 주세요.</div>
+        </div>
     </div>
+    <style>
+        @@keyframes adminSpinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 }

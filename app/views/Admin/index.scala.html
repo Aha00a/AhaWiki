@@ -2,12 +2,18 @@
 @views.html.Admin._baseAdmin("Admin", "Admin") {
     <script type="module" src="/public/js/babel/admin.js"></script>
 } {
-    <div id="main" data-admin-page="dashboard" style="padding: 20px;">
-        <h1>Admin (Fallback)</h1>
-        <p><strong>Fallback 화면</strong>입니다. 클라이언트 UI를 불러오는 중이며, 계속 유지되면 아래 링크를 사용하세요.</p>
-        <ul>
-            <li><a href="/admin/sites">All Sites</a></li>
-            <li><a href="/admin/site-users">Site Users</a></li>
-        </ul>
+    <div id="main" data-admin-page="dashboard" style="padding: 20px; min-height: 220px; display: flex; align-items: center; justify-content: center;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; color: #4c6ef5;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(76, 110, 245, 0.2); border-top-color: #4c6ef5; animation: adminSpinner 0.8s linear infinite;"></div>
+            <div style="font-size: 16px; color: #1f2937; font-weight: 600;">Admin UI 로딩 중...</div>
+            <div style="font-size: 13px; color: #6b7280;">잠시만 기다려 주세요.</div>
+        </div>
     </div>
+    <style>
+        @@keyframes adminSpinner {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 }

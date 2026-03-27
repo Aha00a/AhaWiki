@@ -167,11 +167,16 @@ function AdminContent({page}) {
 
     if (loading) {
         return (
-            <Paper p="lg" withBorder radius="md">
-                <Group gap="sm">
-                    <Loader size="sm"/>
-                    <Text>데이터를 불러오는 중...</Text>
-                </Group>
+            <Paper p="xl" withBorder radius="md" shadow="xs">
+                <Stack align="center" gap="xs" py="xl">
+                    <Loader size="lg" color="blue" type="dots"/>
+                    <Title order={4} c="dark">
+                        Admin 데이터를 준비하고 있어요
+                    </Title>
+                    <Text c="dimmed" size="sm">
+                        페이지가 곧 표시됩니다. 잠시만 기다려 주세요.
+                    </Text>
+                </Stack>
             </Paper>
         );
     }

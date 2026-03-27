@@ -128,7 +128,7 @@ function Navigation({ activePage, onNavigate }) {
 function AdminContent({ page }) {
   const { loading, sites, users, error } = useAdminData(page);
   if (loading) {
-    return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Group, { gap: "sm" }, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, null, "\uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uB294 \uC911...")));
+    return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin 데이터를 준비하고 있어요"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "페이지가 곧 표시됩니다. 잠시만 기다려 주세요.")));
   }
   if (error) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Text, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
