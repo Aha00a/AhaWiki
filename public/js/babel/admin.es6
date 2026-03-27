@@ -1,110 +1,194 @@
-const h = React.createElement;
+import React, { useEffect, useState } from "https://esm.sh/react@18.3.1";
+import { createRoot } from "https://esm.sh/react-dom@18.3.1/client";
+import {
+  AppShell,
+  Badge,
+  Card,
+  Container,
+  Group,
+  Loader,
+  MantineProvider,
+  Paper,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from "https://esm.sh/@mantine/core@8.3.6";
 
 function useJson(url) {
-    const [state, setState] = React.useState({
-        loading: true,
-        error: "",
-        data: [],
-    });
+  const [state, setState] = useState({
+    loading: true,
+    error: "",
+    data: [],
+  });
 
-    React.useEffect(() => {
-        let isMounted = true;
-        fetch(url, { credentials: "same-origin" })
-            .then((res) => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
-            .then((data) => {
-                if (isMounted) setState({ loading: false, error: "", data });
-            })
-            .catch((err) => {
-                if (isMounted) setState({ loading: false, error: String(err), data: [] });
-            });
+  useEffect(() => {
+    let isMounted = true;
 
-        return () => {
-            isMounted = false;
-        };
-    }, [url]);
+    fetch(url, { credentials: "same-origin" })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted) {
+          setState({ loading: false, error: "", data });
+        }
+      })
+      .catch((err) => {
+        if (isMounted) {
+          setState({ loading: false, error: String(err), data: [] });
+        }
+      });
 
-    return state;
+    return () => {
+      isMounted = false;
+    };
+  }, [url]);
+
+  return state;
 }
 
-function Section(props) {
-    return h(
-        "section",
-        { style: { marginBottom: "24px" } },
-        h("h2", null, props.title),
-        props.children
+function LoadingOrError({ loading, error, loadingText, errorPrefix }) {
+  if (loading) {
+    return (
+      <Group gap="xs">
+        <Loader size="sm" />
+        <Text size="sm">{loadingText}</Text>
+      </Group>
     );
+  }
+
+  if (error) {
+    return (
+      <Text c="red" size="sm">
+        {errorPrefix}: {error}
+      </Text>
+    );
+  }
+
+  return null;
 }
 
-function SitesTable(props) {
-    if (props.loading) return h("p", null, "Loading sites...");
-    if (props.error) return h("p", { style: { color: "red" } }, `Failed to load sites: ${props.error}`);
+function SitesSection({ state }) {
+  const stateView = (
+    <LoadingOrError
+      loading={state.loading}
+      error={state.error}
+      loadingText="사이트 목록을 불러오는 중..."
+      errorPrefix="사이트 목록 로딩 실패"
+    />
+  );
 
-    return h(
-        "table",
-        { border: "1", cellPadding: "6", cellSpacing: "0", style: { borderCollapse: "collapse", width: "100%" } },
-        h("thead", null, h("tr", null, h("th", null, "Seq"), h("th", null, "Name"))),
-        h(
-            "tbody",
-            null,
-            props.data.map((site) => h("tr", { key: site.seq }, h("td", null, site.seq), h("td", null, site.name)))
-        )
-    );
+  if (state.loading || state.error) return stateView;
+
+  return (
+    <Table striped withTableBorder withColumnBorders>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>Seq</Table.Th>
+          <Table.Th>Name</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {state.data.map((site) => (
+          <Table.Tr key={site.seq}>
+            <Table.Td>{site.seq}</Table.Td>
+            <Table.Td>{site.name}</Table.Td>
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
 }
 
-function SiteUsersTable(props) {
-    if (props.loading) return h("p", null, "Loading users...");
-    if (props.error) return h("p", { style: { color: "red" } }, `Failed to load users: ${props.error}`);
+function UsersSection({ state }) {
+  const stateView = (
+    <LoadingOrError
+      loading={state.loading}
+      error={state.error}
+      loadingText="사용자 목록을 불러오는 중..."
+      errorPrefix="사용자 목록 로딩 실패"
+    />
+  );
 
-    return h(
-        "table",
-        { border: "1", cellPadding: "6", cellSpacing: "0", style: { borderCollapse: "collapse", width: "100%" } },
-        h("thead", null, h("tr", null, h("th", null, "User"), h("th", null, "Email"), h("th", null, "Nickname"), h("th", null, "Created"))),
-        h(
-            "tbody",
-            null,
-            props.data.map((user) => h(
-                "tr",
-                { key: `${user.user}-${user.created}` },
-                h("td", null, user.user),
-                h("td", null, user.email),
-                h("td", null, user.nickname),
-                h("td", null, user.created),
-            ))
-        )
-    );
+  if (state.loading || state.error) return stateView;
+
+  return (
+    <Table striped withTableBorder withColumnBorders>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>User</Table.Th>
+          <Table.Th>Email</Table.Th>
+          <Table.Th>Nickname</Table.Th>
+          <Table.Th>Created</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
+        {state.data.map((user) => (
+          <Table.Tr key={`${user.user}-${user.created}`}>
+            <Table.Td>{user.user}</Table.Td>
+            <Table.Td>{user.email}</Table.Td>
+            <Table.Td>{user.nickname}</Table.Td>
+            <Table.Td>{user.created}</Table.Td>
+          </Table.Tr>
+        ))}
+      </Table.Tbody>
+    </Table>
+  );
 }
 
 function Main() {
-    const sites = useJson("/api/admin/sites");
-    const users = useJson("/api/admin/site-users");
+  const sites = useJson("/api/admin/sites");
+  const users = useJson("/api/admin/site-users");
 
-    return h(
-        "div",
-        { style: { maxWidth: "1100px", margin: "16px auto", padding: "0 12px" } },
-        h("h1", null, "Admin"),
-        h("p", null, "Admin UI is now powered by React and Play API endpoints."),
-        h(Section, { title: "Sites" }, h(SitesTable, sites)),
-        h(Section, { title: "Site Users (current host)" }, h(SiteUsersTable, users)),
-    );
+  return (
+    <MantineProvider defaultColorScheme="light">
+      <AppShell padding="md" header={{ height: 56 }}>
+        <AppShell.Header>
+          <Group h="100%" px="md" justify="space-between">
+            <Title order={4}>Admin</Title>
+            <Badge variant="light" color="blue">
+              React + Mantine
+            </Badge>
+          </Group>
+        </AppShell.Header>
+
+        <AppShell.Main>
+          <Container size="lg">
+            <Stack gap="md">
+              <Paper p="md" withBorder>
+                <Text>
+                  Admin 페이지를 Mantine UI와 JSX 기반 단일 파일(`admin.es6`) 구조로 변경했습니다.
+                </Text>
+              </Paper>
+
+              <Card withBorder shadow="sm" radius="md" padding="lg">
+                <Stack gap="sm">
+                  <Title order={3}>Sites</Title>
+                  <SitesSection state={sites} />
+                </Stack>
+              </Card>
+
+              <Card withBorder shadow="sm" radius="md" padding="lg">
+                <Stack gap="sm">
+                  <Title order={3}>Site Users (current host)</Title>
+                  <UsersSection state={users} />
+                </Stack>
+              </Card>
+            </Stack>
+          </Container>
+        </AppShell.Main>
+      </AppShell>
+    </MantineProvider>
+  );
 }
 
-function Page_Load() {
-    const rootElement = document.getElementById("main");
-    if (!rootElement) return;
+function pageLoad() {
+  const rootElement = document.getElementById("main");
+  if (!rootElement) return;
 
-    if (ReactDOM.createRoot) {
-        ReactDOM.createRoot(rootElement).render(h(Main));
-        return;
-    }
-
-    ReactDOM.render(h(Main), rootElement);
+  createRoot(rootElement).render(<Main />);
 }
 
-if (window.attachEvent) {
-    window.attachEvent("onload", Page_Load);
-} else {
-    window.addEventListener("DOMContentLoaded", Page_Load, false);
-}
+window.addEventListener("DOMContentLoaded", pageLoad);
