@@ -65,7 +65,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  // 페이지 계산 스케쥴러: 1~20분 간격으로 랜덤 사이트를 선택하여 최신 페이지 10개에 대해 계산 작업을 ActorAhaWiki에 요청합니다.
+  // 페이지 계산 스케쥴러: 1~20분 간격으로 랜덤 사이트를 선택하여 랜덤 페이지 10개에 대해 계산 작업을 ActorAhaWiki에 요청합니다.
   scheduleWithRandomInterval("Calculate", 60, 60 * 20, () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)

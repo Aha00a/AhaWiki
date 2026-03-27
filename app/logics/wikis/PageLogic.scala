@@ -71,7 +71,7 @@ object PageLogic {
     requestWrapper: RequestWrapper,
     logger: Logger,
     site: Site,
-  ): Unit = {
+  ): Unit = StopWatch(s"calculate\t${site.name}(${site.seq})\t$name\t\t") {
     val seqStopWord: Seq[String] = """at in on of by to is the gmail com http https""".stripMargin.split("""\s""").toSeq
 
     Page.selectLastRevision(name) foreach { page =>
@@ -95,17 +95,13 @@ object PageLogic {
         val wordCount = seqWordFiltered.groupByCount()
         val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
 
-        StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\tInsert Term Frequency\t${seqWordCountSorted.size}") {
-          CalculatedTermFrequency.delete(name)
-          for ((term, frequency) <- seqWordCountSorted) {
-            CalculatedTermFrequency.insert(name, term, frequency)
-          }
+        CalculatedTermFrequency.delete(name)
+        for ((term, frequency) <- seqWordCountSorted) {
+          CalculatedTermFrequency.insert(name, term, frequency)
         }
         logger.info(seqWordCountSorted.take(10).mkString(" "))
 
-        StopWatch(s"Calculate\t${site.name}(${site.seq})\t$name\tCalculate Cosine Similarity") {
-          CalculatedCosineSimilarity.recalc(name)
-        }
+        CalculatedCosineSimilarity.recalc(name)
       }
 
       val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
