@@ -31,11 +31,13 @@ GET           /google/oauth/login                   controllers.GoogleOAuth.logi
 GET           /google/oauth/callback                controllers.GoogleOAuth.callback(code:String)
 
 GET           /admin/                               controllers.Admin.index
-GET           /admin/sites                          controllers.Admin.sites
-GET           /admin/site-users                     controllers.Admin.siteUsers
+GET           /admin/sites                          controllers.Admin.index
+GET           /admin/site-users                     controllers.Admin.index
 
 
 GET           /api/csrf                             controllers.Api.csrf
+GET           /api/admin/sites                      controllers.Api.adminSites
+GET           /api/admin/site-users                 controllers.Api.adminSiteUsers
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames
 GET           /api/links/*nameEncoded               controllers.Api.links(nameEncoded)

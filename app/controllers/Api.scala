@@ -7,6 +7,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
 import models.Adjacent
@@ -17,6 +18,7 @@ import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
+import models.tables.UserSite
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -40,7 +42,36 @@ class Api @Inject()(
   wsClient: WSClient,
   executionContext: ExecutionContext
 ) extends BaseController {
+  private def isAdmin(implicit request: RequestHeader): Boolean = {
+    SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
+  }
+
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
+
+  def adminSites: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminSite(seq: Long, name: String)
+        val sites = Site.select().map(s => AdminSite(s.seq, s.name))
+        Ok(sites.asJson)
+      }
+    }
+  }
+
+  def adminSiteUsers: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String)
+        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toInstant.toString, u.email, u.nickname))
+        Ok(users.asJson)
+      }
+    }
+  }
 
   def csrf: Action[AnyContent] = Action { implicit request =>
     val token: Option[CSRF.Token] = CSRF.getToken
@@ -118,4 +149,3 @@ class Api @Inject()(
     Ok("ok")
   }
 }
-
