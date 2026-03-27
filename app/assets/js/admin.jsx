@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {createRoot} from "react-dom/client";
 import {
     MantineProvider,
@@ -23,6 +23,16 @@ function logInfo(...args) {
 
 function logError(...args) {
     console.error(LOG_PREFIX, ...args);
+}
+
+function routeToPage(pathname) {
+    if (pathname === "/admin/sites") {
+        return "sites";
+    }
+    if (pathname === "/admin/site-users") {
+        return "users";
+    }
+    return "dashboard";
 }
 
 async function fetchJson(url) {
@@ -119,7 +129,7 @@ function makeTable(headers, rows) {
     );
 }
 
-function Navigation({activePage}) {
+function Navigation({activePage, onNavigate}) {
     const links = useMemo(
         () => [
             {href: "/", label: "Home", key: "home"},
@@ -139,6 +149,13 @@ function Navigation({activePage}) {
                     label={link.label}
                     active={activePage === link.key}
                     variant="light"
+                    onClick={(event) => {
+                        if (link.key === "home") {
+                            return;
+                        }
+                        event.preventDefault();
+                        onNavigate(link.href);
+                    }}
                 />
             ))}
         </Stack>
@@ -221,7 +238,29 @@ function AdminContent({page}) {
     );
 }
 
-function AdminApp({page}) {
+function AdminApp({initialPage}) {
+    const [page, setPage] = useState(initialPage);
+
+    useEffect(() => {
+        const onPopState = () => {
+            setPage(routeToPage(window.location.pathname));
+        };
+        window.addEventListener("popstate", onPopState);
+        return () => {
+            window.removeEventListener("popstate", onPopState);
+        };
+    }, []);
+
+    const onNavigate = useCallback(
+        (href) => {
+            if (window.location.pathname !== href) {
+                window.history.pushState({}, "", href);
+            }
+            setPage(routeToPage(href));
+        },
+        [],
+    );
+
     return (
         <MantineProvider defaultColorScheme="light">
             <AppShell
@@ -232,7 +271,7 @@ function AdminApp({page}) {
                 }}
             >
                 <AppShell.Navbar p="md">
-                    <Navigation activePage={page}/>
+                    <Navigation activePage={page} onNavigate={onNavigate}/>
                 </AppShell.Navbar>
                 <AppShell.Main>
                     <Stack gap="md">
@@ -259,11 +298,11 @@ function pageLoad() {
         return;
     }
 
-    const page = rootElement.dataset.adminPage || "dashboard";
+    const page = routeToPage(window.location.pathname);
     logInfo("pageLoad:render", {page});
 
     const root = createRoot(rootElement);
-    root.render(<AdminApp page={page}/>);
+    root.render(<AdminApp initialPage={page}/>);
 }
 
 window.addEventListener("error", (event) => {

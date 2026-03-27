@@ -1,5 +1,5 @@
 // app/assets/js/admin.jsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   MantineProvider,
@@ -22,6 +22,15 @@ function logInfo(...args) {
 }
 function logError(...args) {
   console.error(LOG_PREFIX, ...args);
+}
+function routeToPage(pathname) {
+  if (pathname === "/admin/sites") {
+    return "sites";
+  }
+  if (pathname === "/admin/site-users") {
+    return "users";
+  }
+  return "dashboard";
 }
 async function fetchJson(url) {
   logInfo("fetch:start", url);
@@ -110,7 +119,7 @@ function makeTable(headers, rows) {
     ]
   }, undefined, true, undefined, this);
 }
-function Navigation({ activePage }) {
+function Navigation({ activePage, onNavigate }) {
   const links = useMemo(() => [
     { href: "/", label: "Home", key: "home" },
     { href: "/admin", label: "Dashboard", key: "dashboard" },
@@ -123,7 +132,14 @@ function Navigation({ activePage }) {
       href: link.href,
       label: link.label,
       active: activePage === link.key,
-      variant: "light"
+      variant: "light",
+      onClick: (event) => {
+        if (link.key === "home") {
+          return;
+        }
+        event.preventDefault();
+        onNavigate(link.href);
+      }
     }, link.key, false, undefined, this))
   }, undefined, false, undefined, this);
 }
@@ -224,7 +240,23 @@ function AdminContent({ page }) {
     ]
   }, undefined, true, undefined, this);
 }
-function AdminApp({ page }) {
+function AdminApp({ initialPage }) {
+  const [page, setPage] = useState(initialPage);
+  useEffect(() => {
+    const onPopState = () => {
+      setPage(routeToPage(window.location.pathname));
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
+  const onNavigate = useCallback((href) => {
+    if (window.location.pathname !== href) {
+      window.history.pushState({}, "", href);
+    }
+    setPage(routeToPage(href));
+  }, []);
   return /* @__PURE__ */ jsxDEV(MantineProvider, {
     defaultColorScheme: "light",
     children: /* @__PURE__ */ jsxDEV(AppShell, {
@@ -237,7 +269,8 @@ function AdminApp({ page }) {
         /* @__PURE__ */ jsxDEV(AppShell.Navbar, {
           p: "md",
           children: /* @__PURE__ */ jsxDEV(Navigation, {
-            activePage: page
+            activePage: page,
+            onNavigate
           }, undefined, false, undefined, this)
         }, undefined, false, undefined, this),
         /* @__PURE__ */ jsxDEV(AppShell.Main, {
@@ -277,11 +310,11 @@ function pageLoad() {
     logError("pageLoad:no-root", "#main not found");
     return;
   }
-  const page = rootElement.dataset.adminPage || "dashboard";
+  const page = routeToPage(window.location.pathname);
   logInfo("pageLoad:render", { page });
   const root = createRoot(rootElement);
   root.render(/* @__PURE__ */ jsxDEV(AdminApp, {
-    page
+    initialPage: page
   }, undefined, false, undefined, this));
 }
 window.addEventListener("error", (event) => {
