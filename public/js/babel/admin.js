@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import htm from "https://esm.sh/htm@3.1.1";
 import {
   MantineProvider,
   AppShell,
@@ -15,6 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 
+const html = htm.bind(React.createElement);
 const LOG_PREFIX = "[AdminUI]";
 
 function logInfo(...args) {
@@ -97,34 +99,27 @@ function useAdminData(page) {
 }
 
 function makeTable(headers, rows) {
-  const head = React.createElement(
-    Table.Thead,
-    null,
-    React.createElement(
-      Table.Tr,
-      null,
-      ...headers.map((header) => React.createElement(Table.Th, { key: header }, header)),
-    ),
-  );
-
-  const bodyRows = rows.map((columns, rowIndex) =>
-    React.createElement(
-      Table.Tr,
-      { key: `row-${rowIndex}` },
-      ...columns.map((column, colIndex) =>
-        React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")),
-      ),
-    ),
-  );
-
-  const body = React.createElement(Table.Tbody, null, ...bodyRows);
-
-  return React.createElement(
-    Table,
-    { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true },
-    head,
-    body,
-  );
+  return html`
+    <${Table} striped highlightOnHover withTableBorder withColumnBorders>
+      <${Table.Thead}>
+        <${Table.Tr}>
+          ${headers.map((header) => html`<${Table.Th} key=${header}>${header}<//>`)}
+        <//>
+      <//>
+      <${Table.Tbody}>
+        ${rows.map(
+          (columns, rowIndex) => html`
+            <${Table.Tr} key=${`row-${rowIndex}`}>
+              ${columns.map(
+                (column, colIndex) =>
+                  html`<${Table.Td} key=${`col-${rowIndex}-${colIndex}`}>${String(column ?? "")}<//>`,
+              )}
+            <//>
+          `,
+        )}
+      <//>
+    <//>
+  `;
 }
 
 function Navigation({ activePage }) {
@@ -138,123 +133,113 @@ function Navigation({ activePage }) {
     [],
   );
 
-  return React.createElement(
-    Stack,
-    { gap: 4 },
-    ...links.map((link) =>
-      React.createElement(NavLink, {
-        key: link.key,
-        href: link.href,
-        label: link.label,
-        active: activePage === link.key,
-        variant: "light",
-      }),
-    ),
-  );
+  return html`
+    <${Stack} gap=${4}>
+      ${links.map(
+        (link) =>
+          html`<${NavLink}
+            key=${link.key}
+            href=${link.href}
+            label=${link.label}
+            active=${activePage === link.key}
+            variant="light"
+          />`,
+      )}
+    <//>
+  `;
 }
 
 function AdminContent({ page }) {
   const { loading, sites, users, error } = useAdminData(page);
 
   if (loading) {
-    return React.createElement(
-      Paper,
-      { p: "lg", withBorder: true, radius: "md" },
-      React.createElement(Group, { gap: "sm" }, React.createElement(Loader, { size: "sm" }), React.createElement(Text, null, "데이터를 불러오는 중...")),
-    );
+    return html`
+      <${Paper} p="lg" withBorder radius="md">
+        <${Group} gap="sm">
+          <${Loader} size="sm" />
+          <${Text}>데이터를 불러오는 중...<//>
+        <//>
+      <//>
+    `;
   }
 
   if (error) {
-    return React.createElement(
-      Paper,
-      { p: "lg", withBorder: true, radius: "md" },
-      React.createElement(Text, { c: "red", fw: 600 }, `클라이언트 렌더링 오류: ${error}`),
-    );
+    return html`
+      <${Paper} p="lg" withBorder radius="md">
+        <${Text} c="red" fw=${600}>클라이언트 렌더링 오류: ${error}<//>
+      <//>
+    `;
   }
 
   if (page === "sites") {
-    return React.createElement(
-      Card,
-      { withBorder: true, radius: "md", padding: "lg" },
-      React.createElement(Title, { order: 3, mb: "md" }, "All Sites"),
-      makeTable(
-        ["Seq", "Name"],
-        sites.map((site) => [site.seq, site.name]),
-      ),
-    );
+    return html`
+      <${Card} withBorder radius="md" padding="lg">
+        <${Title} order=${3} mb="md">All Sites<//>
+        ${makeTable(
+          ["Seq", "Name"],
+          sites.map((site) => [site.seq, site.name]),
+        )}
+      <//>
+    `;
   }
 
   if (page === "users") {
-    return React.createElement(
-      Card,
-      { withBorder: true, radius: "md", padding: "lg" },
-      React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"),
-      makeTable(
-        ["User", "Email", "Nickname", "Created"],
-        users.map((user) => [user.user, user.email, user.nickname, user.created]),
-      ),
-    );
+    return html`
+      <${Card} withBorder radius="md" padding="lg">
+        <${Title} order=${3} mb="md">Site Users (current host)<//>
+        ${makeTable(
+          ["User", "Email", "Nickname", "Created"],
+          users.map((user) => [user.user, user.email, user.nickname, user.created]),
+        )}
+      <//>
+    `;
   }
 
-  return React.createElement(
-    Stack,
-    { gap: "lg" },
-    React.createElement(
-      Card,
-      { withBorder: true, radius: "md", padding: "lg" },
-      React.createElement(Title, { order: 3, mb: "md" }, "Sites"),
-      makeTable(
-        ["Seq", "Name"],
-        sites.map((site) => [site.seq, site.name]),
-      ),
-    ),
-    React.createElement(
-      Card,
-      { withBorder: true, radius: "md", padding: "lg" },
-      React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"),
-      makeTable(
-        ["User", "Email", "Nickname", "Created"],
-        users.map((user) => [user.user, user.email, user.nickname, user.created]),
-      ),
-    ),
-  );
+  return html`
+    <${Stack} gap="lg">
+      <${Card} withBorder radius="md" padding="lg">
+        <${Title} order=${3} mb="md">Sites<//>
+        ${makeTable(
+          ["Seq", "Name"],
+          sites.map((site) => [site.seq, site.name]),
+        )}
+      <//>
+      <${Card} withBorder radius="md" padding="lg">
+        <${Title} order=${3} mb="md">Site Users (current host)<//>
+        ${makeTable(
+          ["User", "Email", "Nickname", "Created"],
+          users.map((user) => [user.user, user.email, user.nickname, user.created]),
+        )}
+      <//>
+    <//>
+  `;
 }
 
 function AdminApp({ page }) {
-  return React.createElement(
-    MantineProvider,
-    { defaultColorScheme: "light" },
-    React.createElement(
-      AppShell,
-      {
-        padding: "md",
-        navbar: {
+  return html`
+    <${MantineProvider} defaultColorScheme="light">
+      <${AppShell}
+        padding="md"
+        navbar=${{
           width: 240,
           breakpoint: "sm",
-        },
-      },
-      React.createElement(
-        AppShell.Navbar,
-        { p: "md" },
-        React.createElement(Navigation, { activePage: page }),
-      ),
-      React.createElement(
-        AppShell.Main,
-        null,
-        React.createElement(
-          Stack,
-          { gap: "md" },
-          React.createElement(
-            Group,
-            { justify: "space-between", align: "center" },
-            React.createElement(Title, { order: 2 }, "Admin"),
-            React.createElement(Badge, { variant: "light", color: "blue", size: "lg" }, "Mantine Enabled"),
-          ),
-          React.createElement(AdminContent, { page }),
-        ),
-      ),
-    ),
-  );
+        }}
+      >
+        <${AppShell.Navbar} p="md">
+          <${Navigation} activePage=${page} />
+        <//>
+        <${AppShell.Main}>
+          <${Stack} gap="md">
+            <${Group} justify="space-between" align="center">
+              <${Title} order=${2}>Admin<//>
+              <${Badge} variant="light" color="blue" size="lg">Mantine Enabled<//>
+            <//>
+            <${AdminContent} page=${page} />
+          <//>
+        <//>
+      <//>
+    <//>
+  `;
 }
 
 function pageLoad() {
@@ -270,7 +255,7 @@ function pageLoad() {
   logInfo("pageLoad:render", { page });
 
   const root = createRoot(rootElement);
-  root.render(React.createElement(AdminApp, { page }));
+  root.render(html`<${AdminApp} page=${page} />`);
 }
 
 window.addEventListener("error", (event) => {
