@@ -15,7 +15,6 @@ import {
   Text,
   Title
 } from "@mantine/core";
-import { jsxDEV } from "react/jsx-dev-runtime";
 var LOG_PREFIX = "[AdminUI]";
 function logInfo(...args) {
   console.log(LOG_PREFIX, ...args);
@@ -39,7 +38,7 @@ async function fetchJson(url) {
     throw new Error(`HTTP ${response.status}`);
   }
   const data = await response.json();
-  logInfo("fetch:success", url, { count: Array.isArray(data) ? data.length : undefined });
+  logInfo("fetch:success", url, { count: Array.isArray(data) ? data.length : void 0 });
   return data;
 }
 function useAdminData(page) {
@@ -96,39 +95,22 @@ function useAdminData(page) {
   return { loading, sites, users, error };
 }
 function makeTable(headers, rows) {
-  return /* @__PURE__ */ jsxDEV(Table, {
-    striped: true,
-    highlightOnHover: true,
-    withTableBorder: true,
-    withColumnBorders: true,
-    children: [
-      /* @__PURE__ */ jsxDEV(Table.Thead, {
-        children: /* @__PURE__ */ jsxDEV(Table.Tr, {
-          children: headers.map((header) => /* @__PURE__ */ jsxDEV(Table.Th, {
-            children: header
-          }, header, false, undefined, this))
-        }, undefined, false, undefined, this)
-      }, undefined, false, undefined, this),
-      /* @__PURE__ */ jsxDEV(Table.Tbody, {
-        children: rows.map((columns, rowIndex) => /* @__PURE__ */ jsxDEV(Table.Tr, {
-          children: columns.map((column, colIndex) => /* @__PURE__ */ jsxDEV(Table.Td, {
-            children: String(column ?? "")
-          }, `col-${rowIndex}-${colIndex}`, false, undefined, this))
-        }, `row-${rowIndex}`, false, undefined, this))
-      }, undefined, false, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+  return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
 }
 function Navigation({ activePage, onNavigate }) {
-  const links = useMemo(() => [
-    { href: "/", label: "Home", key: "home" },
-    { href: "/admin", label: "Dashboard", key: "dashboard" },
-    { href: "/admin/sites", label: "All Sites", key: "sites" },
-    { href: "/admin/site-users", label: "Site Users", key: "users" }
-  ], []);
-  return /* @__PURE__ */ jsxDEV(Stack, {
-    gap: 4,
-    children: links.map((link) => /* @__PURE__ */ jsxDEV(NavLink, {
+  const links = useMemo(
+    () => [
+      { href: "/", label: "Home", key: "home" },
+      { href: "/admin", label: "Dashboard", key: "dashboard" },
+      { href: "/admin/sites", label: "All Sites", key: "sites" },
+      { href: "/admin/site-users", label: "Site Users", key: "users" }
+    ],
+    []
+  );
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => /* @__PURE__ */ React.createElement(
+    NavLink,
+    {
+      key: link.key,
       href: link.href,
       label: link.label,
       active: activePage === link.key,
@@ -140,105 +122,36 @@ function Navigation({ activePage, onNavigate }) {
         event.preventDefault();
         onNavigate(link.href);
       }
-    }, link.key, false, undefined, this))
-  }, undefined, false, undefined, this);
+    }
+  )));
 }
 function AdminContent({ page }) {
   const { loading, sites, users, error } = useAdminData(page);
   if (loading) {
-    return /* @__PURE__ */ jsxDEV(Paper, {
-      p: "lg",
-      withBorder: true,
-      radius: "md",
-      children: /* @__PURE__ */ jsxDEV(Group, {
-        gap: "sm",
-        children: [
-          /* @__PURE__ */ jsxDEV(Loader, {
-            size: "sm"
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsxDEV(Text, {
-            children: "데이터를 불러오는 중..."
-          }, undefined, false, undefined, this)
-        ]
-      }, undefined, true, undefined, this)
-    }, undefined, false, undefined, this);
+    return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Group, { gap: "sm" }, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, null, "\uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC624\uB294 \uC911...")));
   }
   if (error) {
-    return /* @__PURE__ */ jsxDEV(Paper, {
-      p: "lg",
-      withBorder: true,
-      radius: "md",
-      children: /* @__PURE__ */ jsxDEV(Text, {
-        c: "red",
-        fw: 600,
-        children: [
-          "클라이언트 렌더링 오류: ",
-          error
-        ]
-      }, undefined, true, undefined, this)
-    }, undefined, false, undefined, this);
+    return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Text, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
   }
   if (page === "sites") {
-    return /* @__PURE__ */ jsxDEV(Card, {
-      withBorder: true,
-      radius: "md",
-      padding: "lg",
-      children: [
-        /* @__PURE__ */ jsxDEV(Title, {
-          order: 3,
-          mb: "md",
-          children: "All Sites"
-        }, undefined, false, undefined, this),
-        makeTable(["Seq", "Name"], sites.map((site) => [site.seq, site.name]))
-      ]
-    }, undefined, true, undefined, this);
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "All Sites"), makeTable(
+      ["Seq", "Name"],
+      sites.map((site) => [site.seq, site.name])
+    ));
   }
   if (page === "users") {
-    return /* @__PURE__ */ jsxDEV(Card, {
-      withBorder: true,
-      radius: "md",
-      padding: "lg",
-      children: [
-        /* @__PURE__ */ jsxDEV(Title, {
-          order: 3,
-          mb: "md",
-          children: "Site Users (current host)"
-        }, undefined, false, undefined, this),
-        makeTable(["User", "Email", "Nickname", "Created"], users.map((user) => [user.user, user.email, user.nickname, user.created]))
-      ]
-    }, undefined, true, undefined, this);
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"), makeTable(
+      ["User", "Email", "Nickname", "Created"],
+      users.map((user) => [user.user, user.email, user.nickname, user.created])
+    ));
   }
-  return /* @__PURE__ */ jsxDEV(Stack, {
-    gap: "lg",
-    children: [
-      /* @__PURE__ */ jsxDEV(Card, {
-        withBorder: true,
-        radius: "md",
-        padding: "lg",
-        children: [
-          /* @__PURE__ */ jsxDEV(Title, {
-            order: 3,
-            mb: "md",
-            children: "Sites"
-          }, undefined, false, undefined, this),
-          makeTable(["Seq", "Name"], sites.map((site) => [site.seq, site.name]))
-        ]
-      }, undefined, true, undefined, this),
-      /* @__PURE__ */ jsxDEV(Card, {
-        withBorder: true,
-        radius: "md",
-        padding: "lg",
-        children: [
-          /* @__PURE__ */ jsxDEV(Title, {
-            order: 3,
-            mb: "md",
-            children: "Site Users (current host)"
-          }, undefined, false, undefined, this),
-          makeTable(["User", "Email", "Nickname", "Created"], users.map((user) => [user.user, user.email, user.nickname, user.created]))
-        ]
-      }, undefined, true, undefined, this)
-    ]
-  }, undefined, true, undefined, this);
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Sites"), makeTable(
+    ["Seq", "Name"],
+    sites.map((site) => [site.seq, site.name])
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"), makeTable(
+    ["User", "Email", "Nickname", "Created"],
+    users.map((user) => [user.user, user.email, user.nickname, user.created])
+  )));
 }
 function AdminApp({ initialPage }) {
   const [page, setPage] = useState(initialPage);
@@ -251,57 +164,27 @@ function AdminApp({ initialPage }) {
       window.removeEventListener("popstate", onPopState);
     };
   }, []);
-  const onNavigate = useCallback((href) => {
-    if (window.location.pathname !== href) {
-      window.history.pushState({}, "", href);
-    }
-    setPage(routeToPage(href));
-  }, []);
-  return /* @__PURE__ */ jsxDEV(MantineProvider, {
-    defaultColorScheme: "light",
-    children: /* @__PURE__ */ jsxDEV(AppShell, {
+  const onNavigate = useCallback(
+    (href) => {
+      if (window.location.pathname !== href) {
+        window.history.pushState({}, "", href);
+      }
+      setPage(routeToPage(href));
+    },
+    []
+  );
+  return /* @__PURE__ */ React.createElement(MantineProvider, { defaultColorScheme: "light" }, /* @__PURE__ */ React.createElement(
+    AppShell,
+    {
       padding: "md",
       navbar: {
         width: 240,
         breakpoint: "sm"
-      },
-      children: [
-        /* @__PURE__ */ jsxDEV(AppShell.Navbar, {
-          p: "md",
-          children: /* @__PURE__ */ jsxDEV(Navigation, {
-            activePage: page,
-            onNavigate
-          }, undefined, false, undefined, this)
-        }, undefined, false, undefined, this),
-        /* @__PURE__ */ jsxDEV(AppShell.Main, {
-          children: /* @__PURE__ */ jsxDEV(Stack, {
-            gap: "md",
-            children: [
-              /* @__PURE__ */ jsxDEV(Group, {
-                justify: "space-between",
-                align: "center",
-                children: [
-                  /* @__PURE__ */ jsxDEV(Title, {
-                    order: 2,
-                    children: "Admin"
-                  }, undefined, false, undefined, this),
-                  /* @__PURE__ */ jsxDEV(Badge, {
-                    variant: "light",
-                    color: "blue",
-                    size: "lg",
-                    children: "Mantine Enabled"
-                  }, undefined, false, undefined, this)
-                ]
-              }, undefined, true, undefined, this),
-              /* @__PURE__ */ jsxDEV(AdminContent, {
-                page
-              }, undefined, false, undefined, this)
-            ]
-          }, undefined, true, undefined, this)
-        }, undefined, false, undefined, this)
-      ]
-    }, undefined, true, undefined, this)
-  }, undefined, false, undefined, this);
+      }
+    },
+    /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
+    /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, "Admin"), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "blue", size: "lg" }, "Mantine Enabled")), /* @__PURE__ */ React.createElement(AdminContent, { page })))
+  ));
 }
 function pageLoad() {
   logInfo("pageLoad:start", window.location.pathname);
@@ -313,9 +196,7 @@ function pageLoad() {
   const page = routeToPage(window.location.pathname);
   logInfo("pageLoad:render", { page });
   const root = createRoot(rootElement);
-  root.render(/* @__PURE__ */ jsxDEV(AdminApp, {
-    initialPage: page
-  }, undefined, false, undefined, this));
+  root.render(/* @__PURE__ */ React.createElement(AdminApp, { initialPage: page }));
 }
 window.addEventListener("error", (event) => {
   logError("window:error", event.message, event.error);

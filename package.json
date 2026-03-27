@@ -1,0 +1,11 @@
+{
+  "name": "ahawiki-admin-build",
+  "private": true,
+  "scripts": {
+    "build:admin": "node scripts/build-admin.mjs",
+    "watch:admin": "node scripts/watch-admin.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.11"
+  }
+}
