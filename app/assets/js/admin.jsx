@@ -4,6 +4,7 @@ import {
     MantineProvider,
     AppShell,
     Badge,
+    Button,
     Card,
     Group,
     Loader,
@@ -50,7 +51,39 @@ function useAdminData(page) {
     const [loading, setLoading] = useState(true);
     const [sites, setSites] = useState([]);
     const [users, setUsers] = useState([]);
+    const [schedulers, setSchedulers] = useState([]);
+    const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [error, setError] = useState("");
+
+    const loadDashboard = useCallback(async () => {
+        const [siteData, userData, schedulerData] = await Promise.all([
+            fetchJson("/api/admin/sites"),
+            fetchJson("/api/admin/site-users"),
+            fetchJson("/api/admin/schedulers"),
+        ]);
+        setSites(siteData);
+        setUsers(userData);
+        setSchedulers(schedulerData);
+    }, []);
+
+    const reloadSchedulers = useCallback(async () => {
+        const data = await fetchJson("/api/admin/schedulers");
+        setSchedulers(data);
+    }, []);
+
+    const runScheduler = useCallback(async (name) => {
+        setRunningSchedulerName(name);
+        setError("");
+        try {
+            await fetchJson(`/api/admin/schedulers/run/${encodeURIComponent(name)}`);
+            await reloadSchedulers();
+        } catch (caughtError) {
+            logError("scheduler:run:error", name, caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setRunningSchedulerName("");
+        }
+    }, [reloadSchedulers]);
 
     useEffect(() => {
         let mounted = true;
@@ -63,6 +96,7 @@ function useAdminData(page) {
                     if (mounted) {
                         setSites(data);
                         setUsers([]);
+                        setSchedulers([]);
                     }
                     return;
                 }
@@ -72,18 +106,13 @@ function useAdminData(page) {
                     if (mounted) {
                         setUsers(data);
                         setSites([]);
+                        setSchedulers([]);
                     }
                     return;
                 }
 
-                const [siteData, userData] = await Promise.all([
-                    fetchJson("/api/admin/sites"),
-                    fetchJson("/api/admin/site-users"),
-                ]);
-
                 if (mounted) {
-                    setSites(siteData);
-                    setUsers(userData);
+                    await loadDashboard();
                 }
             } catch (caughtError) {
                 logError("data:load:error", caughtError);
@@ -101,9 +130,9 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page]);
+    }, [page, loadDashboard]);
 
-    return {loading, sites, users, error};
+    return {loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error};
 }
 
 function makeTable(headers, rows) {
@@ -162,8 +191,57 @@ function Navigation({activePage, onNavigate}) {
     );
 }
 
+function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
+    return (
+        <Stack gap="sm">
+            <Group justify="space-between">
+                <Title order={4}>Schedulers</Title>
+                <Button size="xs" variant="light" onClick={onRefresh}>Refresh</Button>
+            </Group>
+            <Table striped highlightOnHover withTableBorder withColumnBorders>
+                <Table.Thead>
+                    <Table.Tr>
+                        <Table.Th>Name</Table.Th>
+                        <Table.Th>Interval</Table.Th>
+                        <Table.Th>Next Delay(s)</Table.Th>
+                        <Table.Th>Last Started</Table.Th>
+                        <Table.Th>Last Finished</Table.Th>
+                        <Table.Th>Result</Table.Th>
+                        <Table.Th>Run Count</Table.Th>
+                        <Table.Th>Action</Table.Th>
+                    </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                    {schedulers.map((scheduler) => (
+                        <Table.Tr key={scheduler.name}>
+                            <Table.Td>{scheduler.name}</Table.Td>
+                            <Table.Td>{`${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`}</Table.Td>
+                            <Table.Td>{scheduler.nextDelaySeconds ?? "-"}</Table.Td>
+                            <Table.Td>{scheduler.lastStartedAt ?? "-"}</Table.Td>
+                            <Table.Td>{scheduler.lastFinishedAt ?? "-"}</Table.Td>
+                            <Table.Td>{scheduler.lastResult ?? "-"}</Table.Td>
+                            <Table.Td>{scheduler.runCount ?? 0}</Table.Td>
+                            <Table.Td>
+                                <Button
+                                    size="xs"
+                                    variant="filled"
+                                    loading={runningSchedulerName === scheduler.name}
+                                    disabled={scheduler.running}
+                                    onClick={() => onRun(scheduler.name)}
+                                >
+                                    {scheduler.running ? "Running..." : "Run now"}
+                                </Button>
+                            </Table.Td>
+                        </Table.Tr>
+                    ))}
+                </Table.Tbody>
+            </Table>
+        </Stack>
+    );
+}
+
 function AdminContent({page}) {
-    const {loading, sites, users, error} = useAdminData(page);
+    const {loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error} = useAdminData(page);
 
     if (loading) {
         return (
@@ -238,6 +316,14 @@ function AdminContent({page}) {
                     ["User", "Email", "Nickname", "Created"],
                     users.map((user) => [user.user, user.email, user.nickname, user.created]),
                 )}
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <SchedulerTable
+                    schedulers={schedulers}
+                    runningSchedulerName={runningSchedulerName}
+                    onRun={runScheduler}
+                    onRefresh={reloadSchedulers}
+                />
             </Card>
         </Stack>
     );

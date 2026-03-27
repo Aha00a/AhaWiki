@@ -5,6 +5,7 @@ import {
   MantineProvider,
   AppShell,
   Badge,
+  Button,
   Card,
   Group,
   Loader,
@@ -45,7 +46,29 @@ function useAdminData(page) {
   const [loading, setLoading] = useState(true);
   const [sites, setSites] = useState([]);
   const [users, setUsers] = useState([]);
+  const [schedulers, setSchedulers] = useState([]);
+  const [runningSchedulerName, setRunningSchedulerName] = useState("");
   const [error, setError] = useState("");
+
+  const reloadSchedulers = useCallback(async () => {
+    const data = await fetchJson("/api/admin/schedulers");
+    setSchedulers(data);
+  }, []);
+
+  const runScheduler = useCallback(async (name) => {
+    setRunningSchedulerName(name);
+    setError("");
+    try {
+      await fetchJson(`/api/admin/schedulers/run/${encodeURIComponent(name)}`);
+      await reloadSchedulers();
+    } catch (caughtError) {
+      logError("scheduler:run:error", name, caughtError);
+      setError(caughtError.message || String(caughtError));
+    } finally {
+      setRunningSchedulerName("");
+    }
+  }, [reloadSchedulers]);
+
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -57,6 +80,7 @@ function useAdminData(page) {
           if (mounted) {
             setSites(data);
             setUsers([]);
+            setSchedulers([]);
           }
           return;
         }
@@ -65,16 +89,20 @@ function useAdminData(page) {
           if (mounted) {
             setUsers(data);
             setSites([]);
+            setSchedulers([]);
           }
           return;
         }
-        const [siteData, userData] = await Promise.all([
+
+        const [siteData, userData, schedulerData] = await Promise.all([
           fetchJson("/api/admin/sites"),
-          fetchJson("/api/admin/site-users")
+          fetchJson("/api/admin/site-users"),
+          fetchJson("/api/admin/schedulers")
         ]);
         if (mounted) {
           setSites(siteData);
           setUsers(userData);
+          setSchedulers(schedulerData);
         }
       } catch (caughtError) {
         logError("data:load:error", caughtError);
@@ -92,7 +120,8 @@ function useAdminData(page) {
       mounted = false;
     };
   }, [page]);
-  return { loading, sites, users, error };
+
+  return { loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error };
 }
 function makeTable(headers, rows) {
   return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
@@ -125,8 +154,28 @@ function Navigation({ activePage, onNavigate }) {
     }
   )));
 }
+function SchedulerControls({ schedulers, runningSchedulerName, onRun, onRefresh }) {
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" },
+    /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" },
+      /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"),
+      /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")
+    ),
+    ...schedulers.map((scheduler) => /* @__PURE__ */ React.createElement(Group, { key: scheduler.name, justify: "space-between", align: "center" },
+      /* @__PURE__ */ React.createElement(Stack, { gap: 2 },
+        /* @__PURE__ */ React.createElement(Text, { fw: 600 }, scheduler.name),
+        /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, `interval ${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s | next ${scheduler.nextDelaySeconds ?? "-"}s | last ${scheduler.lastResult ?? "-"}`)
+      ),
+      /* @__PURE__ */ React.createElement(Button, {
+        size: "xs",
+        loading: runningSchedulerName === scheduler.name,
+        disabled: scheduler.running,
+        onClick: () => onRun(scheduler.name)
+      }, scheduler.running ? "Running..." : "Run now")
+    ))
+  );
+}
 function AdminContent({ page }) {
-  const { loading, sites, users, error } = useAdminData(page);
+  const { loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error } = useAdminData(page);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin 데이터를 준비하고 있어요"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "페이지가 곧 표시됩니다. 잠시만 기다려 주세요.")));
   }
@@ -151,7 +200,14 @@ function AdminContent({ page }) {
   )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"), makeTable(
     ["User", "Email", "Nickname", "Created"],
     users.map((user) => [user.user, user.email, user.nickname, user.created])
-  )));
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" },
+    /* @__PURE__ */ React.createElement(SchedulerControls, {
+      schedulers,
+      runningSchedulerName,
+      onRun: runScheduler,
+      onRefresh: reloadSchedulers
+    })
+  ));
 }
 function AdminApp({ initialPage }) {
   const [page, setPage] = useState(initialPage);

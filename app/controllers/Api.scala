@@ -23,6 +23,7 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.filters.csrf.CSRF
+import services.ApplicationLifecycleHook
 
 import java.net.URLDecoder
 import javax.inject._
@@ -40,7 +41,8 @@ class Api @Inject()(
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
-  executionContext: ExecutionContext
+  executionContext: ExecutionContext,
+  applicationLifecycleHook: ApplicationLifecycleHook
 ) extends BaseController {
   private def isAdmin(implicit request: RequestHeader): Boolean = {
     SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
@@ -69,6 +71,53 @@ class Api @Inject()(
         case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String)
         val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toInstant.toString, u.email, u.nickname))
         Ok(users.asJson)
+      }
+    }
+  }
+
+
+  def adminSchedulers: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      case class AdminScheduler(
+        name: String,
+        minSeconds: Int,
+        maxSeconds: Int,
+        running: Boolean,
+        nextDelaySeconds: Option[Int],
+        lastStartedAt: Option[String],
+        lastFinishedAt: Option[String],
+        lastResult: Option[String],
+        runCount: Long,
+      )
+
+      val schedulers = applicationLifecycleHook.getSchedulerStatuses.map { scheduler =>
+        AdminScheduler(
+          scheduler.name,
+          scheduler.minSeconds,
+          scheduler.maxSeconds,
+          scheduler.running,
+          scheduler.nextDelaySeconds,
+          scheduler.lastStartedAt,
+          scheduler.lastFinishedAt,
+          scheduler.lastResult,
+          scheduler.runCount,
+        )
+      }
+
+      Ok(schedulers.asJson)
+    }
+  }
+
+  def adminRunScheduler(name: String): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      if (applicationLifecycleHook.runSchedulerNow(name)) {
+        Ok(Map("status" -> "queued", "name" -> name).asJson)
+      } else {
+        NotFound(name)
       }
     }
   }
