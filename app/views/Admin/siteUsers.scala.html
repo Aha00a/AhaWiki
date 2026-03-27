@@ -1,0 +1,27 @@
+@(seqUserSite: Seq[models.tables.UserSite])(implicit contextSite: models.ContextSite)
+@views.html.Admin._baseAdmin("Site Users", "Manage users for this site") {
+} {
+    <div id="main" style="padding: 20px;">
+        <h1>Site Users for @contextSite.site.name</h1>
+        <table class="simpleTable">
+            <thead>
+                <tr>
+                    <th>User Seq</th>
+                    <th>Email</th>
+                    <th>Nickname</th>
+                    <th>Joined</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(us <- seqUserSite) {
+                    <tr>
+                        <td>@us.user</td>
+                        <td>@us.email</td>
+                        <td>@us.nickname</td>
+                        <td>@us.created</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

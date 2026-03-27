@@ -1,0 +1,23 @@
+@(seqSite: Seq[models.tables.Site])
+@views.html.Admin._baseAdmin("All Sites", "Manage all sites") {
+} {
+    <div id="main" style="padding: 20px;">
+        <h1>All Sites</h1>
+        <table class="simpleTable">
+            <thead>
+                <tr>
+                    <th>Seq</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(site <- seqSite) {
+                    <tr>
+                        <td>@site.seq</td>
+                        <td>@site.name</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

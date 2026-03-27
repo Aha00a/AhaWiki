@@ -31,6 +31,8 @@ GET           /google/oauth/login                   controllers.GoogleOAuth.logi
 GET           /google/oauth/callback                controllers.GoogleOAuth.callback(code:String)
 
 GET           /admin/                               controllers.Admin.index
+GET           /admin/sites                          controllers.Admin.sites
+GET           /admin/site-users                     controllers.Admin.siteUsers
 
 
 GET           /api/csrf                             controllers.Api.csrf
