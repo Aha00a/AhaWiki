@@ -56,18 +56,31 @@ function useAdminData(page) {
     const [sites, setSites] = useState([]);
     const [users, setUsers] = useState([]);
     const [schedulers, setSchedulers] = useState([]);
+    const [dailyStats, setDailyStats] = useState({
+        userCreated: [],
+        siteUserCreated: [],
+        pageCreated: [],
+        pageEdited: [],
+    });
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [error, setError] = useState("");
 
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, schedulerData] = await Promise.all([
+        const [siteData, userData, schedulerData, dailyStatsData] = await Promise.all([
             fetchJson("/api/admin/sites"),
             fetchJson("/api/admin/site-users"),
             fetchJson("/api/admin/schedulers"),
+            fetchJson("/api/admin/daily-stats"),
         ]);
         setSites(siteData);
         setUsers(userData);
         setSchedulers(schedulerData);
+        setDailyStats({
+            userCreated: dailyStatsData?.userCreated ?? [],
+            siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
+            pageCreated: dailyStatsData?.pageCreated ?? [],
+            pageEdited: dailyStatsData?.pageEdited ?? [],
+        });
     }, []);
 
     const reloadSchedulers = useCallback(async () => {
@@ -101,6 +114,12 @@ function useAdminData(page) {
                         setSites(data);
                         setUsers([]);
                         setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
                     }
                     return;
                 }
@@ -111,6 +130,12 @@ function useAdminData(page) {
                         setUsers(data);
                         setSites([]);
                         setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
                     }
                     return;
                 }
@@ -136,7 +161,7 @@ function useAdminData(page) {
         };
     }, [page, loadDashboard]);
 
-    return {loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error};
+    return {loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error};
 }
 
 function makeTable(headers, rows) {
@@ -257,8 +282,24 @@ function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
     );
 }
 
+function DailyStatTable({title, description, rows, badgeColor}) {
+    return (
+        <Card withBorder radius="md" padding="lg">
+            <Group justify="space-between" mb="md">
+                <Title order={3}>{title}</Title>
+                <Badge color={badgeColor} variant="light">{rows.length} days</Badge>
+            </Group>
+            <Text size="sm" c="dimmed" mb="md">{description}</Text>
+            {makeTable(
+                ["Date", "Count"],
+                rows.map((row) => [row.ymd, row.count]),
+            )}
+        </Card>
+    );
+}
+
 function AdminContent({page}) {
-    const {loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error} = useAdminData(page);
+    const {loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error} = useAdminData(page);
 
     if (loading) {
         return (
@@ -364,6 +405,24 @@ function AdminContent({page}) {
                     </Group>
                 </Card>
             </SimpleGrid>
+            <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
+                <Card withBorder radius="md" padding="md">
+                    <Text size="sm" c="dimmed">New Users (30d)</Text>
+                    <Title order={3}>{dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Text size="sm" c="dimmed">Site User Joins (30d)</Text>
+                    <Title order={3}>{dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Text size="sm" c="dimmed">New Pages (30d)</Text>
+                    <Title order={3}>{dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Text size="sm" c="dimmed">Page Edits (30d)</Text>
+                    <Title order={3}>{dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
+                </Card>
+            </SimpleGrid>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
                     <Title order={3}>Sites</Title>
@@ -398,6 +457,30 @@ function AdminContent({page}) {
                     onRefresh={reloadSchedulers}
                 />
             </Card>
+            <DailyStatTable
+                title="Daily New Users"
+                description="최근 30일 기준 전체 사용자 신규 생성 수입니다."
+                rows={dailyStats.userCreated}
+                badgeColor="blue"
+            />
+            <DailyStatTable
+                title="Daily Site User Joins"
+                description="최근 30일 기준 사이트 가입(UserSite) 수입니다."
+                rows={dailyStats.siteUserCreated}
+                badgeColor="teal"
+            />
+            <DailyStatTable
+                title="Daily New Pages"
+                description="최근 30일 기준 revision=1 페이지 생성 수입니다."
+                rows={dailyStats.pageCreated}
+                badgeColor="indigo"
+            />
+            <DailyStatTable
+                title="Daily Page Edits"
+                description="최근 30일 기준 페이지 전체 수정(모든 리비전) 수입니다."
+                rows={dailyStats.pageEdited}
+                badgeColor="grape"
+            />
         </Stack>
     );
 }

@@ -151,6 +151,72 @@ class Api @Inject()(
     }
   }
 
+  def adminDailyStats: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class DailyCount(ymd: String, count: Long)
+        case class AdminDailyStats(
+          userCreated: Seq[DailyCount],
+          siteUserCreated: Seq[DailyCount],
+          pageCreated: Seq[DailyCount],
+          pageEdited: Seq[DailyCount],
+        )
+
+        val userCreated = SQL"""
+          SELECT DATE_FORMAT(U.created, '%Y-%m-%d') ymd, COUNT(*) cnt
+          FROM User U
+          GROUP BY DATE_FORMAT(U.created, '%Y-%m-%d')
+          ORDER BY DATE_FORMAT(U.created, '%Y-%m-%d') DESC
+          LIMIT 30
+        """.as((str("ymd") ~ long("cnt")).map {
+          case ymd ~ cnt => DailyCount(ymd, cnt)
+        }.*)
+
+        val siteUserCreated = SQL"""
+          SELECT DATE_FORMAT(US.created, '%Y-%m-%d') ymd, COUNT(*) cnt
+          FROM UserSite US
+          GROUP BY DATE_FORMAT(US.created, '%Y-%m-%d')
+          ORDER BY DATE_FORMAT(US.created, '%Y-%m-%d') DESC
+          LIMIT 30
+        """.as((str("ymd") ~ long("cnt")).map {
+          case ymd ~ cnt => DailyCount(ymd, cnt)
+        }.*)
+
+        val pageCreated = SQL"""
+          SELECT DATE_FORMAT(P.dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
+          FROM Page P
+          WHERE P.revision = 1
+          GROUP BY DATE_FORMAT(P.dateTime, '%Y-%m-%d')
+          ORDER BY DATE_FORMAT(P.dateTime, '%Y-%m-%d') DESC
+          LIMIT 30
+        """.as((str("ymd") ~ long("cnt")).map {
+          case ymd ~ cnt => DailyCount(ymd, cnt)
+        }.*)
+
+        val pageEdited = SQL"""
+          SELECT DATE_FORMAT(P.dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
+          FROM Page P
+          GROUP BY DATE_FORMAT(P.dateTime, '%Y-%m-%d')
+          ORDER BY DATE_FORMAT(P.dateTime, '%Y-%m-%d') DESC
+          LIMIT 30
+        """.as((str("ymd") ~ long("cnt")).map {
+          case ymd ~ cnt => DailyCount(ymd, cnt)
+        }.*)
+
+        Ok(
+          AdminDailyStats(
+            userCreated = userCreated,
+            siteUserCreated = siteUserCreated,
+            pageCreated = pageCreated,
+            pageEdited = pageEdited,
+          ).asJson
+        )
+      }
+    }
+  }
+
   def adminRunScheduler(name: String): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       Forbidden("Access denied.")

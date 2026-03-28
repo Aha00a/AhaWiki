@@ -51,17 +51,30 @@ function useAdminData(page) {
   const [sites, setSites] = useState([]);
   const [users, setUsers] = useState([]);
   const [schedulers, setSchedulers] = useState([]);
+  const [dailyStats, setDailyStats] = useState({
+    userCreated: [],
+    siteUserCreated: [],
+    pageCreated: [],
+    pageEdited: []
+  });
   const [runningSchedulerName, setRunningSchedulerName] = useState("");
   const [error, setError] = useState("");
   const loadDashboard = useCallback(async () => {
-    const [siteData, userData, schedulerData] = await Promise.all([
+    const [siteData, userData, schedulerData, dailyStatsData] = await Promise.all([
       fetchJson("/api/admin/sites"),
       fetchJson("/api/admin/site-users"),
-      fetchJson("/api/admin/schedulers")
+      fetchJson("/api/admin/schedulers"),
+      fetchJson("/api/admin/daily-stats")
     ]);
     setSites(siteData);
     setUsers(userData);
     setSchedulers(schedulerData);
+    setDailyStats({
+      userCreated: dailyStatsData?.userCreated ?? [],
+      siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
+      pageCreated: dailyStatsData?.pageCreated ?? [],
+      pageEdited: dailyStatsData?.pageEdited ?? []
+    });
   }, []);
   const reloadSchedulers = useCallback(async () => {
     const data = await fetchJson("/api/admin/schedulers");
@@ -92,6 +105,12 @@ function useAdminData(page) {
             setSites(data);
             setUsers([]);
             setSchedulers([]);
+            setDailyStats({
+              userCreated: [],
+              siteUserCreated: [],
+              pageCreated: [],
+              pageEdited: []
+            });
           }
           return;
         }
@@ -101,6 +120,12 @@ function useAdminData(page) {
             setUsers(data);
             setSites([]);
             setSchedulers([]);
+            setDailyStats({
+              userCreated: [],
+              siteUserCreated: [],
+              pageCreated: [],
+              pageEdited: []
+            });
           }
           return;
         }
@@ -123,7 +148,7 @@ function useAdminData(page) {
       mounted = false;
     };
   }, [page, loadDashboard]);
-  return { loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error };
+  return { loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error };
 }
 function makeTable(headers, rows) {
   return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
@@ -177,8 +202,14 @@ function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) 
     scheduler.running ? "Running..." : "Run now"
   )))))));
 }
+function DailyStatTable({ title, description, rows, badgeColor }) {
+  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, title), /* @__PURE__ */ React.createElement(Badge, { color: badgeColor, variant: "light" }, rows.length, " days")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, description), makeTable(
+    ["Date", "Count"],
+    rows.map((row) => [row.ymd, row.count])
+  ));
+}
 function AdminContent({ page }) {
-  const { loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error } = useAdminData(page);
+  const { loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error } = useAdminData(page);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -203,7 +234,7 @@ function AdminContent({ page }) {
       users.map((user) => [user.user, user.email, user.nickname, user.created])
     ));
   }
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, users.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length)), makeTable(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, users.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "New Users (30d)"), /* @__PURE__ */ React.createElement(Title, { order: 3 }, dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Site User Joins (30d)"), /* @__PURE__ */ React.createElement(Title, { order: 3 }, dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "New Pages (30d)"), /* @__PURE__ */ React.createElement(Title, { order: 3 }, dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Page Edits (30d)"), /* @__PURE__ */ React.createElement(Title, { order: 3 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length)), makeTable(
     ["Seq", "Name", "Domains", "Users", "Pages"],
     sites.map((site) => [
       site.seq,
@@ -223,7 +254,39 @@ function AdminContent({ page }) {
       onRun: runScheduler,
       onRefresh: reloadSchedulers
     }
-  )));
+  )), /* @__PURE__ */ React.createElement(
+    DailyStatTable,
+    {
+      title: "Daily New Users",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC804\uCCB4 \uC0AC\uC6A9\uC790 \uC2E0\uADDC \uC0DD\uC131 \uC218\uC785\uB2C8\uB2E4.",
+      rows: dailyStats.userCreated,
+      badgeColor: "blue"
+    }
+  ), /* @__PURE__ */ React.createElement(
+    DailyStatTable,
+    {
+      title: "Daily Site User Joins",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC0AC\uC774\uD2B8 \uAC00\uC785(UserSite) \uC218\uC785\uB2C8\uB2E4.",
+      rows: dailyStats.siteUserCreated,
+      badgeColor: "teal"
+    }
+  ), /* @__PURE__ */ React.createElement(
+    DailyStatTable,
+    {
+      title: "Daily New Pages",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 revision=1 \uD398\uC774\uC9C0 \uC0DD\uC131 \uC218\uC785\uB2C8\uB2E4.",
+      rows: dailyStats.pageCreated,
+      badgeColor: "indigo"
+    }
+  ), /* @__PURE__ */ React.createElement(
+    DailyStatTable,
+    {
+      title: "Daily Page Edits",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uD398\uC774\uC9C0 \uC804\uCCB4 \uC218\uC815(\uBAA8\uB4E0 \uB9AC\uBE44\uC804) \uC218\uC785\uB2C8\uB2E4.",
+      rows: dailyStats.pageEdited,
+      badgeColor: "grape"
+    }
+  ));
 }
 function AdminApp({ initialPage }) {
   const [page, setPage] = useState(initialPage);
