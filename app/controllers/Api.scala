@@ -116,6 +116,45 @@ class Api @Inject()(
     }
   }
 
+  def adminUsers: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminUser(seq: Long, created: String, updated: String, email: String, nickname: String, siteCount: Long)
+
+        val users = SQL"""
+          SELECT
+            U.seq,
+            DATE_FORMAT(U.created, '%Y-%m-%d %H:%i:%s') AS created,
+            DATE_FORMAT(U.updated, '%Y-%m-%d %H:%i:%s') AS updated,
+            U.email,
+            U.nickname,
+            COALESCE(US.site_count, 0) AS site_count
+          FROM User U
+          LEFT JOIN (
+            SELECT user, COUNT(*) AS site_count
+            FROM UserSite
+            GROUP BY user
+          ) US ON US.user = U.seq
+          ORDER BY U.seq DESC
+        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count")).map {
+          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount =>
+            AdminUser(
+              seq = seq,
+              created = created,
+              updated = updated,
+              email = email,
+              nickname = nickname,
+              siteCount = siteCount,
+            )
+        }.*)
+
+        Ok(users.asJson)
+      }
+    }
+  }
+
 
   def adminSchedulers: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {

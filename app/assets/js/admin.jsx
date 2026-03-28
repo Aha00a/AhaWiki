@@ -38,6 +38,9 @@ function routeToPage(pathname) {
     if (pathname === "/admin/site-users") {
         return "users";
     }
+    if (pathname === "/admin/all-users") {
+        return "all-users";
+    }
     if (pathname === "/admin/operations") {
         return "operations";
     }
@@ -71,6 +74,7 @@ function useAdminData(page) {
     const [loading, setLoading] = useState(true);
     const [sites, setSites] = useState([]);
     const [users, setUsers] = useState([]);
+    const [allUsers, setAllUsers] = useState([]);
     const [schedulers, setSchedulers] = useState([]);
     const [dailyStats, setDailyStats] = useState({
         userCreated: [],
@@ -89,15 +93,17 @@ function useAdminData(page) {
     }, []);
 
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
+        const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
             fetchJson("/api/admin/sites"),
             fetchJson("/api/admin/site-users"),
+            fetchJson("/api/admin/users"),
             fetchJson("/api/admin/schedulers"),
             fetchJson("/api/admin/daily-stats"),
             fetchJson("/api/admin/recent-changes?n=30"),
         ]);
         setSites(siteData);
         setUsers(userData);
+        setAllUsers(allUserData);
         setSchedulers(schedulerData);
         setRecentChanges(recentChangesData);
         setDailyStats({
@@ -177,6 +183,24 @@ function useAdminData(page) {
                     if (mounted) {
                         setUsers(data);
                         setSites([]);
+                        setAllUsers([]);
+                        setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
+                    }
+                    return;
+                }
+
+                if (page === "all-users") {
+                    const data = await fetchJson("/api/admin/users");
+                    if (mounted) {
+                        setAllUsers(data);
+                        setUsers([]);
+                        setSites([]);
                         setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
@@ -193,6 +217,7 @@ function useAdminData(page) {
                     if (mounted) {
                         setSites([]);
                         setUsers([]);
+                        setAllUsers([]);
                         setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
@@ -229,6 +254,7 @@ function useAdminData(page) {
         loading,
         sites,
         users,
+        allUsers,
         schedulers,
         dailyStats,
         recentChanges,
@@ -272,6 +298,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/admin", label: "Dashboard", key: "dashboard"},
             {href: "/admin/sites", label: "All Sites", key: "sites"},
             {href: "/admin/site-users", label: "Site Users", key: "users"},
+            {href: "/admin/all-users", label: "All Users", key: "all-users"},
             {href: "/admin/operations", label: "Operations", key: "operations"},
             {href: "/admin/recent-changes", label: "Recent Changes", key: "recent-changes"},
         ],
@@ -562,6 +589,7 @@ function AdminContent({page}) {
         loading,
         sites,
         users,
+        allUsers,
         schedulers,
         dailyStats,
         recentChanges,
@@ -643,6 +671,32 @@ function AdminContent({page}) {
                 {makeTable(
                     ["User", "Email", "Nickname", "Created"],
                     users.map((user) => [user.user, user.email, user.nickname, user.created]),
+                )}
+            </Card>
+        );
+    }
+
+    if (page === "all-users") {
+        return (
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>All Users</Title>
+                    <Badge color="blue" variant="light">{allUsers.length} users</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    전체 사이트 기준 사용자 목록입니다.
+                </Text>
+                <Divider mb="md"/>
+                {makeTable(
+                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
+                    allUsers.map((user) => [
+                        user.seq,
+                        user.email,
+                        user.nickname,
+                        user.siteCount ?? 0,
+                        user.created,
+                        user.updated,
+                    ]),
                 )}
             </Card>
         );
@@ -763,8 +817,8 @@ function AdminContent({page}) {
                 <Card withBorder radius="md" padding="md">
                     <Group justify="space-between" align="flex-start">
                         <Stack gap={2}>
-                            <Text size="sm" c="dimmed">Users</Text>
-                            <Title order={2}>{users.length}</Title>
+                            <Text size="sm" c="dimmed">All Users</Text>
+                            <Title order={2}>{allUsers.length}</Title>
                         </Stack>
                         <ThemeIcon color="teal" variant="light" radius="xl">U</ThemeIcon>
                     </Group>
@@ -835,6 +889,23 @@ function AdminContent({page}) {
                         (site.domains ?? []).join(", "),
                         site.userCount ?? 0,
                         site.pageCount ?? 0,
+                    ]),
+                )}
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>All Users</Title>
+                    <Badge color="blue" variant="light">{allUsers.length}</Badge>
+                </Group>
+                {makeTable(
+                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
+                    allUsers.map((user) => [
+                        user.seq,
+                        user.email,
+                        user.nickname,
+                        user.siteCount ?? 0,
+                        user.created,
+                        user.updated,
                     ]),
                 )}
             </Card>
