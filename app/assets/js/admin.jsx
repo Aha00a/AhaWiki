@@ -16,6 +16,7 @@ import {
     Stack,
     Table,
     Text,
+    TextInput,
     ThemeIcon,
     Title,
 } from "@mantine/core";
@@ -39,6 +40,9 @@ function routeToPage(pathname) {
     }
     if (pathname === "/admin/operations") {
         return "operations";
+    }
+    if (pathname === "/admin/recent-changes") {
+        return "recent-changes";
     }
     return "dashboard";
 }
@@ -74,20 +78,28 @@ function useAdminData(page) {
         pageCreated: [],
         pageEdited: [],
     });
+    const [recentChanges, setRecentChanges] = useState([]);
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
     const [error, setError] = useState("");
 
+    const loadRecentChanges = useCallback(async (n = 50) => {
+        const data = await fetchJson(`/api/admin/recent-changes?n=${encodeURIComponent(n)}`);
+        setRecentChanges(data);
+    }, []);
+
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, schedulerData, dailyStatsData] = await Promise.all([
+        const [siteData, userData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
             fetchJson("/api/admin/sites"),
             fetchJson("/api/admin/site-users"),
             fetchJson("/api/admin/schedulers"),
             fetchJson("/api/admin/daily-stats"),
+            fetchJson("/api/admin/recent-changes?n=30"),
         ]);
         setSites(siteData);
         setUsers(userData);
         setSchedulers(schedulerData);
+        setRecentChanges(recentChangesData);
         setDailyStats({
             userCreated: dailyStatsData?.userCreated ?? [],
             siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
@@ -176,6 +188,22 @@ function useAdminData(page) {
                     return;
                 }
 
+                if (page === "recent-changes") {
+                    await loadRecentChanges(50);
+                    if (mounted) {
+                        setSites([]);
+                        setUsers([]);
+                        setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
+                    }
+                    return;
+                }
+
                 if (mounted) {
                     await loadDashboard();
                 }
@@ -195,7 +223,7 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard]);
+    }, [page, loadDashboard, loadRecentChanges]);
 
     return {
         loading,
@@ -203,6 +231,8 @@ function useAdminData(page) {
         users,
         schedulers,
         dailyStats,
+        recentChanges,
+        loadRecentChanges,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -243,6 +273,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/admin/sites", label: "All Sites", key: "sites"},
             {href: "/admin/site-users", label: "Site Users", key: "users"},
             {href: "/admin/operations", label: "Operations", key: "operations"},
+            {href: "/admin/recent-changes", label: "Recent Changes", key: "recent-changes"},
         ],
         [],
     );
@@ -533,6 +564,8 @@ function AdminContent({page}) {
         users,
         schedulers,
         dailyStats,
+        recentChanges,
+        loadRecentChanges,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -540,6 +573,7 @@ function AdminContent({page}) {
         clearingSiteSeq,
         error,
     } = useAdminData(page);
+    const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
 
     if (loading) {
         return (
@@ -669,6 +703,51 @@ function AdminContent({page}) {
         );
     }
 
+    if (page === "recent-changes") {
+        return (
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Recent Changes (All Sites)</Title>
+                    <Badge color="violet" variant="light">{recentChanges.length} rows</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    사이트 전체 최근 변경 기록을 n개 단위로 조회할 수 있습니다.
+                </Text>
+                <Group align="flex-end" mb="md">
+                    <TextInput
+                        label="조회 개수 n"
+                        value={recentChangeLimitInput}
+                        onChange={(event) => setRecentChangeLimitInput(event.currentTarget.value)}
+                        placeholder="1 ~ 500"
+                    />
+                    <Button
+                        variant="filled"
+                        onClick={() => {
+                            const parsed = Number.parseInt(recentChangeLimitInput, 10);
+                            const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
+                            setRecentChangeLimitInput(String(n));
+                            loadRecentChanges(n);
+                        }}
+                    >
+                        조회
+                    </Button>
+                </Group>
+                {makeTable(
+                    ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
+                    recentChanges.map((row) => [
+                        row.dateTime,
+                        `${row.siteName} (#${row.siteSeq})`,
+                        row.name,
+                        row.revision,
+                        row.nickname ?? "-",
+                        row.comment || "-",
+                        row.remoteAddress,
+                    ]),
+                )}
+            </Card>
+        );
+    }
+
     return (
         <Stack gap="lg">
             <SimpleGrid cols={{base: 1, sm: 3}} spacing="md">
@@ -776,6 +855,26 @@ function AdminContent({page}) {
                     onRun={runScheduler}
                     onRefresh={reloadSchedulers}
                 />
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Recent Changes (All Sites)</Title>
+                    <Badge color="violet" variant="light">{recentChanges.length}</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    전체 사이트 기준 최근 변경 30개입니다. 더 많이 보려면 왼쪽 메뉴 Recent Changes를 사용하세요.
+                </Text>
+                {makeTable(
+                    ["When", "Site", "Page", "Revision", "Editor", "Comment"],
+                    recentChanges.map((row) => [
+                        row.dateTime,
+                        `${row.siteName} (#${row.siteSeq})`,
+                        row.name,
+                        row.revision,
+                        row.nickname ?? "-",
+                        row.comment || "-",
+                    ]),
+                )}
             </Card>
             <DailyStatTable
                 title="Daily New Users"

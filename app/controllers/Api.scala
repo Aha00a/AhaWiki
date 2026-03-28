@@ -217,6 +217,61 @@ class Api @Inject()(
     }
   }
 
+  def adminRecentChanges: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminRecentChange(
+          siteSeq: Long,
+          siteName: String,
+          name: String,
+          revision: Long,
+          dateTime: String,
+          nickname: Option[String],
+          remoteAddress: String,
+          comment: String,
+        )
+
+        val limit = request.getQueryString("n")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1).min(500))
+          .getOrElse(50)
+
+        val rows = SQL"""
+          SELECT
+            P.site AS site_seq,
+            S.name AS site_name,
+            P.name,
+            P.revision,
+            DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
+            U.nickname,
+            P.remoteAddress,
+            P.comment
+          FROM Page P
+          INNER JOIN Site S ON S.seq = P.site
+          LEFT JOIN User U ON U.seq = P.user
+          ORDER BY P.dateTime DESC
+          LIMIT $limit
+        """.as((long("site_seq") ~ str("site_name") ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment")).map {
+          case siteSeq ~ siteName ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment =>
+            AdminRecentChange(
+              siteSeq = siteSeq,
+              siteName = siteName,
+              name = name,
+              revision = revision,
+              dateTime = dateTime,
+              nickname = nickname,
+              remoteAddress = remoteAddress,
+              comment = comment,
+            )
+        }.*)
+
+        Ok(rows.asJson)
+      }
+    }
+  }
+
   def adminRunScheduler(name: String): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       Forbidden("Access denied.")

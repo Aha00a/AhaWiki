@@ -17,6 +17,7 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
   ThemeIcon,
   Title
 } from "@mantine/core";
@@ -36,6 +37,9 @@ function routeToPage(pathname) {
   }
   if (pathname === "/admin/operations") {
     return "operations";
+  }
+  if (pathname === "/admin/recent-changes") {
+    return "recent-changes";
   }
   return "dashboard";
 }
@@ -68,19 +72,26 @@ function useAdminData(page) {
     pageCreated: [],
     pageEdited: []
   });
+  const [recentChanges, setRecentChanges] = useState([]);
   const [runningSchedulerName, setRunningSchedulerName] = useState("");
   const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
   const [error, setError] = useState("");
+  const loadRecentChanges = useCallback(async (n = 50) => {
+    const data = await fetchJson(`/api/admin/recent-changes?n=${encodeURIComponent(n)}`);
+    setRecentChanges(data);
+  }, []);
   const loadDashboard = useCallback(async () => {
-    const [siteData, userData, schedulerData, dailyStatsData] = await Promise.all([
+    const [siteData, userData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
       fetchJson("/api/admin/sites"),
       fetchJson("/api/admin/site-users"),
       fetchJson("/api/admin/schedulers"),
-      fetchJson("/api/admin/daily-stats")
+      fetchJson("/api/admin/daily-stats"),
+      fetchJson("/api/admin/recent-changes?n=30")
     ]);
     setSites(siteData);
     setUsers(userData);
     setSchedulers(schedulerData);
+    setRecentChanges(recentChangesData);
     setDailyStats({
       userCreated: dailyStatsData?.userCreated ?? [],
       siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
@@ -163,6 +174,21 @@ function useAdminData(page) {
           }
           return;
         }
+        if (page === "recent-changes") {
+          await loadRecentChanges(50);
+          if (mounted) {
+            setSites([]);
+            setUsers([]);
+            setSchedulers([]);
+            setDailyStats({
+              userCreated: [],
+              siteUserCreated: [],
+              pageCreated: [],
+              pageEdited: []
+            });
+          }
+          return;
+        }
         if (mounted) {
           await loadDashboard();
         }
@@ -181,13 +207,15 @@ function useAdminData(page) {
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard]);
+  }, [page, loadDashboard, loadRecentChanges]);
   return {
     loading,
     sites,
     users,
     schedulers,
     dailyStats,
+    recentChanges,
+    loadRecentChanges,
     runningSchedulerName,
     runScheduler,
     reloadSchedulers,
@@ -206,7 +234,8 @@ function Navigation({ activePage, onNavigate }) {
       { href: "/admin", label: "Dashboard", key: "dashboard" },
       { href: "/admin/sites", label: "All Sites", key: "sites" },
       { href: "/admin/site-users", label: "Site Users", key: "users" },
-      { href: "/admin/operations", label: "Operations", key: "operations" }
+      { href: "/admin/operations", label: "Operations", key: "operations" },
+      { href: "/admin/recent-changes", label: "Recent Changes", key: "recent-changes" }
     ],
     []
   );
@@ -379,6 +408,8 @@ function AdminContent({ page }) {
     users,
     schedulers,
     dailyStats,
+    recentChanges,
+    loadRecentChanges,
     runningSchedulerName,
     runScheduler,
     reloadSchedulers,
@@ -386,6 +417,7 @@ function AdminContent({ page }) {
     clearingSiteSeq,
     error
   } = useAdminData(page);
+  const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -430,6 +462,40 @@ function AdminContent({ page }) {
         onRefresh: reloadSchedulers
       }
     )));
+  }
+  if (page === "recent-changes") {
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "\uC870\uD68C \uAC1C\uC218 n",
+        value: recentChangeLimitInput,
+        onChange: (event) => setRecentChangeLimitInput(event.currentTarget.value),
+        placeholder: "1 ~ 500"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        variant: "filled",
+        onClick: () => {
+          const parsed = Number.parseInt(recentChangeLimitInput, 10);
+          const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
+          setRecentChangeLimitInput(String(n));
+          loadRecentChanges(n);
+        }
+      },
+      "\uC870\uD68C"
+    )), makeTable(
+      ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
+      recentChanges.map((row) => [
+        row.dateTime,
+        `${row.siteName} (#${row.siteSeq})`,
+        row.name,
+        row.revision,
+        row.nickname ?? "-",
+        row.comment || "-",
+        row.remoteAddress
+      ])
+    ));
   }
   return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, users.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
     StatTrendCard,
@@ -493,6 +559,16 @@ function AdminContent({ page }) {
       onRun: runScheduler,
       onRefresh: reloadSchedulers
     }
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
+    ["When", "Site", "Page", "Revision", "Editor", "Comment"],
+    recentChanges.map((row) => [
+      row.dateTime,
+      `${row.siteName} (#${row.siteSeq})`,
+      row.name,
+      row.revision,
+      row.nickname ?? "-",
+      row.comment || "-"
+    ])
   )), /* @__PURE__ */ React.createElement(
     DailyStatTable,
     {

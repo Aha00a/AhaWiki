@@ -35,6 +35,7 @@ GET           /admin/                               controllers.Admin.index
 GET           /admin/sites                          controllers.Admin.sites
 GET           /admin/site-users                     controllers.Admin.siteUsers
 GET           /admin/operations                     controllers.Admin.index
+GET           /admin/recent-changes                 controllers.Admin.index
 
 
 GET           /api/csrf                             controllers.Api.csrf
@@ -42,6 +43,7 @@ GET           /api/admin/sites                      controllers.Api.adminSites
 GET           /api/admin/site-users                 controllers.Api.adminSiteUsers
 GET           /api/admin/schedulers                 controllers.Api.adminSchedulers
 GET           /api/admin/daily-stats                controllers.Api.adminDailyStats
+GET           /api/admin/recent-changes             controllers.Api.adminRecentChanges
 GET           /api/admin/schedulers/run/:name       controllers.Api.adminRunScheduler(name: String)
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames
