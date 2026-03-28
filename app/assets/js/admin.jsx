@@ -283,6 +283,9 @@ function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
 }
 
 function DailyStatTable({title, description, rows, badgeColor}) {
+    const maxCount = rows.reduce((max, row) => Math.max(max, row.count ?? 0), 0);
+    const bars = rows.slice(-14);
+
     return (
         <Card withBorder radius="md" padding="lg">
             <Group justify="space-between" mb="md">
@@ -290,10 +293,64 @@ function DailyStatTable({title, description, rows, badgeColor}) {
                 <Badge color={badgeColor} variant="light">{rows.length} days</Badge>
             </Group>
             <Text size="sm" c="dimmed" mb="md">{description}</Text>
+            <Stack gap={8} mb="md">
+                {bars.map((row) => {
+                    const count = row.count ?? 0;
+                    const widthPercent = maxCount === 0 ? 0 : (count / maxCount) * 100;
+                    return (
+                        <Stack key={row.ymd} gap={4}>
+                            <Group justify="space-between">
+                                <Text size="xs" c="dimmed">{row.ymd}</Text>
+                                <Text size="xs" fw={700}>{count}</Text>
+                            </Group>
+                            <Progress value={widthPercent} color={badgeColor} radius="xl"/>
+                        </Stack>
+                    );
+                })}
+            </Stack>
             {makeTable(
                 ["Date", "Count"],
                 rows.map((row) => [row.ymd, row.count]),
             )}
+        </Card>
+    );
+}
+
+function StatTrendCard({title, total, rows, color}) {
+    const orderedRows = [...rows].sort((left, right) => (left.ymd > right.ymd ? 1 : -1));
+    const latestRows = orderedRows.slice(-30);
+    const maxCount = latestRows.reduce((max, row) => Math.max(max, row.count ?? 0), 0);
+    const minCount = latestRows.reduce((min, row) => Math.min(min, row.count ?? 0), Number.POSITIVE_INFINITY);
+    const safeMin = Number.isFinite(minCount) ? minCount : 0;
+
+    return (
+        <Card withBorder radius="md" padding="md">
+            <Stack gap={8}>
+                <Group justify="space-between" align="flex-start">
+                    <Text size="sm" c="dimmed">{title}</Text>
+                    <Badge color={color} variant="light">30d</Badge>
+                </Group>
+                <Title order={3}>{total}</Title>
+                <Group gap={6} align="flex-end" wrap="nowrap" style={{height: 48}}>
+                    {latestRows.map((row) => {
+                        const value = row.count ?? 0;
+                        const normalizedValue = maxCount === safeMin ? 40 : ((value - safeMin) / (maxCount - safeMin)) * 100;
+                        return (
+                            <div
+                                key={row.ymd}
+                                title={`${row.ymd}: ${value}`}
+                                style={{
+                                    height: `${Math.max(normalizedValue, 6)}%`,
+                                    width: "100%",
+                                    background: `var(--mantine-color-${color}-6)`,
+                                    borderRadius: 999,
+                                    opacity: 0.85,
+                                }}
+                            />
+                        );
+                    })}
+                </Group>
+            </Stack>
         </Card>
     );
 }
@@ -406,22 +463,30 @@ function AdminContent({page}) {
                 </Card>
             </SimpleGrid>
             <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
-                <Card withBorder radius="md" padding="md">
-                    <Text size="sm" c="dimmed">New Users (30d)</Text>
-                    <Title order={3}>{dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
-                </Card>
-                <Card withBorder radius="md" padding="md">
-                    <Text size="sm" c="dimmed">Site User Joins (30d)</Text>
-                    <Title order={3}>{dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
-                </Card>
-                <Card withBorder radius="md" padding="md">
-                    <Text size="sm" c="dimmed">New Pages (30d)</Text>
-                    <Title order={3}>{dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
-                </Card>
-                <Card withBorder radius="md" padding="md">
-                    <Text size="sm" c="dimmed">Page Edits (30d)</Text>
-                    <Title order={3}>{dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
-                </Card>
+                <StatTrendCard
+                    title="New Users"
+                    color="blue"
+                    rows={dailyStats.userCreated}
+                    total={dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}
+                />
+                <StatTrendCard
+                    title="Site User Joins"
+                    color="teal"
+                    rows={dailyStats.siteUserCreated}
+                    total={dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}
+                />
+                <StatTrendCard
+                    title="New Pages"
+                    color="indigo"
+                    rows={dailyStats.pageCreated}
+                    total={dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}
+                />
+                <StatTrendCard
+                    title="Page Edits"
+                    color="grape"
+                    rows={dailyStats.pageEdited}
+                    total={dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)}
+                />
             </SimpleGrid>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
