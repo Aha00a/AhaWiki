@@ -34,6 +34,9 @@ function routeToPage(pathname) {
   if (pathname === "/admin/site-users") {
     return "users";
   }
+  if (pathname === "/admin/operations") {
+    return "operations";
+  }
   return "dashboard";
 }
 async function fetchJson(url) {
@@ -45,6 +48,14 @@ async function fetchJson(url) {
   const data = await response.json();
   logInfo("fetch:success", url, { count: Array.isArray(data) ? data.length : void 0 });
   return data;
+}
+async function fetchCsrfToken() {
+  const response = await fetch("/api/csrf", { credentials: "same-origin" });
+  if (!response.ok) {
+    throw new Error(`CSRF HTTP ${response.status}`);
+  }
+  const token = await response.json();
+  return token?.value ?? "";
 }
 function useAdminData(page) {
   const [loading, setLoading] = useState(true);
@@ -58,6 +69,7 @@ function useAdminData(page) {
     pageEdited: []
   });
   const [runningSchedulerName, setRunningSchedulerName] = useState("");
+  const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
   const [error, setError] = useState("");
   const loadDashboard = useCallback(async () => {
     const [siteData, userData, schedulerData, dailyStatsData] = await Promise.all([
@@ -93,6 +105,28 @@ function useAdminData(page) {
       setRunningSchedulerName("");
     }
   }, [reloadSchedulers]);
+  const clearSiteCache = useCallback(async (siteSeq) => {
+    setClearingSiteSeq(siteSeq);
+    setError("");
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`/api/cache/${siteSeq}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: {
+          "X-CSRF-Token": csrfToken
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+    } catch (caughtError) {
+      logError("cache:clear:error", siteSeq, caughtError);
+      setError(caughtError.message || String(caughtError));
+    } finally {
+      setClearingSiteSeq(0);
+    }
+  }, []);
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -148,7 +182,19 @@ function useAdminData(page) {
       mounted = false;
     };
   }, [page, loadDashboard]);
-  return { loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error };
+  return {
+    loading,
+    sites,
+    users,
+    schedulers,
+    dailyStats,
+    runningSchedulerName,
+    runScheduler,
+    reloadSchedulers,
+    clearSiteCache,
+    clearingSiteSeq,
+    error
+  };
 }
 function makeTable(headers, rows) {
   return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
@@ -159,7 +205,8 @@ function Navigation({ activePage, onNavigate }) {
       { href: "/", label: "Home", key: "home" },
       { href: "/admin", label: "Dashboard", key: "dashboard" },
       { href: "/admin/sites", label: "All Sites", key: "sites" },
-      { href: "/admin/site-users", label: "Site Users", key: "users" }
+      { href: "/admin/site-users", label: "Site Users", key: "users" },
+      { href: "/admin/operations", label: "Operations", key: "operations" }
     ],
     []
   );
@@ -240,7 +287,19 @@ function StatTrendCard({ title, total, rows, color }) {
   }))));
 }
 function AdminContent({ page }) {
-  const { loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error } = useAdminData(page);
+  const {
+    loading,
+    sites,
+    users,
+    schedulers,
+    dailyStats,
+    runningSchedulerName,
+    runScheduler,
+    reloadSchedulers,
+    clearSiteCache,
+    clearingSiteSeq,
+    error
+  } = useAdminData(page);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -264,6 +323,27 @@ function AdminContent({ page }) {
       ["User", "Email", "Nickname", "Created"],
       users.map((user) => [user.user, user.email, user.nickname, user.created])
     ));
+  }
+  if (page === "operations") {
+    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operations"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Careful")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uCE90\uC2DC\uB97C \uC989\uC2DC \uBE44\uC6CC\uC11C \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uB97C \uAC15\uC81C\uB85C \uAC31\uC2E0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        color: "orange",
+        variant: "filled",
+        size: "xs",
+        loading: clearingSiteSeq === site.seq,
+        onClick: () => clearSiteCache(site.seq)
+      },
+      "Clear cache"
+    ))))))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
+      SchedulerTable,
+      {
+        schedulers,
+        runningSchedulerName,
+        onRun: runScheduler,
+        onRefresh: reloadSchedulers
+      }
+    )));
   }
   return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, users.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
     StatTrendCard,

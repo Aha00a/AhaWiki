@@ -34,6 +34,7 @@ GET           /admin                                controllers.Admin.index
 GET           /admin/                               controllers.Admin.index
 GET           /admin/sites                          controllers.Admin.sites
 GET           /admin/site-users                     controllers.Admin.siteUsers
+GET           /admin/operations                     controllers.Admin.index
 
 
 GET           /api/csrf                             controllers.Api.csrf

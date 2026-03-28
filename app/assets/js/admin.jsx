@@ -37,6 +37,9 @@ function routeToPage(pathname) {
     if (pathname === "/admin/site-users") {
         return "users";
     }
+    if (pathname === "/admin/operations") {
+        return "operations";
+    }
     return "dashboard";
 }
 
@@ -51,6 +54,15 @@ async function fetchJson(url) {
     return data;
 }
 
+async function fetchCsrfToken() {
+    const response = await fetch("/api/csrf", {credentials: "same-origin"});
+    if (!response.ok) {
+        throw new Error(`CSRF HTTP ${response.status}`);
+    }
+    const token = await response.json();
+    return token?.value ?? "";
+}
+
 function useAdminData(page) {
     const [loading, setLoading] = useState(true);
     const [sites, setSites] = useState([]);
@@ -63,6 +75,7 @@ function useAdminData(page) {
         pageEdited: [],
     });
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
+    const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
     const [error, setError] = useState("");
 
     const loadDashboard = useCallback(async () => {
@@ -101,6 +114,29 @@ function useAdminData(page) {
             setRunningSchedulerName("");
         }
     }, [reloadSchedulers]);
+
+    const clearSiteCache = useCallback(async (siteSeq) => {
+        setClearingSiteSeq(siteSeq);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const response = await fetch(`/api/cache/${siteSeq}`, {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+        } catch (caughtError) {
+            logError("cache:clear:error", siteSeq, caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setClearingSiteSeq(0);
+        }
+    }, []);
 
     useEffect(() => {
         let mounted = true;
@@ -161,7 +197,19 @@ function useAdminData(page) {
         };
     }, [page, loadDashboard]);
 
-    return {loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error};
+    return {
+        loading,
+        sites,
+        users,
+        schedulers,
+        dailyStats,
+        runningSchedulerName,
+        runScheduler,
+        reloadSchedulers,
+        clearSiteCache,
+        clearingSiteSeq,
+        error,
+    };
 }
 
 function makeTable(headers, rows) {
@@ -194,6 +242,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/admin", label: "Dashboard", key: "dashboard"},
             {href: "/admin/sites", label: "All Sites", key: "sites"},
             {href: "/admin/site-users", label: "Site Users", key: "users"},
+            {href: "/admin/operations", label: "Operations", key: "operations"},
         ],
         [],
     );
@@ -356,7 +405,19 @@ function StatTrendCard({title, total, rows, color}) {
 }
 
 function AdminContent({page}) {
-    const {loading, sites, users, schedulers, dailyStats, runningSchedulerName, runScheduler, reloadSchedulers, error} = useAdminData(page);
+    const {
+        loading,
+        sites,
+        users,
+        schedulers,
+        dailyStats,
+        runningSchedulerName,
+        runScheduler,
+        reloadSchedulers,
+        clearSiteCache,
+        clearingSiteSeq,
+        error,
+    } = useAdminData(page);
 
     if (loading) {
         return (
@@ -428,6 +489,61 @@ function AdminContent({page}) {
                     users.map((user) => [user.user, user.email, user.nickname, user.created]),
                 )}
             </Card>
+        );
+    }
+
+    if (page === "operations") {
+        return (
+            <Stack gap="lg">
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Cache Operations</Title>
+                        <Badge color="orange" variant="light">Careful</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        사이트별 캐시를 즉시 비워서 도메인/페이지/헤더 캐시를 강제로 갱신합니다.
+                    </Text>
+                    <Divider mb="md"/>
+                    <Table striped highlightOnHover withTableBorder withColumnBorders>
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th>Seq</Table.Th>
+                                <Table.Th>Site</Table.Th>
+                                <Table.Th>Domains</Table.Th>
+                                <Table.Th>Action</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {sites.map((site) => (
+                                <Table.Tr key={site.seq}>
+                                    <Table.Td>{site.seq}</Table.Td>
+                                    <Table.Td>{site.name}</Table.Td>
+                                    <Table.Td>{(site.domains ?? []).join(", ") || "-"}</Table.Td>
+                                    <Table.Td>
+                                        <Button
+                                            color="orange"
+                                            variant="filled"
+                                            size="xs"
+                                            loading={clearingSiteSeq === site.seq}
+                                            onClick={() => clearSiteCache(site.seq)}
+                                        >
+                                            Clear cache
+                                        </Button>
+                                    </Table.Td>
+                                </Table.Tr>
+                            ))}
+                        </Table.Tbody>
+                    </Table>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <SchedulerTable
+                        schedulers={schedulers}
+                        runningSchedulerName={runningSchedulerName}
+                        onRun={runScheduler}
+                        onRefresh={reloadSchedulers}
+                    />
+                </Card>
+            </Stack>
         );
     }
 
