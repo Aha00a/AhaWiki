@@ -77,12 +77,26 @@ function useAdminData(page) {
     pageEdited: []
   });
   const [recentChanges, setRecentChanges] = useState([]);
+  const [userViewHistories, setUserViewHistories] = useState([]);
+  const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
   const [runningSchedulerName, setRunningSchedulerName] = useState("");
   const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
   const [error, setError] = useState("");
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
     setRecentChanges(data);
+  }, []);
+  const loadUserViewHistories = useCallback(async (userSeq, n = 200) => {
+    setLoadingUserViewHistories(true);
+    try {
+      const clampedN = Math.min(1e3, Math.max(1, Number.parseInt(String(n), 10) || 200));
+      const data = await fetchJson(
+        `/api/Admin/UserViews?userSeq=${encodeURIComponent(userSeq)}&n=${encodeURIComponent(clampedN)}`
+      );
+      setUserViewHistories(data);
+    } finally {
+      setLoadingUserViewHistories(false);
+    }
   }, []);
   const loadDashboard = useCallback(async () => {
     const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
@@ -240,6 +254,9 @@ function useAdminData(page) {
     schedulers,
     dailyStats,
     recentChanges,
+    userViewHistories,
+    loadingUserViewHistories,
+    loadUserViewHistories,
     loadRecentChanges,
     runningSchedulerName,
     runScheduler,
@@ -436,6 +453,9 @@ function AdminContent({ page }) {
     schedulers,
     dailyStats,
     recentChanges,
+    userViewHistories,
+    loadingUserViewHistories,
+    loadUserViewHistories,
     loadRecentChanges,
     runningSchedulerName,
     runScheduler,
@@ -445,6 +465,7 @@ function AdminContent({ page }) {
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
+  const [selectedAllUser, setSelectedAllUser] = useState(null);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -470,18 +491,27 @@ function AdminContent({ page }) {
     ));
   }
   if (page === "all-users") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUsers.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), makeTable(
-      ["Seq", "Email", "Nickname", "Sites", "Created", "Updated", "Last Viewed"],
-      allUsers.map((user) => [
-        user.seq,
-        user.email,
-        user.nickname,
-        user.siteCount ?? 0,
-        user.created,
-        user.updated,
-        user.lastViewed ?? "-"
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUsers.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0AC\uC6A9\uC790 \uD589\uC758 \uC0C1\uC138 \uC870\uD68C \uBC84\uD2BC\uC73C\uB85C \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC744 \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Action"), /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Email"), /* @__PURE__ */ React.createElement(Table.Th, null, "Nickname"), /* @__PURE__ */ React.createElement(Table.Th, null, "Sites"), /* @__PURE__ */ React.createElement(Table.Th, null, "Created"), /* @__PURE__ */ React.createElement(Table.Th, null, "Updated"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Viewed"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, allUsers.map((user) => /* @__PURE__ */ React.createElement(Table.Tr, { key: user.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        size: "xs",
+        variant: selectedAllUser?.seq === user.seq ? "filled" : "light",
+        onClick: () => {
+          setSelectedAllUser(user);
+          loadUserViewHistories(user.seq, 200);
+        },
+        loading: loadingUserViewHistories && selectedAllUser?.seq === user.seq
+      },
+      "\uC0C1\uC138 \uC870\uD68C"
+    )), /* @__PURE__ */ React.createElement(Table.Td, null, user.seq), /* @__PURE__ */ React.createElement(Table.Td, null, user.email), /* @__PURE__ */ React.createElement(Table.Td, null, user.nickname), /* @__PURE__ */ React.createElement(Table.Td, null, user.siteCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, user.created), /* @__PURE__ */ React.createElement(Table.Td, null, user.updated), /* @__PURE__ */ React.createElement(Table.Td, null, user.lastViewed ?? "-"))))), /* @__PURE__ */ React.createElement(Divider, { my: "md" }), selectedAllUser ? /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC6A9\uC790 \uC5F4\uB78C \uC774\uB825: ", selectedAllUser.nickname, " (", selectedAllUser.email, ")"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), loadingUserViewHistories ? /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
+      ["When", "Site", "Page", "History Seq"],
+      userViewHistories.map((history) => [
+        history.viewedAt,
+        `${history.siteName} (#${history.site})`,
+        history.pageName,
+        history.seq
       ])
-    ));
+    )) : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uD2B9\uC815 \uC0AC\uC6A9\uC790\uC758 \uC0C1\uC138 \uC870\uD68C \uBC84\uD2BC\uC744 \uB20C\uB7EC \uC5B8\uC81C \uC5B4\uB5A4 \uD398\uC774\uC9C0\uB97C \uBD24\uB294\uC9C0 \uD655\uC778\uD558\uC138\uC694."));
   }
   if (page === "operations") {
     return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operations"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Careful")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uCE90\uC2DC\uB97C \uC989\uC2DC \uBE44\uC6CC\uC11C \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uB97C \uAC15\uC81C\uB85C \uAC31\uC2E0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(

@@ -43,6 +43,7 @@ GET           /api/csrf                             controllers.Api.csrf
 GET           /api/Admin/Sites                      controllers.Api.adminSites
 GET           /api/Admin/SiteUsers                 controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                      controllers.Api.adminUsers
+GET           /api/Admin/UserViews                 controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
 GET           /api/Admin/Schedulers                 controllers.Api.adminSchedulers
 GET           /api/Admin/DailyStats                controllers.Api.adminDailyStats
 GET           /api/Admin/RecentChanges             controllers.Api.adminRecentChanges

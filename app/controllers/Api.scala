@@ -162,6 +162,52 @@ class Api @Inject()(
     }
   }
 
+  def adminUserViews(userSeq: Long, n: Int = 200): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminUserViewHistory(
+          seq: Long,
+          user: Long,
+          site: Long,
+          siteName: String,
+          pageName: String,
+          viewedAt: String,
+        )
+
+        val limit = math.max(1, math.min(1000, n))
+
+        val histories = SQL"""
+          SELECT
+            UV.seq,
+            UV.user,
+            UV.site,
+            S.name AS site_name,
+            UV.pageName,
+            DATE_FORMAT(UV.dateInserted, '%Y-%m-%d %H:%i:%s') AS viewed_at
+          FROM UserViewHistory UV
+          INNER JOIN Site S ON S.seq = UV.site
+          WHERE UV.user = $userSeq
+          ORDER BY UV.seq DESC
+          LIMIT $limit
+        """.as((long("seq") ~ long("user") ~ long("site") ~ str("site_name") ~ str("pageName") ~ str("viewed_at")).map {
+          case seq ~ user ~ site ~ siteName ~ pageName ~ viewedAt =>
+            AdminUserViewHistory(
+              seq = seq,
+              user = user,
+              site = site,
+              siteName = siteName,
+              pageName = pageName,
+              viewedAt = viewedAt,
+            )
+        }.*)
+
+        Ok(histories.asJson)
+      }
+    }
+  }
+
 
   def adminSchedulers: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {

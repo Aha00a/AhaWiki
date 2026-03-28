@@ -83,6 +83,8 @@ function useAdminData(page) {
         pageEdited: [],
     });
     const [recentChanges, setRecentChanges] = useState([]);
+    const [userViewHistories, setUserViewHistories] = useState([]);
+    const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
     const [error, setError] = useState("");
@@ -90,6 +92,19 @@ function useAdminData(page) {
     const loadRecentChanges = useCallback(async (n = 50) => {
         const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
         setRecentChanges(data);
+    }, []);
+
+    const loadUserViewHistories = useCallback(async (userSeq, n = 200) => {
+        setLoadingUserViewHistories(true);
+        try {
+            const clampedN = Math.min(1000, Math.max(1, Number.parseInt(String(n), 10) || 200));
+            const data = await fetchJson(
+                `/api/Admin/UserViews?userSeq=${encodeURIComponent(userSeq)}&n=${encodeURIComponent(clampedN)}`,
+            );
+            setUserViewHistories(data);
+        } finally {
+            setLoadingUserViewHistories(false);
+        }
     }, []);
 
     const loadDashboard = useCallback(async () => {
@@ -258,6 +273,9 @@ function useAdminData(page) {
         schedulers,
         dailyStats,
         recentChanges,
+        userViewHistories,
+        loadingUserViewHistories,
+        loadUserViewHistories,
         loadRecentChanges,
         runningSchedulerName,
         runScheduler,
@@ -593,6 +611,9 @@ function AdminContent({page}) {
         schedulers,
         dailyStats,
         recentChanges,
+        userViewHistories,
+        loadingUserViewHistories,
+        loadUserViewHistories,
         loadRecentChanges,
         runningSchedulerName,
         runScheduler,
@@ -602,6 +623,7 @@ function AdminContent({page}) {
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
+    const [selectedAllUser, setSelectedAllUser] = useState(null);
 
     if (loading) {
         return (
@@ -684,20 +706,79 @@ function AdminContent({page}) {
                     <Badge color="blue" variant="light">{allUsers.length} users</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    전체 사이트 기준 사용자 목록입니다.
+                    전체 사이트 기준 사용자 목록입니다. 사용자 행의 상세 조회 버튼으로 페이지 열람 이력을 확인할 수 있습니다.
                 </Text>
                 <Divider mb="md"/>
-                {makeTable(
-                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated", "Last Viewed"],
-                    allUsers.map((user) => [
-                        user.seq,
-                        user.email,
-                        user.nickname,
-                        user.siteCount ?? 0,
-                        user.created,
-                        user.updated,
-                        user.lastViewed ?? "-",
-                    ]),
+                <Table striped highlightOnHover withTableBorder withColumnBorders>
+                    <Table.Thead>
+                        <Table.Tr>
+                            <Table.Th>Action</Table.Th>
+                            <Table.Th>Seq</Table.Th>
+                            <Table.Th>Email</Table.Th>
+                            <Table.Th>Nickname</Table.Th>
+                            <Table.Th>Sites</Table.Th>
+                            <Table.Th>Created</Table.Th>
+                            <Table.Th>Updated</Table.Th>
+                            <Table.Th>Last Viewed</Table.Th>
+                        </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                        {allUsers.map((user) => (
+                            <Table.Tr key={user.seq}>
+                                <Table.Td>
+                                    <Button
+                                        size="xs"
+                                        variant={selectedAllUser?.seq === user.seq ? "filled" : "light"}
+                                        onClick={() => {
+                                            setSelectedAllUser(user);
+                                            loadUserViewHistories(user.seq, 200);
+                                        }}
+                                        loading={loadingUserViewHistories && selectedAllUser?.seq === user.seq}
+                                    >
+                                        상세 조회
+                                    </Button>
+                                </Table.Td>
+                                <Table.Td>{user.seq}</Table.Td>
+                                <Table.Td>{user.email}</Table.Td>
+                                <Table.Td>{user.nickname}</Table.Td>
+                                <Table.Td>{user.siteCount ?? 0}</Table.Td>
+                                <Table.Td>{user.created}</Table.Td>
+                                <Table.Td>{user.updated}</Table.Td>
+                                <Table.Td>{user.lastViewed ?? "-"}</Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
+                <Divider my="md"/>
+                {selectedAllUser ? (
+                    <Stack gap="sm">
+                        <Group justify="space-between">
+                            <Title order={4}>
+                                사용자 열람 이력: {selectedAllUser.nickname} ({selectedAllUser.email})
+                            </Title>
+                            <Badge color="cyan" variant="light">
+                                {userViewHistories.length} rows
+                            </Badge>
+                        </Group>
+                        {loadingUserViewHistories ? (
+                            <Group>
+                                <Loader size="sm"/>
+                                <Text size="sm" c="dimmed">열람 이력을 불러오는 중입니다...</Text>
+                            </Group>
+                        ) : makeTable(
+                            ["When", "Site", "Page", "History Seq"],
+                            userViewHistories.map((history) => [
+                                history.viewedAt,
+                                `${history.siteName} (#${history.site})`,
+                                history.pageName,
+                                history.seq,
+                            ]),
+                        )}
+                    </Stack>
+                ) : (
+                    <Text size="sm" c="dimmed">
+                        특정 사용자의 상세 조회 버튼을 눌러 언제 어떤 페이지를 봤는지 확인하세요.
+                    </Text>
                 )}
             </Card>
         );
