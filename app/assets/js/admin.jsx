@@ -32,19 +32,19 @@ function logError(...args) {
 }
 
 function routeToPage(pathname) {
-    if (pathname === "/admin/sites") {
+    if (pathname === "/Admin/Sites") {
         return "sites";
     }
-    if (pathname === "/admin/site-users") {
+    if (pathname === "/Admin/SiteUsers") {
         return "users";
     }
-    if (pathname === "/admin/all-users") {
+    if (pathname === "/Admin/AllUsers") {
         return "all-users";
     }
-    if (pathname === "/admin/operations") {
+    if (pathname === "/Admin/Operations") {
         return "operations";
     }
-    if (pathname === "/admin/recent-changes") {
+    if (pathname === "/Admin/RecentChanges") {
         return "recent-changes";
     }
     return "dashboard";
@@ -88,18 +88,18 @@ function useAdminData(page) {
     const [error, setError] = useState("");
 
     const loadRecentChanges = useCallback(async (n = 50) => {
-        const data = await fetchJson(`/api/admin/recent-changes?n=${encodeURIComponent(n)}`);
+        const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
         setRecentChanges(data);
     }, []);
 
     const loadDashboard = useCallback(async () => {
         const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
-            fetchJson("/api/admin/sites"),
-            fetchJson("/api/admin/site-users"),
-            fetchJson("/api/admin/users"),
-            fetchJson("/api/admin/schedulers"),
-            fetchJson("/api/admin/daily-stats"),
-            fetchJson("/api/admin/recent-changes?n=30"),
+            fetchJson("/api/Admin/Sites"),
+            fetchJson("/api/Admin/SiteUsers"),
+            fetchJson("/api/Admin/Users"),
+            fetchJson("/api/Admin/Schedulers"),
+            fetchJson("/api/Admin/DailyStats"),
+            fetchJson("/api/Admin/RecentChanges?n=30"),
         ]);
         setSites(siteData);
         setUsers(userData);
@@ -115,7 +115,7 @@ function useAdminData(page) {
     }, []);
 
     const reloadSchedulers = useCallback(async () => {
-        const data = await fetchJson("/api/admin/schedulers");
+        const data = await fetchJson("/api/Admin/Schedulers");
         setSchedulers(data);
     }, []);
 
@@ -123,7 +123,7 @@ function useAdminData(page) {
         setRunningSchedulerName(name);
         setError("");
         try {
-            await fetchJson(`/api/admin/schedulers/run/${encodeURIComponent(name)}`);
+            await fetchJson(`/api/Admin/Schedulers/Run/${encodeURIComponent(name)}`);
             await reloadSchedulers();
         } catch (caughtError) {
             logError("scheduler:run:error", name, caughtError);
@@ -163,7 +163,7 @@ function useAdminData(page) {
             setError("");
             try {
                 if (page === "sites") {
-                    const data = await fetchJson("/api/admin/sites");
+                    const data = await fetchJson("/api/Admin/Sites");
                     if (mounted) {
                         setSites(data);
                         setUsers([]);
@@ -179,7 +179,7 @@ function useAdminData(page) {
                 }
 
                 if (page === "users") {
-                    const data = await fetchJson("/api/admin/site-users");
+                    const data = await fetchJson("/api/Admin/SiteUsers");
                     if (mounted) {
                         setUsers(data);
                         setSites([]);
@@ -196,7 +196,7 @@ function useAdminData(page) {
                 }
 
                 if (page === "all-users") {
-                    const data = await fetchJson("/api/admin/users");
+                    const data = await fetchJson("/api/Admin/Users");
                     if (mounted) {
                         setAllUsers(data);
                         setUsers([]);
@@ -295,12 +295,12 @@ function Navigation({activePage, onNavigate}) {
     const links = useMemo(
         () => [
             {href: "/", label: "Home", key: "home"},
-            {href: "/admin", label: "Dashboard", key: "dashboard"},
-            {href: "/admin/sites", label: "All Sites", key: "sites"},
-            {href: "/admin/site-users", label: "Site Users", key: "users"},
-            {href: "/admin/all-users", label: "All Users", key: "all-users"},
-            {href: "/admin/operations", label: "Operations", key: "operations"},
-            {href: "/admin/recent-changes", label: "Recent Changes", key: "recent-changes"},
+            {href: "/Admin", label: "Dashboard", key: "dashboard"},
+            {href: "/Admin/Sites", label: "All Sites", key: "sites"},
+            {href: "/Admin/SiteUsers", label: "Site Users", key: "users"},
+            {href: "/Admin/AllUsers", label: "All Users", key: "all-users"},
+            {href: "/Admin/Operations", label: "Operations", key: "operations"},
+            {href: "/Admin/RecentChanges", label: "Recent Changes", key: "recent-changes"},
         ],
         [],
     );
