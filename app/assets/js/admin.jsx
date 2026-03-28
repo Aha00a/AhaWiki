@@ -688,7 +688,7 @@ function AdminContent({page}) {
                 </Text>
                 <Divider mb="md"/>
                 {makeTable(
-                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
+                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated", "Last Viewed"],
                     allUsers.map((user) => [
                         user.seq,
                         user.email,
@@ -696,6 +696,7 @@ function AdminContent({page}) {
                         user.siteCount ?? 0,
                         user.created,
                         user.updated,
+                        user.lastViewed ?? "-",
                     ]),
                 )}
             </Card>

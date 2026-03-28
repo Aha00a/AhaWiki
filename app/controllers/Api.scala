@@ -121,7 +121,7 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminUser(seq: Long, created: String, updated: String, email: String, nickname: String, siteCount: Long)
+        case class AdminUser(seq: Long, created: String, updated: String, email: String, nickname: String, siteCount: Long, lastViewed: Option[String])
 
         val users = SQL"""
           SELECT
@@ -130,16 +130,22 @@ class Api @Inject()(
             DATE_FORMAT(U.updated, '%Y-%m-%d %H:%i:%s') AS updated,
             U.email,
             U.nickname,
-            COALESCE(US.site_count, 0) AS site_count
+            COALESCE(US.site_count, 0) AS site_count,
+            UV.last_viewed
           FROM User U
           LEFT JOIN (
             SELECT user, COUNT(*) AS site_count
             FROM UserSite
             GROUP BY user
           ) US ON US.user = U.seq
+          LEFT JOIN (
+            SELECT user, DATE_FORMAT(MAX(dateInserted), '%Y-%m-%d %H:%i:%s') AS last_viewed
+            FROM UserViewHistory
+            GROUP BY user
+          ) UV ON UV.user = U.seq
           ORDER BY U.seq DESC
-        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count")).map {
-          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount =>
+        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ str("last_viewed").?).map {
+          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount ~ lastViewed =>
             AdminUser(
               seq = seq,
               created = created,
@@ -147,6 +153,7 @@ class Api @Inject()(
               email = email,
               nickname = nickname,
               siteCount = siteCount,
+              lastViewed = lastViewed,
             )
         }.*)
 

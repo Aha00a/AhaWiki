@@ -471,14 +471,15 @@ function AdminContent({ page }) {
   }
   if (page === "all-users") {
     return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUsers.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), makeTable(
-      ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
+      ["Seq", "Email", "Nickname", "Sites", "Created", "Updated", "Last Viewed"],
       allUsers.map((user) => [
         user.seq,
         user.email,
         user.nickname,
         user.siteCount ?? 0,
         user.created,
-        user.updated
+        user.updated,
+        user.lastViewed ?? "-"
       ])
     ));
   }

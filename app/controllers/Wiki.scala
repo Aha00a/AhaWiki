@@ -199,6 +199,7 @@ controllerComponents: ControllerComponents,
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
           Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
         case None =>
+          SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
           Ok(pageContent.interpreter match {
             case Some("Paper") =>
