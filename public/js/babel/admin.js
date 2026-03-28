@@ -261,30 +261,116 @@ function DailyStatTable({ title, description, rows, badgeColor }) {
     rows.map((row) => [row.ymd, row.count])
   ));
 }
+function normalizeDailyRows(rows) {
+  return [...rows].map((row) => ({
+    ymd: row.ymd,
+    count: Number(row.count ?? 0)
+  })).sort((left, right) => left.ymd > right.ymd ? 1 : -1);
+}
+function Sparkline({ rows, color }) {
+  const width = 320;
+  const height = 72;
+  const data = normalizeDailyRows(rows).slice(-30);
+  if (data.length === 0) {
+    return /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "No data");
+  }
+  const max = Math.max(...data.map((item) => item.count), 1);
+  const min = Math.min(...data.map((item) => item.count), 0);
+  const range = Math.max(max - min, 1);
+  const points = data.map((item, index) => {
+    const x = data.length === 1 ? width / 2 : index / (data.length - 1) * width;
+    const y = height - (item.count - min) / range * height;
+    return `${x},${y}`;
+  }).join(" ");
+  const areaPoints = `0,${height} ${points} ${width},${height}`;
+  const latest = data[data.length - 1]?.count ?? 0;
+  const previous = data[data.length - 2]?.count ?? latest;
+  const delta = latest - previous;
+  const deltaColor = delta >= 0 ? "teal" : "red";
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React.createElement("svg", { width: "100%", viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React.createElement(
+    "polyline",
+    {
+      points: areaPoints,
+      fill: `var(--mantine-color-${color}-1)`,
+      stroke: "none"
+    }
+  ), /* @__PURE__ */ React.createElement(
+    "polyline",
+    {
+      points,
+      fill: "none",
+      stroke: `var(--mantine-color-${color}-6)`,
+      strokeWidth: "2",
+      strokeLinejoin: "round",
+      strokeLinecap: "round"
+    }
+  )), /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React.createElement(Badge, { color: deltaColor, variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
+}
 function StatTrendCard({ title, total, rows, color }) {
-  const orderedRows = [...rows].sort((left, right) => left.ymd > right.ymd ? 1 : -1);
-  const latestRows = orderedRows.slice(-30);
-  const maxCount = latestRows.reduce((max, row) => Math.max(max, row.count ?? 0), 0);
-  const minCount = latestRows.reduce((min, row) => Math.min(min, row.count ?? 0), Number.POSITIVE_INFINITY);
-  const safeMin = Number.isFinite(minCount) ? minCount : 0;
-  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React.createElement(Badge, { color, variant: "light" }, "30d")), /* @__PURE__ */ React.createElement(Title, { order: 3 }, total), /* @__PURE__ */ React.createElement(Group, { gap: 6, align: "flex-end", wrap: "nowrap", style: { height: 48 } }, latestRows.map((row) => {
-    const value = row.count ?? 0;
-    const normalizedValue = maxCount === safeMin ? 40 : (value - safeMin) / (maxCount - safeMin) * 100;
+  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React.createElement(Badge, { color, variant: "light" }, "30d")), /* @__PURE__ */ React.createElement(Title, { order: 3 }, total), /* @__PURE__ */ React.createElement(Sparkline, { rows, color })));
+}
+function MultiTrendChart({ series }) {
+  const width = 840;
+  const height = 260;
+  const padding = { top: 14, right: 20, bottom: 30, left: 28 };
+  const innerWidth = width - padding.left - padding.right;
+  const innerHeight = height - padding.top - padding.bottom;
+  const dateSet = /* @__PURE__ */ new Set();
+  series.forEach((line) => {
+    normalizeDailyRows(line.rows).forEach((row) => {
+      dateSet.add(row.ymd);
+    });
+  });
+  const dates = [...dateSet].sort().slice(-30);
+  if (dates.length === 0) {
+    return /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uCC28\uD2B8 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
+  }
+  const mappedSeries = series.map((line) => {
+    const indexed = new Map(normalizeDailyRows(line.rows).map((row) => [row.ymd, row.count]));
+    return {
+      ...line,
+      points: dates.map((date) => ({ date, count: indexed.get(date) ?? 0 }))
+    };
+  });
+  const maxValue = Math.max(
+    1,
+    ...mappedSeries.flatMap((line) => line.points.map((point) => point.count))
+  );
+  const yScale = (value) => padding.top + innerHeight - value / maxValue * innerHeight;
+  const xScale = (index) => {
+    if (dates.length === 1) {
+      return padding.left + innerWidth / 2;
+    }
+    return padding.left + index / (dates.length - 1) * innerWidth;
+  };
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement("svg", { width: "100%", viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "daily trends chart" }, [0, 0.25, 0.5, 0.75, 1].map((tick) => {
+    const y = padding.top + innerHeight - innerHeight * tick;
     return /* @__PURE__ */ React.createElement(
-      "div",
+      "line",
       {
-        key: row.ymd,
-        title: `${row.ymd}: ${value}`,
-        style: {
-          height: `${Math.max(normalizedValue, 6)}%`,
-          width: "100%",
-          background: `var(--mantine-color-${color}-6)`,
-          borderRadius: 999,
-          opacity: 0.85
-        }
+        key: `y-${tick}`,
+        x1: padding.left,
+        y1: y,
+        x2: padding.left + innerWidth,
+        y2: y,
+        stroke: "var(--mantine-color-gray-2)",
+        strokeWidth: "1"
       }
     );
-  }))));
+  }), mappedSeries.map((line) => {
+    const path = line.points.map((point, index) => `${index === 0 ? "M" : "L"} ${xScale(index)} ${yScale(point.count)}`).join(" ");
+    return /* @__PURE__ */ React.createElement(
+      "path",
+      {
+        key: line.name,
+        d: path,
+        fill: "none",
+        stroke: `var(--mantine-color-${line.color}-6)`,
+        strokeWidth: "2.5",
+        strokeLinecap: "round"
+      }
+    );
+  })), /* @__PURE__ */ React.createElement(Group, { gap: 8 }, mappedSeries.map((line) => /* @__PURE__ */ React.createElement(Badge, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 function AdminContent({ page }) {
   const {
@@ -377,6 +463,16 @@ function AdminContent({ page }) {
       rows: dailyStats.pageEdited,
       total: dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)
     }
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC2E0\uADDC \uC0AC\uC6A9\uC790, \uC0AC\uC774\uD2B8 \uAC00\uC785, \uBB38\uC11C \uC0DD\uC131/\uC218\uC815 \uC9C0\uD45C\uB97C \uD558\uB098\uC758 \uC2DC\uACC4\uC5F4 \uCC28\uD2B8\uB85C \uBE44\uAD50\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(
+    MultiTrendChart,
+    {
+      series: [
+        { name: "New Users", color: "blue", rows: dailyStats.userCreated },
+        { name: "Site User Joins", color: "teal", rows: dailyStats.siteUserCreated },
+        { name: "New Pages", color: "indigo", rows: dailyStats.pageCreated },
+        { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }
+      ]
+    }
   )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length)), makeTable(
     ["Seq", "Name", "Domains", "Users", "Pages"],
     sites.map((site) => [
@@ -401,7 +497,7 @@ function AdminContent({ page }) {
     DailyStatTable,
     {
       title: "Daily New Users",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC804\uCCB4 \uC0AC\uC6A9\uC790 \uC2E0\uADDC \uC0DD\uC131 \uC218\uC785\uB2C8\uB2E4.",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC804\uCCB4 \uC0AC\uC6A9\uC790 \uC2E0\uADDC \uC0DD\uC131 \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
       rows: dailyStats.userCreated,
       badgeColor: "blue"
     }
@@ -409,7 +505,7 @@ function AdminContent({ page }) {
     DailyStatTable,
     {
       title: "Daily Site User Joins",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC0AC\uC774\uD2B8 \uAC00\uC785(UserSite) \uC218\uC785\uB2C8\uB2E4.",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC0AC\uC774\uD2B8 \uAC00\uC785(UserSite) \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
       rows: dailyStats.siteUserCreated,
       badgeColor: "teal"
     }
@@ -417,7 +513,7 @@ function AdminContent({ page }) {
     DailyStatTable,
     {
       title: "Daily New Pages",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 revision=1 \uD398\uC774\uC9C0 \uC0DD\uC131 \uC218\uC785\uB2C8\uB2E4.",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 revision=1 \uD398\uC774\uC9C0 \uC0DD\uC131 \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
       rows: dailyStats.pageCreated,
       badgeColor: "indigo"
     }
@@ -425,7 +521,7 @@ function AdminContent({ page }) {
     DailyStatTable,
     {
       title: "Daily Page Edits",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uD398\uC774\uC9C0 \uC804\uCCB4 \uC218\uC815(\uBAA8\uB4E0 \uB9AC\uBE44\uC804) \uC218\uC785\uB2C8\uB2E4.",
+      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uD398\uC774\uC9C0 \uC804\uCCB4 \uC218\uC815(\uBAA8\uB4E0 \uB9AC\uBE44\uC804) \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
       rows: dailyStats.pageEdited,
       badgeColor: "grape"
     }
