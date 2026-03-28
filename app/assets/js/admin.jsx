@@ -6,13 +6,17 @@ import {
     Badge,
     Button,
     Card,
+    Divider,
     Group,
     Loader,
     NavLink,
     Paper,
+    Progress,
+    SimpleGrid,
     Stack,
     Table,
     Text,
+    ThemeIcon,
     Title,
 } from "@mantine/core";
 
@@ -137,7 +141,7 @@ function useAdminData(page) {
 
 function makeTable(headers, rows) {
     return (
-        <Table striped highlightOnHover withTableBorder withColumnBorders>
+        <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader stickyHeaderOffset={0}>
             <Table.Thead>
                 <Table.Tr>
                     {headers.map((header) => (
@@ -170,14 +174,17 @@ function Navigation({activePage, onNavigate}) {
     );
 
     return (
-        <Stack gap={4}>
+        <Stack gap={8}>
+            <Text size="xs" tt="uppercase" fw={700} c="dimmed" px={8}>
+                Admin Navigation
+            </Text>
             {links.map((link) => (
                 <NavLink
                     key={link.key}
                     href={link.href}
                     label={link.label}
                     active={activePage === link.key}
-                    variant="light"
+                    variant={activePage === link.key ? "filled" : "light"}
                     onClick={(event) => {
                         if (link.key === "home") {
                             return;
@@ -198,6 +205,16 @@ function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
                 <Title order={4}>Schedulers</Title>
                 <Button size="xs" variant="light" onClick={onRefresh}>Refresh</Button>
             </Group>
+            <Progress
+                size="sm"
+                value={
+                    schedulers.length === 0
+                        ? 0
+                        : (schedulers.filter((scheduler) => scheduler.running).length / schedulers.length) * 100
+                }
+                color="blue"
+                radius="xl"
+            />
             <Table striped highlightOnHover withTableBorder withColumnBorders>
                 <Table.Thead>
                     <Table.Tr>
@@ -272,7 +289,15 @@ function AdminContent({page}) {
     if (page === "sites") {
         return (
             <Card withBorder radius="md" padding="lg">
-                <Title order={3} mb="md">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>All Sites</Title>
+                    <Badge color="indigo" variant="light">{sites.length} sites</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    전체 사이트 목록과 순번을 확인할 수 있습니다.
+                </Text>
+                <Divider mb="md"/>
+                <Title order={6} c="dimmed" mb="sm">
                     All Sites
                 </Title>
                 {makeTable(
@@ -286,9 +311,14 @@ function AdminContent({page}) {
     if (page === "users") {
         return (
             <Card withBorder radius="md" padding="lg">
-                <Title order={3} mb="md">
-                    Site Users (current host)
-                </Title>
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Site Users</Title>
+                    <Badge color="teal" variant="light">{users.length} users</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    현재 호스트 기준 사용자 목록입니다.
+                </Text>
+                <Divider mb="md"/>
                 {makeTable(
                     ["User", "Email", "Nickname", "Created"],
                     users.map((user) => [user.user, user.email, user.nickname, user.created]),
@@ -299,19 +329,50 @@ function AdminContent({page}) {
 
     return (
         <Stack gap="lg">
+            <SimpleGrid cols={{base: 1, sm: 3}} spacing="md">
+                <Card withBorder radius="md" padding="md">
+                    <Group justify="space-between" align="flex-start">
+                        <Stack gap={2}>
+                            <Text size="sm" c="dimmed">Sites</Text>
+                            <Title order={2}>{sites.length}</Title>
+                        </Stack>
+                        <ThemeIcon color="indigo" variant="light" radius="xl">S</ThemeIcon>
+                    </Group>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Group justify="space-between" align="flex-start">
+                        <Stack gap={2}>
+                            <Text size="sm" c="dimmed">Users</Text>
+                            <Title order={2}>{users.length}</Title>
+                        </Stack>
+                        <ThemeIcon color="teal" variant="light" radius="xl">U</ThemeIcon>
+                    </Group>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Group justify="space-between" align="flex-start">
+                        <Stack gap={2}>
+                            <Text size="sm" c="dimmed">Schedulers</Text>
+                            <Title order={2}>{schedulers.length}</Title>
+                        </Stack>
+                        <ThemeIcon color="blue" variant="light" radius="xl">R</ThemeIcon>
+                    </Group>
+                </Card>
+            </SimpleGrid>
             <Card withBorder radius="md" padding="lg">
-                <Title order={3} mb="md">
-                    Sites
-                </Title>
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Sites</Title>
+                    <Badge color="indigo" variant="light">{sites.length}</Badge>
+                </Group>
                 {makeTable(
                     ["Seq", "Name"],
                     sites.map((site) => [site.seq, site.name]),
                 )}
             </Card>
             <Card withBorder radius="md" padding="lg">
-                <Title order={3} mb="md">
-                    Site Users (current host)
-                </Title>
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Site Users (current host)</Title>
+                    <Badge color="teal" variant="light">{users.length}</Badge>
+                </Group>
                 {makeTable(
                     ["User", "Email", "Nickname", "Created"],
                     users.map((user) => [user.user, user.email, user.nickname, user.created]),
@@ -353,7 +414,13 @@ function AdminApp({initialPage}) {
     );
 
     return (
-        <MantineProvider defaultColorScheme="light">
+        <MantineProvider
+            defaultColorScheme="light"
+            theme={{
+                primaryColor: "indigo",
+                defaultRadius: "md",
+            }}
+        >
             <AppShell
                 padding="md"
                 navbar={{
@@ -362,14 +429,21 @@ function AdminApp({initialPage}) {
                 }}
             >
                 <AppShell.Navbar p="md">
+                    <Stack mb="md" gap={4}>
+                        <Text fw={700} size="lg">AhaWiki</Text>
+                        <Text size="xs" c="dimmed">관리자 콘솔</Text>
+                    </Stack>
                     <Navigation activePage={page} onNavigate={onNavigate}/>
                 </AppShell.Navbar>
                 <AppShell.Main>
                     <Stack gap="md">
                         <Group justify="space-between" align="center">
-                            <Title order={2}>Admin</Title>
-                            <Badge variant="light" color="blue" size="lg">
-                                Mantine Enabled
+                            <Stack gap={2}>
+                                <Title order={2}>Admin Dashboard</Title>
+                                <Text size="sm" c="dimmed">운영 현황을 한눈에 확인하고 즉시 작업하세요.</Text>
+                            </Stack>
+                            <Badge variant="light" color="indigo" size="lg">
+                                Live
                             </Badge>
                         </Group>
                         <AdminContent page={page}/>

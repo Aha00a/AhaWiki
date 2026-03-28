@@ -7,13 +7,17 @@ import {
   Badge,
   Button,
   Card,
+  Divider,
   Group,
   Loader,
   NavLink,
   Paper,
+  Progress,
+  SimpleGrid,
   Stack,
   Table,
   Text,
+  ThemeIcon,
   Title
 } from "@mantine/core";
 var LOG_PREFIX = "[AdminUI]";
@@ -124,7 +128,7 @@ function useAdminData(page) {
   return { loading, sites, users, schedulers, runningSchedulerName, runScheduler, reloadSchedulers, error };
 }
 function makeTable(headers, rows) {
-  return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
+  return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, String(column ?? "")))))));
 }
 function Navigation({ activePage, onNavigate }) {
   const links = useMemo(
@@ -136,14 +140,14 @@ function Navigation({ activePage, onNavigate }) {
     ],
     []
   );
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", tt: "uppercase", fw: 700, c: "dimmed", px: 8 }, "Admin Navigation"), links.map((link) => /* @__PURE__ */ React.createElement(
     NavLink,
     {
       key: link.key,
       href: link.href,
       label: link.label,
       active: activePage === link.key,
-      variant: "light",
+      variant: activePage === link.key ? "filled" : "light",
       onClick: (event) => {
         if (link.key === "home") {
           return;
@@ -154,24 +158,25 @@ function Navigation({ activePage, onNavigate }) {
     }
   )));
 }
-function SchedulerControls({ schedulers, runningSchedulerName, onRun, onRefresh }) {
+function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) {
   return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" },
-    /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" },
+    /* @__PURE__ */ React.createElement(Group, { justify: "space-between" },
       /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"),
       /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")
     ),
-    ...schedulers.map((scheduler) => /* @__PURE__ */ React.createElement(Group, { key: scheduler.name, justify: "space-between", align: "center" },
-      /* @__PURE__ */ React.createElement(Stack, { gap: 2 },
-        /* @__PURE__ */ React.createElement(Text, { fw: 600 }, scheduler.name),
-        /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, `interval ${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s | next ${scheduler.nextDelaySeconds ?? "-"}s | last ${scheduler.lastResult ?? "-"}`)
-      ),
-      /* @__PURE__ */ React.createElement(Button, {
-        size: "xs",
-        loading: runningSchedulerName === scheduler.name,
-        disabled: scheduler.running,
-        onClick: () => onRun(scheduler.name)
-      }, scheduler.running ? "Running..." : "Run now")
-    ))
+    /* @__PURE__ */ React.createElement(Progress, {
+      size: "sm",
+      value: schedulers.length === 0 ? 0 : schedulers.filter((scheduler) => scheduler.running).length / schedulers.length * 100,
+      color: "blue",
+      radius: "xl"
+    }),
+    /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Interval"), /* @__PURE__ */ React.createElement(Table.Th, null, "Next Delay(s)"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Started"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Finished"), /* @__PURE__ */ React.createElement(Table.Th, null, "Result"), /* @__PURE__ */ React.createElement(Table.Th, null, "Run Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, schedulers.map((scheduler) => /* @__PURE__ */ React.createElement(Table.Tr, { key: scheduler.name }, /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.name), /* @__PURE__ */ React.createElement(Table.Td, null, `${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.nextDelaySeconds ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastStartedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastFinishedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastResult ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.runCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(Button, {
+      size: "xs",
+      variant: "filled",
+      loading: runningSchedulerName === scheduler.name,
+      disabled: scheduler.running,
+      onClick: () => onRun(scheduler.name)
+    }, scheduler.running ? "Running..." : "Run now"))))))
   );
 }
 function AdminContent({ page }) {
@@ -183,25 +188,25 @@ function AdminContent({ page }) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Text, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
   }
   if (page === "sites") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "All Sites"), makeTable(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uACFC \uC21C\uBC88\uC744 \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Title, { order: 6, c: "dimmed", mb: "sm" }, "All Sites"), makeTable(
       ["Seq", "Name"],
       sites.map((site) => [site.seq, site.name])
     ));
   }
   if (page === "users") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"), makeTable(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Users"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, users.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uD638\uC2A4\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), makeTable(
       ["User", "Email", "Nickname", "Created"],
       users.map((user) => [user.user, user.email, user.nickname, user.created])
     ));
   }
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Sites"), makeTable(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, users.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length)), makeTable(
     ["Seq", "Name"],
     sites.map((site) => [site.seq, site.name])
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Title, { order: 3, mb: "md" }, "Site Users (current host)"), makeTable(
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Users (current host)"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, users.length)), makeTable(
     ["User", "Email", "Nickname", "Created"],
     users.map((user) => [user.user, user.email, user.nickname, user.created])
   )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" },
-    /* @__PURE__ */ React.createElement(SchedulerControls, {
+    /* @__PURE__ */ React.createElement(SchedulerTable, {
       schedulers,
       runningSchedulerName,
       onRun: runScheduler,
@@ -229,7 +234,10 @@ function AdminApp({ initialPage }) {
     },
     []
   );
-  return /* @__PURE__ */ React.createElement(MantineProvider, { defaultColorScheme: "light" }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(MantineProvider, { defaultColorScheme: "light", theme: {
+    primaryColor: "indigo",
+    defaultRadius: "md"
+  } }, /* @__PURE__ */ React.createElement(
     AppShell,
     {
       padding: "md",
@@ -238,8 +246,8 @@ function AdminApp({ initialPage }) {
         breakpoint: "sm"
       }
     },
-    /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
-    /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, "Admin"), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "blue", size: "lg" }, "Mantine Enabled")), /* @__PURE__ */ React.createElement(AdminContent, { page })))
+    /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Stack, { mb: "md", gap: 4 }, /* @__PURE__ */ React.createElement(Text, { fw: 700, size: "lg" }, "AhaWiki"), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD00\uB9AC\uC790 \uCF58\uC194")), /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
+    /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, "Admin Dashboard"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC6B4\uC601 \uD604\uD669\uC744 \uD55C\uB208\uC5D0 \uD655\uC778\uD558\uACE0 \uC989\uC2DC \uC791\uC5C5\uD558\uC138\uC694.")), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React.createElement(AdminContent, { page })))
   ));
 }
 function pageLoad() {
