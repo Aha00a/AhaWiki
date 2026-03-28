@@ -2,6 +2,8 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import anorm.SqlParser.{long, str}
+import anorm._
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -55,8 +57,47 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminSite(seq: Long, name: String)
-        val sites = Site.select().map(s => AdminSite(s.seq, s.name))
+        case class AdminSite(seq: Long, name: String, domains: Seq[String], userCount: Long, pageCount: Long)
+        case class AdminSiteRow(seq: Long, name: String, domain: Option[String], userCount: Long, pageCount: Long)
+
+        val rows = SQL"""
+          SELECT
+            S.seq,
+            S.name,
+            SD.domain,
+            COALESCE(US.user_count, 0) AS user_count,
+            COALESCE(P.page_count, 0) AS page_count
+          FROM Site S
+          LEFT JOIN SiteDomain SD ON SD.site = S.seq
+          LEFT JOIN (
+            SELECT site, COUNT(*) AS user_count
+            FROM UserSite
+            GROUP BY site
+          ) US ON US.site = S.seq
+          LEFT JOIN (
+            SELECT site, COUNT(*) AS page_count
+            FROM Page
+            GROUP BY site
+          ) P ON P.site = S.seq
+          ORDER BY S.seq, SD.domain
+        """.as((long("seq") ~ str("name") ~ str("domain").? ~ long("user_count") ~ long("page_count")).map {
+          case seq ~ name ~ domain ~ userCount ~ pageCount => AdminSiteRow(seq, name, domain, userCount, pageCount)
+        }.*)
+
+        val sites = rows
+          .groupBy(r => (r.seq, r.name, r.userCount, r.pageCount))
+          .toSeq
+          .sortBy(_._1._1)
+          .map { case ((seq, name, userCount, pageCount), groupedRows) =>
+            AdminSite(
+              seq = seq,
+              name = name,
+              domains = groupedRows.flatMap(_.domain).distinct.sorted,
+              userCount = userCount,
+              pageCount = pageCount,
+            )
+          }
+
         Ok(sites.asJson)
       }
     }

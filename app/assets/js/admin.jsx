@@ -294,15 +294,21 @@ function AdminContent({page}) {
                     <Badge color="indigo" variant="light">{sites.length} sites</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    전체 사이트 목록과 순번을 확인할 수 있습니다.
+                    전체 사이트 목록과 함께 도메인, 사용자 수, 페이지 수를 확인할 수 있습니다.
                 </Text>
                 <Divider mb="md"/>
                 <Title order={6} c="dimmed" mb="sm">
                     All Sites
                 </Title>
                 {makeTable(
-                    ["Seq", "Name"],
-                    sites.map((site) => [site.seq, site.name]),
+                    ["Seq", "Name", "Domains", "Users", "Pages"],
+                    sites.map((site) => [
+                        site.seq,
+                        site.name,
+                        (site.domains ?? []).join(", "),
+                        site.userCount ?? 0,
+                        site.pageCount ?? 0,
+                    ]),
                 )}
             </Card>
         );
@@ -364,8 +370,14 @@ function AdminContent({page}) {
                     <Badge color="indigo" variant="light">{sites.length}</Badge>
                 </Group>
                 {makeTable(
-                    ["Seq", "Name"],
-                    sites.map((site) => [site.seq, site.name]),
+                    ["Seq", "Name", "Domains", "Users", "Pages"],
+                    sites.map((site) => [
+                        site.seq,
+                        site.name,
+                        (site.domains ?? []).join(", "),
+                        site.userCount ?? 0,
+                        site.pageCount ?? 0,
+                    ]),
                 )}
             </Card>
             <Card withBorder radius="md" padding="lg">
