@@ -13,6 +13,7 @@ import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
 import logics.wikis.ExtractConvertInjectMacro
+import logics.wikis.interpreters.Interpreters
 import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
@@ -401,6 +402,10 @@ class Api @Inject()(
 
   def macroNames: Action[AnyContent] = Action { implicit request =>
     Ok(ExtractConvertInjectMacro.macroNames.asJson)
+  }
+
+  def interpreterNames: Action[AnyContent] = Action { implicit request =>
+    Ok(Interpreters.map.values.map(_.name).toSeq.distinct.sorted.asJson)
   }
 
 

@@ -224,13 +224,26 @@
             let serverAttachments = [];
             const uploadingMap = new Map();
             let macroNames = [];
+            let interpreterNames = [];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;
+            let autocompleteSuggestionType = null;
 
             function getMacroPrefix(value, cursorIndex) {
                 const left = value.slice(0, cursorIndex);
                 const match = left.match(/\[\[([A-Za-z0-9_]*)$/);
+                if (!match)
+                    return null;
+                return {
+                    start: cursorIndex - match[1].length,
+                    prefix: match[1]
+                };
+            }
+
+            function getInterpreterPrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const match = left.match(/\[\[\[#!([A-Za-z0-9_]*)$/);
                 if (!match)
                     return null;
                 return {
@@ -244,6 +257,7 @@
                 macroSuggestions = [];
                 activeMacroSuggestionIndex = 0;
                 macroAutocompleteContext = null;
+                autocompleteSuggestionType = null;
             }
 
             function renderMacroAutocomplete() {
@@ -273,6 +287,7 @@
 
                 const selectionStart = macroAutocompleteContext.start;
                 const selectionEnd = macroAutocompleteContext.cursor;
+                const isMacroAutocomplete = autocompleteSuggestionType !== 'interpreter';
                 if (macroAutocompleteContext.type === 'codemirror') {
                     const cm = getEditor();
                     if (!cm) {
@@ -281,7 +296,7 @@
                     }
                     const currentValue = cm.getValue();
                     const trailing = currentValue.slice(selectionEnd, selectionEnd + 2);
-                    const insertText = trailing === ']]' ? selected : (selected + ']]');
+                    const insertText = isMacroAutocomplete && trailing !== ']]' ? (selected + ']]') : selected;
                     const from = cm.posFromIndex(selectionStart);
                     const to = cm.posFromIndex(selectionEnd);
                     cm.replaceRange(insertText, from, to);
@@ -298,7 +313,7 @@
                     }
                     const value = element.value;
                     const trailing = value.slice(selectionEnd, selectionEnd + 2);
-                    const insertText = trailing === ']]' ? selected : (selected + ']]');
+                    const insertText = isMacroAutocomplete && trailing !== ']]' ? (selected + ']]') : selected;
                     element.value = value.substring(0, selectionStart) + insertText + value.substring(selectionEnd);
                     element.selectionStart = selectionStart + insertText.length;
                     element.selectionEnd = selectionStart + insertText.length;
@@ -317,14 +332,19 @@
             }
 
             function showMacroAutocomplete(context) {
-                const prefixInfo = getMacroPrefix(context.value, context.cursor);
-                if (!prefixInfo || !macroNames.length) {
+                const macroPrefixInfo = getMacroPrefix(context.value, context.cursor);
+                const interpreterPrefixInfo = getInterpreterPrefix(context.value, context.cursor);
+                const isInterpreterAutocomplete = !!interpreterPrefixInfo;
+                const prefixInfo = interpreterPrefixInfo || macroPrefixInfo;
+                const sourceNames = isInterpreterAutocomplete ? interpreterNames : macroNames;
+
+                if (!prefixInfo || !sourceNames.length) {
                     hideMacroAutocomplete();
                     return;
                 }
 
                 const prefixLower = prefixInfo.prefix.toLowerCase();
-                const list = macroNames.filter(function (name) {
+                const list = sourceNames.filter(function (name) {
                     return !prefixLower || name.toLowerCase().indexOf(prefixLower) === 0;
                 }).slice(0, 30);
 
@@ -340,6 +360,7 @@
                     start: prefixInfo.start,
                     cursor: context.cursor
                 };
+                autocompleteSuggestionType = isInterpreterAutocomplete ? 'interpreter' : 'macro';
                 renderMacroAutocomplete();
                 const left = context.rect.left + window.scrollX;
                 const top = context.rect.bottom + window.scrollY + 4;
@@ -385,6 +406,16 @@
                     })
                     .fail(function () {
                         macroNames = [];
+                    });
+            }
+
+            function loadInterpreterNames() {
+                $.get('@routes.Api.interpreterNames')
+                    .done(function (data) {
+                        interpreterNames = Array.isArray(data) ? data : [];
+                    })
+                    .fail(function () {
+                        interpreterNames = [];
                     });
             }
 
@@ -601,6 +632,7 @@
             });
             loadAttachments();
             loadMacroNames();
+            loadInterpreterNames();
 
             $(document).on('dragenter', function (e) {
                 if (!hasFiles(e))
