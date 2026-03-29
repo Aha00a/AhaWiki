@@ -12,6 +12,7 @@ import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
+import logics.wikis.ExtractConvertInjectMacro
 import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
@@ -396,6 +397,10 @@ class Api @Inject()(
       implicit val requestWrapper: RequestWrapper = RequestWrapper()
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
     }
+  }
+
+  def macroNames: Action[AnyContent] = Action { implicit request =>
+    Ok(ExtractConvertInjectMacro.macroNames.asJson)
   }
 
 

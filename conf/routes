@@ -50,6 +50,7 @@ GET           /api/Admin/RecentChanges             controllers.Api.adminRecentCh
 GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames
+GET           /api/macroNames                       controllers.Api.macroNames
 GET           /api/links/*nameEncoded               controllers.Api.links(nameEncoded)
 GET           /api/statistics                       controllers.Api.statistics()
 POST          /api/uploadClipboardImage             controllers.Wiki.uploadClipboardImage()

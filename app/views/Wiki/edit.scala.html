@@ -142,6 +142,28 @@
         .cm-ahamark-interpreter { color: #7a3e9d; font-weight: 600; }
         .cm-ahamark-tag { color: #d14; }
         .cm-ahamark-date { color: #267f99; }
+        .macroAutocomplete {
+            position: absolute;
+            display: none;
+            z-index: 1200;
+            background: #fff;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+            max-height: 220px;
+            overflow-y: auto;
+            min-width: 220px;
+        }
+        .macroAutocomplete .macroAutocompleteItem {
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .macroAutocomplete .macroAutocompleteItem.active,
+        .macroAutocomplete .macroAutocompleteItem:hover {
+            background: #eef4ff;
+        }
     </style>
     <script type="text/javascript">
 
@@ -197,9 +219,170 @@
             const $uploadInput = $('#attachmentUploadInput');
             const $attachmentList = $('#attachmentList');
             const $uploadDragOverlay = $('#uploadDragOverlay');
+            const $macroAutocomplete = $('<div id="macroAutocomplete" class="macroAutocomplete"></div>').appendTo('body');
             let globalDragCounter = 0;
             let serverAttachments = [];
             const uploadingMap = new Map();
+            let macroNames = [];
+            let macroSuggestions = [];
+            let activeMacroSuggestionIndex = 0;
+            let macroAutocompleteContext = null;
+
+            function getMacroPrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const match = left.match(/\[\[([A-Za-z0-9_]*)$/);
+                if (!match)
+                    return null;
+                return {
+                    start: cursorIndex - match[1].length,
+                    prefix: match[1]
+                };
+            }
+
+            function hideMacroAutocomplete() {
+                $macroAutocomplete.hide().empty();
+                macroSuggestions = [];
+                activeMacroSuggestionIndex = 0;
+                macroAutocompleteContext = null;
+            }
+
+            function renderMacroAutocomplete() {
+                $macroAutocomplete.empty();
+                macroSuggestions.forEach(function (name, index) {
+                    const $item = $('<div class="macroAutocompleteItem"></div>')
+                        .text(name)
+                        .toggleClass('active', index === activeMacroSuggestionIndex)
+                        .on('mousedown', function (e) {
+                            e.preventDefault();
+                            applyMacroAutocompleteSuggestion(index);
+                        });
+                    $macroAutocomplete.append($item);
+                });
+            }
+
+            function applyMacroAutocompleteSuggestion(index) {
+                if (!macroAutocompleteContext || !macroSuggestions.length)
+                    return;
+                const selected = macroSuggestions[index];
+                if (!selected)
+                    return;
+
+                const selectionStart = macroAutocompleteContext.start;
+                const selectionEnd = macroAutocompleteContext.cursor;
+                if (macroAutocompleteContext.type === 'codemirror') {
+                    const cm = getEditor();
+                    if (!cm) {
+                        hideMacroAutocomplete();
+                        return;
+                    }
+                    const currentValue = cm.getValue();
+                    const trailing = currentValue.slice(selectionEnd, selectionEnd + 2);
+                    const insertText = trailing === ']]' ? selected : (selected + ']]');
+                    const from = cm.posFromIndex(selectionStart);
+                    const to = cm.posFromIndex(selectionEnd);
+                    cm.replaceRange(insertText, from, to);
+                    const cursor = cm.posFromIndex(selectionStart + insertText.length);
+                    cm.setCursor(cursor);
+                    cm.focus();
+                    cm.save();
+                    $textarea.trigger('input');
+                } else {
+                    const element = $textarea.get(0);
+                    if (!element) {
+                        hideMacroAutocomplete();
+                        return;
+                    }
+                    const value = element.value;
+                    const trailing = value.slice(selectionEnd, selectionEnd + 2);
+                    const insertText = trailing === ']]' ? selected : (selected + ']]');
+                    element.value = value.substring(0, selectionStart) + insertText + value.substring(selectionEnd);
+                    element.selectionStart = selectionStart + insertText.length;
+                    element.selectionEnd = selectionStart + insertText.length;
+                    $(element).focus().trigger('input');
+                }
+
+                hideMacroAutocomplete();
+            }
+
+            function moveMacroSuggestion(delta) {
+                if (!macroSuggestions.length)
+                    return;
+                const len = macroSuggestions.length;
+                activeMacroSuggestionIndex = (activeMacroSuggestionIndex + delta + len) % len;
+                renderMacroAutocomplete();
+            }
+
+            function showMacroAutocomplete(context) {
+                const prefixInfo = getMacroPrefix(context.value, context.cursor);
+                if (!prefixInfo || !macroNames.length) {
+                    hideMacroAutocomplete();
+                    return;
+                }
+
+                const prefixLower = prefixInfo.prefix.toLowerCase();
+                const list = macroNames.filter(function (name) {
+                    return !prefixLower || name.toLowerCase().indexOf(prefixLower) === 0;
+                }).slice(0, 30);
+
+                if (!list.length) {
+                    hideMacroAutocomplete();
+                    return;
+                }
+
+                macroSuggestions = list;
+                activeMacroSuggestionIndex = 0;
+                macroAutocompleteContext = {
+                    type: context.type,
+                    start: prefixInfo.start,
+                    cursor: context.cursor
+                };
+                renderMacroAutocomplete();
+                const left = context.rect.left + window.scrollX;
+                const top = context.rect.bottom + window.scrollY + 4;
+                $macroAutocomplete.css({ left: left + 'px', top: top + 'px' }).show();
+            }
+
+            function textareaCursorRect(element) {
+                const rect = element.getBoundingClientRect();
+                return { left: rect.left + 12, bottom: rect.top + 28 };
+            }
+
+            function updateMacroAutocompleteForTextarea() {
+                if (getEditor()) {
+                    hideMacroAutocomplete();
+                    return;
+                }
+                const element = $textarea.get(0);
+                if (!element)
+                    return;
+                showMacroAutocomplete({
+                    type: 'textarea',
+                    value: element.value,
+                    cursor: element.selectionStart,
+                    rect: textareaCursorRect(element)
+                });
+            }
+
+            function updateMacroAutocompleteForCodeMirror(cm) {
+                const cursor = cm.getDoc().getCursor();
+                const cursorCoords = cm.cursorCoords(cursor, 'window');
+                showMacroAutocomplete({
+                    type: 'codemirror',
+                    value: cm.getValue(),
+                    cursor: cm.indexFromPos(cursor),
+                    rect: { left: cursorCoords.left, bottom: cursorCoords.bottom }
+                });
+            }
+
+            function loadMacroNames() {
+                $.get('@routes.Api.macroNames')
+                    .done(function (data) {
+                        macroNames = Array.isArray(data) ? data : [];
+                    })
+                    .fail(function () {
+                        macroNames = [];
+                    });
+            }
 
             function getEditor() {
                 return editor || window.AhaWikiCodeMirrorEditor;
@@ -413,6 +596,7 @@
                 $(this).val('');
             });
             loadAttachments();
+            loadMacroNames();
 
             $(document).on('dragenter', function (e) {
                 if (!hasFiles(e))
@@ -505,9 +689,72 @@
                 editor.on('change', function (cm) {
                     cm.save();
                     $textarea.trigger('input');
+                    updateMacroAutocompleteForCodeMirror(cm);
                 });
                 AhaWiki.Editor.addCodeMirrorEventListener(editor);
+                editor.on('keydown', function (cm, e) {
+                    if (!$macroAutocomplete.is(':visible'))
+                        return;
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        moveMacroSuggestion(1);
+                        return;
+                    }
+                    if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        moveMacroSuggestion(-1);
+                        return;
+                    }
+                    if (e.key === 'Enter' || e.key === 'Tab') {
+                        e.preventDefault();
+                        applyMacroAutocompleteSuggestion(activeMacroSuggestionIndex);
+                        return;
+                    }
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        hideMacroAutocomplete();
+                    }
+                });
+                editor.on('blur', function () {
+                    setTimeout(hideMacroAutocomplete, 120);
+                });
             }
+
+            $textarea.on('input click keyup', function () {
+                updateMacroAutocompleteForTextarea();
+            });
+            $textarea.on('keydown', function (e) {
+                if (!$macroAutocomplete.is(':visible'))
+                    return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveMacroSuggestion(1);
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveMacroSuggestion(-1);
+                    return;
+                }
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    applyMacroAutocompleteSuggestion(activeMacroSuggestionIndex);
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    hideMacroAutocomplete();
+                }
+            });
+            $textarea.on('blur', function () {
+                setTimeout(hideMacroAutocomplete, 120);
+            });
+            $(window).on('resize', hideMacroAutocomplete);
+            $(document).on('scroll click', function (e) {
+                if (!$(e.target).closest('#macroAutocomplete').length && !$(e.target).closest('.CodeMirror, textarea[name=text]').length) {
+                    hideMacroAutocomplete();
+                }
+            });
 
             function clamp(min, value, max) {
                 return Math.max(min, Math.min(value, max));

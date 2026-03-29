@@ -58,6 +58,8 @@ object ExtractConvertInjectMacro {
     MacroInfo,
     MacroSuccess
   ).map(m => m.name -> m).toMap
+
+  val macroNames: Seq[String] = mapMacros.keys.toSeq.sorted
 }
 
 class ExtractConvertInjectMacro extends ExtractConvertInject {
@@ -131,5 +133,4 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   }
 
 }
-
 
