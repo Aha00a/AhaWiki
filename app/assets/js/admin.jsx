@@ -33,6 +33,24 @@ function logError(...args) {
 }
 
 function routeToPage(pathname) {
+    if (pathname === "/Admin/User/UserViewHistory") {
+        return "user-views";
+    }
+    if (pathname === "/Admin/Site") {
+        return "sites";
+    }
+    if (pathname === "/Admin/SiteUser") {
+        return "users";
+    }
+    if (pathname === "/Admin/User") {
+        return "all-users";
+    }
+    if (pathname === "/Admin/Operation") {
+        return "operations";
+    }
+    if (pathname === "/Admin/RecentChange") {
+        return "recent-changes";
+    }
     if (pathname === "/Admin/Sites") {
         return "sites";
     }
@@ -52,6 +70,19 @@ function routeToPage(pathname) {
         return "recent-changes";
     }
     return "dashboard";
+}
+
+function parseUserSeqFromPathname(pathname) {
+    if (pathname !== "/Admin/User/UserViewHistory") {
+        return 0;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const userSeqBySeq = Number.parseInt(params.get("seq") ?? "", 10);
+    if (Number.isFinite(userSeqBySeq) && userSeqBySeq > 0) {
+        return userSeqBySeq;
+    }
+    const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
+    return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 
 async function fetchJson(url) {
@@ -232,8 +263,7 @@ function useAdminData(page) {
                 }
 
                 if (page === "user-views") {
-                    const params = new URLSearchParams(window.location.search);
-                    const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
+                    const userSeq = parseUserSeqFromPathname(window.location.pathname);
                     if (Number.isFinite(userSeq) && userSeq > 0) {
                         await loadUserViewHistories(userSeq, 200);
                     } else {
@@ -341,12 +371,11 @@ function Navigation({activePage, onNavigate}) {
         () => [
             {href: "/", label: "Home", key: "home"},
             {href: "/Admin", label: "Dashboard", key: "dashboard"},
-            {href: "/Admin/Sites", label: "All Sites", key: "sites"},
-            {href: "/Admin/SiteUsers", label: "Site Users", key: "users"},
-            {href: "/Admin/AllUsers", label: "All Users", key: "all-users"},
-            {href: "/Admin/UserViews", label: "User Views", key: "user-views"},
-            {href: "/Admin/Operations", label: "Operations", key: "operations"},
-            {href: "/Admin/RecentChanges", label: "Recent Changes", key: "recent-changes"},
+            {href: "/Admin/Site", label: "Site", key: "sites"},
+            {href: "/Admin/SiteUser", label: "Site User", key: "users"},
+            {href: "/Admin/User", label: "User", key: "all-users"},
+            {href: "/Admin/Operation", label: "Operation", key: "operations"},
+            {href: "/Admin/RecentChange", label: "Recent Change", key: "recent-changes"},
         ],
         [],
     );
@@ -361,8 +390,8 @@ function Navigation({activePage, onNavigate}) {
                     key={link.key}
                     href={link.href}
                     label={link.label}
-                    active={activePage === link.key}
-                    variant={activePage === link.key ? "filled" : "light"}
+                    active={activePage === link.key || (activePage === "user-views" && link.key === "all-users")}
+                    variant={activePage === link.key || (activePage === "user-views" && link.key === "all-users") ? "filled" : "light"}
                     onClick={(event) => {
                         if (link.key === "home") {
                             return;
@@ -652,9 +681,13 @@ function AdminContent({page}) {
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
     const selectedUserSeq = useMemo(() => {
+        const userSeqByPath = parseUserSeqFromPathname(window.location.pathname);
+        if (userSeqByPath > 0) {
+            return userSeqByPath;
+        }
         const params = new URLSearchParams(window.location.search);
-        const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
-        return Number.isFinite(userSeq) && userSeq > 0 ? userSeq : 0;
+        const userSeqByQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
+        return Number.isFinite(userSeqByQuery) && userSeqByQuery > 0 ? userSeqByQuery : 0;
     }, [page]);
     const selectedAllUser = useMemo(
         () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
@@ -775,7 +808,7 @@ function AdminContent({page}) {
                                         size="xs"
                                         variant="light"
                                         onClick={() => {
-                                            window.location.href = `/Admin/UserViews?userSeq=${encodeURIComponent(user.seq)}`;
+                                            window.location.href = `/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`;
                                         }}
                                     >
                                         열람 이력
@@ -800,15 +833,15 @@ function AdminContent({page}) {
                     선택한 사용자의 페이지 열람 이력입니다. Site 및 Page 링크로 직접 이동할 수 있습니다.
                 </Text>
                 <Group mb="md" justify="space-between">
-                    <Button component="a" href="/Admin/AllUsers" variant="light" size="xs">
-                        ← All Users
+                    <Button component="a" href="/Admin/User" variant="light" size="xs">
+                        ← User
                     </Button>
                     {selectedAllUser ? (
                         <Text size="sm">
                             사용자: <b>{selectedAllUser.nickname}</b> ({selectedAllUser.email})
                         </Text>
                     ) : (
-                        <Text size="sm" c="dimmed">userSeq를 지정해 주세요. (/Admin/UserViews?userSeq=숫자)</Text>
+                        <Text size="sm" c="dimmed">seq를 지정해 주세요. (/Admin/User/UserViewHistory?seq=숫자)</Text>
                     )}
                 </Group>
                 {loadingUserViewHistories ? (

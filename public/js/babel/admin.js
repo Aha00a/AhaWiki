@@ -30,6 +30,24 @@ function logError(...args) {
   console.error(LOG_PREFIX, ...args);
 }
 function routeToPage(pathname) {
+  if (pathname === "/Admin/User/UserViewHistory") {
+    return "user-views";
+  }
+  if (pathname === "/Admin/Site") {
+    return "sites";
+  }
+  if (pathname === "/Admin/SiteUser") {
+    return "users";
+  }
+  if (pathname === "/Admin/User") {
+    return "all-users";
+  }
+  if (pathname === "/Admin/Operation") {
+    return "operations";
+  }
+  if (pathname === "/Admin/RecentChange") {
+    return "recent-changes";
+  }
   if (pathname === "/Admin/Sites") {
     return "sites";
   }
@@ -49,6 +67,18 @@ function routeToPage(pathname) {
     return "recent-changes";
   }
   return "dashboard";
+}
+function parseUserSeqFromPathname(pathname) {
+  if (pathname !== "/Admin/User/UserViewHistory") {
+    return 0;
+  }
+  const params = new URLSearchParams(window.location.search);
+  const userSeqBySeq = Number.parseInt(params.get("seq") ?? "", 10);
+  if (Number.isFinite(userSeqBySeq) && userSeqBySeq > 0) {
+    return userSeqBySeq;
+  }
+  const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
+  return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 async function fetchJson(url) {
   logInfo("fetch:start", url);
@@ -216,8 +246,7 @@ function useAdminData(page) {
           return;
         }
         if (page === "user-views") {
-          const params = new URLSearchParams(window.location.search);
-          const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
+          const userSeq = parseUserSeqFromPathname(window.location.pathname);
           if (Number.isFinite(userSeq) && userSeq > 0) {
             await loadUserViewHistories(userSeq, 200);
           } else {
@@ -300,12 +329,11 @@ function Navigation({ activePage, onNavigate }) {
     () => [
       { href: "/", label: "Home", key: "home" },
       { href: "/Admin", label: "Dashboard", key: "dashboard" },
-      { href: "/Admin/Sites", label: "All Sites", key: "sites" },
-      { href: "/Admin/SiteUsers", label: "Site Users", key: "users" },
-      { href: "/Admin/AllUsers", label: "All Users", key: "all-users" },
-      { href: "/Admin/UserViews", label: "User Views", key: "user-views" },
-      { href: "/Admin/Operations", label: "Operations", key: "operations" },
-      { href: "/Admin/RecentChanges", label: "Recent Changes", key: "recent-changes" }
+      { href: "/Admin/Site", label: "Site", key: "sites" },
+      { href: "/Admin/SiteUser", label: "Site User", key: "users" },
+      { href: "/Admin/User", label: "User", key: "all-users" },
+      { href: "/Admin/Operation", label: "Operation", key: "operations" },
+      { href: "/Admin/RecentChange", label: "Recent Change", key: "recent-changes" }
     ],
     []
   );
@@ -315,8 +343,8 @@ function Navigation({ activePage, onNavigate }) {
       key: link.key,
       href: link.href,
       label: link.label,
-      active: activePage === link.key,
-      variant: activePage === link.key ? "filled" : "light",
+      active: activePage === link.key || activePage === "user-views" && link.key === "all-users",
+      variant: activePage === link.key || activePage === "user-views" && link.key === "all-users" ? "filled" : "light",
       onClick: (event) => {
         if (link.key === "home") {
           return;
@@ -493,9 +521,13 @@ function AdminContent({ page }) {
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
   const selectedUserSeq = useMemo(() => {
+    const userSeqByPath = parseUserSeqFromPathname(window.location.pathname);
+    if (userSeqByPath > 0) {
+      return userSeqByPath;
+    }
     const params = new URLSearchParams(window.location.search);
-    const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
-    return Number.isFinite(userSeq) && userSeq > 0 ? userSeq : 0;
+    const userSeqByQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
+    return Number.isFinite(userSeqByQuery) && userSeqByQuery > 0 ? userSeqByQuery : 0;
   }, [page]);
   const selectedAllUser = useMemo(
     () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
@@ -532,14 +564,14 @@ function AdminContent({ page }) {
         size: "xs",
         variant: "light",
         onClick: () => {
-          window.location.href = `/Admin/UserViews?userSeq=${encodeURIComponent(user.seq)}`;
+          window.location.href = `/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`;
         }
       },
       "\uC5F4\uB78C \uC774\uB825"
     )))))));
   }
   if (page === "user-views") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "User View Histories"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Button, { component: "a", href: "/Admin/AllUsers", variant: "light", size: "xs" }, "\u2190 All Users"), selectedAllUser ? /* @__PURE__ */ React.createElement(Text, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "userSeq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/UserViews?userSeq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "User View Histories"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Button, { component: "a", href: "/Admin/User", variant: "light", size: "xs" }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React.createElement(Text, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
       ["When", "Site", "Page", "History Seq"],
       userViewHistories.map((history) => {
         const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";

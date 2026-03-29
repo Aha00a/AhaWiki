@@ -32,6 +32,12 @@ GET           /google/oauth/callback                controllers.GoogleOAuth.call
 
 GET           /Admin                                controllers.Admin.index
 GET           /Admin/                               controllers.Admin.index
+GET           /Admin/Site                           controllers.Admin.index
+GET           /Admin/SiteUser                       controllers.Admin.index
+GET           /Admin/User                           controllers.Admin.index
+GET           /Admin/User/UserViewHistory           controllers.Admin.index
+GET           /Admin/Operation                      controllers.Admin.index
+GET           /Admin/RecentChange                   controllers.Admin.index
 GET           /Admin/Sites                          controllers.Admin.sites
 GET           /Admin/SiteUsers                     controllers.Admin.siteUsers
 GET           /Admin/AllUsers                      controllers.Admin.index
