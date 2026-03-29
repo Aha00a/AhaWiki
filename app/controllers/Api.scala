@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import anorm.SqlParser.{long, str}
 import anorm._
+import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -12,6 +13,7 @@ import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
+import logics.wikis.SignedReadUrlLogic
 import logics.wikis.ExtractConvertInjectMacro
 import logics.wikis.interpreters.Interpreters
 import models.Adjacent
@@ -23,6 +25,7 @@ import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import models.tables.UserSite
+import play.api.Configuration
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -46,13 +49,66 @@ class Api @Inject()(
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
   executionContext: ExecutionContext,
-  applicationLifecycleHook: ApplicationLifecycleHook
+  applicationLifecycleHook: ApplicationLifecycleHook,
+  configuration: Configuration
 ) extends BaseController {
   private def isAdmin(implicit request: RequestHeader): Boolean = {
     SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
   }
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
+
+
+  private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
+
+
+  def adminGenerateSignedReadUrl: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      val name = request.getQueryString("name").map(_.trim).getOrElse("")
+      val revision = request.getQueryString("revision").flatMap(v => scala.util.Try(v.toInt).toOption).getOrElse(0)
+      val actionInput = request.getQueryString("action").getOrElse("")
+      val action = actionInput match {
+        case "" | "view" => "view"
+        case "raw" => "raw"
+        case "history" => "history"
+        case "diff" => "diff"
+        case _ => ""
+      }
+
+      if (signedReadUrlSecret.isEmpty) {
+        InternalServerError(Json.obj("error" -> Json.fromString("Signed URL secret is not configured.")).toString()).as(JSON)
+      } else if (name.isEmpty) {
+        BadRequest(Json.obj("error" -> Json.fromString("Query parameter 'name' is required.")).toString()).as(JSON)
+      } else if (action.isEmpty) {
+        BadRequest(Json.obj("error" -> Json.fromString("action must be one of: view, raw, history, diff")).toString()).as(JSON)
+      } else {
+        val expiresAt = java.time.Instant.now().getEpochSecond + SignedReadUrlLogic.ValidDurationSeconds
+        val signature = SignedReadUrlLogic.signReadRequest(
+          host = request.host,
+          name = name,
+          revision = revision,
+          action = action,
+          expiresAtEpochSeconds = expiresAt,
+          secret = signedReadUrlSecret,
+        )
+
+        val basePath = routes.Wiki.view(java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20"), revision, action).url
+        val separator = if (basePath.contains("?")) "&" else "?"
+        val signedPath = s"$basePath$separator${SignedReadUrlLogic.QueryParamExpires}=$expiresAt&${SignedReadUrlLogic.QueryParamSignature}=$signature"
+
+        Ok(Json.obj(
+          "name" -> Json.fromString(name),
+          "revision" -> Json.fromInt(revision),
+          "action" -> Json.fromString(action),
+          "expiresAtEpochSeconds" -> Json.fromLong(expiresAt),
+          "signedPath" -> Json.fromString(signedPath),
+          "signedUrl" -> Json.fromString(s"${request.scheme}://${request.host}$signedPath"),
+        ).toString()).as(JSON)
+      }
+    }
+  }
 
   def adminSites: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {

@@ -13,6 +13,7 @@ import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.WikiSnippet
+import logics.wikis.SignedReadUrlLogic
 import logics.wikis.interpreters.Interpreters
 import models.RequestWrapper
 import models._
@@ -21,6 +22,7 @@ import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
 import play.api.Environment
+import play.api.Configuration
 import play.api.Logging
 import play.api.Mode
 import play.api.data.Form
@@ -56,7 +58,8 @@ controllerComponents: ControllerComponents,
                      applicationConf: ApplicationConf,
                      ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
-                     executionContext: ExecutionContext
+                     executionContext: ExecutionContext,
+                     configuration: Configuration
                     ) extends BaseController with Logging {
 
   implicit class RichResult(result: Result) {
@@ -66,6 +69,8 @@ controllerComponents: ControllerComponents,
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+
+  private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
 
   private def sanitizeAttachmentPathSegment(v: String): String = {
     val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
@@ -111,7 +116,17 @@ controllerComponents: ControllerComponents,
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()
-      val isReadable = wikiPermission.isReadable(pageLastRevisionContent)
+      val isReadableByPermission = wikiPermission.isReadable(pageLastRevisionContent)
+      val isReadableBySignedUrl = SignedReadUrlLogic.verifyReadRequest(
+        host = request.host,
+        name = name,
+        revision = revision,
+        action = action,
+        expiresAtEpochSeconds = SignedReadUrlLogic.parseEpochSecond(request.getQueryString(SignedReadUrlLogic.QueryParamExpires)),
+        signature = request.getQueryString(SignedReadUrlLogic.QueryParamSignature),
+        secret = signedReadUrlSecret,
+      )
+      val isReadable = isReadableByPermission || isReadableBySignedUrl
       val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
 
       logPermissionMismatchInDev(name, isReadable, isWritable)

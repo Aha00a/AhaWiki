@@ -16,6 +16,7 @@ import {
     SimpleGrid,
     Stack,
     Table,
+    Select,
     Text,
     TextInput,
     ThemeIcon,
@@ -659,6 +660,115 @@ function MultiTrendChart({series}) {
     );
 }
 
+
+function SignedReadUrlCard() {
+    const [pageName, setPageName] = useState("");
+    const [revision, setRevision] = useState("0");
+    const [action, setAction] = useState("view");
+    const [loading, setLoading] = useState(false);
+    const [signedUrl, setSignedUrl] = useState("");
+    const [expiresAt, setExpiresAt] = useState("");
+    const [error, setError] = useState("");
+
+    return (
+        <Card withBorder radius="md" padding="lg">
+            <Group justify="space-between" mb="md">
+                <Title order={3}>Signed Read URL</Title>
+                <Badge color="cyan" variant="light">24h</Badge>
+            </Group>
+            <Text size="sm" c="dimmed" mb="md">
+                admin 전용 읽기 URL을 생성합니다. 권한과 무관하게 읽기(view/raw/history/diff)만 허용되고 1일 후 만료됩니다.
+            </Text>
+            <Stack gap="sm">
+                <TextInput
+                    label="Page name"
+                    placeholder="예: PrivatePage"
+                    value={pageName}
+                    onChange={(event) => setPageName(event.currentTarget.value)}
+                />
+                <Group grow align="flex-end">
+                    <TextInput
+                        label="Revision"
+                        placeholder="0"
+                        value={revision}
+                        onChange={(event) => setRevision(event.currentTarget.value)}
+                    />
+                    <Select
+                        label="Action"
+                        value={action}
+                        onChange={(value) => setAction(value ?? "view")}
+                        data={[
+                            {value: "view", label: "view"},
+                            {value: "raw", label: "raw"},
+                            {value: "history", label: "history"},
+                            {value: "diff", label: "diff"},
+                        ]}
+                    />
+                </Group>
+                <Group>
+                    <Button
+                        loading={loading}
+                        onClick={async () => {
+                            const trimmedName = pageName.trim();
+                            const parsedRevision = Number.parseInt(revision, 10);
+                            const safeRevision = Number.isFinite(parsedRevision) ? Math.max(0, parsedRevision) : 0;
+                            if (!trimmedName) {
+                                setError("page name을 입력해 주세요.");
+                                setSignedUrl("");
+                                setExpiresAt("");
+                                return;
+                            }
+
+                            setLoading(true);
+                            setError("");
+                            try {
+                                const params = new URLSearchParams({
+                                    name: trimmedName,
+                                    revision: String(safeRevision),
+                                    action: action ?? "view",
+                                });
+                                const result = await fetchJson(`/api/Admin/SignedReadUrl?${params.toString()}`);
+                                setSignedUrl(result?.signedUrl ?? "");
+                                const epoch = Number(result?.expiresAtEpochSeconds ?? 0);
+                                setExpiresAt(epoch > 0 ? new Date(epoch * 1000).toLocaleString() : "");
+                            } catch (caughtError) {
+                                setError(caughtError.message || String(caughtError));
+                                setSignedUrl("");
+                                setExpiresAt("");
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}
+                    >
+                        Generate URL
+                    </Button>
+                    {signedUrl ? (
+                        <Button
+                            variant="light"
+                            onClick={async () => {
+                                try {
+                                    await navigator.clipboard.writeText(signedUrl);
+                                } catch (caughtError) {
+                                    setError(`클립보드 복사 실패: ${caughtError.message || String(caughtError)}`);
+                                }
+                            }}
+                        >
+                            Copy URL
+                        </Button>
+                    ) : null}
+                </Group>
+                {expiresAt ? <Text size="sm">Expires at: {expiresAt}</Text> : null}
+                {signedUrl ? (
+                    <Anchor href={signedUrl} target="_blank" rel="noopener noreferrer" style={{wordBreak: "break-all"}}>
+                        {signedUrl}
+                    </Anchor>
+                ) : null}
+                {error ? <Text size="sm" c="red">{error}</Text> : null}
+            </Stack>
+        </Card>
+    );
+}
+
 function AdminContent({page, onNavigate}) {
     const {
         loading,
@@ -907,6 +1017,7 @@ function AdminContent({page, onNavigate}) {
                         </Table.Tbody>
                     </Table>
                 </Card>
+                <SignedReadUrlCard/>
                 <Card withBorder radius="md" padding="lg">
                     <SchedulerTable
                         schedulers={schedulers}

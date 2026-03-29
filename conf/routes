@@ -54,6 +54,7 @@ GET           /api/Admin/UserViews                 controllers.Api.adminUserView
 GET           /api/Admin/Schedulers                 controllers.Api.adminSchedulers
 GET           /api/Admin/DailyStats                controllers.Api.adminDailyStats
 GET           /api/Admin/RecentChanges             controllers.Api.adminRecentChanges
+GET           /api/Admin/SignedReadUrl            controllers.Api.adminGenerateSignedReadUrl
 GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames
