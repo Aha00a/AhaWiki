@@ -408,7 +408,7 @@ controllerComponents: ControllerComponents,
   }
 
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
+    database.withTransaction { implicit connection =>
       val name = Form("name" -> text).bindFromRequest.get
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)

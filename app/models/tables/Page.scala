@@ -12,6 +12,7 @@ import models.tables
 import zio.json._
 
 import java.sql.Connection
+import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
@@ -182,7 +183,14 @@ INSERT INTO Page
   // TODO: apply transaction
   def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection, site: Site): Int = {
     deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+    try {
+      SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+    } catch {
+      case _: SQLIntegrityConstraintViolationException =>
+        // async recalculation can re-insert calculated rows between delete and page removal
+        deleteLinkCosignSimilarityTermFrequency(name)
+        SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+    }
   }
 
   // TODO: apply transaction
