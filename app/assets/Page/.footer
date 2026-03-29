@@ -27,6 +27,8 @@ You can use raw html and wiki, freely.
 
 [[Navigation]]
 
+[[Html(<div style="float:right; font-size: 0.75em; color: #aaa">)]]Uptime: [[Uptime]][[Html(</div>)]]
+
 Site powered by [AhaWiki]
 
 [[[#!html
