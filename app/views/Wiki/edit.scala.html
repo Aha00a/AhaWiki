@@ -225,6 +225,7 @@
             const uploadingMap = new Map();
             let macroNames = [];
             let interpreterNames = [];
+            let pageNames = [];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;
@@ -238,6 +239,17 @@
                 return {
                     start: cursorIndex - match[1].length,
                     prefix: match[1]
+                };
+            }
+
+            function getPagePrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const match = left.match(/(^|[^\[])\[([^\[\]\n]*)$/);
+                if (!match)
+                    return null;
+                return {
+                    start: cursorIndex - match[2].length,
+                    prefix: match[2]
                 };
             }
 
@@ -287,20 +299,19 @@
 
                 const selectionStart = macroAutocompleteContext.start;
                 const selectionEnd = macroAutocompleteContext.cursor;
-                const isMacroAutocomplete = autocompleteSuggestionType !== 'interpreter';
+                const isMacroAutocomplete = autocompleteSuggestionType === 'macro';
+                const insertText = isMacroAutocomplete ? (selected + '()') : selected;
+                const cursorOffset = isMacroAutocomplete ? (selected.length + 1) : selected.length;
                 if (macroAutocompleteContext.type === 'codemirror') {
                     const cm = getEditor();
                     if (!cm) {
                         hideMacroAutocomplete();
                         return;
                     }
-                    const currentValue = cm.getValue();
-                    const trailing = currentValue.slice(selectionEnd, selectionEnd + 2);
-                    const insertText = isMacroAutocomplete && trailing !== ']]' ? (selected + ']]') : selected;
                     const from = cm.posFromIndex(selectionStart);
                     const to = cm.posFromIndex(selectionEnd);
                     cm.replaceRange(insertText, from, to);
-                    const cursor = cm.posFromIndex(selectionStart + insertText.length);
+                    const cursor = cm.posFromIndex(selectionStart + cursorOffset);
                     cm.setCursor(cursor);
                     cm.focus();
                     cm.save();
@@ -312,11 +323,9 @@
                         return;
                     }
                     const value = element.value;
-                    const trailing = value.slice(selectionEnd, selectionEnd + 2);
-                    const insertText = isMacroAutocomplete && trailing !== ']]' ? (selected + ']]') : selected;
                     element.value = value.substring(0, selectionStart) + insertText + value.substring(selectionEnd);
-                    element.selectionStart = selectionStart + insertText.length;
-                    element.selectionEnd = selectionStart + insertText.length;
+                    element.selectionStart = selectionStart + cursorOffset;
+                    element.selectionEnd = selectionStart + cursorOffset;
                     $(element).focus().trigger('input');
                 }
 
@@ -332,11 +341,24 @@
             }
 
             function showMacroAutocomplete(context) {
+                const pagePrefixInfo = getPagePrefix(context.value, context.cursor);
                 const macroPrefixInfo = getMacroPrefix(context.value, context.cursor);
                 const interpreterPrefixInfo = getInterpreterPrefix(context.value, context.cursor);
-                const isInterpreterAutocomplete = !!interpreterPrefixInfo;
-                const prefixInfo = interpreterPrefixInfo || macroPrefixInfo;
-                const sourceNames = isInterpreterAutocomplete ? interpreterNames : macroNames;
+                const autocompleteType = interpreterPrefixInfo
+                    ? 'interpreter'
+                    : macroPrefixInfo
+                        ? 'macro'
+                        : pagePrefixInfo
+                            ? 'page'
+                            : null;
+                const prefixInfo = interpreterPrefixInfo || macroPrefixInfo || pagePrefixInfo;
+                const sourceNames = autocompleteType === 'interpreter'
+                    ? interpreterNames
+                    : autocompleteType === 'macro'
+                        ? macroNames
+                        : autocompleteType === 'page'
+                            ? pageNames
+                            : [];
 
                 if (!prefixInfo || !sourceNames.length) {
                     hideMacroAutocomplete();
@@ -360,7 +382,7 @@
                     start: prefixInfo.start,
                     cursor: context.cursor
                 };
-                autocompleteSuggestionType = isInterpreterAutocomplete ? 'interpreter' : 'macro';
+                autocompleteSuggestionType = autocompleteType;
                 renderMacroAutocomplete();
                 const left = context.rect.left + window.scrollX;
                 const top = context.rect.bottom + window.scrollY + 4;
@@ -416,6 +438,16 @@
                     })
                     .fail(function () {
                         interpreterNames = [];
+                    });
+            }
+
+            function loadPageNames() {
+                $.get('@routes.Api.pageNames')
+                    .done(function (data) {
+                        pageNames = Array.isArray(data) ? data : [];
+                    })
+                    .fail(function () {
+                        pageNames = [];
                     });
             }
 
@@ -633,6 +665,7 @@
             loadAttachments();
             loadMacroNames();
             loadInterpreterNames();
+            loadPageNames();
 
             $(document).on('dragenter', function (e) {
                 if (!hasFiles(e))
