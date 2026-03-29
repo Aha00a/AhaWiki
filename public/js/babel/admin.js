@@ -17,7 +17,6 @@ import {
   SimpleGrid,
   Stack,
   Table,
-  Select,
   Text,
   TextInput,
   ThemeIcon,
@@ -500,94 +499,6 @@ function MultiTrendChart({ series }) {
     );
   })), /* @__PURE__ */ React.createElement(Group, { gap: 8 }, mappedSeries.map((line) => /* @__PURE__ */ React.createElement(Badge, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
-function SignedReadUrlCard() {
-  const [pageName, setPageName] = useState("");
-  const [revision, setRevision] = useState("0");
-  const [action, setAction] = useState("view");
-  const [loading, setLoading] = useState(false);
-  const [signedUrl, setSignedUrl] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
-  const [error, setError] = useState("");
-  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Signed Read URL"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, "24h")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "admin \uC804\uC6A9 \uC77D\uAE30 URL\uC744 \uC0DD\uC131\uD569\uB2C8\uB2E4. \uAD8C\uD55C\uACFC \uBB34\uAD00\uD558\uAC8C \uC77D\uAE30(view/raw/history/diff)\uB9CC \uD5C8\uC6A9\uB418\uACE0 1\uC77C \uD6C4 \uB9CC\uB8CC\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(
-    TextInput,
-    {
-      label: "Page name",
-      placeholder: "\uC608: PrivatePage",
-      value: pageName,
-      onChange: (event) => setPageName(event.currentTarget.value)
-    }
-  ), /* @__PURE__ */ React.createElement(Group, { grow: true, align: "flex-end" }, /* @__PURE__ */ React.createElement(
-    TextInput,
-    {
-      label: "Revision",
-      placeholder: "0",
-      value: revision,
-      onChange: (event) => setRevision(event.currentTarget.value)
-    }
-  ), /* @__PURE__ */ React.createElement(
-    Select,
-    {
-      label: "Action",
-      value: action,
-      onChange: (value) => setAction(value ?? "view"),
-      data: [
-        { value: "view", label: "view" },
-        { value: "raw", label: "raw" },
-        { value: "history", label: "history" },
-        { value: "diff", label: "diff" }
-      ]
-    }
-  )), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
-    Button,
-    {
-      loading,
-      onClick: async () => {
-        const trimmedName = pageName.trim();
-        const parsedRevision = Number.parseInt(revision, 10);
-        const safeRevision = Number.isFinite(parsedRevision) ? Math.max(0, parsedRevision) : 0;
-        if (!trimmedName) {
-          setError("page name\uC744 \uC785\uB825\uD574 \uC8FC\uC138\uC694.");
-          setSignedUrl("");
-          setExpiresAt("");
-          return;
-        }
-        setLoading(true);
-        setError("");
-        try {
-          const params = new URLSearchParams({
-            name: trimmedName,
-            revision: String(safeRevision),
-            action: action ?? "view"
-          });
-          const result = await fetchJson(`/api/Admin/SignedReadUrl?${params.toString()}`);
-          setSignedUrl(result?.signedUrl ?? "");
-          const epoch = Number(result?.expiresAtEpochSeconds ?? 0);
-          setExpiresAt(epoch > 0 ? new Date(epoch * 1e3).toLocaleString() : "");
-        } catch (caughtError) {
-          setError(caughtError.message || String(caughtError));
-          setSignedUrl("");
-          setExpiresAt("");
-        } finally {
-          setLoading(false);
-        }
-      }
-    },
-    "Generate URL"
-  ), signedUrl ? /* @__PURE__ */ React.createElement(
-    Button,
-    {
-      variant: "light",
-      onClick: async () => {
-        try {
-          await navigator.clipboard.writeText(signedUrl);
-        } catch (caughtError) {
-          setError(`\uD074\uB9BD\uBCF4\uB4DC \uBCF5\uC0AC \uC2E4\uD328: ${caughtError.message || String(caughtError)}`);
-        }
-      }
-    },
-    "Copy URL"
-  ) : null), expiresAt ? /* @__PURE__ */ React.createElement(Text, { size: "sm" }, "Expires at: ", expiresAt) : null, signedUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: signedUrl, target: "_blank", rel: "noopener noreferrer", style: { wordBreak: "break-all" } }, signedUrl) : null, error ? /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "red" }, error) : null));
-}
 function AdminContent({ page, onNavigate }) {
   const {
     loading,
@@ -683,7 +594,7 @@ function AdminContent({ page, onNavigate }) {
         onClick: () => clearSiteCache(site.seq)
       },
       "Clear cache"
-    ))))))), /* @__PURE__ */ React.createElement(SignedReadUrlCard, null), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
+    ))))))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
       SchedulerTable,
       {
         schedulers,
