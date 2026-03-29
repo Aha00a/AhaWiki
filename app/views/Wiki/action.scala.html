@@ -1,4 +1,4 @@
-@(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page)(implicit wikiContext:ContextWikiPage)
+@(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page, hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @kbdHotKey(key: String) = {<kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>}
 @isAdmin = @{ wikiContext.requestWrapper.getUser.exists(u => u.email == "aha00a@gmail.com" || u.seq == 1) }
 @currentAction = @{ wikiContext.requestWrapper.getQueryString("action").getOrElse("") }
@@ -78,7 +78,7 @@
             <div class="last">last modified by @wikiLast.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous")) at <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
             <div class="revision">revision: <a href="?action=blame" rel="nofollow">@(wikiLast.revision)</a> </div>
         }
-        @if(isAdmin && (currentAction == "" || currentAction == "view") && currentRevision > 0) {
+        @if(isAdmin && hasReadPermissionRestriction && (currentAction == "" || currentAction == "view") && currentRevision > 0) {
             <div class="signedReadUrlAction">
                 <a href="#" id="generateSignedViewUrl" rel="nofollow" data-page-name="@wikiContext.name" data-revision="@currentRevision"><i class="fas fa-link"></i>Generate signed URL (view r@currentRevision)</a>
             </div>

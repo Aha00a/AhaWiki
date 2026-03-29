@@ -116,6 +116,7 @@ controllerComponents: ControllerComponents,
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()
+      val hasReadPermissionRestriction = !wikiPermission.getReadDirective(pageLastRevisionContent).contains("all")
       val isReadableByPermission = wikiPermission.isReadable(pageLastRevisionContent)
       val isReadableBySignedUrl = SignedReadUrlLogic.verifyReadRequest(
         host = request.host,
@@ -146,7 +147,7 @@ controllerComponents: ControllerComponents,
           renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
 
         case (Some(page), "" | "view", true, _) =>
-          renderReadablePage(page, name, isWritable, pageFirstRevision, pageLastRevision)
+          renderReadablePage(page, name, isWritable, hasReadPermissionRestriction, pageFirstRevision, pageLastRevision)
         case (Some(page), "diff", true, _) =>
           renderDiffPage(name)
 
@@ -201,6 +202,7 @@ controllerComponents: ControllerComponents,
   private def renderReadablePage(page: Page,
                                  name: String,
                                  isWritable: Boolean,
+                                 hasReadPermissionRestriction: Boolean,
                                  pageFirstRevision: Option[Page],
                                  pageLastRevision: Option[Page])
                                 (implicit request: Request[AnyContent], wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
@@ -219,13 +221,13 @@ controllerComponents: ControllerComponents,
           Ok(pageContent.interpreter match {
             case Some("Paper") =>
               val contentInterpreted = Interpreters.toHtmlString(page.content)
-              views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+              views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
             case None | Some("Wiki") =>
               val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
-              views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+              views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
             case _ =>
               val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
-              views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision)
+              views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
           })
       }
     }

@@ -1,4 +1,4 @@
-@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
+@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @_base(title, description) {
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
@@ -54,9 +54,16 @@
         });
     </script>
 } {
+    @if(hasReadPermissionRestriction) {
+        <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
+            <div class="info">
+                This page has permission restrictions applied.
+            </div>
+        </div>
+    }
     <div class="@(interpreter)">
         <div class="limitWidth">
-            @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
+            @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull, hasReadPermissionRestriction)
         </div>
         <div class="wikiContent @title">
             <div class="limitWidth">
