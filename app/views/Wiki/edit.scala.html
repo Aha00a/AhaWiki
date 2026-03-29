@@ -258,6 +258,10 @@
                         });
                     $macroAutocomplete.append($item);
                 });
+                const $activeItem = $macroAutocomplete.find('.macroAutocompleteItem.active').first();
+                if ($activeItem.length) {
+                    $activeItem.get(0).scrollIntoView({ block: 'nearest' });
+                }
             }
 
             function applyMacroAutocompleteSuggestion(index) {
