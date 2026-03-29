@@ -35,6 +35,7 @@ GET           /Admin/                               controllers.Admin.index
 GET           /Admin/Sites                          controllers.Admin.sites
 GET           /Admin/SiteUsers                     controllers.Admin.siteUsers
 GET           /Admin/AllUsers                      controllers.Admin.index
+GET           /Admin/UserViews                     controllers.Admin.index
 GET           /Admin/Operations                     controllers.Admin.index
 GET           /Admin/RecentChanges                 controllers.Admin.index
 

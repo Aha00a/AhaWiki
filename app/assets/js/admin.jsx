@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {createRoot} from "react-dom/client";
 import {
     MantineProvider,
+    Anchor,
     AppShell,
     Badge,
     Button,
@@ -40,6 +41,9 @@ function routeToPage(pathname) {
     }
     if (pathname === "/Admin/AllUsers") {
         return "all-users";
+    }
+    if (pathname === "/Admin/UserViews") {
+        return "user-views";
     }
     if (pathname === "/Admin/Operations") {
         return "operations";
@@ -227,6 +231,29 @@ function useAdminData(page) {
                     return;
                 }
 
+                if (page === "user-views") {
+                    const params = new URLSearchParams(window.location.search);
+                    const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
+                    if (Number.isFinite(userSeq) && userSeq > 0) {
+                        await loadUserViewHistories(userSeq, 200);
+                    } else {
+                        setUserViewHistories([]);
+                    }
+                    if (mounted) {
+                        setUsers([]);
+                        setSites([]);
+                        setAllUsers([]);
+                        setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
+                    }
+                    return;
+                }
+
                 if (page === "recent-changes") {
                     await loadRecentChanges(50);
                     if (mounted) {
@@ -263,7 +290,7 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard, loadRecentChanges]);
+    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories]);
 
     return {
         loading,
@@ -300,7 +327,7 @@ function makeTable(headers, rows) {
                 {rows.map((columns, rowIndex) => (
                     <Table.Tr key={`row-${rowIndex}`}>
                         {columns.map((column, colIndex) => (
-                            <Table.Td key={`col-${rowIndex}-${colIndex}`}>{String(column ?? "")}</Table.Td>
+                            <Table.Td key={`col-${rowIndex}-${colIndex}`}>{column ?? ""}</Table.Td>
                         ))}
                     </Table.Tr>
                 ))}
@@ -317,6 +344,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/Admin/Sites", label: "All Sites", key: "sites"},
             {href: "/Admin/SiteUsers", label: "Site Users", key: "users"},
             {href: "/Admin/AllUsers", label: "All Users", key: "all-users"},
+            {href: "/Admin/UserViews", label: "User Views", key: "user-views"},
             {href: "/Admin/Operations", label: "Operations", key: "operations"},
             {href: "/Admin/RecentChanges", label: "Recent Changes", key: "recent-changes"},
         ],
@@ -623,7 +651,15 @@ function AdminContent({page}) {
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-    const [selectedAllUser, setSelectedAllUser] = useState(null);
+    const selectedUserSeq = useMemo(() => {
+        const params = new URLSearchParams(window.location.search);
+        const userSeq = Number.parseInt(params.get("userSeq") ?? "", 10);
+        return Number.isFinite(userSeq) && userSeq > 0 ? userSeq : 0;
+    }, [page]);
+    const selectedAllUser = useMemo(
+        () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
+        [allUsers, selectedUserSeq],
+    );
 
     if (loading) {
         return (
@@ -706,7 +742,7 @@ function AdminContent({page}) {
                     <Badge color="blue" variant="light">{allUsers.length} users</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    전체 사이트 기준 사용자 목록입니다. 사용자 행의 상세 조회 버튼으로 페이지 열람 이력을 확인할 수 있습니다.
+                    전체 사이트 기준 사용자 목록이며, 최근 방문순으로 정렬됩니다.
                 </Text>
                 <Divider mb="md"/>
                 <Table striped highlightOnHover withTableBorder withColumnBorders>
@@ -717,6 +753,7 @@ function AdminContent({page}) {
                             <Table.Th>Email</Table.Th>
                             <Table.Th>Nickname</Table.Th>
                             <Table.Th>Sites</Table.Th>
+                            <Table.Th>Visits</Table.Th>
                             <Table.Th>Created</Table.Th>
                             <Table.Th>Updated</Table.Th>
                             <Table.Th>Last Viewed</Table.Th>
@@ -728,20 +765,19 @@ function AdminContent({page}) {
                                 <Table.Td>
                                     <Button
                                         size="xs"
-                                        variant={selectedAllUser?.seq === user.seq ? "filled" : "light"}
+                                        variant="light"
                                         onClick={() => {
-                                            setSelectedAllUser(user);
-                                            loadUserViewHistories(user.seq, 200);
+                                            window.location.href = `/Admin/UserViews?userSeq=${encodeURIComponent(user.seq)}`;
                                         }}
-                                        loading={loadingUserViewHistories && selectedAllUser?.seq === user.seq}
                                     >
-                                        상세 조회
+                                        열람 이력
                                     </Button>
                                 </Table.Td>
                                 <Table.Td>{user.seq}</Table.Td>
                                 <Table.Td>{user.email}</Table.Td>
                                 <Table.Td>{user.nickname}</Table.Td>
                                 <Table.Td>{user.siteCount ?? 0}</Table.Td>
+                                <Table.Td>{user.visitCount ?? 0}</Table.Td>
                                 <Table.Td>{user.created}</Table.Td>
                                 <Table.Td>{user.updated}</Table.Td>
                                 <Table.Td>{user.lastViewed ?? "-"}</Table.Td>
@@ -749,36 +785,49 @@ function AdminContent({page}) {
                         ))}
                     </Table.Tbody>
                 </Table>
-                <Divider my="md"/>
-                {selectedAllUser ? (
-                    <Stack gap="sm">
-                        <Group justify="space-between">
-                            <Title order={4}>
-                                사용자 열람 이력: {selectedAllUser.nickname} ({selectedAllUser.email})
-                            </Title>
-                            <Badge color="cyan" variant="light">
-                                {userViewHistories.length} rows
-                            </Badge>
-                        </Group>
-                        {loadingUserViewHistories ? (
-                            <Group>
-                                <Loader size="sm"/>
-                                <Text size="sm" c="dimmed">열람 이력을 불러오는 중입니다...</Text>
-                            </Group>
-                        ) : makeTable(
-                            ["When", "Site", "Page", "History Seq"],
-                            userViewHistories.map((history) => [
-                                history.viewedAt,
-                                `${history.siteName} (#${history.site})`,
-                                history.pageName,
-                                history.seq,
-                            ]),
-                        )}
-                    </Stack>
-                ) : (
-                    <Text size="sm" c="dimmed">
-                        특정 사용자의 상세 조회 버튼을 눌러 언제 어떤 페이지를 봤는지 확인하세요.
-                    </Text>
+            </Card>
+        );
+    }
+
+    if (page === "user-views") {
+        return (
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>User View Histories</Title>
+                    <Badge color="cyan" variant="light">{userViewHistories.length} rows</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    선택한 사용자의 페이지 열람 이력입니다. Site 및 Page 링크로 직접 이동할 수 있습니다.
+                </Text>
+                <Group mb="md" justify="space-between">
+                    <Button component="a" href="/Admin/AllUsers" variant="light" size="xs">
+                        ← All Users
+                    </Button>
+                    {selectedAllUser ? (
+                        <Text size="sm">
+                            사용자: <b>{selectedAllUser.nickname}</b> ({selectedAllUser.email})
+                        </Text>
+                    ) : (
+                        <Text size="sm" c="dimmed">userSeq를 지정해 주세요. (/Admin/UserViews?userSeq=숫자)</Text>
+                    )}
+                </Group>
+                {loadingUserViewHistories ? (
+                    <Group>
+                        <Loader size="sm"/>
+                        <Text size="sm" c="dimmed">열람 이력을 불러오는 중입니다...</Text>
+                    </Group>
+                ) : makeTable(
+                    ["When", "Site", "Page", "History Seq"],
+                    userViewHistories.map((history) => {
+                        const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";
+                        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(history.pageName)}` : "";
+                        return [
+                            history.viewedAt,
+                            siteUrl ? <Anchor href={siteUrl} target="_blank">{history.siteName} (#{history.site})</Anchor> : `${history.siteName} (#${history.site})`,
+                            pageUrl ? <Anchor href={pageUrl} target="_blank">{history.pageName}</Anchor> : history.pageName,
+                            history.seq,
+                        ];
+                    }),
                 )}
             </Card>
         );
@@ -1072,10 +1121,11 @@ function AdminApp({initialPage}) {
 
     const onNavigate = useCallback(
         (href) => {
-            if (window.location.pathname !== href) {
+            const currentPathWithSearch = `${window.location.pathname}${window.location.search}`;
+            if (currentPathWithSearch !== href) {
                 window.history.pushState({}, "", href);
             }
-            setPage(routeToPage(href));
+            setPage(routeToPage(new URL(href, window.location.origin).pathname));
         },
         [],
     );

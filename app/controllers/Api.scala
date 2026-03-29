@@ -123,7 +123,16 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminUser(seq: Long, created: String, updated: String, email: String, nickname: String, siteCount: Long, lastViewed: Option[String])
+        case class AdminUser(
+          seq: Long,
+          created: String,
+          updated: String,
+          email: String,
+          nickname: String,
+          siteCount: Long,
+          visitCount: Long,
+          lastViewed: Option[String],
+        )
 
         val users = SQL"""
           SELECT
@@ -133,6 +142,7 @@ class Api @Inject()(
             U.email,
             U.nickname,
             COALESCE(US.site_count, 0) AS site_count,
+            COALESCE(UV.visit_count, 0) AS visit_count,
             UV.last_viewed
           FROM User U
           LEFT JOIN (
@@ -141,13 +151,19 @@ class Api @Inject()(
             GROUP BY user
           ) US ON US.user = U.seq
           LEFT JOIN (
-            SELECT user, DATE_FORMAT(MAX(dateInserted), '%Y-%m-%d %H:%i:%s') AS last_viewed
+            SELECT
+              user,
+              COUNT(*) AS visit_count,
+              DATE_FORMAT(MAX(dateInserted), '%Y-%m-%d %H:%i:%s') AS last_viewed
             FROM UserViewHistory
             GROUP BY user
           ) UV ON UV.user = U.seq
-          ORDER BY U.seq DESC
-        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ str("last_viewed").?).map {
-          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount ~ lastViewed =>
+          ORDER BY
+            CASE WHEN UV.last_viewed IS NULL THEN 1 ELSE 0 END ASC,
+            UV.last_viewed DESC,
+            U.seq DESC
+        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
+          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount ~ visitCount ~ lastViewed =>
             AdminUser(
               seq = seq,
               created = created,
@@ -155,6 +171,7 @@ class Api @Inject()(
               email = email,
               nickname = nickname,
               siteCount = siteCount,
+              visitCount = visitCount,
               lastViewed = lastViewed,
             )
         }.*)
@@ -174,6 +191,7 @@ class Api @Inject()(
           user: Long,
           site: Long,
           siteName: String,
+          siteDomain: Option[String],
           pageName: String,
           viewedAt: String,
         )
@@ -186,20 +204,27 @@ class Api @Inject()(
             UV.user,
             UV.site,
             S.name AS site_name,
+            SD.site_domain,
             UV.pageName,
             DATE_FORMAT(UV.dateInserted, '%Y-%m-%d %H:%i:%s') AS viewed_at
           FROM UserViewHistory UV
           INNER JOIN Site S ON S.seq = UV.site
+          LEFT JOIN (
+            SELECT site, MIN(domain) AS site_domain
+            FROM SiteDomain
+            GROUP BY site
+          ) SD ON SD.site = UV.site
           WHERE UV.user = $userSeq
           ORDER BY UV.seq DESC
           LIMIT $limit
-        """.as((long("seq") ~ long("user") ~ long("site") ~ str("site_name") ~ str("pageName") ~ str("viewed_at")).map {
-          case seq ~ user ~ site ~ siteName ~ pageName ~ viewedAt =>
+        """.as((long("seq") ~ long("user") ~ long("site") ~ str("site_name") ~ str("site_domain").? ~ str("pageName") ~ str("viewed_at")).map {
+          case seq ~ user ~ site ~ siteName ~ siteDomain ~ pageName ~ viewedAt =>
             AdminUserViewHistory(
               seq = seq,
               user = user,
               site = site,
               siteName = siteName,
+              siteDomain = siteDomain,
               pageName = pageName,
               viewedAt = viewedAt,
             )
