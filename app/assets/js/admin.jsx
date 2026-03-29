@@ -659,7 +659,7 @@ function MultiTrendChart({series}) {
     );
 }
 
-function AdminContent({page}) {
+function AdminContent({page, onNavigate}) {
     const {
         loading,
         sites,
@@ -807,9 +807,7 @@ function AdminContent({page}) {
                                     <Button
                                         size="xs"
                                         variant="light"
-                                        onClick={() => {
-                                            window.location.href = `/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`;
-                                        }}
+                                        onClick={() => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`)}
                                     >
                                         열람 이력
                                     </Button>
@@ -833,7 +831,7 @@ function AdminContent({page}) {
                     선택한 사용자의 페이지 열람 이력입니다. Site 및 Page 링크로 직접 이동할 수 있습니다.
                 </Text>
                 <Group mb="md" justify="space-between">
-                    <Button component="a" href="/Admin/User" variant="light" size="xs">
+                    <Button variant="light" size="xs" onClick={() => onNavigate("/Admin/User")}>
                         ← User
                     </Button>
                     {selectedAllUser ? (
@@ -1196,7 +1194,7 @@ function AdminApp({initialPage}) {
                                 Live
                             </Badge>
                         </Group>
-                        <AdminContent page={page}/>
+                        <AdminContent page={page} onNavigate={onNavigate}/>
                     </Stack>
                 </AppShell.Main>
             </AppShell>
