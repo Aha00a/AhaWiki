@@ -748,20 +748,28 @@ function AdminContent({page}) {
                 <Table striped highlightOnHover withTableBorder withColumnBorders>
                     <Table.Thead>
                         <Table.Tr>
-                            <Table.Th>Action</Table.Th>
                             <Table.Th>Seq</Table.Th>
                             <Table.Th>Email</Table.Th>
                             <Table.Th>Nickname</Table.Th>
-                            <Table.Th>Sites</Table.Th>
-                            <Table.Th>Visits</Table.Th>
                             <Table.Th>Created</Table.Th>
                             <Table.Th>Updated</Table.Th>
+                            <Table.Th>Sites</Table.Th>
+                            <Table.Th>Visits</Table.Th>
                             <Table.Th>Last Viewed</Table.Th>
+                            <Table.Th>Action</Table.Th>
                         </Table.Tr>
                     </Table.Thead>
                     <Table.Tbody>
                         {allUsers.map((user) => (
                             <Table.Tr key={user.seq}>
+                                <Table.Td>{user.seq}</Table.Td>
+                                <Table.Td>{user.email}</Table.Td>
+                                <Table.Td>{user.nickname}</Table.Td>
+                                <Table.Td>{user.created}</Table.Td>
+                                <Table.Td>{user.updated}</Table.Td>
+                                <Table.Td>{user.siteCount ?? 0}</Table.Td>
+                                <Table.Td>{user.visitCount ?? 0}</Table.Td>
+                                <Table.Td>{user.lastViewed ?? "-"}</Table.Td>
                                 <Table.Td>
                                     <Button
                                         size="xs"
@@ -773,14 +781,6 @@ function AdminContent({page}) {
                                         열람 이력
                                     </Button>
                                 </Table.Td>
-                                <Table.Td>{user.seq}</Table.Td>
-                                <Table.Td>{user.email}</Table.Td>
-                                <Table.Td>{user.nickname}</Table.Td>
-                                <Table.Td>{user.siteCount ?? 0}</Table.Td>
-                                <Table.Td>{user.visitCount ?? 0}</Table.Td>
-                                <Table.Td>{user.created}</Table.Td>
-                                <Table.Td>{user.updated}</Table.Td>
-                                <Table.Td>{user.lastViewed ?? "-"}</Table.Td>
                             </Table.Tr>
                         ))}
                     </Table.Tbody>
