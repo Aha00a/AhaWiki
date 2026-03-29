@@ -101,6 +101,56 @@ controllerComponents: ControllerComponents,
     }
   }
 
+  private def getWritablePageContext(pageName: String)
+                                    (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
+    implicit val site: Site = SiteLogic.get(request.host)
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+    implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+    val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
+    if (!WikiPermission().isWritable(PageContent(latestText))) Left(Forbidden("Permission denied."))
+    else Right((site, contextWikiPage, provider))
+  }
+
+  private def buildAmazonS3Client(): com.amazonaws.services.s3.AmazonS3 = {
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    val credentials = new BasicAWSCredentials(
+      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+    )
+    AmazonS3ClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+      .build()
+  }
+
+  private def insertInitiatedAttachment(
+                                         siteSeq: Long,
+                                         pageName: String,
+                                         originalFilename: String,
+                                         objectKey: String,
+                                         contentType: String,
+                                         fileSize: Long,
+                                       )(implicit request: RequestHeader, connection: Connection): Unit = {
+    val currentUser = SessionLogic.getUser(request)
+    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+    val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
+    Attachment.insertInitiated(
+      site = siteSeq,
+      pageName = pageName,
+      user = currentUser.map(_.seq),
+      uploaderEmail = currentUser.map(_.email),
+      originalFilename = originalFilename,
+      storedFilename = storedFilename,
+      bucket = bucket,
+      objectKey = objectKey,
+      contentType = contentType,
+      fileSize = fileSize,
+    )
+  }
+
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
@@ -520,10 +570,6 @@ controllerComponents: ControllerComponents,
   }
 
   def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    import com.amazonaws.auth.AWSStaticCredentialsProvider
-    import com.amazonaws.auth.BasicAWSCredentials
-    import com.amazonaws.services.s3.AmazonS3
-    import com.amazonaws.services.s3.AmazonS3ClientBuilder
     import com.amazonaws.services.s3.model.ObjectMetadata
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
@@ -534,79 +580,64 @@ controllerComponents: ControllerComponents,
     (pageNameOption, fileOption) match {
       case (Some(pageName), Some(filePart)) =>
         database.withConnection { implicit connection =>
-          implicit val site: Site = SiteLogic.get(request.host)
-          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+          getWritablePageContext(pageName) match {
+            case Left(result) => result
+            case Right((site0, contextWikiPage0, provider0)) =>
+              implicit val site: Site = site0
+              implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
+              implicit val provider: RequestWrapper = provider0
+              val originalFileName = filePart.filename.trim
+              if (originalFileName.isEmpty) {
+                BadRequest("invalid file name")
+              } else {
+                val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
+                val objectKey = buildAttachmentObjectKey(
+                  site.seq,
+                  pageName,
+                  originalFileName = originalFileName,
+                  extension = if (extension.nonEmpty) extension else "bin",
+                )
 
-          val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
-          if (!WikiPermission().isWritable(PageContent(latestText))) {
-            Forbidden("Permission denied.")
-          } else {
-            val originalFileName = filePart.filename.trim
-            if (originalFileName.isEmpty) {
-              BadRequest("invalid file name")
-            } else {
-              val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-              val objectKey = buildAttachmentObjectKey(
-                site.seq,
-                pageName,
-                originalFileName = originalFileName,
-                extension = if (extension.nonEmpty) extension else "bin",
-              )
+                val contentType = filePart.contentType.getOrElse("application/octet-stream")
+                val contentLength = filePart.fileSize
+                val metadata = new ObjectMetadata()
+                metadata.setContentType(contentType)
+                metadata.setContentLength(contentLength)
 
-              val contentType = filePart.contentType.getOrElse("application/octet-stream")
-              val contentLength = filePart.fileSize
-              val metadata = new ObjectMetadata()
-              metadata.setContentType(contentType)
-              metadata.setContentLength(contentLength)
+                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                val amazonS3 = buildAmazonS3Client()
+                insertInitiatedAttachment(
+                  siteSeq = site.seq,
+                  pageName = pageName,
+                  originalFilename = originalFileName,
+                  objectKey = objectKey,
+                  contentType = contentType,
+                  fileSize = contentLength,
+                )
 
-              val credentials = new BasicAWSCredentials(
-                applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
-                applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
-              )
-              val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
-                .build()
-              val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-              val currentUser = SessionLogic.getUser(request)
-              val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
-              Attachment.insertInitiated(
-                site = site.seq,
-                pageName = pageName,
-                user = currentUser.map(_.seq),
-                uploaderEmail = currentUser.map(_.email),
-                originalFilename = originalFileName,
-                storedFilename = storedFilename,
-                bucket = bucket,
-                objectKey = objectKey,
-                contentType = contentType,
-                fileSize = contentLength,
-              )
-
-              try {
-                val inputStream = Files.newInputStream(filePart.ref.path)
                 try {
-                  val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                  Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                } finally {
-                  inputStream.close()
-                }
+                  val inputStream = Files.newInputStream(filePart.ref.path)
+                  try {
+                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
+                  } finally {
+                    inputStream.close()
+                  }
 
-                val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                Ok(Json.obj(
-                  "objectKey" -> objectKey,
-                  "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                  "fileUrl" -> fileUrl,
-                  "contentType" -> contentType,
-                ))
-              } catch {
-                case error: Throwable =>
-                  logger.error(s"uploadAttachment failed. objectKey=$objectKey", error)
-                  Attachment.markFailed(objectKey)
-                  InternalServerError("File upload failed.")
+                  val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                  Ok(Json.obj(
+                    "objectKey" -> objectKey,
+                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                    "fileUrl" -> fileUrl,
+                    "contentType" -> contentType,
+                  ))
+                } catch {
+                  case error: Throwable =>
+                    logger.error(s"uploadAttachment failed. objectKey=$objectKey", error)
+                    Attachment.markFailed(objectKey)
+                    InternalServerError("File upload failed.")
+                }
               }
-            }
           }
         }
       case _ =>
@@ -619,37 +650,31 @@ controllerComponents: ControllerComponents,
 
     val pageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
     if (pageName.isEmpty) {
-      BadRequest("pageName is required")
+        BadRequest("pageName is required")
     } else {
       database.withConnection { implicit connection =>
-        implicit val site: Site = SiteLogic.get(request.host)
-        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-        implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-
-        val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
-        if (!WikiPermission().isWritable(PageContent(latestText))) {
-          Forbidden("Permission denied.")
-        } else {
-          val attachments = Attachment.selectUploadedByPage(site.seq, pageName)
-          Ok(Json.obj(
-            "attachments" -> attachments.map(attachment => Json.obj(
-              "objectKey" -> attachment.objectKey,
-              "originalFilename" -> attachment.originalFilename,
-              "contentType" -> attachment.contentType,
-              "fileSize" -> attachment.fileSize,
-              "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
+        getWritablePageContext(pageName) match {
+          case Left(result) => result
+          case Right((site0, contextWikiPage0, provider0)) =>
+            implicit val site: Site = site0
+            implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
+            implicit val provider: RequestWrapper = provider0
+            val attachments = Attachment.selectUploadedByPage(site.seq, pageName)
+            Ok(Json.obj(
+              "attachments" -> attachments.map(attachment => Json.obj(
+                "objectKey" -> attachment.objectKey,
+                "originalFilename" -> attachment.originalFilename,
+                "contentType" -> attachment.contentType,
+                "fileSize" -> attachment.fileSize,
+                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
+              ))
             ))
-          ))
         }
       }
     }
   }
 
   def deleteAttachment(): Action[AnyContent] = Action { implicit request =>
-    import com.amazonaws.auth.AWSStaticCredentialsProvider
-    import com.amazonaws.auth.BasicAWSCredentials
-    import com.amazonaws.services.s3.AmazonS3
-    import com.amazonaws.services.s3.AmazonS3ClientBuilder
     import play.api.libs.json.Json
 
     val form = Form(tuple("pageName" -> text, "objectKey" -> text)).bindFromRequest
@@ -661,38 +686,29 @@ controllerComponents: ControllerComponents,
           BadRequest("pageName and objectKey are required")
         } else {
           database.withConnection { implicit connection =>
-            implicit val site: Site = SiteLogic.get(request.host)
-            implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-            implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+            getWritablePageContext(pageName) match {
+              case Left(result) => result
+              case Right((site0, contextWikiPage0, provider0)) =>
+                implicit val site: Site = site0
+                implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
+                implicit val provider: RequestWrapper = provider0
+                Attachment.selectByObjectKey(site.seq, pageName, objectKey) match {
+                  case None =>
+                    NotFound("Attachment not found")
+                  case Some(_) =>
+                    val amazonS3 = buildAmazonS3Client()
+                    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
 
-            val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
-            if (!WikiPermission().isWritable(PageContent(latestText))) {
-              Forbidden("Permission denied.")
-            } else {
-              Attachment.selectByObjectKey(site.seq, pageName, objectKey) match {
-                case None =>
-                  NotFound("Attachment not found")
-                case Some(_) =>
-                  val credentials = new BasicAWSCredentials(
-                    applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
-                    applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
-                  )
-                  val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
-                    .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                    .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
-                    .build()
-                  val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-
-                  try {
-                    amazonS3.deleteObject(bucket, objectKey)
-                    Attachment.markDeleted(objectKey)
-                    Ok(Json.obj("ok" -> true))
-                  } catch {
-                    case error: Throwable =>
-                      logger.error(s"deleteAttachment failed. objectKey=$objectKey", error)
-                      InternalServerError("Attachment delete failed.")
-                  }
-              }
+                    try {
+                      amazonS3.deleteObject(bucket, objectKey)
+                      Attachment.markDeleted(objectKey)
+                      Ok(Json.obj("ok" -> true))
+                    } catch {
+                      case error: Throwable =>
+                        logger.error(s"deleteAttachment failed. objectKey=$objectKey", error)
+                        InternalServerError("Attachment delete failed.")
+                    }
+                }
             }
           }
         }
@@ -700,10 +716,6 @@ controllerComponents: ControllerComponents,
   }
 
   def uploadClipboardImage(): Action[AnyContent] = Action { implicit request =>
-    import com.amazonaws.auth.AWSStaticCredentialsProvider
-    import com.amazonaws.auth.BasicAWSCredentials
-    import com.amazonaws.services.s3.AmazonS3
-    import com.amazonaws.services.s3.AmazonS3ClientBuilder
     import com.amazonaws.services.s3.model.ObjectMetadata
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
@@ -712,79 +724,65 @@ controllerComponents: ControllerComponents,
     form.fold(_ => BadRequest("invalid form"), {
       case (pageName, dataUrl) =>
         database.withConnection { implicit connection =>
-          implicit val site: Site = SiteLogic.get(request.host)
-          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+          getWritablePageContext(pageName) match {
+            case Left(result) => result
+            case Right((site0, contextWikiPage0, provider0)) =>
+              implicit val site: Site = site0
+              implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
+              implicit val provider: RequestWrapper = provider0
+              if (!dataUrl.startsWith("data:image/")) {
+                BadRequest("only image dataUrl is supported")
+              } else {
+                val pattern = """^data:(image/[-+.a-zA-Z0-9]+);base64,(.+)$""".r
+                dataUrl match {
+                  case pattern(contentType, base64Data) =>
+                    val bytes = Base64.getDecoder.decode(base64Data)
+                    val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
+                    val objectKey = buildAttachmentObjectKey(
+                      site.seq,
+                      pageName,
+                      originalFileName = "clipboard",
+                      extension = extension,
+                    )
 
-          val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
-          if (!WikiPermission().isWritable(PageContent(latestText))) {
-            Forbidden("Permission denied.")
-          } else if (!dataUrl.startsWith("data:image/")) {
-            BadRequest("only image dataUrl is supported")
-          } else {
-            val pattern = """^data:(image/[-+.a-zA-Z0-9]+);base64,(.+)$""".r
-            dataUrl match {
-              case pattern(contentType, base64Data) =>
-                val bytes = Base64.getDecoder.decode(base64Data)
-                val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = buildAttachmentObjectKey(
-                  site.seq,
-                  pageName,
-                  originalFileName = "clipboard",
-                  extension = extension,
-                )
+                    val amazonS3 = buildAmazonS3Client()
+                    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                    val metadata = new ObjectMetadata()
+                    metadata.setContentType(contentType)
+                    metadata.setContentLength(bytes.length)
+                    insertInitiatedAttachment(
+                      siteSeq = site.seq,
+                      pageName = pageName,
+                      originalFilename = "clipboard",
+                      objectKey = objectKey,
+                      contentType = contentType,
+                      fileSize = bytes.length,
+                    )
 
-                val credentials = new BasicAWSCredentials(
-                  applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
-                  applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
-                )
-                val amazonS3: AmazonS3 = AmazonS3ClientBuilder.standard
-                  .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                  .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
-                  .build()
+                    try {
+                      val inputStream = new ByteArrayInputStream(bytes)
+                      try {
+                        val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                        Attachment.markUploaded(objectKey, Option(putResult.getETag))
+                      } finally {
+                        inputStream.close()
+                      }
 
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val metadata = new ObjectMetadata()
-                metadata.setContentType(contentType)
-                metadata.setContentLength(bytes.length)
-                val currentUser = SessionLogic.getUser(request)
-                val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
-                Attachment.insertInitiated(
-                  site = site.seq,
-                  pageName = pageName,
-                  user = currentUser.map(_.seq),
-                  uploaderEmail = currentUser.map(_.email),
-                  originalFilename = "clipboard",
-                  storedFilename = storedFilename,
-                  bucket = bucket,
-                  objectKey = objectKey,
-                  contentType = contentType,
-                  fileSize = bytes.length,
-                )
-
-                try {
-                  val inputStream = new ByteArrayInputStream(bytes)
-                  try {
-                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                  } finally {
-                    inputStream.close()
-                  }
-
-                  val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  Ok(Json.obj(
-                    "objectKey" -> objectKey,
-                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                    "imageUrl" -> imageUrl,
-                  ))
-                } catch {
-                  case error: Throwable =>
-                    logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
-                    Attachment.markFailed(objectKey)
-                    InternalServerError("Image upload failed.")
+                      val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                      Ok(Json.obj(
+                        "objectKey" -> objectKey,
+                        "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                        "imageUrl" -> imageUrl,
+                      ))
+                    } catch {
+                      case error: Throwable =>
+                        logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
+                        Attachment.markFailed(objectKey)
+                        InternalServerError("Image upload failed.")
+                    }
+                  case _ =>
+                    BadRequest("invalid image dataUrl")
                 }
-              case _ =>
-                BadRequest("invalid image dataUrl")
             }
           }
         }
