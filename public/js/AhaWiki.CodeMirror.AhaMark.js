@@ -10,28 +10,30 @@
             return {
                 token: function (stream, state) {
                     if (stream.sol()) {
-                        state.inTripleMacro = false;
+                        state.inTripleInterpreter = false;
                         if (stream.match(/\s*={1,6}\s.+/))
                             return 'ahamark-header';
                         if (stream.match(/\s*#.+/))
                             return 'ahamark-comment';
                         if (stream.match(/\s*\[\[\[#![^\]]*/)) {
-                            state.inTripleMacro = true;
-                            return 'ahamark-macro';
+                            state.inTripleInterpreter = true;
+                            return 'ahamark-interpreter';
                         }
                     }
 
-                    if (state.inTripleMacro && stream.match(/.*\]\]\]/)) {
-                        state.inTripleMacro = false;
-                        return 'ahamark-macro';
+                    if (state.inTripleInterpreter && stream.match(/.*\]\]\]/)) {
+                        state.inTripleInterpreter = false;
+                        return 'ahamark-interpreter';
                     }
-                    if (state.inTripleMacro) {
+                    if (state.inTripleInterpreter) {
                         stream.skipToEnd();
-                        return 'ahamark-macro';
+                        return 'ahamark-interpreter';
                     }
 
-                    if (stream.match(/\[\[[^\]]+\]\]/))
+                    if (stream.match(/\[(?!\[)[^\]\n]+\]/))
                         return 'ahamark-link';
+                    if (stream.match(/\[\[[^\]]+\]\]/))
+                        return 'ahamark-macro';
                     if (stream.match(/\[\d{4}-\d{2}-\d{2}(?:\s+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})?\]/))
                         return 'ahamark-date';
                     if (stream.match(/\*\*[^*]+\*\*/))
@@ -45,7 +47,7 @@
                     return null;
                 },
                 startState: function () {
-                    return { inTripleMacro: false };
+                    return { inTripleInterpreter: false };
                 }
             };
         });
