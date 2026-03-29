@@ -4,6 +4,9 @@
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.css"/>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.js"></script>
+    <script type="text/javascript" src="/public/js/AhaWiki.CodeMirror.AhaMark.js"></script>
     <style>
         .attachmentList {
             margin: 2px 0 0;
@@ -116,13 +119,56 @@
             pointer-events: none;
         }
         .uploadDragOverlay.visible { display: flex; }
+        .CodeMirror {
+            border: 1px solid #d9d9d9;
+            height: 500px;
+            font-family: Consolas, Menlo, Monaco, "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        .CodeMirror pre {
+            white-space: pre;
+        }
+        .CodeMirror-wrap pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .cm-ahamark-header { color: #0451a5; font-weight: 700; }
+        .cm-ahamark-link { color: #1a5fb4; }
+        .cm-ahamark-bold { color: #8f2bb8; font-weight: 700; }
+        .cm-ahamark-italic { color: #8f2bb8; font-style: italic; }
+        .cm-ahamark-comment { color: #6a9955; }
+        .cm-ahamark-macro { color: #b56414; font-weight: 600; }
+        .cm-ahamark-tag { color: #d14; }
+        .cm-ahamark-date { color: #267f99; }
     </style>
     <script type="text/javascript">
-        $(function(){
-            $('.checkboxWrap').change(function () {
-                $('textarea[name=text]').css('white-space', $(this).prop('checked') ? 'inherit' : 'pre')
-            });
 
+        function preview() {
+            if (window.AhaWikiCodeMirrorEditor)
+                window.AhaWikiCodeMirrorEditor.save();
+            $.post('/preview', {
+                csrfToken: $('[name=csrfToken]').val(),
+                name: '@(page.name)',
+                text: $('textarea[name=text]').val()
+            }, function (data, textStatus, jqXHR) {
+                var $previewPane = $('.previewPane');
+                $previewPane.html(data);
+                mermaid.init();
+                var windowInnerHeight = $(window).innerHeight();
+                var headerInnerHeight = $('.header').innerHeight();
+                var flashInnerHeight = $('.flash').innerHeight();
+                var height = windowInnerHeight - headerInnerHeight - flashInnerHeight - 300;
+                $previewPane.css({ height: height, overflowY: 'auto'});
+                $("[name=text]").css({ height: height - 9 - $('.attachmentList').height() - $('.editorAdditional').height()});
+                if (window.AhaWikiCodeMirrorEditor) {
+                    window.AhaWikiCodeMirrorEditor.setSize(null, height - 9 - $('.attachmentList').height() - $('.editorAdditional').height());
+                }
+            });
+        }
+
+        var timer;
+        $(function(){
             $.fn.insertAtCaret = function(myValue) {
                 return this.each(function() {
                     var me = this;
@@ -146,12 +192,36 @@
             };
 
             const $textarea = $('textarea[name=text]');
+            let editor;
             const $uploadInput = $('#attachmentUploadInput');
             const $attachmentList = $('#attachmentList');
             const $uploadDragOverlay = $('#uploadDragOverlay');
             let globalDragCounter = 0;
             let serverAttachments = [];
             const uploadingMap = new Map();
+
+            function getEditor() {
+                return editor || window.AhaWikiCodeMirrorEditor;
+            }
+
+            function syncEditorToTextarea() {
+                const cm = getEditor();
+                if (cm)
+                    cm.save();
+            }
+
+            function insertTextAtCursor(text) {
+                const cm = getEditor();
+                if (cm) {
+                    cm.replaceSelection(text, 'end');
+                    cm.focus();
+                    cm.save();
+                    $textarea.trigger('change');
+                    return;
+                }
+                $textarea.insertAtCaret(text);
+                $textarea.change();
+            }
 
             function hasFiles(event) {
                 const dataTransfer = event.originalEvent && event.originalEvent.dataTransfer;
@@ -232,8 +302,7 @@
                     $insert.on('click', function () {
                         if (!attachment.attachmentMacro)
                             return;
-                        $textarea.insertAtCaret(attachment.attachmentMacro + '\n');
-                        $textarea.change();
+                        insertTextAtCursor(attachment.attachmentMacro + '\n');
                     });
 
                     $delete.on('click', function () {
@@ -309,8 +378,7 @@
                     }
                 }).done(function (data) {
                     if (data && data.attachmentMacro) {
-                        $textarea.insertAtCaret(data.attachmentMacro + '\n');
-                        $textarea.change();
+                        insertTextAtCursor(data.attachmentMacro + '\n');
                     } else {
                         alert('File upload failed.');
                     }
@@ -381,8 +449,7 @@
                     dataUrl: results.dataURL
                 }, function (data) {
                     if (data && data.attachmentMacro) {
-                        $textarea.insertAtCaret(data.attachmentMacro + '\n');
-                        $textarea.change();
+                        insertTextAtCursor(data.attachmentMacro + '\n');
                         loadAttachments();
                     } else {
                         alert('Image upload failed.');
@@ -391,29 +458,10 @@
                     alert('Image upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
                 });
             });
-        });
-    </script>
-    <script type="text/javascript">
-        function preview() {
-            $.post('/preview', {
-                csrfToken: $('[name=csrfToken]').val(),
-                name: '@(page.name)',
-                text: $('textarea[name=text]').val()
-            }, function (data, textStatus, jqXHR) {
-                var $previewPane = $('.previewPane');
-                $previewPane.html(data);
-                mermaid.init();
-                var windowInnerHeight = $(window).innerHeight();
-                var headerInnerHeight = $('.header').innerHeight();
-                var flashInnerHeight = $('.flash').innerHeight();
-                var height = windowInnerHeight - headerInnerHeight - flashInnerHeight - 300;
-                $previewPane.css({ height: height, overflowY: 'auto'});
-                $("[name=text]").css({ height: height - 9 - $('.attachmentList').height() - $('.editorAdditional').height()});
-            });
-        }
 
-        var timer;
-        $(function(){
+
+
+
             var $form = $(".form");
             $form.validate({
                 rules: { comment: "required" },
@@ -443,17 +491,47 @@
 
             AhaWiki.Editor.addEventListener('textarea[name=text]');
 
+            if (window.CodeMirror && window.AhaWikiCodeMirrorAhaMarkMode) {
+                const modeName = window.AhaWikiCodeMirrorAhaMarkMode();
+                editor = CodeMirror.fromTextArea($textarea.get(0), {
+                    mode: modeName,
+                    lineNumbers: true,
+                    lineWrapping: false,
+                    indentUnit: 4,
+                    tabSize: 4
+                });
+                window.AhaWikiCodeMirrorEditor = editor;
+                editor.on('change', function (cm) {
+                    cm.save();
+                    $textarea.trigger('input');
+                });
+                AhaWiki.Editor.addCodeMirrorEventListener(editor);
+            }
+
             function clamp(min, value, max) {
                 return Math.max(min, Math.min(value, max));
             }
 
-            $('textarea[name=text]').bind('input cut paste keydown keyup keypress blur change', function () {
+            $textarea.bind('input cut paste keydown keyup keypress blur change', function () {
                 if(timer) {
                     clearTimeout(timer);
                     timer = null;
                 }
 
                 timer = setTimeout(preview, clamp(200, this.value.length, 1000))
+            });
+
+            $('.checkboxWrap').off('change').on('change', function () {
+                const cm = getEditor();
+                if (cm) {
+                    cm.setOption('lineWrapping', $(this).prop('checked'));
+                    return;
+                }
+                $textarea.css('white-space', $(this).prop('checked') ? 'inherit' : 'pre');
+            }).trigger('change');
+
+            $('.form').on('submit', function () {
+                syncEditorToTextarea();
             });
             preview();
         });
@@ -489,8 +567,7 @@
                         return false;
                     }
 
-                    $('textarea[name=text]')
-                        .insertAtCaret(arrayResult
+                    const schemaText = arrayResult
                         .map(v => `
 [[[#!Schema
 ${v.content}
@@ -498,9 +575,15 @@ ${v.content}
 sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
 ]]]
                         `.trim() + '\n\n')
-                                    .join('\n\n'),
-                            )
-                            .change();
+                                    .join('\n\n');
+                    if (window.AhaWikiCodeMirrorEditor) {
+                        window.AhaWikiCodeMirrorEditor.replaceSelection(schemaText, 'end');
+                        window.AhaWikiCodeMirrorEditor.focus();
+                        window.AhaWikiCodeMirrorEditor.save();
+                        $('textarea[name=text]').change();
+                    } else {
+                        $('textarea[name=text]').insertAtCaret(schemaText).change();
+                    }
                     return false;
                 })(e)
                 return false;

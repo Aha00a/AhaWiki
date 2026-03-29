@@ -1,123 +1,223 @@
 (() => {
-    const ExecCommand = {
-        insertText: text => document.execCommand("insertText", false, text),
-        backspace: () => document.execCommand("delete"),
-        delete: () => document.execCommand("forwardDelete"),
-    };
     const openClose = [
         {open: '(', close: ')'},
         {open: '{', close: '}'},
         {open: '[', close: ']'},
         {open: '"', close: '"'},
         {open: "'", close: "'"},
-        {open: "`", close: "`"},
+        {open: '`', close: '`'},
     ];
 
-    function addEventListener(selector) {
-        $(selector).on('keydown', function (e) {
-            const value = this.value;
-            const selectionStart = this.selectionStart;
-            const selectionEnd = this.selectionEnd;
-            const selected = value.substring(selectionStart, selectionEnd);
+    function replaceRange(value, start, end, text) {
+        return value.substring(0, start) + text + value.substring(end);
+    }
 
-            if (e.key === 'Tab') {
-                if (selectionStart === 0 || value.length === selectionStart)
-                    return;
+    function applyEditorRule({value, selectionStart, selectionEnd, key, shiftKey}) {
+        const selected = value.substring(selectionStart, selectionEnd);
 
-                const lastNewlineIndex = selectionStart === 0 ? -1 : value.lastIndexOf('\n', selectionStart - 1);
-                const currentLine = value.substring(lastNewlineIndex + 1, value.indexOf('\n', selectionStart) === -1 ? value.length : value.indexOf('\n', selectionStart));
-                const listPattern = /^\s+(?:[*-]|(?:\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s/;
-                if (listPattern.test(currentLine)) {
-                    const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1;
-                    this.selectionStart = lineStart;
-                    this.selectionEnd = lineStart;
-                    const indentation = currentLine.match(/^[\t ]*/)[0];
-                    if (e.shiftKey) {
-                        if (indentation.length > 0) {
-                            ExecCommand.delete();
-                        }
-                    } else {
-                        ExecCommand.insertText(indentation[0] === '\t' ? '\t' : ' ');
-                    }
-                    this.selectionStart = this.selectionEnd = selectionStart + (e.shiftKey ? -1 : 1);
-                    return false;
+        if (key === 'Tab') {
+            if (selectionStart === 0 || value.length === selectionStart)
+                return { handled: false };
+
+            const lastNewlineIndex = selectionStart === 0 ? -1 : value.lastIndexOf('\n', selectionStart - 1);
+            const lineEnd = value.indexOf('\n', selectionStart) === -1 ? value.length : value.indexOf('\n', selectionStart);
+            const currentLine = value.substring(lastNewlineIndex + 1, lineEnd);
+            const listPattern = /^\s+(?:[*-]|(?:\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s/;
+            if (listPattern.test(currentLine)) {
+                const lineStart = lastNewlineIndex + 1;
+                const indentation = currentLine.match(/^[\t ]*/)[0];
+                if (shiftKey) {
+                    if (!indentation.length)
+                        return { handled: true };
+                    const newValue = replaceRange(value, lineStart, lineStart + 1, '');
+                    const newPos = Math.max(lineStart, selectionStart - 1);
+                    return {
+                        handled: true,
+                        value: newValue,
+                        selectionStart: newPos,
+                        selectionEnd: newPos,
+                    };
                 }
-                ExecCommand.insertText('\t');
-                return false;
+
+                const insertText = indentation[0] === '\t' ? '\t' : ' ';
+                const newValue = replaceRange(value, lineStart, lineStart, insertText);
+                const newPos = selectionStart + 1;
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: newPos,
+                    selectionEnd: newPos,
+                };
             }
 
-            if (e.key === '[') {
-                if (value.slice(selectionStart - 3, selectionStart) === '[[[') {
-                    this.selectionStart = this.selectionEnd = selectionEnd;
-                    ExecCommand.delete();
-                    this.selectionStart = selectionStart;
-                    ExecCommand.insertText('[' + selected + '\n]');
-                    this.selectionStart = selectionStart + 1;
-                    this.selectionEnd = selectionEnd + 1;
-                    return false;
-                } else if (value.slice(selectionStart - 2, selectionStart) === '--') {
-                    const dateStr = dayjs().format('YYYY-MM-DD');
-                    const dateTimeStr = dayjs().format('YYYY-MM-DDTHH:mm:ss');
-                    ExecCommand.insertText(`[${dateStr} ${dateTimeStr}]`);
-                    this.selectionStart = selectionStart + 11;
-                    this.selectionEnd = this.selectionEnd - 1;
-                    return false;
-                } else if (value.slice(selectionStart - 2, selectionStart) === '[[') {
-                    ExecCommand.insertText('[' + selected + '\n]');
-                    this.selectionStart = selectionStart + 1;
-                    this.selectionEnd = selectionEnd + 1;
-                    return false;
+            const newValue = replaceRange(value, selectionStart, selectionEnd, '\t');
+            const newPos = selectionStart + 1;
+            return {
+                handled: true,
+                value: newValue,
+                selectionStart: newPos,
+                selectionEnd: newPos,
+            };
+        }
+
+        if (key === '[') {
+            if (value.slice(selectionStart - 3, selectionStart) === '[[[') {
+                const insertText = '[' + selected + '\n]';
+                const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: selectionStart + 1,
+                    selectionEnd: selectionStart + 1 + selected.length,
+                };
+            }
+
+            if (value.slice(selectionStart - 2, selectionStart) === '--') {
+                const dateStr = dayjs().format('YYYY-MM-DD');
+                const dateTimeStr = dayjs().format('YYYY-MM-DDTHH:mm:ss');
+                const insertText = `[${dateStr} ${dateTimeStr}]`;
+                const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: selectionStart + 11,
+                    selectionEnd: selectionStart + 11,
+                };
+            }
+
+            if (value.slice(selectionStart - 2, selectionStart) === '[[') {
+                const insertText = '[' + selected + '\n]';
+                const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: selectionStart + 1,
+                    selectionEnd: selectionStart + 1 + selected.length,
+                };
+            }
+        }
+
+        for (const { open, close } of openClose) {
+            if (key === open) {
+                const insertText = open + selected + close;
+                const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: selectionStart + 1,
+                    selectionEnd: selectionStart + 1 + selected.length,
+                };
+            }
+        }
+
+        if (key === 'Backspace') {
+            if (
+                value.slice(selectionStart - 3, selectionStart) === '[[[' &&
+                value[selectionEnd] === '\n' &&
+                value.slice(selectionEnd + 1, selectionEnd + 4) === ']]]'
+            ) {
+                let start = selectionStart - 3;
+                let end = selectionEnd + 4;
+                if (value[selectionStart - 4] === '[' && value[selectionEnd + 4] === ']') {
+                    start = selectionStart - 4;
+                    end = selectionEnd + 5;
                 }
+
+                const inner = value.substring(selectionStart, selectionEnd);
+                const insertText = value[selectionStart - 4] === '[' && value[selectionEnd + 4] === ']'
+                    ? inner + '\n'
+                    : inner;
+                const newValue = replaceRange(value, start, end, insertText);
+                const newPos = start;
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: newPos,
+                    selectionEnd: newPos,
+                };
             }
 
             for (const { open, close } of openClose) {
-                if (e.key === open) {
-                    this.selectionStart = this.selectionEnd = selectionStart;
-                    ExecCommand.insertText(open);
-                    this.selectionStart = this.selectionEnd = selectionEnd + 1;
-                    ExecCommand.insertText(close);
-                    this.selectionStart = selectionStart + 1;
-                    this.selectionEnd = selectionEnd + 1;
-                    return false;
+                if (value[selectionStart - 1] === open && value[selectionEnd] === close) {
+                    const newValue = replaceRange(value, selectionStart - 1, selectionEnd + 1, selected);
+                    const newPosStart = Math.max(0, selectionStart - 1);
+                    const newPosEnd = newPosStart + selected.length;
+                    return {
+                        handled: true,
+                        value: newValue,
+                        selectionStart: newPosStart,
+                        selectionEnd: newPosEnd,
+                    };
                 }
             }
+        }
 
-            if (e.key === 'Backspace') {
-                if (
-                    value.slice(selectionStart - 3, selectionStart) === '[[[' &&
-                    value[selectionEnd] === '\n' &&
-                    value.slice(selectionEnd + 1, selectionEnd + 4) === ']]]'
-                ) {
-                    if (value[selectionStart - 4] === '[' && value[selectionEnd + 4] === ']') {
-                        ExecCommand.delete();
-                        ExecCommand.delete();
-                        ExecCommand.backspace();
-                        ExecCommand.insertText('\n');
-                        this.selectionStart = this.selectionEnd = this.selectionStart - 1;
-                        return false;
-                    }
-                    ExecCommand.backspace();
-                    ExecCommand.delete();
-                    ExecCommand.delete();
-                    return false;
-                }
+        return { handled: false };
+    }
 
-                for (const { open, close } of openClose) {
-                    if (value[selectionStart - 1] === open && value[selectionEnd] === close) {
-                        ExecCommand.backspace();
-                        ExecCommand.delete();
-                        return false;
-                    }
-                }
-            }
+    function applyToTextareaElement(el, e) {
+        const result = applyEditorRule({
+            value: el.value,
+            selectionStart: el.selectionStart,
+            selectionEnd: el.selectionEnd,
+            key: e.key,
+            shiftKey: !!e.shiftKey,
+        });
+        if (!result.handled)
+            return;
+
+        e.preventDefault();
+        el.value = result.value;
+        el.selectionStart = result.selectionStart;
+        el.selectionEnd = result.selectionEnd;
+        $(el).trigger('input');
+    }
+
+    function applyToCodeMirrorInstance(cm, e) {
+        const doc = cm.getDoc();
+        const from = doc.getCursor('from');
+        const to = doc.getCursor('to');
+        const value = doc.getValue();
+        const selectionStart = cm.indexFromPos(from);
+        const selectionEnd = cm.indexFromPos(to);
+
+        const result = applyEditorRule({
+            value,
+            selectionStart,
+            selectionEnd,
+            key: e.key,
+            shiftKey: !!e.shiftKey,
+        });
+
+        if (!result.handled)
+            return;
+
+        e.preventDefault();
+        doc.setValue(result.value);
+        doc.setSelection(cm.posFromIndex(result.selectionStart), cm.posFromIndex(result.selectionEnd));
+        cm.focus();
+    }
+
+    function addEventListener(selector) {
+        $(selector).on('keydown', function (e) {
+            applyToTextareaElement(this, e);
         });
     }
 
-    if(typeof window.AhaWiki === "undefined") {
+    function addCodeMirrorEventListener(cm) {
+        if (!cm || typeof cm.on !== 'function')
+            return;
+        cm.on('keydown', function (instance, e) {
+            applyToCodeMirrorInstance(instance, e);
+        });
+    }
+
+    if(typeof window.AhaWiki === 'undefined') {
         window.AhaWiki = {};
     }
 
     window.AhaWiki.Editor = {
         addEventListener,
+        addCodeMirrorEventListener,
     };
 })();
