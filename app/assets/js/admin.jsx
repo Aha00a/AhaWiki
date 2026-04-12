@@ -21,6 +21,18 @@ import {
     ThemeIcon,
     Title,
 } from "@mantine/core";
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 const LOG_PREFIX = "[AdminUI]";
 
@@ -508,27 +520,12 @@ function normalizeDailyRows(rows) {
 }
 
 function Sparkline({rows, color}) {
-    const width = 320;
-    const height = 72;
     const data = normalizeDailyRows(rows).slice(-30);
 
     if (data.length === 0) {
         return <Text size="xs" c="dimmed">No data</Text>;
     }
 
-    const max = Math.max(...data.map((item) => item.count), 1);
-    const min = Math.min(...data.map((item) => item.count), 0);
-    const range = Math.max(max - min, 1);
-
-    const points = data
-        .map((item, index) => {
-            const x = data.length === 1 ? width / 2 : (index / (data.length - 1)) * width;
-            const y = height - ((item.count - min) / range) * height;
-            return `${x},${y}`;
-        })
-        .join(" ");
-
-    const areaPoints = `0,${height} ${points} ${width},${height}`;
     const latest = data[data.length - 1]?.count ?? 0;
     const previous = data[data.length - 2]?.count ?? latest;
     const delta = latest - previous;
@@ -536,21 +533,33 @@ function Sparkline({rows, color}) {
 
     return (
         <Stack gap={4}>
-            <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="trend sparkline">
-                <polyline
-                    points={areaPoints}
-                    fill={`var(--mantine-color-${color}-1)`}
-                    stroke="none"
-                />
-                <polyline
-                    points={points}
-                    fill="none"
-                    stroke={`var(--mantine-color-${color}-6)`}
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                />
-            </svg>
+            <div style={{width: "100%", height: 72}} role="img" aria-label="trend sparkline">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={data} margin={{top: 4, right: 0, left: 0, bottom: 0}}>
+                        <defs>
+                            <linearGradient id={`sparklineGradient-${color}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={`var(--mantine-color-${color}-4)`} stopOpacity={0.35}/>
+                                <stop offset="100%" stopColor={`var(--mantine-color-${color}-1)`} stopOpacity={0.1}/>
+                            </linearGradient>
+                        </defs>
+                        <Tooltip
+                            cursor={false}
+                            labelFormatter={(value) => `Date: ${value}`}
+                            formatter={(value) => [value, "Count"]}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="count"
+                            stroke={`var(--mantine-color-${color}-6)`}
+                            strokeWidth={2}
+                            fill={`url(#sparklineGradient-${color})`}
+                            dot={false}
+                            activeDot={{r: 3}}
+                            isAnimationActive={false}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
             <Group justify="space-between">
                 <Text size="xs" c="dimmed">최근 30일</Text>
                 <Badge color={deltaColor} variant="light" size="xs">
@@ -577,12 +586,6 @@ function StatTrendCard({title, total, rows, color}) {
 }
 
 function MultiTrendChart({series}) {
-    const width = 840;
-    const height = 260;
-    const padding = {top: 14, right: 20, bottom: 30, left: 28};
-    const innerWidth = width - padding.left - padding.right;
-    const innerHeight = height - padding.top - padding.bottom;
-
     const dateSet = new Set();
     series.forEach((line) => {
         normalizeDailyRows(line.rows).forEach((row) => {
@@ -595,61 +598,46 @@ function MultiTrendChart({series}) {
         return <Text c="dimmed" size="sm">차트 데이터가 없습니다.</Text>;
     }
 
-    const mappedSeries = series.map((line) => {
+    const colorByName = {};
+    const chartDataByDate = new Map(dates.map((date) => [date, {date}]));
+    series.forEach((line) => {
+        colorByName[line.name] = line.color;
         const indexed = new Map(normalizeDailyRows(line.rows).map((row) => [row.ymd, row.count]));
-        return {
-            ...line,
-            points: dates.map((date) => ({date, count: indexed.get(date) ?? 0})),
-        };
+        dates.forEach((date) => {
+            chartDataByDate.get(date)[line.name] = indexed.get(date) ?? 0;
+        });
     });
+    const chartData = dates.map((date) => chartDataByDate.get(date));
 
-    const maxValue = Math.max(
-        1,
-        ...mappedSeries.flatMap((line) => line.points.map((point) => point.count)),
-    );
-    const yScale = (value) => padding.top + innerHeight - (value / maxValue) * innerHeight;
-    const xScale = (index) => {
-        if (dates.length === 1) {
-            return padding.left + innerWidth / 2;
-        }
-        return padding.left + (index / (dates.length - 1)) * innerWidth;
-    };
+    const xAxisTickFormatter = (value) => value.slice(5);
 
     return (
         <Stack gap={8}>
-            <svg width="100%" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="daily trends chart">
-                {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
-                    const y = padding.top + innerHeight - innerHeight * tick;
-                    return (
-                        <line
-                            key={`y-${tick}`}
-                            x1={padding.left}
-                            y1={y}
-                            x2={padding.left + innerWidth}
-                            y2={y}
-                            stroke="var(--mantine-color-gray-2)"
-                            strokeWidth="1"
-                        />
-                    );
-                })}
-                {mappedSeries.map((line) => {
-                    const path = line.points
-                        .map((point, index) => `${index === 0 ? "M" : "L"} ${xScale(index)} ${yScale(point.count)}`)
-                        .join(" ");
-                    return (
-                        <path
-                            key={line.name}
-                            d={path}
-                            fill="none"
-                            stroke={`var(--mantine-color-${line.color}-6)`}
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                        />
-                    );
-                })}
-            </svg>
+            <div style={{width: "100%", height: 280}} role="img" aria-label="daily trends chart">
+                <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{top: 8, right: 12, bottom: 8, left: 0}}>
+                        <CartesianGrid stroke="var(--mantine-color-gray-2)" strokeDasharray="3 3"/>
+                        <XAxis dataKey="date" tickFormatter={xAxisTickFormatter} tick={{fontSize: 12}}/>
+                        <YAxis allowDecimals={false} tick={{fontSize: 12}}/>
+                        <Tooltip labelFormatter={(value) => `Date: ${value}`}/>
+                        <Legend verticalAlign="top" height={30}/>
+                        {series.map((line) => (
+                            <Line
+                                key={line.name}
+                                type="monotone"
+                                dataKey={line.name}
+                                stroke={`var(--mantine-color-${colorByName[line.name]}-6)`}
+                                strokeWidth={2.5}
+                                dot={false}
+                                activeDot={{r: 4}}
+                                isAnimationActive={false}
+                            />
+                        ))}
+                    </LineChart>
+                </ResponsiveContainer>
+            </div>
             <Group gap={8}>
-                {mappedSeries.map((line) => (
+                {series.map((line) => (
                     <Badge key={line.name} color={line.color} variant="light">
                         {line.name}
                     </Badge>

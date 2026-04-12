@@ -10,7 +10,7 @@ await build({
   bundle: true,
   format: "esm",
   platform: "browser",
-  external: ["react", "react-dom/client", "@mantine/core"],
+  external: ["react", "react-dom/client", "@mantine/core", "recharts"],
   minify: false,
   sourcemap: false,
   logLevel: "info",
