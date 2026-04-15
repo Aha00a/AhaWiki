@@ -61,6 +61,8 @@ GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames
 GET           /api/macroNames                       controllers.Api.macroNames
 GET           /api/interpreterNames                 controllers.Api.interpreterNames
+GET           /api/schemaClassNames                 controllers.Api.schemaClassNames
+GET           /api/schemaPropertyNames              controllers.Api.schemaPropertyNames
 GET           /api/links/*nameEncoded               controllers.Api.links(nameEncoded)
 GET           /api/statistics                       controllers.Api.statistics()
 POST          /api/uploadClipboardImage             controllers.Wiki.uploadClipboardImage()

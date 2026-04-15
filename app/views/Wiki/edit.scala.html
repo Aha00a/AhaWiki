@@ -225,6 +225,9 @@
             const uploadingMap = new Map();
             let macroNames = [];
             let interpreterNames = [];
+            let schemaClassNames = [];
+            const schemaPropertyNamesByClass = new Map();
+            const schemaPropertyLoadingByClass = new Set();
             let pageNames = [];
             const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 1 tablesorter'];
             let macroSuggestions = [];
@@ -277,6 +280,101 @@
                     start: cursorIndex - prefix.length,
                     prefix: prefix
                 };
+            }
+
+            function getSchemaBlockStart(left) {
+                const openIndex = left.lastIndexOf('[[[#!');
+                if (openIndex < 0)
+                    return null;
+                const closeIndex = left.lastIndexOf(']]]');
+                if (closeIndex > openIndex)
+                    return null;
+                return openIndex;
+            }
+
+            function getSchemaClassPrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const schemaBlockStart = getSchemaBlockStart(left);
+                if (schemaBlockStart == null)
+                    return null;
+                const shebangLineStart = schemaBlockStart;
+                const lineStart = left.lastIndexOf('\n') + 1;
+                if (lineStart !== shebangLineStart)
+                    return null;
+                const shebangText = left.slice(shebangLineStart);
+                const match = shebangText.match(/^\[\[\[#!\s*Schema(?:\s+([A-Za-z0-9_]*))?$/i);
+                if (!match)
+                    return null;
+                const prefix = match[1] || '';
+                return {
+                    start: cursorIndex - prefix.length,
+                    prefix: prefix
+                };
+            }
+
+            function getSchemaPropertyPrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const schemaBlockStart = getSchemaBlockStart(left);
+                if (schemaBlockStart == null)
+                    return null;
+
+                const shebangLineEnd = value.indexOf('\n', schemaBlockStart);
+                if (shebangLineEnd < 0 || cursorIndex <= shebangLineEnd)
+                    return null;
+                const schemaShebangLine = value.slice(schemaBlockStart, shebangLineEnd);
+                const schemaClassMatch = schemaShebangLine.match(/^\[\[\[#!\s*Schema(?:\s+([A-Za-z0-9_]+))?$/i);
+                if (!schemaClassMatch)
+                    return null;
+                const schemaClass = schemaClassMatch[1] || '';
+
+                const lineStart = left.lastIndexOf('\n') + 1;
+                const lineLeft = left.slice(lineStart);
+                if (lineLeft.includes('\t') || /\s{2,}/.test(lineLeft))
+                    return null;
+                if (/^\s*#/.test(lineLeft))
+                    return null;
+                const match = lineLeft.match(/^\s*([A-Za-z0-9_]*)$/);
+                if (!match)
+                    return null;
+
+                const prefix = match[1] || '';
+                return {
+                    start: cursorIndex - prefix.length,
+                    prefix: prefix,
+                    schemaClass: schemaClass
+                };
+            }
+
+            function schemaPropertyCacheKey(schemaClass) {
+                return schemaClass || '__ALL__';
+            }
+
+            function ensureSchemaPropertyNames(schemaClass) {
+                const cacheKey = schemaPropertyCacheKey(schemaClass);
+                if (schemaPropertyNamesByClass.has(cacheKey) || schemaPropertyLoadingByClass.has(cacheKey))
+                    return;
+
+                schemaPropertyLoadingByClass.add(cacheKey);
+                const query = schemaClass
+                    ? { schemaClass: schemaClass, source: 'class-or-recommended' }
+                    : {};
+                $.get('@routes.Api.schemaPropertyNames', query)
+                    .done(function (data) {
+                        const names = Array.isArray(data) ? data : [];
+                        schemaPropertyNamesByClass.set(cacheKey, names);
+                        const cm = getEditor();
+                        if (cm) {
+                            updateMacroAutocompleteForCodeMirror(cm);
+                        } else {
+                            updateMacroAutocompleteForTextarea();
+                        }
+                    })
+                    .fail(function () {
+                        schemaPropertyNamesByClass.set(cacheKey, []);
+                    })
+                    .always(function () {
+                        schemaPropertyLoadingByClass.delete(cacheKey);
+                    });
             }
 
             function hideMacroAutocomplete() {
@@ -360,20 +458,32 @@
                 const macroPrefixInfo = getMacroPrefix(context.value, context.cursor);
                 const interpreterPrefixInfo = getInterpreterPrefix(context.value, context.cursor);
                 const tableOptionPrefixInfo = getTableOptionPrefix(context.value, context.cursor);
+                const schemaClassPrefixInfo = getSchemaClassPrefix(context.value, context.cursor);
+                const schemaPropertyPrefixInfo = getSchemaPropertyPrefix(context.value, context.cursor);
                 const autocompleteType = interpreterPrefixInfo
                     ? 'interpreter'
                     : tableOptionPrefixInfo
                         ? 'table-option'
+                    : schemaClassPrefixInfo
+                        ? 'schema-class'
+                    : schemaPropertyPrefixInfo
+                        ? 'schema-property'
                     : macroPrefixInfo
                         ? 'macro'
                         : pagePrefixInfo
                             ? 'page'
                             : null;
-                const prefixInfo = interpreterPrefixInfo || tableOptionPrefixInfo || macroPrefixInfo || pagePrefixInfo;
+                const prefixInfo = interpreterPrefixInfo || tableOptionPrefixInfo || schemaClassPrefixInfo || schemaPropertyPrefixInfo || macroPrefixInfo || pagePrefixInfo;
+                if (autocompleteType === 'schema-property')
+                    ensureSchemaPropertyNames((prefixInfo && prefixInfo.schemaClass) || '');
                 const sourceNames = autocompleteType === 'interpreter'
                     ? interpreterNames
                     : autocompleteType === 'table-option'
                         ? tableOptionNames
+                    : autocompleteType === 'schema-class'
+                        ? schemaClassNames
+                    : autocompleteType === 'schema-property'
+                        ? (schemaPropertyNamesByClass.get(schemaPropertyCacheKey((prefixInfo && prefixInfo.schemaClass) || '')) || [])
                     : autocompleteType === 'macro'
                         ? macroNames
                         : autocompleteType === 'page'
@@ -459,6 +569,20 @@
                     .fail(function () {
                         interpreterNames = [];
                     });
+            }
+
+            function loadSchemaClassNames() {
+                $.get('@routes.Api.schemaClassNames')
+                    .done(function (data) {
+                        schemaClassNames = Array.isArray(data) ? data : [];
+                    })
+                    .fail(function () {
+                        schemaClassNames = [];
+                    });
+            }
+
+            function loadSchemaPropertyNames() {
+                ensureSchemaPropertyNames('');
             }
 
             function loadPageNames() {
@@ -685,6 +809,8 @@
             loadAttachments();
             loadMacroNames();
             loadInterpreterNames();
+            loadSchemaClassNames();
+            loadSchemaPropertyNames();
             loadPageNames();
 
             $(document).on('dragenter', function (e) {

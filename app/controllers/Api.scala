@@ -543,6 +543,39 @@ class Api @Inject()(
     Ok(Interpreters.map.values.map(_.name).toSeq.distinct.sorted.asJson)
   }
 
+  def schemaClassNames: Action[AnyContent] = Action { implicit request =>
+    Ok(logics.CalculatedSchemaOrg.mapClass.keys.toSeq.sorted.asJson)
+  }
+
+  def schemaPropertyNames: Action[AnyContent] = Action { implicit request =>
+    val schemaClass: String = request.getQueryString("schemaClass").map(_.trim).getOrElse("")
+    val source: String = request.getQueryString("source").map(_.trim).filter(_.nonEmpty).getOrElse("class-or-recommended")
+    implicit val site: Site = SiteLogic.get(request.host)
+
+    val allProperties: Seq[String] = logics.CalculatedSchemaOrg.mapProperty.keys.toSeq.sorted
+
+    val properties = if (schemaClass.isEmpty) {
+      allProperties
+    } else {
+      val classProperties = logics.CalculatedSchemaOrg.seqProperty
+        .filter(_.domainIncludes.contains(schemaClass))
+        .map(_.id)
+        .distinct
+        .sorted
+      val recommendedProperties = database.withConnection { implicit connection =>
+        models.tables.CalculatedSchemaOrg.selectPropCountWhereCls(schemaClass).map(_.prop)
+      }
+
+      source match {
+        case "recommended" => recommendedProperties
+        case "class" => classProperties
+        case _ => (recommendedProperties ++ classProperties).distinct
+      }
+    }
+
+    Ok(properties.asJson)
+  }
+
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
