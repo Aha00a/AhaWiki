@@ -469,9 +469,7 @@
                 if (!selected)
                     return true;
                 const currentToken = currentValue.slice(macroAutocompleteContext.start, macroAutocompleteContext.cursor);
-                if (autocompleteSuggestionType === 'schema-property')
-                    return currentToken.toLowerCase() === selected.toLowerCase();
-                return false;
+                return currentToken.toLowerCase() === selected.toLowerCase();
             }
 
             function showMacroAutocomplete(context) {
@@ -526,7 +524,7 @@
                     return;
                 }
 
-                if (autocompleteType === 'schema-property' && hasExactAutocompleteMatch(prefixInfo.prefix, list)) {
+                if (hasExactAutocompleteMatch(prefixInfo.prefix, list)) {
                     hideMacroAutocomplete();
                     return;
                 }
