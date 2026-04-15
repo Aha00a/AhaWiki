@@ -130,6 +130,7 @@ function useAdminData(page) {
         pageEdited: [],
     });
     const [recentChanges, setRecentChanges] = useState([]);
+    const [topViewedPages, setTopViewedPages] = useState([]);
     const [userViewHistories, setUserViewHistories] = useState([]);
     const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
@@ -155,19 +156,21 @@ function useAdminData(page) {
     }, []);
 
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
+        const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
             fetchJson("/api/Admin/Sites"),
             fetchJson("/api/Admin/SiteUsers"),
             fetchJson("/api/Admin/Users"),
             fetchJson("/api/Admin/Schedulers"),
             fetchJson("/api/Admin/DailyStats"),
             fetchJson("/api/Admin/RecentChanges?n=30"),
+            fetchJson("/api/Admin/TopViewedPages?n=20"),
         ]);
         setSites(siteData);
         setUsers(userData);
         setAllUsers(allUserData);
         setSchedulers(schedulerData);
         setRecentChanges(recentChangesData);
+        setTopViewedPages(topViewedPagesData);
         setDailyStats({
             userCreated: dailyStatsData?.userCreated ?? [],
             siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
@@ -236,6 +239,7 @@ function useAdminData(page) {
                             pageCreated: [],
                             pageEdited: [],
                         });
+                        setTopViewedPages([]);
                     }
                     return;
                 }
@@ -253,6 +257,7 @@ function useAdminData(page) {
                             pageCreated: [],
                             pageEdited: [],
                         });
+                        setTopViewedPages([]);
                     }
                     return;
                 }
@@ -270,6 +275,7 @@ function useAdminData(page) {
                             pageCreated: [],
                             pageEdited: [],
                         });
+                        setTopViewedPages([]);
                     }
                     return;
                 }
@@ -292,6 +298,7 @@ function useAdminData(page) {
                             pageCreated: [],
                             pageEdited: [],
                         });
+                        setTopViewedPages([]);
                     }
                     return;
                 }
@@ -309,6 +316,7 @@ function useAdminData(page) {
                             pageCreated: [],
                             pageEdited: [],
                         });
+                        setTopViewedPages([]);
                     }
                     return;
                 }
@@ -342,6 +350,7 @@ function useAdminData(page) {
         schedulers,
         dailyStats,
         recentChanges,
+        topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
         loadUserViewHistories,
@@ -657,6 +666,7 @@ function AdminContent({page, onNavigate}) {
         schedulers,
         dailyStats,
         recentChanges,
+        topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
         loadUserViewHistories,
@@ -1077,6 +1087,29 @@ function AdminContent({page, onNavigate}) {
                     onRun={runScheduler}
                     onRefresh={reloadSchedulers}
                 />
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Most Viewed Pages</Title>
+                    <Badge color="pink" variant="light">{topViewedPages.length}</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    로그인 사용자 기준 페이지 조회 누적 상위 문서입니다.
+                </Text>
+                {makeTable(
+                    ["Rank", "Site", "Page", "Views", "Last Viewed"],
+                    topViewedPages.map((row, index) => {
+                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
+                        return [
+                            index + 1,
+                            siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`,
+                            pageUrl ? <Anchor href={pageUrl} target="_blank">{row.pageName}</Anchor> : row.pageName,
+                            row.viewCount,
+                            row.lastViewedAt,
+                        ];
+                    }),
+                )}
             </Card>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">

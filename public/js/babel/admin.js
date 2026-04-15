@@ -123,6 +123,7 @@ function useAdminData(page) {
     pageEdited: []
   });
   const [recentChanges, setRecentChanges] = useState([]);
+  const [topViewedPages, setTopViewedPages] = useState([]);
   const [userViewHistories, setUserViewHistories] = useState([]);
   const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
   const [runningSchedulerName, setRunningSchedulerName] = useState("");
@@ -145,19 +146,21 @@ function useAdminData(page) {
     }
   }, []);
   const loadDashboard = useCallback(async () => {
-    const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData] = await Promise.all([
+    const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
       fetchJson("/api/Admin/Sites"),
       fetchJson("/api/Admin/SiteUsers"),
       fetchJson("/api/Admin/Users"),
       fetchJson("/api/Admin/Schedulers"),
       fetchJson("/api/Admin/DailyStats"),
-      fetchJson("/api/Admin/RecentChanges?n=30")
+      fetchJson("/api/Admin/RecentChanges?n=30"),
+      fetchJson("/api/Admin/TopViewedPages?n=20")
     ]);
     setSites(siteData);
     setUsers(userData);
     setAllUsers(allUserData);
     setSchedulers(schedulerData);
     setRecentChanges(recentChangesData);
+    setTopViewedPages(topViewedPagesData);
     setDailyStats({
       userCreated: dailyStatsData?.userCreated ?? [],
       siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
@@ -222,6 +225,7 @@ function useAdminData(page) {
               pageCreated: [],
               pageEdited: []
             });
+            setTopViewedPages([]);
           }
           return;
         }
@@ -238,6 +242,7 @@ function useAdminData(page) {
               pageCreated: [],
               pageEdited: []
             });
+            setTopViewedPages([]);
           }
           return;
         }
@@ -254,6 +259,7 @@ function useAdminData(page) {
               pageCreated: [],
               pageEdited: []
             });
+            setTopViewedPages([]);
           }
           return;
         }
@@ -275,6 +281,7 @@ function useAdminData(page) {
               pageCreated: [],
               pageEdited: []
             });
+            setTopViewedPages([]);
           }
           return;
         }
@@ -291,6 +298,7 @@ function useAdminData(page) {
               pageCreated: [],
               pageEdited: []
             });
+            setTopViewedPages([]);
           }
           return;
         }
@@ -321,6 +329,7 @@ function useAdminData(page) {
     schedulers,
     dailyStats,
     recentChanges,
+    topViewedPages,
     userViewHistories,
     loadingUserViewHistories,
     loadUserViewHistories,
@@ -484,6 +493,7 @@ function AdminContent({ page, onNavigate }) {
     schedulers,
     dailyStats,
     recentChanges,
+    topViewedPages,
     userViewHistories,
     loadingUserViewHistories,
     loadUserViewHistories,
@@ -686,6 +696,19 @@ function AdminContent({ page, onNavigate }) {
       onRun: runScheduler,
       onRefresh: reloadSchedulers
     }
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React.createElement(Badge, { color: "pink", variant: "light" }, topViewedPages.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4."), makeTable(
+    ["Rank", "Site", "Page", "Views", "Last Viewed"],
+    topViewedPages.map((row, index) => {
+      const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+      const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
+      return [
+        index + 1,
+        siteUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
+        pageUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName,
+        row.viewCount,
+        row.lastViewedAt
+      ];
+    })
   )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
     recentChanges.map((row) => [

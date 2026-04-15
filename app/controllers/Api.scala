@@ -392,6 +392,60 @@ class Api @Inject()(
     }
   }
 
+  def adminTopViewedPages: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminTopViewedPage(
+          siteSeq: Long,
+          siteName: String,
+          siteDomain: Option[String],
+          pageName: String,
+          viewCount: Long,
+          lastViewedAt: String,
+        )
+
+        val limit = request.getQueryString("n")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1).min(200))
+          .getOrElse(30)
+
+        val rows = SQL"""
+          SELECT
+            UV.site AS site_seq,
+            S.name AS site_name,
+            SD.site_domain,
+            UV.pageName AS page_name,
+            COUNT(*) AS view_count,
+            DATE_FORMAT(MAX(UV.dateInserted), '%Y-%m-%d %H:%i:%s') AS last_viewed_at
+          FROM UserViewHistory UV
+          INNER JOIN Site S ON S.seq = UV.site
+          LEFT JOIN (
+            SELECT site, MIN(domain) AS site_domain
+            FROM SiteDomain
+            GROUP BY site
+          ) SD ON SD.site = UV.site
+          GROUP BY UV.site, S.name, SD.site_domain, UV.pageName
+          ORDER BY view_count DESC, MAX(UV.dateInserted) DESC
+          LIMIT $limit
+        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("page_name") ~ long("view_count") ~ str("last_viewed_at")).map {
+          case siteSeq ~ siteName ~ siteDomain ~ pageName ~ viewCount ~ lastViewedAt =>
+            AdminTopViewedPage(
+              siteSeq = siteSeq,
+              siteName = siteName,
+              siteDomain = siteDomain,
+              pageName = pageName,
+              viewCount = viewCount,
+              lastViewedAt = lastViewedAt,
+            )
+        }.*)
+
+        Ok(rows.asJson)
+      }
+    }
+  }
+
   def adminRecentChanges: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       Forbidden("Access denied.")

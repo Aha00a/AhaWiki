@@ -53,6 +53,7 @@ GET           /api/Admin/Users                      controllers.Api.adminUsers
 GET           /api/Admin/UserViews                 controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
 GET           /api/Admin/Schedulers                 controllers.Api.adminSchedulers
 GET           /api/Admin/DailyStats                controllers.Api.adminDailyStats
+GET           /api/Admin/TopViewedPages            controllers.Api.adminTopViewedPages
 GET           /api/Admin/RecentChanges             controllers.Api.adminRecentChanges
 GET           /api/Admin/SignedReadUrl            controllers.Api.adminGenerateSignedReadUrl
 GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
