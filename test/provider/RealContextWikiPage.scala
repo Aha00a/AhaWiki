@@ -7,6 +7,7 @@ import logics.wikis.RenderingMode
 import models.ContextWikiPage
 import models.RequestWrapper
 import models.tables.Site
+import models.tables.User
 import play.api.Application
 import play.api.db.Database
 
@@ -19,7 +20,8 @@ trait RealContextWikiPage {
     implicit val applicationConf: ApplicationConf = app.injector.instanceOf[ApplicationConf]
     implicit val cache: AhaWikiCache = app.injector.instanceOf[AhaWikiCache]
     implicit val requestWrapper: RequestWrapper = new RequestWrapper {
-      override def getId: Option[String] = Some("aha00a@gmail.com")
+      override def getUser: Option[User.IdEmailNickname] =
+        Some(User.IdEmailNickname(1L, "aha00a@gmail.com", "aha00a"))
 
       override def locale: Locale = Locale.US
 
