@@ -391,12 +391,10 @@ function Navigation({activePage, onNavigate}) {
     const links = useMemo(
         () => [
             {href: "/", label: "Home", key: "home"},
-            {href: "/Admin", label: "Dashboard", key: "dashboard"},
-            {href: "/Admin/Site", label: "Site", key: "sites"},
-            {href: "/Admin/SiteUser", label: "Site User", key: "users"},
-            {href: "/Admin/User", label: "User", key: "all-users"},
-            {href: "/Admin/Operation", label: "Operation", key: "operations"},
-            {href: "/Admin/RecentChange", label: "Recent Change", key: "recent-changes"},
+            {href: "/Admin", label: "핵심 대시보드", key: "dashboard"},
+            {href: "/Admin/RecentChange", label: "최근 변경", key: "recent-changes"},
+            {href: "/Admin/User", label: "사용자 관리", key: "all-users"},
+            {href: "/Admin/Operation", label: "운영 작업", key: "operations"},
         ],
         [],
     );
@@ -965,7 +963,7 @@ function AdminContent({page, onNavigate}) {
 
     return (
         <Stack gap="lg">
-            <SimpleGrid cols={{base: 1, sm: 3}} spacing="md">
+            <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
                 <Card withBorder radius="md" padding="md">
                     <Group justify="space-between" align="flex-start">
                         <Stack gap={2}>
@@ -987,13 +985,33 @@ function AdminContent({page, onNavigate}) {
                 <Card withBorder radius="md" padding="md">
                     <Group justify="space-between" align="flex-start">
                         <Stack gap={2}>
-                            <Text size="sm" c="dimmed">Schedulers</Text>
-                            <Title order={2}>{schedulers.length}</Title>
+                            <Text size="sm" c="dimmed">30일 문서 수정</Text>
+                            <Title order={2}>{dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)}</Title>
+                        </Stack>
+                        <ThemeIcon color="grape" variant="light" radius="xl">E</ThemeIcon>
+                    </Group>
+                </Card>
+                <Card withBorder radius="md" padding="md">
+                    <Group justify="space-between" align="flex-start">
+                        <Stack gap={2}>
+                            <Text size="sm" c="dimmed">Running Schedulers</Text>
+                            <Title order={2}>{schedulers.filter((scheduler) => scheduler.running).length}/{schedulers.length}</Title>
                         </Stack>
                         <ThemeIcon color="blue" variant="light" radius="xl">R</ThemeIcon>
                     </Group>
                 </Card>
             </SimpleGrid>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>빠른 이동</Title>
+                    <Badge color="indigo" variant="light">Quick Access</Badge>
+                </Group>
+                <SimpleGrid cols={{base: 1, sm: 3}} spacing="sm">
+                    <Button variant="light" onClick={() => onNavigate("/Admin/RecentChange")}>최근 변경 보기</Button>
+                    <Button variant="light" onClick={() => onNavigate("/Admin/User")}>사용자 목록 보기</Button>
+                    <Button variant="light" onClick={() => onNavigate("/Admin/Operation")}>운영 작업 열기</Button>
+                </SimpleGrid>
+            </Card>
             <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
                 <StatTrendCard
                     title="New Users"
@@ -1039,66 +1057,15 @@ function AdminContent({page, onNavigate}) {
             </Card>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
-                    <Title order={3}>Sites</Title>
-                    <Badge color="indigo" variant="light">{sites.length}</Badge>
-                </Group>
-                {makeTable(
-                    ["Seq", "Name", "Domains", "Users", "Pages"],
-                    sites.map((site) => [
-                        site.seq,
-                        site.name,
-                        (site.domains ?? []).join(", "),
-                        site.userCount ?? 0,
-                        site.pageCount ?? 0,
-                    ]),
-                )}
-            </Card>
-            <Card withBorder radius="md" padding="lg">
-                <Group justify="space-between" mb="md">
-                    <Title order={3}>All Users</Title>
-                    <Badge color="blue" variant="light">{allUsers.length}</Badge>
-                </Group>
-                {makeTable(
-                    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
-                    allUsers.map((user) => [
-                        user.seq,
-                        user.email,
-                        user.nickname,
-                        user.siteCount ?? 0,
-                        user.created,
-                        user.updated,
-                    ]),
-                )}
-            </Card>
-            <Card withBorder radius="md" padding="lg">
-                <Group justify="space-between" mb="md">
-                    <Title order={3}>Site Users (current host)</Title>
-                    <Badge color="teal" variant="light">{users.length}</Badge>
-                </Group>
-                {makeTable(
-                    ["User", "Email", "Nickname", "Created"],
-                    users.map((user) => [user.user, user.email, user.nickname, user.created]),
-                )}
-            </Card>
-            <Card withBorder radius="md" padding="lg">
-                <SchedulerTable
-                    schedulers={schedulers}
-                    runningSchedulerName={runningSchedulerName}
-                    onRun={runScheduler}
-                    onRefresh={reloadSchedulers}
-                />
-            </Card>
-            <Card withBorder radius="md" padding="lg">
-                <Group justify="space-between" mb="md">
                     <Title order={3}>Most Viewed Pages</Title>
-                    <Badge color="pink" variant="light">{topViewedPages.length}</Badge>
+                    <Badge color="pink" variant="light">{Math.min(topViewedPages.length, 10)}</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    로그인 사용자 기준 페이지 조회 누적 상위 문서입니다.
+                    로그인 사용자 기준 페이지 조회 누적 상위 문서입니다. 핵심 10개만 표시합니다.
                 </Text>
                 {makeTable(
                     ["Rank", "Site", "Page", "Views", "Last Viewed"],
-                    topViewedPages.map((row, index) => {
+                    topViewedPages.slice(0, 10).map((row, index) => {
                         const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
                         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
                         return [
@@ -1121,7 +1088,7 @@ function AdminContent({page, onNavigate}) {
                 </Text>
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-                    recentChanges.map((row) => [
+                    recentChanges.slice(0, 10).map((row) => [
                         row.dateTime,
                         `${row.siteName} (#${row.siteSeq})`,
                         row.name,
@@ -1131,30 +1098,6 @@ function AdminContent({page, onNavigate}) {
                     ]),
                 )}
             </Card>
-            <DailyStatTable
-                title="Daily New Users"
-                description="최근 30일 기준 전체 사용자 신규 생성 수를 차트와 표로 함께 제공합니다."
-                rows={dailyStats.userCreated}
-                badgeColor="blue"
-            />
-            <DailyStatTable
-                title="Daily Site User Joins"
-                description="최근 30일 기준 사이트 가입(UserSite) 수를 차트와 표로 함께 제공합니다."
-                rows={dailyStats.siteUserCreated}
-                badgeColor="teal"
-            />
-            <DailyStatTable
-                title="Daily New Pages"
-                description="최근 30일 기준 revision=1 페이지 생성 수를 차트와 표로 함께 제공합니다."
-                rows={dailyStats.pageCreated}
-                badgeColor="indigo"
-            />
-            <DailyStatTable
-                title="Daily Page Edits"
-                description="최근 30일 기준 페이지 전체 수정(모든 리비전) 수를 차트와 표로 함께 제공합니다."
-                rows={dailyStats.pageEdited}
-                badgeColor="grape"
-            />
         </Stack>
     );
 }

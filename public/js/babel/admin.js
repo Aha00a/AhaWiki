@@ -349,12 +349,10 @@ function Navigation({ activePage, onNavigate }) {
   const links = useMemo(
     () => [
       { href: "/", label: "Home", key: "home" },
-      { href: "/Admin", label: "Dashboard", key: "dashboard" },
-      { href: "/Admin/Site", label: "Site", key: "sites" },
-      { href: "/Admin/SiteUser", label: "Site User", key: "users" },
-      { href: "/Admin/User", label: "User", key: "all-users" },
-      { href: "/Admin/Operation", label: "Operation", key: "operations" },
-      { href: "/Admin/RecentChange", label: "Recent Change", key: "recent-changes" }
+      { href: "/Admin", label: "\uD575\uC2EC \uB300\uC2DC\uBCF4\uB4DC", key: "dashboard" },
+      { href: "/Admin/RecentChange", label: "\uCD5C\uADFC \uBCC0\uACBD", key: "recent-changes" },
+      { href: "/Admin/User", label: "\uC0AC\uC6A9\uC790 \uAD00\uB9AC", key: "all-users" },
+      { href: "/Admin/Operation", label: "\uC6B4\uC601 \uC791\uC5C5", key: "operations" }
     ],
     []
   );
@@ -396,18 +394,6 @@ function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) 
     },
     scheduler.running ? "Running..." : "Run now"
   )))))));
-}
-function DailyStatTable({ title, description, rows, badgeColor }) {
-  const maxCount = rows.reduce((max, row) => Math.max(max, row.count ?? 0), 0);
-  const bars = rows.slice(-14);
-  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, title), /* @__PURE__ */ React.createElement(Badge, { color: badgeColor, variant: "light" }, rows.length, " days")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, description), /* @__PURE__ */ React.createElement(Stack, { gap: 8, mb: "md" }, bars.map((row) => {
-    const count = row.count ?? 0;
-    const widthPercent = maxCount === 0 ? 0 : count / maxCount * 100;
-    return /* @__PURE__ */ React.createElement(Stack, { key: row.ymd, gap: 4 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, row.ymd), /* @__PURE__ */ React.createElement(Text, { size: "xs", fw: 700 }, count)), /* @__PURE__ */ React.createElement(Progress, { value: widthPercent, color: badgeColor, radius: "xl" }));
-  })), makeTable(
-    ["Date", "Count"],
-    rows.map((row) => [row.ymd, row.count])
-  ));
 }
 function normalizeDailyRows(rows) {
   return [...rows].map((row) => ({
@@ -624,7 +610,7 @@ function AdminContent({ page, onNavigate }) {
       ])
     ));
   }
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Running Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.filter((scheduler) => scheduler.running).length, "/", schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/Operation") }, "\uC6B4\uC601 \uC791\uC5C5 \uC5F4\uAE30"))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
     StatTrendCard,
     {
       title: "New Users",
@@ -666,39 +652,9 @@ function AdminContent({ page, onNavigate }) {
         { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }
       ]
     }
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length)), makeTable(
-    ["Seq", "Name", "Domains", "Users", "Pages"],
-    sites.map((site) => [
-      site.seq,
-      site.name,
-      (site.domains ?? []).join(", "),
-      site.userCount ?? 0,
-      site.pageCount ?? 0
-    ])
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUsers.length)), makeTable(
-    ["Seq", "Email", "Nickname", "Sites", "Created", "Updated"],
-    allUsers.map((user) => [
-      user.seq,
-      user.email,
-      user.nickname,
-      user.siteCount ?? 0,
-      user.created,
-      user.updated
-    ])
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Users (current host)"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, users.length)), makeTable(
-    ["User", "Email", "Nickname", "Created"],
-    users.map((user) => [user.user, user.email, user.nickname, user.created])
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
-    SchedulerTable,
-    {
-      schedulers,
-      runningSchedulerName,
-      onRun: runScheduler,
-      onRefresh: reloadSchedulers
-    }
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React.createElement(Badge, { color: "pink", variant: "light" }, topViewedPages.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4."), makeTable(
+  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React.createElement(Badge, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 10))), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4. \uD575\uC2EC 10\uAC1C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."), makeTable(
     ["Rank", "Site", "Page", "Views", "Last Viewed"],
-    topViewedPages.map((row, index) => {
+    topViewedPages.slice(0, 10).map((row, index) => {
       const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
       const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
       return [
@@ -711,7 +667,7 @@ function AdminContent({ page, onNavigate }) {
     })
   )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-    recentChanges.map((row) => [
+    recentChanges.slice(0, 10).map((row) => [
       row.dateTime,
       `${row.siteName} (#${row.siteSeq})`,
       row.name,
@@ -719,39 +675,7 @@ function AdminContent({ page, onNavigate }) {
       row.nickname ?? "-",
       row.comment || "-"
     ])
-  )), /* @__PURE__ */ React.createElement(
-    DailyStatTable,
-    {
-      title: "Daily New Users",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC804\uCCB4 \uC0AC\uC6A9\uC790 \uC2E0\uADDC \uC0DD\uC131 \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
-      rows: dailyStats.userCreated,
-      badgeColor: "blue"
-    }
-  ), /* @__PURE__ */ React.createElement(
-    DailyStatTable,
-    {
-      title: "Daily Site User Joins",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uC0AC\uC774\uD2B8 \uAC00\uC785(UserSite) \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
-      rows: dailyStats.siteUserCreated,
-      badgeColor: "teal"
-    }
-  ), /* @__PURE__ */ React.createElement(
-    DailyStatTable,
-    {
-      title: "Daily New Pages",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 revision=1 \uD398\uC774\uC9C0 \uC0DD\uC131 \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
-      rows: dailyStats.pageCreated,
-      badgeColor: "indigo"
-    }
-  ), /* @__PURE__ */ React.createElement(
-    DailyStatTable,
-    {
-      title: "Daily Page Edits",
-      description: "\uCD5C\uADFC 30\uC77C \uAE30\uC900 \uD398\uC774\uC9C0 \uC804\uCCB4 \uC218\uC815(\uBAA8\uB4E0 \uB9AC\uBE44\uC804) \uC218\uB97C \uCC28\uD2B8\uC640 \uD45C\uB85C \uD568\uAED8 \uC81C\uACF5\uD569\uB2C8\uB2E4.",
-      rows: dailyStats.pageEdited,
-      badgeColor: "grape"
-    }
-  ));
+  )));
 }
 function AdminApp({ initialPage }) {
   const [page, setPage] = useState(initialPage);
