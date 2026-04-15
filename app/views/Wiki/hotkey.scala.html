@@ -34,6 +34,52 @@
         $('.search, .searchBg').remove();
     }
 
+    function showHotkeyHelp() {
+        var items = [
+            ['F', 'Front page'],
+            ['A', 'AhaWiki page'],
+            ['C', 'RecentChanges'],
+            ['T', 'TitleIndex'],
+            ['L', 'PageList'],
+            ['M', 'PageMap'],
+            ['R', 'Random page'],
+            ['E', 'Edit action toggle'],
+            ['H', 'History action toggle'],
+            ['B', 'Blame action toggle'],
+            ['S,G,/', 'Open search'],
+            ['W', 'Open diary write'],
+            ['?', 'Open hotkey help']
+        ];
+        var rows = items.map(function (item) {
+            return '<tr><th style="text-align:left;white-space:nowrap;padding:6px 16px 6px 0;">' + item[0] + '</th><td style="padding:6px 0;">' + item[1] + '</td></tr>';
+        }).join('');
+
+        var popup = [
+            '<div class="searchBg hotkeyHelpBg"></div>',
+            '<div class="search hotkeyHelp" style="max-width:560px;padding:24px;box-sizing:border-box;background-color:#fff;border-radius: 5px;">',
+            '<h2 style="margin:0 0 12px 0;">Hotkeys</h2>',
+            '<p style="margin:0 0 16px 0;color:#777;">Press ESC or click outside to close.</p>',
+            '<table style="width:100%;border-collapse:collapse;">' + rows + '</table>',
+            '</div>'
+        ].join('');
+
+        $('body').append($(popup));
+        $('.hotkeyHelpBg').click(function () {
+            hideHotkeyHelp();
+        });
+        $(document).on('keydown.hotkeyHelp', function (e) {
+            if (e.keyCode == 27) {
+                hideHotkeyHelp();
+            }
+        });
+        return false;
+    }
+
+    function hideHotkeyHelp() {
+        $('.hotkeyHelp, .hotkeyHelpBg').remove();
+        $(document).off('keydown.hotkeyHelp');
+    }
+
     function showWrite() {
         $.ajax({
             url: '@routes.Api.csrf',
@@ -91,6 +137,9 @@
         $(document).bind('keydown', 's', function () { return showSearch(); });
         $(document).bind('keydown', 'g', function () { return showSearch(); });
         $(document).bind('keydown', '/', function () { return showSearch(); });
+
+        $(document).bind('keydown', '?', function () { return showHotkeyHelp(); });
+        $(document).bind('keydown', 'shift+/', function () { return showHotkeyHelp(); });
 
         $(document).bind('keydown', 'w', function () { return showWrite(); });
     });
