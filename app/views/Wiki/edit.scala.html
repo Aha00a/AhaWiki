@@ -453,6 +453,27 @@
                 renderMacroAutocomplete();
             }
 
+            function hasExactAutocompleteMatch(prefix, list) {
+                if (!prefix)
+                    return false;
+                const prefixLower = prefix.toLowerCase();
+                return list.some(function (name) {
+                    return name.toLowerCase() === prefixLower;
+                });
+            }
+
+            function shouldSkipAutocompleteApply(currentValue, index) {
+                if (!macroAutocompleteContext || !macroSuggestions.length)
+                    return true;
+                const selected = macroSuggestions[index];
+                if (!selected)
+                    return true;
+                const currentToken = currentValue.slice(macroAutocompleteContext.start, macroAutocompleteContext.cursor);
+                if (autocompleteSuggestionType === 'schema-property')
+                    return currentToken.toLowerCase() === selected.toLowerCase();
+                return false;
+            }
+
             function showMacroAutocomplete(context) {
                 const pagePrefixInfo = getPagePrefix(context.value, context.cursor);
                 const macroPrefixInfo = getMacroPrefix(context.value, context.cursor);
@@ -501,6 +522,11 @@
                 }).slice(0, 30);
 
                 if (!list.length) {
+                    hideMacroAutocomplete();
+                    return;
+                }
+
+                if (autocompleteType === 'schema-property' && hasExactAutocompleteMatch(prefixInfo.prefix, list)) {
                     hideMacroAutocomplete();
                     return;
                 }
@@ -921,6 +947,10 @@
                         return;
                     }
                     if (e.key === 'Enter' || e.key === 'Tab') {
+                        if (shouldSkipAutocompleteApply(cm.getValue(), activeMacroSuggestionIndex)) {
+                            hideMacroAutocomplete();
+                            return;
+                        }
                         e.preventDefault();
                         applyMacroAutocompleteSuggestion(activeMacroSuggestionIndex);
                         return;
@@ -952,6 +982,12 @@
                     return;
                 }
                 if (e.key === 'Enter' || e.key === 'Tab') {
+                    const element = $textarea.get(0);
+                    const currentValue = element ? element.value : '';
+                    if (shouldSkipAutocompleteApply(currentValue, activeMacroSuggestionIndex)) {
+                        hideMacroAutocomplete();
+                        return;
+                    }
                     e.preventDefault();
                     applyMacroAutocompleteSuggestion(activeMacroSuggestionIndex);
                     return;
