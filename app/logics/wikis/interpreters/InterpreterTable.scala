@@ -61,7 +61,7 @@ object InterpreterTable extends TraitInterpreter {
         else
           s"""<table class="InterpreterTable ${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
       }
-    }).getOrElse("Error!")
+    }).getOrElse("""Error: invalid table options. Use <code>#!table tsv [thRow] [thColumn] [classes]</code>.""")
   }
 
   def convert(reader: CsvListReader): Seq[Seq[String]] = {

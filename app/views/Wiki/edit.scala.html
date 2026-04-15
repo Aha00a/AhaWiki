@@ -226,6 +226,7 @@
             let macroNames = [];
             let interpreterNames = [];
             let pageNames = [];
+            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 1 tablesorter'];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;
@@ -261,6 +262,20 @@
                 return {
                     start: cursorIndex - match[1].length,
                     prefix: match[1]
+                };
+            }
+
+            function getTableOptionPrefix(value, cursorIndex) {
+                const left = value.slice(0, cursorIndex);
+                const match = left.match(/\[\[\[#!table(?:\s+([^\]\n]*))?$/i);
+                if (!match)
+                    return null;
+                const optionInput = match[1] || '';
+                const tokenMatch = optionInput.match(/(?:^|\s)([^\s]*)$/);
+                const prefix = tokenMatch ? tokenMatch[1] : '';
+                return {
+                    start: cursorIndex - prefix.length,
+                    prefix: prefix
                 };
             }
 
@@ -344,16 +359,21 @@
                 const pagePrefixInfo = getPagePrefix(context.value, context.cursor);
                 const macroPrefixInfo = getMacroPrefix(context.value, context.cursor);
                 const interpreterPrefixInfo = getInterpreterPrefix(context.value, context.cursor);
+                const tableOptionPrefixInfo = getTableOptionPrefix(context.value, context.cursor);
                 const autocompleteType = interpreterPrefixInfo
                     ? 'interpreter'
+                    : tableOptionPrefixInfo
+                        ? 'table-option'
                     : macroPrefixInfo
                         ? 'macro'
                         : pagePrefixInfo
                             ? 'page'
                             : null;
-                const prefixInfo = interpreterPrefixInfo || macroPrefixInfo || pagePrefixInfo;
+                const prefixInfo = interpreterPrefixInfo || tableOptionPrefixInfo || macroPrefixInfo || pagePrefixInfo;
                 const sourceNames = autocompleteType === 'interpreter'
                     ? interpreterNames
+                    : autocompleteType === 'table-option'
+                        ? tableOptionNames
                     : autocompleteType === 'macro'
                         ? macroNames
                         : autocompleteType === 'page'
