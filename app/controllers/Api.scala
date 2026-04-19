@@ -89,7 +89,7 @@ class Api @Inject()(
       .getOrElse("png")
     val sanitizedFilename = sanitizeAttachmentPathSegment(originalFileName)
     val formattedDateTime = now.format(adminFaviconTimestampFormatter)
-    s"Attachment/$siteSeq/.admin/favicon/${sanitizedFilename}.$formattedDateTime.$extension"
+    s"Favicon/$siteSeq/${sanitizedFilename}.$formattedDateTime.$extension"
   }
 
   private def buildAmazonS3Client(): AmazonS3 = {
