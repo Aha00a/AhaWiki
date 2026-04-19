@@ -5,6 +5,12 @@
         $(function(){
             $('[name=before]').eq(1).click();
             $('[name=after]').eq(0).click();
+            var updateMinorEditRows = function () {
+                var showMinorEdit = $('#showMinorEdit').is(':checked');
+                $('.historyRowMinorEdit').toggle(showMinorEdit);
+            };
+            $('#showMinorEdit').change(updateMinorEditRows);
+            updateMinorEditRows();
             $('.buttonDeleteLastRevision').click(function () {
                 if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
                     return false;
@@ -35,6 +41,7 @@
             <h1>History of <a href="@title">@title</a></h1>
             <button class="buttonDeleteLastRevision">Delete Last Revision</button>
             <form>
+                <label><input type="checkbox" id="showMinorEdit"/> Show MinorEdit</label>
                 <input type="hidden" name="action" value="diff"/>
                 <table class="simpleTable">
                     <tr>
@@ -47,7 +54,7 @@
                         <th>Comment</th>
                     </tr>
                     @for(history <- listHistory) {
-                        <tr>
+                        <tr class="@if(history.isMinorEdit){historyRowMinorEdit}">
                             <td><input type="radio" name="before" value="@(history.revision)"/></td>
                             <td><input type="radio" name="after" value="@(history.revision)"/></td>
                             <td>
