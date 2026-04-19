@@ -20,7 +20,7 @@ object MacroRecentChanges extends TraitMacro {
                     s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
                     s"${t.toIsoLocalDateTimeString}",
                     s"${t.nickname.map(UserPageLogic.wikiMarkup).getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
-                    s"${t.comment}"
+                    s"${if (t.isMinorEdit) "[minor] " else ""}${t.comment}"
                 ))
                 s"""=== $yearMonth
                    |[[[#!Table tsv 1 tablesorter

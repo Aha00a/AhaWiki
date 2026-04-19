@@ -43,6 +43,7 @@
                         <th width="200px">Date</th>
                         <th width="200px">Nickname</th>
                         <th width="100px">IP</th>
+                        <th width="90px">Minor</th>
                         <th>Comment</th>
                     </tr>
                     @for(history <- listHistory) {
@@ -55,6 +56,7 @@
                             <td>@(history.toIsoLocalDateTimeString)</td>
                             <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
+                            <td>@if(history.isMinorEdit){Y}else{N}</td>
                             <td>@(history.comment)</td>
                         </tr>
                     }

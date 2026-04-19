@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import anorm.SqlParser.{long, str}
+import anorm.SqlParser.{bool, long, str}
 import anorm._
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
@@ -460,6 +460,7 @@ class Api @Inject()(
           nickname: Option[String],
           remoteAddress: String,
           comment: String,
+          isMinorEdit: Boolean,
         )
 
         val limit = request.getQueryString("n")
@@ -476,14 +477,15 @@ class Api @Inject()(
             DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
             U.nickname,
             P.remoteAddress,
-            P.comment
+            P.comment,
+            P.isMinorEdit
           FROM Page P
           INNER JOIN Site S ON S.seq = P.site
           LEFT JOIN User U ON U.seq = P.user
           ORDER BY P.dateTime DESC
           LIMIT $limit
-        """.as((long("site_seq") ~ str("site_name") ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment")).map {
-          case siteSeq ~ siteName ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment =>
+        """.as((long("site_seq") ~ str("site_name") ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
+          case siteSeq ~ siteName ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
             AdminRecentChange(
               siteSeq = siteSeq,
               siteName = siteName,
@@ -493,6 +495,7 @@ class Api @Inject()(
               nickname = nickname,
               remoteAddress = remoteAddress,
               comment = comment,
+              isMinorEdit = isMinorEdit,
             )
         }.*)
 

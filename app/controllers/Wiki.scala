@@ -186,7 +186,7 @@ controllerComponents: ControllerComponents,
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
-          val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", "", content)
+          val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", "", isMinorEdit = false, content)
           Ok(views.html.Wiki.edit(page, applicationConf)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
@@ -375,7 +375,8 @@ controllerComponents: ControllerComponents,
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
-    val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> boolean, "recaptcha" -> text)).bindFromRequest.get
+    val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> optional(boolean), "recaptcha" -> text)).bindFromRequest.get
+    val isMinorEdit = minorEdit.getOrElse(false)
     val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
     val remoteAddress = request.remoteAddressWithXRealIp
 
@@ -393,9 +394,7 @@ controllerComponents: ControllerComponents,
           BadRequest("body == latestText")
         } else {
           val now = LocalDateTime.now()
-          val dateTime = if (minorEdit) latestTime else now
-          val commentFixed = if (minorEdit) s"$comment - minor edit at ${now.toIsoLocalDateTimeString}" else comment
-          PageLogic.insert(name, revision + 1, dateTime, commentFixed, body)
+          PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, body)
 
           name match {
             case ".header" => ahaWikiCache.Header.invalidate()
@@ -518,7 +517,7 @@ controllerComponents: ControllerComponents,
             })
             val body = extractConvertApplyInterpreterRefresh.inject(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
             if (pageContent.content != body) {
-              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", body)
+              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, body)
               Ok("")
             } else {
               Ok("NotChanged")
@@ -546,7 +545,7 @@ controllerComponents: ControllerComponents,
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
 
             Page.rename(name, newName)
-            PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", s"#!redirect $newName")
+            PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
             actorAhaWiki ! Calculate(site, newName)
             Ok("")
           } else {
