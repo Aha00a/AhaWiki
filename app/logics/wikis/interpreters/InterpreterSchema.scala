@@ -42,6 +42,39 @@ object InterpreterSchema extends TraitInterpreter {
     "actor" -> "character",
   ).toMap
 
+  case class DisplayField(key: String, values: Seq[String], pairKey: Option[String] = None, pairValues: Seq[String] = Seq.empty)
+
+  def mergeFieldsForDisplay(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String] = mapPair): Seq[DisplayField] = {
+    val buffer = scala.collection.mutable.ArrayBuffer.empty[DisplayField]
+    var i = 0
+    while (i < seqSeqField.size) {
+      val seqNow = seqSeqField(i)
+      val key = seqNow.head
+      val values = seqNow.tail
+
+      val merged = mapPair.get(key)
+        .filter(_ => i + 1 < seqSeqField.size)
+        .flatMap { pairKey =>
+          val seqNext = seqSeqField(i + 1)
+          if (seqNext.head == pairKey && values.size == seqNext.tail.size) {
+            Some(DisplayField(key, values, Some(pairKey), seqNext.tail))
+          } else {
+            None
+          }
+        }
+
+      merged match {
+        case Some(v) =>
+          buffer += v
+          i += 2
+        case None =>
+          buffer += DisplayField(key, values)
+          i += 1
+      }
+    }
+    buffer.toSeq
+  }
+
   def mergeFields(seqSeqField: Seq[Seq[String]], mapPair: Map[String, String] = mapPair): Seq[Seq[String]] = {
     val (seqSeqFieldNew, skip) = seqSeqField.sliding(2).foldLeft((Seq.empty[Seq[String]], false)) {
       case ((acc, false), Seq(_)) => (acc, false)
@@ -95,64 +128,89 @@ object InterpreterSchema extends TraitInterpreter {
         </h5>
         <div>
           {
-            parseResult.seqSeqField.map { case key +: tail =>
+            mergeFieldsForDisplay(parseResult.seqSeqField).map { field =>
+              val key = field.key
+              val tail = field.values
               <div>
                 <dt>
                   {
                   logics.CalculatedSchemaOrg.mapProperty.get(key).map(n => {
-                      n.toXmlSpan()
+                      if (field.pairKey.isDefined) {
+                        val pairNode = logics.CalculatedSchemaOrg.mapProperty.get(field.pairKey.get).map(_.toXmlSpan()).getOrElse {
+                          <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(field.pairKey.get)}</span>
+                        }
+                        <span>{n.toXmlSpan()} / {pairNode}</span>
+                      } else {
+                        n.toXmlSpan()
+                      }
                     }).getOrElse{
-                      <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                      if (field.pairKey.isDefined) {
+                        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)} / {EnglishCaseConverter.camelCase2TitleCase(field.pairKey.get)}</span>
+                      } else {
+                        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+                      }
                     }
                   }
                 </dt>
                 {
-                  tail.map {
-                    case v if Seq("image", "logo").contains(key) =>
-                      <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
-                    case v if Seq("url", "codeRepository", "sameAs").contains(key) =>
-                      <dd property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
-                    case v if key.startsWith("date") || key.endsWith("Date") =>
-                      <dd property={key}>
-                        {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
-                        ({MacroPeriod.toHtmlString(v)})
-                      </dd>
-                    case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
-                      val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
-                      <div class="address">
-                        <dd property={key}>
-                          {
-                            if(Hangul.containsKo(v)) {
-                              expandAddress(v).flatMap(seq => Seq(
-                                XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
-                                " ",
-                              ))
-                            } else {
-                              XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
-                            }
-                          }
-                          <div class="aspectRatioWrapper">
-                            <div class="ratio_1_1" ></div>
-                            <div class="aspectRatioContent">
-                              <iframe
-                              width="100%" height="100%" frameborder="0"
-                              allowfullscreen="allowfullscreen"
-                              src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
-                            </div>
-                          </div>
-                          {
-                            if (Hangul.containsKo(v)) {
-                              <div class="mapServiceLinks">
-                                <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="Google Map"/>Google&nbsp;Map</a>
-                                <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="Naver Map"/>Naver&nbsp;Map</a>
-                                <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/>Kakao&nbsp;Map</a>
+                  field.pairKey match {
+                    case Some(pairKey) =>
+                      tail.zip(field.pairValues).map {
+                        case (v1, v2) =>
+                          <dd>
+                            <span property={key}>{XML.loadString(AhaMarkLink(v1).toHtmlString(pageNameSet))}</span>
+                            {" / "}
+                            <span property={pairKey}>{XML.loadString(AhaMarkLink(v2).toHtmlString(pageNameSet))}</span>
+                          </dd>
+                      }
+                    case None =>
+                      tail.map {
+                        case v if Seq("image", "logo").contains(key) =>
+                          <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
+                        case v if Seq("url", "codeRepository", "sameAs").contains(key) =>
+                          <dd property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
+                        case v if key.startsWith("date") || key.endsWith("Date") =>
+                          <dd property={key}>
+                            {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
+                            ({MacroPeriod.toHtmlString(v)})
+                          </dd>
+                        case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
+                          val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
+                          <div class="address">
+                            <dd property={key}>
+                              {
+                                if(Hangul.containsKo(v)) {
+                                  expandAddress(v).flatMap(seq => Seq(
+                                    XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                    " ",
+                                  ))
+                                } else {
+                                  XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+                                }
+                              }
+                              <div class="aspectRatioWrapper">
+                                <div class="ratio_1_1" ></div>
+                                <div class="aspectRatioContent">
+                                  <iframe
+                                  width="100%" height="100%" frameborder="0"
+                                  allowfullscreen="allowfullscreen"
+                                  src={s"https://www.google.com/maps/embed/v1/place?q=${UriUtil.encodeURIComponent(v)}&key=${mapJavaScriptApiKey}"}></iframe>
+                                </div>
                               </div>
-                            }
-                          }
-                        </dd>
-                      </div>
-                    case v =>
-                      <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
+                              {
+                                if (Hangul.containsKo(v)) {
+                                  <div class="mapServiceLinks">
+                                    <a rel="noopener" target="_blank" href={s"https://www.google.com/maps/search/${UriUtil.encodeURIComponent(v)}?hl=en&source=opensearch"}><img class="iconMap" src="/public/img/GoogleMap.ico" alt="Google Map"/>Google&nbsp;Map</a>
+                                    <a rel="noopener" target="_blank" href={s"https://map.naver.com/p/search/${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/NaverMap.ico" alt="Naver Map"/>Naver&nbsp;Map</a>
+                                    <a rel="noopener" target="_blank" href={s"http://map.daum.net/?q=${UriUtil.encodeURIComponent(v)}"}><img class="iconMap" src="/public/img/KakaoMap.ico" alt="KakaoMap"/>Kakao&nbsp;Map</a>
+                                  </div>
+                                }
+                              }
+                            </dd>
+                          </div>
+                        case v =>
+                          <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
+                      }
                   }
                 }
               </div>
