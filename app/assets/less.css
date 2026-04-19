@@ -441,11 +441,13 @@ kbd:hover > kbd {
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
-  background-color: #eee;
+  background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 40vw;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .commonAhaWiki div.InterpreterSchema {
@@ -455,6 +457,17 @@ kbd:hover > kbd {
     max-width: initial;
     margin: 10px 0;
   }
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaClassTitle {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d5d5d5;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow {
+  padding: 6px 0;
+  border-bottom: 1px dotted #ddd;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow:last-child {
+  border-bottom: 0;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
@@ -471,10 +484,20 @@ kbd:hover > kbd {
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dt {
   margin-top: 10px;
+  font-weight: 700;
+  color: #333;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
+  color: #888;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl dd .datePeriod {
+  color: #666;
+  font-size: 90%;
+  margin-left: 4px;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
@@ -950,11 +973,13 @@ kbd:hover > kbd {
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
-  background-color: #eee;
+  background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 40vw;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .wikiContent div.InterpreterSchema {
@@ -964,6 +989,17 @@ kbd:hover > kbd {
     max-width: initial;
     margin: 10px 0;
   }
+}
+.AhaWiki .wikiContent div.InterpreterSchema .schemaClassTitle {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d5d5d5;
+}
+.AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow {
+  padding: 6px 0;
+  border-bottom: 1px dotted #ddd;
+}
+.AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow:last-child {
+  border-bottom: 0;
 }
 .AhaWiki .wikiContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
@@ -980,10 +1016,20 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dt {
   margin-top: 10px;
+  font-weight: 700;
+  color: #333;
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .wikiContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
+  color: #888;
+}
+.AhaWiki .wikiContent div.InterpreterSchema dl dd .datePeriod {
+  color: #666;
+  font-size: 90%;
+  margin-left: 4px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
@@ -1672,11 +1718,13 @@ kbd:hover > kbd {
   margin-left: 10px;
   margin-bottom: 10px;
   border: 1px solid #ccc;
-  background-color: #eee;
+  background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
   padding: 10px 20px;
   vertical-align: top;
   display: inline-block;
   max-width: 40vw;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
@@ -1686,6 +1734,17 @@ kbd:hover > kbd {
     max-width: initial;
     margin: 10px 0;
   }
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaClassTitle {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #d5d5d5;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow {
+  padding: 6px 0;
+  border-bottom: 1px dotted #ddd;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow:last-child {
+  border-bottom: 0;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
@@ -1702,10 +1761,20 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dt {
   margin-top: 10px;
+  font-weight: 700;
+  color: #333;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
+  color: #888;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd .datePeriod {
+  color: #666;
+  font-size: 90%;
+  margin-left: 4px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;

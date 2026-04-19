@@ -147,20 +147,20 @@ object InterpreterSchema extends TraitInterpreter {
 
     val dl =
       <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
-        <h5>
+        <h5 class="schemaClassTitle">
           {if (parseResult.schemaClass.isNullOrEmpty) {
             <div class="error">TODO: Specify Schema Class</div>
           } else {
             scala.xml.XML.loadString(logics.CalculatedSchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
           }
         </h5>
-        <div>
+        <div class="schemaFields">
           {
             mergeFieldsForDisplay(parseResult.seqSeqField).map { field =>
               val key = field.key
               val tail = field.values
-              <div>
-                <dt>
+              <div class="schemaFieldRow">
+                <dt class="schemaFieldKey">
                   {renderPropertyTitle(key, field.pairKey)}
                 </dt>
                 {
@@ -168,22 +168,22 @@ object InterpreterSchema extends TraitInterpreter {
                     case Some(pairKey) =>
                       tail.zip(field.pairValues).map {
                         case (v1, v2) =>
-                          <dd>
+                          <dd class="schemaFieldValue schemaFieldValuePair">
                             <span property={key}>{XML.loadString(AhaMarkLink(v1).toHtmlString(pageNameSet))}</span>
-                            {" / "}
+                            <span class="pairSeparator"> / </span>
                             <span property={pairKey}>{XML.loadString(AhaMarkLink(v2).toHtmlString(pageNameSet))}</span>
                           </dd>
                       }
                     case None =>
                       tail.map {
                         case v if imageKeys.contains(key) =>
-                          <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
+                          <dd class="schemaFieldValue schemaFieldImage" property={key}><img src={v} alt={s"$v $key"}></img></dd>
                         case v if urlKeys.contains(key) =>
-                          <dd property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
+                          <dd class="schemaFieldValue" property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
                         case v if isDateKey(key) =>
-                          <dd property={key}>
+                          <dd class="schemaFieldValue" property={key}>
                             {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
-                            ({MacroPeriod.toHtmlString(v)})
+                            <span class="datePeriod">({MacroPeriod.toHtmlString(v)})</span>
                           </dd>
                         case v if isLocationKey(key) =>
                           val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
@@ -220,7 +220,7 @@ object InterpreterSchema extends TraitInterpreter {
                             </dd>
                           </div>
                         case v =>
-                          <dd property={key}>{mapAndWrapLink(v, pageNameSet)}</dd>
+                          <dd class="schemaFieldValue" property={key}>{mapAndWrapLink(v, pageNameSet)}</dd>
                       }
                   }
                 }

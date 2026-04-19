@@ -344,11 +344,13 @@ kbd {
 			margin-left: 10px;
 			margin-bottom: 10px;
 			border: 1px solid #ccc;
-			background-color: #eee;
+			background: linear-gradient(180deg, #f8f8f8 0%, #efefef 100%);
 			padding: 10px 20px;
 			vertical-align: top;
 			display: inline-block;
 			max-width: 40vw;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 			@media only screen and (max-width: 768px) {
 				clear: right;
@@ -358,6 +360,21 @@ kbd {
 				margin: 10px 0;
 			}
 
+			.schemaClassTitle {
+				padding-bottom: 8px;
+				border-bottom: 1px solid #d5d5d5;
+			}
+
+			.schemaFields {
+				.schemaFieldRow {
+					padding: 6px 0;
+					border-bottom: 1px dotted #ddd;
+
+					&:last-child {
+						border-bottom: 0;
+					}
+				}
+			}
 
 			h5:first-of-type {
 				margin-top: 0;
@@ -373,10 +390,24 @@ kbd {
 				margin: 0;
 				dt {
 					margin-top: 10px;
+					font-weight: 700;
+					color: #333;
 				}
 				dd {
 					margin-left: 10px;
 					display: inline-block;
+
+					&.schemaFieldValuePair {
+						.pairSeparator {
+							color: #888;
+						}
+					}
+
+					.datePeriod {
+						color: #666;
+						font-size: 90%;
+						margin-left: 4px;
+					}
 				}
 				.address {
 					margin: 5px 0 5px 10px;
