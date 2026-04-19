@@ -20,10 +20,9 @@ object InterpreterTable extends TraitInterpreter {
   private val regexCssClassToken: Regex = """^[A-Za-z0-9_-]+$""".r
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String]) {
-    def getClasses: String = classes match {
-      case Some(s) => s"simpleTable $s"
-      case None => "simpleTable"
-    }
+    def getClasses: String = (Seq("simpleTable", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")))
+      .distinct
+      .mkString(" ")
   }
 
   private def sanitizeClasses(classes: String): Option[String] = Option(classes)
