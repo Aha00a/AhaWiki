@@ -188,25 +188,25 @@ class Test @Inject()(implicit val
 
         val interpreted =
           """<div class="schema InterpreterSchema"><dl vocab="http://schema.org/" typeof="Person">
-            |        <h5>
+            |        <h5 class="schemaClassTitle">
             |          <a class="schema" href="/w/schema:Person">Person</a>
             |        </h5>
-            |        <div>
-            |          <div>
-            |                <dt>
+            |        <div class="schemaFields">
+            |          <div class="schemaFieldRow">
+            |                <dt class="schemaFieldKey">
             |                  <a href="/w/schema:name" title="The name of the item." class="">Name</a>
             |                </dt>
-            |                <dd property="name"><a rel="nofollow" class="missing" href="/w/KIM, Aha">KIM, Aha</a></dd>
-            |              </div><div>
-            |                <dt>
+            |                <dd class="schemaFieldValue" property="name"><a rel="nofollow" class="missing" href="/w/KIM, Aha">KIM, Aha</a></dd>
+            |              </div><div class="schemaFieldRow">
+            |                <dt class="schemaFieldKey">
             |                  <a href="/w/schema:url" title="URL of the item." class="">Url</a>
             |                </dt>
-            |                <dd property="url"><a rel="noopener" target="_blank" href="https://aha00a.com">https://aha00a.com</a></dd>
-            |              </div><div>
-            |                <dt>
+            |                <dd class="schemaFieldValue" property="url"><a rel="noopener" target="_blank" href="https://aha00a.com">https://aha00a.com</a></dd>
+            |              </div><div class="schemaFieldRow">
+            |                <dt class="schemaFieldKey">
             |                  <a href="/w/schema:memberOf" title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of</a>
             |                </dt>
-            |                <dd property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
+            |                <dd class="schemaFieldValue" property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
             |              </div>
             |        </div>
             |      </dl></div>""".stripMargin
