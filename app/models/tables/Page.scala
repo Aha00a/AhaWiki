@@ -210,7 +210,7 @@ SELECT
     INNER JOIN (
         SELECT site, name, MAX(revision) AS revision
         FROM Page
-        WHERE site = ${site.seq}
+        WHERE site = ${site.seq} AND isMinorEdit = FALSE
         GROUP BY site, name
     ) SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
     LEFT JOIN User U ON U.seq = P.user
