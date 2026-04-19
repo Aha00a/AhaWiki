@@ -8,6 +8,9 @@
 }
 <div class="gnb">
     <div class="action">
+        <button type="button" class="mobileActionToggle" aria-expanded="false" aria-label="Toggle action menu">
+            <i class="fas fa-bars"></i>Menu
+        </button>
         <ul class="authArea">
             @if(wikiContext.requestWrapper.getUser) {
                 <li>
@@ -67,6 +70,31 @@
             }
         </ul>
     </div>
+    <script type="text/javascript">
+        $(function () {
+            const $action = $('.gnb .action');
+            const $toggle = $action.find('.mobileActionToggle');
+            const mobileMediaQuery = window.matchMedia('(max-width: 767px)');
+
+            function resetDesktopState() {
+                if (!mobileMediaQuery.matches) {
+                    $action.removeClass('mobileMenuOpen');
+                    $toggle.attr('aria-expanded', 'false');
+                }
+            }
+
+            $toggle.on('click', function () {
+                const isOpen = $action.toggleClass('mobileMenuOpen').hasClass('mobileMenuOpen');
+                $toggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            if (mobileMediaQuery.addEventListener) {
+                mobileMediaQuery.addEventListener('change', resetDesktopState);
+            } else if (mobileMediaQuery.addListener) {
+                mobileMediaQuery.addListener(resetDesktopState);
+            }
+        });
+    </script>
 </div>
 
 @if(wikiFirst != null && wikiLast != null) {

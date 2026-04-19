@@ -1352,6 +1352,14 @@ kbd:hover > kbd {
   color: #222;
   padding-top: 20px;
 }
+.AhaWiki .gnb .action .mobileActionToggle,
+.AhaWiki .revisionInfo .action .mobileActionToggle {
+  display: none;
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 6px 10px;
+  cursor: pointer;
+}
 .AhaWiki .gnb .action ul,
 .AhaWiki .revisionInfo .action ul {
   vertical-align: top;
@@ -1412,6 +1420,15 @@ kbd:hover > kbd {
     border-left: none;
     border-top: 1px solid #ccc;
     padding: 8px 0;
+  }
+  .AhaWiki .gnb .action .mobileActionToggle {
+    display: inline-block;
+  }
+  .AhaWiki .gnb .action ul {
+    display: none;
+  }
+  .AhaWiki .gnb .action.mobileMenuOpen ul {
+    display: block;
   }
 }
 .AhaWiki .revisionInfo {

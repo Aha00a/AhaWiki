@@ -667,6 +667,13 @@ kbd {
 		color: #222;
 		padding-top: 20px;
 		.action {
+			.mobileActionToggle {
+				display: none;
+				border: 1px solid #ccc;
+				background: #fff;
+				padding: 6px 10px;
+				cursor: pointer;
+			}
 			ul {
 				vertical-align: top;
 				display: inline-block;
@@ -716,6 +723,15 @@ kbd {
 			border-left: none;
 			border-top: 1px solid #ccc;
 			padding: 8px 0;
+		}
+		.gnb .action .mobileActionToggle {
+			display: inline-block;
+		}
+		.gnb .action ul {
+			display: none;
+		}
+		.gnb .action.mobileMenuOpen ul {
+			display: block;
 		}
 	}
 
