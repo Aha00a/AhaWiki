@@ -41,6 +41,9 @@ object InterpreterSchema extends TraitInterpreter {
     "startDate" -> "endDate",
     "actor" -> "character",
   ).toMap
+  private val imageKeys = Set("image", "logo")
+  private val urlKeys = Set("url", "codeRepository", "sameAs")
+  private val locationKeys = Set("address", "geo", "location", "foundingLocation")
 
   case class DisplayField(key: String, values: Seq[String], pairKey: Option[String] = None, pairValues: Seq[String] = Seq.empty)
 
@@ -94,6 +97,31 @@ object InterpreterSchema extends TraitInterpreter {
     if (skip) seqSeqFieldNew else seqSeqFieldNew :+ seqSeqField.last
   }
 
+  private def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
+  private def isLocationKey(key: String): Boolean = locationKeys.contains(key) || key.endsWith("Location")
+
+  private def renderPropertyTitle(key: String, pairKey: Option[String]): scala.xml.NodeSeq = {
+    (logics.CalculatedSchemaOrg.mapProperty.get(key), pairKey.flatMap(logics.CalculatedSchemaOrg.mapProperty.get)) match {
+      case (Some(keySchema), Some(pairSchema)) =>
+        <span>{keySchema.toXmlSpan()} / {pairSchema.toXmlSpan()}</span>
+      case (Some(keySchema), None) =>
+        keySchema.toXmlSpan()
+      case (None, Some(_)) =>
+        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)} / {EnglishCaseConverter.camelCase2TitleCase(pairKey.get)}</span>
+      case (None, None) =>
+        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
+    }
+  }
+
+  private def toAddressCandidates(v: String): Seq[String] =
+    if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v)
+
+  private def mapAndWrapLink(v: String, pageNameSet: Set[String])(implicit contextWikiPage: ContextWikiPage): scala.xml.NodeSeq =
+    XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+
+  private def mapAndWrapLink(link: AhaMarkLink, pageNameSet: Set[String]): scala.xml.NodeSeq =
+    XML.loadString(link.toHtmlString(pageNameSet))
+
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     import models.tables.Site
@@ -133,24 +161,7 @@ object InterpreterSchema extends TraitInterpreter {
               val tail = field.values
               <div>
                 <dt>
-                  {
-                  logics.CalculatedSchemaOrg.mapProperty.get(key).map(n => {
-                      if (field.pairKey.isDefined) {
-                        val pairNode = logics.CalculatedSchemaOrg.mapProperty.get(field.pairKey.get).map(_.toXmlSpan()).getOrElse {
-                          <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(field.pairKey.get)}</span>
-                        }
-                        <span>{n.toXmlSpan()} / {pairNode}</span>
-                      } else {
-                        n.toXmlSpan()
-                      }
-                    }).getOrElse{
-                      if (field.pairKey.isDefined) {
-                        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)} / {EnglishCaseConverter.camelCase2TitleCase(field.pairKey.get)}</span>
-                      } else {
-                        <span class="unknown" title="Unknown property">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
-                      }
-                    }
-                  }
+                  {renderPropertyTitle(key, field.pairKey)}
                 </dt>
                 {
                   field.pairKey match {
@@ -165,27 +176,27 @@ object InterpreterSchema extends TraitInterpreter {
                       }
                     case None =>
                       tail.map {
-                        case v if Seq("image", "logo").contains(key) =>
+                        case v if imageKeys.contains(key) =>
                           <dd property={key}><img src={v} alt={s"$v $key"}></img></dd>
-                        case v if Seq("url", "codeRepository", "sameAs").contains(key) =>
+                        case v if urlKeys.contains(key) =>
                           <dd property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
-                        case v if key.startsWith("date") || key.endsWith("Date") =>
+                        case v if isDateKey(key) =>
                           <dd property={key}>
                             {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}
                             ({MacroPeriod.toHtmlString(v)})
                           </dd>
-                        case v if key.startsWith("address") || key == "geo" || key == "location" || key.endsWith("Location") =>
+                        case v if isLocationKey(key) =>
                           val mapJavaScriptApiKey = wikiContext.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()
                           <div class="address">
                             <dd property={key}>
                               {
                                 if(Hangul.containsKo(v)) {
                                   expandAddress(v).flatMap(seq => Seq(
-                                    XML.loadString(AhaMarkLink(seq.mkString(" "), seq.last).toHtmlString(pageNameSet)),
+                                    mapAndWrapLink(AhaMarkLink(seq.mkString(" "), seq.last), pageNameSet),
                                     " ",
                                   ))
                                 } else {
-                                  XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))
+                                  mapAndWrapLink(v, pageNameSet)
                                 }
                               }
                               <div class="aspectRatioWrapper">
@@ -209,7 +220,7 @@ object InterpreterSchema extends TraitInterpreter {
                             </dd>
                           </div>
                         case v =>
-                          <dd property={key}>{XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}</dd>
+                          <dd property={key}>{mapAndWrapLink(v, pageNameSet)}</dd>
                       }
                   }
                 }
@@ -272,21 +283,14 @@ object InterpreterSchema extends TraitInterpreter {
     val parseResult: ParseResult = parse(pageContent)
 
     val seqLinkProperty: Seq[CalculatedSchemaOrg] = parseResult.seqSeqField
-      .filterNot(_(1).startsWith("http://"))
-      .filterNot(_(1).startsWith("https://"))
+      .collect { case key +: values if values.nonEmpty => key +: values }
+      .filterNot {
+        case _ +: value +: _ => value.startsWith("http://") || value.startsWith("https://")
+        case _ => false
+      }
       .flatMap {
-        case "address" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "address", v))
-        case "geo" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "geo", v))
-        case "location" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "location", v))
-        case "foundingLocation" +: tail =>
-          val seq: Seq[String] = tail.flatMap(v => if (Hangul.containsKo(v)) expandAddress(v).map(_.mkString(" ")) else Seq(v))
-          seq.map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "foundingLocation", v))
+        case key +: tail if locationKeys.contains(key) =>
+          tail.flatMap(toAddressCandidates).map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, key, v))
         case key +: tail =>
           tail
             .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
