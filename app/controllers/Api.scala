@@ -4,6 +4,11 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import anorm.SqlParser.{bool, long, str}
 import anorm._
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import com.amazonaws.services.s3.model.ObjectMetadata
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.generic.auto._
@@ -16,6 +21,7 @@ import logics.wikis.PageLogic
 import logics.wikis.SignedReadUrlLogic
 import logics.wikis.ExtractConvertInjectMacro
 import logics.wikis.interpreters.Interpreters
+import logics.wikis.macros.S3AttachmentUrlLogic
 import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
@@ -25,13 +31,19 @@ import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import models.tables.UserSite
+import models.tables.Config
 import play.api.Configuration
+import play.api.Logging
 import play.api.db.Database
+import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.filters.csrf.CSRF
 import services.ApplicationLifecycleHook
 
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.net.URLDecoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
@@ -51,7 +63,7 @@ class Api @Inject()(
   executionContext: ExecutionContext,
   applicationLifecycleHook: ApplicationLifecycleHook,
   configuration: Configuration
-) extends BaseController {
+) extends BaseController with Logging {
   private def isAdmin(implicit request: RequestHeader): Boolean = {
     SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
   }
@@ -60,6 +72,45 @@ class Api @Inject()(
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
+  private val adminFaviconConfigKey: String = "site.favicon.objectKey"
+  private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
+
+  private def sanitizeAttachmentPathSegment(v: String): String = {
+    val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
+    if (sanitized.nonEmpty) sanitized else "_"
+  }
+
+  private def buildAdminFaviconObjectKey(siteSeq: Long, originalFileName: String, now: LocalDateTime = LocalDateTime.now()): String = {
+    val extension = originalFileName
+      .split('.')
+      .lastOption
+      .map(_.replaceAll("[^a-zA-Z0-9]", "").toLowerCase)
+      .filter(_.nonEmpty)
+      .getOrElse("png")
+    val sanitizedFilename = sanitizeAttachmentPathSegment(originalFileName)
+    val formattedDateTime = now.format(adminFaviconTimestampFormatter)
+    s"Attachment/$siteSeq/.admin/favicon/${sanitizedFilename}.$formattedDateTime.$extension"
+  }
+
+  private def buildAmazonS3Client(): AmazonS3 = {
+    val credentials = new BasicAWSCredentials(
+      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+    )
+    AmazonS3ClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+      .build()
+  }
+
+  private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
+
+  private def resolveAdminTargetSite(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
+    siteSeqValue
+      .flatMap(parseSiteSeq)
+      .flatMap(seq => SiteLogic.get(seq)(database, ahaWikiCache))
+      .toRight(BadRequest(Json.obj("error" -> Json.fromString("Valid siteSeq is required.")).toString()).as(JSON))
+  }
 
 
   def adminGenerateSignedReadUrl: Action[AnyContent] = Action { implicit request =>
@@ -170,6 +221,110 @@ class Api @Inject()(
         case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String)
         val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toInstant.toString, u.email, u.nickname))
         Ok(users.asJson)
+      }
+    }
+  }
+
+  def adminSiteFavicon: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
+          case Left(errorResult) => errorResult
+          case Right(siteValue) =>
+            implicit val site: Site = siteValue
+            val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
+            val faviconUrlOption = objectKeyOption.flatMap(objectKey => S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption)
+            Ok(Json.obj(
+              "siteSeq" -> Json.fromLong(site.seq),
+              "objectKey" -> Json.fromString(objectKeyOption.getOrElse("")),
+              "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse("/public/favicon.png")),
+            ))
+        }
+      }
+    }
+  }
+
+  def adminUploadSiteFavicon: Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      request.body.file("file") match {
+        case None =>
+          BadRequest(Json.obj("error" -> Json.fromString("file is required")).toString()).as(JSON)
+        case Some(filePart) =>
+          val contentType = filePart.contentType.getOrElse("application/octet-stream")
+          if (!contentType.startsWith("image/")) {
+            BadRequest(Json.obj("error" -> Json.fromString("Only image files are allowed.")).toString()).as(JSON)
+          } else {
+            database.withConnection { implicit connection =>
+              val siteSeqValue = request.body.dataParts.get("siteSeq").flatMap(_.headOption)
+              resolveAdminTargetSite(siteSeqValue) match {
+                case Left(errorResult) => errorResult
+                case Right(siteValue) =>
+                  implicit val site: Site = siteValue
+                  val objectKey = buildAdminFaviconObjectKey(site.seq, filePart.filename.trim)
+                  val amazonS3 = buildAmazonS3Client()
+                  val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                  val metadata = new ObjectMetadata()
+                  metadata.setContentType(contentType)
+                  metadata.setContentLength(filePart.fileSize)
+
+                  try {
+                    val inputStream = Files.newInputStream(filePart.ref.path)
+                    try {
+                      amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                    } finally {
+                      inputStream.close()
+                    }
+                    Config.upsert(adminFaviconConfigKey, objectKey)
+                    val faviconUrl = S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("/public/favicon.png")
+                    Ok(Json.obj(
+                      "ok" -> Json.fromBoolean(true),
+                      "siteSeq" -> Json.fromLong(site.seq),
+                      "objectKey" -> Json.fromString(objectKey),
+                      "faviconUrl" -> Json.fromString(faviconUrl),
+                    ))
+                  } catch {
+                    case error: Throwable =>
+                      logger.error(s"adminUploadSiteFavicon failed. objectKey=$objectKey", error)
+                      InternalServerError(Json.obj("error" -> Json.fromString("Favicon upload failed.")).toString()).as(JSON)
+                  }
+              }
+            }
+          }
+      }
+    }
+  }
+
+  def adminDeleteSiteFavicon: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
+          case Left(errorResult) => errorResult
+          case Right(siteValue) =>
+            implicit val site: Site = siteValue
+            val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
+            objectKeyOption.foreach { objectKey =>
+              try {
+                val amazonS3 = buildAmazonS3Client()
+                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                amazonS3.deleteObject(bucket, objectKey)
+              } catch {
+                case error: Throwable =>
+                  logger.warn(s"adminDeleteSiteFavicon: failed to delete old object from S3. objectKey=$objectKey", error)
+              }
+            }
+            Config.delete(adminFaviconConfigKey)
+            Ok(Json.obj(
+              "ok" -> Json.fromBoolean(true),
+              "siteSeq" -> Json.fromLong(site.seq),
+              "faviconUrl" -> Json.fromString("/public/favicon.png"),
+            ))
+        }
       }
     }
   }

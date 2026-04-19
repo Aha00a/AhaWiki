@@ -56,6 +56,9 @@ GET           /api/Admin/DailyStats                controllers.Api.adminDailySta
 GET           /api/Admin/TopViewedPages            controllers.Api.adminTopViewedPages
 GET           /api/Admin/RecentChanges             controllers.Api.adminRecentChanges
 GET           /api/Admin/SignedReadUrl            controllers.Api.adminGenerateSignedReadUrl
+GET           /api/Admin/Favicon                   controllers.Api.adminSiteFavicon
+POST          /api/Admin/Favicon                   controllers.Api.adminUploadSiteFavicon
+DELETE        /api/Admin/Favicon                   controllers.Api.adminDeleteSiteFavicon
 GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames

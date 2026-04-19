@@ -135,6 +135,10 @@ function useAdminData(page) {
     const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
     const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
+    const [siteFaviconUrl, setSiteFaviconUrl] = useState("/public/favicon.png");
+    const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState("");
+    const [uploadingFavicon, setUploadingFavicon] = useState(false);
+    const [deletingFavicon, setDeletingFavicon] = useState(false);
     const [error, setError] = useState("");
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -218,6 +222,86 @@ function useAdminData(page) {
             setError(caughtError.message || String(caughtError));
         } finally {
             setClearingSiteSeq(0);
+        }
+    }, []);
+
+    const loadSiteFavicon = useCallback(async (siteSeq) => {
+        if (!siteSeq) {
+            setSiteFaviconUrl("/public/favicon.png");
+            setSiteFaviconObjectKey("");
+            return;
+        }
+        try {
+            const data = await fetchJson(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`);
+            setSiteFaviconUrl(data?.faviconUrl || "/public/favicon.png");
+            setSiteFaviconObjectKey(data?.objectKey || "");
+        } catch (caughtError) {
+            logError("favicon:load:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        }
+    }, []);
+
+    const uploadSiteFavicon = useCallback(async (file, siteSeq) => {
+        if (!file || !siteSeq) {
+            return;
+        }
+        setUploadingFavicon(true);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("siteSeq", String(siteSeq));
+
+            const response = await fetch("/api/Admin/Favicon", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                },
+                body: formData,
+            });
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null);
+                throw new Error(payload?.error || `HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            setSiteFaviconUrl(data?.faviconUrl || "/public/favicon.png");
+            setSiteFaviconObjectKey(data?.objectKey || "");
+        } catch (caughtError) {
+            logError("favicon:upload:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setUploadingFavicon(false);
+        }
+    }, []);
+
+    const resetSiteFavicon = useCallback(async (siteSeq) => {
+        if (!siteSeq) {
+            return;
+        }
+        setDeletingFavicon(true);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const response = await fetch(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {
+                    "X-CSRF-Token": csrfToken,
+                },
+            });
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null);
+                throw new Error(payload?.error || `HTTP ${response.status}`);
+            }
+            setSiteFaviconUrl("/public/favicon.png");
+            setSiteFaviconObjectKey("");
+        } catch (caughtError) {
+            logError("favicon:delete:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setDeletingFavicon(false);
         }
     }, []);
 
@@ -360,6 +444,13 @@ function useAdminData(page) {
         reloadSchedulers,
         clearSiteCache,
         clearingSiteSeq,
+        siteFaviconUrl,
+        siteFaviconObjectKey,
+        loadSiteFavicon,
+        uploadSiteFavicon,
+        uploadingFavicon,
+        resetSiteFavicon,
+        deletingFavicon,
         error,
     };
 }
@@ -674,9 +765,18 @@ function AdminContent({page, onNavigate}) {
         reloadSchedulers,
         clearSiteCache,
         clearingSiteSeq,
+        siteFaviconUrl,
+        siteFaviconObjectKey,
+        loadSiteFavicon,
+        uploadSiteFavicon,
+        uploadingFavicon,
+        resetSiteFavicon,
+        deletingFavicon,
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
+    const [faviconFile, setFaviconFile] = useState(null);
+    const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
     const selectedUserSeq = useMemo(() => {
         const userSeqByPath = parseUserSeqFromPathname(window.location.pathname);
         if (userSeqByPath > 0) {
@@ -690,6 +790,24 @@ function AdminContent({page, onNavigate}) {
         () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
         [allUsers, selectedUserSeq],
     );
+
+    useEffect(() => {
+        if (page !== "operations") {
+            return;
+        }
+        if (!selectedSiteSeq && sites.length > 0) {
+            const firstSiteSeq = String(sites[0]?.seq ?? "");
+            if (firstSiteSeq) {
+                setSelectedSiteSeq(firstSiteSeq);
+            }
+        }
+    }, [page, selectedSiteSeq, sites]);
+
+    useEffect(() => {
+        if (page === "operations" && selectedSiteSeq) {
+            loadSiteFavicon(selectedSiteSeq);
+        }
+    }, [page, selectedSiteSeq, loadSiteFavicon]);
 
     if (loading) {
         return (
@@ -864,6 +982,90 @@ function AdminContent({page, onNavigate}) {
     if (page === "operations") {
         return (
             <Stack gap="lg">
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Favicon</Title>
+                        <Badge color="blue" variant="light">Current Site</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        선택한 사이트의 favicon을 관리자 업로드로 교체합니다. 업로드 후 바로 반영됩니다.
+                    </Text>
+                    <Stack gap={6} mb="md">
+                        <Text size="sm" fw={600}>대상 사이트</Text>
+                        <select
+                            value={selectedSiteSeq}
+                            onChange={(event) => {
+                                setSelectedSiteSeq(event.currentTarget.value);
+                                setFaviconFile(null);
+                            }}
+                            style={{padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8, maxWidth: 420}}
+                        >
+                            <option value="">사이트를 선택하세요</option>
+                            {sites.map((site) => (
+                                <option key={site.seq} value={String(site.seq)}>
+                                    {site.name} (#{site.seq}) {site.domains?.length ? `- ${site.domains.join(", ")}` : ""}
+                                </option>
+                            ))}
+                        </select>
+                    </Stack>
+                    <Group align="flex-start" grow mb="md">
+                        <Stack gap={6}>
+                            <Text size="sm" fw={600}>현재 favicon</Text>
+                            <img
+                                src={siteFaviconUrl}
+                                alt="Current favicon"
+                                style={{width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb"}}
+                            />
+                            <Text size="xs" c="dimmed" style={{wordBreak: "break-all"}}>
+                                {siteFaviconObjectKey || "/public/favicon.png"}
+                            </Text>
+                            <Anchor size="xs" href={siteFaviconUrl} target="_blank" rel="noopener">새 탭으로 보기</Anchor>
+                        </Stack>
+                        <Stack gap={8}>
+                            <Text size="sm" fw={600}>새 favicon 업로드</Text>
+                            <input
+                                type="file"
+                                accept="image/*,.ico"
+                                onChange={(event) => {
+                                    const selected = event.currentTarget.files?.[0] ?? null;
+                                    setFaviconFile(selected);
+                                }}
+                            />
+                            <Group>
+                                <Button
+                                    variant="filled"
+                                    loading={uploadingFavicon}
+                                    disabled={!faviconFile || !selectedSiteSeq}
+                                    onClick={async () => {
+                                        await uploadSiteFavicon(faviconFile, selectedSiteSeq);
+                                        await loadSiteFavicon(selectedSiteSeq);
+                                    }}
+                                >
+                                    Upload favicon
+                                </Button>
+                                <Button variant="light" disabled={!selectedSiteSeq} onClick={() => loadSiteFavicon(selectedSiteSeq)}>
+                                    Refresh
+                                </Button>
+                                <Button
+                                    color="red"
+                                    variant="light"
+                                    loading={deletingFavicon}
+                                    disabled={!selectedSiteSeq}
+                                    onClick={async () => {
+                                        await resetSiteFavicon(selectedSiteSeq);
+                                        await loadSiteFavicon(selectedSiteSeq);
+                                        setFaviconFile(null);
+                                    }}
+                                >
+                                    Reset to default
+                                </Button>
+                            </Group>
+                            <Text size="xs" c="dimmed">
+                                권장: 32x32 또는 48x48 PNG/ICO
+                            </Text>
+                        </Stack>
+                    </Group>
+                </Card>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Site Cache Operations</Title>

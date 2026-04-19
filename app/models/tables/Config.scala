@@ -29,6 +29,16 @@ object Config extends Logging{
 
   def getOrElse(k: String, default: String)(implicit connection: Connection, site: Site): String = select(k).map(_.v).getOrElse(default)
   def getOrElse(k: String, default: Boolean)(implicit connection: Connection, site: Site): Boolean = getOrElse(k, default.toString).toBoolGenerously
+  def upsert(k: String, v: String)(implicit connection: Connection, site: Site): Int = {
+    SQL"""
+      INSERT INTO Config (site, k, v)
+      VALUES (${site.seq}, $k, $v)
+      ON DUPLICATE KEY UPDATE v = $v, updated = NOW()
+    """.executeUpdate()
+  }
+  def delete(k: String)(implicit connection: Connection, site: Site): Int = {
+    SQL"DELETE FROM Config WHERE site = ${site.seq} AND k = $k".executeUpdate()
+  }
 
   object Query {
     private def fqn: String = {
@@ -50,4 +60,3 @@ object Config extends Logging{
     }
   }
 }
-
