@@ -9,7 +9,6 @@ import org.supercsv.io.CsvListReader
 import org.supercsv.prefs.CsvPreference
 
 import scala.jdk.CollectionConverters._
-import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 object InterpreterTable extends TraitInterpreter {
@@ -18,71 +17,79 @@ object InterpreterTable extends TraitInterpreter {
 
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
-  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:String) {
-    def getClasses: String = classes.toOption match {
+  private val regexCssClassToken: Regex = """^[A-Za-z0-9_-]+$""".r
+
+  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String]) {
+    def getClasses: String = classes match {
       case Some(s) => s"simpleTable $s"
       case None => "simpleTable"
     }
   }
 
+  private def sanitizeClasses(classes: String): Option[String] = Option(classes)
+    .map(_.trim)
+    .filter(_.nonEmpty)
+    .map(_.split("""\s+""").toSeq
+      .filter(token => regexCssClassToken.matches(token))
+      .distinct
+      .mkString(" ")
+    )
+    .filter(_.nonEmpty)
+
   def parseShebang(argument:Seq[String]): Option[Shebang] = argument.mkString(" ") match {
-    case regexShebang("tsv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.TAB_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, classes))
-    case regexShebang("csv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, classes))
+    case regexShebang("tsv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.TAB_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes)))
+    case regexShebang("csv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes)))
     case _ => None
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage): String = {
+  private def withShebangAndRows[T](content: String)(f: (Shebang, Seq[Seq[String]]) => T): Option[T] = {
     val pageContent: PageContent = PageContent(content)
-    val shebang = parseShebang(pageContent.argument)
-    shebang.map(shebang => {
+    parseShebang(pageContent.argument).map(shebang => {
       Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
-        val rowColumnData = convert(listReader)
-          .map(row => row
-            .map(s => if(s == null) "" else InterpreterWiki.toHtmlString(s))
-            .zipWithIndex
-          )
-          .zipWithIndex
-        val (head, body) = rowColumnData.partition(r => r._2 < shebang.thRow)
-        val thead = head
-          .map(_._1
-            .map(col => s"<th>${col._1}</th>")
-            .mkString
-          )
-          .map(s => s"<tr>$s</tr>")
-          .mkString("\n")
-        val tbody = body
-          .map(_._1
-            .map(col => if (col._2 < shebang.thColumn) s"<th>${col._1}</th>" else s"<td>${col._1}</td>")
-            .mkString
-          )
-          .map(s => s"<tr>$s</tr>").mkString("\n")
-        if(thead.isEmpty)
-          s"""<table class="InterpreterTable ${shebang.getClasses}"><tbody>$tbody</tbody></table>"""
-        else
-          s"""<table class="InterpreterTable ${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
+        f(shebang, convert(listReader))
       }
-    }).getOrElse("""Error: invalid table options. Use <code>#!table tsv [thRow] [thColumn] [classes]</code>.""")
+    })
+  }
+
+  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage): String = {
+    withShebangAndRows(content) { (shebang, rows) =>
+      val rowColumnData = rows
+        .map(row => row
+          .map(s => if(s == null) "" else InterpreterWiki.toHtmlString(s))
+          .zipWithIndex
+        )
+        .zipWithIndex
+      val (head, body) = rowColumnData.partition(r => r._2 < shebang.thRow)
+      val thead = head
+        .map(_._1
+          .map(col => s"<th>${col._1}</th>")
+          .mkString
+        )
+        .map(s => s"<tr>$s</tr>")
+        .mkString("\n")
+      val tbody = body
+        .map(_._1
+          .map(col => if (col._2 < shebang.thColumn) s"<th>${col._1}</th>" else s"<td>${col._1}</td>")
+          .mkString
+        )
+        .map(s => s"<tr>$s</tr>").mkString("\n")
+      if(thead.isEmpty)
+        s"""<table class="InterpreterTable ${shebang.getClasses}"><tbody>$tbody</tbody></table>"""
+      else
+        s"""<table class="InterpreterTable ${shebang.getClasses}"><thead>$thead</thead><tbody>$tbody</tbody></table>"""
+    }.getOrElse("""Error: invalid table options. Use <code>#!table tsv [thRow] [thColumn] [classes]</code>.""")
   }
 
   def convert(reader: CsvListReader): Seq[Seq[String]] = {
-    val arrayBuffer = ArrayBuffer[Seq[String]]()
-    while (true) {
-      val javaListString = reader.read().asScala
-      if (null == javaListString)
-        return arrayBuffer.toSeq
-
-      arrayBuffer += javaListString.toSeq
-    }
-    throw new Exception()
+    Iterator.continually(reader.read())
+      .takeWhile(_ != null)
+      .map(_.asScala.toSeq)
+      .toSeq
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
-    val pageContent: PageContent = PageContent(content)
-    val shebang = parseShebang(pageContent.argument)
-    shebang.map(shebang => {
-      Using(new CsvListReader(new StringReader(pageContent.content), shebang.csvPreference)) { listReader =>
-        convert(listReader).flatMap(_.filter(_ != null).flatMap(InterpreterWiki.toSeqLink))
-      }
-    }).getOrElse(Seq())
+    withShebangAndRows(content) { (_, rows) =>
+      rows.flatMap(_.filter(_ != null).flatMap(InterpreterWiki.toSeqLink))
+    }.getOrElse(Seq())
   }
 }
