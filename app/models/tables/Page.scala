@@ -13,6 +13,7 @@ import models.tables
 import zio.json._
 
 import java.sql.Connection
+import java.sql.Savepoint
 import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDateTime
 import scala.collection.immutable
@@ -175,29 +176,58 @@ INSERT INTO Page
     linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount
   }
 
-  // TODO: apply transaction
-  def deleteWithRelatedData(name:String)(implicit connection: Connection, site: Site): Int = {
-    deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name".executeUpdate()
-  }
-
-  // TODO: apply transaction
-  def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection, site: Site): Int = {
-    deleteLinkCosignSimilarityTermFrequency(name)
-    try {
-      SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
-    } catch {
-      case _: SQLIntegrityConstraintViolationException =>
-        // async recalculation can re-insert calculated rows between delete and page removal
-        deleteLinkCosignSimilarityTermFrequency(name)
-        SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+  private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {
+    if (connection.getAutoCommit) {
+      connection.setAutoCommit(false)
+      try {
+        val result = f
+        connection.commit()
+        result
+      } catch {
+        case e: Throwable =>
+          connection.rollback()
+          throw e
+      } finally {
+        connection.setAutoCommit(true)
+      }
+    } else {
+      val savepoint: Savepoint = connection.setSavepoint()
+      try {
+        f
+      } catch {
+        case e: Throwable =>
+          connection.rollback(savepoint)
+          throw e
+      }
     }
   }
 
-  // TODO: apply transaction
+  def deleteWithRelatedData(name:String)(implicit connection: Connection, site: Site): Int = {
+    withLocalTransaction {
+      deleteLinkCosignSimilarityTermFrequency(name)
+      SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    }
+  }
+
+  def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection, site: Site): Int = {
+    withLocalTransaction {
+      deleteLinkCosignSimilarityTermFrequency(name)
+      try {
+        SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+      } catch {
+        case _: SQLIntegrityConstraintViolationException =>
+          // async recalculation can re-insert calculated rows between delete and page removal
+          deleteLinkCosignSimilarityTermFrequency(name)
+          SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
+      }
+    }
+  }
+
   def rename(name: String, newName: String)(implicit connection: Connection, site: Site): Int = {
-    deleteLinkCosignSimilarityTermFrequency(name)
-    SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    withLocalTransaction {
+      deleteLinkCosignSimilarityTermFrequency(name)
+      SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    }
   }
 
   // TODO: remove IFNULL(permRead) and fix schema
