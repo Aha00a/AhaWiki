@@ -434,6 +434,25 @@ kbd:hover > kbd {
 }
 .AhaWiki .commonAhaWiki div.toc {
   clear: right;
+  border-radius: 12px;
+  border: 1px solid #d8dcee;
+  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
+}
+.AhaWiki .commonAhaWiki div.toc ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.AhaWiki .commonAhaWiki div.toc li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+.AhaWiki .commonAhaWiki div.toc a {
+  color: #2f4583;
+  text-decoration: none;
+}
+.AhaWiki .commonAhaWiki div.toc a:hover {
+  color: #1b2f67;
+  text-decoration: underline;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema {
   clear: right;
@@ -966,6 +985,25 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent div.toc {
   clear: right;
+  border-radius: 12px;
+  border: 1px solid #d8dcee;
+  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
+}
+.AhaWiki .wikiContent div.toc ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.AhaWiki .wikiContent div.toc li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+.AhaWiki .wikiContent div.toc a {
+  color: #2f4583;
+  text-decoration: none;
+}
+.AhaWiki .wikiContent div.toc a:hover {
+  color: #1b2f67;
+  text-decoration: underline;
 }
 .AhaWiki .wikiContent div.InterpreterSchema {
   clear: right;
@@ -1711,6 +1749,25 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent div.toc {
   clear: right;
+  border-radius: 12px;
+  border: 1px solid #d8dcee;
+  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
+}
+.AhaWiki .paperContent .page .pageContent div.toc ul {
+  margin: 0;
+  padding-left: 16px;
+}
+.AhaWiki .paperContent .page .pageContent div.toc li {
+  margin: 4px 0;
+  line-height: 1.4;
+}
+.AhaWiki .paperContent .page .pageContent div.toc a {
+  color: #2f4583;
+  text-decoration: none;
+}
+.AhaWiki .paperContent .page .pageContent div.toc a:hover {
+  color: #1b2f67;
+  text-decoration: underline;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
   clear: right;
