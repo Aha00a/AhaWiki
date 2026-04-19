@@ -114,7 +114,10 @@ async function fetchCsrfToken() {
         throw new Error(`CSRF HTTP ${response.status}`);
     }
     const token = await response.json();
-    return token?.value ?? "";
+    return {
+        name: token?.name ?? "csrfToken",
+        value: token?.value ?? "",
+    };
 }
 
 function useAdminData(page) {
@@ -211,7 +214,8 @@ function useAdminData(page) {
                 method: "DELETE",
                 credentials: "same-origin",
                 headers: {
-                    "X-CSRF-Token": csrfToken,
+                    "Csrf-Token": csrfToken.value,
+                    "X-CSRF-Token": csrfToken.value,
                 },
             });
             if (!response.ok) {
@@ -252,12 +256,15 @@ function useAdminData(page) {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("siteSeq", String(siteSeq));
+            formData.append(csrfToken.name, csrfToken.value);
+            formData.append("csrfToken", csrfToken.value);
 
             const response = await fetch("/api/Admin/Favicon", {
                 method: "POST",
                 credentials: "same-origin",
                 headers: {
-                    "X-CSRF-Token": csrfToken,
+                    "Csrf-Token": csrfToken.value,
+                    "X-CSRF-Token": csrfToken.value,
                 },
                 body: formData,
             });
@@ -288,7 +295,8 @@ function useAdminData(page) {
                 method: "DELETE",
                 credentials: "same-origin",
                 headers: {
-                    "X-CSRF-Token": csrfToken,
+                    "Csrf-Token": csrfToken.value,
+                    "X-CSRF-Token": csrfToken.value,
                 },
             });
             if (!response.ok) {
