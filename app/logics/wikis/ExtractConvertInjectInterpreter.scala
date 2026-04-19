@@ -10,15 +10,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   import models.tables.CalculatedSchemaOrg
 
   override def extract(s: String): String = {
-    if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
-      s
-    } else {
-      val Array(head, remain) = s.split("""\[\[\[""", 2)
-      val Array(body, tail) = remain.split("""\]\]\]""", 2)
-      val uniqueKey = getUniqueKey
-      arrayBuffer += uniqueKey -> body
-      head + uniqueKey + extract(tail)
-    }
+    extractByMarkers(s)
   }
 
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
@@ -31,4 +23,3 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c)).toSeq
   }
 }
-
