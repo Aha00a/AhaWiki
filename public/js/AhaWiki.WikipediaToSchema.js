@@ -178,6 +178,7 @@
         "Written in": "programmingLanguage",
         "Year started": "datePublished",
         "각본": "author",
+        "감독": "director",
         "개발자": "author",
         "개봉일": "datePublished",
         "국가": "countryOfOrigin",
