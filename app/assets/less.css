@@ -1416,6 +1416,10 @@ kbd:hover > kbd {
 }
 .AhaWiki .revisionInfo {
   font-style: italic;
+  font-size: 13px;
+}
+.AhaWiki .revisionInfo .revision {
+  font-weight: bold;
 }
 @media screen {
   .AhaWiki .Paper {
