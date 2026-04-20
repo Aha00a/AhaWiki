@@ -27,14 +27,14 @@ object IpAddressUtil {
     if (ip.contains(".")) {
       val parts = ip.split("\\.")
       if (parts.length == 4) {
-        s"${parts(0)}.♡.${parts(2)}.${parts(3)}"
+        s"♡.♡.${parts(2)}.${parts(3)}"
       } else {
         ""
       }
     } else if (ip.contains(":")) {
       expandIPv6(ip) match {
         case Some(hextets) =>
-          val masked = Seq.fill(3)("♡") ++ hextets.drop(3)
+          val masked = Seq.fill(5)("♡") ++ hextets.drop(5)
           masked.mkString(":")
         case None =>
           ""
