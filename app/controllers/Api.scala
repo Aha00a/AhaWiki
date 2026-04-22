@@ -9,6 +9,7 @@ import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
+import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.generic.auto._
@@ -18,6 +19,7 @@ import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
+import logics.wikis.WikiPermission
 import logics.wikis.SignedReadUrlLogic
 import logics.wikis.ExtractConvertInjectMacro
 import logics.wikis.interpreters.Interpreters
@@ -25,6 +27,7 @@ import logics.wikis.macros.S3AttachmentUrlLogic
 import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
+import models.PageContent
 import models.RequestWrapper
 import models.tables.CalculatedLink
 import models.tables.Page
@@ -674,6 +677,45 @@ class Api @Inject()(
   def csrf: Action[AnyContent] = Action { implicit request =>
     val token: Option[CSRF.Token] = CSRF.getToken
     Ok(token.asJson)
+  }
+
+  def habit: Action[AnyContent] = Action { implicit request =>
+    val habitKeyword = request.body.asFormUrlEncoded
+      .flatMap(_.get("habit").flatMap(_.headOption))
+      .map(_.trim)
+      .getOrElse("")
+
+    val allowedHabits = Set("Sleep", "WakeUp", "Meal", "Smoke")
+    if (!allowedHabits.contains(habitKeyword)) {
+      BadRequest(Json.obj("error" -> Json.fromString("habit must be one of: Sleep, WakeUp, Meal, Smoke")).toString()).as(JSON)
+    } else {
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        val now = LocalDateTime.now()
+        val name = now.toIsoLocalDateString
+        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+        implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+        val (latestText: String, latestRevision: Long) = Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+        val permission: WikiPermission = WikiPermission()
+        if (permission.isWritable(PageContent(latestText))) {
+          val line = s"[log:$habitKeyword] ${now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))}"
+          val body =
+            if (latestText.isEmpty) s"[[DayHeader]]\n * $line"
+            else s"$latestText\n * $line"
+          PageLogic.insert(name, latestRevision + 1, now, s"habit:$habitKeyword", isMinorEdit = false, body)
+          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+          ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+          Ok(Json.obj(
+            "status" -> Json.fromString("saved"),
+            "habit" -> Json.fromString(habitKeyword),
+            "entry" -> Json.fromString(line),
+            "page" -> Json.fromString(name),
+          ).toString()).as(JSON)
+        } else {
+          Forbidden(Json.obj("error" -> Json.fromString("forbidden")).toString()).as(JSON)
+        }
+      }
+    }
   }
 
   def pageMap: Action[AnyContent] = Action { implicit request =>

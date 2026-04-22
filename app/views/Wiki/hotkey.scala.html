@@ -48,6 +48,10 @@
             ['B', 'Blame action toggle'],
             ['S,G,/', 'Open search'],
             ['W', 'Open diary write'],
+            ['Alt+L', 'Quick habit log: Sleep'],
+            ['Alt+W', 'Quick habit log: WakeUp'],
+            ['Alt+M', 'Quick habit log: Meal'],
+            ['Alt+K', 'Quick habit log: Smoke'],
             ['?', 'Open hotkey help']
         ];
         var rows = items.map(function (item) {
@@ -87,7 +91,15 @@
             success: function (data, textStatus, jqXHR) {
                 var csrfName = data.name;
                 var csrfValue = data.value;
-                $("body").append($('<div class="searchBg"></div><div class="search"><form action="@routes.Diary.write()" method="post"><input type="hidden" name="' + csrfName + '" value="' + csrfValue + '"/><input type="text" name="q"/></div>'));
+                var popupHtml = '' +
+                    '<div class="searchBg"></div>' +
+                    '<div class="search">' +
+                    '<form action="@routes.Diary.write()" method="post">' +
+                    '<input type="hidden" name="' + csrfName + '" value="' + csrfValue + '"/>' +
+                    '<input type="text" name="q"/>' +
+                    '</form>' +
+                    '</div>';
+                $("body").append($(popupHtml));
                 $('.searchBg').click(function () {
                     hideSearch();
                 });
@@ -102,6 +114,30 @@
             }
         });
         return false;
+    }
+
+    function submitHabitQuick(habit) {
+        $.ajax({
+            url: '@routes.Api.csrf',
+            data: {},
+            success: function (data) {
+                var payload = { habit: habit };
+                payload[data.name] = data.value;
+                $.ajax({
+                    url: '/api/habit',
+                    method: 'POST',
+                    data: payload,
+                    success: function () {},
+                    error: function (jqXHR) {
+                        var message = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error) || 'Failed to save habit log.';
+                        alert(message);
+                    }
+                });
+            },
+            error: function () {
+                alert('Failed to fetch CSRF token.');
+            }
+        });
     }
 
     function go(s) {
@@ -142,5 +178,22 @@
         $(document).bind('keydown', 'shift+/', function () { return showHotkeyHelp(); });
 
         $(document).bind('keydown', 'w', function () { return showWrite(); });
+        $(document).on('keydown', function (e) {
+            if (!e.altKey) return;
+            var targetTagName = String(e.target && e.target.tagName || '');
+            var isEditable = targetTagName === 'input' || targetTagName === 'textarea' || (e.target && e.target.isContentEditable);
+            if (isEditable) return;
+            var key = String(e.key || '').toLowerCase();
+            var map = {
+                l: 'Sleep',
+                w: 'WakeUp',
+                m: 'Meal',
+                s: 'Smoke'
+            };
+            var habit = map[key];
+            if (!habit) return;
+            e.preventDefault();
+            submitHabitQuick(habit);
+        });
     });
 </script>

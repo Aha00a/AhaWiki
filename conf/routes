@@ -47,6 +47,7 @@ GET           /Admin/RecentChanges                 controllers.Admin.index
 
 
 GET           /api/csrf                             controllers.Api.csrf
+POST          /api/habit                            controllers.Api.habit
 GET           /api/Admin/Sites                      controllers.Api.adminSites
 GET           /api/Admin/SiteUsers                 controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                      controllers.Api.adminUsers
