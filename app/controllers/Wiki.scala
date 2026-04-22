@@ -263,7 +263,7 @@ controllerComponents: ControllerComponents,
          | * ["habit:Smoke"]""".stripMargin
     } else {
       val escapedHabit = Regex.quote(habitName)
-      val linePattern = (s"""(?:\\["habit:$escapedHabit"\\]|\\[habit:$escapedHabit\\])\\s+(.+)$$""").r
+      val linePattern = (s"""(?:[*-]\\s+)?(?:\\["habit:$escapedHabit"\\]|\\[habit:$escapedHabit\\])\\s+(.+)$$""").r
       val datePagePattern = """^20[0-9]{2}-[0-9]{2}-[0-9]{2}$""".r
       val linkedDatePages = CalculatedLink
         .selectDst(name)
