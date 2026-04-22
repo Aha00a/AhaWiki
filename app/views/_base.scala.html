@@ -1,5 +1,5 @@
-@(title: String, description: String)(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
-@_baseSkeleton(title, description){
+@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website")(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
+@_baseSkeleton(title, description, canonicalUrl, ogType){
     @head
 } {
     <div class="header">

@@ -1,5 +1,5 @@
 @import models.ContextSite
-@(title: String, description: String)(head: Html)(body: Html)(implicit contextSite: ContextSite)
+@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website")(head: Html)(body: Html)(implicit contextSite: ContextSite)
 <!DOCTYPE html>
 
 <html lang="en">
@@ -13,11 +13,16 @@
         <meta itemprop="name" content="@(title)">
         <meta property="og:title" content="@(title)" />
         <meta name="twitter:title" content="@(title)">
+        <meta property="og:type" content="@(ogType)" />
 
         <meta name="description" content="@(description)" />
         <meta itemprop="description" content="@(description)">
         <meta property="og:description" content="@(description)" />
         <meta name="twitter:description" content="@(description)">
+        @if(canonicalUrl.nonEmpty) {
+            <link rel="canonical" href="@(canonicalUrl)" />
+            <meta property="og:url" content="@(canonicalUrl)" />
+        }
 
         <link rel="shortcut icon" type="image/png" href="@(logics.AhaWikiConfig().site.favicon())">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />

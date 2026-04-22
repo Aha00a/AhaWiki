@@ -1,5 +1,31 @@
 @(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
-@_base(title, description) {
+@encodedTitle = @{ java.net.URLEncoder.encode(title, "UTF-8").replace("+", "%20") }
+@canonicalUrl = @{ s"https://${wikiContext.requestWrapper.host}/w/$encodedTitle" }
+@jsonLdWebPage = @{
+    play.api.libs.json.Json.obj(
+        "@context" -> "https://schema.org",
+        "@graph" -> Seq(
+            play.api.libs.json.Json.obj(
+                "@type" -> "WebSite",
+                "@id" -> s"https://${wikiContext.requestWrapper.host}/#website",
+                "url" -> s"https://${wikiContext.requestWrapper.host}/",
+                "name" -> wikiContext.requestWrapper.host
+            ),
+            play.api.libs.json.Json.obj(
+                "@type" -> "WebPage",
+                "@id" -> s"$canonicalUrl#webpage",
+                "url" -> canonicalUrl,
+                "name" -> title,
+                "description" -> description,
+                "isPartOf" -> play.api.libs.json.Json.obj(
+                    "@id" -> s"https://${wikiContext.requestWrapper.host}/#website"
+                )
+            )
+        )
+    ).toString()
+}
+@_base(title, description, canonicalUrl, "article") {
+    <script type="application/ld+json">@Html(jsonLdWebPage)</script>
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){

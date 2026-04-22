@@ -146,7 +146,7 @@ object InterpreterSchema extends TraitInterpreter {
 //        </h5>
 
     val dl =
-      <dl vocab="http://schema.org/" typeof={parseResult.schemaClass}>
+      <dl vocab="https://schema.org/" typeof={parseResult.schemaClass}>
         <h5 class="schemaClassTitle">
           {if (parseResult.schemaClass.isNullOrEmpty) {
             <div class="error">TODO: Specify Schema Class</div>
