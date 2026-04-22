@@ -253,7 +253,7 @@
         $(document).bind('keydown', 'shift+/', function () { return showHotkeyHelp(); });
 
         $(document).bind('keydown', 'w', function () { return showWrite(); });
-a        $(document).bind('keydown', 'i', function () { return showHabitQuickMenu(); });
+        $(document).bind('keydown', 'i', function () { return showHabitQuickMenu(); });
         $(document).on('keydown', function (e) {
             if (!e.altKey) return;
             var targetTagName = String(e.target && e.target.tagName || '');
