@@ -222,7 +222,7 @@ class Api @Inject()(
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
         case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String)
-        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toInstant.toString, u.email, u.nickname))
+        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toString, u.email, u.nickname))
         Ok(users.asJson)
       }
     }

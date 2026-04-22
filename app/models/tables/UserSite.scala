@@ -1,19 +1,20 @@
 package models.tables
 
-import anorm.SqlParser.{date, flatten, int, long, str}
+import anorm.SqlParser.{flatten, long, str}
 import anorm._
+import com.aha00a.play.AnormSqlParser.localDateTime
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 
-case class UserSite(user: Long, site: Long, created: Date, email: String, nickname: String)
+case class UserSite(user: Long, site: Long, created: LocalDateTime, email: String, nickname: String)
 
 object UserSite {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
   def select()(implicit connection: Connection, site: Site): Seq[UserSite] = {
-    SQL"""
+      SQL"""
         SELECT
             US.user, US.site, US.created, U.email, U.nickname
             FROM UserSite US
@@ -21,7 +22,8 @@ object UserSite {
             WHERE US.site = ${site.seq}
             ORDER BY US.created DESC
          """
-      .as(long("user") ~ long("site") ~ date("created") ~ str("email") ~ str("nickname") *).map(flatten)
-      .map(UserSite.tupled)
+      .as(localDateTime("created") ~ long("user") ~ long("site") ~ str("email") ~ str("nickname") *).map(flatten)
+        .map { case (created, user, site, email, nickname) => (user, site, created, email, nickname) }
+        .map(UserSite.tupled)
   }
 }
