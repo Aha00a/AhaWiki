@@ -18,6 +18,7 @@ object InterpreterTable extends TraitInterpreter {
   val regexShebang: Regex = """([ct]sv)(?:\s+(\d+)(?:\s+(\d+))?)?(?:\s+(.+))?""".r
 
   private val regexCssClassToken: Regex = """^[A-Za-z0-9_-]+$""".r
+  private val defaultCellValue = ""
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String]) {
     def getClasses: String = (Seq("simpleTable", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")))
@@ -35,9 +36,19 @@ object InterpreterTable extends TraitInterpreter {
     )
     .filter(_.nonEmpty)
 
+  private def csvPreferenceFrom(format: String): Option[CsvPreference] = format match {
+    case "tsv" => Some(CsvPreference.TAB_PREFERENCE)
+    case "csv" => Some(CsvPreference.STANDARD_PREFERENCE)
+    case _ => None
+  }
+
+  private def normalizeCell(value: String): String = Option(value).getOrElse(defaultCellValue)
+
   def parseShebang(argument:Seq[String]): Option[Shebang] = argument.mkString(" ") match {
-    case regexShebang("tsv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.TAB_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes)))
-    case regexShebang("csv", thRow, thColumn, classes) => Some(Shebang(CsvPreference.STANDARD_PREFERENCE, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes)))
+    case regexShebang(format, thRow, thColumn, classes) =>
+      csvPreferenceFrom(format).map(csvPreference =>
+        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes))
+      )
     case _ => None
   }
 
@@ -54,7 +65,8 @@ object InterpreterTable extends TraitInterpreter {
     withShebangAndRows(content) { (shebang, rows) =>
       val rowColumnData = rows
         .map(row => row
-          .map(s => if(s == null) "" else InterpreterWiki.toHtmlString(s))
+          .map(normalizeCell)
+          .map(InterpreterWiki.toHtmlString)
           .zipWithIndex
         )
         .zipWithIndex
@@ -88,7 +100,7 @@ object InterpreterTable extends TraitInterpreter {
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     withShebangAndRows(content) { (_, rows) =>
-      rows.flatMap(_.filter(_ != null).flatMap(InterpreterWiki.toSeqLink))
+      rows.flatMap(_.map(normalizeCell).flatMap(InterpreterWiki.toSeqLink))
     }.getOrElse(Seq())
   }
 }
