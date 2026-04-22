@@ -698,7 +698,7 @@ class Api @Inject()(
         val (latestText: String, latestRevision: Long) = Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
         val permission: WikiPermission = WikiPermission()
         if (permission.isWritable(PageContent(latestText))) {
-          val line = s"[habit:$habitKeyword] ${now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))}"
+          val line = s"""["habit:$habitKeyword"] ${now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))}"""
           val body =
             if (latestText.isEmpty) s"[[DayHeader]]\n * $line"
             else s"$latestText\n * $line"

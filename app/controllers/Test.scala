@@ -137,6 +137,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.extractLinkMarkup("""[wiki:FrontPage Alias]""").toList, Seq(AhaMarkLink("""wiki:FrontPage""", """Alias""")))
       assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page"]""").toList, Seq(AhaMarkLink("""Some Page""")))
       assertEquals(InterpreterWiki.extractLinkMarkup("""["Some Page" Alias]""").toList, Seq(AhaMarkLink("""Some Page""", "Alias")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""[habit:Sleep]""").toList, Seq(AhaMarkLink("""habit:Sleep""")))
+      assertEquals(InterpreterWiki.extractLinkMarkup("""["habit:Sleep"]""").toList, Seq(AhaMarkLink("""habit:Sleep""")))
 
       assertEquals(
         InterpreterWiki.extractLinkMarkup("""http://a.com/$   [http://a.com]  [http://a.com a com]""").toList,
@@ -169,6 +171,8 @@ class Test @Inject()(implicit val
 
       assertEquals(InterpreterWiki.toSeqLink("[link]").toList, Seq(CalculatedLink("UnitTest", "link", "")))
       assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(CalculatedLink("UnitTest", "link", "alias"), CalculatedLink("UnitTest", "b", "")))
+      assertEquals(InterpreterWiki.toSeqLink("[habit:Sleep]").toList, Seq(CalculatedLink("UnitTest", "habit:Sleep", "")))
+      assertEquals(InterpreterWiki.toSeqLink("""["habit:Sleep"]""").toList, Seq(CalculatedLink("UnitTest", "habit:Sleep", "")))
 
     }; testInterpreterWiki()
 
