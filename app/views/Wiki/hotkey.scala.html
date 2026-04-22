@@ -2,6 +2,30 @@
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
+    function showToast(message, type) {
+        var backgroundColor = type === 'error' ? '#b00020' : '#2e7d32';
+        var toast = $('<div></div>').text(message).css({
+            position: 'fixed',
+            right: '20px',
+            bottom: '20px',
+            background: backgroundColor,
+            color: '#fff',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            zIndex: 9999,
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            fontSize: '13px',
+            opacity: 0
+        });
+        $('body').append(toast);
+        toast.animate({ opacity: 1 }, 150);
+        setTimeout(function () {
+            toast.animate({ opacity: 0 }, 250, function () {
+                toast.remove();
+            });
+        }, 1600);
+    }
+
     function showSearch() {
         $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
         $('.searchBg').click(function () {
@@ -51,7 +75,7 @@
             ['Alt+L', 'Quick habit log: Sleep'],
             ['Alt+W', 'Quick habit log: WakeUp'],
             ['Alt+M', 'Quick habit log: Meal'],
-            ['Alt+K', 'Quick habit log: Smoke'],
+            ['Alt+S', 'Quick habit log: Smoke'],
             ['?', 'Open hotkey help']
         ];
         var rows = items.map(function (item) {
@@ -127,15 +151,17 @@
                     url: '/api/habit',
                     method: 'POST',
                     data: payload,
-                    success: function () {},
+                    success: function () {
+                        showToast('Habit Saved: ' + habit);
+                    },
                     error: function (jqXHR) {
                         var message = (jqXHR && jqXHR.responseJSON && jqXHR.responseJSON.error) || 'Failed to save habit log.';
-                        alert(message);
+                        showToast(message, 'error');
                     }
                 });
             },
             error: function () {
-                alert('Failed to fetch CSRF token.');
+                showToast('Failed to fetch CSRF token.', 'error');
             }
         });
     }
