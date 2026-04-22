@@ -94,4 +94,30 @@ character\tCharacter1\tCharacter2
     println(seqSeqField)
   }
 
+  "toJsonLdObject" - {
+    "returns JSON-LD object with merged same property as array" in {
+      val parseResult = ParseResult(
+        "Person",
+        Seq(
+          Seq("name", "Aha00a"),
+          Seq("sameAs", "github.com/aha00a"),
+          Seq("sameAs", "https://x.com/aha00a"),
+        )
+      )
+
+      val json = InterpreterSchema.toJsonLdObject(parseResult).get
+      (json \ "@type").as[String] shouldBe "Person"
+      (json \ "name").as[String] shouldBe "Aha00a"
+      (json \ "sameAs").as[Seq[String]] shouldBe Seq("https://github.com/aha00a", "https://x.com/aha00a")
+    }
+
+    "returns None when schema class is empty" in {
+      val parseResult = ParseResult(
+        "",
+        Seq(Seq("name", "Aha00a"))
+      )
+      InterpreterSchema.toJsonLdObject(parseResult) shouldBe None
+    }
+  }
+
 }

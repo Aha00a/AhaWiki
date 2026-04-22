@@ -220,7 +220,7 @@ class Test @Inject()(implicit val
             |                <dd class="schemaFieldValue" property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
             |              </div>
             |        </div>
-            |      </dl></div>""".stripMargin
+            |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
         val interpretedWithWiki = s"""<div>$interpreted</div>"""
 
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)

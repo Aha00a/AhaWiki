@@ -10,6 +10,7 @@ import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import logics.wikis.macros.MacroPeriod
 import models.ContextWikiPage
 import models.PageContent
+import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
 
 import scala.xml.XML
 
@@ -99,6 +100,30 @@ object InterpreterSchema extends TraitInterpreter {
 
   private def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
   private def isLocationKey(key: String): Boolean = locationKeys.contains(key) || key.endsWith("Location")
+  private def normalizeUrlValue(v: String): String = if (v.matches("^[\\w.+-]+://.*")) v else s"https://$v"
+
+  private def toJsonFieldValue(key: String, values: Seq[String]): JsValue = {
+    val normalizedValues = if (urlKeys.contains(key)) values.map(normalizeUrlValue) else values
+    if (normalizedValues.size == 1) JsString(normalizedValues.head)
+    else JsArray(normalizedValues.map(JsString))
+  }
+
+  def toJsonLdObject(parseResult: ParseResult): Option[JsObject] = {
+    if (parseResult.schemaClass.isNullOrEmpty) {
+      None
+    } else {
+      val fields = parseResult.seqSeqField
+        .collect { case key +: values if values.nonEmpty => key -> values }
+        .groupMap(_._1)(_._2)
+        .map { case (key, groupedValues) => key -> groupedValues.flatten }
+      val properties: Seq[(String, JsValue)] = fields.toSeq.map { case (key, values) => key -> toJsonFieldValue(key, values) }
+
+      Some(Json.obj(
+        "@context" -> "https://schema.org",
+        "@type" -> parseResult.schemaClass
+      ) ++ JsObject(properties))
+    }
+  }
 
   private def renderPropertyTitle(key: String, pairKey: Option[String]): scala.xml.NodeSeq = {
     (logics.CalculatedSchemaOrg.mapProperty.get(key), pairKey.flatMap(logics.CalculatedSchemaOrg.mapProperty.get)) match {
@@ -229,9 +254,12 @@ object InterpreterSchema extends TraitInterpreter {
           }
         </div>
       </dl>
+    val jsonLdScript = toJsonLdObject(parseResult).map(json =>
+      <script type="application/ld+json">{scala.xml.Unparsed(Json.stringify(json))}</script>
+    )
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>
-        val r = <div class="schema InterpreterSchema">{dl}</div>
+        val r = <div class="schema InterpreterSchema">{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
         r.toString()
       case RenderingMode.Preview =>
         val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
@@ -246,6 +274,7 @@ object InterpreterSchema extends TraitInterpreter {
         val r =
           <div class="schema InterpreterSchema">
             {dl}
+            {jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}
             <div class="preview info">
               <h6>Recommended Properties</h6>
               {recommendedProperties}
