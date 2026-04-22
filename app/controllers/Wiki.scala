@@ -18,6 +18,7 @@ import logics.wikis.interpreters.Interpreters
 import models.RequestWrapper
 import models._
 import models.tables.CalculatedCosineSimilarity
+import models.tables.CalculatedLink
 import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
@@ -193,8 +194,14 @@ controllerComponents: ControllerComponents,
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
 
 
+        case (None, "" | "view", true, _) if isHabitAggregatedPage(name) =>
+          renderHabitAggregatedPage(name, isWritable, hasReadPermissionRestriction, pageFirstRevision, pageLastRevision)
+
         case (None, _, _, _) =>
           renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
+
+        case (Some(_), "" | "view", true, _) if isHabitAggregatedPage(name) =>
+          renderHabitAggregatedPage(name, isWritable, hasReadPermissionRestriction, pageFirstRevision, pageLastRevision)
 
         case (Some(page), "" | "view", true, _) =>
           renderReadablePage(page, name, isWritable, hasReadPermissionRestriction, pageFirstRevision, pageLastRevision)
@@ -235,6 +242,72 @@ controllerComponents: ControllerComponents,
       if (isReadable != readable || isWritable != editable)
         logger.error(s"readable: $readable editable: $editable")
     }
+  }
+
+  private def isHabitAggregatedPage(name: String): Boolean =
+    name.toLowerCase.startsWith("habit:")
+
+  private case class HabitEntry(pageName: String, timestamp: String)
+
+  private def buildHabitAggregatedMarkup(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
+    val habitName = name.stripPrefix("habit:").trim
+    if (habitName.isEmpty) {
+      s"""= $name
+         |
+         |habit 이름이 비어 있어요.
+         |
+         |예시:
+         | * ["habit:Sleep"]
+         | * ["habit:WakeUp"]
+         | * ["habit:Meal"]
+         | * ["habit:Smoke"]""".stripMargin
+    } else {
+      val escapedHabit = Regex.quote(habitName)
+      val linePattern = (s"""\\[habit:$escapedHabit\\]\\s+(.+)$$""").r
+      val datePagePattern = """^20[0-9]{2}-[0-9]{2}-[0-9]{2}$""".r
+      val linkedDatePages = CalculatedLink
+        .selectDst(name)
+        .map(_.src)
+        .distinct
+        .filter(pageName => datePagePattern.matches(pageName))
+        .filter(wikiContext.pageCanSee)
+
+      val linkedPagesLatest =
+        if (linkedDatePages.isEmpty) Seq.empty
+        else Page.selectLastRevision(linkedDatePages)
+
+      val entries = linkedPagesLatest
+        .flatMap(page =>
+          page.content
+            .split("""(\r\n|\n)+""")
+            .iterator
+            .map(_.trim)
+            .collect {
+              case linePattern(timestamp) => HabitEntry(page.name, timestamp)
+            }
+            .toSeq
+        )
+
+      val body =
+        if (entries.isEmpty) " * 아직 기록이 없습니다."
+        else entries.map(e => s""" * ["${e.pageName}"] - ${e.timestamp}""").mkString("\n")
+
+      s"""= $name
+         | * count: ${entries.size}
+         |
+         |== Entries
+         |$body""".stripMargin
+    }
+  }
+
+  private def renderHabitAggregatedPage(name: String,
+                                        isWritable: Boolean,
+                                        hasReadPermissionRestriction: Boolean,
+                                        pageFirstRevision: Option[Page],
+                                        pageLastRevision: Option[Page])
+                                       (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
+    val contentInterpreted = Interpreters.toHtmlString(buildHabitAggregatedMarkup(name))
+    Ok(views.html.Wiki.view(name, s"$name history", "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction))
   }
 
   private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[Page], pageLastRevision: Option[Page])

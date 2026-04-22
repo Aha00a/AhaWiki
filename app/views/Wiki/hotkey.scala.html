@@ -26,6 +26,40 @@
         }, 1600);
     }
 
+    function showHabitQuickMenu() {
+        var habits = ['Sleep', 'WakeUp', 'Meal', 'Smoke'];
+        var buttons = habits.map(function (habit) {
+            return '<button type="button" data-habit="' + habit + '" style="border:1px solid #ddd;background:#fafafa;color:#333;border-radius:16px;padding:6px 12px;font-size:13px;cursor:pointer;">' + habit + '</button>';
+        }).join('');
+
+        var popup = [
+            '<div class="searchBg habitQuickBg"></div>',
+            '<div class="search habitQuickMenu" style="max-width:480px;padding:20px;box-sizing:border-box;background-color:#fff;border-radius: 5px;">',
+            '<h2 style="margin:0 0 10px 0;">Quick Habit Log</h2>',
+            '<p style="margin:0 0 12px 0;color:#777;">기록할 habit을 선택하세요. (Alt+L/W/M/S도 가능)</p>',
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + buttons + '</div>',
+            '</div>'
+        ].join('');
+
+        $('body').append($(popup));
+        $('.habitQuickBg').click(function () {
+            hideHabitQuickMenu();
+        });
+        $('.habitQuickMenu').on('click', 'button[data-habit]', function () {
+            submitHabitQuick($(this).data('habit'));
+            hideHabitQuickMenu();
+        });
+        $(document).on('keydown.habitQuickMenu', function (e) {
+            if (e.keyCode == 27) hideHabitQuickMenu();
+        });
+        return false;
+    }
+
+    function hideHabitQuickMenu() {
+        $('.habitQuickMenu, .habitQuickBg').remove();
+        $(document).off('keydown.habitQuickMenu');
+    }
+
     function showSearch() {
         $("body").append($('<div class="searchBg"></div><div class="search"><form action="/search"><input type="text" name="q"/></form></div>'));
         $('.searchBg').click(function () {
