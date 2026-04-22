@@ -137,6 +137,206 @@ kbd:hover > kbd {
 .AhaWiki a.schema {
   color: #003;
 }
+.AhaWiki a.schema-link::before {
+  content: "🧩";
+  display: inline-block;
+  margin-right: 0.2em;
+}
+.AhaWiki a.schema-link.schema-thing::before {
+  content: "🧩";
+}
+.AhaWiki a.schema-link.schema-schema::before {
+  content: "🧩";
+}
+.AhaWiki a.schema-link.schema-action::before {
+  content: "⚡";
+}
+.AhaWiki a.schema-link.schema-play-action::before {
+  content: "▶️";
+}
+.AhaWiki a.schema-link.schema-bio-chem-entity::before {
+  content: "🧪";
+}
+.AhaWiki a.schema-link.schema-molecular-entity::before {
+  content: "🧬";
+}
+.AhaWiki a.schema-link.schema-creative-work::before {
+  content: "📝";
+}
+.AhaWiki a.schema-link.schema-article::before {
+  content: "📰";
+}
+.AhaWiki a.schema-link.schema-social-media-posting::before {
+  content: "💬";
+}
+.AhaWiki a.schema-link.schema-tech-article::before {
+  content: "🧑‍💻";
+}
+.AhaWiki a.schema-link.schema-book::before {
+  content: "📚";
+}
+.AhaWiki a.schema-link.schema-creative-work-series::before {
+  content: "🗂️";
+}
+.AhaWiki a.schema-link.schema-book-series::before {
+  content: "📚";
+}
+.AhaWiki a.schema-link.schema-movie-series::before {
+  content: "🎬";
+}
+.AhaWiki a.schema-link.schema-periodical::before {
+  content: "🗞️";
+}
+.AhaWiki a.schema-link.schema-comic-series::before {
+  content: "🦸";
+}
+.AhaWiki a.schema-link.schema-tvseries::before {
+  content: "📺";
+}
+.AhaWiki a.schema-link.schema-game::before {
+  content: "🎮";
+}
+.AhaWiki a.schema-link.schema-video-game::before {
+  content: "🕹️";
+}
+.AhaWiki a.schema-link.schema-how-to::before {
+  content: "🛠️";
+}
+.AhaWiki a.schema-link.schema-recipe::before {
+  content: "🍳";
+}
+.AhaWiki a.schema-link.schema-legislation::before {
+  content: "⚖️";
+}
+.AhaWiki a.schema-link.schema-movie::before {
+  content: "🎞️";
+}
+.AhaWiki a.schema-link.schema-software-application::before {
+  content: "💻";
+}
+.AhaWiki a.schema-link.schema-web-application::before {
+  content: "🌐";
+}
+.AhaWiki a.schema-link.schema-software-source-code::before {
+  content: "👨‍💻";
+}
+.AhaWiki a.schema-link.schema-web-site::before {
+  content: "🕸️";
+}
+.AhaWiki a.schema-link.schema-event::before {
+  content: "📅";
+}
+.AhaWiki a.schema-link.schema-intangible::before {
+  content: "💡";
+}
+.AhaWiki a.schema-link.schema-computer-language::before {
+  content: "⌨️";
+}
+.AhaWiki a.schema-link.schema-language::before {
+  content: "🗣️";
+}
+.AhaWiki a.schema-link.schema-rating::before {
+  content: "⭐";
+}
+.AhaWiki a.schema-link.schema-series::before {
+  content: "🎞️";
+}
+.AhaWiki a.schema-link.schema-medical-entity::before {
+  content: "🩺";
+}
+.AhaWiki a.schema-link.schema-anatomical-structure::before {
+  content: "🫀";
+}
+.AhaWiki a.schema-link.schema-medical-condition::before {
+  content: "🤒";
+}
+.AhaWiki a.schema-link.schema-substance::before {
+  content: "🧫";
+}
+.AhaWiki a.schema-link.schema-drug::before {
+  content: "💊";
+}
+.AhaWiki a.schema-link.schema-organization::before {
+  content: "🏢";
+}
+.AhaWiki a.schema-link.schema-corporation::before {
+  content: "🏭";
+}
+.AhaWiki a.schema-link.schema-educational-organization::before {
+  content: "🎓";
+}
+.AhaWiki a.schema-link.schema-college-or-university::before {
+  content: "🏫";
+}
+.AhaWiki a.schema-link.schema-local-business::before {
+  content: "🏪";
+}
+.AhaWiki a.schema-link.schema-emergency-service::before {
+  content: "🚨";
+}
+.AhaWiki a.schema-link.schema-hospital::before {
+  content: "🏥";
+}
+.AhaWiki a.schema-link.schema-financial-service::before {
+  content: "💳";
+}
+.AhaWiki a.schema-link.schema-food-establishment::before {
+  content: "🍴";
+}
+.AhaWiki a.schema-link.schema-cafe-or-coffee-shop::before {
+  content: "☕";
+}
+.AhaWiki a.schema-link.schema-restaurant::before {
+  content: "🍽️";
+}
+.AhaWiki a.schema-link.schema-government-office::before {
+  content: "🏛️";
+}
+.AhaWiki a.schema-link.schema-medical-organization::before {
+  content: "⚕️";
+}
+.AhaWiki a.schema-link.schema-ngo::before {
+  content: "🤝";
+}
+.AhaWiki a.schema-link.schema-political-party::before {
+  content: "🗳️";
+}
+.AhaWiki a.schema-link.schema-person::before {
+  content: "🧑";
+}
+.AhaWiki a.schema-link.schema-place::before {
+  content: "📍";
+}
+.AhaWiki a.schema-link.schema-administrative-area::before {
+  content: "🗺️";
+}
+.AhaWiki a.schema-link.schema-city::before {
+  content: "🏙️";
+}
+.AhaWiki a.schema-link.schema-country::before {
+  content: "🌏";
+}
+.AhaWiki a.schema-link.schema-civic-structure::before {
+  content: "🏛️";
+}
+.AhaWiki a.schema-link.schema-product::before {
+  content: "📦";
+}
+.AhaWiki a.schema-link.schema-custom::before {
+  content: "🧷";
+}
+.AhaWiki a.schema-link.schema-cognag::before {
+  content: "🥃";
+}
+.AhaWiki a.schema-link.schema-poem::before {
+  content: "✒️";
+}
+.AhaWiki a.schema-link.schema-standard::before {
+  content: "📏";
+}
+.AhaWiki a.schema-link.schema-whiskey::before {
+  content: "🥃";
+}
 .AhaWiki a.habit-link::before {
   display: inline-block;
   margin-right: 0.2em;

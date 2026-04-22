@@ -24,12 +24,27 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       val isStartsWithHash = uriNormalized.startsWith("#")
       val isStartsWithQuestionMark = uriNormalized.startsWith("?")
       val isHabit = uriNormalized.startsWith("habit:")
+      val isSchema = uriNormalized.startsWith("schema:")
       val habitClass = uriNormalized match {
         case "habit:Sleep" => Some("habit-sleep")
         case "habit:WakeUp" => Some("habit-wakeup")
         case "habit:Meal" => Some("habit-meal")
         case "habit:Smoke" => Some("habit-smoke")
         case _ => None
+      }
+      val schemaTypeClass = if (isSchema) {
+        uriNormalized.stripPrefix("schema:").trim match {
+          case "" => None
+          case schemaType =>
+            Some(
+              "schema-" + schemaType
+                .replaceAll("([a-z0-9])([A-Z])", "$1-$2")
+                .replaceAll("[^A-Za-z0-9]+", "-")
+                .toLowerCase
+            )
+        }
+      } else {
+        None
       }
       val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
@@ -48,7 +63,9 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         DefaultPageLogic.isDefined(uriNormalized)
       )
       val classList = Seq(
-        if (uriNormalized.startsWith("schema:")) Some("schema") else None,
+        if (isSchema) Some("schema") else None,
+        if (isSchema) Some("schema-link") else None,
+        schemaTypeClass,
         if (isMissing) Some("missing") else None,
         if (isHabit) Some("habit-link") else None,
         habitClass
