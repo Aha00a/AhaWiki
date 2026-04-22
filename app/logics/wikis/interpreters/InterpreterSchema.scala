@@ -111,9 +111,27 @@ object InterpreterSchema extends TraitInterpreter {
     val normalizedValues =
       if (urlKeys.contains(key) || imageKeys.contains(key)) values.map(v => normalizeUrlValue(v, baseUrl))
       else values
-    val distinctValues = normalizedValues.distinct
-    if (distinctValues.size == 1) JsString(distinctValues.head)
-    else JsArray(distinctValues.map(JsString))
+
+    val normalizedDistinct = normalizedValues.distinct
+    val convertedValues: Seq[JsValue] = key match {
+      case "address" =>
+        normalizedDistinct.map(v => Json.obj("@type" -> "PostalAddress", "streetAddress" -> v))
+      case "location" | "foundingLocation" =>
+        normalizedDistinct.map(v => Json.obj("@type" -> "Place", "name" -> v))
+      case "geo" =>
+        normalizedDistinct.map { v =>
+          v.split(",").map(_.trim).toSeq match {
+            case Seq(lat, lng) if lat.matches("""^-?\d+(\.\d+)?$""") && lng.matches("""^-?\d+(\.\d+)?$""") =>
+              Json.obj("@type" -> "GeoCoordinates", "latitude" -> lat, "longitude" -> lng)
+            case _ =>
+              JsString(v)
+          }
+        }
+      case _ =>
+        normalizedDistinct.map(JsString)
+    }
+
+    if (convertedValues.size == 1) convertedValues.head else JsArray(convertedValues)
   }
 
   def toJsonLdObject(
@@ -225,9 +243,9 @@ object InterpreterSchema extends TraitInterpreter {
                     case None =>
                       tail.map {
                         case v if imageKeys.contains(key) =>
-                          <dd class="schemaFieldValue schemaFieldImage" property={key}><img src={v} alt={s"$v $key"}></img></dd>
+                          <dd class="schemaFieldValue schemaFieldImage" property={key}><img src={normalizeUrlValue(v, baseUrl)} alt={s"${wikiContext.name} $key"}></img></dd>
                         case v if urlKeys.contains(key) =>
-                          <dd class="schemaFieldValue" property={key}>{XML.loadString(AhaMarkLink(if (v.matches("^[\\w.+-]+://.*")) v else "https://" + v).toHtmlString(pageNameSet))}</dd>
+                          <dd class="schemaFieldValue" property={key}>{XML.loadString(AhaMarkLink(normalizeUrlValue(v, baseUrl)).toHtmlString(pageNameSet))}</dd>
                         case v if isDateKey(key) =>
                           <dd class="schemaFieldValue" property={key}>
                             {XML.loadString(AhaMarkLink(v).toHtmlString(pageNameSet))}

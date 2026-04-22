@@ -139,6 +139,30 @@ character\tCharacter1\tCharacter2
       (json \ "inLanguage").as[String] shouldBe "ko-KR"
     }
 
+    "converts location-like properties to structured values" in {
+      val parseResult = ParseResult(
+        "Organization",
+        Seq(
+          Seq("address", "1600 Amphitheatre Parkway"),
+          Seq("location", "Mountain View HQ"),
+          Seq("geo", "37.422,-122.084"),
+          Seq("foundingLocation", "Seoul"),
+        )
+      )
+
+      val json = InterpreterSchema.toJsonLdObject(parseResult).get
+
+      (json \ "address" \ "@type").as[String] shouldBe "PostalAddress"
+      (json \ "address" \ "streetAddress").as[String] shouldBe "1600 Amphitheatre Parkway"
+      (json \ "location" \ "@type").as[String] shouldBe "Place"
+      (json \ "location" \ "name").as[String] shouldBe "Mountain View HQ"
+      (json \ "geo" \ "@type").as[String] shouldBe "GeoCoordinates"
+      (json \ "geo" \ "latitude").as[String] shouldBe "37.422"
+      (json \ "geo" \ "longitude").as[String] shouldBe "-122.084"
+      (json \ "foundingLocation" \ "@type").as[String] shouldBe "Place"
+      (json \ "foundingLocation" \ "name").as[String] shouldBe "Seoul"
+    }
+
     "returns None when schema class is empty" in {
       val parseResult = ParseResult(
         "",
