@@ -6,8 +6,11 @@
 @jsonLdWebPage = @{
     val websiteId = s"https://${wikiContext.requestWrapper.host}/#website"
     val webpageId = s"$canonicalUrl#webpage"
+    val articleId = s"$canonicalUrl#article"
     val breadcrumbId = s"$canonicalUrl#breadcrumb"
     val organizationId = s"https://${wikiContext.requestWrapper.host}/#organization"
+
+    val faviconPath = logics.AhaWikiConfig().site.favicon().stripPrefix("/")
 
     val webPageBase = play.api.libs.json.Json.obj(
         "@type" -> "WebPage",
@@ -27,9 +30,35 @@
                 "@type" -> "Thing",
                 "name" -> title
             )
+        ),
+        "mainEntity" -> play.api.libs.json.Json.obj(
+            "@id" -> articleId
         )
     )
     val webPageWithDates = webPageBase ++
+      publishedDateTime.map(v => play.api.libs.json.Json.obj("datePublished" -> v)).getOrElse(play.api.libs.json.Json.obj()) ++
+      modifiedDateTime.map(v => play.api.libs.json.Json.obj("dateModified" -> v)).getOrElse(play.api.libs.json.Json.obj())
+
+    val articleBase = play.api.libs.json.Json.obj(
+        "@type" -> "Article",
+        "@id" -> articleId,
+        "headline" -> title,
+        "description" -> description,
+        "mainEntityOfPage" -> play.api.libs.json.Json.obj(
+            "@id" -> webpageId
+        ),
+        "isPartOf" -> play.api.libs.json.Json.obj(
+            "@id" -> websiteId
+        ),
+        "author" -> play.api.libs.json.Json.obj(
+            "@id" -> organizationId
+        ),
+        "publisher" -> play.api.libs.json.Json.obj(
+            "@id" -> organizationId
+        ),
+        "inLanguage" -> "ko"
+    )
+    val articleWithDates = articleBase ++
       publishedDateTime.map(v => play.api.libs.json.Json.obj("datePublished" -> v)).getOrElse(play.api.libs.json.Json.obj()) ++
       modifiedDateTime.map(v => play.api.libs.json.Json.obj("dateModified" -> v)).getOrElse(play.api.libs.json.Json.obj())
 
@@ -40,13 +69,18 @@
                 "@type" -> "Organization",
                 "@id" -> organizationId,
                 "name" -> wikiContext.requestWrapper.host,
-                "url" -> s"https://${wikiContext.requestWrapper.host}/"
+                "url" -> s"https://${wikiContext.requestWrapper.host}/",
+                "logo" -> play.api.libs.json.Json.obj(
+                    "@type" -> "ImageObject",
+                    "url" -> s"https://${wikiContext.requestWrapper.host}/$faviconPath"
+                )
             ),
             play.api.libs.json.Json.obj(
                 "@type" -> "WebSite",
                 "@id" -> websiteId,
                 "url" -> s"https://${wikiContext.requestWrapper.host}/",
                 "name" -> wikiContext.requestWrapper.host,
+                "inLanguage" -> "ko",
                 "publisher" -> play.api.libs.json.Json.obj(
                     "@id" -> organizationId
                 ),
@@ -74,6 +108,7 @@
                     )
                 )
             ),
+            articleWithDates,
             webPageWithDates
         )
     ).toString()
