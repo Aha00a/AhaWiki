@@ -1,16 +1,16 @@
 package models.tables
 
-import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
+import com.aha00a.play.AnormSqlParser.localDateTime
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 import scala.annotation.tailrec
 
-case class CalculatedTerm(seq: Long, dateInserted: Date, term:String)
+case class CalculatedTerm(seq: Long, dateInserted: LocalDateTime, term:String)
 
 object CalculatedTerm {
   //noinspection TypeAnnotation
@@ -23,13 +23,13 @@ object CalculatedTerm {
 
   def select(term: String)(implicit connection: Connection): Option[CalculatedTerm] = {
     SQL"""SELECT seq, dateInserted, term FROM CalculatedTerm WHERE term = $term"""
-      .as(long("seq") ~ date("dateInserted") ~ str("term") singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("dateInserted") ~ str("term") singleOpt).map(flatten)
       .map(tupled)
   }
 
   def select(seq: Long)(implicit connection: Connection): Option[CalculatedTerm] = {
     SQL"""SELECT seq, dateInserted, term FROM CalculatedTerm WHERE seq = $seq"""
-      .as(long("seq") ~ date("dateInserted") ~ str("term") singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("dateInserted") ~ str("term") singleOpt).map(flatten)
       .map(tupled)
   }
 
