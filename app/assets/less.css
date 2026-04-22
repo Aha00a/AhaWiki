@@ -137,6 +137,22 @@ kbd:hover > kbd {
 .AhaWiki a.schema {
   color: #003;
 }
+.AhaWiki a.habit-link::before {
+  display: inline-block;
+  margin-right: 0.2em;
+}
+.AhaWiki a.habit-link.habit-sleep::before {
+  content: "😴";
+}
+.AhaWiki a.habit-link.habit-wakeup::before {
+  content: "⏰";
+}
+.AhaWiki a.habit-link.habit-meal::before {
+  content: "🍽️";
+}
+.AhaWiki a.habit-link.habit-smoke::before {
+  content: "🚬";
+}
 .AhaWiki code,
 .AhaWiki kbd,
 .AhaWiki pre,

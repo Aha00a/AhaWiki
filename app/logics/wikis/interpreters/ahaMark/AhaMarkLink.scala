@@ -23,12 +23,17 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       val external: Boolean = PageNameLogic.isExternal(uri)
       val isStartsWithHash = uriNormalized.startsWith("#")
       val isStartsWithQuestionMark = uriNormalized.startsWith("?")
+      val isHabit = uriNormalized.startsWith("habit:")
+      val habitClass = uriNormalized match {
+        case "habit:Sleep" => Some("habit-sleep")
+        case "habit:WakeUp" => Some("habit-wakeup")
+        case "habit:Meal" => Some("habit-meal")
+        case "habit:Smoke" => Some("habit-smoke")
+        case _ => None
+      }
       val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
-      val display: String = aliasWithDefault
-      val attrCss = if (uriNormalized.startsWith("schema:")) {
-        """ class="schema""""
-      } else if (
+      val isMissing = !(
         set.isEmpty ||
         external ||
         isStartsWithHash ||
@@ -41,13 +46,17 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
         set.contains(uriNormalized.replaceAll("""[#?].+$""", "")) ||
         DefaultPageLogic.isDefined(uriNormalized)
-      ) {
-        ""
-      } else {
-        """ class="missing" rel="nofollow""""
-      }
+      )
+      val classList = Seq(
+        if (uriNormalized.startsWith("schema:")) Some("schema") else None,
+        if (isMissing) Some("missing") else None,
+        if (isHabit) Some("habit-link") else None,
+        habitClass
+      ).flatten
+      val attrClass = if (classList.nonEmpty) s""" class="${classList.mkString(" ")}"""" else ""
+      val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
-      s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrCss$attrRel>${display.escapeHtml()}</a>"""
+      s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${aliasWithDefault.escapeHtml()}</a>"""
     }
   }
 
