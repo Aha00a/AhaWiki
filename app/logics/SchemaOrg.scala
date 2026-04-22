@@ -37,7 +37,10 @@ object CalculatedSchemaOrg {
 
       <a href={"/w/schema:" + id} title={title} class={seqClass.mkString(" ")}>{if(toTitleCase) EnglishCaseConverter.camelCase2TitleCase(id) else id}</a>
     }
-    def toAhaMarkLink(implicit wikiContext:ContextWikiPage): AhaMarkLink = AhaMarkLink(s"schema:$id", EnglishCaseConverter.pascalCase2TitleCase(id))
+    def toAhaMarkLink(implicit wikiContext:ContextWikiPage): AhaMarkLink = {
+      val title = if (id.matches("^[A-Za-z0-9]+$")) EnglishCaseConverter.pascalCase2TitleCase(id) else id
+      AhaMarkLink(s"schema:$id", title)
+    }
   }
 
   def withNameSpace(s: String): String = s"schema:$s"
