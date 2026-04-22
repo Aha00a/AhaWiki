@@ -111,6 +111,34 @@ character\tCharacter1\tCharacter2
       (json \ "sameAs").as[Seq[String]] shouldBe Seq("https://github.com/aha00a", "https://x.com/aha00a")
     }
 
+    "normalizes image/url values and adds page level metadata" in {
+      val parseResult = ParseResult(
+        "Person",
+        Seq(
+          Seq("image", "/public/img/profile.png"),
+          Seq("sameAs", "//x.com/aha00a"),
+          Seq("sameAs", "x.com/aha00a"),
+          Seq("sameAs", "x.com/aha00a"),
+        )
+      )
+
+      val json = InterpreterSchema.toJsonLdObject(
+        parseResult = parseResult,
+        baseUrl = Some("https://example.com"),
+        pageUrl = Some("https://example.com/w/Aha00a"),
+        pageName = Some("Aha00a"),
+        language = Some("ko-KR")
+      ).get
+
+      (json \ "image").as[String] shouldBe "https://example.com/public/img/profile.png"
+      (json \ "sameAs").as[Seq[String]] shouldBe Seq("https://x.com/aha00a")
+      (json \ "@id").as[String] shouldBe "https://example.com/w/Aha00a"
+      (json \ "url").as[String] shouldBe "https://example.com/w/Aha00a"
+      (json \ "mainEntityOfPage").as[String] shouldBe "https://example.com/w/Aha00a"
+      (json \ "name").as[String] shouldBe "Aha00a"
+      (json \ "inLanguage").as[String] shouldBe "ko-KR"
+    }
+
     "returns None when schema class is empty" in {
       val parseResult = ParseResult(
         "",

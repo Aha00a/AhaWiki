@@ -100,15 +100,29 @@ object InterpreterSchema extends TraitInterpreter {
 
   private def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
   private def isLocationKey(key: String): Boolean = locationKeys.contains(key) || key.endsWith("Location")
-  private def normalizeUrlValue(v: String): String = if (v.matches("^[\\w.+-]+://.*")) v else s"https://$v"
-
-  private def toJsonFieldValue(key: String, values: Seq[String]): JsValue = {
-    val normalizedValues = if (urlKeys.contains(key)) values.map(normalizeUrlValue) else values
-    if (normalizedValues.size == 1) JsString(normalizedValues.head)
-    else JsArray(normalizedValues.map(JsString))
+  private def normalizeUrlValue(v: String, baseUrl: Option[String]): String = {
+    if (v.matches("^[\\w.+-]+://.*")) v
+    else if (v.startsWith("//")) s"https:$v"
+    else if (v.startsWith("/")) baseUrl.map(_ + v).getOrElse(v)
+    else s"https://$v"
   }
 
-  def toJsonLdObject(parseResult: ParseResult): Option[JsObject] = {
+  private def toJsonFieldValue(key: String, values: Seq[String], baseUrl: Option[String]): JsValue = {
+    val normalizedValues =
+      if (urlKeys.contains(key) || imageKeys.contains(key)) values.map(v => normalizeUrlValue(v, baseUrl))
+      else values
+    val distinctValues = normalizedValues.distinct
+    if (distinctValues.size == 1) JsString(distinctValues.head)
+    else JsArray(distinctValues.map(JsString))
+  }
+
+  def toJsonLdObject(
+    parseResult: ParseResult,
+    baseUrl: Option[String] = None,
+    pageUrl: Option[String] = None,
+    pageName: Option[String] = None,
+    language: Option[String] = None
+  ): Option[JsObject] = {
     if (parseResult.schemaClass.isNullOrEmpty) {
       None
     } else {
@@ -116,12 +130,19 @@ object InterpreterSchema extends TraitInterpreter {
         .collect { case key +: values if values.nonEmpty => key -> values }
         .groupMap(_._1)(_._2)
         .map { case (key, groupedValues) => key -> groupedValues.flatten }
-      val properties: Seq[(String, JsValue)] = fields.toSeq.map { case (key, values) => key -> toJsonFieldValue(key, values) }
+      val properties: Seq[(String, JsValue)] = fields.toSeq.map { case (key, values) => key -> toJsonFieldValue(key, values, baseUrl) }
+      val defaultProperties = Seq(
+        pageUrl.filter(_ => !fields.contains("url")).map("url" -> JsString(_)),
+        pageUrl.map("mainEntityOfPage" -> JsString(_)),
+        pageUrl.map("@id" -> JsString(_)),
+        pageName.filter(_ => !fields.contains("name")).map("name" -> JsString(_)),
+        language.map("inLanguage" -> JsString(_)),
+      ).flatten
 
-      Some(Json.obj(
+      Some((Json.obj(
         "@context" -> "https://schema.org",
         "@type" -> parseResult.schemaClass
-      ) ++ JsObject(properties))
+      ) ++ JsObject(defaultProperties ++ properties)))
     }
   }
 
@@ -155,6 +176,8 @@ object InterpreterSchema extends TraitInterpreter {
     val parseResult: ParseResult = parse(pageContent)
 
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
+    val baseUrl: Option[String] = Option(wikiContext.requestWrapper.host).filter(_.isNotNullOrEmpty).map(host => s"https://$host")
+    val pageUrl: Option[String] = baseUrl.map(base => s"$base/w/${UriUtil.encodeURIComponent(wikiContext.name)}")
 
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
 //        <h5>
@@ -254,7 +277,13 @@ object InterpreterSchema extends TraitInterpreter {
           }
         </div>
       </dl>
-    val jsonLdScript = toJsonLdObject(parseResult).map(json =>
+    val jsonLdScript = toJsonLdObject(
+      parseResult = parseResult,
+      baseUrl = baseUrl,
+      pageUrl = pageUrl,
+      pageName = Some(wikiContext.name),
+      language = Some(wikiContext.requestWrapper.locale.toLanguageTag),
+    ).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(Json.stringify(json))}</script>
     )
     wikiContext.renderingMode match {
