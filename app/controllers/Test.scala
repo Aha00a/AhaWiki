@@ -90,8 +90,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.inlineToHtmlString("""[schema:Schema Alias]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema"]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">schema:Schema</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema" Alias]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">Alias</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep]"""), """<a href="/w/habit:Sleep" class="habit-link habit-sleep">habit:Sleep</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep Good Night]"""), """<a href="/w/habit:Sleep" class="habit-link habit-sleep">Good Night</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep]"""), """<a href="/w/habit:Sleep" class="missing habit-link habit-sleep" rel="nofollow">habit:Sleep</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep Good Night]"""), """<a href="/w/habit:Sleep" class="missing habit-link habit-sleep" rel="nofollow">Good Night</a>""")
 
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank" rel="noopener">http://a.com/$</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/some$thing   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/some$thing" target="_blank" rel="noopener">http://a.com/some$thing</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
@@ -198,9 +198,9 @@ class Test @Inject()(implicit val
              |]]]""".stripMargin
 
         val interpreted =
-          """<div class="schema InterpreterSchema"><dl vocab="http://schema.org/" typeof="Person">
+          """<div class="schema InterpreterSchema"><dl vocab="https://schema.org/" typeof="Person">
             |        <h5 class="schemaClassTitle">
-            |          <a class="schema" href="/w/schema:Person">Person</a>
+            |          <a class="schema schema-link schema-person" href="/w/schema:Person">Person</a>
             |        </h5>
             |        <div class="schemaFields">
             |          <div class="schemaFieldRow">
