@@ -1,7 +1,24 @@
 @(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @encodedTitle = @{ java.net.URLEncoder.encode(title, "UTF-8").replace("+", "%20") }
 @canonicalUrl = @{ s"https://${wikiContext.requestWrapper.host}/w/$encodedTitle" }
+@publishedDateTime = @{ wikiFirst.map(_.dateTime.toString) }
+@modifiedDateTime = @{ wikiLast.map(_.dateTime.toString) }
 @jsonLdWebPage = @{
+    val webPageBase = play.api.libs.json.Json.obj(
+        "@type" -> "WebPage",
+        "@id" -> s"$canonicalUrl#webpage",
+        "url" -> canonicalUrl,
+        "name" -> title,
+        "description" -> description,
+        "inLanguage" -> "ko",
+        "isPartOf" -> play.api.libs.json.Json.obj(
+            "@id" -> s"https://${wikiContext.requestWrapper.host}/#website"
+        )
+    )
+    val webPageWithDates = webPageBase ++
+      publishedDateTime.map(v => play.api.libs.json.Json.obj("datePublished" -> v)).getOrElse(play.api.libs.json.Json.obj()) ++
+      modifiedDateTime.map(v => play.api.libs.json.Json.obj("dateModified" -> v)).getOrElse(play.api.libs.json.Json.obj())
+
     play.api.libs.json.Json.obj(
         "@context" -> "https://schema.org",
         "@graph" -> Seq(
@@ -9,18 +26,14 @@
                 "@type" -> "WebSite",
                 "@id" -> s"https://${wikiContext.requestWrapper.host}/#website",
                 "url" -> s"https://${wikiContext.requestWrapper.host}/",
-                "name" -> wikiContext.requestWrapper.host
-            ),
-            play.api.libs.json.Json.obj(
-                "@type" -> "WebPage",
-                "@id" -> s"$canonicalUrl#webpage",
-                "url" -> canonicalUrl,
-                "name" -> title,
-                "description" -> description,
-                "isPartOf" -> play.api.libs.json.Json.obj(
-                    "@id" -> s"https://${wikiContext.requestWrapper.host}/#website"
+                "name" -> wikiContext.requestWrapper.host,
+                "potentialAction" -> play.api.libs.json.Json.obj(
+                    "@type" -> "SearchAction",
+                    "target" -> s"https://${wikiContext.requestWrapper.host}/search?q={search_term_string}",
+                    "query-input" -> "required name=search_term_string"
                 )
-            )
+            ),
+            webPageWithDates
         )
     ).toString()
 }
