@@ -30,6 +30,7 @@ import models.ContextWikiPage
 import models.PageContent
 import models.RequestWrapper
 import models.tables.CalculatedLink
+import models.tables.Habit
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
@@ -689,31 +690,20 @@ class Api @Inject()(
     if (!allowedHabits.contains(habitKeyword)) {
       BadRequest(Json.obj("error" -> Json.fromString("habit must be one of: Sleep, WakeUp, Meal, Smoke")).toString()).as(JSON)
     } else {
-      database.withConnection { implicit connection =>
-        implicit val site: Site = SiteLogic.get(request.host)
-        val now = LocalDateTime.now()
-        val name = now.toIsoLocalDateString
-        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
-        implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-        val (latestText: String, latestRevision: Long) = Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
-        val permission: WikiPermission = WikiPermission()
-        if (permission.isWritable(PageContent(latestText))) {
-          val line = s"""["habit:$habitKeyword"] ${now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))}"""
-          val body =
-            if (latestText.isEmpty) s"[[DayHeader]]\n * $line"
-            else s"$latestText\n * $line"
-          PageLogic.insert(name, latestRevision + 1, now, s"habit:$habitKeyword", isMinorEdit = false, body)
-          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
-          Ok(Json.obj(
-            "status" -> Json.fromString("saved"),
-            "habit" -> Json.fromString(habitKeyword),
-            "entry" -> Json.fromString(line),
-            "page" -> Json.fromString(name),
-          ).toString()).as(JSON)
-        } else {
-          Forbidden(Json.obj("error" -> Json.fromString("forbidden")).toString()).as(JSON)
-        }
+      SessionLogic.getUser(request) match {
+        case None =>
+          Unauthorized(Json.obj("error" -> Json.fromString("login required")).toString()).as(JSON)
+        case Some(user) =>
+          database.withConnection { implicit connection =>
+            implicit val site: Site = SiteLogic.get(request.host)
+            val now = LocalDateTime.now()
+            Habit.insert(habitKeyword, user.seq, now)
+            Ok(Json.obj(
+              "status" -> Json.fromString("saved"),
+              "habit" -> Json.fromString(habitKeyword),
+              "dateInserted" -> Json.fromString(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))),
+            ).toString()).as(JSON)
+          }
       }
     }
   }

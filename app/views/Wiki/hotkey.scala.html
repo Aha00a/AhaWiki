@@ -1,7 +1,9 @@
-@()
+@(canHabitQuickLog: Boolean)
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
+    var canHabitQuickLog = @canHabitQuickLog;
+
     function showToast(message, type) {
         var backgroundColor = type === 'error' ? '#b00020' : '#2e7d32';
         var toast = $('<div></div>').text(message).css({
@@ -27,6 +29,11 @@
     }
 
     function showHabitQuickMenu() {
+        if (!canHabitQuickLog) {
+            showToast('Login + writable page required.', 'error');
+            return false;
+        }
+
         var habits = ['Sleep', 'WakeUp', 'Meal', 'Smoke'];
         var habitEmoji = {
             Sleep: '😴',
@@ -114,12 +121,17 @@
             ['S,G,/', 'Open search'],
             ['W', 'Open diary write'],
             ['I', 'Open habit quick menu'],
-            ['Alt+L', 'Quick habit log: 😴 Sleep'],
-            ['Alt+W', 'Quick habit log: ⏰ WakeUp'],
-            ['Alt+M', 'Quick habit log: 🍽️ Meal'],
-            ['Alt+S', 'Quick habit log: 🚬 Smoke'],
             ['?', 'Open hotkey help']
         ];
+        if (canHabitQuickLog) {
+            items = items.concat([
+                ['I', 'Open habit quick menu'],
+                ['Alt+L', 'Quick habit log: 😴 Sleep'],
+                ['Alt+W', 'Quick habit log: ⏰ WakeUp'],
+                ['Alt+M', 'Quick habit log: 🍽️ Meal'],
+                ['Alt+S', 'Quick habit log: 🚬 Smoke']
+            ]);
+        }
         var rows = items.map(function (item) {
             return '<tr><th style="text-align:left;white-space:nowrap;padding:6px 16px 6px 0;">' + item[0] + '</th><td style="padding:6px 0;">' + item[1] + '</td></tr>';
         }).join('');
@@ -183,6 +195,11 @@
     }
 
     function submitHabitQuick(habit) {
+        if (!canHabitQuickLog) {
+            showToast('Login + writable page required.', 'error');
+            return;
+        }
+
         var habitEmoji = {
             Sleep: '😴',
             WakeUp: '⏰',
@@ -253,23 +270,26 @@
         $(document).bind('keydown', 'shift+/', function () { return showHotkeyHelp(); });
 
         $(document).bind('keydown', 'w', function () { return showWrite(); });
-        $(document).bind('keydown', 'i', function () { return showHabitQuickMenu(); });
-        $(document).on('keydown', function (e) {
-            if (!e.altKey) return;
-            var targetTagName = String(e.target && e.target.tagName || '');
-            var isEditable = targetTagName === 'input' || targetTagName === 'textarea' || (e.target && e.target.isContentEditable);
-            if (isEditable) return;
-            var key = String(e.key || '').toLowerCase();
-            var map = {
-                l: 'Sleep',
-                w: 'WakeUp',
-                m: 'Meal',
-                s: 'Smoke'
-            };
-            var habit = map[key];
-            if (!habit) return;
-            e.preventDefault();
-            submitHabitQuick(habit);
-        });
+
+        if (canHabitQuickLog) {
+            $(document).bind('keydown', 'i', function () { return showHabitQuickMenu(); });
+            $(document).on('keydown', function (e) {
+                if (!e.altKey) return;
+                var targetTagName = String(e.target && e.target.tagName || '');
+                var isEditable = targetTagName === 'input' || targetTagName === 'textarea' || (e.target && e.target.isContentEditable);
+                if (isEditable) return;
+                var key = String(e.key || '').toLowerCase();
+                var map = {
+                    l: 'Sleep',
+                    w: 'WakeUp',
+                    m: 'Meal',
+                    s: 'Smoke'
+                };
+                var habit = map[key];
+                if (!habit) return;
+                e.preventDefault();
+                submitHabitQuick(habit);
+            });
+        }
     });
 </script>

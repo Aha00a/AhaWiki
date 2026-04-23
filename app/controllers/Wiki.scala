@@ -20,6 +20,7 @@ import models._
 import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedLink
 import models.tables.Attachment
+import models.tables.Habit
 import models.tables.Page
 import models.tables.Site
 import play.api.Environment
@@ -247,7 +248,7 @@ controllerComponents: ControllerComponents,
   private def isHabitAggregatedPage(name: String): Boolean =
     name.toLowerCase.startsWith("habit:")
 
-  private case class HabitEntry(pageName: String, timestamp: String)
+  private case class HabitEntry(dateInserted: String, user: String)
 
   private def buildHabitAggregatedMarkup(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     val habitName = name.stripPrefix("habit:").trim
@@ -262,35 +263,13 @@ controllerComponents: ControllerComponents,
          | * ["habit:Meal"]
          | * ["habit:Smoke"]""".stripMargin
     } else {
-      val escapedHabit = Regex.quote(habitName)
-      val linePattern = (s"""(?:[*-]\\s+)?(?:\\["habit:$escapedHabit"\\]|\\[habit:$escapedHabit\\])\\s+(.+)$$""").r
-      val datePagePattern = """^20[0-9]{2}-[0-9]{2}-[0-9]{2}$""".r
-      val linkedDatePages = CalculatedLink
-        .selectDst(name)
-        .map(_.src)
-        .distinct
-        .filter(pageName => datePagePattern.matches(pageName))
-        .filter(wikiContext.pageCanSee)
-
-      val linkedPagesLatest =
-        if (linkedDatePages.isEmpty) Seq.empty
-        else Page.selectLastRevision(linkedDatePages)
-
-      val entries = linkedPagesLatest
-        .flatMap(page =>
-          page.content
-            .split("""(\r\n|\n)+""")
-            .iterator
-            .map(_.trim)
-            .collect {
-              case linePattern(timestamp) => HabitEntry(page.name, timestamp)
-            }
-            .toSeq
-        )
+      val entries = Habit
+        .selectByType(habitName)
+        .map(e => HabitEntry(e.dateInserted.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), e.nickname))
 
       val body =
         if (entries.isEmpty) " * 아직 기록이 없습니다."
-        else entries.map(e => s""" * ["${e.pageName}"] - ${e.timestamp}""").mkString("\n")
+        else entries.map(e => s""" * ${e.dateInserted} - ${e.user}""").mkString("\n")
 
       s"""= $name
          | * count: ${entries.size}
