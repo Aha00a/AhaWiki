@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.HabitTypes
 import logics.SiteLogic
 import models.ContextSite
 import models.tables.Site
@@ -47,6 +48,8 @@ controllerComponents: ControllerComponents,
       val decodedHabitType = URLDecoder.decode(habitType.replace("+", "%2B"), "UTF-8").trim
       if (decodedHabitType.isEmpty) {
         BadRequest("habit type is required")
+      } else if (!HabitTypes.isAllowed(decodedHabitType)) {
+        NotFound(s"unknown habit type: $decodedHabitType")
       } else {
         val today = LocalDate.now()
         val dateFrom7d = today.minusDays(6)
