@@ -1,0 +1,35 @@
+@(habitType: String, totalCount: Int, count7d: Int, count30d: Int, activeUsers7d: Int, activeUsers30d: Int, myCount30d: Option[Int], myDaily30d: Seq[models.tables.Habit.DailyCount], dateFrom7d: String, dateFrom30d: String, today: String)(implicit contextSite: models.ContextSite)
+@encodedHabitType = @{ java.net.URLEncoder.encode(habitType, "UTF-8").replace("+", "%20") }
+@_base(s"Habit: ${habitType}", s"Habit stats for ${habitType}", canonicalUrl = s"https://${contextSite.requestWrapper.host}/h/$encodedHabitType") {
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Habit: @habitType</h1>
+
+            <h2>Community Activity (Anonymized)</h2>
+            <ul>
+                <li>count(all): @totalCount</li>
+                <li>count(7d): @count7d (@dateFrom7d ~ @today)</li>
+                <li>active users(7d): @activeUsers7d</li>
+                <li>count(30d): @count30d (@dateFrom30d ~ @today)</li>
+                <li>active users(30d): @activeUsers30d</li>
+            </ul>
+
+            <h2>My Activity (Last 30 Days)</h2>
+            @if(myCount30d.isDefined) {
+                <ul>
+                    <li>my count(30d): @myCount30d.get</li>
+                    @if(myDaily30d.isEmpty) {
+                        <li>아직 기록이 없습니다.</li>
+                    } else {
+                        @for(entry <- myDaily30d) {
+                            <li>@entry.dateYmd: @entry.count</li>
+                        }
+                    }
+                </ul>
+            } else {
+                <p>로그인하면 내 통계를 볼 수 있어요.</p>
+            }
+        </div>
+    </div>
+}

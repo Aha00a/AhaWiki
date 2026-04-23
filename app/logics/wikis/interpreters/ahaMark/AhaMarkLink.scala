@@ -46,7 +46,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       } else {
         None
       }
-      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
+      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else if (isHabit) s"/h/${uriNormalized.stripPrefix("habit:")}" else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
       val isMissing = !(
         set.isEmpty ||

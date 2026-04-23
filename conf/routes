@@ -16,6 +16,10 @@ POST          /diary                                controllers.Diary.write()
 
 GET           /search                               controllers.Search.index(q:String?="")
 
+GET           /h                                    controllers.Habit.index
+GET           /h/                                   controllers.Habit.index
+GET           /h/*habitType                          controllers.Habit.view(habitType:String)
+
 GET           /w/*nameEncoded                       controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
 POST          /w/*nameEncoded                       controllers.Wiki.save(nameEncoded:String)
 

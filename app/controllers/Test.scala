@@ -90,8 +90,8 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.inlineToHtmlString("""[schema:Schema Alias]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">Alias</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema"]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">schema:Schema</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema" Alias]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">Alias</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep]"""), """<a href="/w/habit:Sleep" class="missing habit-link habit-sleep" rel="nofollow">habit:Sleep</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep Good Night]"""), """<a href="/w/habit:Sleep" class="missing habit-link habit-sleep" rel="nofollow">Good Night</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep]"""), """<a href="/h/Sleep" class="missing habit-link habit-sleep" rel="nofollow">habit:Sleep</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[habit:Sleep Good Night]"""), """<a href="/h/Sleep" class="missing habit-link habit-sleep" rel="nofollow">Good Night</a>""")
 
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank" rel="noopener">http://a.com/$</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/some$thing   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/some$thing" target="_blank" rel="noopener">http://a.com/some$thing</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
@@ -127,7 +127,7 @@ class Test @Inject()(implicit val
       assertEquals(AhaMarkLink("""?q=1""").toHtmlString(), """<a href="?q=1">?q=1</a>""")
       assertEquals(AhaMarkLink("""With:Colon""").toHtmlString(), """<a href="/w/With:Colon">With:Colon</a>""")
       assertEquals(AhaMarkLink("""With: Colon""").toHtmlString(), """<a href="/w/With: Colon">With: Colon</a>""")
-      assertEquals(AhaMarkLink("""habit:Meal""").toHtmlString(), """<a href="/w/habit:Meal" class="habit-link habit-meal">habit:Meal</a>""")
+      assertEquals(AhaMarkLink("""habit:Meal""").toHtmlString(), """<a href="/h/Meal" class="habit-link habit-meal">habit:Meal</a>""")
 
 
       assertEquals(InterpreterWiki.extractLinkMarkup("""http://a.com""").toList, Seq(AhaMarkLink("""http://a.com""")))

@@ -1,0 +1,16 @@
+@()(implicit contextSite: models.ContextSite)
+@_base("Habit", "Habit Home", canonicalUrl = s"https://${contextSite.requestWrapper.host}/h") {
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Habit</h1>
+            <p>새로운 habit 페이지는 <code>/h/{habitType}</code> 로 접근할 수 있습니다.</p>
+            <ul>
+                <li><a href="/h/Sleep">/h/Sleep</a></li>
+                <li><a href="/h/WakeUp">/h/WakeUp</a></li>
+                <li><a href="/h/Meal">/h/Meal</a></li>
+                <li><a href="/h/Smoke">/h/Smoke</a></li>
+            </ul>
+        </div>
+    </div>
+}
