@@ -1,6 +1,7 @@
 @(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
+@canHabitQuickLog = @{ isWritable && wikiContext.requestWrapper.getUser.isDefined }
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
-    @views.html.Wiki.hotkey()
+    @views.html.Wiki.hotkey(canHabitQuickLog)
 } {
     <div class="wikiContent blame">
         <div class="limitWidth">
