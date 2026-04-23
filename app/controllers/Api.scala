@@ -16,6 +16,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.HabitTypes
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
@@ -686,9 +687,9 @@ class Api @Inject()(
       .map(_.trim)
       .getOrElse("")
 
-    val allowedHabits = Set("Sleep", "WakeUp", "Meal", "Smoke")
-    if (!allowedHabits.contains(habitKeyword)) {
-      BadRequest(Json.obj("error" -> Json.fromString("habit must be one of: Sleep, WakeUp, Meal, Smoke")).toString()).as(JSON)
+    if (!HabitTypes.isAllowed(habitKeyword)) {
+      val allowed = HabitTypes.values.mkString(", ")
+      BadRequest(Json.obj("error" -> Json.fromString(s"habit must be one of: $allowed")).toString()).as(JSON)
     } else {
       SessionLogic.getUser(request) match {
         case None =>

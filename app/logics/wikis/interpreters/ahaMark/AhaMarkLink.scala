@@ -19,19 +19,14 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
     } else {
       import com.aha00a.commons.utils.DateTimeUtil
       import logics.DefaultPageLogic
+      import logics.HabitTypes
       import logics.wikis.PageNameLogic
       val external: Boolean = PageNameLogic.isExternal(uri)
       val isStartsWithHash = uriNormalized.startsWith("#")
       val isStartsWithQuestionMark = uriNormalized.startsWith("?")
       val isHabit = uriNormalized.startsWith("habit:")
       val isSchema = uriNormalized.startsWith("schema:")
-      val habitClass = uriNormalized match {
-        case "habit:Sleep" => Some("habit-sleep")
-        case "habit:WakeUp" => Some("habit-wakeup")
-        case "habit:Meal" => Some("habit-meal")
-        case "habit:Smoke" => Some("habit-smoke")
-        case _ => None
-      }
+      val habitClass = HabitTypes.cssClassFromUriNormalized(uriNormalized)
       val schemaTypeClass = if (isSchema) {
         uriNormalized.stripPrefix("schema:").trim match {
           case "" => None

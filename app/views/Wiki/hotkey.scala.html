@@ -1,6 +1,8 @@
 @(canHabitQuickLog: Boolean = false)
 @import helper._
 @import com.aha00a.commons.Implicits._
+@habitTypesJson = @{ play.api.libs.json.Json.toJson(logics.HabitTypes.values).toString() }
+@habitEmojiJson = @{ play.api.libs.json.Json.toJson(logics.HabitTypes.emojiByType).toString() }
 <script type="text/javascript">
     var canHabitQuickLog = @canHabitQuickLog;
 
@@ -34,13 +36,8 @@
             return false;
         }
 
-        var habits = ['Sleep', 'WakeUp', 'Meal', 'Smoke'];
-        var habitEmoji = {
-            Sleep: '😴',
-            WakeUp: '⏰',
-            Meal: '🍽️',
-            Smoke: '🚬'
-        };
+        var habits = @play.twirl.api.Html(habitTypesJson);
+        var habitEmoji = @play.twirl.api.Html(habitEmojiJson);
         var buttons = habits.map(function (habit) {
             var emoji = habitEmoji[habit] || '✅';
             return '<button type="button" data-habit="' + habit + '" style="border:1px solid #ddd;background:#fafafa;color:#333;border-radius:16px;padding:6px 12px;font-size:13px;cursor:pointer;">' + emoji + ' ' + habit + '</button>';
@@ -200,12 +197,7 @@
             return;
         }
 
-        var habitEmoji = {
-            Sleep: '😴',
-            WakeUp: '⏰',
-            Meal: '🍽️',
-            Smoke: '🚬'
-        };
+        var habitEmoji = @play.twirl.api.Html(habitEmojiJson);
         var habitLabel = (habitEmoji[habit] ? (habitEmoji[habit] + ' ') : '') + habit;
         $.ajax({
             url: '@routes.Api.csrf',
