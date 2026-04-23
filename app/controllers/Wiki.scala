@@ -40,6 +40,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.sql.Connection
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject._
@@ -248,7 +249,7 @@ controllerComponents: ControllerComponents,
   private def isHabitAggregatedPage(name: String): Boolean =
     name.toLowerCase.startsWith("habit:")
 
-  private case class HabitEntry(dateInserted: String, user: String)
+  private case class HabitEntry(dateInserted: String)
 
   private def buildHabitAggregatedMarkup(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     val habitName = name.stripPrefix("habit:").trim
@@ -263,18 +264,53 @@ controllerComponents: ControllerComponents,
          | * ["habit:Meal"]
          | * ["habit:Smoke"]""".stripMargin
     } else {
+      val today = LocalDate.now()
+      val dateFrom7d = today.minusDays(6)
+      val dateFrom30d = today.minusDays(29)
+      val totalCount = Habit.countByType(habitName)
+      val count7d = Habit.countByTypeSince(habitName, dateFrom7d)
+      val count30d = Habit.countByTypeSince(habitName, dateFrom30d)
+      val activeUsers7d = Habit.countDistinctUsersByTypeSince(habitName, dateFrom7d)
+      val activeUsers30d = Habit.countDistinctUsersByTypeSince(habitName, dateFrom30d)
+      val currentUser = wikiContext.requestWrapper.getUser.map(_.seq)
+      val myCount30d = currentUser.map(userSeq => Habit.countByTypeSinceForUser(habitName, userSeq, dateFrom30d))
+      val myDaily30d = currentUser
+        .map(userSeq => Habit.selectDailyCountByTypeSinceForUser(habitName, userSeq, dateFrom30d))
+        .getOrElse(Seq.empty)
+
       val entries = Habit
         .selectByType(habitName)
-        .map(e => HabitEntry(e.dateInserted.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")), e.nickname))
+        .map(e => HabitEntry(e.dateInserted.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))))
+
+      val mySection =
+        currentUser match {
+          case Some(_) =>
+            val myDailyBody =
+              if (myDaily30d.isEmpty) " * 아직 기록이 없습니다."
+              else myDaily30d.map(e => s""" * ${e.dateYmd}: ${e.count}""").mkString("\n")
+            s"""== My Activity (Last 30 Days)
+               | * my count(30d): ${myCount30d.getOrElse(0)}
+               |$myDailyBody
+               |""".stripMargin
+          case None =>
+            "== My Activity (Last 30 Days)\n * 로그인하면 내 통계를 볼 수 있어요.\n"
+        }
 
       val body =
         if (entries.isEmpty) " * 아직 기록이 없습니다."
-        else entries.map(e => s""" * ${e.dateInserted} - ${e.user}""").mkString("\n")
+        else entries.map(e => s""" * ${e.dateInserted}""").mkString("\n")
 
       s"""= $name
-         | * count: ${entries.size}
+         |$mySection
+         |== Community Activity (Anonymized)
+         | * count(all): $totalCount
+         | * count(7d): $count7d (${dateFrom7d} ~ ${today})
+         | * active users(7d): $activeUsers7d
+         | * count(30d): $count30d (${dateFrom30d} ~ ${today})
+         | * active users(30d): $activeUsers30d
          |
          |== Entries
+         |(privacy-safe: 사용자명은 표시하지 않아요.)
          |$body""".stripMargin
     }
   }
