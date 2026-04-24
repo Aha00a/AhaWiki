@@ -1,7 +1,6 @@
 @(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @encodedTitle = @{ java.net.URLEncoder.encode(title, "UTF-8").replace("+", "%20") }
 @canonicalUrl = @{ s"https://${wikiContext.requestWrapper.host}/w/$encodedTitle" }
-@canHabitQuickLog = @{ isWritable && wikiContext.requestWrapper.getUser.isDefined }
 @publishedDateTime = @{ wikiFirst.map(_.dateTime.toString) }
 @modifiedDateTime = @{ wikiLast.map(_.dateTime.toString) }
 @jsonLdWebPage = @{
@@ -116,7 +115,7 @@
 }
 @_base(title, description, canonicalUrl, "article") {
     <script type="application/ld+json">@Html(jsonLdWebPage)</script>
-    @views.html.Wiki.hotkey(canHabitQuickLog)
+    @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){
             $('a[target=_blank]').hover(function () {

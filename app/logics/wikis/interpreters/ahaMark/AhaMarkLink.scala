@@ -19,14 +19,11 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
     } else {
       import com.aha00a.commons.utils.DateTimeUtil
       import logics.DefaultPageLogic
-      import logics.HabitTypes
       import logics.wikis.PageNameLogic
       val external: Boolean = PageNameLogic.isExternal(uri)
       val isStartsWithHash = uriNormalized.startsWith("#")
       val isStartsWithQuestionMark = uriNormalized.startsWith("?")
-      val isHabit = uriNormalized.startsWith("habit:")
       val isSchema = uriNormalized.startsWith("schema:")
-      val habitClass = HabitTypes.cssClassFromUriNormalized(uriNormalized)
       val schemaTypeClass = if (isSchema) {
         uriNormalized.stripPrefix("schema:").trim match {
           case "" => None
@@ -41,7 +38,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       } else {
         None
       }
-      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else if (isHabit) s"/h/${uriNormalized.stripPrefix("habit:")}" else s"/w/$uriNormalized"
+      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
       val isMissing = !(
         set.isEmpty ||
@@ -62,8 +59,6 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         if (isSchema) Some("schema-link") else None,
         schemaTypeClass,
         if (isMissing) Some("missing") else None,
-        if (isHabit) Some("habit-link") else None,
-        habitClass
       ).flatten
       val attrClass = if (classList.nonEmpty) s""" class="${classList.mkString(" ")}"""" else ""
       val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""

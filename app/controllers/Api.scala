@@ -16,7 +16,6 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
-import logics.HabitTypes
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
@@ -31,7 +30,6 @@ import models.ContextWikiPage
 import models.PageContent
 import models.RequestWrapper
 import models.tables.CalculatedLink
-import models.tables.Habit
 import models.tables.Page
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
@@ -679,34 +677,6 @@ class Api @Inject()(
   def csrf: Action[AnyContent] = Action { implicit request =>
     val token: Option[CSRF.Token] = CSRF.getToken
     Ok(token.asJson)
-  }
-
-  def habit: Action[AnyContent] = Action { implicit request =>
-    val habitKeyword = request.body.asFormUrlEncoded
-      .flatMap(_.get("habit").flatMap(_.headOption))
-      .map(_.trim)
-      .getOrElse("")
-
-    if (!HabitTypes.isAllowed(habitKeyword)) {
-      val allowed = HabitTypes.values.mkString(", ")
-      BadRequest(Json.obj("error" -> Json.fromString(s"habit must be one of: $allowed")).toString()).as(JSON)
-    } else {
-      SessionLogic.getUser(request) match {
-        case None =>
-          Unauthorized(Json.obj("error" -> Json.fromString("login required")).toString()).as(JSON)
-        case Some(user) =>
-          database.withConnection { implicit connection =>
-            implicit val site: Site = SiteLogic.get(request.host)
-            val now = LocalDateTime.now()
-            Habit.insert(habitKeyword, user.seq, now)
-            Ok(Json.obj(
-              "status" -> Json.fromString("saved"),
-              "habit" -> Json.fromString(habitKeyword),
-              "dateInserted" -> Json.fromString(now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))),
-            ).toString()).as(JSON)
-          }
-      }
-    }
   }
 
   def pageMap: Action[AnyContent] = Action { implicit request =>
