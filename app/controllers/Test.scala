@@ -190,8 +190,9 @@ class Test @Inject()(implicit val
           s"""[[[$schemaMarkup
              |]]]""".stripMargin
 
+        val currentPageUrl = s"https://${request.host}/w/UnitTest"
         val interpreted =
-          """<div class="schema InterpreterSchema"><dl vocab="https://schema.org/" typeof="Person">
+          s"""<div class="schema InterpreterSchema"><dl vocab="https://schema.org/" typeof="Person">
             |        <h5 class="schemaClassTitle">
             |          <a class="schema schema-link schema-person" href="/w/schema:Person">Person</a>
             |        </h5>
@@ -213,7 +214,7 @@ class Test @Inject()(implicit val
             |                <dd class="schemaFieldValue" property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
             |              </div>
             |        </div>
-            |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"https://localhost:9999/w/UnitTest","@id":"https://localhost:9999/w/UnitTest","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
+            |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"$currentPageUrl","@id":"$currentPageUrl","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
         val interpretedWithWiki = s"""<div>$interpreted</div>"""
 
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
