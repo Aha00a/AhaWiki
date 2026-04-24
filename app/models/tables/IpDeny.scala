@@ -1,20 +1,21 @@
 package models.tables
 
 import anorm._
-import anorm.SqlParser._
+import anorm.SqlParser.{flatten, long, str}
+import com.aha00a.play.AnormSqlParser.localDateTime
 import play.api.Logging
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 
 case class IpDeny(
   seq: Long,
   ip: String,
-  dateInserted: Date,
+  dateInserted: LocalDateTime,
 )
 
 object IpDeny extends Logging {
-  def tupled: ((Long, String, Date)) => IpDeny = (apply _).tupled
+  def tupled: ((Long, String, LocalDateTime)) => IpDeny = (apply _).tupled
 
   def insert(ip: String, accessLog: Option[Long], reason: String)(implicit connection: Connection): Option[Long] = {
     SQL"""INSERT INTO IpDeny (ip, accessLog, reason) VALUES ($ip, $accessLog, $reason)""".executeInsert()
@@ -26,7 +27,7 @@ object IpDeny extends Logging {
 
   def selectLatest(ip: String)(implicit connection: Connection): Option[IpDeny] = {
     SQL"""SELECT seq, ip, dateInserted FROM IpDeny WHERE ip = $ip ORDER BY seq DESC LIMIT 1"""
-      .as(long("seq") ~ str("ip") ~ date("dateInserted") singleOpt).map(flatten)
+      .as(long("seq") ~ str("ip") ~ localDateTime("dateInserted") singleOpt).map(flatten)
       .map(tupled)
   }
 
