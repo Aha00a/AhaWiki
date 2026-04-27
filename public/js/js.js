@@ -48,6 +48,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        wrapper.style.pointerEvents = 'none';
+        content.style.pointerEvents = 'none';
+
+        var contentAnchorTarget = content.firstElementChild || content;
+        contentAnchorTarget.style.pointerEvents = 'auto';
         var editLink = wrapper.querySelector('.InterpreterRenderEditLink');
         if (!editLink) {
             editLink = document.createElement('a');
@@ -68,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.color = '#555';
             editLink.style.textDecoration = 'none';
             editLink.style.opacity = '0';
+            editLink.style.pointerEvents = 'none';
             editLink.style.transition = 'opacity .15s ease-in-out';
             editLink.style.zIndex = '1';
             wrapper.appendChild(editLink);
@@ -82,9 +88,10 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.title = title;
         }
 
+        editLink.style.pointerEvents = 'none';
+
         var positionEditLink = function () {
-            var targetElement = content.firstElementChild || content;
-            var targetRect = targetElement.getBoundingClientRect();
+            var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
             var top = targetRect.top - wrapperRect.top + 6;
             var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - 8;
@@ -93,13 +100,20 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.right = 'auto';
         };
 
-        wrapper.addEventListener('mouseenter', function () {
+        var showEditLink = function () {
             positionEditLink();
             editLink.style.opacity = '1';
-        });
+            editLink.style.pointerEvents = 'auto';
+        };
 
-        wrapper.addEventListener('mouseleave', function () {
+        var hideEditLink = function () {
             editLink.style.opacity = '0';
-        });
+            editLink.style.pointerEvents = 'none';
+        };
+
+        contentAnchorTarget.addEventListener('mouseenter', showEditLink);
+        contentAnchorTarget.addEventListener('mouseleave', hideEditLink);
+        editLink.addEventListener('mouseenter', showEditLink);
+        editLink.addEventListener('mouseleave', hideEditLink);
     });
 });
