@@ -1170,76 +1170,78 @@ function AdminContent({page, onNavigate}) {
                     <Text size="sm" c="dimmed" mb="md">
                         사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 기본 스타일을 사용합니다.
                     </Text>
-                    <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
-                        <ColorInput
-                            label="Header 배경색"
-                            placeholder="#FFFFFF"
-                            format="hexa"
-                            value={siteTheme.headerBackgroundColor}
-                            onChange={(value) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: value}))}
-                            swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"]}
-                            withEyeDropper={false}
-                            clearable
-                        />
-                        <ColorInput
-                            label="Header 전경색"
-                            placeholder="#111111"
-                            format="hexa"
-                            value={siteTheme.headerForegroundColor}
-                            onChange={(value) => setSiteTheme((prev) => ({...prev, headerForegroundColor: value}))}
-                            swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"]}
-                            withEyeDropper={false}
-                            clearable
-                        />
-                        <ColorInput
-                            label="Footer 배경색"
-                            placeholder="#FFFFFF"
-                            format="hexa"
-                            value={siteTheme.footerBackgroundColor}
-                            onChange={(value) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: value}))}
-                            swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"]}
-                            withEyeDropper={false}
-                            clearable
-                        />
-                        <ColorInput
-                            label="Footer 전경색"
-                            placeholder="#111111"
-                            format="hexa"
-                            value={siteTheme.footerForegroundColor}
-                            onChange={(value) => setSiteTheme((prev) => ({...prev, footerForegroundColor: value}))}
-                            swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"]}
-                            withEyeDropper={false}
-                            clearable
-                        />
+                    <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
+                        <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
+                            <ColorInput
+                                label="Header 배경색"
+                                placeholder="#FFFFFF"
+                                format="hexa"
+                                value={siteTheme.headerBackgroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: value}))}
+                                swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                            <ColorInput
+                                label="Header 전경색"
+                                placeholder="#111111"
+                                format="hexa"
+                                value={siteTheme.headerForegroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, headerForegroundColor: value}))}
+                                swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                            <ColorInput
+                                label="Footer 배경색"
+                                placeholder="#FFFFFF"
+                                format="hexa"
+                                value={siteTheme.footerBackgroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: value}))}
+                                swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                            <ColorInput
+                                label="Footer 전경색"
+                                placeholder="#111111"
+                                format="hexa"
+                                value={siteTheme.footerForegroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, footerForegroundColor: value}))}
+                                swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                        </SimpleGrid>
+                        <Paper withBorder radius="md" p="md" style={{overflow: "hidden"}}>
+                            <Text size="sm" fw={600} mb={8}>미리보기</Text>
+                            <Stack gap={0} style={{borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef"}}>
+                                <div
+                                    style={{
+                                        backgroundColor: siteTheme.headerBackgroundColor || "#f8f9fa",
+                                        color: siteTheme.headerForegroundColor || "#111111",
+                                        padding: "12px 14px",
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Header Preview
+                                </div>
+                                <div style={{padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057"}}>
+                                    콘텐츠 영역 (고정 미리보기)
+                                </div>
+                                <div
+                                    style={{
+                                        backgroundColor: siteTheme.footerBackgroundColor || "#f8f9fa",
+                                        color: siteTheme.footerForegroundColor || "#111111",
+                                        padding: "12px 14px",
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Footer Preview
+                                </div>
+                            </Stack>
+                        </Paper>
                     </SimpleGrid>
-                    <Paper withBorder radius="md" p="md" mt="md" style={{overflow: "hidden"}}>
-                        <Text size="sm" fw={600} mb={8}>미리보기</Text>
-                        <Stack gap={0} style={{borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef"}}>
-                            <div
-                                style={{
-                                    backgroundColor: siteTheme.headerBackgroundColor || "#f8f9fa",
-                                    color: siteTheme.headerForegroundColor || "#111111",
-                                    padding: "12px 14px",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Header Preview
-                            </div>
-                            <div style={{padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057"}}>
-                                콘텐츠 영역 (고정 미리보기)
-                            </div>
-                            <div
-                                style={{
-                                    backgroundColor: siteTheme.footerBackgroundColor || "#f8f9fa",
-                                    color: siteTheme.footerForegroundColor || "#111111",
-                                    padding: "12px 14px",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Footer Preview
-                            </div>
-                        </Stack>
-                    </Paper>
                     <Group mt="md">
                         <Button
                             variant="filled"
