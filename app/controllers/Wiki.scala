@@ -417,39 +417,41 @@ controllerComponents: ControllerComponents,
         implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
-        val mergedBodyEither = (partialLineStart, partialLineEnd) match {
-          case (Some(lineStart), Some(lineEnd)) =>
-            mergePartialBody(latestText, body, lineStart, lineEnd)
-          case (None, None) =>
-            Right(body)
-          case _ =>
-            Left("partial line range mismatch")
-        }
 
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
         } else if (revision != latestRevision) {
           Conflict("revision != latestRevision")
-        } else mergedBodyEither match {
-          case Left(error) =>
-            BadRequest(error)
-          case Right(mergedBody) if mergedBody == latestText =>
-            BadRequest("body == latestText")
-          case Right(mergedBody) =>
-          val now = LocalDateTime.now()
-          PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, mergedBody)
-
-          name match {
-            case ".header" => ahaWikiCache.Header.invalidate()
-            case ".footer" => ahaWikiCache.Footer.invalidate()
-            case ".config" => ahaWikiCache.Config.invalidate()
-            case _ => // do nothing
+        } else {
+          val mergedBodyEither = (partialLineStart, partialLineEnd) match {
+            case (Some(lineStart), Some(lineEnd)) =>
+              mergePartialBody(latestText, body, lineStart, lineEnd)
+            case (None, None) =>
+              Right(body)
+            case _ =>
+              Left("partial line range mismatch")
           }
+          mergedBodyEither match {
+            case Left(error) =>
+              BadRequest(error)
+            case Right(mergedBody) if mergedBody == latestText =>
+              BadRequest("body == latestText")
+            case Right(mergedBody) =>
+              val now = LocalDateTime.now()
+              PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, mergedBody)
 
-          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+              name match {
+                case ".header" => ahaWikiCache.Header.invalidate()
+                case ".footer" => ahaWikiCache.Footer.invalidate()
+                case ".config" => ahaWikiCache.Config.invalidate()
+                case _ => // do nothing
+              }
 
-          Ok("")
+              implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+              ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+
+              Ok("")
+          }
         }
       }
     }
