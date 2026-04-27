@@ -59,12 +59,10 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>
           val editUrl = getEditUrl(revision, chunk.lineStart, chunk.lineEnd)
+          val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${chunk.lineEnd})"
           s"""<div class="InterpreterRenderMetaWrapper" style="position: relative;"
-             |  onmouseenter="var e=this.querySelector('.InterpreterRenderEditLink'); if(e){e.style.opacity='1';}"
-             |  onmouseleave="var e=this.querySelector('.InterpreterRenderEditLink'); if(e){e.style.opacity='0';}">
-             |  <a class="InterpreterRenderEditLink" href="$editUrl" rel="nofollow" title="Edit (r$revision, L${chunk.lineStart}-L${chunk.lineEnd})" style="position: absolute; top: 6px; right: 8px; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ddd; background: rgba(255,255,255,.92); color: #555; text-decoration: none; opacity: 0; transition: opacity .15s ease-in-out; z-index: 1;">
-             |    <i class="fas fa-edit"></i>
-             |  </a>
+             |  data-edit-link="$editUrl"
+             |  data-edit-title="$editTitle">
              |  <div class="InterpreterRenderContent">$converted</div>
              |</div>""".stripMargin
         case None =>

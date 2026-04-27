@@ -38,3 +38,67 @@ location.params = function(params, preventReload) {
         history.replaceState({}, document.title, '?' + search);
     }
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+    var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper[data-edit-link]');
+
+    wrappers.forEach(function (wrapper) {
+        var content = wrapper.querySelector('.InterpreterRenderContent');
+        if (!content) {
+            return;
+        }
+
+        var editLink = wrapper.querySelector('.InterpreterRenderEditLink');
+        if (!editLink) {
+            editLink = document.createElement('a');
+            editLink.className = 'InterpreterRenderEditLink';
+            editLink.rel = 'nofollow';
+            editLink.innerHTML = '<i class="fas fa-edit"></i>';
+            editLink.style.position = 'absolute';
+            editLink.style.top = '6px';
+            editLink.style.right = '8px';
+            editLink.style.display = 'inline-flex';
+            editLink.style.alignItems = 'center';
+            editLink.style.justifyContent = 'center';
+            editLink.style.width = '26px';
+            editLink.style.height = '26px';
+            editLink.style.borderRadius = '50%';
+            editLink.style.border = '1px solid #ddd';
+            editLink.style.background = 'rgba(255,255,255,.92)';
+            editLink.style.color = '#555';
+            editLink.style.textDecoration = 'none';
+            editLink.style.opacity = '0';
+            editLink.style.transition = 'opacity .15s ease-in-out';
+            editLink.style.zIndex = '1';
+            wrapper.appendChild(editLink);
+        }
+
+        var href = wrapper.getAttribute('data-edit-link');
+        var title = wrapper.getAttribute('data-edit-title');
+        if (href) {
+            editLink.href = href;
+        }
+        if (title) {
+            editLink.title = title;
+        }
+
+        var positionEditLink = function () {
+            var contentRect = content.getBoundingClientRect();
+            var wrapperRect = wrapper.getBoundingClientRect();
+            var top = contentRect.top - wrapperRect.top + 6;
+            var left = contentRect.left - wrapperRect.left + contentRect.width - editLink.offsetWidth - 8;
+            editLink.style.top = top + 'px';
+            editLink.style.left = (left < 0 ? 0 : left) + 'px';
+            editLink.style.right = 'auto';
+        };
+
+        wrapper.addEventListener('mouseenter', function () {
+            positionEditLink();
+            editLink.style.opacity = '1';
+        });
+
+        wrapper.addEventListener('mouseleave', function () {
+            editLink.style.opacity = '0';
+        });
+    });
+});
