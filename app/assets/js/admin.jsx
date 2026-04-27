@@ -14,6 +14,7 @@ import {
     NavLink,
     Paper,
     Progress,
+    Select,
     SimpleGrid,
     Stack,
     Table,
@@ -873,6 +874,10 @@ function AdminContent({page, onNavigate}) {
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
+    const selectedSite = useMemo(
+        () => sites.find((site) => String(site.seq) === selectedSiteSeq) ?? null,
+        [sites, selectedSiteSeq],
+    );
     const selectedUserSeq = useMemo(() => {
         const userSeqByPath = parseUserSeqFromPathname(window.location.pathname);
         if (userSeqByPath > 0) {
@@ -1080,6 +1085,45 @@ function AdminContent({page, onNavigate}) {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="xs">
+                        <Title order={4}>사이트 선택</Title>
+                        <Badge color="blue" variant="light">Site Context</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        먼저 사이트를 선택하면 아래의 favicon/테마 설정 대상이 즉시 전환됩니다.
+                    </Text>
+                    <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
+                        <Select
+                            label="대상 사이트"
+                            placeholder="사이트를 선택하세요"
+                            searchable
+                            value={selectedSiteSeq}
+                            onChange={(value) => {
+                                setSelectedSiteSeq(value ?? "");
+                                setFaviconFile(null);
+                            }}
+                            data={sites.map((site) => ({
+                                value: String(site.seq),
+                                label: `${site.name} (#${site.seq})`,
+                            }))}
+                            nothingFoundMessage="검색 결과가 없습니다."
+                        />
+                        <Paper withBorder radius="md" p="sm">
+                            {selectedSite ? (
+                                <Stack gap={4}>
+                                    <Text size="xs" c="dimmed">선택된 사이트</Text>
+                                    <Text fw={700}>{selectedSite.name} (#{selectedSite.seq})</Text>
+                                    <Text size="sm" c="dimmed">
+                                        도메인: {(selectedSite.domains ?? []).join(", ") || "-"}
+                                    </Text>
+                                </Stack>
+                            ) : (
+                                <Text size="sm" c="dimmed">사이트를 선택하면 요약 정보가 여기에 표시됩니다.</Text>
+                            )}
+                        </Paper>
+                    </SimpleGrid>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Site Favicon</Title>
                         <Badge color="blue" variant="light">Current Site</Badge>
@@ -1087,24 +1131,6 @@ function AdminContent({page, onNavigate}) {
                     <Text size="sm" c="dimmed" mb="md">
                         선택한 사이트의 favicon을 관리자 업로드로 교체합니다. 업로드 후 바로 반영됩니다.
                     </Text>
-                    <Stack gap={6} mb="md">
-                        <Text size="sm" fw={600}>대상 사이트</Text>
-                        <select
-                            value={selectedSiteSeq}
-                            onChange={(event) => {
-                                setSelectedSiteSeq(event.currentTarget.value);
-                                setFaviconFile(null);
-                            }}
-                            style={{padding: "8px 10px", border: "1px solid #d1d5db", borderRadius: 8, maxWidth: 420}}
-                        >
-                            <option value="">사이트를 선택하세요</option>
-                            {sites.map((site) => (
-                                <option key={site.seq} value={String(site.seq)}>
-                                    {site.name} (#{site.seq}) {site.domains?.length ? `- ${site.domains.join(", ")}` : ""}
-                                </option>
-                            ))}
-                        </select>
-                    </Stack>
                     <Group align="flex-start" grow mb="md">
                         <Stack gap={6}>
                             <Text size="sm" fw={600}>현재 favicon</Text>
