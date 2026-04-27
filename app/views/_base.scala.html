@@ -29,6 +29,8 @@
         Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).map(v => s"background-color: $v;"),
         Option(contextSite.footerForegroundColor).filter(_.nonEmpty).map(v => s"color: $v;")
     ).flatten.mkString(" ")">
-        @Html(contextSite.ahaWikiCache.Footer.get())
+        <div class="wrap">
+            @Html(contextSite.ahaWikiCache.Footer.get())
+        </div>
     </div>
 }(contextSite)

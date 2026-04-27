@@ -77,6 +77,10 @@ body {
   font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
 }
+.header > .wrap,
+.footer > .wrap {
+  padding: 10px 30px;
+}
 .monospace {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
