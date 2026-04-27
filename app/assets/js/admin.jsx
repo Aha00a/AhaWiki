@@ -50,7 +50,7 @@ function routeToPage(pathname) {
         return "user-views";
     }
     if (pathname === "/Admin/Site") {
-        return "sites";
+        return "site";
     }
     if (pathname === "/Admin/SiteUser") {
         return "users";
@@ -575,6 +575,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/Admin", label: "핵심 대시보드", key: "dashboard"},
             {href: "/Admin/RecentChange", label: "최근 변경", key: "recent-changes"},
             {href: "/Admin/User", label: "사용자 관리", key: "all-users"},
+            {href: "/Admin/Site", label: "Site", key: "site"},
             {href: "/Admin/Operation", label: "운영 작업", key: "operations"},
         ],
         [],
@@ -887,7 +888,7 @@ function AdminContent({page, onNavigate}) {
     );
 
     useEffect(() => {
-        if (page !== "operations") {
+        if (page !== "site") {
             return;
         }
         if (!selectedSiteSeq && sites.length > 0) {
@@ -899,7 +900,7 @@ function AdminContent({page, onNavigate}) {
     }, [page, selectedSiteSeq, sites]);
 
     useEffect(() => {
-        if (page === "operations" && selectedSiteSeq) {
+        if (page === "site" && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
         }
@@ -1075,7 +1076,7 @@ function AdminContent({page, onNavigate}) {
         );
     }
 
-    if (page === "operations") {
+    if (page === "site") {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
@@ -1278,6 +1279,13 @@ function AdminContent({page, onNavigate}) {
                         </Button>
                     </Group>
                 </Card>
+            </Stack>
+        );
+    }
+
+    if (page === "operations") {
+        return (
+            <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Site Cache Operations</Title>
