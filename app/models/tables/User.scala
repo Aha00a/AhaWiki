@@ -1,17 +1,17 @@
 package models.tables
 
-import anorm.SqlParser.date
 import anorm.SqlParser.flatten
 import anorm.SqlParser.long
 import anorm.SqlParser.scalar
 import anorm.SqlParser.str
 import anorm._
+import com.aha00a.play.AnormSqlParser.localDateTime
 
 import java.sql.Connection
-import java.util.Date
+import java.time.LocalDateTime
 import scala.annotation.tailrec
 
-case class User(seq: Long, created: Date, updated: Date, email: String, nickname: String) {
+case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, email: String, nickname: String) {
   def toIdEmailNickname: User.IdEmailNickname = User.IdEmailNickname(seq, email, nickname)
 }
 
@@ -22,13 +22,13 @@ object User {
   def tupled = (apply _).tupled
 
   def selectWhereEmail(email: String)(implicit connection: Connection): Option[User] = {
-    SQL"""
+      SQL"""
         SELECT
             U.seq, U.created, U.updated, U.email, U.nickname
             FROM User U
             WHERE U.email = $email
          """
-      .as(long("seq") ~ date("created") ~ date("updated") ~ str("email") ~ str("nickname") singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") singleOpt).map(flatten)
       .map(User.tupled)
   }
 

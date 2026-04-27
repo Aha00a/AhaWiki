@@ -1,15 +1,14 @@
 package models.tables
 
-import java.util.Date
-
-import anorm.SqlParser.date
 import anorm.SqlParser.double
 import anorm.SqlParser.flatten
 import anorm.SqlParser.str
 import anorm._
+import com.aha00a.play.AnormSqlParser.localDateTime
 import models.LatLng
+import java.time.LocalDateTime
 
-case class GeocodeCache(address: String, lat: Double, lng: Double, created: Date) {
+case class GeocodeCache(address: String, lat: Double, lng: Double, created: LocalDateTime) {
   lazy val latLng: LatLng = LatLng(lat, lng)
 }
 
@@ -22,7 +21,7 @@ object GeocodeCache {
 
   def select(seqAddress: Seq[String])(implicit connection: Connection): Seq[GeocodeCache] = {
     SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address IN ($seqAddress)"
-      .as(str("address") ~ double("lat") ~ double("lng") ~ date("created") *).map(flatten)
+      .as(str("address") ~ double("lat") ~ double("lng") ~ localDateTime("created") *).map(flatten)
       .map(tupled)
   }
 
@@ -30,4 +29,3 @@ object GeocodeCache {
     SQL"""REPLACE INTO GeocodeCache (address, lat, lng) VALUES ($address, ${latLng.lat}, ${latLng.lng})""".executeUpdate()
   }
 }
-
