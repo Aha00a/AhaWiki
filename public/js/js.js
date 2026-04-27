@@ -83,10 +83,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var positionEditLink = function () {
-            var contentRect = content.getBoundingClientRect();
+            var targetElement = content.firstElementChild || content;
+            var targetRect = targetElement.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
-            var top = contentRect.top - wrapperRect.top + 6;
-            var left = contentRect.left - wrapperRect.left + contentRect.width - editLink.offsetWidth - 8;
+            var top = targetRect.top - wrapperRect.top + 6;
+            var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - 8;
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
