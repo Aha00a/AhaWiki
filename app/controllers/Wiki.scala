@@ -487,11 +487,17 @@ controllerComponents: ControllerComponents,
       if (lineEnd > latestLines.length) {
         Left("partial line range out of bounds")
       } else {
-        val partialLines = partialBody.split("""\r\n|\n""", -1).toVector
+        val partialLines = stripGeneratedSeeAlso(partialBody.split("""\r\n|\n""", -1).toVector)
         val mergedLines = latestLines.take(lineStart - 1) ++ partialLines ++ latestLines.drop(lineEnd)
         Right(mergedLines.mkString("\n"))
       }
     }
+  }
+
+  private def stripGeneratedSeeAlso(lines: Vector[String]): Vector[String] = {
+    val seeAlsoGeneratedLineIndex = lines.indexWhere(_.contains("#See-Also-Generated"))
+    if (seeAlsoGeneratedLineIndex == -1) lines
+    else lines.take(seeAlsoGeneratedLineIndex)
   }
 
 

@@ -119,9 +119,14 @@ object InterpreterWiki extends TraitInterpreter {
       val lineEnd = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber)
       val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEnd)
       val editTitle = s"Edit section (r$revision, L$lineNumber-L$lineEnd)"
+      val editDataAttrs = if (Option(id).exists(_.endsWith("-Generated"))) {
+        ""
+      } else {
+        s""" data-edit-link="$editUrl" data-edit-title="$editTitle""""
+      }
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""</div><div class="$idNotEmpty"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="$editUrl" data-edit-title="$editTitle"><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
+      arrayBuffer += s"""</div><div class="$idNotEmpty"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
     override def list(indentString: String, style: String, content: String): Unit = {
@@ -171,7 +176,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def result(): String = {
       variableHolderState := State.Normal
-      if (arrayBufferHeading.length > 5)
+      if (arrayBufferHeading.length > 6)
         arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
