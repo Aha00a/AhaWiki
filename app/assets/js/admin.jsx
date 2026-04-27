@@ -142,6 +142,13 @@ function useAdminData(page) {
     const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState("");
     const [uploadingFavicon, setUploadingFavicon] = useState(false);
     const [deletingFavicon, setDeletingFavicon] = useState(false);
+    const [siteTheme, setSiteTheme] = useState({
+        headerBackgroundColor: "",
+        headerForegroundColor: "",
+        footerBackgroundColor: "",
+        footerForegroundColor: "",
+    });
+    const [savingSiteTheme, setSavingSiteTheme] = useState(false);
     const [error, setError] = useState("");
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -313,6 +320,75 @@ function useAdminData(page) {
         }
     }, []);
 
+    const loadSiteTheme = useCallback(async (siteSeq) => {
+        if (!siteSeq) {
+            setSiteTheme({
+                headerBackgroundColor: "",
+                headerForegroundColor: "",
+                footerBackgroundColor: "",
+                footerForegroundColor: "",
+            });
+            return;
+        }
+        try {
+            const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
+            setSiteTheme({
+                headerBackgroundColor: data?.headerBackgroundColor ?? "",
+                headerForegroundColor: data?.headerForegroundColor ?? "",
+                footerBackgroundColor: data?.footerBackgroundColor ?? "",
+                footerForegroundColor: data?.footerForegroundColor ?? "",
+            });
+        } catch (caughtError) {
+            logError("site-theme:load:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        }
+    }, []);
+
+    const saveSiteTheme = useCallback(async (siteSeq, nextTheme) => {
+        if (!siteSeq) {
+            return;
+        }
+        setSavingSiteTheme(true);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const payload = new URLSearchParams();
+            payload.set("siteSeq", String(siteSeq));
+            payload.set("headerBackgroundColor", nextTheme?.headerBackgroundColor ?? "");
+            payload.set("headerForegroundColor", nextTheme?.headerForegroundColor ?? "");
+            payload.set("footerBackgroundColor", nextTheme?.footerBackgroundColor ?? "");
+            payload.set("footerForegroundColor", nextTheme?.footerForegroundColor ?? "");
+            payload.set(csrfToken.name, csrfToken.value);
+            payload.set("csrfToken", csrfToken.value);
+            const response = await fetch("/api/Admin/SiteTheme", {
+                method: "PUT",
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "Csrf-Token": csrfToken.value,
+                    "X-CSRF-Token": csrfToken.value,
+                },
+                body: payload.toString(),
+            });
+            if (!response.ok) {
+                const payloadJson = await response.json().catch(() => null);
+                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+            }
+            const data = await response.json();
+            setSiteTheme({
+                headerBackgroundColor: data?.headerBackgroundColor ?? "",
+                headerForegroundColor: data?.headerForegroundColor ?? "",
+                footerBackgroundColor: data?.footerBackgroundColor ?? "",
+                footerForegroundColor: data?.footerForegroundColor ?? "",
+            });
+        } catch (caughtError) {
+            logError("site-theme:save:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setSavingSiteTheme(false);
+        }
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         const load = async () => {
@@ -459,6 +535,11 @@ function useAdminData(page) {
         uploadingFavicon,
         resetSiteFavicon,
         deletingFavicon,
+        siteTheme,
+        setSiteTheme,
+        loadSiteTheme,
+        saveSiteTheme,
+        savingSiteTheme,
         error,
     };
 }
@@ -780,6 +861,11 @@ function AdminContent({page, onNavigate}) {
         uploadingFavicon,
         resetSiteFavicon,
         deletingFavicon,
+        siteTheme,
+        setSiteTheme,
+        loadSiteTheme,
+        saveSiteTheme,
+        savingSiteTheme,
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
@@ -814,8 +900,9 @@ function AdminContent({page, onNavigate}) {
     useEffect(() => {
         if (page === "operations" && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
+            loadSiteTheme(selectedSiteSeq);
         }
-    }, [page, selectedSiteSeq, loadSiteFavicon]);
+    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme]);
 
     if (loading) {
         return (
@@ -1072,6 +1159,76 @@ function AdminContent({page, onNavigate}) {
                                 권장: 32x32 또는 48x48 PNG/ICO
                             </Text>
                         </Stack>
+                    </Group>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Header/Footer Theme</Title>
+                        <Badge color="grape" variant="light">Per Site</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 기본 스타일을 사용합니다.
+                    </Text>
+                    <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
+                        <TextInput
+                            label="Header 배경색"
+                            placeholder="#FFFFFF"
+                            value={siteTheme.headerBackgroundColor}
+                            onChange={(event) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: event.currentTarget.value}))}
+                        />
+                        <TextInput
+                            label="Header 전경색"
+                            placeholder="#111111"
+                            value={siteTheme.headerForegroundColor}
+                            onChange={(event) => setSiteTheme((prev) => ({...prev, headerForegroundColor: event.currentTarget.value}))}
+                        />
+                        <TextInput
+                            label="Footer 배경색"
+                            placeholder="#FFFFFF"
+                            value={siteTheme.footerBackgroundColor}
+                            onChange={(event) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: event.currentTarget.value}))}
+                        />
+                        <TextInput
+                            label="Footer 전경색"
+                            placeholder="#111111"
+                            value={siteTheme.footerForegroundColor}
+                            onChange={(event) => setSiteTheme((prev) => ({...prev, footerForegroundColor: event.currentTarget.value}))}
+                        />
+                    </SimpleGrid>
+                    <Group mt="md">
+                        <Button
+                            variant="filled"
+                            color="grape"
+                            loading={savingSiteTheme}
+                            disabled={!selectedSiteSeq}
+                            onClick={async () => {
+                                await saveSiteTheme(selectedSiteSeq, siteTheme);
+                                await loadSiteTheme(selectedSiteSeq);
+                            }}
+                        >
+                            Save theme
+                        </Button>
+                        <Button variant="light" disabled={!selectedSiteSeq} onClick={() => loadSiteTheme(selectedSiteSeq)}>
+                            Refresh
+                        </Button>
+                        <Button
+                            color="gray"
+                            variant="light"
+                            disabled={!selectedSiteSeq}
+                            onClick={async () => {
+                                const emptyTheme = {
+                                    headerBackgroundColor: "",
+                                    headerForegroundColor: "",
+                                    footerBackgroundColor: "",
+                                    footerForegroundColor: "",
+                                };
+                                setSiteTheme(emptyTheme);
+                                await saveSiteTheme(selectedSiteSeq, emptyTheme);
+                                await loadSiteTheme(selectedSiteSeq);
+                            }}
+                        >
+                            Reset
+                        </Button>
                     </Group>
                 </Card>
                 <Card withBorder radius="md" padding="lg">

@@ -59,6 +59,8 @@ GET           /api/Admin/SignedReadUrl            controllers.Api.adminGenerateS
 GET           /api/Admin/Favicon                   controllers.Api.adminSiteFavicon
 POST          /api/Admin/Favicon                   controllers.Api.adminUploadSiteFavicon
 DELETE        /api/Admin/Favicon                   controllers.Api.adminDeleteSiteFavicon
+GET           /api/Admin/SiteTheme                 controllers.Api.adminSiteTheme
+PUT           /api/Admin/SiteTheme                 controllers.Api.adminUpdateSiteTheme
 GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
 GET           /api/pageMap                          controllers.Api.pageMap
 GET           /api/pageNames                        controllers.Api.pageNames

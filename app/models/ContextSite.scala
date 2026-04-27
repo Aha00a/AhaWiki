@@ -3,9 +3,11 @@ package models
 import akka.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.SiteThemeLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode.RenderingMode
 import models.tables.PageWithoutContentWithSize
+import models.tables.Config
 import models.tables.Site
 import play.api.db.Database
 import play.api.mvc.Request
@@ -55,6 +57,17 @@ class ContextSite()(
 
   lazy val seqPageNameByPermission: Seq[String] = seqPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
+
+  private def getSiteHexColorConfig(key: String): String = database.withConnection { implicit connection =>
+    Config.select(key)
+      .flatMap(config => SiteThemeLogic.normalizeHexColor(config.v))
+      .getOrElse("")
+  }
+
+  lazy val headerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderBackgroundColorKey)
+  lazy val headerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderForegroundColorKey)
+  lazy val footerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterBackgroundColorKey)
+  lazy val footerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterForegroundColorKey)
 
   def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)
 

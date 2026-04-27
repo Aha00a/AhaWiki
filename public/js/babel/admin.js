@@ -135,6 +135,13 @@ function useAdminData(page) {
   const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState("");
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const [deletingFavicon, setDeletingFavicon] = useState(false);
+  const [siteTheme, setSiteTheme] = useState({
+    headerBackgroundColor: "",
+    headerForegroundColor: "",
+    footerBackgroundColor: "",
+    footerForegroundColor: ""
+  });
+  const [savingSiteTheme, setSavingSiteTheme] = useState(false);
   const [error, setError] = useState("");
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -295,6 +302,73 @@ function useAdminData(page) {
       setDeletingFavicon(false);
     }
   }, []);
+  const loadSiteTheme = useCallback(async (siteSeq) => {
+    if (!siteSeq) {
+      setSiteTheme({
+        headerBackgroundColor: "",
+        headerForegroundColor: "",
+        footerBackgroundColor: "",
+        footerForegroundColor: ""
+      });
+      return;
+    }
+    try {
+      const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
+      setSiteTheme({
+        headerBackgroundColor: data?.headerBackgroundColor ?? "",
+        headerForegroundColor: data?.headerForegroundColor ?? "",
+        footerBackgroundColor: data?.footerBackgroundColor ?? "",
+        footerForegroundColor: data?.footerForegroundColor ?? ""
+      });
+    } catch (caughtError) {
+      logError("site-theme:load:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+    }
+  }, []);
+  const saveSiteTheme = useCallback(async (siteSeq, nextTheme) => {
+    if (!siteSeq) {
+      return;
+    }
+    setSavingSiteTheme(true);
+    setError("");
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("siteSeq", String(siteSeq));
+      payload.set("headerBackgroundColor", nextTheme?.headerBackgroundColor ?? "");
+      payload.set("headerForegroundColor", nextTheme?.headerForegroundColor ?? "");
+      payload.set("footerBackgroundColor", nextTheme?.footerBackgroundColor ?? "");
+      payload.set("footerForegroundColor", nextTheme?.footerForegroundColor ?? "");
+      payload.set(csrfToken.name, csrfToken.value);
+      payload.set("csrfToken", csrfToken.value);
+      const response = await fetch("/api/Admin/SiteTheme", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "Csrf-Token": csrfToken.value,
+          "X-CSRF-Token": csrfToken.value
+        },
+        body: payload.toString()
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      setSiteTheme({
+        headerBackgroundColor: data?.headerBackgroundColor ?? "",
+        headerForegroundColor: data?.headerForegroundColor ?? "",
+        footerBackgroundColor: data?.footerBackgroundColor ?? "",
+        footerForegroundColor: data?.footerForegroundColor ?? ""
+      });
+    } catch (caughtError) {
+      logError("site-theme:save:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+    } finally {
+      setSavingSiteTheme(false);
+    }
+  }, []);
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -434,6 +508,11 @@ function useAdminData(page) {
     uploadingFavicon,
     resetSiteFavicon,
     deletingFavicon,
+    siteTheme,
+    setSiteTheme,
+    loadSiteTheme,
+    saveSiteTheme,
+    savingSiteTheme,
     error
   };
 }
@@ -591,6 +670,11 @@ function AdminContent({ page, onNavigate }) {
     uploadingFavicon,
     resetSiteFavicon,
     deletingFavicon,
+    siteTheme,
+    setSiteTheme,
+    loadSiteTheme,
+    saveSiteTheme,
+    savingSiteTheme,
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
@@ -623,8 +707,9 @@ function AdminContent({ page, onNavigate }) {
   useEffect(() => {
     if (page === "operations" && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
+      loadSiteTheme(selectedSiteSeq);
     }
-  }, [page, selectedSiteSeq, loadSiteFavicon]);
+  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme]);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -731,7 +816,71 @@ function AdminContent({ page, onNavigate }) {
         }
       },
       "Reset to default"
-    )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operations"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Careful")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uCE90\uC2DC\uB97C \uC989\uC2DC \uBE44\uC6CC\uC11C \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uB97C \uAC15\uC81C\uB85C \uAC31\uC2E0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Header/Footer Theme"), /* @__PURE__ */ React.createElement(Badge, { color: "grape", variant: "light" }, "Per Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "Header \uBC30\uACBD\uC0C9",
+        placeholder: "#FFFFFF",
+        value: siteTheme.headerBackgroundColor,
+        onChange: (event) => setSiteTheme((prev) => ({ ...prev, headerBackgroundColor: event.currentTarget.value }))
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "Header \uC804\uACBD\uC0C9",
+        placeholder: "#111111",
+        value: siteTheme.headerForegroundColor,
+        onChange: (event) => setSiteTheme((prev) => ({ ...prev, headerForegroundColor: event.currentTarget.value }))
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "Footer \uBC30\uACBD\uC0C9",
+        placeholder: "#FFFFFF",
+        value: siteTheme.footerBackgroundColor,
+        onChange: (event) => setSiteTheme((prev) => ({ ...prev, footerBackgroundColor: event.currentTarget.value }))
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "Footer \uC804\uACBD\uC0C9",
+        placeholder: "#111111",
+        value: siteTheme.footerForegroundColor,
+        onChange: (event) => setSiteTheme((prev) => ({ ...prev, footerForegroundColor: event.currentTarget.value }))
+      }
+    )), /* @__PURE__ */ React.createElement(Group, { mt: "md" }, /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        variant: "filled",
+        color: "grape",
+        loading: savingSiteTheme,
+        disabled: !selectedSiteSeq,
+        onClick: async () => {
+          await saveSiteTheme(selectedSiteSeq, siteTheme);
+          await loadSiteTheme(selectedSiteSeq);
+        }
+      },
+      "Save theme"
+    ), /* @__PURE__ */ React.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteTheme(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        color: "gray",
+        variant: "light",
+        disabled: !selectedSiteSeq,
+        onClick: async () => {
+          const emptyTheme = {
+            headerBackgroundColor: "",
+            headerForegroundColor: "",
+            footerBackgroundColor: "",
+            footerForegroundColor: ""
+          };
+          setSiteTheme(emptyTheme);
+          await saveSiteTheme(selectedSiteSeq, emptyTheme);
+          await loadSiteTheme(selectedSiteSeq);
+        }
+      },
+      "Reset"
+    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operations"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Careful")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uCE90\uC2DC\uB97C \uC989\uC2DC \uBE44\uC6CC\uC11C \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uB97C \uAC15\uC81C\uB85C \uAC31\uC2E0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
       Button,
       {
         color: "orange",

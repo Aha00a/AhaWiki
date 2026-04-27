@@ -18,6 +18,7 @@ import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
+import logics.SiteThemeLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.SignedReadUrlLogic
@@ -107,6 +108,7 @@ class Api @Inject()(
   }
 
   private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
+  private def parseHexColorValue(v: Option[String]): String = v.flatMap(SiteThemeLogic.normalizeHexColor).getOrElse("")
 
   private def resolveAdminTargetSite(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
     siteSeqValue
@@ -326,6 +328,73 @@ class Api @Inject()(
               "ok" -> Json.fromBoolean(true),
               "siteSeq" -> Json.fromLong(site.seq),
               "faviconUrl" -> Json.fromString("/public/favicon.png"),
+            ))
+        }
+      }
+    }
+  }
+
+  def adminSiteTheme: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
+          case Left(errorResult) => errorResult
+          case Right(siteValue) =>
+            implicit val site: Site = siteValue
+            val headerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderBackgroundColorKey).map(_.v))
+            val headerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderForegroundColorKey).map(_.v))
+            val footerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterBackgroundColorKey).map(_.v))
+            val footerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterForegroundColorKey).map(_.v))
+            Ok(Json.obj(
+              "siteSeq" -> Json.fromLong(site.seq),
+              "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
+              "headerForegroundColor" -> Json.fromString(headerForegroundColor),
+              "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
+              "footerForegroundColor" -> Json.fromString(footerForegroundColor),
+            ))
+        }
+      }
+    }
+  }
+
+  def adminUpdateSiteTheme: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+        val siteSeqValue = body.get("siteSeq").flatMap(_.headOption).orElse(request.getQueryString("siteSeq"))
+        resolveAdminTargetSite(siteSeqValue) match {
+          case Left(errorResult) => errorResult
+          case Right(siteValue) =>
+            implicit val site: Site = siteValue
+            val headerBackgroundColor = parseHexColorValue(body.get("headerBackgroundColor").flatMap(_.headOption))
+            val headerForegroundColor = parseHexColorValue(body.get("headerForegroundColor").flatMap(_.headOption))
+            val footerBackgroundColor = parseHexColorValue(body.get("footerBackgroundColor").flatMap(_.headOption))
+            val footerForegroundColor = parseHexColorValue(body.get("footerForegroundColor").flatMap(_.headOption))
+
+            Seq(
+              SiteThemeLogic.HeaderBackgroundColorKey -> headerBackgroundColor,
+              SiteThemeLogic.HeaderForegroundColorKey -> headerForegroundColor,
+              SiteThemeLogic.FooterBackgroundColorKey -> footerBackgroundColor,
+              SiteThemeLogic.FooterForegroundColorKey -> footerForegroundColor,
+            ).foreach { case (key, value) =>
+              if (value.nonEmpty) {
+                Config.upsert(key, value)
+              } else {
+                Config.delete(key)
+              }
+            }
+
+            Ok(Json.obj(
+              "ok" -> Json.fromBoolean(true),
+              "siteSeq" -> Json.fromLong(site.seq),
+              "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
+              "headerForegroundColor" -> Json.fromString(headerForegroundColor),
+              "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
+              "footerForegroundColor" -> Json.fromString(footerForegroundColor),
             ))
         }
       }
