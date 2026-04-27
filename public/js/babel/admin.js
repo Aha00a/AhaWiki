@@ -865,7 +865,29 @@ function AdminContent({ page, onNavigate }) {
         withEyeDropper: false,
         clearable: true
       }
-    )), /* @__PURE__ */ React.createElement(Group, { mt: "md" }, /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "md", mt: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Stack, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        style: {
+          backgroundColor: siteTheme.headerBackgroundColor || "#f8f9fa",
+          color: siteTheme.headerForegroundColor || "#111111",
+          padding: "12px 14px",
+          fontWeight: 600
+        }
+      },
+      "Header Preview"
+    ), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React.createElement(
+      "div",
+      {
+        style: {
+          backgroundColor: siteTheme.footerBackgroundColor || "#f8f9fa",
+          color: siteTheme.footerForegroundColor || "#111111",
+          padding: "12px 14px",
+          fontWeight: 600
+        }
+      },
+      "Footer Preview"
+    ))), /* @__PURE__ */ React.createElement(Group, { mt: "md" }, /* @__PURE__ */ React.createElement(
       Button,
       {
         variant: "filled",

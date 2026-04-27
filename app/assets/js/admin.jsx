@@ -1212,6 +1212,34 @@ function AdminContent({page, onNavigate}) {
                             clearable
                         />
                     </SimpleGrid>
+                    <Paper withBorder radius="md" p="md" mt="md" style={{overflow: "hidden"}}>
+                        <Text size="sm" fw={600} mb={8}>미리보기</Text>
+                        <Stack gap={0} style={{borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef"}}>
+                            <div
+                                style={{
+                                    backgroundColor: siteTheme.headerBackgroundColor || "#f8f9fa",
+                                    color: siteTheme.headerForegroundColor || "#111111",
+                                    padding: "12px 14px",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Header Preview
+                            </div>
+                            <div style={{padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057"}}>
+                                콘텐츠 영역 (고정 미리보기)
+                            </div>
+                            <div
+                                style={{
+                                    backgroundColor: siteTheme.footerBackgroundColor || "#f8f9fa",
+                                    color: siteTheme.footerForegroundColor || "#111111",
+                                    padding: "12px 14px",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Footer Preview
+                            </div>
+                        </Stack>
+                    </Paper>
                     <Group mt="md">
                         <Button
                             variant="filled"
