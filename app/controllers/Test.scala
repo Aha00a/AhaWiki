@@ -215,7 +215,12 @@ class Test @Inject()(implicit val
             |              </div>
             |        </div>
             |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"$currentPageUrl","@id":"$currentPageUrl","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
-        val interpretedWithWiki = s"""<div>$interpreted</div>"""
+        val interpretedWithWiki =
+          s"""<div><div class="InterpreterRenderMetaWrapper" style="position: relative;"
+             |  data-edit-link="/w/UnitTest?action=edit&revision=0&lineStart=1&lineEnd=5"
+             |  data-edit-title="Edit (r0, L1-L5)">
+             |  <div class="InterpreterRenderContent">$interpreted</div>
+             |</div></div>""".stripMargin
 
         assertEquals(InterpreterSchema.toHtmlString(schemaMarkup), interpreted)
         assertEquals(Interpreters.toHtmlString(wikiMarkup), interpretedWithWiki)
