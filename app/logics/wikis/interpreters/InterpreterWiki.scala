@@ -50,12 +50,13 @@ object InterpreterWiki extends TraitInterpreter {
     val regexListUpperHangulConsonant: Regex = """[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+\.""".r
 
     override def process(): T = {
-      for(s <- backQuoteExtracted.split("""(\r\n|\n)""")) {
+      for((s, index) <- backQuoteExtracted.split("""(\r\n|\n)""", -1).zipWithIndex) {
+        val lineNumber = index + 1
         s match {
           case "" => emptyLine()
           case regexHr() => hr(s)
           case regexHr2() => hr2(s)
-          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id)
+          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id, lineNumber)
           case regexList(indentString, style, _, content) => list(indentString, style, content);
           case _ => others(s)
         }
@@ -66,7 +67,7 @@ object InterpreterWiki extends TraitInterpreter {
     def emptyLine(): Unit
     def hr(s: String): Unit
     def hr2(s: String): Unit
-    def heading(heading: String, title: String, id: String): Unit
+    def heading(heading: String, title: String, id: String, lineNumber: Int): Unit
     def list(indentString: String, style: String, content: String): Unit
     def others(s: String): Unit
     def result(): T
@@ -76,6 +77,8 @@ object InterpreterWiki extends TraitInterpreter {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
+    private val revision = InterpreterWiki.getRevisionForPartialEdit
+    private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(backQuoteExtracted, regexHeading)
 
     var oldIndent = 0
     val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (_:State.State, after:State.State) => {
@@ -101,7 +104,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<hr class="hr${s.length} pageBreakAfterAlways"/>"""
     }
 
-    override def heading(heading: String, title: String, id: String): Unit = {
+    override def heading(heading: String, title: String, id: String, lineNumber: Int): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
@@ -113,9 +116,12 @@ object InterpreterWiki extends TraitInterpreter {
         .replaceAll("""(?<!\\)\[(\S+?)]""", "$1")
         .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)]""", "$2")
       val idNotEmpty = if(id == null) titleForToc.replaceAll("""\s+""", "-") else id
+      val lineEnd = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber)
+      val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEnd)
+      val editTitle = s"Edit section (r$revision, L$lineNumber-L$lineEnd)"
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""</div><div class="$idNotEmpty"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength>"""
+      arrayBuffer += s"""</div><div class="$idNotEmpty"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="$editUrl" data-edit-title="$editTitle"><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
     override def list(indentString: String, style: String, content: String): Unit = {
@@ -171,6 +177,43 @@ object InterpreterWiki extends TraitInterpreter {
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
       extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(str)))
     }
+  }
+
+  private def buildHeadingLineRangeByLineStart(content: String, regexHeading: Regex): Map[Int, Int] = {
+    val lines = content.split("""\r\n|\n""", -1).toVector
+    val headings = lines.zipWithIndex.flatMap { case (line, index) =>
+      line match {
+        case regexHeading(heading, _, _, _, _) => Some((index + 1, heading.length))
+        case _ => None
+      }
+    }
+
+    headings.map { case (lineStart, level) =>
+      val lineEnd = headings
+        .dropWhile(_._1 <= lineStart)
+        .collectFirst { case (nextLineStart, nextLevel) if nextLevel <= level => nextLineStart - 1 }
+        .getOrElse(lines.length)
+      lineStart -> lineEnd
+    }.toMap
+  }
+
+  private def getRevisionForPartialEdit(implicit wikiContext: ContextWikiPage): Long = {
+    wikiContext.requestWrapper
+      .getQueryString("revision")
+      .flatMap(v => scala.util.Try(v.toLong).toOption)
+      .filter(_ > 0)
+      .getOrElse {
+        val (database, site) = wikiContext.tupleDatabaseSite
+        database.withConnection { implicit connection =>
+          implicit val implicitSite: models.tables.Site = site
+          models.tables.Page.selectLastRevision(wikiContext.name).map(_.revision).getOrElse(0L)
+        }
+      }
+  }
+
+  private def getEditUrlForPartialEdit(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String = {
+    val nameEncoded = java.net.URLEncoder.encode(wikiContext.name, "UTF-8").replace("+", "%20")
+    s"/w/$nameEncoded?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
   }
 
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[CalculatedLink]](pageContent) {
@@ -276,4 +319,3 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 }
-

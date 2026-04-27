@@ -40,6 +40,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
         builder.append(s.substring(cursor, openIndex))
         builder.append(uniqueKey)
+        builder.append("\n" * body.count(_ == '\n'))
         cursor = closeIndex + close.length
         openIndex = s.indexOf(open, cursor)
       }
