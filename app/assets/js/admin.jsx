@@ -7,6 +7,7 @@ import {
     Badge,
     Button,
     Card,
+    ColorInput,
     Divider,
     Group,
     Loader,
@@ -1170,29 +1171,45 @@ function AdminContent({page, onNavigate}) {
                         사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 기본 스타일을 사용합니다.
                     </Text>
                     <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
-                        <TextInput
+                        <ColorInput
                             label="Header 배경색"
                             placeholder="#FFFFFF"
+                            format="hexa"
                             value={siteTheme.headerBackgroundColor}
-                            onChange={(event) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: event.currentTarget.value}))}
+                            onChange={(value) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: value}))}
+                            swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"]}
+                            withEyeDropper={false}
+                            clearable
                         />
-                        <TextInput
+                        <ColorInput
                             label="Header 전경색"
                             placeholder="#111111"
+                            format="hexa"
                             value={siteTheme.headerForegroundColor}
-                            onChange={(event) => setSiteTheme((prev) => ({...prev, headerForegroundColor: event.currentTarget.value}))}
+                            onChange={(value) => setSiteTheme((prev) => ({...prev, headerForegroundColor: value}))}
+                            swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"]}
+                            withEyeDropper={false}
+                            clearable
                         />
-                        <TextInput
+                        <ColorInput
                             label="Footer 배경색"
                             placeholder="#FFFFFF"
+                            format="hexa"
                             value={siteTheme.footerBackgroundColor}
-                            onChange={(event) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: event.currentTarget.value}))}
+                            onChange={(value) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: value}))}
+                            swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"]}
+                            withEyeDropper={false}
+                            clearable
                         />
-                        <TextInput
+                        <ColorInput
                             label="Footer 전경색"
                             placeholder="#111111"
+                            format="hexa"
                             value={siteTheme.footerForegroundColor}
-                            onChange={(event) => setSiteTheme((prev) => ({...prev, footerForegroundColor: event.currentTarget.value}))}
+                            onChange={(value) => setSiteTheme((prev) => ({...prev, footerForegroundColor: value}))}
+                            swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"]}
+                            withEyeDropper={false}
+                            clearable
                         />
                     </SimpleGrid>
                     <Group mt="md">

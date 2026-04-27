@@ -8,6 +8,7 @@ import {
   Badge,
   Button,
   Card,
+  ColorInput,
   Divider,
   Group,
   Loader,
@@ -817,36 +818,52 @@ function AdminContent({ page, onNavigate }) {
       },
       "Reset to default"
     )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Header/Footer Theme"), /* @__PURE__ */ React.createElement(Badge, { color: "grape", variant: "light" }, "Per Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
-      TextInput,
+      ColorInput,
       {
         label: "Header \uBC30\uACBD\uC0C9",
         placeholder: "#FFFFFF",
+        format: "hexa",
         value: siteTheme.headerBackgroundColor,
-        onChange: (event) => setSiteTheme((prev) => ({ ...prev, headerBackgroundColor: event.currentTarget.value }))
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, headerBackgroundColor: value })),
+        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"],
+        withEyeDropper: false,
+        clearable: true
       }
     ), /* @__PURE__ */ React.createElement(
-      TextInput,
+      ColorInput,
       {
         label: "Header \uC804\uACBD\uC0C9",
         placeholder: "#111111",
+        format: "hexa",
         value: siteTheme.headerForegroundColor,
-        onChange: (event) => setSiteTheme((prev) => ({ ...prev, headerForegroundColor: event.currentTarget.value }))
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, headerForegroundColor: value })),
+        swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"],
+        withEyeDropper: false,
+        clearable: true
       }
     ), /* @__PURE__ */ React.createElement(
-      TextInput,
+      ColorInput,
       {
         label: "Footer \uBC30\uACBD\uC0C9",
         placeholder: "#FFFFFF",
+        format: "hexa",
         value: siteTheme.footerBackgroundColor,
-        onChange: (event) => setSiteTheme((prev) => ({ ...prev, footerBackgroundColor: event.currentTarget.value }))
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, footerBackgroundColor: value })),
+        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"],
+        withEyeDropper: false,
+        clearable: true
       }
     ), /* @__PURE__ */ React.createElement(
-      TextInput,
+      ColorInput,
       {
         label: "Footer \uC804\uACBD\uC0C9",
         placeholder: "#111111",
+        format: "hexa",
         value: siteTheme.footerForegroundColor,
-        onChange: (event) => setSiteTheme((prev) => ({ ...prev, footerForegroundColor: event.currentTarget.value }))
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, footerForegroundColor: value })),
+        swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"],
+        withEyeDropper: false,
+        clearable: true
       }
     )), /* @__PURE__ */ React.createElement(Group, { mt: "md" }, /* @__PURE__ */ React.createElement(
       Button,
