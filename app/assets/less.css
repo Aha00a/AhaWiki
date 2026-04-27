@@ -422,6 +422,7 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki h5,
 .AhaWiki .commonAhaWiki h6 {
   margin: 0;
+  overflow: hidden;
   word-break: keep-all;
 }
 @media screen {
@@ -973,6 +974,7 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent h5,
 .AhaWiki .wikiContent h6 {
   margin: 0;
+  overflow: hidden;
   word-break: keep-all;
 }
 @media screen {
@@ -1758,6 +1760,7 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent h5,
 .AhaWiki .paperContent .page .pageContent h6 {
   margin: 0;
+  overflow: hidden;
   word-break: keep-all;
 }
 @media screen {
