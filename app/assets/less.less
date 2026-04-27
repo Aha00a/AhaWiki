@@ -415,10 +415,6 @@ kbd {
 		}
 
 		div.toc {
-			border-radius: 12px;
-			border: 1px solid #d8dcee;
-			background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
-
 
 			ul {
 				margin: 0;
@@ -552,15 +548,16 @@ kbd {
 				text-overflow: ellipsis;
 			}
 		}
-		div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema {
+		div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
 			position: relative;
 			float: right;
 			margin-bottom: 10px;
 			margin-left: 10px;
 			max-width: 50vw;
 			border: 1px solid #ccc;
-			background-color: #eee;
-			padding: 20px;
+			border-radius: 5px;
+			background: linear-gradient(135deg, #eef 0%, #eff 100%);
+			padding: 10px 20px;
 			.boxShadow();
 
 			p {
@@ -714,7 +711,7 @@ kbd {
 				margin-left: 0;
 			}
 
-			div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema {
+			div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
 				float: none;
 				max-width: none;
 				margin-left: 0;

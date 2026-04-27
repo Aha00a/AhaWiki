@@ -637,11 +637,6 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
-.AhaWiki .commonAhaWiki div.toc {
-  border-radius: 12px;
-  border: 1px solid #d8dcee;
-  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
-}
 .AhaWiki .commonAhaWiki div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -762,15 +757,17 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.toc,
 .AhaWiki .commonAhaWiki div.MacroLinkDate,
 .AhaWiki .commonAhaWiki div.rightInfoBox,
-.AhaWiki .commonAhaWiki div.InterpreterSchema {
+.AhaWiki .commonAhaWiki div.InterpreterSchema,
+.AhaWiki .commonAhaWiki div.schema {
   position: relative;
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
   border: 1px solid #ccc;
-  background-color: #eee;
-  padding: 20px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
@@ -778,13 +775,15 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.toc p,
 .AhaWiki .commonAhaWiki div.MacroLinkDate p,
 .AhaWiki .commonAhaWiki div.rightInfoBox p,
-.AhaWiki .commonAhaWiki div.InterpreterSchema p {
+.AhaWiki .commonAhaWiki div.InterpreterSchema p,
+.AhaWiki .commonAhaWiki div.schema p {
   margin-top: 0;
 }
 .AhaWiki .commonAhaWiki div.toc img,
 .AhaWiki .commonAhaWiki div.MacroLinkDate img,
 .AhaWiki .commonAhaWiki div.rightInfoBox img,
-.AhaWiki .commonAhaWiki div.InterpreterSchema img {
+.AhaWiki .commonAhaWiki div.InterpreterSchema img,
+.AhaWiki .commonAhaWiki div.schema img {
   max-width: 100%;
 }
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
@@ -1183,11 +1182,6 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
-.AhaWiki .wikiContent div.toc {
-  border-radius: 12px;
-  border: 1px solid #d8dcee;
-  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
-}
 .AhaWiki .wikiContent div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -1308,15 +1302,17 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc,
 .AhaWiki .wikiContent div.MacroLinkDate,
 .AhaWiki .wikiContent div.rightInfoBox,
-.AhaWiki .wikiContent div.InterpreterSchema {
+.AhaWiki .wikiContent div.InterpreterSchema,
+.AhaWiki .wikiContent div.schema {
   position: relative;
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
   border: 1px solid #ccc;
-  background-color: #eee;
-  padding: 20px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
@@ -1324,13 +1320,15 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc p,
 .AhaWiki .wikiContent div.MacroLinkDate p,
 .AhaWiki .wikiContent div.rightInfoBox p,
-.AhaWiki .wikiContent div.InterpreterSchema p {
+.AhaWiki .wikiContent div.InterpreterSchema p,
+.AhaWiki .wikiContent div.schema p {
   margin-top: 0;
 }
 .AhaWiki .wikiContent div.toc img,
 .AhaWiki .wikiContent div.MacroLinkDate img,
 .AhaWiki .wikiContent div.rightInfoBox img,
-.AhaWiki .wikiContent div.InterpreterSchema img {
+.AhaWiki .wikiContent div.InterpreterSchema img,
+.AhaWiki .wikiContent div.schema img {
   max-width: 100%;
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
@@ -1525,7 +1523,8 @@ kbd:hover > kbd {
   .AhaWiki .commonAhaWiki div.toc,
   .AhaWiki .commonAhaWiki div.MacroLinkDate,
   .AhaWiki .commonAhaWiki div.rightInfoBox,
-  .AhaWiki .commonAhaWiki div.InterpreterSchema {
+  .AhaWiki .commonAhaWiki div.InterpreterSchema,
+  .AhaWiki .commonAhaWiki div.schema {
     float: none;
     max-width: none;
     margin-left: 0;
@@ -1964,11 +1963,6 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
-.AhaWiki .paperContent .page .pageContent div.toc {
-  border-radius: 12px;
-  border: 1px solid #d8dcee;
-  background: linear-gradient(180deg, #f8faff 0%, #eef3ff 100%);
-}
 .AhaWiki .paperContent .page .pageContent div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -2089,15 +2083,17 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.toc,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
 .AhaWiki .paperContent .page .pageContent div.rightInfoBox,
-.AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema,
+.AhaWiki .paperContent .page .pageContent div.schema {
   position: relative;
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
   border: 1px solid #ccc;
-  background-color: #eee;
-  padding: 20px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
@@ -2105,13 +2101,15 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.toc p,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate p,
 .AhaWiki .paperContent .page .pageContent div.rightInfoBox p,
-.AhaWiki .paperContent .page .pageContent div.InterpreterSchema p {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema p,
+.AhaWiki .paperContent .page .pageContent div.schema p {
   margin-top: 0;
 }
 .AhaWiki .paperContent .page .pageContent div.toc img,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate img,
 .AhaWiki .paperContent .page .pageContent div.rightInfoBox img,
-.AhaWiki .paperContent .page .pageContent div.InterpreterSchema img {
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema img,
+.AhaWiki .paperContent .page .pageContent div.schema img {
   max-width: 100%;
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
