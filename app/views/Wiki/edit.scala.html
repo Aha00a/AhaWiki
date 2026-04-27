@@ -1,4 +1,4 @@
-@(page: models.tables.Page, applicationConf: logics.ApplicationConf)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
+@(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)])(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
 @kbdHotKeyAlt(key: String) = {<kbd data-hotkey-alt="@key"><kbd>Alt</kbd><kbd>@key</kbd></kbd>}
 @_base(page.name, "") {
@@ -1158,6 +1158,9 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
         <div id="uploadDragOverlay" class="uploadDragOverlay">파일을 여기에 놓아 업로드</div>
         <div class="limitWidth">
             <h1>Edit - <a href="?">@page.name</a></h1>
+            @partialRange.map { case (lineStart, lineEnd) =>
+                <div class="flashMessage warning">Partial edit mode (L@lineStart-L@lineEnd)</div>
+            }
         </div>
         <div class="limitWidth">
             <div class="edit">
@@ -1166,6 +1169,10 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                         @CSRF.formField
                         <input type="hidden" name="revision" value="@page.revision"/>
                         <input type="hidden" id="recaptcha" name="recaptcha">
+                        @partialRange.map { case (lineStart, lineEnd) =>
+                            <input type="hidden" name="lineStart" value="@lineStart"/>
+                            <input type="hidden" name="lineEnd" value="@lineEnd"/>
+                        }
                         <div class="left">
                             <div class="toolbar">
                                 <div class="toolbarLeft">
@@ -1178,7 +1185,7 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                             </div>
                             <input type="file" id="attachmentUploadInput" multiple style="display:none;" />
                             <div class="editorBody">
-                                <textarea name="text" autofocus="autofocus">@page.content</textarea>
+                                <textarea name="text" autofocus="autofocus">@initialEditorText</textarea>
                             </div>
                             <div class="attachmentList" id="attachmentList"></div>
                             <div class="editorAdditional">

@@ -188,7 +188,8 @@ controllerComponents: ControllerComponents,
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
           val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", "", isMinorEdit = false, content)
-          Ok(views.html.Wiki.edit(page, applicationConf)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+          val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
+          Ok(views.html.Wiki.edit(page, applicationConf, initialEditorText, partialRange)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -211,7 +212,9 @@ controllerComponents: ControllerComponents,
           val mapRevisionColor = seqRevision.map(v => (v, GradientPreset.ahaWikiBlame.getColor(seqRevision.indexOf(v).toDouble / seqRevision.size).toHashString)).toMap
           Ok(views.html.Wiki.blame(blame, mapRevisionColor, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
 
-        case (Some(page), "edit", _, true) => Ok(views.html.Wiki.edit(page, applicationConf)).withHeaderRobotNoIndexNoFollow
+        case (Some(page), "edit", _, true) =>
+          val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
+          Ok(views.html.Wiki.edit(page, applicationConf, initialEditorText, partialRange)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -221,6 +224,25 @@ controllerComponents: ControllerComponents,
 
   private def decodeWikiName(nameEncoded: String): String =
     URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+
+  private def buildEditFormState(pageContent: String, request: RequestHeader): (String, Option[(Int, Int)]) = {
+    val lineStart = request.getQueryString("lineStart").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
+    val lineEnd = request.getQueryString("lineEnd").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
+
+    val partialRange = for {
+      start <- lineStart
+      end <- lineEnd
+      if end >= start
+    } yield (start, end)
+
+    val pageLines = pageContent.split("""\r\n|\n""", -1).toSeq
+    val partialRangeInBounds = partialRange.filter { case (_, end) => end <= pageLines.length }
+    val initialEditorText = partialRangeInBounds
+      .map { case (start, end) => pageLines.slice(start - 1, end).mkString("\n") }
+      .getOrElse(pageContent)
+
+    (initialEditorText, partialRangeInBounds)
+  }
 
   private def logPermissionMismatchInDev(name: String, isReadable: Boolean, isWritable: Boolean)(implicit request: Request[AnyContent]): Unit = {
     if (environment.mode == Mode.Dev) {
@@ -376,7 +398,15 @@ controllerComponents: ControllerComponents,
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
-    val (revision, body, comment, minorEdit, recaptcha) = Form(tuple("revision" -> number, "text" -> text, "comment" -> text, "minorEdit" -> optional(boolean), "recaptcha" -> text)).bindFromRequest.get
+    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd) = Form(tuple(
+      "revision" -> number,
+      "text" -> text,
+      "comment" -> text,
+      "minorEdit" -> optional(boolean),
+      "recaptcha" -> text,
+      "lineStart" -> optional(number),
+      "lineEnd" -> optional(number),
+    )).bindFromRequest.get
     val isMinorEdit = minorEdit.getOrElse(false)
     val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
     val remoteAddress = request.remoteAddressWithXRealIp
@@ -387,15 +417,27 @@ controllerComponents: ControllerComponents,
         implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
+        val mergedBodyEither = (partialLineStart, partialLineEnd) match {
+          case (Some(lineStart), Some(lineEnd)) =>
+            mergePartialBody(latestText, body, lineStart, lineEnd)
+          case (None, None) =>
+            Right(body)
+          case _ =>
+            Left("partial line range mismatch")
+        }
+
         if (!WikiPermission().isWritable(PageContent(latestText))) {
           Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
         } else if (revision != latestRevision) {
           Conflict("revision != latestRevision")
-        } else if (body == latestText) {
-          BadRequest("body == latestText")
-        } else {
+        } else mergedBodyEither match {
+          case Left(error) =>
+            BadRequest(error)
+          case Right(mergedBody) if mergedBody == latestText =>
+            BadRequest("body == latestText")
+          case Right(mergedBody) =>
           val now = LocalDateTime.now()
-          PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, body)
+          PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, mergedBody)
 
           name match {
             case ".header" => ahaWikiCache.Header.invalidate()
@@ -431,6 +473,21 @@ controllerComponents: ControllerComponents,
     } else {
       Future {
         doSave()
+      }
+    }
+  }
+
+  private def mergePartialBody(latestText: String, partialBody: String, lineStart: Int, lineEnd: Int): Either[String, String] = {
+    if (lineStart <= 0 || lineEnd < lineStart) {
+      Left("invalid partial line range")
+    } else {
+      val latestLines = latestText.split("""\r\n|\n""", -1).toVector
+      if (lineEnd > latestLines.length) {
+        Left("partial line range out of bounds")
+      } else {
+        val partialLines = partialBody.split("""\r\n|\n""", -1).toVector
+        val mergedLines = latestLines.take(lineStart - 1) ++ partialLines ++ latestLines.drop(lineEnd)
+        Right(mergedLines.mkString("\n"))
       }
     }
   }
