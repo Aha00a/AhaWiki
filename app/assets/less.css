@@ -653,6 +653,10 @@ kbd:hover > kbd {
   color: #1b2f67;
   text-decoration: underline;
 }
+.AhaWiki .commonAhaWiki div.toc,
+.AhaWiki .commonAhaWiki div.schema {
+  clear: right;
+}
 .AhaWiki .commonAhaWiki div.InterpreterSchema {
   clear: right;
   vertical-align: top;
@@ -1197,6 +1201,10 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc a:hover {
   color: #1b2f67;
   text-decoration: underline;
+}
+.AhaWiki .wikiContent div.toc,
+.AhaWiki .wikiContent div.schema {
+  clear: right;
 }
 .AhaWiki .wikiContent div.InterpreterSchema {
   clear: right;
@@ -1978,6 +1986,10 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.toc a:hover {
   color: #1b2f67;
   text-decoration: underline;
+}
+.AhaWiki .paperContent .page .pageContent div.toc,
+.AhaWiki .paperContent .page .pageContent div.schema {
+  clear: right;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
   clear: right;
