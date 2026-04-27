@@ -90,15 +90,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var positionEditLink = function () {
             var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
-            var top = targetRect.top - wrapperRect.top + 6;
+            var top = targetRect.top - wrapperRect.top + 15;
             var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - 8;
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
         };
 
-        positionEditLink();
         window.addEventListener('resize', positionEditLink);
         window.addEventListener('scroll', positionEditLink, { passive: true });
+        setTimeout(positionEditLink, 100);
     });
 });
