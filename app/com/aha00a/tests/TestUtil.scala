@@ -17,10 +17,9 @@ class TestUtil(val out: Any => Unit) {
   }
 
   def assertEquals(actual: String, expect: String): Unit = {
-    if (actual == expect) {
-
-    } else if (actual == expect.replace("\r", "")) {
-
+    val normalizedActual = actual.replace("\r", "")
+    val normalizedExpect = expect.replace("\r", "")
+    if (normalizedActual == normalizedExpect) {
     } else {
       throw ExceptionEquals(actual, expect)
     }
