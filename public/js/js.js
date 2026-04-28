@@ -58,22 +58,30 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink = document.createElement('a');
             editLink.className = 'InterpreterRenderEditLink';
             editLink.rel = 'nofollow';
-            editLink.innerHTML = '<i class="fas fa-edit"></i>';
+            editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;Edit';
             editLink.style.position = 'absolute';
             editLink.style.top = '6px';
             editLink.style.right = '8px';
             editLink.style.display = 'inline-flex';
             editLink.style.alignItems = 'center';
             editLink.style.justifyContent = 'center';
-            editLink.style.width = '26px';
-            editLink.style.height = '26px';
-            editLink.style.borderRadius = '50%';
-            editLink.style.border = '1px solid #ddd';
-            editLink.style.background = 'rgba(255,255,255,.92)';
-            editLink.style.color = '#555';
+            editLink.style.width = '50px';
+            editLink.style.height = '20px';
+            editLink.style.borderRadius = '50px';
+            editLink.style.border = '1px solid #888';
+            editLink.style.background = '#fff';
+            editLink.style.color = '#000';
             editLink.style.textDecoration = 'none';
-            editLink.style.opacity = '1';
+            editLink.style.opacity = '.4';
+            editLink.style.fontSize = '12px';
+            editLink.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
             editLink.style.pointerEvents = 'auto';
+            editLink.addEventListener('mouseenter', function () {
+                editLink.style.opacity = '1';
+            });
+            editLink.addEventListener('mouseleave', function () {
+                editLink.style.opacity = '.4';
+            });
             wrapper.appendChild(editLink);
         }
 
