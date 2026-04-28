@@ -52,6 +52,7 @@ import java.net.URLDecoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
+import scala.collection.concurrent.TrieMap
 import scala.util.Random
 
 
@@ -76,6 +77,10 @@ class Api @Inject()(
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
+  private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
+  private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
+  private val linksCacheTtlMs: Long = 10 * 60 * 1000
+
   private val adminFaviconConfigKey: String = "site.favicon.objectKey"
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
@@ -874,7 +879,16 @@ class Api @Inject()(
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
-      Ok(Adjacent.getSeqLinkFiltered(name).asJson)
+
+      val cacheKey = (site.seq, name)
+      val now = System.currentTimeMillis()
+      val cached = linksCache.get(cacheKey).filter(entry => now - entry.cachedAtEpochMs <= linksCacheTtlMs)
+      val links = cached.map(_.value).getOrElse {
+        val fetched = Adjacent.getSeqLinkFiltered(name)
+        linksCache.put(cacheKey, CachedLinks(fetched, now))
+        fetched
+      }
+      Ok(links.asJson)
     }
   }
 

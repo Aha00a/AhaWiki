@@ -12,6 +12,8 @@
             intervalGraph: null,
             queueFetch: [],
             queueGraph: [],
+            fetchedSet: new Set(),
+            inFlightSet: new Set(),
             limit: 500,
             running: false,
             nodeById: new Map(),
@@ -41,6 +43,7 @@
         };
 
         var intervalFetchMs = 200;
+        var maxInFlight = 3;
         var intervalAddMs = 50;
         var graphBatchSize = 5;
         var radiusDefault = 7;
@@ -265,21 +268,35 @@
         }
 
         function fetchLinks(name) {
+            if(!name || state.fetchedSet.has(name) || state.inFlightSet.has(name)) return;
+            state.inFlightSet.add(name);
             $.ajax({
                 url: '/api/links/' + name,
                 success: function(data) {
                     state.queueGraph = state.queueGraph.concat(data);
+                    state.fetchedSet.add(name);
                     updateCounter();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.log(name, jqXHR, textStatus, errorThrown);
+                },
+                complete: function() {
+                    state.inFlightSet.delete(name);
+                    updateCounter();
                 }
             });
         }
 
         function processQueueFetch() {
             if(document.hidden || state.queueFetch.length === 0 || state.nodes.length > state.limit) return;
-            fetchLinks(state.queueFetch.shift());
+            if(state.inFlightSet.size >= maxInFlight) return;
+
+            while(state.queueFetch.length > 0) {
+                var next = state.queueFetch.shift();
+                if(!next || state.fetchedSet.has(next) || state.inFlightSet.has(next)) continue;
+                fetchLinks(next);
+                break;
+            }
             updateCounter();
         }
 
@@ -291,12 +308,12 @@
                 var v = state.queueGraph.shift();
                 if(!getNode(v.src)) {
                     ensureNode(v.src);
-                    state.queueFetch.push(v.src);
+                    if(!state.fetchedSet.has(v.src) && !state.inFlightSet.has(v.src)) state.queueFetch.push(v.src);
                     changed = true;
                 }
                 if(!getNode(v.dst)) {
                     ensureNode(v.dst);
-                    state.queueFetch.push(v.dst);
+                    if(!state.fetchedSet.has(v.dst) && !state.inFlightSet.has(v.dst)) state.queueFetch.push(v.dst);
                     changed = true;
                 }
                 changed = addLink(v.src, v.dst) || changed;
@@ -452,6 +469,8 @@
             state.running = false;
             state.queueFetch = [];
             state.queueGraph = [];
+            state.fetchedSet = new Set();
+            state.inFlightSet = new Set();
             state.nodeById = new Map();
             state.linkKeySet = new Set();
             state.adjacency = new Map();
