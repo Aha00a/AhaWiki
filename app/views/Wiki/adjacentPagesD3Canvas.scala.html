@@ -405,7 +405,17 @@
 
         function bindCanvasEvents() {
             $(canvasSelector).off('.d3canvas@(id)');
+            $(document).off('.d3canvasDoc@(id)');
             $(canvasSelector).on('mousemove.d3canvas@(id)', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var n = nodeAt(x, y);
+                state.hoverNodeId = n ? n.id : null;
+                draw();
+            });
+            $(document).on('mousemove.d3canvasDoc@(id)', function(e) {
+                if(!state.dragNode && !state.isPanning) return;
                 var rect = canvas.getBoundingClientRect();
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
@@ -423,11 +433,7 @@
                     state.lastMouseX = x;
                     state.lastMouseY = y;
                     draw();
-                    return;
                 }
-                var n = nodeAt(x, y);
-                state.hoverNodeId = n ? n.id : null;
-                draw();
             });
             $(canvasSelector).on('wheel.d3canvas@(id)', function(e) {
                 e.preventDefault();
@@ -464,6 +470,22 @@
                 var rect = canvas.getBoundingClientRect();
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
+                finishPointerInteraction(x, y);
+            });
+            $(document).on('mouseup.d3canvasDoc@(id)', function(e) {
+                if(!state.dragNode && !state.isPanning && !state.mouseDownNodeId) return;
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                finishPointerInteraction(x, y);
+            });
+            $(canvasSelector).on('mouseleave.d3canvas@(id)', function() {
+                state.hoverNodeId = null;
+                draw();
+            });
+        }
+
+        function finishPointerInteraction(x, y) {
                 var world = screenToWorld(x, y);
                 var n = nodeAt(x, y);
                 var diff = new Date().getTime() - state.mouseDownAt;
@@ -483,16 +505,7 @@
                 state.isPanning = false;
                 state.simulation.alphaTarget(0);
                 state.mouseDownNodeId = null;
-            });
-            $(canvasSelector).on('mouseleave.d3canvas@(id)', function() {
-                state.hoverNodeId = null;
-                state.isPanning = false;
-                if(state.dragNode) {
-                    state.dragNode = null;
-                    state.simulation.alphaTarget(0);
-                }
                 draw();
-            });
         }
 
         function render() {
