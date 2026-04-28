@@ -74,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.textDecoration = 'none';
             editLink.style.opacity = '1';
             editLink.style.pointerEvents = 'auto';
-            editLink.style.zIndex = '1';
             wrapper.appendChild(editLink);
         }
 
@@ -90,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var positionEditLink = function () {
             var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
-            var top = targetRect.top - wrapperRect.top + 15;
+            var top = targetRect.top - wrapperRect.top + 4;
             var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - 8;
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
