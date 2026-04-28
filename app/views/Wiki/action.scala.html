@@ -13,20 +13,19 @@
         </button>
         <ul class="authArea">
             @if(wikiContext.requestWrapper.getUser) {
-                <li>
-                    <i class="fas fa-user-cog"></i>
-                    @wikiContext.requestWrapper.getUser.map { user =>
-                        @Html(logics.wikis.UserPageLogic.toHtmlString(user.nickname))
-                    }.getOrElse("Anonymous")
-                </li>
-                <li>
-                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
-                </li>
+                @wikiContext.requestWrapper.getUser.map { user =>
+                    <li>
+                        <a href="@(routes.Auth.logout)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                    </li>
+                }
                 @if(isAdmin) {
                     <li>
                         <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
                     </li>
                 }
+                <li>
+                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                </li>
             } else {
                 <li>
                     <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
@@ -72,27 +71,30 @@
     </div>
     <script type="text/javascript">
         $(function () {
-            const $action = $('.gnb .action');
-            const $toggle = $action.find('.mobileActionToggle');
             const mobileMediaQuery = window.matchMedia('(max-width: 767px)');
 
-            function resetDesktopState() {
-                if (!mobileMediaQuery.matches) {
-                    $action.removeClass('mobileMenuOpen');
-                    $toggle.attr('aria-expanded', 'false');
+            $('.gnb .action').each(function () {
+                const $action = $(this);
+                const $toggle = $action.find('.mobileActionToggle').first();
+
+                function resetDesktopState() {
+                    if (!mobileMediaQuery.matches) {
+                        $action.removeClass('mobileMenuOpen');
+                        $toggle.attr('aria-expanded', 'false');
+                    }
                 }
-            }
 
-            $toggle.on('click', function () {
-                const isOpen = $action.toggleClass('mobileMenuOpen').hasClass('mobileMenuOpen');
-                $toggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+                $toggle.on('click', function () {
+                    const isOpen = $action.toggleClass('mobileMenuOpen').hasClass('mobileMenuOpen');
+                    $toggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+                });
+
+                if (mobileMediaQuery.addEventListener) {
+                    mobileMediaQuery.addEventListener('change', resetDesktopState);
+                } else if (mobileMediaQuery.addListener) {
+                    mobileMediaQuery.addListener(resetDesktopState);
+                }
             });
-
-            if (mobileMediaQuery.addEventListener) {
-                mobileMediaQuery.addEventListener('change', resetDesktopState);
-            } else if (mobileMediaQuery.addListener) {
-                mobileMediaQuery.addListener(resetDesktopState);
-            }
         });
     </script>
 </div>

@@ -757,11 +757,21 @@ kbd {
 		.action {
 			.mobileActionToggle {
 				display: none;
-				border: 1px solid #ccc;
-				background: #fff;
-				padding: 6px 10px;
+				align-items: center;
+				gap: 8px;
+				border: 1px solid #cfd6de;
+				border-radius: 8px;
+				background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
+				padding: 7px 13px;
+				box-shadow: 0 1px 2px rgba(18, 24, 40, 0.08);
+				font-size: 13px;
+				font-weight: 600;
+				letter-spacing: 0.01em;
+				color: #1b2330;
 				cursor: pointer;
+				transition: all 120ms ease-in-out;
 			}
+
 			ul {
 				vertical-align: top;
 				display: inline-block;
@@ -811,20 +821,58 @@ kbd {
 			border-radius: 8px;
 			background-color: #fafafa;
 		}
-		.gnb .action ul {
-			display: block;
-			border-left: none;
-			border-top: 1px solid #ccc;
-			padding: 8px 0;
-		}
-		.gnb .action .mobileActionToggle {
-			display: inline-block;
-		}
-		.gnb .action ul {
-			display: none;
-		}
-		.gnb .action.mobileMenuOpen ul {
-			display: block;
+		.gnb .action {
+			padding: 12px;
+			border: 1px solid #dce2ea;
+			border-radius: 8px;
+			background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+			box-shadow: 0 3px 12px rgba(18, 24, 40, 0.08);
+
+			.mobileActionToggle {
+				display: inline-flex;
+			}
+
+			ul {
+				display: none;
+				border-left: none;
+				margin-top: 10px;
+				padding: 10px 0 0;
+				border-top: 1px solid #e3e8ef;
+			}
+
+			ul + ul {
+				margin-top: 6px;
+			}
+
+			ul li {
+				display: block;
+				padding: 0;
+				margin-bottom: 6px;
+			}
+
+			ul li:last-child {
+				margin-bottom: 0;
+			}
+
+			ul li > a {
+				display: flex;
+				align-items: center;
+				width: 100%;
+				padding: 9px 10px;
+				border-radius: 10px;
+				text-decoration: none;
+				background-color: transparent;
+				transition: background-color 120ms ease-in-out;
+			}
+
+			ul li > a:hover,
+			ul li > a:focus-visible {
+				background-color: #ecf2fb;
+			}
+
+			&.mobileMenuOpen ul {
+				display: block;
+			}
 		}
 	}
 
