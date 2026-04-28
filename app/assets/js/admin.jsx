@@ -99,6 +99,22 @@ function parseUserSeqFromPathname(pathname) {
     return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 
+function pageTitleByKey(page) {
+    if (page === "recent-changes") {
+        return "RecentChanges";
+    }
+    if (page === "all-users" || page === "user-views") {
+        return "User";
+    }
+    if (page === "site" || page === "sites" || page === "users") {
+        return "Site";
+    }
+    if (page === "operations") {
+        return "Operation";
+    }
+    return "Dashboard";
+}
+
 async function fetchJson(url) {
     logInfo("fetch:start", url);
     const response = await fetch(url, {credentials: "same-origin"});
@@ -572,12 +588,12 @@ function makeTable(headers, rows) {
 function Navigation({activePage, onNavigate}) {
     const links = useMemo(
         () => [
-            {href: "/", label: "Home", key: "home"},
-            {href: "/Admin", label: "핵심 대시보드", key: "dashboard"},
-            {href: "/Admin/RecentChange", label: "최근 변경", key: "recent-changes"},
-            {href: "/Admin/User", label: "사용자 관리", key: "all-users"},
+            {href: "/", label: "위키로 돌아가기", key: "home"},
+            {href: "/Admin", label: "Dashboard", key: "dashboard"},
+            {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes"},
+            {href: "/Admin/User", label: "User", key: "all-users"},
             {href: "/Admin/Site", label: "Site", key: "site"},
-            {href: "/Admin/Operation", label: "운영 작업", key: "operations"},
+            {href: "/Admin/Operation", label: "Operation", key: "operations"},
         ],
         [],
     );
@@ -1552,6 +1568,7 @@ function AdminContent({page, onNavigate}) {
 
 function AdminApp({initialPage}) {
     const [page, setPage] = useState(initialPage);
+    const pageTitle = pageTitleByKey(page);
 
     useEffect(() => {
         const onPopState = () => {
@@ -1591,8 +1608,7 @@ function AdminApp({initialPage}) {
             >
                 <AppShell.Navbar p="md">
                     <Stack mb="md" gap={4}>
-                        <Text fw={700} size="lg">AhaWiki</Text>
-                        <Text size="xs" c="dimmed">관리자 콘솔</Text>
+                        <Text fw={700} size="lg">AhaWiki Admin</Text>
                     </Stack>
                     <Navigation activePage={page} onNavigate={onNavigate}/>
                 </AppShell.Navbar>
@@ -1600,8 +1616,7 @@ function AdminApp({initialPage}) {
                     <Stack gap="md">
                         <Group justify="space-between" align="center">
                             <Stack gap={2}>
-                                <Title order={2}>Admin Dashboard</Title>
-                                <Text size="sm" c="dimmed">운영 현황을 한눈에 확인하고 즉시 작업하세요.</Text>
+                                <Title order={2}>{pageTitle}</Title>
                             </Stack>
                             <Badge variant="light" color="indigo" size="lg">
                                 Live

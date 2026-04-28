@@ -94,6 +94,21 @@ function parseUserSeqFromPathname(pathname) {
   const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
   return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
+function pageTitleByKey(page) {
+  if (page === "recent-changes") {
+    return "RecentChanges";
+  }
+  if (page === "all-users" || page === "user-views") {
+    return "User";
+  }
+  if (page === "site" || page === "sites" || page === "users") {
+    return "Site";
+  }
+  if (page === "operations") {
+    return "Operation";
+  }
+  return "Dashboard";
+}
 async function fetchJson(url) {
   logInfo("fetch:start", url);
   const response = await fetch(url, { credentials: "same-origin" });
@@ -524,12 +539,12 @@ function makeTable(headers, rows) {
 function Navigation({ activePage, onNavigate }) {
   const links = useMemo(
     () => [
-      { href: "/", label: "Home", key: "home" },
-      { href: "/Admin", label: "\uD575\uC2EC \uB300\uC2DC\uBCF4\uB4DC", key: "dashboard" },
-      { href: "/Admin/RecentChange", label: "\uCD5C\uADFC \uBCC0\uACBD", key: "recent-changes" },
-      { href: "/Admin/User", label: "\uC0AC\uC6A9\uC790 \uAD00\uB9AC", key: "all-users" },
+      { href: "/", label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30", key: "home" },
+      { href: "/Admin", label: "Dashboard", key: "dashboard" },
+      { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes" },
+      { href: "/Admin/User", label: "User", key: "all-users" },
       { href: "/Admin/Site", label: "Site", key: "site" },
-      { href: "/Admin/Operation", label: "\uC6B4\uC601 \uC791\uC5C5", key: "operations" }
+      { href: "/Admin/Operation", label: "Operation", key: "operations" }
     ],
     []
   );
@@ -1056,6 +1071,7 @@ function AdminContent({ page, onNavigate }) {
 }
 function AdminApp({ initialPage }) {
   const [page, setPage] = useState(initialPage);
+  const pageTitle = pageTitleByKey(page);
   useEffect(() => {
     const onPopState = () => {
       setPage(routeToPage(window.location.pathname));
@@ -1093,8 +1109,8 @@ function AdminApp({ initialPage }) {
           breakpoint: "sm"
         }
       },
-      /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Stack, { mb: "md", gap: 4 }, /* @__PURE__ */ React.createElement(Text, { fw: 700, size: "lg" }, "AhaWiki"), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD00\uB9AC\uC790 \uCF58\uC194")), /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
-      /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, "Admin Dashboard"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC6B4\uC601 \uD604\uD669\uC744 \uD55C\uB208\uC5D0 \uD655\uC778\uD558\uACE0 \uC989\uC2DC \uC791\uC5C5\uD558\uC138\uC694.")), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React.createElement(AdminContent, { page, onNavigate })))
+      /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Stack, { mb: "md", gap: 4 }, /* @__PURE__ */ React.createElement(Text, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
+      /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, pageTitle)), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React.createElement(AdminContent, { page, onNavigate })))
     )
   );
 }
