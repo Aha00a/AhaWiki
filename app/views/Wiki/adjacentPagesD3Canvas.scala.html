@@ -32,8 +32,12 @@
             lastMouseY: 0,
             nodeDegree: new Map(),
             depthFromRoot: new Map(),
-            focusDepth: 3,
+            focusDepth: 2,
             minDegree: 0,
+            nodeScale: 1,
+            labelScale: 1,
+            linkDistance: 80,
+            chargeStrength: -120,
         };
 
         var intervalFetchMs = 100;
@@ -91,11 +95,6 @@
             return true;
         }
 
-        function updateCounter() {
-            var visibleNodes = state.nodes.filter(isNodeVisible).length;
-            $('.linkCountD3Canvas.@(id)').text(visibleNodes + '/' + state.nodes.length + ' Nodes, ' + state.links.length + ' Links');
-        }
-
         function worldToScreen(x, y) {
             return { x: x * state.scale + state.panX, y: y * state.scale + state.panY };
         }
@@ -130,7 +129,7 @@
                 state.nodeDegree.set(src, (state.nodeDegree.get(src) || 0) + 1);
                 state.nodeDegree.set(dst, (state.nodeDegree.get(dst) || 0) + 1);
             });
-            state.depthFromRoot = buildDepthMap(state.rootNodeName, 8);
+            state.depthFromRoot = buildDepthMap(state.rootNodeName, 12);
         }
 
         function isNodeVisible(node) {
@@ -139,6 +138,37 @@
             var keepByDepth = depth <= state.focusDepth || node.id === state.rootNodeName;
             var keepByDegree = degree >= state.minDegree || node.id === state.rootNodeName;
             return keepByDepth && keepByDegree;
+        }
+
+        function updateCounter() {
+            var visibleNodeCount = 0;
+            state.nodes.forEach(function(n) {
+                if(isNodeVisible(n)) visibleNodeCount++;
+            });
+
+            var visibleLinkCount = 0;
+            state.links.forEach(function(l) {
+                var src = l.source.id ? l.source.id : l.source;
+                var dst = l.target.id ? l.target.id : l.target;
+                var sNode = getNode(src);
+                var tNode = getNode(dst);
+                if(sNode && tNode && isNodeVisible(sNode) && isNodeVisible(tNode)) visibleLinkCount++;
+            });
+
+            var totalNodes = state.nodes.length;
+            var totalLinks = state.links.length;
+            var avgDegree = totalNodes > 0 ? ((totalLinks * 2) / totalNodes) : 0;
+            var depthCoverage = state.depthFromRoot.size;
+
+            $('.nodeCountD3Canvas.@(id)').text(totalNodes);
+            $('.visibleNodeCountD3Canvas.@(id)').text(visibleNodeCount);
+            $('.linkCountOnlyD3Canvas.@(id)').text(totalLinks);
+            $('.visibleLinkCountD3Canvas.@(id)').text(visibleLinkCount);
+            $('.avgDegreeD3Canvas.@(id)').text(avgDegree.toFixed(2));
+            $('.depthCoverageD3Canvas.@(id)').text(depthCoverage);
+            $('.queueStatusD3Canvas.@(id)').text(state.queueFetch.length + ' / ' + state.queueGraph.length);
+            $('.zoomScaleD3Canvas.@(id)').text(state.scale.toFixed(2) + 'x');
+            $('.linkCountD3Canvas.@(id)').text(visibleNodeCount + '/' + totalNodes + ' Nodes, ' + visibleLinkCount + '/' + totalLinks + ' Links');
         }
 
         function draw() {
@@ -182,8 +212,8 @@
                 var isNeighbor = state.hoverNodeId && neighbors.has(n.id);
                 var depth = state.depthFromRoot.has(n.id) ? state.depthFromRoot.get(n.id) : 99;
                 var degree = state.nodeDegree.get(n.id) || 0;
-                var r = Math.min(18, radiusDefault + Math.log(degree + 1) * 2);
-                if(isRoot || isHover) r = Math.max(r, radiusHighlight);
+                var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
+                if(isRoot || isHover) r = Math.max(r, radiusHighlight * state.nodeScale);
                 var rScreen = Math.max(2, r * state.scale);
                 var p = worldToScreen(n.x || 0, n.y || 0);
 
@@ -197,18 +227,22 @@
                     ctx.stroke();
                 }
 
+                var labelSize = Math.max(9, (10 + Math.log(degree + 1) * 2) * state.labelScale);
+                if(isRoot || isHover) labelSize = Math.max(labelSize, 13 * state.labelScale);
                 ctx.fillStyle = isRoot ? '#1e2f80' : '#23314a';
-                ctx.font = (isRoot || isHover) ? 'bold 13px sans-serif' : '12px sans-serif';
+                ctx.font = ((isRoot || isHover) ? 'bold ' : '') + labelSize.toFixed(1) + 'px sans-serif';
                 ctx.fillText(n.id, p.x + rScreen + 4, p.y + 4);
             });
+
+            updateCounter();
         }
 
         function createSimulation() {
             if(state.simulation) state.simulation.stop();
             var size = syncCanvasSize();
             state.simulation = d3.forceSimulation(state.nodes)
-                .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(80))
-                .force('charge', d3.forceManyBody().strength(-120))
+                .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(state.linkDistance))
+                .force('charge', d3.forceManyBody().strength(state.chargeStrength))
                 .force('center', d3.forceCenter(size.width / 2, size.height / 2));
             state.simulation.on('tick', draw);
             recomputeDerivedGraphState();
@@ -217,7 +251,8 @@
         function restart() {
             if(!state.simulation) return;
             state.simulation.nodes(state.nodes);
-            state.simulation.force('link').links(state.links);
+            state.simulation.force('link').links(state.links).distance(state.linkDistance);
+            state.simulation.force('charge').strength(state.chargeStrength);
             state.simulation.alpha(0.8).restart();
             recomputeDerivedGraphState();
             updateCounter();
@@ -254,6 +289,7 @@
                         }
                     }
                     state.queueGraph = state.queueGraph.concat(data);
+                    updateCounter();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.log(name, jqXHR, textStatus, errorThrown);
@@ -264,6 +300,7 @@
         function processQueueFetch() {
             if(document.hidden || state.queueFetch.length === 0 || state.nodes.length > state.limit) return;
             fetchLinks(state.queueFetch.shift());
+            updateCounter();
         }
 
         function processQueueGraph() {
@@ -308,16 +345,17 @@
             state.simulation.alphaTarget(0.3).restart();
             state.intervalFetch = setInterval(processQueueFetch, intervalFetchMs);
             state.intervalGraph = setInterval(processQueueGraph, intervalAddMs);
-            $('.playPauseD3Canvas.@(id)').addClass('play').find('i.fas').removeClass('fa-play').addClass('fa-stop');
-            $('.playPauseLabelD3Canvas.@(id)').text('Pause');
+            $('.controlStartD3Canvas.@(id)').addClass('active');
+            $('.controlStopD3Canvas.@(id)').removeClass('active');
         }
 
         function stop() {
             state.running = false;
             if(state.simulation) state.simulation.stop();
             clearIntervals();
-            $('.playPauseD3Canvas.@(id)').removeClass('play').find('i.fas').removeClass('fa-stop').addClass('fa-play');
-            $('.playPauseLabelD3Canvas.@(id)').text('Play');
+            $('.controlStartD3Canvas.@(id)').removeClass('active');
+            $('.controlStopD3Canvas.@(id)').addClass('active');
+            updateCounter();
         }
 
         function nodeAt(screenX, screenY) {
@@ -325,8 +363,8 @@
                 var n = state.nodes[i];
                 if(!isNodeVisible(n)) continue;
                 var degree = state.nodeDegree.get(n.id) || 0;
-                var r = Math.min(18, radiusDefault + Math.log(degree + 1) * 2);
-                if(n.id === state.rootNodeName) r = Math.max(r, radiusHighlight);
+                var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
+                if(n.id === state.rootNodeName) r = Math.max(r, radiusHighlight * state.nodeScale);
                 var p = worldToScreen(n.x || 0, n.y || 0);
                 var rScreen = Math.max(2, r * state.scale);
                 var dx = p.x - screenX;
@@ -431,6 +469,7 @@
         function render() {
             clearIntervals();
             state.limit = 1000;
+            state.running = false;
             state.queueFetch = [];
             state.queueGraph = [];
             state.nodeById = new Map();
@@ -459,14 +498,24 @@
             start();
         }
 
-        $('.playPauseD3Canvas.@(id)').click(function() {
-            if($(this).hasClass('play')) stop();
-            else start();
+        $('.controlRestartD3Canvas.@(id)').click(function() {
+            restart();
+            return false;
+        });
+
+        $('.controlStartD3Canvas.@(id)').click(function() {
+            start();
+            return false;
+        });
+
+        $('.controlStopD3Canvas.@(id)').click(function() {
+            stop();
             return false;
         });
 
         $('.moreD3Canvas.@(id)').click(function() {
             state.limit = state.nodes.length + 1000;
+            updateCounter();
             return false;
         });
 
@@ -484,6 +533,30 @@
             draw();
         });
 
+        $('.labelScaleD3Canvas.@(id)').on('input change', function() {
+            state.labelScale = parseFloat($(this).val());
+            $('.labelScaleValueD3Canvas.@(id)').text(state.labelScale.toFixed(1) + 'x');
+            draw();
+        });
+
+        $('.nodeScaleD3Canvas.@(id)').on('input change', function() {
+            state.nodeScale = parseFloat($(this).val());
+            $('.nodeScaleValueD3Canvas.@(id)').text(state.nodeScale.toFixed(1) + 'x');
+            draw();
+        });
+
+        $('.linkDistanceD3Canvas.@(id)').on('input change', function() {
+            state.linkDistance = parseInt($(this).val(), 10);
+            $('.linkDistanceValueD3Canvas.@(id)').text(state.linkDistance);
+            restart();
+        });
+
+        $('.chargeStrengthD3Canvas.@(id)').on('input change', function() {
+            state.chargeStrength = parseInt($(this).val(), 10);
+            $('.chargeStrengthValueD3Canvas.@(id)').text(state.chargeStrength);
+            restart();
+        });
+
         $(document).on('adjacent-pages-d3canvas:rerender-@(id)', function() {
             render();
         });
@@ -492,6 +565,7 @@
             render: render,
             start: start,
             stop: stop,
+            restart: restart,
         };
     });
 </script>

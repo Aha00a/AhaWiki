@@ -2703,8 +2703,14 @@ kbd:hover > kbd {
 }
 .AhaWiki .adjacentPagesHud {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.AhaWiki .adjacentPagesHud .hudPanel {
+  position: absolute;
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid #d8deea;
   border-radius: 8px;
@@ -2712,7 +2718,30 @@ kbd:hover > kbd {
   box-shadow: 0 2px 8px rgba(37, 59, 100, 0.15);
   font-size: 12px;
   color: #2e3b52;
-  min-width: 210px;
+  min-width: 220px;
+  pointer-events: auto;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topLeft {
+  top: 10px;
+  left: 10px;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.bottomLeft {
+  left: 10px;
+  bottom: 10px;
+  min-width: 260px;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topRight {
+  top: 10px;
+  right: 10px;
+  min-width: 230px;
+}
+.AhaWiki .adjacentPagesHud .title {
+  font-weight: 700;
+  margin-bottom: 5px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #3d4f70;
 }
 .AhaWiki .adjacentPagesHud .row {
   display: flex;
@@ -2722,7 +2751,8 @@ kbd:hover > kbd {
 }
 .AhaWiki .adjacentPagesHud .row.compact {
   justify-content: flex-start;
-  gap: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 .AhaWiki .adjacentPagesHud .row.footer {
   justify-content: flex-start;
@@ -2731,23 +2761,31 @@ kbd:hover > kbd {
   font-weight: 600;
 }
 .AhaWiki .adjacentPagesHud .row.legend {
-  margin-bottom: 4px;
+  margin-bottom: 0;
   gap: 6px;
   font-size: 11px;
+}
+.AhaWiki .adjacentPagesHud .row.metric {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 }
 .AhaWiki .adjacentPagesHud .hudActions a {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 3px 7px;
   border-radius: 4px;
   border: 1px solid #d1d9e8;
   text-decoration: none;
   color: #2e3b52;
   background: #fff;
 }
+.AhaWiki .adjacentPagesHud .hudActions a.active {
+  background: #2b5fc7;
+  color: #fff;
+  border-color: #2b5fc7;
+}
 .AhaWiki .adjacentPagesHud input[type='range'] {
-  width: 90px;
+  width: 84px;
   vertical-align: middle;
   margin-left: 5px;
 }
