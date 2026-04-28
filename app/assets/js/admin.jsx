@@ -178,6 +178,7 @@ function useAdminData(page) {
         footerForegroundColor: "",
     });
     const [savingSiteTheme, setSavingSiteTheme] = useState(false);
+    const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
     const [error, setError] = useState("");
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -418,6 +419,49 @@ function useAdminData(page) {
         }
     }, []);
 
+    const loadAdminSitePageNames = useCallback(async (siteSeq) => {
+        if (!siteSeq) {
+            return [];
+        }
+        const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
+        return Array.isArray(data) ? data : [];
+    }, []);
+
+    const runSiteCalculate = useCallback(async (siteSeq, pageName = "") => {
+        if (!siteSeq) {
+            return null;
+        }
+        setCalculatingSiteSeq(Number.parseInt(String(siteSeq), 10) || 0);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const suffix = pageName?.trim()
+                ? `?pageName=${encodeURIComponent(pageName.trim())}`
+                : "";
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Csrf-Token": csrfToken.value,
+                    "X-CSRF-Token": csrfToken.value,
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                },
+                body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}&csrfToken=${encodeURIComponent(csrfToken.value)}`,
+            });
+            if (!response.ok) {
+                const payloadJson = await response.json().catch(() => null);
+                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+            }
+            return await response.json();
+        } catch (caughtError) {
+            logError("site:calculate:error", siteSeq, pageName, caughtError);
+            setError(caughtError.message || String(caughtError));
+            return null;
+        } finally {
+            setCalculatingSiteSeq(0);
+        }
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         const load = async () => {
@@ -569,6 +613,9 @@ function useAdminData(page) {
         loadSiteTheme,
         saveSiteTheme,
         savingSiteTheme,
+        loadAdminSitePageNames,
+        runSiteCalculate,
+        calculatingSiteSeq,
         error,
     };
 }
@@ -684,18 +731,22 @@ function Navigation({activePage, onNavigate}) {
 }
 
 function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
+    const schedulersWithoutCalculate = schedulers.filter((scheduler) => scheduler.name !== "Calculate");
     return (
         <Stack gap="sm">
             <Group justify="space-between">
                 <Title order={4}>Schedulers</Title>
                 <Button size="xs" variant="light" onClick={onRefresh}>Refresh</Button>
             </Group>
+            <Text size="xs" c="dimmed">
+                Calculate는 사이트 상세(/Admin/Site/:seq)에서 실행하세요.
+            </Text>
             <Progress
                 size="sm"
                 value={
-                    schedulers.length === 0
+                    schedulersWithoutCalculate.length === 0
                         ? 0
-                        : (schedulers.filter((scheduler) => scheduler.running).length / schedulers.length) * 100
+                        : (schedulersWithoutCalculate.filter((scheduler) => scheduler.running).length / schedulersWithoutCalculate.length) * 100
                 }
                 color="blue"
                 radius="xl"
@@ -714,7 +765,7 @@ function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
                     </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                    {schedulers.map((scheduler) => (
+                    {schedulersWithoutCalculate.map((scheduler) => (
                         <Table.Tr key={scheduler.name}>
                             <Table.Td>{scheduler.name}</Table.Td>
                             <Table.Td>{`${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`}</Table.Td>
@@ -945,11 +996,17 @@ function AdminContent({page, onNavigate, pathname, search}) {
         loadSiteTheme,
         saveSiteTheme,
         savingSiteTheme,
+        loadAdminSitePageNames,
+        runSiteCalculate,
+        calculatingSiteSeq,
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
+    const [sitePageNames, setSitePageNames] = useState([]);
+    const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
+    const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
     const selectedSite = useMemo(
         () => sites.find((site) => String(site.seq) === selectedSiteSeq) ?? null,
         [sites, selectedSiteSeq],
@@ -975,6 +1032,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
         const siteSeqByPath = parseSiteSeqFromPathname(pathname);
         if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
             setSelectedSiteSeq(siteSeqByPath);
+            setSelectedCalculatePageName("");
+            setSiteCalculateMessage("");
         }
     }, [page, pathname, selectedSiteSeq]);
 
@@ -982,8 +1041,15 @@ function AdminContent({page, onNavigate, pathname, search}) {
         if (page === "site-detail" && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
+            loadAdminSitePageNames(selectedSiteSeq)
+                .then((pageNames) => {
+                    setSitePageNames(pageNames);
+                })
+                .catch((caughtError) => {
+                    logError("site:pageNames:error", selectedSiteSeq, caughtError);
+                });
         }
-    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme]);
+    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
 
     if (loading) {
         return (
@@ -1236,6 +1302,70 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             Clear current site cache
                         </Button>
                     </Group>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Calculate Operation</Title>
+                        <Badge color="teal" variant="light">Per Site</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        현재 사이트에서 1개 페이지만 Calculate 큐에 넣습니다. 페이지를 비워두면 랜덤 1개, 입력하면 해당 페이지를 Calculate합니다.
+                    </Text>
+                    <Stack gap="sm">
+                        <TextInput
+                            label="Calculate할 페이지 (자동완성)"
+                            placeholder="비워두면 랜덤 1개"
+                            value={selectedCalculatePageName}
+                            onChange={(event) => setSelectedCalculatePageName(event.currentTarget.value)}
+                            list="site-calculate-page-name-list"
+                            disabled={!selectedSiteSeq}
+                        />
+                        <datalist id="site-calculate-page-name-list">
+                            {sitePageNames.map((pageName) => (
+                                <option key={`calculate-page-${pageName}`} value={pageName}/>
+                            ))}
+                        </datalist>
+                        <Group>
+                            <Button
+                                variant="filled"
+                                color="teal"
+                                disabled={!selectedSiteSeq}
+                                loading={selectedSite ? calculatingSiteSeq === selectedSite.seq : false}
+                                onClick={async () => {
+                                    if (!selectedSiteSeq) {
+                                        return;
+                                    }
+                                    const response = await runSiteCalculate(selectedSiteSeq, selectedCalculatePageName);
+                                    if (!response) {
+                                        return;
+                                    }
+                                    const modeLabel = response?.source === "selected" ? "선택 페이지" : "랜덤 페이지";
+                                    setSiteCalculateMessage(`${modeLabel}: ${response?.pageName ?? "-"} (queued)`);
+                                }}
+                            >
+                                Calculate 1 page
+                            </Button>
+                            <Button
+                                variant="light"
+                                disabled={!selectedSiteSeq}
+                                onClick={async () => {
+                                    if (!selectedSiteSeq) {
+                                        return;
+                                    }
+                                    const pageNames = await loadAdminSitePageNames(selectedSiteSeq);
+                                    setSitePageNames(pageNames);
+                                }}
+                            >
+                                페이지 목록 새로고침
+                            </Button>
+                        </Group>
+                        {siteCalculateMessage ? (
+                            <Text size="sm" c="teal">{siteCalculateMessage}</Text>
+                        ) : null}
+                        <Text size="xs" c="dimmed">
+                            페이지 이름 목록은 사이트 캐시를 사용합니다. (count: {sitePageNames.length})
+                        </Text>
+                    </Stack>
                 </Card>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">

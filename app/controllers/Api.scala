@@ -735,10 +735,72 @@ class Api @Inject()(
     if (!isAdmin) {
       Forbidden("Access denied.")
     } else {
-      if (applicationLifecycleHook.runSchedulerNow(name)) {
+      if (name == "Calculate") {
+        BadRequest(Map("error" -> "Use /api/Admin/Site/:seq/Calculate for Calculate operation.").asJson.toString()).as(JSON)
+      } else if (applicationLifecycleHook.runSchedulerNow(name)) {
         Ok(Map("status" -> "queued", "name" -> name).asJson)
       } else {
         NotFound(name)
+      }
+    }
+  }
+
+  def adminSitePageNames(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database, ahaWikiCache) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+          val pageNames = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest
+            .get()
+            .map(_.name)
+            .distinct
+            .sorted
+          Ok(pageNames.asJson)
+      }
+    }
+  }
+
+  def adminSiteCalculate(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database, ahaWikiCache) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+          val pageNames = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest
+            .get()
+            .map(_.name)
+            .distinct
+          val requestedPageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
+          val maybePageName = if (requestedPageName.nonEmpty) {
+            pageNames.find(_ == requestedPageName)
+          } else {
+            pageNames match {
+              case Seq() => None
+              case seqPageNames => Some(Random.shuffle(seqPageNames).head)
+            }
+          }
+
+          maybePageName match {
+            case Some(pageName) =>
+              actorAhaWiki ! actors.ActorAhaWiki.Calculate(site, pageName)
+              Ok(Map(
+                "status" -> "queued",
+                "siteSeq" -> site.seq.toString,
+                "pageName" -> pageName,
+                "source" -> (if (requestedPageName.nonEmpty) "selected" else "random"),
+              ).asJson)
+            case None =>
+              if (requestedPageName.nonEmpty) {
+                BadRequest(Map("error" -> s"page not found in site cache: $requestedPageName").asJson.toString()).as(JSON)
+              } else {
+                NotFound(Map("error" -> "No page exists in site cache.").asJson.toString()).as(JSON)
+              }
+          }
       }
     }
   }

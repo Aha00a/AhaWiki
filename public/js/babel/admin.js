@@ -169,6 +169,7 @@ function useAdminData(page) {
     footerForegroundColor: ""
   });
   const [savingSiteTheme, setSavingSiteTheme] = useState(false);
+  const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
   const [error, setError] = useState("");
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -396,6 +397,45 @@ function useAdminData(page) {
       setSavingSiteTheme(false);
     }
   }, []);
+  const loadAdminSitePageNames = useCallback(async (siteSeq) => {
+    if (!siteSeq) {
+      return [];
+    }
+    const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
+    return Array.isArray(data) ? data : [];
+  }, []);
+  const runSiteCalculate = useCallback(async (siteSeq, pageName = "") => {
+    if (!siteSeq) {
+      return null;
+    }
+    setCalculatingSiteSeq(Number.parseInt(String(siteSeq), 10) || 0);
+    setError("");
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const suffix = pageName?.trim() ? `?pageName=${encodeURIComponent(pageName.trim())}` : "";
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Csrf-Token": csrfToken.value,
+          "X-CSRF-Token": csrfToken.value,
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}&csrfToken=${encodeURIComponent(csrfToken.value)}`
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (caughtError) {
+      logError("site:calculate:error", siteSeq, pageName, caughtError);
+      setError(caughtError.message || String(caughtError));
+      return null;
+    } finally {
+      setCalculatingSiteSeq(0);
+    }
+  }, []);
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -540,6 +580,9 @@ function useAdminData(page) {
     loadSiteTheme,
     saveSiteTheme,
     savingSiteTheme,
+    loadAdminSitePageNames,
+    runSiteCalculate,
+    calculatingSiteSeq,
     error
   };
 }
@@ -605,15 +648,16 @@ function Navigation({ activePage, onNavigate }) {
   ))))));
 }
 function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) {
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")), /* @__PURE__ */ React.createElement(
+  const schedulersWithoutCalculate = schedulers.filter((scheduler) => scheduler.name !== "Calculate");
+  return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "Calculate\uB294 \uC0AC\uC774\uD2B8 \uC0C1\uC138(/Admin/Site/:seq)\uC5D0\uC11C \uC2E4\uD589\uD558\uC138\uC694."), /* @__PURE__ */ React.createElement(
     Progress,
     {
       size: "sm",
-      value: schedulers.length === 0 ? 0 : schedulers.filter((scheduler) => scheduler.running).length / schedulers.length * 100,
+      value: schedulersWithoutCalculate.length === 0 ? 0 : schedulersWithoutCalculate.filter((scheduler) => scheduler.running).length / schedulersWithoutCalculate.length * 100,
       color: "blue",
       radius: "xl"
     }
-  ), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Interval"), /* @__PURE__ */ React.createElement(Table.Th, null, "Next Delay(s)"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Started"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Finished"), /* @__PURE__ */ React.createElement(Table.Th, null, "Result"), /* @__PURE__ */ React.createElement(Table.Th, null, "Run Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, schedulers.map((scheduler) => /* @__PURE__ */ React.createElement(Table.Tr, { key: scheduler.name }, /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.name), /* @__PURE__ */ React.createElement(Table.Td, null, `${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.nextDelaySeconds ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastStartedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastFinishedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastResult ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.runCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Interval"), /* @__PURE__ */ React.createElement(Table.Th, null, "Next Delay(s)"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Started"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Finished"), /* @__PURE__ */ React.createElement(Table.Th, null, "Result"), /* @__PURE__ */ React.createElement(Table.Th, null, "Run Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, schedulersWithoutCalculate.map((scheduler) => /* @__PURE__ */ React.createElement(Table.Tr, { key: scheduler.name }, /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.name), /* @__PURE__ */ React.createElement(Table.Td, null, `${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.nextDelaySeconds ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastStartedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastFinishedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastResult ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.runCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
     Button,
     {
       size: "xs",
@@ -731,11 +775,17 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     loadSiteTheme,
     saveSiteTheme,
     savingSiteTheme,
+    loadAdminSitePageNames,
+    runSiteCalculate,
+    calculatingSiteSeq,
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
   const [faviconFile, setFaviconFile] = useState(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
+  const [sitePageNames, setSitePageNames] = useState([]);
+  const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
+  const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
   const selectedSite = useMemo(
     () => sites.find((site) => String(site.seq) === selectedSiteSeq) ?? null,
     [sites, selectedSiteSeq]
@@ -760,14 +810,21 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     const siteSeqByPath = parseSiteSeqFromPathname(pathname);
     if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
       setSelectedSiteSeq(siteSeqByPath);
+      setSelectedCalculatePageName("");
+      setSiteCalculateMessage("");
     }
   }, [page, pathname, selectedSiteSeq]);
   useEffect(() => {
     if (page === "site-detail" && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
+      loadAdminSitePageNames(selectedSiteSeq).then((pageNames) => {
+        setSitePageNames(pageNames);
+      }).catch((caughtError) => {
+        logError("site:pageNames:error", selectedSiteSeq, caughtError);
+      });
     }
-  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme]);
+  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
   if (loading) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -833,7 +890,51 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Clear current site cache"
-    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
+    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Calculate Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, "Per Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "Calculate\uD560 \uD398\uC774\uC9C0 (\uC790\uB3D9\uC644\uC131)",
+        placeholder: "\uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C",
+        value: selectedCalculatePageName,
+        onChange: (event) => setSelectedCalculatePageName(event.currentTarget.value),
+        list: "site-calculate-page-name-list",
+        disabled: !selectedSiteSeq
+      }
+    ), /* @__PURE__ */ React.createElement("datalist", { id: "site-calculate-page-name-list" }, sitePageNames.map((pageName) => /* @__PURE__ */ React.createElement("option", { key: `calculate-page-${pageName}`, value: pageName }))), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        variant: "filled",
+        color: "teal",
+        disabled: !selectedSiteSeq,
+        loading: selectedSite ? calculatingSiteSeq === selectedSite.seq : false,
+        onClick: async () => {
+          if (!selectedSiteSeq) {
+            return;
+          }
+          const response = await runSiteCalculate(selectedSiteSeq, selectedCalculatePageName);
+          if (!response) {
+            return;
+          }
+          const modeLabel = response?.source === "selected" ? "\uC120\uD0DD \uD398\uC774\uC9C0" : "\uB79C\uB364 \uD398\uC774\uC9C0";
+          setSiteCalculateMessage(`${modeLabel}: ${response?.pageName ?? "-"} (queued)`);
+        }
+      },
+      "Calculate 1 page"
+    ), /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        variant: "light",
+        disabled: !selectedSiteSeq,
+        onClick: async () => {
+          if (!selectedSiteSeq) {
+            return;
+          }
+          const pageNames = await loadAdminSitePageNames(selectedSiteSeq);
+          setSitePageNames(pageNames);
+        }
+      },
+      "\uD398\uC774\uC9C0 \uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
+    )), siteCalculateMessage ? /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
       "img",
       {
         src: siteFaviconUrl,
