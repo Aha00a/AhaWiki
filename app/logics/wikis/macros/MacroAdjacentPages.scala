@@ -4,6 +4,6 @@ import models.ContextWikiPage
 
 object MacroAdjacentPages extends TraitMacro {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    views.html.Wiki.adjacentPagesViva(enableWikiLink = true).toString()
+    views.html.Wiki.adjacentPagesD3CanvasHost(enableWikiLink = true).toString()
   }
 }
