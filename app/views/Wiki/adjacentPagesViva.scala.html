@@ -8,10 +8,6 @@
                 <div class="hudPanel topLeft @id">
                     <div class="title">Control</div>
                     <div class="row">
-                        <label>Focus depth <input type="range" min="1" max="6" step="1" value="2" class="focusDepthD3Canvas @id"/></label>
-                        <span class="focusDepthValueD3Canvas @id">2-hop</span>
-                    </div>
-                    <div class="row">
                         <label>Min degree <input type="range" min="0" max="12" step="1" value="0" class="degreeFilterD3Canvas @id"/></label>
                         <span class="degreeFilterValueD3Canvas @id">all</span>
                     </div>
@@ -33,7 +29,6 @@
                     </div>
                 </div>
                 <div class="hudPanel bottomLeft @id">
-                    <div class="title">Control</div>
                     <div class="row compact hudActions">
                         <a href="#" class="controlRestartD3Canvas @(id)"><i class="fas fa-redo"></i> Restart</a>
                         <a href="#" class="controlStartD3Canvas @(id)"><i class="fas fa-play"></i> Start</a>
@@ -43,15 +38,14 @@
                 </div>
                 <div class="hudPanel topRight @id">
                     <div class="title">Metrics</div>
-                    <div class="row metric"><span>Nodes</span><span class="nodeCountD3Canvas @id">0</span></div>
-                    <div class="row metric"><span>Visible Nodes</span><span class="visibleNodeCountD3Canvas @id">0</span></div>
-                    <div class="row metric"><span>Links</span><span class="linkCountOnlyD3Canvas @id">0</span></div>
-                    <div class="row metric"><span>Visible Links</span><span class="visibleLinkCountD3Canvas @id">0</span></div>
+                    <div class="row metric"><span>Nodes(visible/total)</span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
+                    <div class="row metric"><span>Links(visible/total)</span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
                     <div class="row metric"><span>Avg degree</span><span class="avgDegreeD3Canvas @id">0.00</span></div>
                     <div class="row metric"><span>Depth coverage</span><span class="depthCoverageD3Canvas @id">0</span></div>
                     <div class="row metric"><span>Queue(fetch/graph)</span><span class="queueStatusD3Canvas @id">0 / 0</span></div>
                     <div class="row metric"><span>Zoom(scale)</span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
-                    <div class="row footer"><span class="linkCountD3Canvas @id">0 Nodes, 0 Links</span></div>
+                </div>
+                <div class="hudPanel bottomRight @id">
                     <div class="row legend">
                         <span class="dot root"></span>Root
                         <span class="dot hop1"></span>1-hop

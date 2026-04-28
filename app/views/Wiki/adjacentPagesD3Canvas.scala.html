@@ -12,7 +12,7 @@
             intervalGraph: null,
             queueFetch: [],
             queueGraph: [],
-            limit: 1000,
+            limit: 555,
             running: false,
             nodeById: new Map(),
             linkKeySet: new Set(),
@@ -41,8 +41,8 @@
         };
 
         var intervalFetchMs = 100;
-        var intervalAddMs = 30;
-        var graphBatchSize = 40;
+        var intervalAddMs = 50;
+        var graphBatchSize = 10;
         var radiusDefault = 7;
         var radiusHighlight = 15;
 
@@ -160,15 +160,12 @@
             var avgDegree = totalNodes > 0 ? ((totalLinks * 2) / totalNodes) : 0;
             var depthCoverage = state.depthFromRoot.size;
 
-            $('.nodeCountD3Canvas.@(id)').text(totalNodes);
-            $('.visibleNodeCountD3Canvas.@(id)').text(visibleNodeCount);
-            $('.linkCountOnlyD3Canvas.@(id)').text(totalLinks);
-            $('.visibleLinkCountD3Canvas.@(id)').text(visibleLinkCount);
+            $('.nodeCountSummaryD3Canvas.@(id)').text(visibleNodeCount + '/' + totalNodes);
+            $('.linkCountSummaryD3Canvas.@(id)').text(visibleLinkCount + '/' + totalLinks);
             $('.avgDegreeD3Canvas.@(id)').text(avgDegree.toFixed(2));
             $('.depthCoverageD3Canvas.@(id)').text(depthCoverage);
             $('.queueStatusD3Canvas.@(id)').text(state.queueFetch.length + ' / ' + state.queueGraph.length);
             $('.zoomScaleD3Canvas.@(id)').text(state.scale.toFixed(2) + 'x');
-            $('.linkCountD3Canvas.@(id)').text(visibleNodeCount + '/' + totalNodes + ' Nodes, ' + visibleLinkCount + '/' + totalLinks + ' Links');
         }
 
         function draw() {
@@ -468,7 +465,7 @@
 
         function render() {
             clearIntervals();
-            state.limit = 1000;
+            state.limit = 555;
             state.running = false;
             state.queueFetch = [];
             state.queueGraph = [];
@@ -514,16 +511,9 @@
         });
 
         $('.moreD3Canvas.@(id)').click(function() {
-            state.limit = state.nodes.length + 1000;
+            state.limit = state.nodes.length + 555;
             updateCounter();
             return false;
-        });
-
-        $('.focusDepthD3Canvas.@(id)').on('input change', function() {
-            state.focusDepth = parseInt($(this).val(), 10);
-            $('.focusDepthValueD3Canvas.@(id)').text(state.focusDepth + '-hop');
-            updateCounter();
-            draw();
         });
 
         $('.degreeFilterD3Canvas.@(id)').on('input change', function() {

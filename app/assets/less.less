@@ -1355,7 +1355,7 @@ kbd {
 
 		.hudPanel {
 			position: absolute;
-			background: rgba(255, 255, 255, 0.92);
+			background: rgba(255, 255, 255, 0.5);
 			border: 1px solid #d8deea;
 			border-radius: 8px;
 			padding: 8px 10px;
@@ -1377,7 +1377,12 @@ kbd {
 			&.topRight {
 				top: 10px;
 				right: 10px;
-				min-width: 230px;
+				min-width: 200px;
+			}
+			&.bottomRight {
+				right: 10px;
+				bottom: 10px;
+				min-width: 130px;
 			}
 		}
 
@@ -1408,6 +1413,7 @@ kbd {
 				font-weight: 600;
 			}
 			&.legend {
+				justify-content: flex-start;
 				margin-bottom: 0;
 				gap: 6px;
 				font-size: 11px;
