@@ -51,6 +51,30 @@
         var initialScale = 0.5;
         var minScale = 0.1;
         var maxScale = 2.5;
+        var $wrapper = $('.aspectRatioWrapper.@(id)');
+
+        function isFullscreen() {
+            return document.fullscreenElement === $wrapper.get(0);
+        }
+
+        function updateFullscreenButton() {
+            var active = isFullscreen();
+            var icon = active ? 'compress' : 'expand';
+            var text = active ? 'Exit Fullscreen' : 'Fullscreen';
+            var $btn = $('.toggleFullscreenD3Canvas.@(id)');
+            $btn.toggleClass('active', active);
+            $btn.html('<i class="fas fa-' + icon + '"></i> ' + text);
+        }
+
+        function toggleFullscreen() {
+            var el = $wrapper.get(0);
+            if(!el) return;
+            if(isFullscreen()) {
+                if(document.exitFullscreen) document.exitFullscreen();
+                return;
+            }
+            if(el.requestFullscreen) el.requestFullscreen();
+        }
 
         function syncCanvasSize() {
             var $el = $(canvasSelector);
@@ -102,6 +126,14 @@
 
         function screenToWorld(x, y) {
             return { x: (x - state.panX) / state.scale, y: (y - state.panY) / state.scale };
+        }
+
+        function keepViewportCenteredAfterResize(oldWidth, oldHeight) {
+            if(!oldWidth || !oldHeight) return;
+            var centerWorld = screenToWorld(oldWidth / 2, oldHeight / 2);
+            var size = syncCanvasSize();
+            state.panX = (size.width / 2) - (centerWorld.x * state.scale);
+            state.panY = (size.height / 2) - (centerWorld.y * state.scale);
         }
 
         function buildDepthMap(originId, maxDepth) {
@@ -515,6 +547,11 @@
             return false;
         });
 
+        $('.toggleFullscreenD3Canvas.@(id)').click(function() {
+            toggleFullscreen();
+            return false;
+        });
+
         $('.degreeFilterD3Canvas.@(id)').on('input change', function() {
             state.minDegree = parseInt($(this).val(), 10);
             $('.degreeFilterValueD3Canvas.@(id)').text(state.minDegree === 0 ? 'all' : ('≥ ' + state.minDegree));
@@ -550,11 +587,21 @@
             render();
         });
 
+        $(document).on('fullscreenchange.d3canvas@(id)', function() {
+            var oldWidth = canvas.width;
+            var oldHeight = canvas.height;
+            keepViewportCenteredAfterResize(oldWidth, oldHeight);
+            updateFullscreenButton();
+            draw();
+        });
+
         window['adjacentPagesD3CanvasEngine@(id)'] = {
             render: render,
             start: start,
             stop: stop,
             restart: restart,
         };
+
+        updateFullscreenButton();
     });
 </script>
