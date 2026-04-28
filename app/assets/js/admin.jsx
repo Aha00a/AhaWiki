@@ -636,48 +636,49 @@ function Navigation({activePage, onNavigate}) {
                 Admin Navigation
             </Text>
             {links.map((link) => (
-                <NavLink
-                    key={link.key}
-                    href={link.href}
-                    label={link.label}
-                    active={
-                        activePage === link.key
-                        || (activePage === "user-views" && link.key === "all-users")
-                        || (activePage === "site-detail" && link.key === "sites")
-                    }
-                    variant={
-                        activePage === link.key
-                        || (activePage === "user-views" && link.key === "all-users")
-                        || (activePage === "site-detail" && link.key === "sites")
-                            ? "filled"
-                            : "light"
-                    }
-                    onClick={(event) => {
-                        if (link.key === "home") {
-                            return;
+                <React.Fragment key={link.key}>
+                    <NavLink
+                        href={link.href}
+                        label={link.label}
+                        active={
+                            activePage === link.key
+                            || (activePage === "user-views" && link.key === "all-users")
+                            || (activePage === "site-detail" && link.key === "sites")
                         }
-                        event.preventDefault();
-                        onNavigate(link.href);
-                    }}
-                />
+                        variant={
+                            activePage === link.key
+                            || (activePage === "user-views" && link.key === "all-users")
+                            || (activePage === "site-detail" && link.key === "sites")
+                                ? "filled"
+                                : "light"
+                        }
+                        onClick={(event) => {
+                            if (link.key === "home") {
+                                return;
+                            }
+                            event.preventDefault();
+                            onNavigate(link.href);
+                        }}
+                    />
+                    {link.key === "sites" && (activePage === "sites" || activePage === "site-detail") && (
+                        <Stack gap={2} ml={8}>
+                            {siteLinks.map((site) => (
+                                <NavLink
+                                    key={`site-${site.seq}`}
+                                    href={`/Admin/Site/${site.seq}`}
+                                    label={`${site.name} (#${site.seq})`}
+                                    active={currentSiteSeq === String(site.seq)}
+                                    variant={currentSiteSeq === String(site.seq) ? "subtle" : "light"}
+                                    onClick={(event) => {
+                                        event.preventDefault();
+                                        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+                                    }}
+                                />
+                            ))}
+                        </Stack>
+                    )}
+                </React.Fragment>
             ))}
-            {(activePage === "sites" || activePage === "site-detail") && (
-                <Stack gap={2} ml={8}>
-                    {siteLinks.map((site) => (
-                        <NavLink
-                            key={`site-${site.seq}`}
-                            href={`/Admin/Site/${site.seq}`}
-                            label={`${site.name} (#${site.seq})`}
-                            active={currentSiteSeq === String(site.seq)}
-                            variant={currentSiteSeq === String(site.seq) ? "subtle" : "light"}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-                            }}
-                        />
-                    ))}
-                </Stack>
-            )}
         </Stack>
     );
 }
@@ -1424,56 +1425,14 @@ function AdminContent({page, onNavigate}) {
 
     if (page === "operations") {
         return (
-            <Stack gap="lg">
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Site Cache Operations</Title>
-                        <Badge color="orange" variant="light">Careful</Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="md">
-                        사이트별 캐시를 즉시 비워서 도메인/페이지/헤더 캐시를 강제로 갱신합니다.
-                    </Text>
-                    <Divider mb="md"/>
-                    <Table striped highlightOnHover withTableBorder withColumnBorders>
-                        <Table.Thead>
-                            <Table.Tr>
-                                <Table.Th>Seq</Table.Th>
-                                <Table.Th>Site</Table.Th>
-                                <Table.Th>Domains</Table.Th>
-                                <Table.Th>Action</Table.Th>
-                            </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                            {sites.map((site) => (
-                                <Table.Tr key={site.seq}>
-                                    <Table.Td>{site.seq}</Table.Td>
-                                    <Table.Td>{site.name}</Table.Td>
-                                    <Table.Td>{(site.domains ?? []).join(", ") || "-"}</Table.Td>
-                                    <Table.Td>
-                                        <Button
-                                            color="orange"
-                                            variant="filled"
-                                            size="xs"
-                                            loading={clearingSiteSeq === site.seq}
-                                            onClick={() => clearSiteCache(site.seq)}
-                                        >
-                                            Clear cache
-                                        </Button>
-                                    </Table.Td>
-                                </Table.Tr>
-                            ))}
-                        </Table.Tbody>
-                    </Table>
-                </Card>
-                <Card withBorder radius="md" padding="lg">
-                    <SchedulerTable
-                        schedulers={schedulers}
-                        runningSchedulerName={runningSchedulerName}
-                        onRun={runScheduler}
-                        onRefresh={reloadSchedulers}
-                    />
-                </Card>
-            </Stack>
+            <Card withBorder radius="md" padding="lg">
+                <SchedulerTable
+                    schedulers={schedulers}
+                    runningSchedulerName={runningSchedulerName}
+                    onRun={runScheduler}
+                    onRefresh={reloadSchedulers}
+                />
+            </Card>
         );
     }
 

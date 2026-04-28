@@ -574,10 +574,9 @@ function Navigation({ activePage, onNavigate }) {
     ],
     []
   );
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", tt: "uppercase", fw: 700, c: "dimmed", px: 8 }, "Admin Navigation"), links.map((link) => /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", tt: "uppercase", fw: 700, c: "dimmed", px: 8 }, "Admin Navigation"), links.map((link) => /* @__PURE__ */ React.createElement(React.Fragment, { key: link.key }, /* @__PURE__ */ React.createElement(
     NavLink,
     {
-      key: link.key,
       href: link.href,
       label: link.label,
       active: activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites",
@@ -590,7 +589,7 @@ function Navigation({ activePage, onNavigate }) {
         onNavigate(link.href);
       }
     }
-  )), (activePage === "sites" || activePage === "site-detail") && /* @__PURE__ */ React.createElement(Stack, { gap: 2, ml: 8 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
+  ), link.key === "sites" && (activePage === "sites" || activePage === "site-detail") && /* @__PURE__ */ React.createElement(Stack, { gap: 2, ml: 8 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
     NavLink,
     {
       key: `site-${site.seq}`,
@@ -603,7 +602,7 @@ function Navigation({ activePage, onNavigate }) {
         onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
       }
     }
-  ))));
+  ))))));
 }
 function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) {
   return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")), /* @__PURE__ */ React.createElement(
@@ -982,17 +981,7 @@ function AdminContent({ page, onNavigate }) {
     ))));
   }
   if (page === "operations") {
-    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operations"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Careful")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uCE90\uC2DC\uB97C \uC989\uC2DC \uBE44\uC6CC\uC11C \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uB97C \uAC15\uC81C\uB85C \uAC31\uC2E0\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
-      Button,
-      {
-        color: "orange",
-        variant: "filled",
-        size: "xs",
-        loading: clearingSiteSeq === site.seq,
-        onClick: () => clearSiteCache(site.seq)
-      },
-      "Clear cache"
-    ))))))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
       SchedulerTable,
       {
         schedulers,
@@ -1000,7 +989,7 @@ function AdminContent({ page, onNavigate }) {
         onRun: runScheduler,
         onRefresh: reloadSchedulers
       }
-    )));
+    ));
   }
   if (page === "recent-changes") {
     return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
