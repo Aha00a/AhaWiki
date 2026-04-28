@@ -597,13 +597,34 @@ function makeTable(headers, rows) {
 }
 
 function Navigation({activePage, onNavigate}) {
+    const [siteLinks, setSiteLinks] = useState([]);
+    const currentSiteSeq = parseSiteSeqFromPathname(window.location.pathname);
+
+    useEffect(() => {
+        let mounted = true;
+        fetchJson("/api/Admin/Sites")
+            .then((siteData) => {
+                if (!mounted) {
+                    return;
+                }
+                setSiteLinks(Array.isArray(siteData) ? siteData : []);
+            })
+            .catch((caughtError) => {
+                logError("navigation:sites:error", caughtError);
+            });
+
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
     const links = useMemo(
         () => [
             {href: "/", label: "위키로 돌아가기", key: "home"},
             {href: "/Admin", label: "Dashboard", key: "dashboard"},
             {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes"},
             {href: "/Admin/User", label: "User", key: "all-users"},
-            {href: "/Admin/Site", label: "Site", key: "site"},
+            {href: "/Admin/Site", label: "Site", key: "sites"},
             {href: "/Admin/Operation", label: "Operation", key: "operations"},
         ],
         [],
@@ -619,8 +640,18 @@ function Navigation({activePage, onNavigate}) {
                     key={link.key}
                     href={link.href}
                     label={link.label}
-                    active={activePage === link.key || (activePage === "user-views" && link.key === "all-users")}
-                    variant={activePage === link.key || (activePage === "user-views" && link.key === "all-users") ? "filled" : "light"}
+                    active={
+                        activePage === link.key
+                        || (activePage === "user-views" && link.key === "all-users")
+                        || (activePage === "site-detail" && link.key === "sites")
+                    }
+                    variant={
+                        activePage === link.key
+                        || (activePage === "user-views" && link.key === "all-users")
+                        || (activePage === "site-detail" && link.key === "sites")
+                            ? "filled"
+                            : "light"
+                    }
                     onClick={(event) => {
                         if (link.key === "home") {
                             return;
@@ -630,6 +661,23 @@ function Navigation({activePage, onNavigate}) {
                     }}
                 />
             ))}
+            {(activePage === "sites" || activePage === "site-detail") && (
+                <Stack gap={2} ml={8}>
+                    {siteLinks.map((site) => (
+                        <NavLink
+                            key={`site-${site.seq}`}
+                            href={`/Admin/Site/${site.seq}`}
+                            label={`${site.name} (#${site.seq})`}
+                            active={currentSiteSeq === String(site.seq)}
+                            variant={currentSiteSeq === String(site.seq) ? "subtle" : "light"}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+                            }}
+                        />
+                    ))}
+                </Stack>
+            )}
         </Stack>
     );
 }
@@ -1156,6 +1204,37 @@ function AdminContent({page, onNavigate}) {
                             )}
                         </Paper>
                     </SimpleGrid>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Cache Operation</Title>
+                        <Badge color="orange" variant="light">Current Site</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        현재 보고 있는 사이트의 캐시를 즉시 초기화합니다. 도메인/페이지/헤더 캐시가 강제로 갱신됩니다.
+                    </Text>
+                    <Group justify="space-between" align="center">
+                        <Stack gap={2}>
+                            <Text size="xs" c="dimmed">대상 사이트</Text>
+                            <Text fw={700}>
+                                {selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}
+                            </Text>
+                        </Stack>
+                        <Button
+                            color="orange"
+                            variant="filled"
+                            disabled={!selectedSite}
+                            loading={selectedSite ? clearingSiteSeq === selectedSite.seq : false}
+                            onClick={() => {
+                                if (!selectedSite) {
+                                    return;
+                                }
+                                clearSiteCache(selectedSite.seq);
+                            }}
+                        >
+                            Clear current site cache
+                        </Button>
+                    </Group>
                 </Card>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
