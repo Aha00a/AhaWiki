@@ -150,7 +150,7 @@ kbd:hover > kbd {
   content: "🧩";
 }
 .AhaWiki a.schema-link.schema-schema::before {
-  content: "🧩";
+  content: "🗂️";
 }
 .AhaWiki a.schema-link.schema-action::before {
   content: "⚡";
