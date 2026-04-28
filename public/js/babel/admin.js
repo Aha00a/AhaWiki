@@ -616,20 +616,24 @@ function Navigation({ activePage, onNavigate }) {
     ],
     []
   );
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, links.map((link) => /* @__PURE__ */ React.createElement(React.Fragment, { key: link.key }, /* @__PURE__ */ React.createElement(
-    NavLink,
-    {
-      href: link.href,
-      label: link.label,
-      leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
-      active: activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites",
-      variant: activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites" ? "filled" : "light",
-      onClick: (event) => {
-        event.preventDefault();
-        onNavigate(link.href);
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites";
+    return /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        key: link.key,
+        href: link.href,
+        label: link.label,
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
+        active: isActive,
+        variant: isActive ? "filled" : "light",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(link.href);
+        }
       }
-    }
-  ), link.key === "sites" && (activePage === "sites" || activePage === "site-detail") && /* @__PURE__ */ React.createElement(Stack, { gap: 2, ml: 8 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
+    );
+  }))), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
     NavLink,
     {
       key: `site-${site.seq}`,
@@ -637,13 +641,13 @@ function Navigation({ activePage, onNavigate }) {
       label: `${site.name} (#${site.seq})`,
       leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
       active: currentSiteSeq === String(site.seq),
-      variant: currentSiteSeq === String(site.seq) ? "subtle" : "light",
+      variant: currentSiteSeq === String(site.seq) ? "filled" : "light",
       onClick: (event) => {
         event.preventDefault();
         onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
       }
     }
-  ))))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
+  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
     NavLink,
     {
       href: "/",

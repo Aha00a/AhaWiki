@@ -678,49 +678,57 @@ function Navigation({activePage, onNavigate}) {
 
     return (
         <Stack gap={8}>
-            {links.map((link) => (
-                <React.Fragment key={link.key}>
-                    <NavLink
-                        href={link.href}
-                        label={link.label}
-                        leftSection={<i className={link.iconClassName} aria-hidden="true" />}
-                        active={
-                            activePage === link.key
+            <Paper withBorder radius="md" p={8}>
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={6}>Main Menu</Text>
+                <Stack gap={4}>
+                    {links.map((link) => {
+                        const isActive = activePage === link.key
                             || (activePage === "user-views" && link.key === "all-users")
-                            || (activePage === "site-detail" && link.key === "sites")
-                        }
-                        variant={
-                            activePage === link.key
-                            || (activePage === "user-views" && link.key === "all-users")
-                            || (activePage === "site-detail" && link.key === "sites")
-                                ? "filled"
-                                : "light"
-                        }
-                        onClick={(event) => {
-                            event.preventDefault();
-                            onNavigate(link.href);
-                        }}
-                    />
-                    {link.key === "sites" && (activePage === "sites" || activePage === "site-detail") && (
-                        <Stack gap={2} ml={8}>
-                            {siteLinks.map((site) => (
-                                <NavLink
-                                    key={`site-${site.seq}`}
-                                    href={`/Admin/Site/${site.seq}`}
-                                    label={`${site.name} (#${site.seq})`}
-                                    leftSection={<i className="fas fa-globe-asia" aria-hidden="true" />}
-                                    active={currentSiteSeq === String(site.seq)}
-                                    variant={currentSiteSeq === String(site.seq) ? "subtle" : "light"}
-                                    onClick={(event) => {
-                                        event.preventDefault();
-                                        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-                                    }}
-                                />
-                            ))}
-                        </Stack>
+                            || (activePage === "site-detail" && link.key === "sites");
+                        return (
+                            <NavLink
+                                key={link.key}
+                                href={link.href}
+                                label={link.label}
+                                leftSection={<i className={link.iconClassName} aria-hidden="true" />}
+                                active={isActive}
+                                variant={isActive ? "filled" : "light"}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    onNavigate(link.href);
+                                }}
+                            />
+                        );
+                    })}
+                </Stack>
+            </Paper>
+
+            <Paper withBorder radius="md" p={8}>
+                <Group justify="space-between" mb={6}>
+                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">Sites</Text>
+                    <Badge color="indigo" variant="light" size="sm">{siteLinks.length}</Badge>
+                </Group>
+                <Stack gap={2}>
+                    {siteLinks.map((site) => (
+                        <NavLink
+                            key={`site-${site.seq}`}
+                            href={`/Admin/Site/${site.seq}`}
+                            label={`${site.name} (#${site.seq})`}
+                            leftSection={<i className="fas fa-globe-asia" aria-hidden="true" />}
+                            active={currentSiteSeq === String(site.seq)}
+                            variant={currentSiteSeq === String(site.seq) ? "filled" : "light"}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+                            }}
+                        />
+                    ))}
+                    {siteLinks.length === 0 && (
+                        <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>
                     )}
-                </React.Fragment>
-            ))}
+                </Stack>
+            </Paper>
+
             <Divider my={6} label="바로가기" labelPosition="center" />
             <Paper withBorder radius="md" p={6}>
                 <NavLink
