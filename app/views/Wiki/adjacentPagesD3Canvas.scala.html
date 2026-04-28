@@ -1,0 +1,395 @@
+@(id:String, enableWikiLink:Boolean)(implicit wikiContext: ContextWikiPage)
+
+<script type="text/javascript">
+    $(function() {
+        var canvasSelector = '#graphD3Canvas-@(id)';
+        var canvas = $(canvasSelector).get(0);
+        var ctx = canvas.getContext('2d');
+
+        var state = {
+            simulation: null,
+            intervalFetch: null,
+            intervalGraph: null,
+            queueFetch: [],
+            queueGraph: [],
+            limit: 100,
+            running: false,
+            nodeById: new Map(),
+            linkKeySet: new Set(),
+            adjacency: new Map(),
+            nodes: [],
+            links: [],
+            rootNodeName: null,
+            hoverNodeId: null,
+            mouseDownAt: 0,
+            mouseDownNodeId: null,
+            dragNode: null,
+            isPanning: false,
+            panX: 0,
+            panY: 0,
+            lastMouseX: 0,
+            lastMouseY: 0,
+        };
+
+        var intervalFetchMs = 1000;
+        var intervalAddMs = 30;
+        var graphBatchSize = 40;
+        var radiusDefault = 7;
+        var radiusHighlight = 15;
+
+        function syncCanvasSize() {
+            var $el = $(canvasSelector);
+            var w = $el.width() || 800;
+            var h = $el.height() || 450;
+            if(canvas.width !== w || canvas.height !== h) {
+                canvas.width = w;
+                canvas.height = h;
+            }
+            return { width: w, height: h };
+        }
+
+        function addAdj(src, dst) {
+            if(!state.adjacency.has(src)) state.adjacency.set(src, new Set());
+            if(!state.adjacency.has(dst)) state.adjacency.set(dst, new Set());
+            state.adjacency.get(src).add(dst);
+            state.adjacency.get(dst).add(src);
+        }
+
+        function removeAdj(src, dst) {
+            if(state.adjacency.has(src)) state.adjacency.get(src).delete(dst);
+            if(state.adjacency.has(dst)) state.adjacency.get(dst).delete(src);
+        }
+
+        function getNode(id) {
+            return state.nodeById.get(id);
+        }
+
+        function ensureNode(id) {
+            var node = getNode(id);
+            if(node) return node;
+            node = { id: id };
+            state.nodeById.set(id, node);
+            state.nodes.push(node);
+            return node;
+        }
+
+        function linkKey(src, dst) {
+            return src + '->' + dst;
+        }
+
+        function addLink(src, dst) {
+            var key = linkKey(src, dst);
+            if(state.linkKeySet.has(key)) return false;
+            state.linkKeySet.add(key);
+            addAdj(src, dst);
+            state.links.push({ source: src, target: dst, key: key });
+            return true;
+        }
+
+        function updateCounter() {
+            $('.linkCountD3Canvas.@(id)').text(state.nodes.length + ' Nodes, ' + state.links.length + ' Links');
+        }
+
+        function worldToScreen(x, y) {
+            return { x: x + state.panX, y: y + state.panY };
+        }
+
+        function screenToWorld(x, y) {
+            return { x: x - state.panX, y: y - state.panY };
+        }
+
+        function draw() {
+            var size = syncCanvasSize();
+            ctx.clearRect(0, 0, size.width, size.height);
+
+            var neighbors = state.hoverNodeId ? (state.adjacency.get(state.hoverNodeId) || new Set()) : new Set();
+
+            state.links.forEach(function(l) {
+                var src = l.source.id ? l.source.id : l.source;
+                var dst = l.target.id ? l.target.id : l.target;
+                var sNode = l.source.id ? l.source : getNode(src);
+                var tNode = l.target.id ? l.target : getNode(dst);
+                if(!sNode || !tNode) return;
+
+                var highlighted = state.hoverNodeId && (src === state.hoverNodeId || dst === state.hoverNodeId || (neighbors.has(src) && neighbors.has(dst)));
+                ctx.strokeStyle = highlighted ? '#3366cc' : '#999';
+                ctx.globalAlpha = highlighted ? 0.9 : 0.55;
+                ctx.lineWidth = highlighted ? 1.8 : 1;
+                var s = worldToScreen(sNode.x || 0, sNode.y || 0);
+                var t = worldToScreen(tNode.x || 0, tNode.y || 0);
+                ctx.beginPath();
+                ctx.moveTo(s.x, s.y);
+                ctx.lineTo(t.x, t.y);
+                ctx.stroke();
+            });
+
+            ctx.globalAlpha = 1;
+            state.nodes.forEach(function(n) {
+                var isRoot = n.id === state.rootNodeName;
+                var isHover = n.id === state.hoverNodeId;
+                var isNeighbor = state.hoverNodeId && neighbors.has(n.id);
+                var r = isRoot || isHover ? radiusHighlight : radiusDefault;
+                var p = worldToScreen(n.x || 0, n.y || 0);
+
+                ctx.beginPath();
+                ctx.fillStyle = isRoot ? '#00a' : (isHover ? '#3366cc' : (isNeighbor ? '#6d8fd8' : '#666'));
+                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = isRoot ? '#00f' : '#333';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(n.id, p.x + 12, p.y + 4);
+            });
+        }
+
+        function createSimulation() {
+            if(state.simulation) state.simulation.stop();
+            var size = syncCanvasSize();
+            state.simulation = d3.forceSimulation(state.nodes)
+                .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(80))
+                .force('charge', d3.forceManyBody().strength(-120))
+                .force('center', d3.forceCenter(size.width / 2, size.height / 2));
+            state.simulation.on('tick', draw);
+        }
+
+        function restart() {
+            if(!state.simulation) return;
+            state.simulation.nodes(state.nodes);
+            state.simulation.force('link').links(state.links);
+            state.simulation.alpha(0.8).restart();
+            updateCounter();
+            draw();
+        }
+
+        function removeNodeAndLinks(nodeId) {
+            state.links = state.links.filter(function (l) {
+                var s = l.source.id ? l.source.id : l.source;
+                var t = l.target.id ? l.target.id : l.target;
+                var remove = s === nodeId || t === nodeId;
+                if(remove) {
+                    state.linkKeySet.delete(linkKey(s, t));
+                    removeAdj(s, t);
+                }
+                return !remove;
+            });
+            state.nodes = state.nodes.filter(function (n) { return n.id !== nodeId; });
+            state.nodeById.delete(nodeId);
+            state.adjacency.delete(nodeId);
+            updateCounter();
+            restart();
+        }
+
+        function fetchLinks(name) {
+            $.ajax({
+                url: '/api/links/' + name,
+                success: function(data) {
+                    if(data.length === 1) {
+                        var node = getNode(name);
+                        if(node && !(node.fx != null || node.fy != null)) {
+                            removeNodeAndLinks(name);
+                            return;
+                        }
+                    }
+                    state.queueGraph = state.queueGraph.concat(data);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(name, jqXHR, textStatus, errorThrown);
+                }
+            });
+        }
+
+        function processQueueFetch() {
+            if(document.hidden || state.queueFetch.length === 0 || state.nodes.length > state.limit) return;
+            fetchLinks(state.queueFetch.shift());
+        }
+
+        function processQueueGraph() {
+            if(state.queueGraph.length === 0) return;
+            var changed = false;
+            var consumed = 0;
+            while(state.queueGraph.length > 0 && consumed < graphBatchSize) {
+                var v = state.queueGraph.shift();
+                if(!getNode(v.src)) {
+                    ensureNode(v.src);
+                    state.queueFetch.push(v.src);
+                    changed = true;
+                }
+                if(!getNode(v.dst)) {
+                    ensureNode(v.dst);
+                    state.queueFetch.push(v.dst);
+                    changed = true;
+                }
+                changed = addLink(v.src, v.dst) || changed;
+                consumed++;
+            }
+            if(changed) restart();
+            else updateCounter();
+        }
+
+        function clearIntervals() {
+            if(state.intervalFetch) clearInterval(state.intervalFetch);
+            if(state.intervalGraph) clearInterval(state.intervalGraph);
+            state.intervalFetch = null;
+            state.intervalGraph = null;
+        }
+
+        function start() {
+            if(state.running) {
+                state.simulation.alphaTarget(0.3).restart();
+                return;
+            }
+            state.running = true;
+            state.simulation.alphaTarget(0.3).restart();
+            state.intervalFetch = setInterval(processQueueFetch, intervalFetchMs);
+            state.intervalGraph = setInterval(processQueueGraph, intervalAddMs);
+            $('.playPauseD3Canvas.@(id)').addClass('play').find('i.fas').removeClass('fa-play').addClass('fa-stop');
+        }
+
+        function stop() {
+            state.running = false;
+            if(state.simulation) state.simulation.stop();
+            clearIntervals();
+            $('.playPauseD3Canvas.@(id)').removeClass('play').find('i.fas').removeClass('fa-stop').addClass('fa-play');
+        }
+
+        function nodeAt(worldX, worldY) {
+            for(var i = state.nodes.length - 1; i >= 0; i--) {
+                var n = state.nodes[i];
+                var r = n.id === state.rootNodeName ? radiusHighlight : radiusDefault;
+                var dx = (n.x || 0) - worldX;
+                var dy = (n.y || 0) - worldY;
+                if(dx * dx + dy * dy <= (r + 3) * (r + 3)) return n;
+            }
+            return null;
+        }
+
+        function bindCanvasEvents() {
+            $(canvasSelector).off('.d3canvas@(id)');
+            $(canvasSelector).on('mousemove.d3canvas@(id)', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var world = screenToWorld(x, y);
+                if(state.dragNode) {
+                    state.dragNode.fx = world.x;
+                    state.dragNode.fy = world.y;
+                    state.simulation.alphaTarget(0.3).restart();
+                    draw();
+                    return;
+                }
+                if(state.isPanning) {
+                    state.panX += (x - state.lastMouseX);
+                    state.panY += (y - state.lastMouseY);
+                    state.lastMouseX = x;
+                    state.lastMouseY = y;
+                    draw();
+                    return;
+                }
+                var n = nodeAt(world.x, world.y);
+                state.hoverNodeId = n ? n.id : null;
+                draw();
+            });
+            $(canvasSelector).on('mousedown.d3canvas@(id)', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var world = screenToWorld(x, y);
+                var n = nodeAt(world.x, world.y);
+                state.mouseDownAt = new Date().getTime();
+                state.mouseDownNodeId = n ? n.id : null;
+                state.lastMouseX = x;
+                state.lastMouseY = y;
+                if(n) {
+                    state.dragNode = n;
+                    n.fx = world.x;
+                    n.fy = world.y;
+                    state.simulation.alphaTarget(0.3).restart();
+                } else {
+                    state.isPanning = true;
+                }
+            });
+            $(canvasSelector).on('mouseup.d3canvas@(id)', function(e) {
+                var rect = canvas.getBoundingClientRect();
+                var x = e.clientX - rect.left;
+                var y = e.clientY - rect.top;
+                var world = screenToWorld(x, y);
+                var n = nodeAt(world.x, world.y);
+                var diff = new Date().getTime() - state.mouseDownAt;
+                if(n && state.mouseDownNodeId === n.id && diff < 300) {
+                    @if(enableWikiLink) {
+                    stop();
+                    location.href = '/w/' + n.id;
+                    }
+                } else if(n) {
+                    fetchLinks(n.id);
+                }
+                if(state.dragNode) {
+                    state.dragNode.fx = world.x;
+                    state.dragNode.fy = world.y;
+                    state.dragNode = null;
+                }
+                state.isPanning = false;
+                state.simulation.alphaTarget(0);
+                state.mouseDownNodeId = null;
+            });
+            $(canvasSelector).on('mouseleave.d3canvas@(id)', function() {
+                state.hoverNodeId = null;
+                state.isPanning = false;
+                if(state.dragNode) {
+                    state.dragNode = null;
+                    state.simulation.alphaTarget(0);
+                }
+                draw();
+            });
+        }
+
+        function render() {
+            clearIntervals();
+            state.limit = 100;
+            state.queueFetch = [];
+            state.queueGraph = [];
+            state.nodeById = new Map();
+            state.linkKeySet = new Set();
+            state.adjacency = new Map();
+            state.nodes = [];
+            state.links = [];
+            state.hoverNodeId = null;
+            state.panX = 0;
+            state.panY = 0;
+
+            var wikiContextName = $('.aspectRatioWrapper.@(id) input[name=wikiContextName]').val();
+            state.rootNodeName = wikiContextName;
+            var size = syncCanvasSize();
+            var root = ensureNode(wikiContextName);
+            root.fx = size.width / 2;
+            root.fy = size.height / 2;
+            state.queueFetch = [wikiContextName];
+
+            createSimulation();
+            bindCanvasEvents();
+            restart();
+            start();
+        }
+
+        $('.playPauseD3Canvas.@(id)').click(function() {
+            if($(this).hasClass('play')) stop();
+            else start();
+            return false;
+        });
+
+        $('.moreD3Canvas.@(id)').click(function() {
+            state.limit = state.nodes.length + 1000;
+            return false;
+        });
+
+        $(document).on('adjacent-pages-d3canvas:rerender-@(id)', function() {
+            render();
+        });
+
+        window['adjacentPagesD3CanvasEngine@(id)'] = {
+            render: render,
+            start: start,
+            stop: stop,
+        };
+    });
+</script>

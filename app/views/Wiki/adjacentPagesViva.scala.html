@@ -1,0 +1,27 @@
+@(enableWikiLink:Boolean)(implicit wikiContext: ContextWikiPage)
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+    <div class="aspectRatioWrapper @id">
+        <div class="ratio_16_9"></div>
+        <div class="aspectRatioContent">
+            <canvas id="graphD3Canvas-@id" class="graph graphD3Canvas @(id)" style="width: 100%; height: 100%;"></canvas>
+
+            <a href="#" class="playPauseD3Canvas play @(id)" style="position: absolute; bottom: 10px; left: 15px; text-decoration: none;">
+                <i class="fas fa-stop"></i> <span class="linkCountD3Canvas @id">0</span>
+            </a>
+            <a href="#" class="moreD3Canvas play @(id)" style="position: absolute; bottom: 10px; right: 15px; text-decoration: none;">
+                <i class="fas fa-plus"></i> <span>More</span>
+            </a>
+        </div>
+        <input type="hidden" name="wikiContextName" value="@{wikiContext.name}"/>
+    </div>
+
+    @views.html.Wiki.adjacentPagesD3Canvas(id, enableWikiLink)
+
+    <script type="text/javascript">
+        $(function () {
+            setTimeout(function () {
+                $(document).trigger('adjacent-pages-d3canvas:rerender-@(id)');
+            }, 100);
+        });
+    </script>
+}
