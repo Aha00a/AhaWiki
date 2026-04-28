@@ -2701,6 +2701,35 @@ kbd:hover > kbd {
 .AhaWiki svg.graph marker {
   fill: #777;
 }
+.AhaWiki .adjacentPagesPreviewPlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed #d8deea;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+  color: #4e5f82;
+  text-align: center;
+  padding: 20px;
+}
+.AhaWiki .adjacentPagesPreviewPlaceholder i {
+  font-size: 24px;
+  color: #7088bf;
+}
+.AhaWiki .adjacentPagesPreviewPlaceholder .title {
+  font-weight: 700;
+}
+.AhaWiki .adjacentPagesPreviewPlaceholder .description {
+  font-size: 12px;
+  color: #6e7fa3;
+}
 .AhaWiki .adjacentPagesHud {
   position: absolute;
   top: 0;
