@@ -75,6 +75,8 @@ kbd {
 @widthTablet: ~"(max-width: 767px)";
 @widthMobile: ~"(max-width: 319px)";
 
+@import "_right-floating-panels.less";
+
 @media @widthTablet {
 	kbd {
 		display: none;
@@ -553,29 +555,7 @@ kbd {
 			}
 		}
 
-		.rightFloatingInfoPanels() {
-			div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
-				position: relative;
-				float: right;
-				margin-bottom: 10px;
-				margin-left: 10px;
-				max-width: 50vw;
-				border: 1px solid #ccc;
-				border-radius: 5px;
-				background: linear-gradient(135deg, #eef 0%, #eff 100%);
-				padding: 10px 20px;
-				.boxShadow();
-
-				p {
-					margin-top: 0;
-				}
-				img {
-					max-width: 100%;
-				}
-			}
-		}
-
-		.rightFloatingInfoPanels();
+		.rightFloatingInfoPanelsMixin();
 
 		div.MacroLinkDate.around {
             clear: right;
@@ -721,21 +701,7 @@ kbd {
 				margin-left: 0;
 			}
 
-			.rightFloatingInfoPanelsMobile() {
-				div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
-					float: none;
-					clear: both;
-					max-width: none;
-					width: auto;
-					margin: 12px 0;
-					padding: 12px;
-					border-radius: 8px;
-					background: #f8fbff;
-					box-sizing: border-box;
-				}
-			}
-
-			.rightFloatingInfoPanelsMobile();
+			.rightFloatingInfoPanelsMobileMixin();
 
 			div.toc ul, div.schema dl {
 				max-height: 40vh;
