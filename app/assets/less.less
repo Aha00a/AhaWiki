@@ -1372,7 +1372,7 @@ kbd {
 			&.bottomLeft {
 				left: 10px;
 				bottom: 10px;
-				min-width: 260px;
+				min-width: 100px;
 			}
 			&.topRight {
 				top: 10px;
@@ -1399,7 +1399,6 @@ kbd {
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			margin-bottom: 6px;
 
 			&.compact {
 				justify-content: flex-start;
@@ -1421,6 +1420,10 @@ kbd {
 			&.metric {
 				font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 			}
+		}
+
+		.row + .row {
+			margin-top: 6px;
 		}
 
 		.hudActions {

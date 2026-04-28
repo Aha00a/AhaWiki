@@ -2728,7 +2728,7 @@ kbd:hover > kbd {
 .AhaWiki .adjacentPagesHud .hudPanel.bottomLeft {
   left: 10px;
   bottom: 10px;
-  min-width: 260px;
+  min-width: 100px;
 }
 .AhaWiki .adjacentPagesHud .hudPanel.topRight {
   top: 10px;
@@ -2752,7 +2752,6 @@ kbd:hover > kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
 }
 .AhaWiki .adjacentPagesHud .row.compact {
   justify-content: flex-start;
@@ -2773,6 +2772,9 @@ kbd:hover > kbd {
 }
 .AhaWiki .adjacentPagesHud .row.metric {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+}
+.AhaWiki .adjacentPagesHud .row + .row {
+  margin-top: 6px;
 }
 .AhaWiki .adjacentPagesHud .hudActions a {
   display: inline-flex;

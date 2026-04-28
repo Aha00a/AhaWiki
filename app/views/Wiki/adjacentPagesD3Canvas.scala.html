@@ -12,7 +12,7 @@
             intervalGraph: null,
             queueFetch: [],
             queueGraph: [],
-            limit: 555,
+            limit: 500,
             running: false,
             nodeById: new Map(),
             linkKeySet: new Set(),
@@ -40,11 +40,14 @@
             chargeStrength: -120,
         };
 
-        var intervalFetchMs = 100;
+        var intervalFetchMs = 200;
         var intervalAddMs = 50;
-        var graphBatchSize = 10;
+        var graphBatchSize = 5;
         var radiusDefault = 7;
         var radiusHighlight = 15;
+        var initialScale = 0.5;
+        var minScale = 0.1;
+        var maxScale = 2.5;
 
         function syncCanvasSize() {
             var $el = $(canvasSelector);
@@ -226,11 +229,19 @@
 
                 var labelSize = Math.max(9, (10 + Math.log(degree + 1) * 2) * state.labelScale);
                 if(isRoot || isHover) labelSize = Math.max(labelSize, 13 * state.labelScale);
+                // label alpha 기준:
+                // 1) 글자 크기(labelSize)가 클수록 진하게 보이도록 선형 매핑
+                // 2) root/hover는 시선 유도를 위해 상한(1.0)에 가깝게 유지
+                // 3) 일반 노드는 약간만 감산해서 너무 흐려지지 않게 유지
+                var labelAlpha = Math.min(1, Math.max(0.2, (labelSize - 7) / 12));
+                if(!isRoot && !isHover && !isNeighbor) labelAlpha *= 0.92;
+                ctx.globalAlpha = labelAlpha;
                 ctx.fillStyle = isRoot ? '#1e2f80' : '#23314a';
                 ctx.font = ((isRoot || isHover) ? 'bold ' : '') + labelSize.toFixed(1) + 'px sans-serif';
                 ctx.fillText(n.id, p.x + rScreen + 4, p.y + 4);
             });
 
+            ctx.globalAlpha = 1;
             updateCounter();
         }
 
@@ -404,7 +415,7 @@
                 var y = e.originalEvent.clientY - rect.top;
                 var worldBefore = screenToWorld(x, y);
                 var zoomFactor = e.originalEvent.deltaY < 0 ? 1.1 : 0.9;
-                state.scale = Math.max(0.35, Math.min(2.5, state.scale * zoomFactor));
+                state.scale = Math.max(minScale, Math.min(maxScale, state.scale * zoomFactor));
                 state.panX = x - worldBefore.x * state.scale;
                 state.panY = y - worldBefore.y * state.scale;
                 draw();
@@ -465,7 +476,7 @@
 
         function render() {
             clearIntervals();
-            state.limit = 555;
+            state.limit = 500;
             state.running = false;
             state.queueFetch = [];
             state.queueGraph = [];
@@ -479,7 +490,7 @@
             state.hoverNodeId = null;
             state.panX = 0;
             state.panY = 0;
-            state.scale = 1;
+            state.scale = initialScale;
 
             var wikiContextName = $('.aspectRatioWrapper.@(id) input[name=wikiContextName]').val();
             state.rootNodeName = wikiContextName;
@@ -487,6 +498,8 @@
             var root = ensureNode(wikiContextName);
             root.fx = size.width / 2;
             root.fy = size.height / 2;
+            state.panX = size.width * (1 - state.scale) / 2;
+            state.panY = size.height * (1 - state.scale) / 2;
             state.queueFetch = [wikiContextName];
 
             createSimulation();
@@ -494,11 +507,6 @@
             restart();
             start();
         }
-
-        $('.controlRestartD3Canvas.@(id)').click(function() {
-            restart();
-            return false;
-        });
 
         $('.controlStartD3Canvas.@(id)').click(function() {
             start();
@@ -511,7 +519,7 @@
         });
 
         $('.moreD3Canvas.@(id)').click(function() {
-            state.limit = state.nodes.length + 555;
+            state.limit = state.nodes.length + 500;
             updateCounter();
             return false;
         });
