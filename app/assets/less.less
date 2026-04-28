@@ -570,7 +570,20 @@ kbd {
 			img {
 				max-width: 100%;
 			}
+
+			@media @widthTablet {
+				float: none;
+				clear: both;
+				max-width: none;
+				width: auto;
+				margin: 12px 0;
+				padding: 12px;
+				border-radius: 8px;
+				background: #f8fbff;
+				box-sizing: border-box;
+			}
 		}
+
 		div.MacroLinkDate.around {
             clear: right;
 		}
@@ -713,18 +726,6 @@ kbd {
 
 			hr {
 				margin-left: 0;
-			}
-
-			div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
-				float: none;
-				clear: both;
-				max-width: none;
-				width: auto;
-				margin: 12px 0;
-				padding: 12px;
-				border-radius: 8px;
-				background: #f8fbff;
-				box-sizing: border-box;
 			}
 
 			div.toc ul, div.schema dl {

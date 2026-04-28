@@ -790,6 +790,23 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.schema img {
   max-width: 100%;
 }
+@media (max-width: 767px) {
+  .AhaWiki .commonAhaWiki div.toc,
+  .AhaWiki .commonAhaWiki div.MacroLinkDate,
+  .AhaWiki .commonAhaWiki div.rightInfoBox,
+  .AhaWiki .commonAhaWiki div.InterpreterSchema,
+  .AhaWiki .commonAhaWiki div.schema {
+    float: none;
+    clear: both;
+    max-width: none;
+    width: auto;
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fbff;
+    box-sizing: border-box;
+  }
+}
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
@@ -1339,6 +1356,23 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.schema img {
   max-width: 100%;
 }
+@media (max-width: 767px) {
+  .AhaWiki .wikiContent div.toc,
+  .AhaWiki .wikiContent div.MacroLinkDate,
+  .AhaWiki .wikiContent div.rightInfoBox,
+  .AhaWiki .wikiContent div.InterpreterSchema,
+  .AhaWiki .wikiContent div.schema {
+    float: none;
+    clear: both;
+    max-width: none;
+    width: auto;
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fbff;
+    box-sizing: border-box;
+  }
+}
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
 }
@@ -1527,21 +1561,6 @@ kbd:hover > kbd {
   }
   .AhaWiki .commonAhaWiki hr {
     margin-left: 0;
-  }
-  .AhaWiki .commonAhaWiki div.toc,
-  .AhaWiki .commonAhaWiki div.MacroLinkDate,
-  .AhaWiki .commonAhaWiki div.rightInfoBox,
-  .AhaWiki .commonAhaWiki div.InterpreterSchema,
-  .AhaWiki .commonAhaWiki div.schema {
-    float: none;
-    clear: both;
-    max-width: none;
-    width: auto;
-    margin: 12px 0;
-    padding: 12px;
-    border-radius: 8px;
-    background: #f8fbff;
-    box-sizing: border-box;
   }
   .AhaWiki .commonAhaWiki div.toc ul,
   .AhaWiki .commonAhaWiki div.schema dl {
@@ -2142,6 +2161,23 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema img,
 .AhaWiki .paperContent .page .pageContent div.schema img {
   max-width: 100%;
+}
+@media (max-width: 767px) {
+  .AhaWiki .paperContent .page .pageContent div.toc,
+  .AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
+  .AhaWiki .paperContent .page .pageContent div.rightInfoBox,
+  .AhaWiki .paperContent .page .pageContent div.InterpreterSchema,
+  .AhaWiki .paperContent .page .pageContent div.schema {
+    float: none;
+    clear: both;
+    max-width: none;
+    width: auto;
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8fbff;
+    box-sizing: border-box;
+  }
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
