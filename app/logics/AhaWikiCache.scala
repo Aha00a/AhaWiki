@@ -111,7 +111,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
-      Interpreters.toHtmlString(models.tables.Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header").toOption).getOrElse(""))
+      removePartialEditDataAttrs(
+        Interpreters.toHtmlString(
+          models.tables.Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header").toOption).getOrElse("")
+        )
+      )
     }
   }
 
@@ -121,8 +125,18 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toWikiContext(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
-      Interpreters.toHtmlString(models.tables.Page.selectLastRevision(".footer").map(_.content).orElse(DefaultPageLogic.getOption(".footer").toOption).getOrElse(""))
+      removePartialEditDataAttrs(
+        Interpreters.toHtmlString(
+          models.tables.Page.selectLastRevision(".footer").map(_.content).orElse(DefaultPageLogic.getOption(".footer").toOption).getOrElse("")
+        )
+      )
     }
+  }
+
+  private def removePartialEditDataAttrs(html: String): String = {
+    html
+      .replaceAll("""\sdata-edit-link="[^"]*"""", "")
+      .replaceAll("""\sdata-edit-title="[^"]*"""", "")
   }
 
   object Config extends CacheEntityWithContextSite[String] {
