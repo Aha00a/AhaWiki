@@ -82,6 +82,12 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.addEventListener('mouseleave', function () {
                 editLink.style.opacity = '.4';
             });
+            editLink.addEventListener('focus', function () {
+                editLink.style.opacity = '1';
+            });
+            editLink.addEventListener('blur', function () {
+                editLink.style.opacity = '.4';
+            });
             wrapper.appendChild(editLink);
         }
 
