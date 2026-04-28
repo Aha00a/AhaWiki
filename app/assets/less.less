@@ -1345,6 +1345,73 @@ kbd {
 		}
 	}
 
+	.adjacentPagesHud {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		background: rgba(255, 255, 255, 0.92);
+		border: 1px solid #d8deea;
+		border-radius: 8px;
+		padding: 8px 10px;
+		box-shadow: 0 2px 8px rgba(37, 59, 100, 0.15);
+		font-size: 12px;
+		color: #2e3b52;
+		min-width: 210px;
+
+		.row {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 6px;
+
+			&.compact {
+				justify-content: flex-start;
+				gap: 8px;
+			}
+			&.footer {
+				justify-content: flex-start;
+				margin-top: 2px;
+				margin-bottom: 0;
+				font-weight: 600;
+			}
+			&.legend {
+				margin-bottom: 4px;
+				gap: 6px;
+				font-size: 11px;
+			}
+		}
+
+		.hudActions {
+			a {
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				padding: 3px 8px;
+				border-radius: 4px;
+				border: 1px solid #d1d9e8;
+				text-decoration: none;
+				color: #2e3b52;
+				background: #fff;
+			}
+		}
+
+		input[type='range'] {
+			width: 90px;
+			vertical-align: middle;
+			margin-left: 5px;
+		}
+
+		.dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			display: inline-block;
+			&.root { background: #213a9a; }
+			&.hop1 { background: #3f7bcf; }
+			&.hop2 { background: #7ea2df; }
+		}
+	}
+
 	.searchBg {
 		position: fixed;
 		top: 0;

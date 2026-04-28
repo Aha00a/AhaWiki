@@ -12,7 +12,7 @@
             intervalGraph: null,
             queueFetch: [],
             queueGraph: [],
-            limit: 100,
+            limit: 1000,
             running: false,
             nodeById: new Map(),
             linkKeySet: new Set(),
@@ -27,8 +27,13 @@
             isPanning: false,
             panX: 0,
             panY: 0,
+            scale: 1,
             lastMouseX: 0,
             lastMouseY: 0,
+            nodeDegree: new Map(),
+            depthFromRoot: new Map(),
+            focusDepth: 3,
+            minDegree: 0,
         };
 
         var intervalFetchMs = 1000;
@@ -87,22 +92,66 @@
         }
 
         function updateCounter() {
-            $('.linkCountD3Canvas.@(id)').text(state.nodes.length + ' Nodes, ' + state.links.length + ' Links');
+            var visibleNodes = state.nodes.filter(isNodeVisible).length;
+            $('.linkCountD3Canvas.@(id)').text(visibleNodes + '/' + state.nodes.length + ' Nodes, ' + state.links.length + ' Links');
         }
 
         function worldToScreen(x, y) {
-            return { x: x + state.panX, y: y + state.panY };
+            return { x: x * state.scale + state.panX, y: y * state.scale + state.panY };
         }
 
         function screenToWorld(x, y) {
-            return { x: x - state.panX, y: y - state.panY };
+            return { x: (x - state.panX) / state.scale, y: (y - state.panY) / state.scale };
+        }
+
+        function buildDepthMap(originId, maxDepth) {
+            var result = new Map();
+            if(!originId) return result;
+            var queue = [{ id: originId, depth: 0 }];
+            result.set(originId, 0);
+            while(queue.length > 0) {
+                var cur = queue.shift();
+                if(cur.depth >= maxDepth) continue;
+                var neighbors = state.adjacency.get(cur.id) || new Set();
+                neighbors.forEach(function(nextId) {
+                    if(result.has(nextId)) return;
+                    result.set(nextId, cur.depth + 1);
+                    queue.push({ id: nextId, depth: cur.depth + 1 });
+                });
+            }
+            return result;
+        }
+
+        function recomputeDerivedGraphState() {
+            state.nodeDegree = new Map();
+            state.links.forEach(function(l) {
+                var src = l.source.id ? l.source.id : l.source;
+                var dst = l.target.id ? l.target.id : l.target;
+                state.nodeDegree.set(src, (state.nodeDegree.get(src) || 0) + 1);
+                state.nodeDegree.set(dst, (state.nodeDegree.get(dst) || 0) + 1);
+            });
+            state.depthFromRoot = buildDepthMap(state.rootNodeName, 8);
+        }
+
+        function isNodeVisible(node) {
+            var depth = state.depthFromRoot.has(node.id) ? state.depthFromRoot.get(node.id) : 999;
+            var degree = state.nodeDegree.get(node.id) || 0;
+            var keepByDepth = depth <= state.focusDepth || node.id === state.rootNodeName;
+            var keepByDegree = degree >= state.minDegree || node.id === state.rootNodeName;
+            return keepByDepth && keepByDegree;
         }
 
         function draw() {
             var size = syncCanvasSize();
             ctx.clearRect(0, 0, size.width, size.height);
+            var bg = ctx.createLinearGradient(0, 0, 0, size.height);
+            bg.addColorStop(0, '#f8faff');
+            bg.addColorStop(1, '#f2f4f9');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, size.width, size.height);
 
             var neighbors = state.hoverNodeId ? (state.adjacency.get(state.hoverNodeId) || new Set()) : new Set();
+            var hop2 = state.hoverNodeId ? buildDepthMap(state.hoverNodeId, 2) : new Map();
 
             state.links.forEach(function(l) {
                 var src = l.source.id ? l.source.id : l.source;
@@ -110,11 +159,13 @@
                 var sNode = l.source.id ? l.source : getNode(src);
                 var tNode = l.target.id ? l.target : getNode(dst);
                 if(!sNode || !tNode) return;
+                if(!isNodeVisible(sNode) || !isNodeVisible(tNode)) return;
 
                 var highlighted = state.hoverNodeId && (src === state.hoverNodeId || dst === state.hoverNodeId || (neighbors.has(src) && neighbors.has(dst)));
-                ctx.strokeStyle = highlighted ? '#3366cc' : '#999';
-                ctx.globalAlpha = highlighted ? 0.9 : 0.55;
-                ctx.lineWidth = highlighted ? 1.8 : 1;
+                var inHop2 = hop2.has(src) && hop2.has(dst);
+                ctx.strokeStyle = highlighted ? '#2b5fc7' : (inHop2 ? '#7396df' : '#b2bdcf');
+                ctx.globalAlpha = highlighted ? 0.95 : (inHop2 ? 0.55 : 0.25);
+                ctx.lineWidth = highlighted ? 2.2 : 1;
                 var s = worldToScreen(sNode.x || 0, sNode.y || 0);
                 var t = worldToScreen(tNode.x || 0, tNode.y || 0);
                 ctx.beginPath();
@@ -125,20 +176,30 @@
 
             ctx.globalAlpha = 1;
             state.nodes.forEach(function(n) {
+                if(!isNodeVisible(n)) return;
                 var isRoot = n.id === state.rootNodeName;
                 var isHover = n.id === state.hoverNodeId;
                 var isNeighbor = state.hoverNodeId && neighbors.has(n.id);
-                var r = isRoot || isHover ? radiusHighlight : radiusDefault;
+                var depth = state.depthFromRoot.has(n.id) ? state.depthFromRoot.get(n.id) : 99;
+                var degree = state.nodeDegree.get(n.id) || 0;
+                var r = Math.min(18, radiusDefault + Math.log(degree + 1) * 2);
+                if(isRoot || isHover) r = Math.max(r, radiusHighlight);
+                var rScreen = Math.max(2, r * state.scale);
                 var p = worldToScreen(n.x || 0, n.y || 0);
 
                 ctx.beginPath();
-                ctx.fillStyle = isRoot ? '#00a' : (isHover ? '#3366cc' : (isNeighbor ? '#6d8fd8' : '#666'));
-                ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = isRoot ? '#213a9a' : (isHover ? '#2b5fc7' : (isNeighbor ? '#6a8fe0' : (depth <= 1 ? '#3f7bcf' : (depth <= 2 ? '#7ea2df' : '#9099ab'))));
+                ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                 ctx.fill();
+                if(isRoot) {
+                    ctx.strokeStyle = '#ffb300';
+                    ctx.lineWidth = 2.5;
+                    ctx.stroke();
+                }
 
-                ctx.fillStyle = isRoot ? '#00f' : '#333';
-                ctx.font = '12px sans-serif';
-                ctx.fillText(n.id, p.x + 12, p.y + 4);
+                ctx.fillStyle = isRoot ? '#1e2f80' : '#23314a';
+                ctx.font = (isRoot || isHover) ? 'bold 13px sans-serif' : '12px sans-serif';
+                ctx.fillText(n.id, p.x + rScreen + 4, p.y + 4);
             });
         }
 
@@ -150,6 +211,7 @@
                 .force('charge', d3.forceManyBody().strength(-120))
                 .force('center', d3.forceCenter(size.width / 2, size.height / 2));
             state.simulation.on('tick', draw);
+            recomputeDerivedGraphState();
         }
 
         function restart() {
@@ -157,6 +219,7 @@
             state.simulation.nodes(state.nodes);
             state.simulation.force('link').links(state.links);
             state.simulation.alpha(0.8).restart();
+            recomputeDerivedGraphState();
             updateCounter();
             draw();
         }
@@ -223,7 +286,10 @@
                 consumed++;
             }
             if(changed) restart();
-            else updateCounter();
+            else {
+                recomputeDerivedGraphState();
+                updateCounter();
+            }
         }
 
         function clearIntervals() {
@@ -243,6 +309,7 @@
             state.intervalFetch = setInterval(processQueueFetch, intervalFetchMs);
             state.intervalGraph = setInterval(processQueueGraph, intervalAddMs);
             $('.playPauseD3Canvas.@(id)').addClass('play').find('i.fas').removeClass('fa-play').addClass('fa-stop');
+            $('.playPauseLabelD3Canvas.@(id)').text('Pause');
         }
 
         function stop() {
@@ -250,15 +317,21 @@
             if(state.simulation) state.simulation.stop();
             clearIntervals();
             $('.playPauseD3Canvas.@(id)').removeClass('play').find('i.fas').removeClass('fa-stop').addClass('fa-play');
+            $('.playPauseLabelD3Canvas.@(id)').text('Play');
         }
 
-        function nodeAt(worldX, worldY) {
+        function nodeAt(screenX, screenY) {
             for(var i = state.nodes.length - 1; i >= 0; i--) {
                 var n = state.nodes[i];
-                var r = n.id === state.rootNodeName ? radiusHighlight : radiusDefault;
-                var dx = (n.x || 0) - worldX;
-                var dy = (n.y || 0) - worldY;
-                if(dx * dx + dy * dy <= (r + 3) * (r + 3)) return n;
+                if(!isNodeVisible(n)) continue;
+                var degree = state.nodeDegree.get(n.id) || 0;
+                var r = Math.min(18, radiusDefault + Math.log(degree + 1) * 2);
+                if(n.id === state.rootNodeName) r = Math.max(r, radiusHighlight);
+                var p = worldToScreen(n.x || 0, n.y || 0);
+                var rScreen = Math.max(2, r * state.scale);
+                var dx = p.x - screenX;
+                var dy = p.y - screenY;
+                if(dx * dx + dy * dy <= (rScreen + 3) * (rScreen + 3)) return n;
             }
             return null;
         }
@@ -285,8 +358,20 @@
                     draw();
                     return;
                 }
-                var n = nodeAt(world.x, world.y);
+                var n = nodeAt(x, y);
                 state.hoverNodeId = n ? n.id : null;
+                draw();
+            });
+            $(canvasSelector).on('wheel.d3canvas@(id)', function(e) {
+                e.preventDefault();
+                var rect = canvas.getBoundingClientRect();
+                var x = e.originalEvent.clientX - rect.left;
+                var y = e.originalEvent.clientY - rect.top;
+                var worldBefore = screenToWorld(x, y);
+                var zoomFactor = e.originalEvent.deltaY < 0 ? 1.1 : 0.9;
+                state.scale = Math.max(0.35, Math.min(2.5, state.scale * zoomFactor));
+                state.panX = x - worldBefore.x * state.scale;
+                state.panY = y - worldBefore.y * state.scale;
                 draw();
             });
             $(canvasSelector).on('mousedown.d3canvas@(id)', function(e) {
@@ -294,7 +379,7 @@
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
                 var world = screenToWorld(x, y);
-                var n = nodeAt(world.x, world.y);
+                var n = nodeAt(x, y);
                 state.mouseDownAt = new Date().getTime();
                 state.mouseDownNodeId = n ? n.id : null;
                 state.lastMouseX = x;
@@ -313,7 +398,7 @@
                 var x = e.clientX - rect.left;
                 var y = e.clientY - rect.top;
                 var world = screenToWorld(x, y);
-                var n = nodeAt(world.x, world.y);
+                var n = nodeAt(x, y);
                 var diff = new Date().getTime() - state.mouseDownAt;
                 if(n && state.mouseDownNodeId === n.id && diff < 300) {
                     @if(enableWikiLink) {
@@ -345,7 +430,7 @@
 
         function render() {
             clearIntervals();
-            state.limit = 100;
+            state.limit = 1000;
             state.queueFetch = [];
             state.queueGraph = [];
             state.nodeById = new Map();
@@ -353,9 +438,12 @@
             state.adjacency = new Map();
             state.nodes = [];
             state.links = [];
+            state.nodeDegree = new Map();
+            state.depthFromRoot = new Map();
             state.hoverNodeId = null;
             state.panX = 0;
             state.panY = 0;
+            state.scale = 1;
 
             var wikiContextName = $('.aspectRatioWrapper.@(id) input[name=wikiContextName]').val();
             state.rootNodeName = wikiContextName;
@@ -380,6 +468,20 @@
         $('.moreD3Canvas.@(id)').click(function() {
             state.limit = state.nodes.length + 1000;
             return false;
+        });
+
+        $('.focusDepthD3Canvas.@(id)').on('input change', function() {
+            state.focusDepth = parseInt($(this).val(), 10);
+            $('.focusDepthValueD3Canvas.@(id)').text(state.focusDepth + '-hop');
+            updateCounter();
+            draw();
+        });
+
+        $('.degreeFilterD3Canvas.@(id)').on('input change', function() {
+            state.minDegree = parseInt($(this).val(), 10);
+            $('.degreeFilterValueD3Canvas.@(id)').text(state.minDegree === 0 ? 'all' : ('≥ ' + state.minDegree));
+            updateCounter();
+            draw();
         });
 
         $(document).on('adjacent-pages-d3canvas:rerender-@(id)', function() {
