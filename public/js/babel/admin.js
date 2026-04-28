@@ -803,6 +803,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
     [allUsers, selectedUserSeq]
   );
+  const selectedSiteDomainsText = useMemo(
+    () => (selectedSite?.domains ?? []).join(", ") || "-",
+    [selectedSite]
+  );
   useEffect(() => {
     if (page !== "site-detail") {
       return;
@@ -875,22 +879,50 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "site-detail") {
-    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8\uC758 favicon/\uD14C\uB9C8\uB97C \uC124\uC815\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, selectedSite ? /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite.name, " (#", selectedSite.seq, ")"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", (selectedSite.domains ?? []).join(", ") || "-")) : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC720\uD6A8\uD55C \uC0AC\uC774\uD2B8 seq\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. (/Admin/Site/\uC22B\uC790)")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4. \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uAC00 \uAC15\uC81C\uB85C \uAC31\uC2E0\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8\uC758 favicon/\uD14C\uB9C8\uB97C \uC124\uC815\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, sitePageNames.length.toLocaleString()))))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
+      "img",
+      {
+        src: siteFaviconUrl,
+        alt: "Current favicon",
+        style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" }
+      }
+    ), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, siteFaviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React.createElement(Anchor, { size: "xs", href: siteFaviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "file",
+        accept: "image/*,.ico",
+        onChange: (event) => {
+          const selected = event.currentTarget.files?.[0] ?? null;
+          setFaviconFile(selected);
+        }
+      }
+    ), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
       Button,
       {
-        color: "orange",
         variant: "filled",
-        disabled: !selectedSite,
-        loading: selectedSite ? clearingSiteSeq === selectedSite.seq : false,
-        onClick: () => {
-          if (!selectedSite) {
-            return;
-          }
-          clearSiteCache(selectedSite.seq);
+        loading: uploadingFavicon,
+        disabled: !faviconFile || !selectedSiteSeq,
+        onClick: async () => {
+          await uploadSiteFavicon(faviconFile, selectedSiteSeq);
+          await loadSiteFavicon(selectedSiteSeq);
         }
       },
-      "Clear current site cache"
-    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Calculate Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, "Per Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(
+      "Upload favicon"
+    ), /* @__PURE__ */ React.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteFavicon(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        color: "red",
+        variant: "light",
+        loading: deletingFavicon,
+        disabled: !selectedSiteSeq,
+        onClick: async () => {
+          await resetSiteFavicon(selectedSiteSeq);
+          await loadSiteFavicon(selectedSiteSeq);
+          setFaviconFile(null);
+        }
+      },
+      "Reset to default"
+    )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Calculate Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, "\uC6B4\uC601 \uC791\uC5C5")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(
       TextInput,
       {
         label: "Calculate\uD560 \uD398\uC774\uC9C0 (\uC790\uB3D9\uC644\uC131)",
@@ -934,50 +966,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "\uD398\uC774\uC9C0 \uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
-    )), siteCalculateMessage ? /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
-      "img",
-      {
-        src: siteFaviconUrl,
-        alt: "Current favicon",
-        style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" }
-      }
-    ), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, siteFaviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React.createElement(Anchor, { size: "xs", href: siteFaviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React.createElement(
-      "input",
-      {
-        type: "file",
-        accept: "image/*,.ico",
-        onChange: (event) => {
-          const selected = event.currentTarget.files?.[0] ?? null;
-          setFaviconFile(selected);
-        }
-      }
-    ), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
-      Button,
-      {
-        variant: "filled",
-        loading: uploadingFavicon,
-        disabled: !faviconFile || !selectedSiteSeq,
-        onClick: async () => {
-          await uploadSiteFavicon(faviconFile, selectedSiteSeq);
-          await loadSiteFavicon(selectedSiteSeq);
-        }
-      },
-      "Upload favicon"
-    ), /* @__PURE__ */ React.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteFavicon(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React.createElement(
-      Button,
-      {
-        color: "red",
-        variant: "light",
-        loading: deletingFavicon,
-        disabled: !selectedSiteSeq,
-        onClick: async () => {
-          await resetSiteFavicon(selectedSiteSeq);
-          await loadSiteFavicon(selectedSiteSeq);
-          setFaviconFile(null);
-        }
-      },
-      "Reset to default"
-    )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Header/Footer Theme"), /* @__PURE__ */ React.createElement(Badge, { color: "grape", variant: "light" }, "Per Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
+    )), siteCalculateMessage ? /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Header/Footer Theme"), /* @__PURE__ */ React.createElement(Badge, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
       ColorInput,
       {
         label: "Header \uBC30\uACBD\uC0C9",
@@ -1079,6 +1068,21 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Reset"
+    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Cache Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4. \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uAC00 \uAC15\uC81C\uB85C \uAC31\uC2E0\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        color: "orange",
+        variant: "filled",
+        disabled: !selectedSite,
+        loading: selectedSite ? clearingSiteSeq === selectedSite.seq : false,
+        onClick: () => {
+          if (!selectedSite) {
+            return;
+          }
+          clearSiteCache(selectedSite.seq);
+        }
+      },
+      "Clear current site cache"
     ))));
   }
   if (page === "operations") {

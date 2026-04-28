@@ -1024,6 +1024,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
         [allUsers, selectedUserSeq],
     );
+    const selectedSiteDomainsText = useMemo(
+        () => (selectedSite?.domains ?? []).join(", ") || "-",
+        [selectedSite],
+    );
 
     useEffect(() => {
         if (page !== "site-detail") {
@@ -1251,192 +1255,173 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     <Text size="sm" c="dimmed" mb="md">
                         /Admin/Site/{`{seq}`} 경로로 접근한 사이트의 favicon/테마를 설정합니다.
                     </Text>
-                    <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
-                        <Paper withBorder radius="md" p="sm">
+                    <Stack gap="sm">
+                        <Group justify="space-between" align="flex-start" wrap="wrap">
+                            <Stack gap={2}>
+                                <Text size="xs" c="dimmed">선택된 사이트</Text>
+                                <Text fw={700}>{selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}</Text>
+                                <Text size="sm" c="dimmed">도메인: {selectedSiteDomainsText}</Text>
+                            </Stack>
                             <Button variant="light" size="xs" onClick={() => onNavigate("/Admin/Site")}>
                                 ← 사이트 목록
                             </Button>
-                        </Paper>
-                        <Paper withBorder radius="md" p="sm">
-                            {selectedSite ? (
-                                <Stack gap={4}>
-                                    <Text size="xs" c="dimmed">선택된 사이트</Text>
-                                    <Text fw={700}>{selectedSite.name} (#{selectedSite.seq})</Text>
-                                    <Text size="sm" c="dimmed">
-                                        도메인: {(selectedSite.domains ?? []).join(", ") || "-"}
-                                    </Text>
-                                </Stack>
-                            ) : (
-                                <Text size="sm" c="dimmed">유효한 사이트 seq가 필요합니다. (/Admin/Site/숫자)</Text>
-                            )}
-                        </Paper>
-                    </SimpleGrid>
-                </Card>
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Site Cache Operation</Title>
-                        <Badge color="orange" variant="light">Current Site</Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="md">
-                        현재 보고 있는 사이트의 캐시를 즉시 초기화합니다. 도메인/페이지/헤더 캐시가 강제로 갱신됩니다.
-                    </Text>
-                    <Group justify="space-between" align="center">
-                        <Stack gap={2}>
-                            <Text size="xs" c="dimmed">대상 사이트</Text>
-                            <Text fw={700}>
-                                {selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}
-                            </Text>
-                        </Stack>
-                        <Button
-                            color="orange"
-                            variant="filled"
-                            disabled={!selectedSite}
-                            loading={selectedSite ? clearingSiteSeq === selectedSite.seq : false}
-                            onClick={() => {
-                                if (!selectedSite) {
-                                    return;
-                                }
-                                clearSiteCache(selectedSite.seq);
-                            }}
-                        >
-                            Clear current site cache
-                        </Button>
-                    </Group>
-                </Card>
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Site Calculate Operation</Title>
-                        <Badge color="teal" variant="light">Per Site</Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="md">
-                        현재 사이트에서 1개 페이지만 Calculate 큐에 넣습니다. 페이지를 비워두면 랜덤 1개, 입력하면 해당 페이지를 Calculate합니다.
-                    </Text>
-                    <Stack gap="sm">
-                        <TextInput
-                            label="Calculate할 페이지 (자동완성)"
-                            placeholder="비워두면 랜덤 1개"
-                            value={selectedCalculatePageName}
-                            onChange={(event) => setSelectedCalculatePageName(event.currentTarget.value)}
-                            list="site-calculate-page-name-list"
-                            disabled={!selectedSiteSeq}
-                        />
-                        <datalist id="site-calculate-page-name-list">
-                            {sitePageNames.map((pageName) => (
-                                <option key={`calculate-page-${pageName}`} value={pageName}/>
-                            ))}
-                        </datalist>
-                        <Group>
-                            <Button
-                                variant="filled"
-                                color="teal"
-                                disabled={!selectedSiteSeq}
-                                loading={selectedSite ? calculatingSiteSeq === selectedSite.seq : false}
-                                onClick={async () => {
-                                    if (!selectedSiteSeq) {
-                                        return;
-                                    }
-                                    const response = await runSiteCalculate(selectedSiteSeq, selectedCalculatePageName);
-                                    if (!response) {
-                                        return;
-                                    }
-                                    const modeLabel = response?.source === "selected" ? "선택 페이지" : "랜덤 페이지";
-                                    setSiteCalculateMessage(`${modeLabel}: ${response?.pageName ?? "-"} (queued)`);
-                                }}
-                            >
-                                Calculate 1 page
-                            </Button>
-                            <Button
-                                variant="light"
-                                disabled={!selectedSiteSeq}
-                                onClick={async () => {
-                                    if (!selectedSiteSeq) {
-                                        return;
-                                    }
-                                    const pageNames = await loadAdminSitePageNames(selectedSiteSeq);
-                                    setSitePageNames(pageNames);
-                                }}
-                            >
-                                페이지 목록 새로고침
-                            </Button>
                         </Group>
-                        {siteCalculateMessage ? (
-                            <Text size="sm" c="teal">{siteCalculateMessage}</Text>
-                        ) : null}
-                        <Text size="xs" c="dimmed">
-                            페이지 이름 목록은 사이트 캐시를 사용합니다. (count: {sitePageNames.length})
-                        </Text>
+                        <SimpleGrid cols={{base: 2, sm: 4}} spacing="sm">
+                            <Paper withBorder radius="md" p="sm">
+                                <Text size="xs" c="dimmed">Site Seq</Text>
+                                <Text fw={700}>{selectedSite?.seq ?? "-"}</Text>
+                            </Paper>
+                            <Paper withBorder radius="md" p="sm">
+                                <Text size="xs" c="dimmed">이름</Text>
+                                <Text fw={700}>{selectedSite?.name ?? "-"}</Text>
+                            </Paper>
+                            <Paper withBorder radius="md" p="sm">
+                                <Text size="xs" c="dimmed">도메인 수</Text>
+                                <Text fw={700}>{selectedSite?.domains?.length ?? 0}</Text>
+                            </Paper>
+                            <Paper withBorder radius="md" p="sm">
+                                <Text size="xs" c="dimmed">페이지 목록 캐시</Text>
+                                <Text fw={700}>{sitePageNames.length.toLocaleString()}</Text>
+                            </Paper>
+                        </SimpleGrid>
                     </Stack>
                 </Card>
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Site Favicon</Title>
-                        <Badge color="blue" variant="light">Current Site</Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="md">
-                        선택한 사이트의 favicon을 관리자 업로드로 교체합니다. 업로드 후 바로 반영됩니다.
-                    </Text>
-                    <Group align="flex-start" grow mb="md">
-                        <Stack gap={6}>
-                            <Text size="sm" fw={600}>현재 favicon</Text>
-                            <img
-                                src={siteFaviconUrl}
-                                alt="Current favicon"
-                                style={{width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb"}}
+                <SimpleGrid cols={{base: 1, xl: 2}} spacing="lg">
+                    <Card withBorder radius="md" padding="lg">
+                        <Group justify="space-between" mb="md">
+                            <Title order={3}>Site Favicon</Title>
+                            <Badge color="blue" variant="light">브랜딩</Badge>
+                        </Group>
+                        <Text size="sm" c="dimmed" mb="md">
+                            선택한 사이트의 favicon을 관리자 업로드로 교체합니다. 업로드 후 바로 반영됩니다.
+                        </Text>
+                        <Group align="flex-start" grow mb="md">
+                            <Stack gap={6}>
+                                <Text size="sm" fw={600}>현재 favicon</Text>
+                                <img
+                                    src={siteFaviconUrl}
+                                    alt="Current favicon"
+                                    style={{width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb"}}
+                                />
+                                <Text size="xs" c="dimmed" style={{wordBreak: "break-all"}}>
+                                    {siteFaviconObjectKey || "/public/favicon.png"}
+                                </Text>
+                                <Anchor size="xs" href={siteFaviconUrl} target="_blank" rel="noopener">새 탭으로 보기</Anchor>
+                            </Stack>
+                            <Stack gap={8}>
+                                <Text size="sm" fw={600}>새 favicon 업로드</Text>
+                                <input
+                                    type="file"
+                                    accept="image/*,.ico"
+                                    onChange={(event) => {
+                                        const selected = event.currentTarget.files?.[0] ?? null;
+                                        setFaviconFile(selected);
+                                    }}
+                                />
+                                <Group>
+                                    <Button
+                                        variant="filled"
+                                        loading={uploadingFavicon}
+                                        disabled={!faviconFile || !selectedSiteSeq}
+                                        onClick={async () => {
+                                            await uploadSiteFavicon(faviconFile, selectedSiteSeq);
+                                            await loadSiteFavicon(selectedSiteSeq);
+                                        }}
+                                    >
+                                        Upload favicon
+                                    </Button>
+                                    <Button variant="light" disabled={!selectedSiteSeq} onClick={() => loadSiteFavicon(selectedSiteSeq)}>
+                                        Refresh
+                                    </Button>
+                                    <Button
+                                        color="red"
+                                        variant="light"
+                                        loading={deletingFavicon}
+                                        disabled={!selectedSiteSeq}
+                                        onClick={async () => {
+                                            await resetSiteFavicon(selectedSiteSeq);
+                                            await loadSiteFavicon(selectedSiteSeq);
+                                            setFaviconFile(null);
+                                        }}
+                                    >
+                                        Reset to default
+                                    </Button>
+                                </Group>
+                                <Text size="xs" c="dimmed">
+                                    권장: 32x32 또는 48x48 PNG/ICO
+                                </Text>
+                            </Stack>
+                        </Group>
+                    </Card>
+                    <Card withBorder radius="md" padding="lg">
+                        <Group justify="space-between" mb="md">
+                            <Title order={3}>Site Calculate Operation</Title>
+                            <Badge color="teal" variant="light">운영 작업</Badge>
+                        </Group>
+                        <Text size="sm" c="dimmed" mb="md">
+                            현재 사이트에서 1개 페이지만 Calculate 큐에 넣습니다. 페이지를 비워두면 랜덤 1개, 입력하면 해당 페이지를 Calculate합니다.
+                        </Text>
+                        <Stack gap="sm">
+                            <TextInput
+                                label="Calculate할 페이지 (자동완성)"
+                                placeholder="비워두면 랜덤 1개"
+                                value={selectedCalculatePageName}
+                                onChange={(event) => setSelectedCalculatePageName(event.currentTarget.value)}
+                                list="site-calculate-page-name-list"
+                                disabled={!selectedSiteSeq}
                             />
-                            <Text size="xs" c="dimmed" style={{wordBreak: "break-all"}}>
-                                {siteFaviconObjectKey || "/public/favicon.png"}
-                            </Text>
-                            <Anchor size="xs" href={siteFaviconUrl} target="_blank" rel="noopener">새 탭으로 보기</Anchor>
-                        </Stack>
-                        <Stack gap={8}>
-                            <Text size="sm" fw={600}>새 favicon 업로드</Text>
-                            <input
-                                type="file"
-                                accept="image/*,.ico"
-                                onChange={(event) => {
-                                    const selected = event.currentTarget.files?.[0] ?? null;
-                                    setFaviconFile(selected);
-                                }}
-                            />
+                            <datalist id="site-calculate-page-name-list">
+                                {sitePageNames.map((pageName) => (
+                                    <option key={`calculate-page-${pageName}`} value={pageName}/>
+                                ))}
+                            </datalist>
                             <Group>
                                 <Button
                                     variant="filled"
-                                    loading={uploadingFavicon}
-                                    disabled={!faviconFile || !selectedSiteSeq}
+                                    color="teal"
+                                    disabled={!selectedSiteSeq}
+                                    loading={selectedSite ? calculatingSiteSeq === selectedSite.seq : false}
                                     onClick={async () => {
-                                        await uploadSiteFavicon(faviconFile, selectedSiteSeq);
-                                        await loadSiteFavicon(selectedSiteSeq);
+                                        if (!selectedSiteSeq) {
+                                            return;
+                                        }
+                                        const response = await runSiteCalculate(selectedSiteSeq, selectedCalculatePageName);
+                                        if (!response) {
+                                            return;
+                                        }
+                                        const modeLabel = response?.source === "selected" ? "선택 페이지" : "랜덤 페이지";
+                                        setSiteCalculateMessage(`${modeLabel}: ${response?.pageName ?? "-"} (queued)`);
                                     }}
                                 >
-                                    Upload favicon
-                                </Button>
-                                <Button variant="light" disabled={!selectedSiteSeq} onClick={() => loadSiteFavicon(selectedSiteSeq)}>
-                                    Refresh
+                                    Calculate 1 page
                                 </Button>
                                 <Button
-                                    color="red"
                                     variant="light"
-                                    loading={deletingFavicon}
                                     disabled={!selectedSiteSeq}
                                     onClick={async () => {
-                                        await resetSiteFavicon(selectedSiteSeq);
-                                        await loadSiteFavicon(selectedSiteSeq);
-                                        setFaviconFile(null);
+                                        if (!selectedSiteSeq) {
+                                            return;
+                                        }
+                                        const pageNames = await loadAdminSitePageNames(selectedSiteSeq);
+                                        setSitePageNames(pageNames);
                                     }}
                                 >
-                                    Reset to default
+                                    페이지 목록 새로고침
                                 </Button>
                             </Group>
+                            {siteCalculateMessage ? (
+                                <Text size="sm" c="teal">{siteCalculateMessage}</Text>
+                            ) : null}
                             <Text size="xs" c="dimmed">
-                                권장: 32x32 또는 48x48 PNG/ICO
+                                페이지 이름 목록은 사이트 캐시를 사용합니다. (count: {sitePageNames.length})
                             </Text>
                         </Stack>
-                    </Group>
-                </Card>
+                    </Card>
+                </SimpleGrid>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Site Header/Footer Theme</Title>
-                        <Badge color="grape" variant="light">Per Site</Badge>
+                        <Badge color="grape" variant="light">디자인</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
                         사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 기본 스타일을 사용합니다.
@@ -1546,6 +1531,37 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             }}
                         >
                             Reset
+                        </Button>
+                    </Group>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Cache Operation</Title>
+                        <Badge color="orange" variant="light">유지보수</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        현재 보고 있는 사이트의 캐시를 즉시 초기화합니다. 도메인/페이지/헤더 캐시가 강제로 갱신됩니다.
+                    </Text>
+                    <Group justify="space-between" align="center">
+                        <Stack gap={2}>
+                            <Text size="xs" c="dimmed">대상 사이트</Text>
+                            <Text fw={700}>
+                                {selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}
+                            </Text>
+                        </Stack>
+                        <Button
+                            color="orange"
+                            variant="filled"
+                            disabled={!selectedSite}
+                            loading={selectedSite ? clearingSiteSeq === selectedSite.seq : false}
+                            onClick={() => {
+                                if (!selectedSite) {
+                                    return;
+                                }
+                                clearSiteCache(selectedSite.seq);
+                            }}
+                        >
+                            Clear current site cache
                         </Button>
                     </Group>
                 </Card>
