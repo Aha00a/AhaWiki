@@ -15,7 +15,6 @@ import {
   NavLink,
   Paper,
   Progress,
-  Select,
   SimpleGrid,
   Stack,
   Table,
@@ -44,11 +43,14 @@ function logError(...args) {
   console.error(LOG_PREFIX, ...args);
 }
 function routeToPage(pathname) {
+  if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
+    return "site-detail";
+  }
   if (pathname === "/Admin/User/UserViewHistory") {
     return "user-views";
   }
   if (pathname === "/Admin/Site") {
-    return "site";
+    return "sites";
   }
   if (pathname === "/Admin/SiteUser") {
     return "users";
@@ -94,6 +96,14 @@ function parseUserSeqFromPathname(pathname) {
   const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
   return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
+function parseSiteSeqFromPathname(pathname) {
+  const matched = pathname.match(/^\/Admin\/Site\/(\d+)$/);
+  if (!matched) {
+    return "";
+  }
+  const siteSeq = Number.parseInt(matched[1], 10);
+  return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+}
 function pageTitleByKey(page) {
   if (page === "recent-changes") {
     return "RecentChanges";
@@ -101,7 +111,7 @@ function pageTitleByKey(page) {
   if (page === "all-users" || page === "user-views") {
     return "User";
   }
-  if (page === "site" || page === "sites" || page === "users") {
+  if (page === "site-detail" || page === "sites" || page === "users") {
     return "Site";
   }
   if (page === "operations") {
@@ -716,18 +726,16 @@ function AdminContent({ page, onNavigate }) {
     [allUsers, selectedUserSeq]
   );
   useEffect(() => {
-    if (page !== "site") {
+    if (page !== "site-detail") {
       return;
     }
-    if (!selectedSiteSeq && sites.length > 0) {
-      const firstSiteSeq = String(sites[0]?.seq ?? "");
-      if (firstSiteSeq) {
-        setSelectedSiteSeq(firstSiteSeq);
-      }
+    const siteSeqByPath = parseSiteSeqFromPathname(window.location.pathname);
+    if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
+      setSelectedSiteSeq(siteSeqByPath);
     }
-  }, [page, selectedSiteSeq, sites]);
+  }, [page, selectedSiteSeq]);
   useEffect(() => {
-    if (page === "site" && selectedSiteSeq) {
+    if (page === "site-detail" && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
     }
@@ -739,16 +747,15 @@ function AdminContent({ page, onNavigate }) {
     return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Text, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
   }
   if (page === "sites") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uACFC \uD568\uAED8 \uB3C4\uBA54\uC778, \uC0AC\uC6A9\uC790 \uC218, \uD398\uC774\uC9C0 \uC218\uB97C \uD655\uC778\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Title, { order: 6, c: "dimmed", mb: "sm" }, "All Sites"), makeTable(
-      ["Seq", "Name", "Domains", "Users", "Pages"],
-      sites.map((site) => [
-        site.seq,
-        site.name,
-        (site.domains ?? []).join(", "),
-        site.userCount ?? 0,
-        site.pageCount ?? 0
-      ])
-    ));
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site List"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Users"), /* @__PURE__ */ React.createElement(Table.Th, null, "Pages"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, site.userCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+      Button,
+      {
+        size: "xs",
+        variant: "light",
+        onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`)
+      },
+      "\uAD00\uB9AC"
+    )))))));
   }
   if (page === "users") {
     return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Users"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, users.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uD638\uC2A4\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), makeTable(
@@ -782,25 +789,8 @@ function AdminContent({ page, onNavigate }) {
       })
     ));
   }
-  if (page === "site") {
-    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC120\uD0DD"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Site Context")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uBA3C\uC800 \uC0AC\uC774\uD2B8\uB97C \uC120\uD0DD\uD558\uBA74 \uC544\uB798\uC758 favicon/\uD14C\uB9C8 \uC124\uC815 \uB300\uC0C1\uC774 \uC989\uC2DC \uC804\uD658\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
-      Select,
-      {
-        label: "\uB300\uC0C1 \uC0AC\uC774\uD2B8",
-        placeholder: "\uC0AC\uC774\uD2B8\uB97C \uC120\uD0DD\uD558\uC138\uC694",
-        searchable: true,
-        value: selectedSiteSeq,
-        onChange: (value) => {
-          setSelectedSiteSeq(value ?? "");
-          setFaviconFile(null);
-        },
-        data: sites.map((site) => ({
-          value: String(site.seq),
-          label: `${site.name} (#${site.seq})`
-        })),
-        nothingFoundMessage: "\uAC80\uC0C9 \uACB0\uACFC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."
-      }
-    ), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, selectedSite ? /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite.name, " (#", selectedSite.seq, ")"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", (selectedSite.domains ?? []).join(", ") || "-")) : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC0AC\uC774\uD2B8\uB97C \uC120\uD0DD\uD558\uBA74 \uC694\uC57D \uC815\uBCF4\uAC00 \uC5EC\uAE30\uC5D0 \uD45C\uC2DC\uB429\uB2C8\uB2E4.")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
+  if (page === "site-detail") {
+    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8\uC758 favicon/\uD14C\uB9C8\uB97C \uC124\uC815\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, selectedSite ? /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite.name, " (#", selectedSite.seq, ")"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", (selectedSite.domains ?? []).join(", ") || "-")) : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC720\uD6A8\uD55C \uC0AC\uC774\uD2B8 seq\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. (/Admin/Site/\uC22B\uC790)")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Current Site")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
       "img",
       {
         src: siteFaviconUrl,

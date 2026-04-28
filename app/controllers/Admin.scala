@@ -38,6 +38,14 @@ class Admin @Inject()(
     }
   }
 
+  def site(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (isAdmin) {
+      Ok(views.html.Admin.index())
+    } else {
+      Forbidden("Access denied.")
+    }
+  }
+
   def sites(): Action[AnyContent] = Action { implicit request =>
     if (isAdmin) {
       database.withConnection { implicit connection =>
@@ -61,4 +69,3 @@ class Admin @Inject()(
     }
   }
 }
-

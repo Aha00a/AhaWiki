@@ -14,7 +14,6 @@ import {
     NavLink,
     Paper,
     Progress,
-    Select,
     SimpleGrid,
     Stack,
     Table,
@@ -47,11 +46,14 @@ function logError(...args) {
 }
 
 function routeToPage(pathname) {
+    if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
+        return "site-detail";
+    }
     if (pathname === "/Admin/User/UserViewHistory") {
         return "user-views";
     }
     if (pathname === "/Admin/Site") {
-        return "site";
+        return "sites";
     }
     if (pathname === "/Admin/SiteUser") {
         return "users";
@@ -99,6 +101,15 @@ function parseUserSeqFromPathname(pathname) {
     return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 
+function parseSiteSeqFromPathname(pathname) {
+    const matched = pathname.match(/^\/Admin\/Site\/(\d+)$/);
+    if (!matched) {
+        return "";
+    }
+    const siteSeq = Number.parseInt(matched[1], 10);
+    return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+}
+
 function pageTitleByKey(page) {
     if (page === "recent-changes") {
         return "RecentChanges";
@@ -106,7 +117,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site" || page === "sites" || page === "users") {
+    if (page === "site-detail" || page === "sites" || page === "users") {
         return "Site";
     }
     if (page === "operations") {
@@ -909,19 +920,17 @@ function AdminContent({page, onNavigate}) {
     );
 
     useEffect(() => {
-        if (page !== "site") {
+        if (page !== "site-detail") {
             return;
         }
-        if (!selectedSiteSeq && sites.length > 0) {
-            const firstSiteSeq = String(sites[0]?.seq ?? "");
-            if (firstSiteSeq) {
-                setSelectedSiteSeq(firstSiteSeq);
-            }
+        const siteSeqByPath = parseSiteSeqFromPathname(window.location.pathname);
+        if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
+            setSelectedSiteSeq(siteSeqByPath);
         }
-    }, [page, selectedSiteSeq, sites]);
+    }, [page, selectedSiteSeq]);
 
     useEffect(() => {
-        if (page === "site" && selectedSiteSeq) {
+        if (page === "site-detail" && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
         }
@@ -957,26 +966,45 @@ function AdminContent({page, onNavigate}) {
         return (
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
-                    <Title order={3}>All Sites</Title>
+                    <Title order={3}>Site List</Title>
                     <Badge color="indigo" variant="light">{sites.length} sites</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    전체 사이트 목록과 함께 도메인, 사용자 수, 페이지 수를 확인할 수 있습니다.
+                    전체 사이트 목록입니다. 상세 설정은 각 사이트의 관리 버튼으로 이동하세요.
                 </Text>
                 <Divider mb="md"/>
-                <Title order={6} c="dimmed" mb="sm">
-                    All Sites
-                </Title>
-                {makeTable(
-                    ["Seq", "Name", "Domains", "Users", "Pages"],
-                    sites.map((site) => [
-                        site.seq,
-                        site.name,
-                        (site.domains ?? []).join(", "),
-                        site.userCount ?? 0,
-                        site.pageCount ?? 0,
-                    ]),
-                )}
+                <Table striped highlightOnHover withTableBorder withColumnBorders>
+                    <Table.Thead>
+                        <Table.Tr>
+                            <Table.Th>Seq</Table.Th>
+                            <Table.Th>Name</Table.Th>
+                            <Table.Th>Domains</Table.Th>
+                            <Table.Th>Users</Table.Th>
+                            <Table.Th>Pages</Table.Th>
+                            <Table.Th>Action</Table.Th>
+                        </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                        {sites.map((site) => (
+                            <Table.Tr key={site.seq}>
+                                <Table.Td>{site.seq}</Table.Td>
+                                <Table.Td>{site.name}</Table.Td>
+                                <Table.Td>{(site.domains ?? []).join(", ") || "-"}</Table.Td>
+                                <Table.Td>{site.userCount ?? 0}</Table.Td>
+                                <Table.Td>{site.pageCount ?? 0}</Table.Td>
+                                <Table.Td>
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        onClick={() => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`)}
+                                    >
+                                        관리
+                                    </Button>
+                                </Table.Td>
+                            </Table.Tr>
+                        ))}
+                    </Table.Tbody>
+                </Table>
             </Card>
         );
     }
@@ -1097,33 +1125,23 @@ function AdminContent({page, onNavigate}) {
         );
     }
 
-    if (page === "site") {
+    if (page === "site-detail") {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="xs">
-                        <Title order={4}>사이트 선택</Title>
-                        <Badge color="blue" variant="light">Site Context</Badge>
+                        <Title order={4}>사이트 상세</Title>
+                        <Badge color="blue" variant="light">Site Detail</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
-                        먼저 사이트를 선택하면 아래의 favicon/테마 설정 대상이 즉시 전환됩니다.
+                        /Admin/Site/{`{seq}`} 경로로 접근한 사이트의 favicon/테마를 설정합니다.
                     </Text>
                     <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
-                        <Select
-                            label="대상 사이트"
-                            placeholder="사이트를 선택하세요"
-                            searchable
-                            value={selectedSiteSeq}
-                            onChange={(value) => {
-                                setSelectedSiteSeq(value ?? "");
-                                setFaviconFile(null);
-                            }}
-                            data={sites.map((site) => ({
-                                value: String(site.seq),
-                                label: `${site.name} (#${site.seq})`,
-                            }))}
-                            nothingFoundMessage="검색 결과가 없습니다."
-                        />
+                        <Paper withBorder radius="md" p="sm">
+                            <Button variant="light" size="xs" onClick={() => onNavigate("/Admin/Site")}>
+                                ← 사이트 목록
+                            </Button>
+                        </Paper>
                         <Paper withBorder radius="md" p="sm">
                             {selectedSite ? (
                                 <Stack gap={4}>
@@ -1134,7 +1152,7 @@ function AdminContent({page, onNavigate}) {
                                     </Text>
                                 </Stack>
                             ) : (
-                                <Text size="sm" c="dimmed">사이트를 선택하면 요약 정보가 여기에 표시됩니다.</Text>
+                                <Text size="sm" c="dimmed">유효한 사이트 seq가 필요합니다. (/Admin/Site/숫자)</Text>
                             )}
                         </Paper>
                     </SimpleGrid>
