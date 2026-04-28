@@ -4,9 +4,53 @@
         <div class="ratio_16_9"></div>
         <div class="aspectRatioContent">
             <canvas id="graphD3Canvas-@id" class="graph graphD3Canvas @(id)" style="width: 100%; height: 100%;"></canvas>
-            <a href="#" class="playPauseD3Canvas play @(id)" style="position: absolute; bottom: 10px; left: 15px; text-decoration: none;">
-                <i class="fas fa-stop"></i> <span class="linkCountD3Canvas @id">0</span>
-            </a>
+            <div class="adjacentPagesHud @id">
+                <div class="hudPanel topLeft @id">
+                    <div class="title">Control</div>
+                    <div class="row">
+                        <label>Min degree <input type="range" min="0" max="12" step="1" value="0" class="degreeFilterD3Canvas @id"/></label>
+                        <span class="degreeFilterValueD3Canvas @id">all</span>
+                    </div>
+                    <div class="row">
+                        <label>Label scale <input type="range" min="0.6" max="2" step="0.1" value="1" class="labelScaleD3Canvas @id"/></label>
+                        <span class="labelScaleValueD3Canvas @id">1.0x</span>
+                    </div>
+                    <div class="row">
+                        <label>Node scale <input type="range" min="0.7" max="1.8" step="0.1" value="1" class="nodeScaleD3Canvas @id"/></label>
+                        <span class="nodeScaleValueD3Canvas @id">1.0x</span>
+                    </div>
+                    <div class="row">
+                        <label>Link distance <input type="range" min="40" max="180" step="10" value="80" class="linkDistanceD3Canvas @id"/></label>
+                        <span class="linkDistanceValueD3Canvas @id">80</span>
+                    </div>
+                    <div class="row">
+                        <label>Charge <input type="range" min="-300" max="-40" step="10" value="-120" class="chargeStrengthD3Canvas @id"/></label>
+                        <span class="chargeStrengthValueD3Canvas @id">-120</span>
+                    </div>
+                </div>
+                <div class="hudPanel bottomLeft @id">
+                    <div class="row compact hudActions">
+                        <a href="#" class="controlStartD3Canvas @(id) active"><i class="fas fa-play"></i> Start</a>
+                        <a href="#" class="controlStopD3Canvas @(id)"><i class="fas fa-stop"></i> Stop</a>
+                        <a href="#" class="controlResetViewD3Canvas @(id)"><i class="fas fa-compress-arrows-alt"></i> Reset</a>
+                    </div>
+                </div>
+                <div class="hudPanel topRight @id">
+                    <div class="title">Metrics</div>
+                    <div class="row metric"><span>Nodes(visible/total)</span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
+                    <div class="row metric"><span>Links(visible/total)</span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
+                    <div class="row metric"><span>Avg degree</span><span class="avgDegreeD3Canvas @id">0.00</span></div>
+                    <div class="row metric"><span>Connected ratio</span><span class="depthCoverageD3Canvas @id">0%</span></div>
+                    <div class="row metric"><span>Zoom(scale)</span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
+                </div>
+                <div class="hudPanel bottomRight @id">
+                    <div class="row legend">
+                        <span class="dot root"></span>Root
+                        <span class="dot hop1"></span>Connected
+                        <span class="dot hop2"></span>Others
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -20,6 +64,7 @@
                 simulation: null,
                 nodes: [],
                 links: [],
+                allLinks: [],
                 nodeById: new Map(),
                 linkKeySet: new Set(),
                 adjacency: new Map(),
@@ -32,8 +77,16 @@
                 isPanning: false,
                 panX: 0,
                 panY: 0,
+                zoomScale: 1,
                 lastMouseX: 0,
                 lastMouseY: 0,
+                config: {
+                    minDegree: 0,
+                    labelScale: 1,
+                    nodeScale: 1,
+                    linkDistance: 80,
+                    chargeStrength: -120,
+                }
             };
 
             var radiusDefault = 7;
@@ -90,16 +143,38 @@
                 return true;
             }
 
-            function updateCounter() {
-                $('.linkCountD3Canvas.@(id)').text(state.nodes.length + ' Nodes, ' + state.links.length + ' Links');
+            function updateMetrics() {
+                var totalNodeCount = state.nodeById.size;
+                var totalLinkCount = state.allLinks.length;
+                var visibleNodeCount = state.nodes.length;
+                var visibleLinkCount = state.links.length;
+                var avgDegree = visibleNodeCount ? ((visibleLinkCount * 2) / visibleNodeCount) : 0;
+                var connectedSet = new Set();
+                state.allLinks.forEach(function (l) {
+                    connectedSet.add(l.source);
+                    connectedSet.add(l.target);
+                });
+                var connectedRatio = totalNodeCount ? ((connectedSet.size / totalNodeCount) * 100) : 0;
+
+                $('.nodeCountSummaryD3Canvas.@(id)').text(visibleNodeCount + '/' + totalNodeCount);
+                $('.linkCountSummaryD3Canvas.@(id)').text(visibleLinkCount + '/' + totalLinkCount);
+                $('.avgDegreeD3Canvas.@(id)').text(avgDegree.toFixed(2));
+                $('.depthCoverageD3Canvas.@(id)').text(connectedRatio.toFixed(1) + '%');
+                $('.zoomScaleD3Canvas.@(id)').text(state.zoomScale.toFixed(2) + 'x');
             }
 
             function worldToScreen(x, y) {
-                return { x: x + state.panX, y: y + state.panY };
+                return {
+                    x: (x * state.zoomScale) + state.panX,
+                    y: (y * state.zoomScale) + state.panY
+                };
             }
 
             function screenToWorld(x, y) {
-                return { x: x - state.panX, y: y - state.panY };
+                return {
+                    x: (x - state.panX) / state.zoomScale,
+                    y: (y - state.panY) / state.zoomScale
+                };
             }
 
             function draw() {
@@ -132,16 +207,16 @@
                     var isRoot = n.id === state.rootNodeName;
                     var isHover = n.id === state.hoverNodeId;
                     var isNeighbor = state.hoverNodeId && neighbors.has(n.id);
-                    var r = isRoot || isHover ? radiusHighlight : radiusDefault;
+                    var r = (isRoot || isHover ? radiusHighlight : radiusDefault) * state.config.nodeScale;
                     var p = worldToScreen(n.x || 0, n.y || 0);
 
                     ctx.beginPath();
-                    ctx.fillStyle = isRoot ? '#00a' : (isHover ? '#3366cc' : (isNeighbor ? '#6d8fd8' : '#666'));
+                    ctx.fillStyle = isRoot ? '#213a9a' : (isHover ? '#3366cc' : (isNeighbor ? '#3f7bcf' : '#7ea2df'));
                     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
                     ctx.fill();
 
                     ctx.fillStyle = isRoot ? '#00f' : '#333';
-                    ctx.font = '12px sans-serif';
+                    ctx.font = (12 * state.config.labelScale) + 'px sans-serif';
                     ctx.fillText(n.id, p.x + 12, p.y + 4);
                 });
             }
@@ -150,8 +225,8 @@
                 if(state.simulation) state.simulation.stop();
                 var size = syncCanvasSize();
                 state.simulation = d3.forceSimulation(state.nodes)
-                    .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(80))
-                    .force('charge', d3.forceManyBody().strength(-120))
+                    .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(state.config.linkDistance))
+                    .force('charge', d3.forceManyBody().strength(state.config.chargeStrength))
                     .force('center', d3.forceCenter(size.width / 2, size.height / 2));
                 state.simulation.on('tick', draw);
             }
@@ -160,8 +235,10 @@
                 if(!state.simulation) return;
                 state.simulation.nodes(state.nodes);
                 state.simulation.force('link').links(state.links);
+                state.simulation.force('link').distance(state.config.linkDistance);
+                state.simulation.force('charge').strength(state.config.chargeStrength);
                 state.simulation.alpha(0.8).restart();
-                updateCounter();
+                updateMetrics();
                 draw();
             }
 
@@ -169,19 +246,21 @@
                 if(!state.simulation) return;
                 state.running = true;
                 state.simulation.alphaTarget(0.3).restart();
-                $('.playPauseD3Canvas.@(id)').addClass('play').find('i.fas').removeClass('fa-play').addClass('fa-stop');
+                $('.controlStartD3Canvas.@(id)').addClass('active');
+                $('.controlStopD3Canvas.@(id)').removeClass('active');
             }
 
             function stop() {
                 state.running = false;
                 if(state.simulation) state.simulation.stop();
-                $('.playPauseD3Canvas.@(id)').removeClass('play').find('i.fas').removeClass('fa-stop').addClass('fa-play');
+                $('.controlStartD3Canvas.@(id)').removeClass('active');
+                $('.controlStopD3Canvas.@(id)').addClass('active');
             }
 
             function nodeAt(worldX, worldY) {
                 for(var i = state.nodes.length - 1; i >= 0; i--) {
                     var n = state.nodes[i];
-                    var r = n.id === state.rootNodeName ? radiusHighlight : radiusDefault;
+                    var r = (n.id === state.rootNodeName ? radiusHighlight : radiusDefault) * state.config.nodeScale;
                     var dx = (n.x || 0) - worldX;
                     var dy = (n.y || 0) - worldY;
                     if(dx * dx + dy * dy <= (r + 3) * (r + 3)) return n;
@@ -208,6 +287,7 @@
                         state.panY += (y - state.lastMouseY);
                         state.lastMouseX = x;
                         state.lastMouseY = y;
+                        updateMetrics();
                         draw();
                         return;
                     }
@@ -269,6 +349,22 @@
                     }
                     draw();
                 });
+
+                $(canvasSelector).on('wheel.d3canvas@(id)', function(e) {
+                    e.preventDefault();
+                    var oe = e.originalEvent;
+                    var deltaY = oe.deltaY || 0;
+                    var rect = canvas.getBoundingClientRect();
+                    var x = oe.clientX - rect.left;
+                    var y = oe.clientY - rect.top;
+                    var worldBefore = screenToWorld(x, y);
+                    var zoomStep = deltaY > 0 ? 0.92 : 1.08;
+                    state.zoomScale = Math.max(0.25, Math.min(2.5, state.zoomScale * zoomStep));
+                    state.panX = x - (worldBefore.x * state.zoomScale);
+                    state.panY = y - (worldBefore.y * state.zoomScale);
+                    updateMetrics();
+                    draw();
+                });
             }
 
             function buildGraphData() {
@@ -281,40 +377,112 @@
                     if(link.length >= 2) {
                         ensureNode(link[0]);
                         ensureNode(link[1]);
-                        addLink(link[0], link[1]);
+                        if(addLink(link[0], link[1])) {
+                            state.allLinks.push({ source: link[0], target: link[1], key: linkKey(link[0], link[1]) });
+                        }
                     }
                 });
             }
 
-            function render() {
+            function applyFilters() {
+                var selectedNodeIds = new Set();
                 state.nodes = [];
                 state.links = [];
+
+                state.nodeById.forEach(function(node, id) {
+                    var degree = (state.adjacency.get(id) || new Set()).size;
+                    if(id === state.rootNodeName || degree >= state.config.minDegree) {
+                        selectedNodeIds.add(id);
+                        state.nodes.push(node);
+                    }
+                });
+
+                state.allLinks.forEach(function(link) {
+                    if(selectedNodeIds.has(link.source) && selectedNodeIds.has(link.target)) {
+                        state.links.push(link);
+                    }
+                });
+            }
+
+            function resetView() {
+                var size = syncCanvasSize();
+                state.zoomScale = 1;
+                state.panX = size.width / 2;
+                state.panY = size.height / 2;
+                var root = getNode(state.rootNodeName);
+                if(root) {
+                    root.fx = 0;
+                    root.fy = 0;
+                }
+                updateMetrics();
+                draw();
+            }
+
+            function bindHudControls() {
+                $('.degreeFilterD3Canvas.@(id)').off('input').on('input', function() {
+                    state.config.minDegree = parseInt($(this).val(), 10) || 0;
+                    $('.degreeFilterValueD3Canvas.@(id)').text(state.config.minDegree <= 0 ? 'all' : state.config.minDegree + '+');
+                    applyFilters();
+                    restart();
+                });
+
+                $('.labelScaleD3Canvas.@(id)').off('input').on('input', function() {
+                    state.config.labelScale = parseFloat($(this).val()) || 1;
+                    $('.labelScaleValueD3Canvas.@(id)').text(state.config.labelScale.toFixed(1) + 'x');
+                    draw();
+                });
+
+                $('.nodeScaleD3Canvas.@(id)').off('input').on('input', function() {
+                    state.config.nodeScale = parseFloat($(this).val()) || 1;
+                    $('.nodeScaleValueD3Canvas.@(id)').text(state.config.nodeScale.toFixed(1) + 'x');
+                    draw();
+                });
+
+                $('.linkDistanceD3Canvas.@(id)').off('input').on('input', function() {
+                    state.config.linkDistance = parseInt($(this).val(), 10) || 80;
+                    $('.linkDistanceValueD3Canvas.@(id)').text(state.config.linkDistance);
+                    restart();
+                });
+
+                $('.chargeStrengthD3Canvas.@(id)').off('input').on('input', function() {
+                    state.config.chargeStrength = parseInt($(this).val(), 10) || -120;
+                    $('.chargeStrengthValueD3Canvas.@(id)').text(state.config.chargeStrength);
+                    restart();
+                });
+
+                $('.controlStartD3Canvas.@(id)').off('click').on('click', function() {
+                    start();
+                    return false;
+                });
+
+                $('.controlStopD3Canvas.@(id)').off('click').on('click', function() {
+                    stop();
+                    return false;
+                });
+
+                $('.controlResetViewD3Canvas.@(id)').off('click').on('click', function() {
+                    resetView();
+                    return false;
+                });
+            }
+
+            function render() {
                 state.nodeById = new Map();
                 state.linkKeySet = new Set();
                 state.adjacency = new Map();
+                state.allLinks = [];
                 state.hoverNodeId = null;
-                state.panX = 0;
-                state.panY = 0;
 
                 buildGraphData();
-                var root = getNode(state.rootNodeName);
-                if(root) {
-                    var size = syncCanvasSize();
-                    root.fx = size.width / 2;
-                    root.fy = size.height / 2;
-                }
+                applyFilters();
 
                 createSimulation();
                 bindCanvasEvents();
+                bindHudControls();
+                resetView();
                 restart();
                 start();
             }
-
-            $('.playPauseD3Canvas.@(id)').click(function () {
-                if($(this).hasClass('play')) stop();
-                else start();
-                return false;
-            });
 
             render();
         });
