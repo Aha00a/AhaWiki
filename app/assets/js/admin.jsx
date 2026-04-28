@@ -914,7 +914,7 @@ function MultiTrendChart({series}) {
 }
 
 
-function AdminContent({page, onNavigate}) {
+function AdminContent({page, onNavigate, pathname, search}) {
     const {
         loading,
         sites,
@@ -955,14 +955,14 @@ function AdminContent({page, onNavigate}) {
         [sites, selectedSiteSeq],
     );
     const selectedUserSeq = useMemo(() => {
-        const userSeqByPath = parseUserSeqFromPathname(window.location.pathname);
+        const userSeqByPath = parseUserSeqFromPathname(pathname);
         if (userSeqByPath > 0) {
             return userSeqByPath;
         }
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(search);
         const userSeqByQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
         return Number.isFinite(userSeqByQuery) && userSeqByQuery > 0 ? userSeqByQuery : 0;
-    }, [page]);
+    }, [page, pathname, search]);
     const selectedAllUser = useMemo(
         () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
         [allUsers, selectedUserSeq],
@@ -972,11 +972,11 @@ function AdminContent({page, onNavigate}) {
         if (page !== "site-detail") {
             return;
         }
-        const siteSeqByPath = parseSiteSeqFromPathname(window.location.pathname);
+        const siteSeqByPath = parseSiteSeqFromPathname(pathname);
         if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
             setSelectedSiteSeq(siteSeqByPath);
         }
-    }, [page, selectedSiteSeq]);
+    }, [page, pathname, selectedSiteSeq]);
 
     useEffect(() => {
         if (page === "site-detail" && selectedSiteSeq) {
@@ -1624,10 +1624,14 @@ function AdminContent({page, onNavigate}) {
 
 function AdminApp({initialPage}) {
     const [page, setPage] = useState(initialPage);
+    const [pathname, setPathname] = useState(window.location.pathname);
+    const [search, setSearch] = useState(window.location.search);
     const pageTitle = pageTitleByKey(page);
 
     useEffect(() => {
         const onPopState = () => {
+            setPathname(window.location.pathname);
+            setSearch(window.location.search);
             setPage(routeToPage(window.location.pathname));
         };
         window.addEventListener("popstate", onPopState);
@@ -1638,11 +1642,15 @@ function AdminApp({initialPage}) {
 
     const onNavigate = useCallback(
         (href) => {
+            const nextUrl = new URL(href, window.location.origin);
             const currentPathWithSearch = `${window.location.pathname}${window.location.search}`;
-            if (currentPathWithSearch !== href) {
+            const nextPathWithSearch = `${nextUrl.pathname}${nextUrl.search}`;
+            if (currentPathWithSearch !== nextPathWithSearch) {
                 window.history.pushState({}, "", href);
             }
-            setPage(routeToPage(new URL(href, window.location.origin).pathname));
+            setPathname(nextUrl.pathname);
+            setSearch(nextUrl.search);
+            setPage(routeToPage(nextUrl.pathname));
         },
         [],
     );
@@ -1678,7 +1686,7 @@ function AdminApp({initialPage}) {
                                 Live
                             </Badge>
                         </Group>
-                        <AdminContent page={page} onNavigate={onNavigate}/>
+                        <AdminContent page={page} onNavigate={onNavigate} pathname={pathname} search={search}/>
                     </Stack>
                 </AppShell.Main>
             </AppShell>
