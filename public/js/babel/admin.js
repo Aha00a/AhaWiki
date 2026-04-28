@@ -608,26 +608,23 @@ function Navigation({ activePage, onNavigate }) {
   }, []);
   const links = useMemo(
     () => [
-      { href: "/", label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30", key: "home" },
-      { href: "/Admin", label: "Dashboard", key: "dashboard" },
-      { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes" },
-      { href: "/Admin/User", label: "User", key: "all-users" },
-      { href: "/Admin/Site", label: "Site", key: "sites" },
-      { href: "/Admin/Operation", label: "Operation", key: "operations" }
+      { href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line" },
+      { href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap" },
+      { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
+      { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
+      { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" }
     ],
     []
   );
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", tt: "uppercase", fw: 700, c: "dimmed", px: 8 }, "Admin Navigation"), links.map((link) => /* @__PURE__ */ React.createElement(React.Fragment, { key: link.key }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, links.map((link) => /* @__PURE__ */ React.createElement(React.Fragment, { key: link.key }, /* @__PURE__ */ React.createElement(
     NavLink,
     {
       href: link.href,
       label: link.label,
+      leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
       active: activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites",
       variant: activePage === link.key || activePage === "user-views" && link.key === "all-users" || activePage === "site-detail" && link.key === "sites" ? "filled" : "light",
       onClick: (event) => {
-        if (link.key === "home") {
-          return;
-        }
         event.preventDefault();
         onNavigate(link.href);
       }
@@ -638,6 +635,7 @@ function Navigation({ activePage, onNavigate }) {
       key: `site-${site.seq}`,
       href: `/Admin/Site/${site.seq}`,
       label: `${site.name} (#${site.seq})`,
+      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
       active: currentSiteSeq === String(site.seq),
       variant: currentSiteSeq === String(site.seq) ? "subtle" : "light",
       onClick: (event) => {
@@ -645,7 +643,18 @@ function Navigation({ activePage, onNavigate }) {
         onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
       }
     }
-  ))))));
+  ))))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
+    NavLink,
+    {
+      href: "/",
+      label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30",
+      description: "\uAD00\uB9AC\uC790 \uC601\uC5ED\uC744 \uB098\uAC00 \uBA54\uC778 \uC704\uD0A4\uB85C \uC774\uB3D9",
+      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-arrow-left", "aria-hidden": "true" }),
+      rightSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-external-link-alt", "aria-hidden": "true" }),
+      color: "gray",
+      variant: "subtle"
+    }
+  )));
 }
 function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) {
   const schedulersWithoutCalculate = schedulers.filter((scheduler) => scheduler.name !== "Calculate");

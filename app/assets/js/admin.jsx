@@ -667,26 +667,23 @@ function Navigation({activePage, onNavigate}) {
 
     const links = useMemo(
         () => [
-            {href: "/", label: "위키로 돌아가기", key: "home"},
-            {href: "/Admin", label: "Dashboard", key: "dashboard"},
-            {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes"},
-            {href: "/Admin/User", label: "User", key: "all-users"},
-            {href: "/Admin/Site", label: "Site", key: "sites"},
-            {href: "/Admin/Operation", label: "Operation", key: "operations"},
+            {href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line"},
+            {href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap"},
+            {href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users"},
+            {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history"},
+            {href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs"},
         ],
         [],
     );
 
     return (
         <Stack gap={8}>
-            <Text size="xs" tt="uppercase" fw={700} c="dimmed" px={8}>
-                Admin Navigation
-            </Text>
             {links.map((link) => (
                 <React.Fragment key={link.key}>
                     <NavLink
                         href={link.href}
                         label={link.label}
+                        leftSection={<i className={link.iconClassName} aria-hidden="true" />}
                         active={
                             activePage === link.key
                             || (activePage === "user-views" && link.key === "all-users")
@@ -700,9 +697,6 @@ function Navigation({activePage, onNavigate}) {
                                 : "light"
                         }
                         onClick={(event) => {
-                            if (link.key === "home") {
-                                return;
-                            }
                             event.preventDefault();
                             onNavigate(link.href);
                         }}
@@ -714,6 +708,7 @@ function Navigation({activePage, onNavigate}) {
                                     key={`site-${site.seq}`}
                                     href={`/Admin/Site/${site.seq}`}
                                     label={`${site.name} (#${site.seq})`}
+                                    leftSection={<i className="fas fa-globe-asia" aria-hidden="true" />}
                                     active={currentSiteSeq === String(site.seq)}
                                     variant={currentSiteSeq === String(site.seq) ? "subtle" : "light"}
                                     onClick={(event) => {
@@ -726,6 +721,18 @@ function Navigation({activePage, onNavigate}) {
                     )}
                 </React.Fragment>
             ))}
+            <Divider my={6} label="바로가기" labelPosition="center" />
+            <Paper withBorder radius="md" p={6}>
+                <NavLink
+                    href="/"
+                    label="위키로 돌아가기"
+                    description="관리자 영역을 나가 메인 위키로 이동"
+                    leftSection={<i className="fas fa-arrow-left" aria-hidden="true" />}
+                    rightSection={<i className="fas fa-external-link-alt" aria-hidden="true" />}
+                    color="gray"
+                    variant="subtle"
+                />
+            </Paper>
         </Stack>
     );
 }
