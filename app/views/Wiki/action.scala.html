@@ -15,7 +15,7 @@
             @if(wikiContext.requestWrapper.getUser) {
                 @wikiContext.requestWrapper.getUser.map { user =>
                     <li>
-                        <a href="@(routes.Auth.logout)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                        <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
                     </li>
                 }
                 @if(isAdmin) {
