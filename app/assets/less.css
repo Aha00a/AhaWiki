@@ -1515,7 +1515,7 @@ kbd:hover > kbd {
     margin: 0 12px;
   }
   .AhaWiki .commonAhaWiki {
-    padding: 0 0 20px 12px;
+    padding: 0 0 20px;
   }
   .AhaWiki .commonAhaWiki h1,
   .AhaWiki .commonAhaWiki h2,
@@ -1534,8 +1534,11 @@ kbd:hover > kbd {
   .AhaWiki .commonAhaWiki div.InterpreterSchema,
   .AhaWiki .commonAhaWiki div.schema {
     float: none;
+    clear: both;
     max-width: none;
-    margin-left: 0;
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 8px;
   }
   .AhaWiki .commonAhaWiki table {
     display: block;
@@ -1610,11 +1613,16 @@ kbd:hover > kbd {
   .AhaWiki .gnb,
   .AhaWiki .revisionInfo {
     float: none;
-    margin-left: 0;
+    clear: both;
+    margin: 0 0 12px;
     padding-top: 10px;
+    text-align: left;
   }
   .AhaWiki .revisionInfo {
-    float: right;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fafafa;
   }
   .AhaWiki .gnb .action ul {
     display: block;

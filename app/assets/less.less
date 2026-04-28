@@ -705,7 +705,7 @@ kbd {
 			margin: 0 12px;
 		}
 		.commonAhaWiki {
-			padding: 0 0 20px 12px;
+			padding: 0 0 20px;
 
 			h1, h2, h3, h4, h5, h6 {
 				margin-left: 0;
@@ -717,8 +717,11 @@ kbd {
 
 			div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
 				float: none;
+				clear: both;
 				max-width: none;
-				margin-left: 0;
+				margin: 12px 0;
+				padding: 12px;
+				border-radius: 8px;
 			}
 
 			table {
@@ -783,11 +786,16 @@ kbd {
 	@media @widthTablet {
 		.gnb, .revisionInfo {
 			float: none;
-			margin-left: 0;
+			clear: both;
+			margin: 0 0 12px;
 			padding-top: 10px;
+			text-align: left;
 		}
 		.revisionInfo {
-			float: right;
+			padding: 10px 12px;
+			border: 1px solid #ddd;
+			border-radius: 8px;
+			background-color: #fafafa;
 		}
 		.gnb .action ul {
 			display: block;
