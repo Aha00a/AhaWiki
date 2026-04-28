@@ -67,11 +67,6 @@
             state.adjacency.get(dst).add(src);
         }
 
-        function removeAdj(src, dst) {
-            if(state.adjacency.has(src)) state.adjacency.get(src).delete(dst);
-            if(state.adjacency.has(dst)) state.adjacency.get(dst).delete(src);
-        }
-
         function getNode(id) {
             return state.nodeById.get(id);
         }
@@ -269,35 +264,10 @@
             draw();
         }
 
-        function removeNodeAndLinks(nodeId) {
-            state.links = state.links.filter(function (l) {
-                var s = l.source.id ? l.source.id : l.source;
-                var t = l.target.id ? l.target.id : l.target;
-                var remove = s === nodeId || t === nodeId;
-                if(remove) {
-                    state.linkKeySet.delete(linkKey(s, t));
-                    removeAdj(s, t);
-                }
-                return !remove;
-            });
-            state.nodes = state.nodes.filter(function (n) { return n.id !== nodeId; });
-            state.nodeById.delete(nodeId);
-            state.adjacency.delete(nodeId);
-            updateCounter();
-            restart();
-        }
-
         function fetchLinks(name) {
             $.ajax({
                 url: '/api/links/' + name,
                 success: function(data) {
-                    if(data.length === 1) {
-                        var node = getNode(name);
-                        if(node && !(node.fx != null || node.fy != null)) {
-                            removeNodeAndLinks(name);
-                            return;
-                        }
-                    }
                     state.queueGraph = state.queueGraph.concat(data);
                     updateCounter();
                 },
