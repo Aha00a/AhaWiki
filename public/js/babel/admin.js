@@ -170,6 +170,7 @@ function useAdminData(page) {
   });
   const [savingSiteTheme, setSavingSiteTheme] = useState(false);
   const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
+  const [memoryCacheStats, setMemoryCacheStats] = useState([]);
   const [error, setError] = useState("");
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -436,6 +437,15 @@ function useAdminData(page) {
       setCalculatingSiteSeq(0);
     }
   }, []);
+  const loadMemoryCacheStats = useCallback(async () => {
+    try {
+      const data = await fetchJson("/api/Admin/MemoryCacheStats");
+      setMemoryCacheStats(Array.isArray(data) ? data : []);
+    } catch (caughtError) {
+      logError("memory-cache:load:error", caughtError);
+      setMemoryCacheStats([]);
+    }
+  }, []);
   useEffect(() => {
     let mounted = true;
     const load = async () => {
@@ -533,6 +543,7 @@ function useAdminData(page) {
         }
         if (mounted) {
           await loadDashboard();
+          await loadMemoryCacheStats();
         }
       } catch (caughtError) {
         logError("data:load:error", caughtError);
@@ -549,7 +560,7 @@ function useAdminData(page) {
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories]);
+  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats]);
   return {
     loading,
     sites,
@@ -583,6 +594,8 @@ function useAdminData(page) {
     loadAdminSitePageNames,
     runSiteCalculate,
     calculatingSiteSeq,
+    memoryCacheStats,
+    loadMemoryCacheStats,
     error
   };
 }
@@ -791,6 +804,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     loadAdminSitePageNames,
     runSiteCalculate,
     calculatingSiteSeq,
+    memoryCacheStats,
+    loadMemoryCacheStats,
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
@@ -1096,7 +1111,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Clear current site cache"
-    ))));
+    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Port"), /* @__PURE__ */ React.createElement(Table.Th, null, "Key Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Value Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "JVM Used (MB)"), /* @__PURE__ */ React.createElement(Table.Th, null, "Captured At"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React.createElement(Table.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React.createElement(Table.Td, null, row.instancePort), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, Math.round((Number(row.stats?.jvmUsedMemoryBytes) || 0) / (1024 * 1024))), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
   }
   if (page === "operations") {
     return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(

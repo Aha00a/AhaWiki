@@ -15,6 +15,8 @@ import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
+import logics.ApiLinksMemoryCache
+import logics.ApiLinksMemoryCache.Snapshot
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
@@ -38,6 +40,7 @@ import models.tables.UserSite
 import models.tables.Config
 import play.api.Configuration
 import play.api.Logging
+import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
@@ -52,7 +55,6 @@ import java.net.URLDecoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
-import scala.collection.concurrent.TrieMap
 import scala.util.Random
 
 
@@ -67,8 +69,11 @@ class Api @Inject()(
   wsClient: WSClient,
   executionContext: ExecutionContext,
   applicationLifecycleHook: ApplicationLifecycleHook,
-  configuration: Configuration
+  configuration: Configuration,
+  syncCacheApi: SyncCacheApi
 ) extends BaseController with Logging {
+  private case class MemoryCacheStatsPayload(instancePort: String, stats: Snapshot)
+
   private def isAdmin(implicit request: RequestHeader): Boolean = {
     SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
   }
@@ -77,9 +82,14 @@ class Api @Inject()(
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
-  private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
-  private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
-  private val linksCacheTtlMs: Long = 10 * 60 * 1000
+  private val apiLinksMemoryCache = new ApiLinksMemoryCache()
+  private val memoryCacheSnapshotKey = "admin:memoryCacheStats:instances"
+  private val instancePort: String = configuration.getOptional[String]("play.server.http.port").getOrElse("unknown")
+  actorSystem.scheduler.scheduleWithFixedDelay(scala.concurrent.duration.Duration.Zero, 30.seconds) { () =>
+    val currentSnapshot = apiLinksMemoryCache.snapshot(instancePort)
+    val merged = syncCacheApi.get[Map[String, Snapshot]](memoryCacheSnapshotKey).getOrElse(Map.empty) + (instancePort -> currentSnapshot)
+    syncCacheApi.set(memoryCacheSnapshotKey, merged, 10.minutes)
+  }
 
   private val adminFaviconConfigKey: String = "site.favicon.objectKey"
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
@@ -880,15 +890,22 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
-      val cacheKey = (site.seq, name)
-      val now = System.currentTimeMillis()
-      val cached = linksCache.get(cacheKey).filter(entry => now - entry.cachedAtEpochMs <= linksCacheTtlMs)
-      val links = cached.map(_.value).getOrElse {
-        val fetched = Adjacent.getSeqLinkFiltered(name)
-        linksCache.put(cacheKey, CachedLinks(fetched, now))
-        fetched
+      val links = apiLinksMemoryCache.getOrElseUpdate(site.seq, name) {
+        Adjacent.getSeqLinkFiltered(name)
       }
       Ok(links.asJson)
+    }
+  }
+
+  def adminMemoryCacheStats(): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Unauthorized(Map("error" -> "forbidden").asJson.toString()).as(JSON)
+    } else {
+      val stats = syncCacheApi.get[Map[String, Snapshot]](memoryCacheSnapshotKey).getOrElse(Map.empty)
+      val normalized = stats.toSeq.sortBy(_._1).map { case (_, payload) =>
+        MemoryCacheStatsPayload(instancePort = payload.instancePort, stats = payload)
+      }
+      Ok(normalized.asJson)
     }
   }
 

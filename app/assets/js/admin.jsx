@@ -179,6 +179,7 @@ function useAdminData(page) {
     });
     const [savingSiteTheme, setSavingSiteTheme] = useState(false);
     const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
+    const [memoryCacheStats, setMemoryCacheStats] = useState([]);
     const [error, setError] = useState("");
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -462,6 +463,16 @@ function useAdminData(page) {
         }
     }, []);
 
+    const loadMemoryCacheStats = useCallback(async () => {
+        try {
+            const data = await fetchJson("/api/Admin/MemoryCacheStats");
+            setMemoryCacheStats(Array.isArray(data) ? data : []);
+        } catch (caughtError) {
+            logError("memory-cache:load:error", caughtError);
+            setMemoryCacheStats([]);
+        }
+    }, []);
+
     useEffect(() => {
         let mounted = true;
         const load = async () => {
@@ -564,6 +575,7 @@ function useAdminData(page) {
 
                 if (mounted) {
                     await loadDashboard();
+                    await loadMemoryCacheStats();
                 }
             } catch (caughtError) {
                 logError("data:load:error", caughtError);
@@ -581,7 +593,7 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories]);
+    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats]);
 
     return {
         loading,
@@ -616,6 +628,8 @@ function useAdminData(page) {
         loadAdminSitePageNames,
         runSiteCalculate,
         calculatingSiteSeq,
+        memoryCacheStats,
+        loadMemoryCacheStats,
         error,
     };
 }
@@ -1014,6 +1028,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
         loadAdminSitePageNames,
         runSiteCalculate,
         calculatingSiteSeq,
+        memoryCacheStats,
+        loadMemoryCacheStats,
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
@@ -1579,6 +1595,34 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             Clear current site cache
                         </Button>
                     </Group>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Memory Cache Status (All Instances)</Title>
+                        <Button variant="light" onClick={loadMemoryCacheStats}>Refresh</Button>
+                    </Group>
+                    <Table striped highlightOnHover withTableBorder withColumnBorders>
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th>Port</Table.Th>
+                                <Table.Th>Key Count</Table.Th>
+                                <Table.Th>Value Count</Table.Th>
+                                <Table.Th>JVM Used (MB)</Table.Th>
+                                <Table.Th>Captured At</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {memoryCacheStats.map((row) => (
+                                <Table.Tr key={String(row.instancePort)}>
+                                    <Table.Td>{row.instancePort}</Table.Td>
+                                    <Table.Td>{row.stats?.linksCacheKeyCount ?? 0}</Table.Td>
+                                    <Table.Td>{row.stats?.linksCacheValueCount ?? 0}</Table.Td>
+                                    <Table.Td>{Math.round((Number(row.stats?.jvmUsedMemoryBytes) || 0) / (1024 * 1024))}</Table.Td>
+                                    <Table.Td>{row.stats?.capturedAtIso8601 ?? "-"}</Table.Td>
+                                </Table.Tr>
+                            ))}
+                        </Table.Tbody>
+                    </Table>
                 </Card>
             </Stack>
         );
