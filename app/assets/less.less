@@ -749,6 +749,10 @@ kbd {
 		text-align: right;
 		color: #222;
 		.action {
+			.mobileActionHeader {
+				display: block;
+			}
+
 			.mobileActionToggle {
 				display: none;
 				align-items: center;
@@ -786,6 +790,11 @@ kbd {
 					}
 				}
 			}
+
+			.mobileAuthSummary {
+				display: none;
+			}
+
 			a {
 				display: inline-block;
 			}
@@ -816,6 +825,13 @@ kbd {
 			background-color: #fafafa;
 		}
 		.gnb .action {
+			.mobileActionHeader {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+			}
+
 			padding: 12px;
 			border: 1px solid #dce2ea;
 			border-radius: 8px;
@@ -824,6 +840,25 @@ kbd {
 
 			.mobileActionToggle {
 				display: inline-flex;
+			}
+
+			.mobileAuthSummary {
+				display: inline-flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 6px;
+
+				a {
+					display: inline-flex;
+					align-items: center;
+					padding: 6px 8px;
+					border-radius: 8px;
+					border: 1px solid #d9e1eb;
+					background-color: #fff;
+					text-decoration: none;
+					font-size: 12px;
+					line-height: 1.2;
+				}
 			}
 
 			ul {

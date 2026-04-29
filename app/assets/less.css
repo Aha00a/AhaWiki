@@ -1577,6 +1577,10 @@ kbd:hover > kbd {
   text-align: right;
   color: #222;
 }
+.AhaWiki .gnb .action .mobileActionHeader,
+.AhaWiki .revisionInfo .action .mobileActionHeader {
+  display: block;
+}
 .AhaWiki .gnb .action .mobileActionToggle,
 .AhaWiki .revisionInfo .action .mobileActionToggle {
   display: none;
@@ -1621,6 +1625,10 @@ kbd:hover > kbd {
     display: inline-block;
   }
 }
+.AhaWiki .gnb .action .mobileAuthSummary,
+.AhaWiki .revisionInfo .action .mobileAuthSummary {
+  display: none;
+}
 .AhaWiki .gnb .action a,
 .AhaWiki .revisionInfo .action a {
   display: inline-block;
@@ -1661,8 +1669,31 @@ kbd:hover > kbd {
     background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
     box-shadow: 0 3px 12px rgba(18, 24, 40, 0.08);
   }
+  .AhaWiki .gnb .action .mobileActionHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
   .AhaWiki .gnb .action .mobileActionToggle {
     display: inline-flex;
+  }
+  .AhaWiki .gnb .action .mobileAuthSummary {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .AhaWiki .gnb .action .mobileAuthSummary a {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid #d9e1eb;
+    background-color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    line-height: 1.2;
   }
   .AhaWiki .gnb .action ul {
     display: none;

@@ -8,9 +8,21 @@
 }
 <div class="gnb">
     <div class="action">
-        <button type="button" class="mobileActionToggle" aria-expanded="false" aria-label="Toggle action menu">
-            <i class="fas fa-bars"></i>Menu
-        </button>
+        <div class="mobileActionHeader">
+            <button type="button" class="mobileActionToggle" aria-expanded="false" aria-label="Toggle action menu">
+                <i class="fas fa-bars"></i>Menu
+            </button>
+            <div class="mobileAuthSummary">
+                @if(wikiContext.requestWrapper.getUser) {
+                    @wikiContext.requestWrapper.getUser.map { user =>
+                        <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                    }
+                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                } else {
+                    <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
+                }
+            </div>
+        </div>
         <ul class="authArea">
             @if(wikiContext.requestWrapper.getUser) {
                 @wikiContext.requestWrapper.getUser.map { user =>
