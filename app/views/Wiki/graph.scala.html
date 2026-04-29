@@ -419,50 +419,49 @@
             }
 
             function bindHudControls() {
-                $('.degreeFilterD3Canvas.@(id)').off('input').on('input', function() {
+                var controls = window.AhaWikiD3CanvasControls;
+
+                controls.bindRangeControl('.degreeFilterD3Canvas.@(id)', function() {
                     state.config.minDegree = parseInt($(this).val(), 10) || 0;
                     $('.degreeFilterValueD3Canvas.@(id)').text(state.config.minDegree <= 0 ? 'all' : state.config.minDegree + '+');
                     applyFilters();
                     restart();
                 });
 
-                $('.labelScaleD3Canvas.@(id)').off('input').on('input', function() {
+                controls.bindRangeControl('.labelScaleD3Canvas.@(id)', function() {
                     state.config.labelScale = parseFloat($(this).val()) || 1;
                     $('.labelScaleValueD3Canvas.@(id)').text(state.config.labelScale.toFixed(1) + 'x');
                     draw();
                 });
 
-                $('.nodeScaleD3Canvas.@(id)').off('input').on('input', function() {
+                controls.bindRangeControl('.nodeScaleD3Canvas.@(id)', function() {
                     state.config.nodeScale = parseFloat($(this).val()) || 1;
                     $('.nodeScaleValueD3Canvas.@(id)').text(state.config.nodeScale.toFixed(1) + 'x');
                     draw();
                 });
 
-                $('.linkDistanceD3Canvas.@(id)').off('input').on('input', function() {
+                controls.bindRangeControl('.linkDistanceD3Canvas.@(id)', function() {
                     state.config.linkDistance = parseInt($(this).val(), 10) || 80;
                     $('.linkDistanceValueD3Canvas.@(id)').text(state.config.linkDistance);
                     restart();
                 });
 
-                $('.chargeStrengthD3Canvas.@(id)').off('input').on('input', function() {
+                controls.bindRangeControl('.chargeStrengthD3Canvas.@(id)', function() {
                     state.config.chargeStrength = parseInt($(this).val(), 10) || -120;
                     $('.chargeStrengthValueD3Canvas.@(id)').text(state.config.chargeStrength);
                     restart();
                 });
 
-                $('.controlStartD3Canvas.@(id)').off('click').on('click', function() {
+                controls.bindActionControl('.controlStartD3Canvas.@(id)', function() {
                     start();
-                    return false;
                 });
 
-                $('.controlStopD3Canvas.@(id)').off('click').on('click', function() {
+                controls.bindActionControl('.controlStopD3Canvas.@(id)', function() {
                     stop();
-                    return false;
                 });
 
-                $('.controlResetViewD3Canvas.@(id)').off('click').on('click', function() {
+                controls.bindActionControl('.controlResetViewD3Canvas.@(id)', function() {
                     resetView();
-                    return false;
                 });
             }
 

@@ -544,53 +544,51 @@
             start();
         }
 
-        $('.controlStartD3Canvas.@(id)').click(function() {
+        var controls = window.AhaWikiD3CanvasControls;
+
+        controls.bindActionControl('.controlStartD3Canvas.@(id)', function() {
             start();
-            return false;
         });
 
-        $('.controlStopD3Canvas.@(id)').click(function() {
+        controls.bindActionControl('.controlStopD3Canvas.@(id)', function() {
             stop();
-            return false;
         });
 
-        $('.moreD3Canvas.@(id)').click(function() {
+        controls.bindActionControl('.moreD3Canvas.@(id)', function() {
             state.limit = state.nodes.length + 500;
             updateCounter();
-            return false;
         });
 
-        $('.toggleFullscreenD3Canvas.@(id)').click(function() {
+        controls.bindActionControl('.toggleFullscreenD3Canvas.@(id)', function() {
             toggleFullscreen();
-            return false;
         });
 
-        $('.degreeFilterD3Canvas.@(id)').on('input change', function() {
+        controls.bindRangeControl('.degreeFilterD3Canvas.@(id)', function() {
             state.minDegree = parseInt($(this).val(), 10);
             $('.degreeFilterValueD3Canvas.@(id)').text(state.minDegree === 0 ? 'all' : ('≥ ' + state.minDegree));
             updateCounter();
             draw();
         });
 
-        $('.labelScaleD3Canvas.@(id)').on('input change', function() {
+        controls.bindRangeControl('.labelScaleD3Canvas.@(id)', function() {
             state.labelScale = parseFloat($(this).val());
             $('.labelScaleValueD3Canvas.@(id)').text(state.labelScale.toFixed(1) + 'x');
             draw();
         });
 
-        $('.nodeScaleD3Canvas.@(id)').on('input change', function() {
+        controls.bindRangeControl('.nodeScaleD3Canvas.@(id)', function() {
             state.nodeScale = parseFloat($(this).val());
             $('.nodeScaleValueD3Canvas.@(id)').text(state.nodeScale.toFixed(1) + 'x');
             draw();
         });
 
-        $('.linkDistanceD3Canvas.@(id)').on('input change', function() {
+        controls.bindRangeControl('.linkDistanceD3Canvas.@(id)', function() {
             state.linkDistance = parseInt($(this).val(), 10);
             $('.linkDistanceValueD3Canvas.@(id)').text(state.linkDistance);
             restart();
         });
 
-        $('.chargeStrengthD3Canvas.@(id)').on('input change', function() {
+        controls.bindRangeControl('.chargeStrengthD3Canvas.@(id)', function() {
             state.chargeStrength = parseInt($(this).val(), 10);
             $('.chargeStrengthValueD3Canvas.@(id)').text(state.chargeStrength);
             restart();
