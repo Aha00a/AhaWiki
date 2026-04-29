@@ -204,9 +204,9 @@
         function draw() {
             var size = syncCanvasSize();
             ctx.clearRect(0, 0, size.width, size.height);
-            var bg = ctx.createLinearGradient(0, 0, 0, size.height);
-            bg.addColorStop(0, '#f8faff');
-            bg.addColorStop(1, '#f2f4f9');
+            var bg = ctx.createLinearGradient(0, 0, size.width, size.height);
+            bg.addColorStop(0, '#eef');
+            bg.addColorStop(1, '#eff');
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, size.width, size.height);
 
