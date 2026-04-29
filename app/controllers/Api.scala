@@ -98,6 +98,7 @@ class Api @Inject()(
   }
 
   actorSystem.scheduler.scheduleWithFixedDelay(scala.concurrent.duration.Duration.Zero, 30.seconds) { () =>
+    apiLinksMemoryCache.cleanupExpiredNow()
     val currentSnapshot = apiLinksMemoryCache.snapshot(instancePort)
     val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
     writeMemoryCacheSnapshots(merged)

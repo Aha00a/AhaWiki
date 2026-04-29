@@ -1607,7 +1607,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 <Table.Th>Port</Table.Th>
                                 <Table.Th>Key Count</Table.Th>
                                 <Table.Th>Value Count</Table.Th>
-                                <Table.Th>JVM Used (MB)</Table.Th>
                                 <Table.Th>Captured At</Table.Th>
                             </Table.Tr>
                         </Table.Thead>
@@ -1617,7 +1616,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                     <Table.Td>{row.instancePort}</Table.Td>
                                     <Table.Td>{row.stats?.linksCacheKeyCount ?? 0}</Table.Td>
                                     <Table.Td>{row.stats?.linksCacheValueCount ?? 0}</Table.Td>
-                                    <Table.Td>{Math.round((Number(row.stats?.jvmUsedMemoryBytes) || 0) / (1024 * 1024))}</Table.Td>
                                     <Table.Td>{row.stats?.capturedAtIso8601 ?? "-"}</Table.Td>
                                 </Table.Tr>
                             ))}
