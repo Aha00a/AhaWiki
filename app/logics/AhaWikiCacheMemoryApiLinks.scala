@@ -5,7 +5,7 @@ import models.tables.CalculatedLink
 import java.time.Instant
 import scala.collection.concurrent.TrieMap
 
-object ApiLinksMemoryCache {
+object AhaWikiCacheMemoryApiLinks {
   case class Snapshot(
     instancePort: String,
     capturedAtEpochMs: Long,
@@ -15,7 +15,7 @@ object ApiLinksMemoryCache {
   )
 }
 
-class ApiLinksMemoryCache {
+class AhaWikiCacheMemoryApiLinks {
   private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
   private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
   private val linksCacheTtlMs: Long = 10 * 60 * 1000
@@ -45,8 +45,8 @@ class ApiLinksMemoryCache {
 
   def clear(): Unit = linksCache.clear()
 
-  def snapshot(instancePort: String): ApiLinksMemoryCache.Snapshot = {
-    ApiLinksMemoryCache.Snapshot(
+  def snapshot(instancePort: String): AhaWikiCacheMemoryApiLinks.Snapshot = {
+    AhaWikiCacheMemoryApiLinks.Snapshot(
       instancePort = instancePort,
       capturedAtEpochMs = System.currentTimeMillis(),
       capturedAtIso8601 = Instant.now().toString,

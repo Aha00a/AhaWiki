@@ -16,8 +16,8 @@ import io.circe.parser.decode
 import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
-import logics.ApiLinksMemoryCache
-import logics.ApiLinksMemoryCache.Snapshot
+import logics.AhaWikiCacheMemoryApiLinks
+import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
@@ -83,7 +83,7 @@ class Api @Inject()(
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
-  private val apiLinksMemoryCache = new ApiLinksMemoryCache()
+  private val ahaWikiCacheMemoryApiLinks = new AhaWikiCacheMemoryApiLinks()
   private val memoryCacheSnapshotKey = "admin:memoryCacheStats:instances"
   private val instancePort: String = configuration.getOptional[String]("play.server.http.port").getOrElse("unknown")
   private def readMemoryCacheSnapshots(): Map[String, Snapshot] = {
@@ -98,8 +98,8 @@ class Api @Inject()(
   }
 
   actorSystem.scheduler.scheduleWithFixedDelay(scala.concurrent.duration.Duration.Zero, 30.seconds) { () =>
-    apiLinksMemoryCache.cleanupExpiredNow()
-    val currentSnapshot = apiLinksMemoryCache.snapshot(instancePort)
+    ahaWikiCacheMemoryApiLinks.cleanupExpiredNow()
+    val currentSnapshot = ahaWikiCacheMemoryApiLinks.snapshot(instancePort)
     val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
     writeMemoryCacheSnapshots(merged)
   }
@@ -903,7 +903,7 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
-      val links = apiLinksMemoryCache.getOrElseUpdate(site.seq, name) {
+      val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
         Adjacent.getSeqLinkFiltered(name)
       }
       Ok(links.asJson)
@@ -949,7 +949,7 @@ class Api @Inject()(
   }
 
   def cacheDelete(siteSeq: Long): Action[AnyContent] = Action { implicit request =>
-    apiLinksMemoryCache.clear()
+    ahaWikiCacheMemoryApiLinks.clear()
     SiteLogic.get(siteSeq) foreach { implicit site =>
       implicit val tupleDatabaseSite: (Database, Site) = (database, site)
       implicit val contextSite: ContextSite = ContextSite()
