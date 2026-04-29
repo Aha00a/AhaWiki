@@ -12,6 +12,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
+import io.circe.parser.decode
 import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
@@ -85,10 +86,21 @@ class Api @Inject()(
   private val apiLinksMemoryCache = new ApiLinksMemoryCache()
   private val memoryCacheSnapshotKey = "admin:memoryCacheStats:instances"
   private val instancePort: String = configuration.getOptional[String]("play.server.http.port").getOrElse("unknown")
+  private def readMemoryCacheSnapshots(): Map[String, Snapshot] = {
+    syncCacheApi
+      .get[String](memoryCacheSnapshotKey)
+      .flatMap(json => decode[Map[String, Snapshot]](json).toOption)
+      .getOrElse(Map.empty)
+  }
+
+  private def writeMemoryCacheSnapshots(stats: Map[String, Snapshot]): Unit = {
+    syncCacheApi.set(memoryCacheSnapshotKey, stats.asJson.noSpaces, 10.minutes)
+  }
+
   actorSystem.scheduler.scheduleWithFixedDelay(scala.concurrent.duration.Duration.Zero, 30.seconds) { () =>
     val currentSnapshot = apiLinksMemoryCache.snapshot(instancePort)
-    val merged = syncCacheApi.get[Map[String, Snapshot]](memoryCacheSnapshotKey).getOrElse(Map.empty) + (instancePort -> currentSnapshot)
-    syncCacheApi.set(memoryCacheSnapshotKey, merged, 10.minutes)
+    val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
+    writeMemoryCacheSnapshots(merged)
   }
 
   private val adminFaviconConfigKey: String = "site.favicon.objectKey"
@@ -901,7 +913,7 @@ class Api @Inject()(
     if (!isAdmin) {
       Unauthorized(Map("error" -> "forbidden").asJson.toString()).as(JSON)
     } else {
-      val stats = syncCacheApi.get[Map[String, Snapshot]](memoryCacheSnapshotKey).getOrElse(Map.empty)
+      val stats = readMemoryCacheSnapshots()
       val normalized = stats.toSeq.sortBy(_._1).map { case (_, payload) =>
         MemoryCacheStatsPayload(instancePort = payload.instancePort, stats = payload)
       }
