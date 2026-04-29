@@ -2,7 +2,7 @@ package controllers
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
-import anorm.SqlParser.{bool, long, str}
+import anorm.SqlParser.{bool, long, str, int}
 import anorm._
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
@@ -756,6 +756,69 @@ class Api @Inject()(
               remoteAddress = remoteAddress,
               comment = comment,
               isMinorEdit = isMinorEdit,
+            )
+        }.*)
+
+        Ok(rows.asJson)
+      }
+    }
+  }
+
+  def adminAccessLogs: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        case class AdminAccessLog(
+          seq: Long,
+          siteSeq: Long,
+          siteName: String,
+          userSeq: Option[Long],
+          method: String,
+          uri: String,
+          status: Int,
+          remoteAddress: String,
+          durationMilli: Int,
+          userAgent: String,
+          dateInserted: String,
+        )
+
+        val limit = request.getQueryString("n")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1).min(500))
+          .getOrElse(100)
+
+        val rows = SQL"""
+          SELECT
+            AL.seq,
+            AL.site AS site_seq,
+            S.name AS site_name,
+            AL.user AS user_seq,
+            AL.method,
+            AL.uri,
+            AL.status,
+            AL.remoteAddress,
+            AL.durationMilli,
+            AL.userAgent,
+            DATE_FORMAT(AL.dateInserted, '%Y-%m-%d %H:%i:%s') AS date_inserted
+          FROM AccessLog AL
+          INNER JOIN Site S ON S.seq = AL.site
+          ORDER BY AL.seq DESC
+          LIMIT $limit
+        """.as((long("seq") ~ long("site_seq") ~ str("site_name") ~ long("user_seq").? ~ str("method") ~ str("uri") ~ int("status") ~ str("remoteAddress") ~ int("durationMilli") ~ str("userAgent") ~ str("date_inserted")).map {
+          case seq ~ siteSeq ~ siteName ~ userSeq ~ method ~ uri ~ status ~ remoteAddress ~ durationMilli ~ userAgent ~ dateInserted =>
+            AdminAccessLog(
+              seq = seq,
+              siteSeq = siteSeq,
+              siteName = siteName,
+              userSeq = userSeq,
+              method = method,
+              uri = uri,
+              status = status,
+              remoteAddress = remoteAddress,
+              durationMilli = durationMilli,
+              userAgent = userAgent,
+              dateInserted = dateInserted,
             )
         }.*)
 

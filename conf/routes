@@ -38,6 +38,7 @@ GET           /Admin/SiteUser                        controllers.Admin.index
 GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
 GET           /Admin/Operation                       controllers.Admin.index
+GET           /Admin/AccessLog                      controllers.Admin.index
 GET           /Admin/RecentChange                    controllers.Admin.index
 GET           /Admin/Sites                           controllers.Admin.sites
 GET           /Admin/SiteUsers                       controllers.Admin.siteUsers
@@ -56,6 +57,7 @@ GET           /api/Admin/Schedulers                  controllers.Api.adminSchedu
 GET           /api/Admin/DailyStats                  controllers.Api.adminDailyStats
 GET           /api/Admin/TopViewedPages              controllers.Api.adminTopViewedPages
 GET           /api/Admin/RecentChanges               controllers.Api.adminRecentChanges
+GET           /api/Admin/AccessLogs                  controllers.Api.adminAccessLogs
 GET           /api/Admin/SignedReadUrl               controllers.Api.adminGenerateSignedReadUrl
 GET           /api/Admin/Favicon                     controllers.Api.adminSiteFavicon
 POST          /api/Admin/Favicon                     controllers.Api.adminUploadSiteFavicon

@@ -64,6 +64,9 @@ function routeToPage(pathname) {
     if (pathname === "/Admin/Operation") {
         return "operations";
     }
+    if (pathname === "/Admin/AccessLog") {
+        return "access-logs";
+    }
     if (pathname === "/Admin/RecentChange") {
         return "recent-changes";
     }
@@ -81,6 +84,9 @@ function routeToPage(pathname) {
     }
     if (pathname === "/Admin/Operations") {
         return "operations";
+    }
+    if (pathname === "/Admin/AccessLogs") {
+        return "access-logs";
     }
     if (pathname === "/Admin/RecentChanges") {
         return "recent-changes";
@@ -123,6 +129,9 @@ function pageTitleByKey(page) {
     if (page === "operations") {
         return "Operation";
     }
+    if (page === "access-logs") {
+        return "AccessLog";
+    }
     return "Dashboard";
 }
 
@@ -162,6 +171,7 @@ function useAdminData(page) {
         pageEdited: [],
     });
     const [recentChanges, setRecentChanges] = useState([]);
+    const [accessLogs, setAccessLogs] = useState([]);
     const [topViewedPages, setTopViewedPages] = useState([]);
     const [userViewHistories, setUserViewHistories] = useState([]);
     const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
@@ -181,6 +191,10 @@ function useAdminData(page) {
     const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
     const [memoryCacheStats, setMemoryCacheStats] = useState([]);
     const [error, setError] = useState("");
+    const loadAccessLogs = useCallback(async (n = 100) => {
+        const data = await fetchJson(`/api/Admin/AccessLogs?n=${encodeURIComponent(n)}`);
+        setAccessLogs(data);
+    }, []);
 
     const loadRecentChanges = useCallback(async (n = 50) => {
         const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -572,6 +586,23 @@ function useAdminData(page) {
                     }
                     return;
                 }
+                if (page === "access-logs") {
+                    await loadAccessLogs(100);
+                    if (mounted) {
+                        setSites([]);
+                        setUsers([]);
+                        setAllUsers([]);
+                        setSchedulers([]);
+                        setDailyStats({
+                            userCreated: [],
+                            siteUserCreated: [],
+                            pageCreated: [],
+                            pageEdited: [],
+                        });
+                        setTopViewedPages([]);
+                    }
+                    return;
+                }
 
                 if (mounted) {
                     await loadDashboard();
@@ -593,7 +624,7 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats]);
+    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs]);
 
     return {
         loading,
@@ -603,11 +634,13 @@ function useAdminData(page) {
         schedulers,
         dailyStats,
         recentChanges,
+        accessLogs,
         topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
         loadUserViewHistories,
         loadRecentChanges,
+        loadAccessLogs,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -685,6 +718,7 @@ function Navigation({activePage, onNavigate}) {
             {href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap"},
             {href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users"},
             {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history"},
+            {href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired"},
             {href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs"},
         ],
         [],
@@ -1003,11 +1037,13 @@ function AdminContent({page, onNavigate, pathname, search}) {
         schedulers,
         dailyStats,
         recentChanges,
+        accessLogs,
         topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
         loadUserViewHistories,
         loadRecentChanges,
+        loadAccessLogs,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -1033,6 +1069,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
+    const [accessLogLimitInput, setAccessLogLimitInput] = useState("100");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
     const [sitePageNames, setSitePageNames] = useState([]);
@@ -1678,6 +1715,50 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         row.nickname ?? "-",
                         row.comment || "-",
                         row.remoteAddress,
+                    ]),
+                )}
+            </Card>
+        );
+    }
+    if (page === "access-logs") {
+        return (
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Access Logs (All Sites)</Title>
+                    <Badge color="cyan" variant="light">{accessLogs.length} rows</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">사이트 전체 요청 로그를 n개 단위로 조회할 수 있습니다.</Text>
+                <Group align="flex-end" mb="md">
+                    <TextInput
+                        label="조회 개수 n"
+                        value={accessLogLimitInput}
+                        onChange={(event) => setAccessLogLimitInput(event.currentTarget.value)}
+                        placeholder="1 ~ 500"
+                    />
+                    <Button
+                        variant="filled"
+                        onClick={() => {
+                            const parsed = Number.parseInt(accessLogLimitInput, 10);
+                            const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 100;
+                            setAccessLogLimitInput(String(n));
+                            loadAccessLogs(n);
+                        }}
+                    >
+                        조회
+                    </Button>
+                </Group>
+                {makeTable(
+                    ["When", "Site", "User", "Method", "URI", "Status", "IP", "Duration(ms)", "User-Agent"],
+                    accessLogs.map((row) => [
+                        row.dateInserted,
+                        `${row.siteName} (#${row.siteSeq})`,
+                        row.userSeq ?? "-",
+                        row.method,
+                        row.uri,
+                        row.status,
+                        row.remoteAddress,
+                        row.durationMilli,
+                        row.userAgent,
                     ]),
                 )}
             </Card>
