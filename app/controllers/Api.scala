@@ -948,6 +948,7 @@ class Api @Inject()(
   }
 
   def cacheDelete(siteSeq: Long): Action[AnyContent] = Action { implicit request =>
+    apiLinksMemoryCache.clear()
     SiteLogic.get(siteSeq) foreach { implicit site =>
       implicit val tupleDatabaseSite: (Database, Site) = (database, site)
       implicit val contextSite: ContextSite = ContextSite()
