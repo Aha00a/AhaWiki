@@ -97,12 +97,17 @@ class Api @Inject()(
     syncCacheApi.set(memoryCacheSnapshotKey, stats.asJson.noSpaces, 10.minutes)
   }
 
-  actorSystem.scheduler.scheduleWithFixedDelay(scala.concurrent.duration.Duration.Zero, 30.seconds) { () =>
-    ahaWikiCacheMemoryApiLinks.cleanupExpiredNow()
-    val currentSnapshot = ahaWikiCacheMemoryApiLinks.snapshot(instancePort)
-    val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
-    writeMemoryCacheSnapshots(merged)
-  }
+  applicationLifecycleHook.registerFixedDelayScheduler(
+    name = "apiMemoryCacheStatsRefresh",
+    initialDelay = scala.concurrent.duration.Duration.Zero,
+    interval = 30.seconds,
+    job = () => {
+      ahaWikiCacheMemoryApiLinks.cleanupExpiredNow()
+      val currentSnapshot = ahaWikiCacheMemoryApiLinks.snapshot(instancePort)
+      val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
+      writeMemoryCacheSnapshots(merged)
+    },
+  )
 
   private val adminFaviconConfigKey: String = "site.favicon.objectKey"
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")

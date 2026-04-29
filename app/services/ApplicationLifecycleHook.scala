@@ -22,6 +22,7 @@ import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
 case class SchedulerStatus(
@@ -62,6 +63,11 @@ class ApplicationLifecycleHook @Inject()(
   private val schedulerMap = new ConcurrentHashMap[String, SchedulerStatus]()
   private val jobMap = new ConcurrentHashMap[String, () => Unit]()
 
+  private def logScheduler(name: String, event: String, details: (String, Any)*): Unit = {
+    val suffix = if (details.nonEmpty) details.map { case (k, v) => s"$k=$v" }.mkString(" ") else ""
+    logger.info(s"Scheduler\t$name\t$event${if (suffix.nonEmpty) s"\t$suffix" else ""}")
+  }
+
   applicationLifecycle.addStopHook { () =>
     logger.info("OnApplicationStop")
     Future.successful(())
@@ -77,23 +83,28 @@ class ApplicationLifecycleHook @Inject()(
   private def runScheduler(name: String): Unit = {
     val maybeJob = Option(jobMap.get(name))
     if (maybeJob.isEmpty) {
-      logger.warn(s"Unknown scheduler run requested: $name")
+      logScheduler(name, "run-skipped", "reason" -> "unknown-scheduler")
       return
     }
 
     val schedulerStatus = Option(schedulerMap.get(name))
     if (schedulerStatus.exists(_.running)) {
-      logger.info(s"Skip scheduler run because already running: $name")
+      logScheduler(name, "run-skipped", "reason" -> "already-running")
       return
     }
 
     withSchedulerStatus(name)(_.withRunning(None))
+    logScheduler(name, "run-start")
+    val startedAtNanos = System.nanoTime()
     try {
       maybeJob.get.apply()
+      val elapsedMs = (System.nanoTime() - startedAtNanos) / 1000000
       withSchedulerStatus(name)(_.withCompleted("ok"))
+      logScheduler(name, "run-success", "elapsedMs" -> elapsedMs)
     } catch {
       case t: Throwable =>
-        logger.error(s"Scheduler execution failed: $name", t)
+        val elapsedMs = (System.nanoTime() - startedAtNanos) / 1000000
+        logger.error(s"[scheduler][$name] run-failed elapsedMs=$elapsedMs", t)
         withSchedulerStatus(name)(_.withCompleted(s"error: ${t.getClass.getSimpleName}"))
     }
   }
@@ -104,7 +115,7 @@ class ApplicationLifecycleHook @Inject()(
 
     def scheduleWithRandomInterval(): Unit = {
       val delay = Random.between(min, max)
-      logger.info(s"Schedule\t$name\tmin\t${min}s\tmax\t${max}s\tdelay\t${delay}s")
+      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> min, "maxSeconds" -> max, "delaySeconds" -> delay)
       withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(delay)))
       actorSystem.scheduler.scheduleOnce(delay seconds) {
         runScheduler(name)
@@ -113,6 +124,25 @@ class ApplicationLifecycleHook @Inject()(
     }
 
     scheduleWithRandomInterval()
+  }
+
+
+  def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
+    val min = interval.toSeconds.toInt
+    val max = interval.toSeconds.toInt
+    jobMap.put(name, job)
+    schedulerMap.put(name, SchedulerStatus(name, min, max, running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
+
+    def scheduleOnce(delay: FiniteDuration): Unit = {
+      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(delay.toSeconds.toInt)))
+      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> delay.toSeconds)
+      actorSystem.scheduler.scheduleOnce(delay) {
+        runScheduler(name)
+        scheduleOnce(interval)
+      }
+    }
+
+    scheduleOnce(initialDelay)
   }
 
   def getSchedulerStatuses: Seq[SchedulerStatus] = {
