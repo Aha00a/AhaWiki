@@ -18,7 +18,7 @@ import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models._
 import models.tables.Permission
 import models.tables.Site
-import play.api.Environment
+import play.api.{Configuration, Environment}
 import play.api.Logging
 import play.api.db.Database
 import play.api.libs.ws.WSClient
@@ -37,6 +37,7 @@ class Test @Inject()(implicit val
                      environment: Environment,
                      @Named("db-actor") actorAhaWiki: ActorRef,
                      applicationConf: ApplicationConf,
+                     configuration: Configuration,
                      ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
                      executionContext: ExecutionContext
@@ -50,6 +51,8 @@ class Test @Inject()(implicit val
   import testUtil.assertEquals
 
   def unit: Action[AnyContent] = Action { implicit request =>
+    val sessionMaxAge = configuration.getOptional[Long]("play.http.session.maxAge")
+    logger.info(s"[/test/unit] play.http.session.maxAge=$sessionMaxAge")
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 

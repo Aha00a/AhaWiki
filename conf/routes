@@ -4,93 +4,94 @@
 # ~~~~
 
 # Home page
-GET           /                                     controllers.Home.index
-GET           /w                                    controllers.Home.index
-GET           /w/                                   controllers.Home.index
+GET           /                                      controllers.Home.index
+GET           /w                                     controllers.Home.index
+GET           /w/                                    controllers.Home.index
 
-GET           /robots.txt                           controllers.Home.robotsTxt
-GET           /ads.txt                              controllers.Home.adsTxt
-GET           /r                                    controllers.Home.random
+GET           /robots.txt                            controllers.Home.robotsTxt
+GET           /ads.txt                               controllers.Home.adsTxt
+GET           /r                                     controllers.Home.random
 
-POST          /diary                                controllers.Diary.write()
+POST          /diary                                 controllers.Diary.write()
 
-GET           /search                               controllers.Search.index(q:String?="")
+GET           /search                                controllers.Search.index(q:String?="")
 
-GET           /w/*nameEncoded                       controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
-POST          /w/*nameEncoded                       controllers.Wiki.save(nameEncoded:String)
+GET           /w/*nameEncoded                        controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
+POST          /w/*nameEncoded                        controllers.Wiki.save(nameEncoded:String)
 
-POST          /actions/delete                       controllers.Wiki.delete()
-POST          /actions/deleteLastRevision           controllers.Wiki.deleteLastRevision()
-POST          /actions/rename                       controllers.Wiki.rename()
-POST          /actions/syncGoogleSpreadsheet        controllers.Wiki.syncGoogleSpreadsheet()
-POST          /preview                              controllers.Wiki.preview
+POST          /actions/delete                        controllers.Wiki.delete()
+POST          /actions/deleteLastRevision            controllers.Wiki.deleteLastRevision()
+POST          /actions/rename                        controllers.Wiki.rename()
+POST          /actions/syncGoogleSpreadsheet         controllers.Wiki.syncGoogleSpreadsheet()
+POST          /preview                               controllers.Wiki.preview
 
-GET           /login                                controllers.Auth.login
-GET           /logout                               controllers.Auth.logout
-GET           /google/oauth/login                   controllers.GoogleOAuth.login
-GET           /google/oauth/callback                controllers.GoogleOAuth.callback(code:String)
+GET           /login                                 controllers.Auth.login
+GET           /logout                                controllers.Auth.logout
+GET           /google/oauth/login                    controllers.GoogleOAuth.login
+GET           /google/oauth/callback                 controllers.GoogleOAuth.callback(code:String)
 
-GET           /Admin                                controllers.Admin.index
-GET           /Admin/                               controllers.Admin.index
-GET           /Admin/Site                           controllers.Admin.index
-GET           /Admin/Site/:seq                      controllers.Admin.site(seq: Long)
-GET           /Admin/SiteUser                       controllers.Admin.index
-GET           /Admin/User                           controllers.Admin.index
-GET           /Admin/User/UserViewHistory           controllers.Admin.index
-GET           /Admin/Operation                      controllers.Admin.index
-GET           /Admin/RecentChange                   controllers.Admin.index
-GET           /Admin/Sites                          controllers.Admin.sites
-GET           /Admin/SiteUsers                     controllers.Admin.siteUsers
-GET           /Admin/AllUsers                      controllers.Admin.index
-GET           /Admin/UserViews                     controllers.Admin.index
-GET           /Admin/Operations                     controllers.Admin.index
-GET           /Admin/RecentChanges                 controllers.Admin.index
+GET           /Admin                                 controllers.Admin.index
+GET           /Admin/                                controllers.Admin.index
+GET           /Admin/Site                            controllers.Admin.index
+GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
+GET           /Admin/SiteUser                        controllers.Admin.index
+GET           /Admin/User                            controllers.Admin.index
+GET           /Admin/User/UserViewHistory            controllers.Admin.index
+GET           /Admin/Operation                       controllers.Admin.index
+GET           /Admin/RecentChange                    controllers.Admin.index
+GET           /Admin/Sites                           controllers.Admin.sites
+GET           /Admin/SiteUsers                       controllers.Admin.siteUsers
+GET           /Admin/AllUsers                        controllers.Admin.index
+GET           /Admin/UserViews                       controllers.Admin.index
+GET           /Admin/Operations                      controllers.Admin.index
+GET           /Admin/RecentChanges                   controllers.Admin.index
 
 
-GET           /api/csrf                             controllers.Api.csrf
-GET           /api/Admin/Sites                      controllers.Api.adminSites
-GET           /api/Admin/SiteUsers                 controllers.Api.adminSiteUsers
-GET           /api/Admin/Users                      controllers.Api.adminUsers
-GET           /api/Admin/UserViews                 controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
-GET           /api/Admin/Schedulers                 controllers.Api.adminSchedulers
-GET           /api/Admin/DailyStats                controllers.Api.adminDailyStats
-GET           /api/Admin/TopViewedPages            controllers.Api.adminTopViewedPages
-GET           /api/Admin/RecentChanges             controllers.Api.adminRecentChanges
-GET           /api/Admin/SignedReadUrl            controllers.Api.adminGenerateSignedReadUrl
-GET           /api/Admin/Favicon                   controllers.Api.adminSiteFavicon
-POST          /api/Admin/Favicon                   controllers.Api.adminUploadSiteFavicon
-DELETE        /api/Admin/Favicon                   controllers.Api.adminDeleteSiteFavicon
-GET           /api/Admin/SiteTheme                 controllers.Api.adminSiteTheme
-PUT           /api/Admin/SiteTheme                 controllers.Api.adminUpdateSiteTheme
-GET           /api/Admin/Site/:seq/PageNames       controllers.Api.adminSitePageNames(seq: Long)
-POST          /api/Admin/Site/:seq/Calculate       controllers.Api.adminSiteCalculate(seq: Long)
-GET           /api/Admin/Schedulers/Run/:name       controllers.Api.adminRunScheduler(name: String)
-GET           /api/Admin/MemoryCacheStats           controllers.Api.adminMemoryCacheStats
-GET           /api/pageMap                          controllers.Api.pageMap
-GET           /api/pageNames                        controllers.Api.pageNames
-GET           /api/macroNames                       controllers.Api.macroNames
-GET           /api/interpreterNames                 controllers.Api.interpreterNames
-GET           /api/schemaClassNames                 controllers.Api.schemaClassNames
-GET           /api/schemaPropertyNames              controllers.Api.schemaPropertyNames
-GET           /api/links/*nameEncoded               controllers.Api.links(nameEncoded)
-GET           /api/statistics                       controllers.Api.statistics()
-POST          /api/uploadClipboardImage             controllers.Wiki.uploadClipboardImage()
-POST          /api/uploadAttachment                 controllers.Wiki.uploadAttachment()
-GET           /api/pageAttachments                 controllers.Wiki.pageAttachments()
-POST          /api/deleteAttachment                controllers.Wiki.deleteAttachment()
-DELETE        /api/cache/:siteSeq                   controllers.Api.cacheDelete(siteSeq: Long)
+GET           /api/csrf                              controllers.Api.csrf
+GET           /api/Admin/Sites                       controllers.Api.adminSites
+GET           /api/Admin/SiteUsers                   controllers.Api.adminSiteUsers
+GET           /api/Admin/Users                       controllers.Api.adminUsers
+GET           /api/Admin/UserViews                   controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
+GET           /api/Admin/Schedulers                  controllers.Api.adminSchedulers
+GET           /api/Admin/DailyStats                  controllers.Api.adminDailyStats
+GET           /api/Admin/TopViewedPages              controllers.Api.adminTopViewedPages
+GET           /api/Admin/RecentChanges               controllers.Api.adminRecentChanges
+GET           /api/Admin/SignedReadUrl               controllers.Api.adminGenerateSignedReadUrl
+GET           /api/Admin/Favicon                     controllers.Api.adminSiteFavicon
+POST          /api/Admin/Favicon                     controllers.Api.adminUploadSiteFavicon
+DELETE        /api/Admin/Favicon                     controllers.Api.adminDeleteSiteFavicon
+GET           /api/Admin/SiteTheme                   controllers.Api.adminSiteTheme
+PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdateSiteTheme
+GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
+POST          /api/Admin/Site/:seq/Calculate         controllers.Api.adminSiteCalculate(seq: Long)
+GET           /api/Admin/Schedulers/Run/:name        controllers.Api.adminRunScheduler(name: String)
+GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats
+GET           /api/pageMap                           controllers.Api.pageMap
+GET           /api/pageNames                         controllers.Api.pageNames
+GET           /api/macroNames                        controllers.Api.macroNames
+GET           /api/interpreterNames                  controllers.Api.interpreterNames
+GET           /api/schemaClassNames                  controllers.Api.schemaClassNames
+GET           /api/schemaPropertyNames               controllers.Api.schemaPropertyNames
+GET           /api/links/*nameEncoded                controllers.Api.links(nameEncoded)
+GET           /api/statistics                        controllers.Api.statistics()
+POST          /api/uploadClipboardImage              controllers.Wiki.uploadClipboardImage()
+POST          /api/uploadAttachment                  controllers.Wiki.uploadAttachment()
+GET           /api/pageAttachments                   controllers.Wiki.pageAttachments()
+POST          /api/deleteAttachment                  controllers.Wiki.deleteAttachment()
+DELETE        /api/cache/:siteSeq                    controllers.Api.cacheDelete(siteSeq: Long)
 
-GET           /feed                                 controllers.Feed.index
-GET           /feed.atom                            controllers.Feed.atom
+GET           /feed                                  controllers.Feed.index
+GET           /feed.atom                             controllers.Feed.atom
 
-GET           /test/unit                            controllers.Test.unit
-GET           /test/dbtest                          controllers.Test.dbtest
-GET           /test/filetest                        controllers.Test.filetest
-GET           /test/gradient                        controllers.Test.gradient
-GET           /test/permission                      controllers.Test.permission
+GET           /hc                                    controllers.Test.unit
+GET           /test/unit                             controllers.Test.unit
+GET           /test/dbtest                           controllers.Test.dbtest
+GET           /test/filetest                         controllers.Test.filetest
+GET           /test/gradient                         controllers.Test.gradient
+GET           /test/permission                       controllers.Test.permission
 
-GET           /dev/deleteVimCache                   controllers.Dev.deleteVimCache(md5:String)
+GET           /dev/deleteVimCache                    controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path
-GET           /public/*file                         controllers.Assets.at(path="/public", file)
-GET           /assets/*file                         controllers.Assets.at(path="/public", file)
+GET           /public/*file                          controllers.Assets.at(path="/public", file)
+GET           /assets/*file                          controllers.Assets.at(path="/public", file)
