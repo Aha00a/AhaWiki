@@ -42,6 +42,7 @@
                     <div class="row metric"><span>Avg degree</span><span class="avgDegreeD3Canvas @id">0.00</span></div>
                     <div class="row metric"><span>Connected ratio</span><span class="depthCoverageD3Canvas @id">0%</span></div>
                     <div class="row metric"><span>Zoom(scale)</span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
+                    <div class="row compact">Ctrl/⌘ + Scroll: Zoom</div>
                 </div>
                 <div class="hudPanel bottomRight @id">
                     <div class="row legend">
@@ -351,8 +352,11 @@
                 });
 
                 $(canvasSelector).on('wheel.d3canvas@(id)', function(e) {
-                    e.preventDefault();
                     var oe = e.originalEvent;
+                    if(!oe.ctrlKey && !oe.metaKey) {
+                        return;
+                    }
+                    e.preventDefault();
                     var deltaY = oe.deltaY || 0;
                     var rect = canvas.getBoundingClientRect();
                     var x = oe.clientX - rect.left;

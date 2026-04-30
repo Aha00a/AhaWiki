@@ -436,12 +436,16 @@
                 }
             });
             $(canvasSelector).on('wheel.d3canvas@(id)', function(e) {
+                var oe = e.originalEvent;
+                if(!oe.ctrlKey && !oe.metaKey) {
+                    return;
+                }
                 e.preventDefault();
                 var rect = canvas.getBoundingClientRect();
-                var x = e.originalEvent.clientX - rect.left;
-                var y = e.originalEvent.clientY - rect.top;
+                var x = oe.clientX - rect.left;
+                var y = oe.clientY - rect.top;
                 var worldBefore = screenToWorld(x, y);
-                var zoomFactor = e.originalEvent.deltaY < 0 ? 1.1 : 0.9;
+                var zoomFactor = oe.deltaY < 0 ? 1.1 : 0.9;
                 state.scale = Math.max(minScale, Math.min(maxScale, state.scale * zoomFactor));
                 state.panX = x - worldBefore.x * state.scale;
                 state.panY = y - worldBefore.y * state.scale;
