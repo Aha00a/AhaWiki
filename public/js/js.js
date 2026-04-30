@@ -110,8 +110,33 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.right = 'auto';
         };
 
-        window.addEventListener('resize', positionEditLink);
-        window.addEventListener('scroll', positionEditLink, { passive: true });
-        setTimeout(positionEditLink, 100);
+        var schedulePositionEditLink = function () {
+            if (window.requestAnimationFrame) {
+                window.requestAnimationFrame(positionEditLink);
+            } else {
+                positionEditLink();
+            }
+        };
+
+        window.addEventListener('resize', schedulePositionEditLink);
+        window.addEventListener('scroll', schedulePositionEditLink, { passive: true });
+
+        if (window.ResizeObserver) {
+            var resizeObserver = new ResizeObserver(schedulePositionEditLink);
+            resizeObserver.observe(wrapper);
+            resizeObserver.observe(contentAnchorTarget);
+        }
+
+        if (window.MutationObserver) {
+            document.querySelectorAll('.wikiContent .toc').forEach(function (toc) {
+                var mutationObserver = new MutationObserver(schedulePositionEditLink);
+                mutationObserver.observe(toc, {
+                    attributes: true,
+                    attributeFilter: ['class', 'style']
+                });
+            });
+        }
+
+        setTimeout(schedulePositionEditLink, 100);
     });
 });
