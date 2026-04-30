@@ -650,6 +650,9 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
+.AhaWiki .commonAhaWiki div.toc .tocBody > div > p:first-child {
+  margin-left: 0;
+}
 .AhaWiki .commonAhaWiki div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -688,6 +691,7 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
   border-bottom: 1px solid #d5d5d5;
+  margin-left: 0;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
@@ -985,6 +989,16 @@ kbd:hover > kbd {
     padding-left: 0;
   }
 }
+.AhaWiki .commonAhaWiki .seeAlsoGrid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.AhaWiki .commonAhaWiki .seeAlsoGrid .seeAlsoPrimary,
+.AhaWiki .commonAhaWiki .seeAlsoGrid .seeAlsoSecondary {
+  flex: 1 1 0;
+  min-width: 0;
+}
 .AhaWiki .wikiContent {
   padding: 0 0 25px 0;
   word-break: break-all;
@@ -1224,6 +1238,9 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
+.AhaWiki .wikiContent div.toc .tocBody > div > p:first-child {
+  margin-left: 0;
+}
 .AhaWiki .wikiContent div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -1262,6 +1279,7 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
   border-bottom: 1px solid #d5d5d5;
+  margin-left: 0;
 }
 .AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
@@ -1559,6 +1577,16 @@ kbd:hover > kbd {
     padding-left: 0;
   }
 }
+.AhaWiki .wikiContent .seeAlsoGrid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.AhaWiki .wikiContent .seeAlsoGrid .seeAlsoPrimary,
+.AhaWiki .wikiContent .seeAlsoGrid .seeAlsoSecondary {
+  flex: 1 1 0;
+  min-width: 0;
+}
 @media (max-width: 767px) {
   .AhaWiki .limitWidth {
     width: auto;
@@ -1592,6 +1620,12 @@ kbd:hover > kbd {
     max-width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  .AhaWiki .commonAhaWiki .seeAlsoGrid {
+    display: block;
+  }
+  .AhaWiki .commonAhaWiki .seeAlsoGrid .seeAlsoSecondary {
+    margin-top: 12px;
   }
 }
 .AhaWiki .gnb,
@@ -2108,6 +2142,9 @@ kbd:hover > kbd {
   right: 3px;
   content: '”';
 }
+.AhaWiki .paperContent .page .pageContent div.toc .tocBody > div > p:first-child {
+  margin-left: 0;
+}
 .AhaWiki .paperContent .page .pageContent div.toc ul {
   margin: 0;
   padding-left: 16px;
@@ -2146,6 +2183,7 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
   border-bottom: 1px solid #d5d5d5;
+  margin-left: 0;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
@@ -2442,6 +2480,16 @@ kbd:hover > kbd {
   .AhaWiki .paperContent .page .pageContent table.column2 > tbody > tr > td:last-of-type {
     padding-left: 0;
   }
+}
+.AhaWiki .paperContent .page .pageContent .seeAlsoGrid {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.AhaWiki .paperContent .page .pageContent .seeAlsoGrid .seeAlsoPrimary,
+.AhaWiki .paperContent .page .pageContent .seeAlsoGrid .seeAlsoSecondary {
+  flex: 1 1 0;
+  min-width: 0;
 }
 .AhaWiki .paperContent .page .toc {
   display: none;

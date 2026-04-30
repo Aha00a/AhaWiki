@@ -367,17 +367,17 @@ controllerComponents: ControllerComponents,
 
     s"""
        |== See Also == #See-Also-Generated
-       |[[Html(<table class="column2"><tbody><tr><td>)]]
+       |[[Html(<div class="seeAlsoGrid"><div class="seeAlsoPrimary">)]]
        |${context.schema}
        |
        |$backlinksMarkup
        |
        |$similarPagesMarkup
-       |[[Html(</td><td>)]]
+       |[[Html(</div><div class="seeAlsoSecondary">)]]
        |
        |=== Adjacent Pages === #Adjacent-Pages-Generated
        |[[AdjacentPages]]
-       |[[Html(</td></tr></tbody></table>)]]
+       |[[Html(</div></div>)]]
        |""".stripMargin
   }
 

@@ -420,6 +420,9 @@ kbd {
 		}
 
 		div.toc {
+			.tocBody > div > p:first-child {
+				margin-left: 0;
+			}
 
 			ul {
 				margin: 0;
@@ -463,6 +466,7 @@ kbd {
 			.schemaClassTitle {
 				padding-bottom: 8px;
 				border-bottom: 1px solid #d5d5d5;
+				margin-left: 0;
 			}
 
 			.schemaFields {
@@ -705,6 +709,17 @@ kbd {
 				}
 			}
 		}
+
+		.seeAlsoGrid {
+			display: flex;
+			gap: 20px;
+			align-items: flex-start;
+
+			.seeAlsoPrimary, .seeAlsoSecondary {
+				flex: 1 1 0;
+				min-width: 0;
+			}
+		}
 	}
 
 	.wikiContent {
@@ -742,6 +757,13 @@ kbd {
 				max-width: 100%;
 				overflow-x: auto;
 				-webkit-overflow-scrolling: touch;
+			}
+
+			.seeAlsoGrid {
+				display: block;
+				.seeAlsoSecondary {
+					margin-top: 12px;
+				}
 			}
 		}
 	}
