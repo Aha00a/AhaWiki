@@ -2857,6 +2857,14 @@ kbd:hover > kbd {
 .AhaWiki .adjacentPagesHud .dot.hop2 {
   background: #7ea2df;
 }
+@media (max-width: 768px) {
+  .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .ratio_16_9 {
+    padding-bottom: 100%;
+  }
+  .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .adjacentPagesHud {
+    display: none;
+  }
+}
 .AhaWiki .searchBg {
   position: fixed;
   top: 0;
