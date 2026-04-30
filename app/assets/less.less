@@ -1830,3 +1830,28 @@ kbd {
 		}
 	}
 }
+
+.AhaWiki {
+	.wikiContent {
+		div.toc {
+			button.tocToggle {
+				display: inline-block;
+				margin: 0 0 8px;
+				padding: 4px 8px;
+				font-size: 12px;
+				line-height: 1.4;
+				border: 1px solid #b7c5df;
+				border-radius: 4px;
+				background: #fff;
+				color: #2f4583;
+				cursor: pointer;
+			}
+
+			&.collapsed {
+				.tocBody {
+					display: none;
+				}
+			}
+		}
+	}
+}

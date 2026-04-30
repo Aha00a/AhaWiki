@@ -154,6 +154,27 @@
 
             $('.tablesorter').tablesorter();
 
+
+            function updateTocToggleLabel($toc, isCollapsed) {
+                var $button = $toc.find('.tocToggle').first();
+                $button.text(isCollapsed ? 'Show' : 'Hide');
+                $button.attr('aria-expanded', (!isCollapsed).toString());
+            }
+
+            $('.wikiContent .toc').each(function () {
+                var $toc = $(this);
+                var isMobile = window.matchMedia('(max-width: 768px)').matches;
+                var shouldCollapse = isMobile;
+                $toc.toggleClass('collapsed', shouldCollapse);
+                updateTocToggleLabel($toc, shouldCollapse);
+
+                $toc.find('.tocToggle').first().on('click', function () {
+                    $toc.toggleClass('collapsed');
+                    updateTocToggleLabel($toc, $toc.hasClass('collapsed'));
+                });
+            });
+
+
             var match = /\/search\?q=(.+)/.exec(document.referrer);
             if(match && match[1]) {
                 $('.wikiContent').mark(decodeURIComponent(match[1]));

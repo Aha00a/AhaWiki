@@ -177,7 +177,10 @@ object InterpreterWiki extends TraitInterpreter {
     override def result(): String = {
       variableHolderState := State.Normal
       if (arrayBufferHeading.length > 6)
-        arrayBuffer.insert(0, """<div class="toc">""" + InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) + """</div>""")
+        arrayBuffer.insert(0,
+          """<div class="toc" data-default-collapsed-mobile="true"><button type="button" class="tocToggle" aria-expanded="true">목차 접기</button><div class="tocBody">""" +
+            InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) +
+            """</div></div>""")
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
       extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(str)))
