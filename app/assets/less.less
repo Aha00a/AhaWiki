@@ -266,8 +266,13 @@ kbd {
 	}
 
 	.commonAhaWiki {
-		padding: 0 0 25px 25px;
+		padding: 0 0 25px 0;
 		word-break: break-all;
+		& > {
+			p, ul, ol, dl, blockquote, pre, table, .math, .error, .info, .footnote {
+				margin-left: 30px;
+			}
+		}
 
 		h1, h2, h3, h4, h5, h6 {
 			margin: 0;
@@ -285,18 +290,18 @@ kbd {
 		h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #cccccc; padding: 5px; }
 		h4, h5, h6 { margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid #ddd; padding: 3px; }
 
-		h1 { font-size: 2.25em; margin-left: -25px;}
-		h2 { font-size: 2em; margin-left: -20px; }
-		h3 { font-size: 1.75em; margin-left: -15px; }
-		h4 { font-size: 1.5em; margin-left: -10px; }
-		h5 { font-size: 1.25em; margin-left: -5px; }
-		h6 { font-size: 1em; margin-left: 0; }
+		h1 { font-size: 2.25em; margin-left: 0; }
+		h2 { font-size: 2em; margin-left: 5px; }
+		h3 { font-size: 1.75em; margin-left: 10px; }
+		h4 { font-size: 1.5em; margin-left: 15px; }
+		h5 { font-size: 1.25em; margin-left: 20px; }
+		h6 { font-size: 1em; margin-left: 25px; }
 
 		hr {
 			padding: 0;
 			border: none;
 			border-bottom: 1px dashed #ccc;
-			margin-left: -25px;
+			margin-left: 0;
 			height: 0;
 			clear: both;
 			&.pageBreakAfterAlways {

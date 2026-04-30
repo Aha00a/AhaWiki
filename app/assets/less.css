@@ -412,8 +412,21 @@ kbd:hover > kbd {
   padding: 10px;
 }
 .AhaWiki .commonAhaWiki {
-  padding: 0 0 25px 25px;
+  padding: 0 0 25px 0;
   word-break: break-all;
+}
+.AhaWiki .commonAhaWiki p,
+.AhaWiki .commonAhaWiki ul,
+.AhaWiki .commonAhaWiki ol,
+.AhaWiki .commonAhaWiki dl,
+.AhaWiki .commonAhaWiki blockquote,
+.AhaWiki .commonAhaWiki pre,
+.AhaWiki .commonAhaWiki table,
+.AhaWiki .commonAhaWiki .math,
+.AhaWiki .commonAhaWiki .error,
+.AhaWiki .commonAhaWiki .info,
+.AhaWiki .commonAhaWiki .footnote {
+  margin-left: 30px;
 }
 .AhaWiki .commonAhaWiki h1,
 .AhaWiki .commonAhaWiki h2,
@@ -461,33 +474,33 @@ kbd:hover > kbd {
 }
 .AhaWiki .commonAhaWiki h1 {
   font-size: 2.25em;
-  margin-left: -25px;
+  margin-left: 0;
 }
 .AhaWiki .commonAhaWiki h2 {
   font-size: 2em;
-  margin-left: -20px;
+  margin-left: 5px;
 }
 .AhaWiki .commonAhaWiki h3 {
   font-size: 1.75em;
-  margin-left: -15px;
+  margin-left: 10px;
 }
 .AhaWiki .commonAhaWiki h4 {
   font-size: 1.5em;
-  margin-left: -10px;
+  margin-left: 15px;
 }
 .AhaWiki .commonAhaWiki h5 {
   font-size: 1.25em;
-  margin-left: -5px;
+  margin-left: 20px;
 }
 .AhaWiki .commonAhaWiki h6 {
   font-size: 1em;
-  margin-left: 0;
+  margin-left: 25px;
 }
 .AhaWiki .commonAhaWiki hr {
   padding: 0;
   border: none;
   border-bottom: 1px dashed #ccc;
-  margin-left: -25px;
+  margin-left: 0;
   height: 0;
   clear: both;
 }
@@ -973,8 +986,21 @@ kbd:hover > kbd {
   }
 }
 .AhaWiki .wikiContent {
-  padding: 0 0 25px 25px;
+  padding: 0 0 25px 0;
   word-break: break-all;
+}
+.AhaWiki .wikiContent p,
+.AhaWiki .wikiContent ul,
+.AhaWiki .wikiContent ol,
+.AhaWiki .wikiContent dl,
+.AhaWiki .wikiContent blockquote,
+.AhaWiki .wikiContent pre,
+.AhaWiki .wikiContent table,
+.AhaWiki .wikiContent .math,
+.AhaWiki .wikiContent .error,
+.AhaWiki .wikiContent .info,
+.AhaWiki .wikiContent .footnote {
+  margin-left: 30px;
 }
 .AhaWiki .wikiContent h1,
 .AhaWiki .wikiContent h2,
@@ -1022,33 +1048,33 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent h1 {
   font-size: 2.25em;
-  margin-left: -25px;
+  margin-left: 0;
 }
 .AhaWiki .wikiContent h2 {
   font-size: 2em;
-  margin-left: -20px;
+  margin-left: 5px;
 }
 .AhaWiki .wikiContent h3 {
   font-size: 1.75em;
-  margin-left: -15px;
+  margin-left: 10px;
 }
 .AhaWiki .wikiContent h4 {
   font-size: 1.5em;
-  margin-left: -10px;
+  margin-left: 15px;
 }
 .AhaWiki .wikiContent h5 {
   font-size: 1.25em;
-  margin-left: -5px;
+  margin-left: 20px;
 }
 .AhaWiki .wikiContent h6 {
   font-size: 1em;
-  margin-left: 0;
+  margin-left: 25px;
 }
 .AhaWiki .wikiContent hr {
   padding: 0;
   border: none;
   border-bottom: 1px dashed #ccc;
-  margin-left: -25px;
+  margin-left: 0;
   height: 0;
   clear: both;
 }
@@ -1843,9 +1869,22 @@ kbd:hover > kbd {
   float: right;
 }
 .AhaWiki .paperContent .page .pageContent {
-  padding: 0 0 25px 25px;
+  padding: 0 0 25px 0;
   word-break: break-all;
   text-align: justify;
+}
+.AhaWiki .paperContent .page .pageContent p,
+.AhaWiki .paperContent .page .pageContent ul,
+.AhaWiki .paperContent .page .pageContent ol,
+.AhaWiki .paperContent .page .pageContent dl,
+.AhaWiki .paperContent .page .pageContent blockquote,
+.AhaWiki .paperContent .page .pageContent pre,
+.AhaWiki .paperContent .page .pageContent table,
+.AhaWiki .paperContent .page .pageContent .math,
+.AhaWiki .paperContent .page .pageContent .error,
+.AhaWiki .paperContent .page .pageContent .info,
+.AhaWiki .paperContent .page .pageContent .footnote {
+  margin-left: 30px;
 }
 .AhaWiki .paperContent .page .pageContent h1,
 .AhaWiki .paperContent .page .pageContent h2,
@@ -1893,33 +1932,33 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent h1 {
   font-size: 2.25em;
-  margin-left: -25px;
+  margin-left: 0;
 }
 .AhaWiki .paperContent .page .pageContent h2 {
   font-size: 2em;
-  margin-left: -20px;
+  margin-left: 5px;
 }
 .AhaWiki .paperContent .page .pageContent h3 {
   font-size: 1.75em;
-  margin-left: -15px;
+  margin-left: 10px;
 }
 .AhaWiki .paperContent .page .pageContent h4 {
   font-size: 1.5em;
-  margin-left: -10px;
+  margin-left: 15px;
 }
 .AhaWiki .paperContent .page .pageContent h5 {
   font-size: 1.25em;
-  margin-left: -5px;
+  margin-left: 20px;
 }
 .AhaWiki .paperContent .page .pageContent h6 {
   font-size: 1em;
-  margin-left: 0;
+  margin-left: 25px;
 }
 .AhaWiki .paperContent .page .pageContent hr {
   padding: 0;
   border: none;
   border-bottom: 1px dashed #ccc;
-  margin-left: -25px;
+  margin-left: 0;
   height: 0;
   clear: both;
 }
