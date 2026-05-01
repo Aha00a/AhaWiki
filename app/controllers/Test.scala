@@ -94,9 +94,9 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema"]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">schema:Schema</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""["schema:Schema" Alias]"""), """<a href="/w/schema:Schema" class="schema schema-link schema-schema">Alias</a>""")
 
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[KR]"""), """<a href="/w/KR" class="iso3166-alpha2-link missing" rel="nofollow">🇰🇷 KR</a>""")
-      assertEquals(InterpreterWiki.inlineToHtmlString("""[US United States]"""), """<a href="/w/US" class="iso3166-alpha2-link missing" rel="nofollow">🇺🇸 United States</a>""")
-      assertEquals(AhaMarkLink("""JP""").toHtmlString(), """<a href="/w/JP" class="iso3166-alpha2-link missing" rel="nofollow">🇯🇵 JP</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[KR]"""), """<a href="/w/KR" class="iso3166-alpha2-link">🇰🇷 KR</a>""")
+      assertEquals(InterpreterWiki.inlineToHtmlString("""[US United States]"""), """<a href="/w/US" class="iso3166-alpha2-link">🇺🇸 United States</a>""")
+      assertEquals(AhaMarkLink("""JP""").toHtmlString(), """<a href="/w/JP" class="iso3166-alpha2-link">🇯🇵 JP</a>""")
 
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/$   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/$" target="_blank" rel="noopener">http://a.com/$</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
       assertEquals(InterpreterWiki.inlineToHtmlString("""http://a.com/some$thing   [http://a.com]  [http://a.com a com]"""), """<a href="http://a.com/some$thing" target="_blank" rel="noopener">http://a.com/some$thing</a>   <a href="http://a.com" target="_blank" rel="noopener">http://a.com</a>  <a href="http://a.com" target="_blank" rel="noopener">a com</a>""")
