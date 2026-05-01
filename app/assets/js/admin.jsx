@@ -1797,7 +1797,13 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader>
                         <Table.Thead>
                             <Table.Tr>
-                                <Table.Th><AccessLogSortHeader label="When" field="dateInserted" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                <Table.Th><AccessLogSortHeader label="seq" field="seq" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th><AccessLogSortHeader label="DateInserted" field="dateInserted" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
                                     const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
                                     setAccessLogSortBy(field);
                                     setAccessLogSortOrder(nextOrder);
@@ -1840,6 +1846,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Table.Tbody>
                             {(Array.isArray(accessLogs) ? accessLogs : []).map((row) => (
                                 <Table.Tr key={row.seq}>
+                                    <Table.Td>{row.seq}</Table.Td>
                                     <Table.Td>{row.dateInserted}</Table.Td>
                                     <Table.Td>{`${row.siteName} (#${row.siteSeq})`}</Table.Td>
                                     <Table.Td>{row.ipDenySeq ?? "-"}</Table.Td>
