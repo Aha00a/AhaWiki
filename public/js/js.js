@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle.style.color = '#000';
                 foldToggle.style.textDecoration = 'none';
                 foldToggle.style.opacity = '.4';
-                foldToggle.style.fontSize = '0.75em';
+                foldToggle.style.fontSize = '0.5em';
                 foldToggle.style.lineHeight = '1';
                 foldToggle.style.marginRight = '0px';
                 foldToggle.style.verticalAlign = 'middle';
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 childSections.forEach(function (childSection) {
                     childSection.style.display = isCollapsed ? 'none' : '';
                 });
-                foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-down"></i>';
+                foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right fa-fw"></i>' : '<i class="fas fa-chevron-down fa-fw"></i>';
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
             };
             updateFoldState(section.classList.contains('sectionCollapsed'));
