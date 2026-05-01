@@ -1,59 +1,20 @@
 @(links:Array[Array[String]], enableWikiLink:Boolean)(implicit wikiContext: ContextWikiPage)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <div class="aspectRatioWrapper @id">
-        <div class="ratio_16_9"></div>
-        <div class="aspectRatioContent">
-            <canvas id="graphD3Canvas-@id" class="graph graphD3Canvas @(id)" style="width: 100%; height: 100%;"></canvas>
-            <div class="adjacentPagesHud @id">
-                <div class="hudPanel topLeft @id">
-                    <div class="title">Control</div>
-                    <div class="row">
-                        <label>Min degree <input type="range" min="0" max="12" step="1" value="0" class="degreeFilterD3Canvas @id"/></label>
-                        <span class="degreeFilterValueD3Canvas @id">all</span>
-                    </div>
-                    <div class="row">
-                        <label>Label scale <input type="range" min="0.6" max="2" step="0.1" value="1" class="labelScaleD3Canvas @id"/></label>
-                        <span class="labelScaleValueD3Canvas @id">1.0x</span>
-                    </div>
-                    <div class="row">
-                        <label>Node scale <input type="range" min="0.7" max="1.8" step="0.1" value="1" class="nodeScaleD3Canvas @id"/></label>
-                        <span class="nodeScaleValueD3Canvas @id">1.0x</span>
-                    </div>
-                    <div class="row">
-                        <label>Link distance <input type="range" min="40" max="180" step="10" value="80" class="linkDistanceD3Canvas @id"/></label>
-                        <span class="linkDistanceValueD3Canvas @id">80</span>
-                    </div>
-                    <div class="row">
-                        <label>Charge <input type="range" min="-300" max="-40" step="10" value="-120" class="chargeStrengthD3Canvas @id"/></label>
-                        <span class="chargeStrengthValueD3Canvas @id">-120</span>
-                    </div>
-                </div>
-                <div class="hudPanel bottomLeft @id">
-                    <div class="row compact hudActions">
-                        <a href="#" class="controlStartD3Canvas @(id) active"><i class="fas fa-play"></i> Start</a>
-                        <a href="#" class="controlStopD3Canvas @(id)"><i class="fas fa-stop"></i> Stop</a>
-                        <a href="#" class="controlResetViewD3Canvas @(id)"><i class="fas fa-compress-arrows-alt"></i> Reset</a>
-                    </div>
-                </div>
-                <div class="hudPanel topRight @id">
-                    <div class="title">Metrics</div>
-                    <div class="row metric"><span>Nodes(visible/total)</span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
-                    <div class="row metric"><span>Links(visible/total)</span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
-                    <div class="row metric"><span>Avg degree</span><span class="avgDegreeD3Canvas @id">0.00</span></div>
-                    <div class="row metric"><span>Connected ratio</span><span class="depthCoverageD3Canvas @id">0%</span></div>
-                    <div class="row metric"><span>Zoom(scale)</span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
-                    <div class="row compact">Ctrl/⌘ + Scroll: Zoom</div>
-                </div>
-                <div class="hudPanel bottomRight @id">
-                    <div class="row legend">
-                        <span class="dot root"></span>Root
-                        <span class="dot hop1"></span>Connected
-                        <span class="dot hop2"></span>Others
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    @views.html.Wiki._graphD3CanvasLayout(
+        id = id,
+        canvasStyle = "width: 100%; height: 100%;",
+        startActive = true,
+        showQueueMetric = false,
+        showMoreButton = false,
+        showFullscreenButton = false,
+        showResetButton = true,
+        depthMetricLabel = "Connected ratio",
+        depthMetricDefaultValue = "0%",
+        legendHop1 = "Connected",
+        legendHop2 = "Others"
+    )
+</div>
 
     <script type="text/javascript">
         $(function() {
