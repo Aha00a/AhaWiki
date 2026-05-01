@@ -47,7 +47,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         isStartsWithQuestionMark ||
         // uriNormalized.matches(DateTimeUtil.regexIsoLocalDate.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexYearDashMonth.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexDashDashDashDashDay.pattern.pattern()) ||
+        uriNormalized.matches(DateTimeUtil.regexDashDashDashDay.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
         uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||

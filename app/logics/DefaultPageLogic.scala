@@ -126,7 +126,7 @@ object DefaultPageLogic {
              |""".stripMargin
         )
 
-      //          case regexDashDashDashDashDay(mm) =>
+      //          case regexDashDashDashDay(mm) =>
       //            Ok(mm) // TODO
 
       case "schema:Schema" =>
