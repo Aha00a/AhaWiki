@@ -450,7 +450,45 @@ class Api @Inject()(
           lastViewed: Option[String],
         )
 
-        val users = SQL"""
+        val page = request.getQueryString("page")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1))
+          .getOrElse(1)
+        val pageSize = request.getQueryString("pageSize")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1).min(1000))
+          .getOrElse(20)
+        val search = request.getQueryString("search").map(_.trim).getOrElse("")
+        val sortByRaw = request.getQueryString("sortBy").map(_.trim).getOrElse("seq")
+        val sortOrderRaw = request.getQueryString("sortOrder").map(_.trim.toLowerCase).getOrElse("desc")
+
+        val sortBy = sortByRaw match {
+          case "created" => "U.created"
+          case "updated" => "U.updated"
+          case "email" => "U.email"
+          case "nickname" => "U.nickname"
+          case "siteCount" => "site_count"
+          case "visitCount" => "visit_count"
+          case "lastViewed" => "last_viewed_raw"
+          case _ => "U.seq"
+        }
+        val sortOrder = if (sortOrderRaw == "asc") "ASC" else "DESC"
+        val offset = (page - 1) * pageSize
+        val searchLike = s"%$search%"
+
+        val count = SQL"""
+          SELECT COUNT(*) AS count_value
+          FROM User U
+          WHERE (
+            ${search.isEmpty} = TRUE OR
+            U.email LIKE $searchLike OR
+            U.nickname LIKE $searchLike OR
+            CAST(U.seq AS CHAR) LIKE $searchLike
+          )
+        """.as(long("count_value").single)
+
+        val orderBySql = s"$sortBy $sortOrder"
+        val users = SQL(s"""
           SELECT
             U.seq,
             DATE_FORMAT(U.created, '%Y-%m-%d %H:%i:%s') AS created,
@@ -459,7 +497,8 @@ class Api @Inject()(
             U.nickname,
             COALESCE(US.site_count, 0) AS site_count,
             COALESCE(UV.visit_count, 0) AS visit_count,
-            UV.last_viewed
+            UV.last_viewed,
+            UV.last_viewed_raw
           FROM User U
           LEFT JOIN (
             SELECT user, COUNT(*) AS site_count
@@ -470,15 +509,25 @@ class Api @Inject()(
             SELECT
               user,
               COUNT(*) AS visit_count,
+              MAX(dateInserted) AS last_viewed_raw,
               DATE_FORMAT(MAX(dateInserted), '%Y-%m-%d %H:%i:%s') AS last_viewed
             FROM UserViewHistory
             GROUP BY user
           ) UV ON UV.user = U.seq
-          ORDER BY
-            CASE WHEN UV.last_viewed IS NULL THEN 1 ELSE 0 END ASC,
-            UV.last_viewed DESC,
-            U.seq DESC
-        """.as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
+          WHERE (
+            {searchIsEmpty} = TRUE OR
+            U.email LIKE {searchLike} OR
+            U.nickname LIKE {searchLike} OR
+            CAST(U.seq AS CHAR) LIKE {searchLike}
+          )
+          ORDER BY $orderBySql
+          LIMIT {pageSize} OFFSET {offset}
+        """).on(
+          "searchIsEmpty" -> search.isEmpty,
+          "searchLike" -> searchLike,
+          "pageSize" -> pageSize,
+          "offset" -> offset,
+        ).as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
           case seq ~ created ~ updated ~ email ~ nickname ~ siteCount ~ visitCount ~ lastViewed =>
             AdminUser(
               seq = seq,
@@ -492,7 +541,12 @@ class Api @Inject()(
             )
         }.*)
 
-        Ok(users.asJson)
+        Ok(Map(
+          "array" -> users.asJson,
+          "page" -> page.asJson,
+          "pageSize" -> pageSize.asJson,
+          "count" -> count.asJson,
+        ).asJson)
       }
     }
   }

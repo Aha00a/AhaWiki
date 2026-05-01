@@ -156,6 +156,7 @@ function useAdminData(page) {
   const [sites, setSites] = useState([]);
   const [users, setUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const [allUserCount, setAllUserCount] = useState(0);
   const [schedulers, setSchedulers] = useState([]);
   const [dailyStats, setDailyStats] = useState({
     userCreated: [],
@@ -203,6 +204,25 @@ function useAdminData(page) {
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAccessLogs(rows);
     setAccessLogCount(Number(data?.count ?? rows.length));
+  }, []);
+  const loadAllUsers = useCallback(async ({
+    page: page2 = 1,
+    pageSize = 20,
+    search = "",
+    sortBy = "seq",
+    sortOrder = "desc"
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page2),
+      pageSize: String(pageSize),
+      search,
+      sortBy,
+      sortOrder
+    });
+    const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
+    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+    setAllUsers(rows);
+    setAllUserCount(Number(data?.count ?? rows.length));
   }, []);
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -518,9 +538,8 @@ function useAdminData(page) {
           return;
         }
         if (page === "all-users") {
-          const data = await fetchJson("/api/Admin/Users");
           if (mounted) {
-            setAllUsers(data);
+            await loadAllUsers();
             setUsers([]);
             setSites([]);
             setSchedulers([]);
@@ -609,12 +628,13 @@ function useAdminData(page) {
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs]);
+  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers]);
   return {
     loading,
     sites,
     users,
     allUsers,
+    allUserCount,
     schedulers,
     dailyStats,
     recentChanges,
@@ -626,6 +646,7 @@ function useAdminData(page) {
     loadUserViewHistories,
     loadRecentChanges,
     loadAccessLogs,
+    loadAllUsers,
     runningSchedulerName,
     runScheduler,
     reloadSchedulers,
@@ -830,6 +851,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     sites,
     users,
     allUsers,
+    allUserCount,
     schedulers,
     dailyStats,
     recentChanges,
@@ -841,6 +863,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     loadUserViewHistories,
     loadRecentChanges,
     loadAccessLogs,
+    loadAllUsers,
     runningSchedulerName,
     runScheduler,
     reloadSchedulers,
@@ -870,6 +893,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
   const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
   const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
+  const [allUserPage, setAllUserPage] = useState(1);
+  const [allUserSearchInput, setAllUserSearchInput] = useState("");
+  const [allUserSortBy, setAllUserSortBy] = useState("seq");
+  const [allUserSortOrder, setAllUserSortOrder] = useState("desc");
   const [faviconFile, setFaviconFile] = useState(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
   const [sitePageNames, setSitePageNames] = useState([]);
@@ -897,6 +924,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     [selectedSite]
   );
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
+  const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
   useEffect(() => {
     if (page !== "site-detail") {
       return;
@@ -943,15 +971,44 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "all-users") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUsers.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Email"), /* @__PURE__ */ React.createElement(Table.Th, null, "Nickname"), /* @__PURE__ */ React.createElement(Table.Th, null, "Created"), /* @__PURE__ */ React.createElement(Table.Th, null, "Updated"), /* @__PURE__ */ React.createElement(Table.Th, null, "Sites"), /* @__PURE__ */ React.createElement(Table.Th, null, "Visits"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Viewed"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, allUsers.map((user) => /* @__PURE__ */ React.createElement(Table.Tr, { key: user.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, user.seq), /* @__PURE__ */ React.createElement(Table.Td, null, user.email), /* @__PURE__ */ React.createElement(Table.Td, null, user.nickname), /* @__PURE__ */ React.createElement(Table.Td, null, user.created), /* @__PURE__ */ React.createElement(Table.Td, null, user.updated), /* @__PURE__ */ React.createElement(Table.Td, null, user.siteCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, user.visitCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, user.lastViewed ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
-      Button,
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUserCount, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Group, { mb: "sm", align: "end" }, /* @__PURE__ */ React.createElement(TextInput, { label: "search", value: allUserSearchInput, onChange: (event) => setAllUserSearchInput(event.currentTarget.value), placeholder: "email, nickname, seq" }), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => {
+      setAllUserPage(1);
+      loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder });
+    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React.createElement(
+      DataTable,
       {
-        size: "xs",
-        variant: "light",
-        onClick: () => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`)
-      },
-      "\uC5F4\uB78C \uC774\uB825"
-    )))))));
+        withTableBorder: true,
+        striped: true,
+        highlightOnHover: true,
+        records: allUsers,
+        columns: [
+          { accessor: "seq", title: "Seq", sortable: true },
+          { accessor: "email", title: "Email", sortable: true },
+          { accessor: "nickname", title: "Nickname", sortable: true },
+          { accessor: "created", title: "Created", sortable: true },
+          { accessor: "updated", title: "Updated", sortable: true },
+          { accessor: "siteCount", title: "Sites", sortable: true },
+          { accessor: "visitCount", title: "Visits", sortable: true },
+          { accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-" },
+          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`) }, "\uC5F4\uB78C \uC774\uB825") }
+        ],
+        sortStatus: { columnAccessor: allUserSortBy, direction: allUserSortOrder },
+        onSortStatusChange: (nextSortStatus) => {
+          setAllUserSortBy(nextSortStatus.columnAccessor);
+          setAllUserSortOrder(nextSortStatus.direction);
+          loadAllUsers({ page: allUserPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextSortStatus.direction });
+        },
+        totalRecords: allUserCount,
+        recordsPerPage: ACCESS_LOG_PAGE_SIZE,
+        page: allUserPage,
+        onPageChange: (nextPage) => {
+          setAllUserPage(nextPage);
+          loadAllUsers({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder });
+        },
+        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+        minHeight: 380
+      }
+    ), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", allUserPage, " / ", allUserTotalPages));
   }
   if (page === "user-views") {
     return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "User View Histories"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React.createElement(Text, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(

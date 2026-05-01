@@ -165,6 +165,7 @@ function useAdminData(page) {
     const [sites, setSites] = useState([]);
     const [users, setUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [allUserCount, setAllUserCount] = useState(0);
     const [schedulers, setSchedulers] = useState([]);
     const [dailyStats, setDailyStats] = useState({
         userCreated: [],
@@ -214,6 +215,27 @@ function useAdminData(page) {
             : (Array.isArray(data) ? data : []);
         setAccessLogs(rows);
         setAccessLogCount(Number(data?.count ?? rows.length));
+    }, []);
+    const loadAllUsers = useCallback(async ({
+        page = 1,
+        pageSize = 20,
+        search = "",
+        sortBy = "seq",
+        sortOrder = "desc",
+    } = {}) => {
+        const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            search,
+            sortBy,
+            sortOrder,
+        });
+        const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
+        const rows = Array.isArray(data?.array)
+            ? data.array
+            : (Array.isArray(data) ? data : []);
+        setAllUsers(rows);
+        setAllUserCount(Number(data?.count ?? rows.length));
     }, []);
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -549,9 +571,8 @@ function useAdminData(page) {
                 }
 
                 if (page === "all-users") {
-                    const data = await fetchJson("/api/Admin/Users");
                     if (mounted) {
-                        setAllUsers(data);
+                        await loadAllUsers();
                         setUsers([]);
                         setSites([]);
                         setSchedulers([]);
@@ -644,13 +665,14 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs]);
+    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers]);
 
     return {
         loading,
         sites,
         users,
         allUsers,
+        allUserCount,
         schedulers,
         dailyStats,
         recentChanges,
@@ -662,6 +684,7 @@ function useAdminData(page) {
         loadUserViewHistories,
         loadRecentChanges,
         loadAccessLogs,
+        loadAllUsers,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -1057,6 +1080,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         sites,
         users,
         allUsers,
+        allUserCount,
         schedulers,
         dailyStats,
         recentChanges,
@@ -1068,6 +1092,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         loadUserViewHistories,
         loadRecentChanges,
         loadAccessLogs,
+        loadAllUsers,
         runningSchedulerName,
         runScheduler,
         reloadSchedulers,
@@ -1097,6 +1122,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
     const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
     const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
+    const [allUserPage, setAllUserPage] = useState(1);
+    const [allUserSearchInput, setAllUserSearchInput] = useState("");
+    const [allUserSortBy, setAllUserSortBy] = useState("seq");
+    const [allUserSortOrder, setAllUserSortOrder] = useState("desc");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
     const [sitePageNames, setSitePageNames] = useState([]);
@@ -1124,6 +1153,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         [selectedSite],
     );
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
+    const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
 
     useEffect(() => {
         if (page !== "site-detail") {
@@ -1248,50 +1278,52 @@ function AdminContent({page, onNavigate, pathname, search}) {
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
                     <Title order={3}>All Users</Title>
-                    <Badge color="blue" variant="light">{allUsers.length} users</Badge>
+                    <Badge color="blue" variant="light">{allUserCount} users</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
                     전체 사이트 기준 사용자 목록이며, 최근 방문순으로 정렬됩니다.
                 </Text>
                 <Divider mb="md"/>
-                <Table striped highlightOnHover withTableBorder withColumnBorders>
-                    <Table.Thead>
-                        <Table.Tr>
-                            <Table.Th>Seq</Table.Th>
-                            <Table.Th>Email</Table.Th>
-                            <Table.Th>Nickname</Table.Th>
-                            <Table.Th>Created</Table.Th>
-                            <Table.Th>Updated</Table.Th>
-                            <Table.Th>Sites</Table.Th>
-                            <Table.Th>Visits</Table.Th>
-                            <Table.Th>Last Viewed</Table.Th>
-                            <Table.Th>Action</Table.Th>
-                        </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                        {allUsers.map((user) => (
-                            <Table.Tr key={user.seq}>
-                                <Table.Td>{user.seq}</Table.Td>
-                                <Table.Td>{user.email}</Table.Td>
-                                <Table.Td>{user.nickname}</Table.Td>
-                                <Table.Td>{user.created}</Table.Td>
-                                <Table.Td>{user.updated}</Table.Td>
-                                <Table.Td>{user.siteCount ?? 0}</Table.Td>
-                                <Table.Td>{user.visitCount ?? 0}</Table.Td>
-                                <Table.Td>{user.lastViewed ?? "-"}</Table.Td>
-                                <Table.Td>
-                                    <Button
-                                        size="xs"
-                                        variant="light"
-                                        onClick={() => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(user.seq)}`)}
-                                    >
-                                        열람 이력
-                                    </Button>
-                                </Table.Td>
-                            </Table.Tr>
-                        ))}
-                    </Table.Tbody>
-                </Table>
+                <Group mb="sm" align="end">
+                    <TextInput label="search" value={allUserSearchInput} onChange={(event) => setAllUserSearchInput(event.currentTarget.value)} placeholder="email, nickname, seq"/>
+                    <Button variant="light" onClick={() => {
+                        setAllUserPage(1);
+                        loadAllUsers({page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder});
+                    }}>검색</Button>
+                </Group>
+                <DataTable
+                    withTableBorder
+                    striped
+                    highlightOnHover
+                    records={allUsers}
+                    columns={[
+                        {accessor: "seq", title: "Seq", sortable: true},
+                        {accessor: "email", title: "Email", sortable: true},
+                        {accessor: "nickname", title: "Nickname", sortable: true},
+                        {accessor: "created", title: "Created", sortable: true},
+                        {accessor: "updated", title: "Updated", sortable: true},
+                        {accessor: "siteCount", title: "Sites", sortable: true},
+                        {accessor: "visitCount", title: "Visits", sortable: true},
+                        {accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-"},
+                        {accessor: "action", title: "Action", render: (row) => <Button size="xs" variant="light" onClick={() => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`)}>열람 이력</Button>},
+                    ]}
+                    sortStatus={{columnAccessor: allUserSortBy, direction: allUserSortOrder}}
+                    onSortStatusChange={(nextSortStatus) => {
+                        setAllUserSortBy(nextSortStatus.columnAccessor);
+                        setAllUserSortOrder(nextSortStatus.direction);
+                        loadAllUsers({page: allUserPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextSortStatus.direction});
+                    }}
+                    totalRecords={allUserCount}
+                    recordsPerPage={ACCESS_LOG_PAGE_SIZE}
+                    page={allUserPage}
+                    onPageChange={(nextPage) => {
+                        setAllUserPage(nextPage);
+                        loadAllUsers({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder});
+                    }}
+                    paginationText={({from, to, totalRecords}) => `${from}-${to} / ${totalRecords}`}
+                    minHeight={380}
+                />
+                <Text size="xs" c="dimmed" mt="xs">Page {allUserPage} / {allUserTotalPages}</Text>
             </Card>
         );
     }
