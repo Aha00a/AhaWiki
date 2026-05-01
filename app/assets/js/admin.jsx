@@ -1749,7 +1749,8 @@ function AdminApp({initialPage}) {
                     breakpoint: "sm",
                 }}
             >
-                <AppShell.Navbar p="md">
+                <AppShell.Navbar p="md" style={{overflowY: "auto"}}>
+
                     <Stack mb="md" gap={4}>
                         <Text fw={700} size="lg">AhaWiki Admin</Text>
                     </Stack>

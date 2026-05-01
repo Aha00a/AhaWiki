@@ -1559,7 +1559,7 @@ function AdminApp({ initialPage }) {
           breakpoint: "sm"
         }
       },
-      /* @__PURE__ */ React5.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { mb: "md", gap: 4 }, /* @__PURE__ */ React5.createElement(Text4, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React5.createElement(Navigation, { activePage: page, onNavigate })),
+      /* @__PURE__ */ React5.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React5.createElement(Stack3, { mb: "md", gap: 4 }, /* @__PURE__ */ React5.createElement(Text4, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React5.createElement(Navigation, { activePage: page, onNavigate })),
       /* @__PURE__ */ React5.createElement(AppShell.Main, null, /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "center" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, pageTitle)), /* @__PURE__ */ React5.createElement(Badge4, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React5.createElement(AdminContent, { page, onNavigate, pathname, search })))
     )
   );
