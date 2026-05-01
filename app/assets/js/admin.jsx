@@ -69,6 +69,9 @@ function routeToPage(pathname) {
     if (/^\/Admin\/Site\/\d+\/Config$/.test(pathname)) {
         return "site-config";
     }
+    if (/^\/Admin\/Site\/\d+\/Cache$/.test(pathname)) {
+        return "site-cache";
+    }
     if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
         return "site-detail";
     }
@@ -131,7 +134,7 @@ function parseUserSeqFromPathname(pathname) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/Config)?$/);
+    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
     if (!matched) {
         return "";
     }
@@ -147,7 +150,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site-detail" || page === "site-config" || page === "sites" || page === "users") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "sites" || page === "users") {
         return "Site";
     }
     if (page === "operations") {
@@ -802,7 +805,7 @@ function Navigation({activePage, onNavigate}) {
                     {links.map((link) => {
                         const isActive = activePage === link.key
                             || (activePage === "user-views" && link.key === "all-users")
-                            || ((activePage === "site-detail" || activePage === "site-config") && link.key === "sites");
+                            || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites");
                         return (
                             <NavLink
                                 key={link.key}
@@ -849,6 +852,17 @@ function Navigation({activePage, onNavigate}) {
                                 onClick={(event) => {
                                     event.preventDefault();
                                     onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
+                                }}
+                            />
+                            <NavLink
+                                href={`/Admin/Site/${site.seq}/Cache`}
+                                label="Cache"
+                                leftSection={<i className="fas fa-database" aria-hidden="true" />}
+                                active={window.location.pathname === `/Admin/Site/${site.seq}/Cache`}
+                                variant={window.location.pathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle"}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
                                 }}
                             />
                         </NavLink>
@@ -1206,7 +1220,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     }, [page, pathname, selectedSiteSeq]);
 
     useEffect(() => {
-        if (page === "site-detail" && selectedSiteSeq) {
+        if ((page === "site-detail" || page === "site-cache") && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
             loadAdminSitePageNames(selectedSiteSeq)
@@ -1416,7 +1430,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         );
     }
 
-    if (page === "site-detail" || page === "site-config") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache") {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
@@ -1712,63 +1726,67 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Card>
                     </>
                 ) : null}
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Operation · Site Cache Operation</Title>
-                        <Badge color="orange" variant="light">유지보수</Badge>
-                    </Group>
-                    <Text size="sm" c="dimmed" mb="md">
-                        현재 보고 있는 사이트의 캐시를 즉시 초기화합니다. 도메인/페이지/헤더 캐시가 강제로 갱신됩니다.
-                    </Text>
-                    <Group justify="space-between" align="center">
-                        <Stack gap={2}>
-                            <Text size="xs" c="dimmed">대상 사이트</Text>
-                            <Text fw={700}>
-                                {selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}
+                {page === "site-cache" ? (
+                    <>
+                        <Card withBorder radius="md" padding="lg">
+                            <Group justify="space-between" mb="md">
+                                <Title order={3}>Operation · Site Cache Operation</Title>
+                                <Badge color="orange" variant="light">유지보수</Badge>
+                            </Group>
+                            <Text size="sm" c="dimmed" mb="md">
+                                현재 보고 있는 사이트의 캐시를 즉시 초기화합니다. 도메인/페이지/헤더 캐시가 강제로 갱신됩니다.
                             </Text>
-                        </Stack>
-                        <Button
-                            color="orange"
-                            variant="filled"
-                            disabled={!selectedSite}
-                            loading={selectedSite ? clearingSiteSeq === selectedSite.seq : false}
-                            onClick={() => {
-                                if (!selectedSite) {
-                                    return;
-                                }
-                                clearSiteCache(selectedSite.seq);
-                            }}
-                        >
-                            Clear current site cache
-                        </Button>
-                    </Group>
-                </Card>
-                <Card withBorder radius="md" padding="lg">
-                    <Group justify="space-between" mb="md">
-                        <Title order={3}>Memory Cache Status (All Instances)</Title>
-                        <Button variant="light" onClick={loadMemoryCacheStats}>Refresh</Button>
-                    </Group>
-                    <Table striped highlightOnHover withTableBorder withColumnBorders>
-                        <Table.Thead>
-                            <Table.Tr>
-                                <Table.Th>Port</Table.Th>
-                                <Table.Th>Key Count</Table.Th>
-                                <Table.Th>Value Count</Table.Th>
-                                <Table.Th>Captured At</Table.Th>
-                            </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                            {memoryCacheStats.map((row) => (
-                                <Table.Tr key={String(row.instancePort)}>
-                                    <Table.Td>{row.instancePort}</Table.Td>
-                                    <Table.Td>{row.stats?.linksCacheKeyCount ?? 0}</Table.Td>
-                                    <Table.Td>{row.stats?.linksCacheValueCount ?? 0}</Table.Td>
-                                    <Table.Td>{row.stats?.capturedAtIso8601 ?? "-"}</Table.Td>
-                                </Table.Tr>
-                            ))}
-                        </Table.Tbody>
-                    </Table>
-                </Card>
+                            <Group justify="space-between" align="center">
+                                <Stack gap={2}>
+                                    <Text size="xs" c="dimmed">대상 사이트</Text>
+                                    <Text fw={700}>
+                                        {selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}
+                                    </Text>
+                                </Stack>
+                                <Button
+                                    color="orange"
+                                    variant="filled"
+                                    disabled={!selectedSite}
+                                    loading={selectedSite ? clearingSiteSeq === selectedSite.seq : false}
+                                    onClick={() => {
+                                        if (!selectedSite) {
+                                            return;
+                                        }
+                                        clearSiteCache(selectedSite.seq);
+                                    }}
+                                >
+                                    Clear current site cache
+                                </Button>
+                            </Group>
+                        </Card>
+                        <Card withBorder radius="md" padding="lg">
+                            <Group justify="space-between" mb="md">
+                                <Title order={3}>Memory Cache Status (All Instances)</Title>
+                                <Button variant="light" onClick={loadMemoryCacheStats}>Refresh</Button>
+                            </Group>
+                            <Table striped highlightOnHover withTableBorder withColumnBorders>
+                                <Table.Thead>
+                                    <Table.Tr>
+                                        <Table.Th>Port</Table.Th>
+                                        <Table.Th>Key Count</Table.Th>
+                                        <Table.Th>Value Count</Table.Th>
+                                        <Table.Th>Captured At</Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>
+                                    {memoryCacheStats.map((row) => (
+                                        <Table.Tr key={String(row.instancePort)}>
+                                            <Table.Td>{row.instancePort}</Table.Td>
+                                            <Table.Td>{row.stats?.linksCacheKeyCount ?? 0}</Table.Td>
+                                            <Table.Td>{row.stats?.linksCacheValueCount ?? 0}</Table.Td>
+                                            <Table.Td>{row.stats?.capturedAtIso8601 ?? "-"}</Table.Td>
+                                        </Table.Tr>
+                                    ))}
+                                </Table.Tbody>
+                            </Table>
+                        </Card>
+                    </>
+                ) : null}
             </Stack>
         );
     }

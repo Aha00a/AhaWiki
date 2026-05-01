@@ -35,6 +35,7 @@ GET           /Admin/                                controllers.Admin.index
 GET           /Admin/Site                            controllers.Admin.index
 GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
+GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
 GET           /Admin/SiteUser                        controllers.Admin.index
 GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
