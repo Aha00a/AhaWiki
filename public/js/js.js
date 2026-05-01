@@ -57,51 +57,50 @@ document.addEventListener('DOMContentLoaded', function () {
         var href = wrapper.getAttribute('data-edit-link');
         var title = wrapper.getAttribute('data-edit-title');
         var heading = content.querySelector('h2, h3, h4, h5, h6');
-        if (!href) {
-            return;
-        }
-
-        var editLink = wrapper.querySelector('.InterpreterRenderEditLink');
-        if (!editLink) {
-            editLink = document.createElement('a');
-            editLink.className = 'InterpreterRenderEditLink';
-            editLink.rel = 'nofollow';
-            editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;Edit';
-            editLink.style.position = 'absolute';
-            editLink.style.top = '6px';
-            editLink.style.right = '8px';
-            editLink.style.display = 'inline-flex';
-            editLink.style.alignItems = 'center';
-            editLink.style.justifyContent = 'center';
-            editLink.style.width = '50px';
-            editLink.style.height = '20px';
-            editLink.style.borderRadius = '50px';
-            editLink.style.border = '1px solid #888';
-            editLink.style.background = '#fff';
-            editLink.style.color = '#000';
-            editLink.style.textDecoration = 'none';
-            editLink.style.opacity = '.4';
-            editLink.style.fontSize = '12px';
-            editLink.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
-            editLink.style.pointerEvents = 'auto';
-            editLink.addEventListener('mouseenter', function () {
-                editLink.style.opacity = '1';
-            });
-            editLink.addEventListener('mouseleave', function () {
+        var editLink = null;
+        if (href) {
+            editLink = wrapper.querySelector('.InterpreterRenderEditLink');
+            if (!editLink) {
+                editLink = document.createElement('a');
+                editLink.className = 'InterpreterRenderEditLink';
+                editLink.rel = 'nofollow';
+                editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;Edit';
+                editLink.style.position = 'absolute';
+                editLink.style.top = '6px';
+                editLink.style.right = '8px';
+                editLink.style.display = 'inline-flex';
+                editLink.style.alignItems = 'center';
+                editLink.style.justifyContent = 'center';
+                editLink.style.width = '50px';
+                editLink.style.height = '20px';
+                editLink.style.borderRadius = '50px';
+                editLink.style.border = '1px solid #888';
+                editLink.style.background = '#fff';
+                editLink.style.color = '#000';
+                editLink.style.textDecoration = 'none';
                 editLink.style.opacity = '.4';
-            });
-            editLink.addEventListener('focus', function () {
-                editLink.style.opacity = '1';
-            });
-            editLink.addEventListener('blur', function () {
-                editLink.style.opacity = '.4';
-            });
-            wrapper.appendChild(editLink);
-        }
+                editLink.style.fontSize = '12px';
+                editLink.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
+                editLink.style.pointerEvents = 'auto';
+                editLink.addEventListener('mouseenter', function () {
+                    editLink.style.opacity = '1';
+                });
+                editLink.addEventListener('mouseleave', function () {
+                    editLink.style.opacity = '.4';
+                });
+                editLink.addEventListener('focus', function () {
+                    editLink.style.opacity = '1';
+                });
+                editLink.addEventListener('blur', function () {
+                    editLink.style.opacity = '.4';
+                });
+                wrapper.appendChild(editLink);
+            }
 
-        editLink.href = href;
-        if (title) {
-            editLink.title = title;
+            editLink.href = href;
+            if (title) {
+                editLink.title = title;
+            }
         }
 
         var foldToggle = null;
@@ -250,6 +249,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var positionEditLink = function () {
+            if (!editLink) {
+                return;
+            }
             var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
             var top = targetRect.top - wrapperRect.top + 4;
