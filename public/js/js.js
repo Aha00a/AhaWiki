@@ -143,6 +143,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 heading.insertBefore(foldToggle, heading.firstChild);
             }
 
+            var schemaContainer = heading.closest('.InterpreterSchema');
+            var isSchemaHeading = !!(schemaContainer && heading.classList.contains('schemaClassTitle'));
+            var schemaHeadingRoot = null;
+            var schemaFoldTargets = [];
+            if (isSchemaHeading) {
+                schemaHeadingRoot = heading;
+                while (schemaHeadingRoot.parentElement && schemaHeadingRoot.parentElement !== schemaContainer) {
+                    schemaHeadingRoot = schemaHeadingRoot.parentElement;
+                }
+
+                var schemaNode = heading.nextElementSibling;
+                while (schemaNode) {
+                    schemaFoldTargets.push(schemaNode);
+                    schemaNode = schemaNode.nextElementSibling;
+                }
+
+                Array.prototype.forEach.call(schemaContainer.children, function (child) {
+                    if (child !== schemaHeadingRoot) {
+                        schemaFoldTargets.push(child);
+                    }
+                });
+            }
             var section = wrapper.parentElement;
             var headingLevel = parseInt(heading.tagName.replace('H', ''), 10);
             var getSectionHeadingLevel = function (sectionElement) {
@@ -168,28 +190,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 return childSections;
             };
             var updateFoldState = function (isCollapsed) {
-                section.classList.toggle('sectionCollapsed', isCollapsed);
-                Array.prototype.forEach.call(section.children, function (child) {
-                    if (child !== wrapper) {
-                        child.style.display = isCollapsed ? 'none' : '';
-                    }
-                });
-                var childSections = getChildSections();
-                childSections.forEach(function (childSection) {
-                    childSection.style.display = isCollapsed ? 'none' : '';
-                });
+                if (isSchemaHeading) {
+                    schemaContainer.classList.toggle('sectionCollapsed', isCollapsed);
+                    schemaFoldTargets.forEach(function (target) {
+                        target.style.display = isCollapsed ? 'none' : '';
+                    });
+                } else {
+                    section.classList.toggle('sectionCollapsed', isCollapsed);
+                    Array.prototype.forEach.call(section.children, function (child) {
+                        if (child !== wrapper) {
+                            child.style.display = isCollapsed ? 'none' : '';
+                        }
+                    });
+                    var childSections = getChildSections();
+                    childSections.forEach(function (childSection) {
+                        childSection.style.display = isCollapsed ? 'none' : '';
+                    });
+                }
                 foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right fa-fw"></i>' : '<i class="fas fa-chevron-down fa-fw"></i>';
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
             };
-            updateFoldState(section.classList.contains('sectionCollapsed'));
+            var isInitiallyCollapsed = isSchemaHeading
+                ? schemaContainer.classList.contains('sectionCollapsed')
+                : section.classList.contains('sectionCollapsed');
+            updateFoldState(isInitiallyCollapsed);
 
             heading.style.cursor = 'pointer';
             heading.setAttribute('role', 'button');
             heading.setAttribute('tabindex', '0');
-            heading.setAttribute('aria-expanded', (!section.classList.contains('sectionCollapsed')).toString());
+            heading.setAttribute('aria-expanded', (!isInitiallyCollapsed).toString());
 
             var toggleSectionFold = function () {
-                var nextCollapsed = !section.classList.contains('sectionCollapsed');
+                var nextCollapsed = isSchemaHeading
+                    ? !schemaContainer.classList.contains('sectionCollapsed')
+                    : !section.classList.contains('sectionCollapsed');
                 updateFoldState(nextCollapsed);
                 heading.setAttribute('aria-expanded', (!nextCollapsed).toString());
                 schedulePositionEditLink();
