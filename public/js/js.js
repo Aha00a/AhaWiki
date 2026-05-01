@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 childSections.forEach(function (childSection) {
                     childSection.style.display = isCollapsed ? 'none' : '';
                 });
-                foldToggle.textContent = isCollapsed ? 'Unfold' : 'Fold';
+                foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-down"></i>';
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
             };
             updateFoldState(section.classList.contains('sectionCollapsed'));

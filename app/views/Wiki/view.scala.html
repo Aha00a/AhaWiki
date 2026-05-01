@@ -157,7 +157,7 @@
 
             function updateTocToggleLabel($toc, isCollapsed) {
                 var $button = $toc.find('.tocToggle').first();
-                $button.text(isCollapsed ? 'Show' : 'Hide');
+                $button.html(isCollapsed ? '<i class="fas fa-chevron-right"></i>' : '<i class="fas fa-chevron-down"></i>');
                 $button.attr('aria-expanded', (!isCollapsed).toString());
             }
 
