@@ -26,7 +26,7 @@
     }
     @body
     <div class="footer" style="@Seq(
-        Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).map(v => s"background-color: $v;"),
+        Some(s"background-color: ${Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
         Option(contextSite.footerForegroundColor).filter(_.nonEmpty).map(v => s"color: $v;")
     ).flatten.mkString(" ")">
         <div class="wrap">
