@@ -371,6 +371,8 @@ function useAdminData(page) {
   const [siteTheme, setSiteTheme] = useState2({
     headerBackgroundColor: "",
     headerForegroundColor: "",
+    bodyBackgroundColor: "",
+    bodyForegroundColor: "",
     footerBackgroundColor: "",
     footerForegroundColor: ""
   });
@@ -585,6 +587,8 @@ function useAdminData(page) {
       setSiteTheme({
         headerBackgroundColor: "",
         headerForegroundColor: "",
+        bodyBackgroundColor: "",
+        bodyForegroundColor: "",
         footerBackgroundColor: "",
         footerForegroundColor: ""
       });
@@ -595,6 +599,8 @@ function useAdminData(page) {
       setSiteTheme({
         headerBackgroundColor: data?.headerBackgroundColor ?? "",
         headerForegroundColor: data?.headerForegroundColor ?? "",
+        bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
+        bodyForegroundColor: data?.bodyForegroundColor ?? "",
         footerBackgroundColor: data?.footerBackgroundColor ?? "",
         footerForegroundColor: data?.footerForegroundColor ?? ""
       });
@@ -615,6 +621,8 @@ function useAdminData(page) {
       payload.set("siteSeq", String(siteSeq));
       payload.set("headerBackgroundColor", nextTheme?.headerBackgroundColor ?? "");
       payload.set("headerForegroundColor", nextTheme?.headerForegroundColor ?? "");
+      payload.set("bodyBackgroundColor", nextTheme?.bodyBackgroundColor ?? "");
+      payload.set("bodyForegroundColor", nextTheme?.bodyForegroundColor ?? "");
       payload.set("footerBackgroundColor", nextTheme?.footerBackgroundColor ?? "");
       payload.set("footerForegroundColor", nextTheme?.footerForegroundColor ?? "");
       payload.set(csrfToken.name, csrfToken.value);
@@ -637,6 +645,8 @@ function useAdminData(page) {
       setSiteTheme({
         headerBackgroundColor: data?.headerBackgroundColor ?? "",
         headerForegroundColor: data?.headerForegroundColor ?? "",
+        bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
+        bodyForegroundColor: data?.bodyForegroundColor ?? "",
         footerBackgroundColor: data?.footerBackgroundColor ?? "",
         footerForegroundColor: data?.footerForegroundColor ?? ""
       });
@@ -1158,7 +1168,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "\uD398\uC774\uC9C0 \uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
-    )), siteCalculateMessage ? /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))) : null), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Config \xB7 Site Header/Footer Theme"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 Header/Footer \uAE30\uBCF8\uAC12(\uBC30\uACBD #EEEEEE, \uC804\uACBD #000000)\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(
+    )), siteCalculateMessage ? /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))) : null), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Config \xB7 Site Header/Footer Theme"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 Header/Footer \uAE30\uBCF8\uAC12(\uBC30\uACBD #EEEEEE, \uC804\uACBD #000000), Body \uAE30\uBCF8\uAC12(\uBC30\uACBD #FFFFFF, \uC804\uACBD #000000)\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(
       ColorInput,
       {
         label: "Header \uBC30\uACBD\uC0C9",
@@ -1179,6 +1189,30 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         value: siteTheme.headerForegroundColor,
         onChange: (value) => setSiteTheme((prev) => ({ ...prev, headerForegroundColor: value })),
         swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"],
+        withEyeDropper: false,
+        clearable: true
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      ColorInput,
+      {
+        label: "Body \uBC30\uACBD\uC0C9",
+        placeholder: "#FFFFFF",
+        format: "hexa",
+        value: siteTheme.bodyBackgroundColor,
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, bodyBackgroundColor: value })),
+        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"],
+        withEyeDropper: false,
+        clearable: true
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      ColorInput,
+      {
+        label: "Body \uC804\uACBD\uC0C9",
+        placeholder: "#000000",
+        format: "hexa",
+        value: siteTheme.bodyForegroundColor,
+        onChange: (value) => setSiteTheme((prev) => ({ ...prev, bodyForegroundColor: value })),
+        swatches: ["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"],
         withEyeDropper: false,
         clearable: true
       }
@@ -1217,7 +1251,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Header Preview"
-    ), /* @__PURE__ */ React5.createElement("div", { style: { padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React5.createElement(
+    ), /* @__PURE__ */ React5.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React5.createElement(
       "div",
       {
         style: {
@@ -1251,6 +1285,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           const emptyTheme = {
             headerBackgroundColor: "",
             headerForegroundColor: "",
+            bodyBackgroundColor: "",
+            bodyForegroundColor: "",
             footerBackgroundColor: "",
             footerForegroundColor: ""
           };

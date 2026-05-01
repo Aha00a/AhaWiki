@@ -199,6 +199,8 @@ function useAdminData(page) {
     const [siteTheme, setSiteTheme] = useState({
         headerBackgroundColor: "",
         headerForegroundColor: "",
+        bodyBackgroundColor: "",
+        bodyForegroundColor: "",
         footerBackgroundColor: "",
         footerForegroundColor: "",
     });
@@ -430,6 +432,8 @@ function useAdminData(page) {
             setSiteTheme({
                 headerBackgroundColor: "",
                 headerForegroundColor: "",
+                bodyBackgroundColor: "",
+                bodyForegroundColor: "",
                 footerBackgroundColor: "",
                 footerForegroundColor: "",
             });
@@ -440,6 +444,8 @@ function useAdminData(page) {
             setSiteTheme({
                 headerBackgroundColor: data?.headerBackgroundColor ?? "",
                 headerForegroundColor: data?.headerForegroundColor ?? "",
+                bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
+                bodyForegroundColor: data?.bodyForegroundColor ?? "",
                 footerBackgroundColor: data?.footerBackgroundColor ?? "",
                 footerForegroundColor: data?.footerForegroundColor ?? "",
             });
@@ -461,6 +467,8 @@ function useAdminData(page) {
             payload.set("siteSeq", String(siteSeq));
             payload.set("headerBackgroundColor", nextTheme?.headerBackgroundColor ?? "");
             payload.set("headerForegroundColor", nextTheme?.headerForegroundColor ?? "");
+            payload.set("bodyBackgroundColor", nextTheme?.bodyBackgroundColor ?? "");
+            payload.set("bodyForegroundColor", nextTheme?.bodyForegroundColor ?? "");
             payload.set("footerBackgroundColor", nextTheme?.footerBackgroundColor ?? "");
             payload.set("footerForegroundColor", nextTheme?.footerForegroundColor ?? "");
             payload.set(csrfToken.name, csrfToken.value);
@@ -483,6 +491,8 @@ function useAdminData(page) {
             setSiteTheme({
                 headerBackgroundColor: data?.headerBackgroundColor ?? "",
                 headerForegroundColor: data?.headerForegroundColor ?? "",
+                bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
+                bodyForegroundColor: data?.bodyForegroundColor ?? "",
                 footerBackgroundColor: data?.footerBackgroundColor ?? "",
                 footerForegroundColor: data?.footerForegroundColor ?? "",
             });
@@ -1199,7 +1209,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Badge color="grape" variant="light">디자인</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
-                        사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 Header/Footer 기본값(배경 #EEEEEE, 전경 #000000)을 사용합니다.
+                        사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 Header/Footer 기본값(배경 #EEEEEE, 전경 #000000), Body 기본값(배경 #FFFFFF, 전경 #000000)을 사용합니다.
                     </Text>
                     <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
                         <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
@@ -1220,6 +1230,26 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 value={siteTheme.headerForegroundColor}
                                 onChange={(value) => setSiteTheme((prev) => ({...prev, headerForegroundColor: value}))}
                                 swatches={["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                            <ColorInput
+                                label="Body 배경색"
+                                placeholder="#FFFFFF"
+                                format="hexa"
+                                value={siteTheme.bodyBackgroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, bodyBackgroundColor: value}))}
+                                swatches={["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"]}
+                                withEyeDropper={false}
+                                clearable
+                            />
+                            <ColorInput
+                                label="Body 전경색"
+                                placeholder="#000000"
+                                format="hexa"
+                                value={siteTheme.bodyForegroundColor}
+                                onChange={(value) => setSiteTheme((prev) => ({...prev, bodyForegroundColor: value}))}
+                                swatches={["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"]}
                                 withEyeDropper={false}
                                 clearable
                             />
@@ -1257,7 +1287,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 >
                                     Header Preview
                                 </div>
-                                <div style={{padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057"}}>
+                                <div style={{padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000"}}>
                                     콘텐츠 영역 (고정 미리보기)
                                 </div>
                                 <div
@@ -1297,6 +1327,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 const emptyTheme = {
                                     headerBackgroundColor: "",
                                     headerForegroundColor: "",
+                                    bodyBackgroundColor: "",
+                                    bodyForegroundColor: "",
                                     footerBackgroundColor: "",
                                     footerForegroundColor: "",
                                 };

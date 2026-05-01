@@ -378,12 +378,16 @@ class Api @Inject()(
             implicit val site: Site = siteValue
             val headerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderBackgroundColorKey).map(_.v))
             val headerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderForegroundColorKey).map(_.v))
+            val bodyBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.BodyBackgroundColorKey).map(_.v))
+            val bodyForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.BodyForegroundColorKey).map(_.v))
             val footerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterBackgroundColorKey).map(_.v))
             val footerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterForegroundColorKey).map(_.v))
             Ok(Json.obj(
               "siteSeq" -> Json.fromLong(site.seq),
               "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
               "headerForegroundColor" -> Json.fromString(headerForegroundColor),
+              "bodyBackgroundColor" -> Json.fromString(bodyBackgroundColor),
+              "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
             ))
@@ -405,12 +409,16 @@ class Api @Inject()(
             implicit val site: Site = siteValue
             val headerBackgroundColor = parseHexColorValue(body.get("headerBackgroundColor").flatMap(_.headOption))
             val headerForegroundColor = parseHexColorValue(body.get("headerForegroundColor").flatMap(_.headOption))
+            val bodyBackgroundColor = parseHexColorValue(body.get("bodyBackgroundColor").flatMap(_.headOption))
+            val bodyForegroundColor = parseHexColorValue(body.get("bodyForegroundColor").flatMap(_.headOption))
             val footerBackgroundColor = parseHexColorValue(body.get("footerBackgroundColor").flatMap(_.headOption))
             val footerForegroundColor = parseHexColorValue(body.get("footerForegroundColor").flatMap(_.headOption))
 
             Seq(
               SiteThemeLogic.HeaderBackgroundColorKey -> headerBackgroundColor,
               SiteThemeLogic.HeaderForegroundColorKey -> headerForegroundColor,
+              SiteThemeLogic.BodyBackgroundColorKey -> bodyBackgroundColor,
+              SiteThemeLogic.BodyForegroundColorKey -> bodyForegroundColor,
               SiteThemeLogic.FooterBackgroundColorKey -> footerBackgroundColor,
               SiteThemeLogic.FooterForegroundColorKey -> footerForegroundColor,
             ).foreach { case (key, value) =>
@@ -426,6 +434,8 @@ class Api @Inject()(
               "siteSeq" -> Json.fromLong(site.seq),
               "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
               "headerForegroundColor" -> Json.fromString(headerForegroundColor),
+              "bodyBackgroundColor" -> Json.fromString(bodyBackgroundColor),
+              "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
             ))

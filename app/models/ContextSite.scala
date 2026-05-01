@@ -66,6 +66,8 @@ class ContextSite()(
 
   lazy val headerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderBackgroundColorKey)
   lazy val headerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderForegroundColorKey)
+  lazy val bodyBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.BodyBackgroundColorKey)
+  lazy val bodyForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.BodyForegroundColorKey)
   lazy val footerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterBackgroundColorKey)
   lazy val footerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterForegroundColorKey)
 

@@ -3,6 +3,8 @@ package logics
 object SiteThemeLogic {
   val HeaderBackgroundColorKey: String = "site.theme.header.backgroundColor"
   val HeaderForegroundColorKey: String = "site.theme.header.foregroundColor"
+  val BodyBackgroundColorKey: String = "site.theme.body.backgroundColor"
+  val BodyForegroundColorKey: String = "site.theme.body.foregroundColor"
   val FooterBackgroundColorKey: String = "site.theme.footer.backgroundColor"
   val FooterForegroundColorKey: String = "site.theme.footer.foregroundColor"
 

@@ -89,7 +89,10 @@
 
         @head
     </head>
-    <body class="AhaWiki no-mathjax">
+    <body class="AhaWiki no-mathjax" style="@Seq(
+        Some(s"background-color: ${Option(contextSite.bodyBackgroundColor).filter(_.nonEmpty).getOrElse("#FFFFFF")};"),
+        Some(s"color: ${Option(contextSite.bodyForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
+    ).flatten.mkString(" ")">
         @body
 
         @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
