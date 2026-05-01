@@ -38,7 +38,7 @@ object InterpreterWiki extends TraitInterpreter {
   abstract class HandlerContentIterateBase[T](override val pageContent: PageContent) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHr2: Regex = """^={4,}$""".r
-    val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(\s*#(.+))?)?""".r
+    val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
     val regexListUnordered: Regex = """[*-]""".r
     val regexListDecimal: Regex = """\d+\.""".r
@@ -56,7 +56,7 @@ object InterpreterWiki extends TraitInterpreter {
           case "" => emptyLine()
           case regexHr() => hr(s)
           case regexHr2() => hr2(s)
-          case regexHeading(heading, title, _, _, id) => this.heading(heading, title, id, lineNumber)
+          case regexHeading(heading, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber)
           case regexList(indentString, style, _, content) => list(indentString, style, content);
           case _ => others(s)
         }
@@ -115,7 +115,14 @@ object InterpreterWiki extends TraitInterpreter {
         .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)]""", "$2")
         .replaceAll("""(?<!\\)\[(\S+?)]""", "$1")
         .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)]""", "$2")
-      val idNotEmpty = if(id == null) titleForToc.replaceAll("""\s+""", "-") else id
+      val headingAttributes = Option(id).map(_.trim).filter(_.nonEmpty).map { raw =>
+        """([#.])([^#.\s]+)""".r.findAllMatchIn(raw).toSeq
+      }.getOrElse(Seq.empty)
+      val headingId = headingAttributes.collectFirst { case m if m.group(1) == "#" => m.group(2) }
+      val headingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
+      val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
+      val wrapperClass = idNotEmpty
+      val headingClassAttribute = headingClasses.mkString(" ")
       val lineEnd = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber)
       val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEnd)
       val editTitle = s"Edit section (r$revision, L$lineNumber-L$lineEnd)"
@@ -126,7 +133,7 @@ object InterpreterWiki extends TraitInterpreter {
       }
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""</div><div class="$idNotEmpty"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
+      arrayBuffer += s"""</div><div class="$wrapperClass"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty" class="$headingClassAttribute"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
     override def list(indentString: String, style: String, content: String): Unit = {
@@ -191,7 +198,7 @@ object InterpreterWiki extends TraitInterpreter {
     val lines = content.split("""\r\n|\n""", -1).toVector
     val headings = lines.zipWithIndex.flatMap { case (line, index) =>
       line match {
-        case regexHeading(heading, _, _, _, _) => Some((index + 1, heading.length))
+        case regexHeading(heading, _, _, _) => Some((index + 1, heading.length))
         case _ => None
       }
     }
