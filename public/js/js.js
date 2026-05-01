@@ -111,19 +111,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle = document.createElement('button');
                 foldToggle.type = 'button';
                 foldToggle.className = 'InterpreterRenderFoldToggle';
-                foldToggle.style.position = 'absolute';
+                foldToggle.style.position = 'static';
                 foldToggle.style.display = 'inline-flex';
                 foldToggle.style.alignItems = 'center';
                 foldToggle.style.justifyContent = 'center';
-                foldToggle.style.width = '50px';
-                foldToggle.style.height = '20px';
                 foldToggle.style.borderRadius = '50px';
-                foldToggle.style.border = '1px solid #888';
+                foldToggle.style.border = 'none';
                 foldToggle.style.background = '#fff';
                 foldToggle.style.color = '#000';
                 foldToggle.style.textDecoration = 'none';
                 foldToggle.style.opacity = '.4';
                 foldToggle.style.fontSize = '12px';
+                foldToggle.style.marginRight = '0px';
+                foldToggle.style.verticalAlign = 'middle';
                 foldToggle.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
                 foldToggle.style.pointerEvents = 'auto';
                 foldToggle.style.cursor = 'pointer';
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle.addEventListener('blur', function () {
                     foldToggle.style.opacity = '.4';
                 });
-                wrapper.appendChild(foldToggle);
+                heading.insertBefore(foldToggle, heading.firstChild);
             }
 
             var section = wrapper.parentElement;
@@ -196,13 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
-            if (foldToggle) {
-                var gap = 6;
-                var foldLeft = left - foldToggle.offsetWidth - gap;
-                foldToggle.style.top = top + 'px';
-                foldToggle.style.left = (foldLeft < 0 ? 0 : foldLeft) + 'px';
-                foldToggle.style.right = 'auto';
-            }
         };
 
         var schedulePositionEditLink = function () {
