@@ -40,7 +40,7 @@ location.params = function(params, preventReload) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-    var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper[data-edit-link]');
+    var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper');
 
     wrappers.forEach(function (wrapper) {
         var content = wrapper.querySelector('.InterpreterRenderContent');
@@ -53,6 +53,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var contentAnchorTarget = content.firstElementChild || content;
         contentAnchorTarget.style.pointerEvents = 'auto';
+
+        var href = wrapper.getAttribute('data-edit-link');
+        var title = wrapper.getAttribute('data-edit-title');
+        if (!href) {
+            return;
+        }
+
         var editLink = wrapper.querySelector('.InterpreterRenderEditLink');
         if (!editLink) {
             editLink = document.createElement('a');
@@ -91,11 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
             wrapper.appendChild(editLink);
         }
 
-        var href = wrapper.getAttribute('data-edit-link');
-        var title = wrapper.getAttribute('data-edit-title');
-        if (href) {
-            editLink.href = href;
-        }
+        editLink.href = href;
         if (title) {
             editLink.title = title;
         }
