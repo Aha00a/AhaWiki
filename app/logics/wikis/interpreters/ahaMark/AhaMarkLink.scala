@@ -13,6 +13,15 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
   lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
   lazy val aliasWithDefault: String = if (alias == null || alias.isEmpty) uriNormalized else alias
 
+  private def toCountryFlagEmoji(alpha2Code: String): Option[String] = {
+    val code = alpha2Code.trim.toUpperCase
+    if (!code.matches("^[A-Z]{2}$")) {
+      None
+    } else {
+      Some(code.map(ch => Character.toChars(0x1F1E6 + (ch - 'A')).mkString).mkString)
+    }
+  }
+
   def toHtmlString(set: Set[String] = Set[String]()): String = {
     if (wikiContext.name == uri) {
       s"""<b>$aliasWithDefault</b>"""
@@ -54,16 +63,19 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         set.contains(uriNormalized.replaceAll("""[#?].+$""", "")) ||
         DefaultPageLogic.isDefined(uriNormalized)
       )
+      val countryFlagEmoji = toCountryFlagEmoji(uriNormalized)
       val classList = Seq(
         if (isSchema) Some("schema") else None,
         if (isSchema) Some("schema-link") else None,
         schemaTypeClass,
+        if (countryFlagEmoji.isDefined) Some("iso3166-alpha2-link") else None,
         if (isMissing) Some("missing") else None,
       ).flatten
       val attrClass = if (classList.nonEmpty) s""" class="${classList.mkString(" ")}"""" else ""
       val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
-      s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${aliasWithDefault.escapeHtml()}</a>"""
+      val displayText = countryFlagEmoji.map(flag => s"$flag ${aliasWithDefault.escapeHtml()}").getOrElse(aliasWithDefault.escapeHtml())
+      s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${displayText}</a>"""
     }
   }
 
