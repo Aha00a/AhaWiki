@@ -269,12 +269,17 @@ kbd {
 		padding: 0 0 25px 0;
 		word-break: break-all;
 		>.limitWidth>div {
-			&>, >div, >div>div, >div>div>div {
+			&>, >div, >div>div, >div>div>div{
 				>p, >blockquote, >pre, >table, >.math, >.error, >.info, >.adjacentPagesGraphWrapper {
 					margin-left: 30px;
 				}
 				>ul, ol {
 					margin-left: 40px;
+				}
+				>.tocBody>div {
+					>ul {
+						margin-left: 20px;
+					}
 				}
 			}
 		}
@@ -1856,8 +1861,9 @@ kbd {
 	.wikiContent {
 		div.toc {
 			button.tocToggle {
+				float: right;
 				display: inline-block;
-				margin: 0 0 8px;
+				margin: 0;
 				padding: 4px 8px;
 				font-size: 12px;
 				line-height: 1.4;

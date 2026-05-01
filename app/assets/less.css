@@ -459,6 +459,12 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div ol {
   margin-left: 40px;
 }
+.AhaWiki .commonAhaWiki > .limitWidth > div > .tocBody > div > ul,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > .tocBody > div > ul,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .tocBody > div > ul,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .tocBody > div > ul {
+  margin-left: 20px;
+}
 .AhaWiki .commonAhaWiki h1,
 .AhaWiki .commonAhaWiki h2,
 .AhaWiki .commonAhaWiki h3,
@@ -1067,6 +1073,12 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent > .limitWidth > div > div > div ol,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div ol {
   margin-left: 40px;
+}
+.AhaWiki .wikiContent > .limitWidth > div > .tocBody > div > ul,
+.AhaWiki .wikiContent > .limitWidth > div > div > .tocBody > div > ul,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > .tocBody > div > ul,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .tocBody > div > ul {
+  margin-left: 20px;
 }
 .AhaWiki .wikiContent h1,
 .AhaWiki .wikiContent h2,
@@ -1992,6 +2004,12 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div ol,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div ol {
   margin-left: 40px;
+}
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > .tocBody > div > ul,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .tocBody > div > ul,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .tocBody > div > ul,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .tocBody > div > ul {
+  margin-left: 20px;
 }
 .AhaWiki .paperContent .page .pageContent h1,
 .AhaWiki .paperContent .page .pageContent h2,
@@ -3334,8 +3352,9 @@ kbd:hover > kbd {
   height: 30px;
 }
 .AhaWiki .wikiContent div.toc button.tocToggle {
+  float: right;
   display: inline-block;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 4px 8px;
   font-size: 12px;
   line-height: 1.4;
