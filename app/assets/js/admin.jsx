@@ -285,9 +285,12 @@ function useAdminData(page) {
             fetchJson("/api/Admin/RecentChanges?n=30"),
             fetchJson("/api/Admin/TopViewedPages?n=20"),
         ]);
+        const allUserRows = Array.isArray(allUserData?.array)
+            ? allUserData.array
+            : (Array.isArray(allUserData) ? allUserData : []);
         setSites(siteData);
         setUsers(userData);
-        setAllUsers(allUserData);
+        setAllUsers(allUserRows);
         setSchedulers(schedulerData);
         setRecentChanges(recentChangesData);
         setTopViewedPages(topViewedPagesData);
