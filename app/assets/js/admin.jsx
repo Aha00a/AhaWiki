@@ -1199,13 +1199,13 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Badge color="grape" variant="light">디자인</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
-                        사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 기본 스타일을 사용합니다.
+                        사이트별 헤더/푸터 배경색·전경색을 16진수(#RGB, #RRGGBB, #RRGGBBAA)로 지정할 수 있습니다. 비워두면 Header/Footer 기본값(배경 #EEEEEE, 전경 #000000)을 사용합니다.
                     </Text>
                     <SimpleGrid cols={{base: 1, lg: 2}} spacing="md">
                         <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
                             <ColorInput
                                 label="Header 배경색"
-                                placeholder="#FFFFFF"
+                                placeholder="#EEEEEE"
                                 format="hexa"
                                 value={siteTheme.headerBackgroundColor}
                                 onChange={(value) => setSiteTheme((prev) => ({...prev, headerBackgroundColor: value}))}
@@ -1215,7 +1215,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             />
                             <ColorInput
                                 label="Header 전경색"
-                                placeholder="#111111"
+                                placeholder="#000000"
                                 format="hexa"
                                 value={siteTheme.headerForegroundColor}
                                 onChange={(value) => setSiteTheme((prev) => ({...prev, headerForegroundColor: value}))}
@@ -1225,7 +1225,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             />
                             <ColorInput
                                 label="Footer 배경색"
-                                placeholder="#FFFFFF"
+                                placeholder="#EEEEEE"
                                 format="hexa"
                                 value={siteTheme.footerBackgroundColor}
                                 onChange={(value) => setSiteTheme((prev) => ({...prev, footerBackgroundColor: value}))}
@@ -1235,7 +1235,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             />
                             <ColorInput
                                 label="Footer 전경색"
-                                placeholder="#111111"
+                                placeholder="#000000"
                                 format="hexa"
                                 value={siteTheme.footerForegroundColor}
                                 onChange={(value) => setSiteTheme((prev) => ({...prev, footerForegroundColor: value}))}
@@ -1249,8 +1249,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             <Stack gap={0} style={{borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef"}}>
                                 <div
                                     style={{
-                                        backgroundColor: siteTheme.headerBackgroundColor || "#f8f9fa",
-                                        color: siteTheme.headerForegroundColor || "#111111",
+                                        backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE",
+                                        color: siteTheme.headerForegroundColor || "#000000",
                                         padding: "12px 14px",
                                         fontWeight: 600,
                                     }}
@@ -1262,8 +1262,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 </div>
                                 <div
                                     style={{
-                                        backgroundColor: siteTheme.footerBackgroundColor || "#f8f9fa",
-                                        color: siteTheme.footerForegroundColor || "#111111",
+                                        backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE",
+                                        color: siteTheme.footerForegroundColor || "#000000",
                                         padding: "12px 14px",
                                         fontWeight: 600,
                                     }}

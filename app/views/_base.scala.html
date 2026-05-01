@@ -3,8 +3,8 @@
     @head
 } {
     <div class="header" style="@Seq(
-        Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).map(v => s"background-color: $v;"),
-        Option(contextSite.headerForegroundColor).filter(_.nonEmpty).map(v => s"color: $v;")
+        Some(s"background-color: ${Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
+        Some(s"color: ${Option(contextSite.headerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
     ).flatten.mkString(" ")">
         @Html(contextSite.ahaWikiCache.Header.get())
     </div>
@@ -27,7 +27,7 @@
     @body
     <div class="footer" style="@Seq(
         Some(s"background-color: ${Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
-        Option(contextSite.footerForegroundColor).filter(_.nonEmpty).map(v => s"color: $v;")
+        Some(s"color: ${Option(contextSite.footerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
     ).flatten.mkString(" ")">
         <div class="wrap">
             @Html(contextSite.ahaWikiCache.Footer.get())
