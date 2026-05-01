@@ -3365,6 +3365,7 @@ kbd:hover > kbd {
   cursor: pointer;
 }
 .AhaWiki .wikiContent div.toc.collapsed .tocBody {
-  display: none;
+  height: 26px;
+  overflow: hidden;
 }
 /*# sourceMappingURL=less.css.map */
