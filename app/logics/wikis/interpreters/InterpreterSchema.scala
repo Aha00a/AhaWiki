@@ -225,7 +225,8 @@ object InterpreterSchema extends TraitInterpreter {
             mergeFieldsForDisplay(parseResult.seqSeqField).map { field =>
               val key = field.key
               val tail = field.values
-              <div class="schemaFieldRow">
+              val isActorCharacterField = key == "actor" && field.pairKey.contains("character")
+              <div class={s"schemaFieldRow${if(isActorCharacterField) " actorCharacterPairRow" else ""}"}>
                 <dt class="schemaFieldKey">
                   {renderPropertyTitle(key, field.pairKey)}
                 </dt>

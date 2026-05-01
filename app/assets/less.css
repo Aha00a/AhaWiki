@@ -733,6 +733,13 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
 }
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow {
+  column-count: 3;
+  column-gap: 16px;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
+  break-inside: avoid;
+}
 .AhaWiki .commonAhaWiki div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
@@ -753,6 +760,10 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .commonAhaWiki div.InterpreterSchema dl dd.schemaFieldValuePair {
+  display: block;
+  margin-left: 10px;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
   color: #888;
@@ -1348,6 +1359,13 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
 }
+.AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow {
+  column-count: 3;
+  column-gap: 16px;
+}
+.AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
+  break-inside: avoid;
+}
 .AhaWiki .wikiContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
@@ -1368,6 +1386,10 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .wikiContent div.InterpreterSchema dl dd.schemaFieldValuePair {
+  display: block;
+  margin-left: 10px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
   color: #888;
@@ -2279,6 +2301,13 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow {
   padding: 6px 0;
 }
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow {
+  column-count: 3;
+  column-gap: 16px;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
+  break-inside: avoid;
+}
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema h5:first-of-type {
   margin-top: 0;
 }
@@ -2299,6 +2328,10 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd {
   margin-left: 10px;
   display: inline-block;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd.schemaFieldValuePair {
+  display: block;
+  margin-left: 10px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
   color: #888;

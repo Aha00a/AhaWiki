@@ -482,6 +482,15 @@ kbd {
 			.schemaFields {
 				.schemaFieldRow {
 					padding: 6px 0;
+
+					&.actorCharacterPairRow {
+						column-count: 3;
+						column-gap: 16px;
+
+						dd.schemaFieldValuePair {
+							break-inside: avoid;
+						}
+					}
 				}
 			}
 
@@ -506,6 +515,9 @@ kbd {
 					display: inline-block;
 
 					&.schemaFieldValuePair {
+						display: block;
+						margin-left: 10px;
+
 						.pairSeparator {
 							color: #888;
 						}
