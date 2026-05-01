@@ -56,9 +56,9 @@
                                 "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
                                 "<td>" + esc(row.dateTime) + "</td>" +
                                 "<td>" + esc(author) + "</td>" +
+                                "<td>" + esc(row.remoteAddressMasked || "") + "</td>" +
                                 "<td>" + esc(comment) + "</td>" +
-                                "<td>" + esc(comment) + "</td>" +
-                                "<td>" + esc(comment) + "</td>" +
+                                "<td>" + esc(row.isMinorEdit ? "Y" : "") + "</td>" +
                                 "</tr>";
                     }).join("");
 
