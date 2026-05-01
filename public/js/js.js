@@ -183,9 +183,35 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             updateFoldState(section.classList.contains('sectionCollapsed'));
 
-            foldToggle.onclick = function () {
-                updateFoldState(!section.classList.contains('sectionCollapsed'));
+            heading.style.cursor = 'pointer';
+            heading.setAttribute('role', 'button');
+            heading.setAttribute('tabindex', '0');
+            heading.setAttribute('aria-expanded', (!section.classList.contains('sectionCollapsed')).toString());
+
+            var toggleSectionFold = function () {
+                var nextCollapsed = !section.classList.contains('sectionCollapsed');
+                updateFoldState(nextCollapsed);
+                heading.setAttribute('aria-expanded', (!nextCollapsed).toString());
                 schedulePositionEditLink();
+            };
+
+            heading.addEventListener('click', function (event) {
+                if (event.target.closest('a, button')) {
+                    return;
+                }
+                toggleSectionFold();
+            });
+
+            heading.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleSectionFold();
+                }
+            });
+
+            foldToggle.onclick = function (event) {
+                event.stopPropagation();
+                toggleSectionFold();
             };
         }
 
