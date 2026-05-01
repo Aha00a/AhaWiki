@@ -7,6 +7,9 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 
 object MacroRecentChanges extends TraitMacro {
+  private def escapeWikiControl(text: String): String =
+    Option(text).getOrElse("").replace("[[", "\\[[").replace("]]", "\\]]")
+
   private def shouldIncludeMinorEdit(argument: String): Either[String, Boolean] = {
     Option(argument).map(_.trim.toLowerCase).filter(_.nonEmpty) match {
       case None => Right(false)
@@ -32,7 +35,7 @@ object MacroRecentChanges extends TraitMacro {
                       s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
                       s"${t.toIsoLocalDateTimeString}",
                       s"${t.nickname.map(UserPageLogic.wikiMarkup).getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
-                      s"${if (t.isMinorEdit) "[minor] " else ""}${t.comment}"
+                      s"${if (t.isMinorEdit) "[minor] " else ""}${escapeWikiControl(t.comment)}"
                     ))
                     s"""=== $yearMonth
                        |[[[#!Table tsv 1 tablesorter

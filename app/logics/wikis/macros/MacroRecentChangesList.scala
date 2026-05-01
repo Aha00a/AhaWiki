@@ -7,6 +7,9 @@ import models.ContextWikiPage
 
 object MacroRecentChangesList extends TraitMacro {
 
+  private def escapeWikiControl(text: String): String =
+    Option(text).getOrElse("").replace("[[", "\\[[").replace("]]", "\\]]")
+
   import models.tables.PageWithoutContentWithSize
 
   private val includeMinorEditKeywords = Set("minor", "include-minor", "include_minor", "includeminor")
@@ -40,6 +43,6 @@ object MacroRecentChangesList extends TraitMacro {
   }
 
   def toHtmlString(list: Seq[PageWithoutContentWithSize])(implicit wikiContext: ContextWikiPage): String = {
-    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${if (p.isMinorEdit) "[minor] " else ""}${p.comment} by ${p.nickname.map(UserPageLogic.wikiMarkup).getOrElse(IpAddressUtil.mask(p.remoteAddress))}""").mkString("\n"))
+    InterpreterWiki.toHtmlString(list.map(p => s""" * ${p.toIsoLocalDateTimeString} - [[Html(<a rel="nofollow" href="/w/${p.name}?action=diff&after=${p.revision}">r${p.revision}</a>)]] - ["${p.name}"] - ${if (p.isMinorEdit) "[minor] " else ""}${escapeWikiControl(p.comment)} by ${p.nickname.map(UserPageLogic.wikiMarkup).getOrElse(IpAddressUtil.mask(p.remoteAddress))}""").mkString("\n"))
   }
 }
