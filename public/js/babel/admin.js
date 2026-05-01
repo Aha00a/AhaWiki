@@ -206,6 +206,9 @@ function logError(...args) {
   console.error(LOG_PREFIX, ...args);
 }
 function routeToPage(pathname) {
+  if (/^\/Admin\/\d+\/AccessLog$/.test(pathname)) {
+    return "access-logs";
+  }
   if (/^\/Admin\/Site\/\d+\/Config$/.test(pathname)) {
     return "site-config";
   }
@@ -273,6 +276,14 @@ function parseUserSeqFromPathname(pathname) {
 }
 function parseSiteSeqFromPathname2(pathname) {
   const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+  if (!matched) {
+    return "";
+  }
+  const siteSeq = Number.parseInt(matched[1], 10);
+  return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+}
+function parseSiteSeqForAccessLogPathname(pathname) {
+  const matched = pathname.match(/^\/Admin\/(\d+)\/AccessLog$/);
   if (!matched) {
     return "";
   }
@@ -358,7 +369,8 @@ function useAdminData(page) {
     pageSize = 20,
     search = "",
     sortBy = "seq",
-    sortOrder = "desc"
+    sortOrder = "desc",
+    siteSeq = ""
   } = {}) => {
     const params = new URLSearchParams({
       page: String(page2),
@@ -367,6 +379,9 @@ function useAdminData(page) {
       sortBy,
       sortOrder
     });
+    if (siteSeq) {
+      params.set("siteSeq", String(siteSeq));
+    }
     const data = await fetchJson2(`/api/Admin/AccessLogs?${params.toString()}`);
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAccessLogs(rows);
@@ -761,7 +776,6 @@ function useAdminData(page) {
           return;
         }
         if (page === "access-logs") {
-          await loadAccessLogs();
           if (mounted) {
             setSites([]);
             setUsers([]);
@@ -919,6 +933,14 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     () => (selectedSite?.domains ?? []).join(", ") || "-",
     [selectedSite]
   );
+  const selectedAccessLogSiteSeq = useMemo2(
+    () => parseSiteSeqForAccessLogPathname(pathname),
+    [pathname]
+  );
+  const selectedAccessLogSite = useMemo2(
+    () => sites.find((site) => String(site.seq) === selectedAccessLogSiteSeq) ?? null,
+    [sites, selectedAccessLogSiteSeq]
+  );
   const isSiteConfigPage = page === "site-config";
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
@@ -944,6 +966,20 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       });
     }
   }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
+  useEffect2(() => {
+    if (page !== "access-logs") {
+      return;
+    }
+    setAccessLogPage(1);
+    loadAccessLogs({
+      page: 1,
+      pageSize: ACCESS_LOG_PAGE_SIZE,
+      search: accessLogSearchInput,
+      sortBy: accessLogSortBy,
+      sortOrder: accessLogSortOrder,
+      siteSeq: selectedAccessLogSiteSeq
+    });
+  }, [page, selectedAccessLogSiteSeq]);
   if (loading) {
     return /* @__PURE__ */ React5.createElement(Paper2, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React5.createElement(Stack3, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React5.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React5.createElement(Title3, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
@@ -1273,7 +1309,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "access-logs") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, selectedAccessLogSite ? `Access Logs (${selectedAccessLogSite.name} #${selectedAccessLogSite.seq})` : "Access Logs (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(
       TextInput,
       {
         label: "search",
@@ -1292,7 +1328,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
             pageSize: ACCESS_LOG_PAGE_SIZE,
             search: accessLogSearchInput,
             sortBy: accessLogSortBy,
-            sortOrder: accessLogSortOrder
+            sortOrder: accessLogSortOrder,
+            siteSeq: selectedAccessLogSiteSeq
           });
         }
       },
@@ -1337,7 +1374,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
             pageSize: ACCESS_LOG_PAGE_SIZE,
             search: accessLogSearchInput,
             sortBy: nextSortStatus.columnAccessor,
-            sortOrder: nextDirection
+            sortOrder: nextDirection,
+            siteSeq: selectedAccessLogSiteSeq
           });
         }
       }
@@ -1347,7 +1385,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         value: accessLogPage,
         onChange: (nextPage) => {
           setAccessLogPage(nextPage);
-          loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+          loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, siteSeq: selectedAccessLogSiteSeq });
         },
         total: accessLogTotalPages,
         siblings: 1,

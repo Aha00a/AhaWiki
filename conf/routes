@@ -41,6 +41,7 @@ GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
 GET           /Admin/Operation                       controllers.Admin.index
 GET           /Admin/AccessLog                      controllers.Admin.index
+GET           /Admin/:seq/AccessLog                 controllers.Admin.site(seq: Long)
 GET           /Admin/RecentChange                    controllers.Admin.index
 GET           /Admin/Sites                           controllers.Admin.sites
 GET           /Admin/SiteUsers                       controllers.Admin.siteUsers

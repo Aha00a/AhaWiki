@@ -40,6 +40,9 @@ function logError(...args) {
 }
 
 function routeToPage(pathname) {
+    if (/^\/Admin\/\d+\/AccessLog$/.test(pathname)) {
+        return "access-logs";
+    }
     if (/^\/Admin\/Site\/\d+\/Config$/.test(pathname)) {
         return "site-config";
     }
@@ -109,6 +112,15 @@ function parseUserSeqFromPathname(pathname) {
 
 function parseSiteSeqFromPathname(pathname) {
     const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+    if (!matched) {
+        return "";
+    }
+    const siteSeq = Number.parseInt(matched[1], 10);
+    return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+}
+
+function parseSiteSeqForAccessLogPathname(pathname) {
+    const matched = pathname.match(/^\/Admin\/(\d+)\/AccessLog$/);
     if (!matched) {
         return "";
     }
@@ -200,6 +212,7 @@ function useAdminData(page) {
         search = "",
         sortBy = "seq",
         sortOrder = "desc",
+        siteSeq = "",
     } = {}) => {
         const params = new URLSearchParams({
             page: String(page),
@@ -208,6 +221,9 @@ function useAdminData(page) {
             sortBy,
             sortOrder,
         });
+        if (siteSeq) {
+            params.set("siteSeq", String(siteSeq));
+        }
         const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
         const rows = Array.isArray(data?.array)
             ? data.array
@@ -630,7 +646,6 @@ function useAdminData(page) {
                     return;
                 }
                 if (page === "access-logs") {
-                    await loadAccessLogs();
                     if (mounted) {
                         setSites([]);
                         setUsers([]);
@@ -793,6 +808,14 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => (selectedSite?.domains ?? []).join(", ") || "-",
         [selectedSite],
     );
+    const selectedAccessLogSiteSeq = useMemo(
+        () => parseSiteSeqForAccessLogPathname(pathname),
+        [pathname],
+    );
+    const selectedAccessLogSite = useMemo(
+        () => sites.find((site) => String(site.seq) === selectedAccessLogSiteSeq) ?? null,
+        [sites, selectedAccessLogSiteSeq],
+    );
     const isSiteConfigPage = page === "site-config";
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
@@ -822,6 +845,21 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 });
         }
     }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
+
+    useEffect(() => {
+        if (page !== "access-logs") {
+            return;
+        }
+        setAccessLogPage(1);
+        loadAccessLogs({
+            page: 1,
+            pageSize: ACCESS_LOG_PAGE_SIZE,
+            search: accessLogSearchInput,
+            sortBy: accessLogSortBy,
+            sortOrder: accessLogSortOrder,
+            siteSeq: selectedAccessLogSiteSeq,
+        });
+    }, [page, selectedAccessLogSiteSeq]);
 
     if (loading) {
         return (
@@ -1399,7 +1437,9 @@ function AdminContent({page, onNavigate, pathname, search}) {
         return (
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
-                    <Title order={3}>Access Logs (All Sites)</Title>
+                    <Title order={3}>
+                        {selectedAccessLogSite ? `Access Logs (${selectedAccessLogSite.name} #${selectedAccessLogSite.seq})` : "Access Logs (All Sites)"}
+                    </Title>
                     <Badge color="cyan" variant="light">{accessLogs.length} / {accessLogCount} rows</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">검색과 헤더 정렬, 페이지 이동으로 요청 로그를 조회할 수 있습니다.</Text>
@@ -1420,6 +1460,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 search: accessLogSearchInput,
                                 sortBy: accessLogSortBy,
                                 sortOrder: accessLogSortOrder,
+                                siteSeq: selectedAccessLogSiteSeq,
                             });
                         }}
                     >
@@ -1465,6 +1506,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             search: accessLogSearchInput,
                             sortBy: nextSortStatus.columnAccessor,
                             sortOrder: nextDirection,
+                            siteSeq: selectedAccessLogSiteSeq,
                         });
                     }}
                 />
@@ -1474,7 +1516,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         value={accessLogPage}
                         onChange={(nextPage) => {
                             setAccessLogPage(nextPage);
-                            loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                            loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, siteSeq: selectedAccessLogSiteSeq});
                         }}
                         total={accessLogTotalPages}
                         siblings={1}

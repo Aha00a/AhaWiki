@@ -850,6 +850,9 @@ class Api @Inject()(
           .map(_.max(1).min(1000))
           .getOrElse(20)
         val search = request.getQueryString("search").map(_.trim).getOrElse("")
+        val siteSeq = request.getQueryString("siteSeq")
+          .flatMap(raw => scala.util.Try(raw.toLong).toOption)
+          .filter(_ > 0)
         val sortByRaw = request.getQueryString("sortBy").map(_.trim).getOrElse("seq")
         val sortOrderRaw = request.getQueryString("sortOrder").map(_.trim.toLowerCase).getOrElse("desc")
 
@@ -865,13 +868,18 @@ class Api @Inject()(
         val sortOrder = if (sortOrderRaw == "asc") "ASC" else "DESC"
         val offset = (page - 1) * pageSize
         val searchLike = s"%$search%"
+        val siteSeqIsEmpty = siteSeq.isEmpty
+        val siteSeqValue: Long = siteSeq.getOrElse(0L)
+        val searchIsEmpty = search.isEmpty
 
         val count = SQL"""
           SELECT COUNT(*) AS count_value
           FROM AccessLog AL
           INNER JOIN Site S ON S.seq = AL.site
           WHERE (
-            ${search.isEmpty} = TRUE OR
+            $siteSeqIsEmpty = TRUE OR AL.site = $siteSeqValue
+          ) AND (
+            $searchIsEmpty = TRUE OR
             S.name LIKE $searchLike OR
             AL.method LIKE $searchLike OR
             AL.uri LIKE $searchLike OR
@@ -901,6 +909,8 @@ class Api @Inject()(
           FROM AccessLog AL
           INNER JOIN Site S ON S.seq = AL.site
           WHERE (
+            {siteSeqIsEmpty} = TRUE OR AL.site = {siteSeq}
+          ) AND (
             {searchIsEmpty} = TRUE OR
             S.name LIKE {searchLike} OR
             AL.method LIKE {searchLike} OR
@@ -911,7 +921,9 @@ class Api @Inject()(
           ORDER BY $orderBySql
           LIMIT {pageSize} OFFSET {offset}
         """).on(
-          "searchIsEmpty" -> search.isEmpty,
+          "searchIsEmpty" -> searchIsEmpty,
+          "siteSeqIsEmpty" -> siteSeqIsEmpty,
+          "siteSeq" -> siteSeqValue,
           "searchLike" -> searchLike,
           "pageSize" -> pageSize,
           "offset" -> offset,
