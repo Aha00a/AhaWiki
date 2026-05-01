@@ -1,51 +1,75 @@
 package logics.wikis.macros
 
-import com.aha00a.commons.utils.IpAddressUtil
-import com.aha00a.supercsv.SupercsvUtil
-import logics.wikis.UserPageLogic
-import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 
 object MacroRecentChanges extends TraitMacro {
-  private def escapeWikiControl(text: String): String =
-    Option(text).getOrElse("").replace("[[", "\\[[").replace("]]", "\\]]")
 
-  private def shouldIncludeMinorEdit(argument: String): Either[String, Boolean] = {
-    Option(argument).map(_.trim.toLowerCase).filter(_.nonEmpty) match {
-      case None => Right(false)
-      case Some("minor") | Some("include-minor") | Some("include_minor") | Some("includeminor") => Right(true)
-      case Some(other) => Left(other)
-    }
-  }
-
-  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    shouldIncludeMinorEdit(argument) match {
-      case Left(_) => MacroError.toHtmlString(s"Bad argument - [[$name($argument)]]")
-      case Right(includeMinorEdit) =>
-        def desc[T : Ordering]: Ordering[T] = implicitly[Ordering[T]].reverse
-        val pageList = wikiContext.seqPageByPermission.filter(p => includeMinorEdit || !p.isMinorEdit)
-        InterpreterWiki.toHtmlString(
-          pageList.groupBy(_.year).toList.sortBy(_._1)(desc).map {
-            case (year, groupedByYear) =>
-              s"== $year\n" +
-                groupedByYear.groupBy(_.yearDashMonth).toList.sortBy(_._1)(desc).map {
-                  case (yearMonth, groupedByYearMonth) =>
-                    val list = groupedByYearMonth.sortBy(_.dateTime)(desc).map(t => Seq(
-                      s"""'''["${t.name}"]'''""",
-                      s"""["${t.name}?action=diff&after=${t.revision}" ${t.revision}]""",
-                      s"${t.toIsoLocalDateTimeString}",
-                      s"${t.nickname.map(UserPageLogic.wikiMarkup).getOrElse("")} ${IpAddressUtil.mask(t.remoteAddress)}",
-                      s"${if (t.isMinorEdit) "[minor] " else ""}${escapeWikiControl(t.comment)}"
-                    ))
-                    s"""=== $yearMonth
-                       |[[[#!Table tsv 1 tablesorter
-                       |Name	Revision	at	by	comment
-                       |${SupercsvUtil.toTsvString(list)}
-                       |]]]
-                       |""".stripMargin
-                }.mkString("\n")
-          }.mkString("\n")
-        )
-    }
+  override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
+    s"""
+       |<div class="macro-recent-changes" data-include-minor-edit="0">
+       |  <div class="macro-recent-changes-status">Loading recent changes...</div>
+       |  <table class="macro-recent-changes-table" style="display:none;">
+       |    <thead>
+       |      <tr>
+       |        <th>Name</th>
+       |        <th>Revision</th>
+       |        <th>At</th>
+       |        <th>By</th>
+       |        <th>Comment</th>
+       |      </tr>
+       |    </thead>
+       |    <tbody></tbody>
+       |  </table>
+       |</div>
+       |<script>
+       |(function () {
+       |  function esc(v) {
+       |    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+       |      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+       |    });
+       |  }
+       |
+       |  function render(container, rows) {
+       |    var status = container.querySelector('.macro-recent-changes-status');
+       |    var table = container.querySelector('.macro-recent-changes-table');
+       |    var tbody = table.querySelector('tbody');
+       |    tbody.innerHTML = rows.map(function (row) {
+       |      var comment = (row.isMinorEdit ? "[minor] " : "") + (row.comment || "");
+       |      var author = row.nickname ? row.nickname : row.remoteAddressMasked;
+       |      return "<tr>" +
+       |        "<td><a href='/w/" + encodeURIComponent(row.name) + "'>" + esc(row.name) + "</a></td>" +
+       |        "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
+       |        "<td>" + esc(row.dateTime) + "</td>" +
+       |        "<td>" + esc(author) + "</td>" +
+       |        "<td>" + esc(comment) + "</td>" +
+       |        "</tr>";
+       |    }).join("");
+       |
+       |    status.style.display = "none";
+       |    table.style.display = "";
+       |    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.tablesorter) {
+       |      window.jQuery(table).tablesorter();
+       |    }
+       |  }
+       |
+       |  function load(container) {
+       |    var includeMinorEdit = container.getAttribute("data-include-minor-edit") === "1" ? "1" : "0";
+       |    var status = container.querySelector('.macro-recent-changes-status');
+       |    fetch("/api/change?includeMinorEdit=" + includeMinorEdit, { credentials: "same-origin" })
+       |      .then(function (res) {
+       |        if (!res.ok) throw new Error("HTTP " + res.status);
+       |        return res.json();
+       |      })
+       |      .then(function (rows) { render(container, rows || []); })
+       |      .catch(function (e) {
+       |        status.textContent = "Failed to load recent changes. " + e;
+       |      });
+       |  }
+       |
+       |  var containers = document.querySelectorAll(".macro-recent-changes");
+       |  for (var i = 0; i < containers.length; i++) load(containers[i]);
+       |})();
+       |</script>
+       |""".stripMargin
   }
 }

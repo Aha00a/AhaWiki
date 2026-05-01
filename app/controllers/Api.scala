@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.AmazonS3
 import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.ObjectMetadata
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.IpAddressUtil
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.parser.decode
@@ -825,6 +826,52 @@ class Api @Inject()(
 
         Ok(rows.asJson)
       }
+    }
+  }
+
+  def change(includeMinorEdit: Int): Action[AnyContent] = Action { implicit request =>
+    // TODO: check permission
+    database.withConnection { implicit connection =>
+      implicit val site: Site = SiteLogic.get(request.host)
+      case class ChangeRow(
+                            name: String,
+                            revision: Long,
+                            dateTime: String,
+                            nickname: Option[String],
+                            remoteAddressMasked: String,
+                            comment: String,
+                            isMinorEdit: Boolean,
+                          )
+
+      val rows = SQL"""
+        SELECT
+          P.name,
+          P.revision,
+          DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
+          U.nickname,
+          P.remoteAddress,
+          P.comment,
+          P.isMinorEdit
+        FROM Page P
+        LEFT JOIN User U ON U.seq = P.user
+        WHERE P.site = ${site.seq}
+          AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
+        ORDER BY P.dateTime DESC
+        LIMIT 500
+      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
+        case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
+          ChangeRow(
+            name = name,
+            revision = revision,
+            dateTime = dateTime,
+            nickname = nickname,
+            remoteAddressMasked = IpAddressUtil.mask(remoteAddress),
+            comment = comment,
+            isMinorEdit = isMinorEdit,
+          )
+      }.*)
+
+      Ok(rows.asJson)
     }
   }
 
