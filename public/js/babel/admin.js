@@ -14,6 +14,7 @@ import {
   Loader,
   NavLink,
   Paper,
+  Pagination,
   Progress,
   SimpleGrid,
   Stack,
@@ -21,7 +22,8 @@ import {
   Text,
   TextInput,
   ThemeIcon,
-  Title
+  Title,
+  UnstyledButton
 } from "@mantine/core";
 import {
   Area,
@@ -649,6 +651,21 @@ function useAdminData(page) {
     error
   };
 }
+function AccessLogSortHeader({ label, field, sortBy, sortOrder, onSort }) {
+  const isActive = sortBy === field;
+  const arrow = isActive ? sortOrder === "asc" ? "\u25B2" : "\u25BC" : "";
+  return /* @__PURE__ */ React.createElement(
+    UnstyledButton,
+    {
+      type: "button",
+      onClick: () => onSort(field),
+      style: { fontWeight: 600, cursor: "pointer", color: "inherit" }
+    },
+    label,
+    " ",
+    arrow
+  );
+}
 function makeTable(headers, rows) {
   return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
 }
@@ -895,8 +912,6 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     [selectedSite]
   );
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
-  const accessLogPageStart = Math.floor((accessLogPage - 1) / 5) * 5 + 1;
-  const accessLogPageNumbers = Array.from({ length: 5 }, (_, index) => accessLogPageStart + index).filter((pageNumber) => pageNumber <= accessLogTotalPages);
   useEffect(() => {
     if (page !== "site-detail") {
       return;
@@ -1245,72 +1260,45 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "\uC870\uD68C"
-    )), makeTable(
-      [
-        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-          const nextOrder = accessLogSortBy === "dateInserted" && accessLogSortOrder === "desc" ? "asc" : "desc";
-          setAccessLogSortBy("dateInserted");
-          setAccessLogSortOrder(nextOrder);
-          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "dateInserted", sortOrder: nextOrder });
-        } }, "When ", accessLogSortBy === "dateInserted" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
-        "Site",
-        "User",
-        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-          const nextOrder = accessLogSortBy === "method" && accessLogSortOrder === "desc" ? "asc" : "desc";
-          setAccessLogSortBy("method");
-          setAccessLogSortOrder(nextOrder);
-          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "method", sortOrder: nextOrder });
-        } }, "Method ", accessLogSortBy === "method" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
-        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-          const nextOrder = accessLogSortBy === "uri" && accessLogSortOrder === "desc" ? "asc" : "desc";
-          setAccessLogSortBy("uri");
-          setAccessLogSortOrder(nextOrder);
-          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "uri", sortOrder: nextOrder });
-        } }, "URI ", accessLogSortBy === "uri" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
-        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-          const nextOrder = accessLogSortBy === "status" && accessLogSortOrder === "desc" ? "asc" : "desc";
-          setAccessLogSortBy("status");
-          setAccessLogSortOrder(nextOrder);
-          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "status", sortOrder: nextOrder });
-        } }, "Status ", accessLogSortBy === "status" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
-        "IP",
-        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
-          const nextOrder = accessLogSortBy === "durationMilli" && accessLogSortOrder === "desc" ? "asc" : "desc";
-          setAccessLogSortBy("durationMilli");
-          setAccessLogSortOrder(nextOrder);
-          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "durationMilli", sortOrder: nextOrder });
-        } }, "Duration(ms) ", accessLogSortBy === "durationMilli" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
-        "User-Agent"
-      ],
-      (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
-        row.dateInserted,
-        `${row.siteName} (#${row.siteSeq})`,
-        row.userSeq ?? "-",
-        row.method,
-        row.uri,
-        row.status,
-        row.remoteAddress,
-        row.durationMilli,
-        row.userAgent
-      ])
-    ), /* @__PURE__ */ React.createElement(Group, { mt: "md", gap: "xs" }, /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage <= 1, onClick: () => {
-      setAccessLogPage(1);
-      loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
-    } }, "<<"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage <= 1, onClick: () => {
-      const nextPage = Math.max(1, accessLogPage - 1);
-      setAccessLogPage(nextPage);
-      loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
-    } }, "<"), accessLogPageNumbers.map((pageNumber) => /* @__PURE__ */ React.createElement(Button, { key: pageNumber, size: "xs", variant: pageNumber === accessLogPage ? "filled" : "light", onClick: () => {
-      setAccessLogPage(pageNumber);
-      loadAccessLogs({ page: pageNumber, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
-    } }, pageNumber)), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage >= accessLogTotalPages, onClick: () => {
-      const nextPage = Math.min(accessLogTotalPages, accessLogPage + 1);
-      setAccessLogPage(nextPage);
-      loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
-    } }, ">"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage >= accessLogTotalPages, onClick: () => {
-      setAccessLogPage(accessLogTotalPages);
-      loadAccessLogs({ page: accessLogTotalPages, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
-    } }, ">>")));
+    )), /* @__PURE__ */ React.createElement(Table.ScrollContainer, { minWidth: 1200 }, /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "When", field: "dateInserted", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+      const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+      setAccessLogSortBy(field);
+      setAccessLogSortOrder(nextOrder);
+      loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "User"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Method", field: "method", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+      const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+      setAccessLogSortBy(field);
+      setAccessLogSortOrder(nextOrder);
+      loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "URI", field: "uri", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+      const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+      setAccessLogSortBy(field);
+      setAccessLogSortOrder(nextOrder);
+      loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Status", field: "status", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+      const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+      setAccessLogSortBy(field);
+      setAccessLogSortOrder(nextOrder);
+      loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "IP"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Duration(ms)", field: "durationMilli", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+      const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+      setAccessLogSortBy(field);
+      setAccessLogSortOrder(nextOrder);
+      loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "User-Agent"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, (Array.isArray(accessLogs) ? accessLogs : []).map((row) => /* @__PURE__ */ React.createElement(Table.Tr, { key: row.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, row.dateInserted), /* @__PURE__ */ React.createElement(Table.Td, null, `${row.siteName} (#${row.siteSeq})`), /* @__PURE__ */ React.createElement(Table.Td, null, row.userSeq ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, row.method), /* @__PURE__ */ React.createElement(Table.Td, null, row.uri), /* @__PURE__ */ React.createElement(Table.Td, null, row.status), /* @__PURE__ */ React.createElement(Table.Td, null, row.remoteAddress), /* @__PURE__ */ React.createElement(Table.Td, null, row.durationMilli), /* @__PURE__ */ React.createElement(Table.Td, null, row.userAgent)))))), /* @__PURE__ */ React.createElement(Group, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React.createElement(
+      Pagination,
+      {
+        value: accessLogPage,
+        onChange: (nextPage) => {
+          setAccessLogPage(nextPage);
+          loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+        },
+        total: accessLogTotalPages,
+        siblings: 1,
+        boundaries: 1,
+        size: "sm"
+      }
+    )));
   }
   return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Running Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.filter((scheduler) => scheduler.running).length, "/", schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/Operation") }, "\uC6B4\uC601 \uC791\uC5C5 \uC5F4\uAE30"))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
     StatTrendCard,

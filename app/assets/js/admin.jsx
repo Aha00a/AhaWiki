@@ -13,6 +13,7 @@ import {
     Loader,
     NavLink,
     Paper,
+    Pagination,
     Progress,
     SimpleGrid,
     Stack,
@@ -21,6 +22,7 @@ import {
     TextInput,
     ThemeIcon,
     Title,
+    UnstyledButton,
 } from "@mantine/core";
 import {
     Area,
@@ -686,6 +688,21 @@ function useAdminData(page) {
     };
 }
 
+
+function AccessLogSortHeader({label, field, sortBy, sortOrder, onSort}) {
+    const isActive = sortBy === field;
+    const arrow = isActive ? (sortOrder === "asc" ? "▲" : "▼") : "";
+    return (
+        <UnstyledButton
+            type="button"
+            onClick={() => onSort(field)}
+            style={{fontWeight: 600, cursor: "pointer", color: "inherit"}}
+        >
+            {label} {arrow}
+        </UnstyledButton>
+    );
+}
+
 function makeTable(headers, rows) {
     return (
         <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader stickyHeaderOffset={0}>
@@ -1121,9 +1138,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
         [selectedSite],
     );
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
-    const accessLogPageStart = Math.floor((accessLogPage - 1) / 5) * 5 + 1;
-    const accessLogPageNumbers = Array.from({length: 5}, (_, index) => accessLogPageStart + index)
-        .filter((pageNumber) => pageNumber <= accessLogTotalPages);
 
     useEffect(() => {
         if (page !== "site-detail") {
@@ -1779,80 +1793,76 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         조회
                     </Button>
                 </Group>
-                {makeTable(
-                    [
-                        <button type="button" onClick={() => {
-                            const nextOrder = accessLogSortBy === "dateInserted" && accessLogSortOrder === "desc" ? "asc" : "desc";
-                            setAccessLogSortBy("dateInserted");
-                            setAccessLogSortOrder(nextOrder);
-                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "dateInserted", sortOrder: nextOrder});
-                        }}>When {accessLogSortBy === "dateInserted" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
-                        "Site",
-                        "User",
-                        <button type="button" onClick={() => {
-                            const nextOrder = accessLogSortBy === "method" && accessLogSortOrder === "desc" ? "asc" : "desc";
-                            setAccessLogSortBy("method");
-                            setAccessLogSortOrder(nextOrder);
-                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "method", sortOrder: nextOrder});
-                        }}>Method {accessLogSortBy === "method" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
-                        <button type="button" onClick={() => {
-                            const nextOrder = accessLogSortBy === "uri" && accessLogSortOrder === "desc" ? "asc" : "desc";
-                            setAccessLogSortBy("uri");
-                            setAccessLogSortOrder(nextOrder);
-                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "uri", sortOrder: nextOrder});
-                        }}>URI {accessLogSortBy === "uri" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
-                        <button type="button" onClick={() => {
-                            const nextOrder = accessLogSortBy === "status" && accessLogSortOrder === "desc" ? "asc" : "desc";
-                            setAccessLogSortBy("status");
-                            setAccessLogSortOrder(nextOrder);
-                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "status", sortOrder: nextOrder});
-                        }}>Status {accessLogSortBy === "status" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
-                        "IP",
-                        <button type="button" onClick={() => {
-                            const nextOrder = accessLogSortBy === "durationMilli" && accessLogSortOrder === "desc" ? "asc" : "desc";
-                            setAccessLogSortBy("durationMilli");
-                            setAccessLogSortOrder(nextOrder);
-                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "durationMilli", sortOrder: nextOrder});
-                        }}>Duration(ms) {accessLogSortBy === "durationMilli" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
-                        "User-Agent",
-                    ],
-                    (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
-                        row.dateInserted,
-                        `${row.siteName} (#${row.siteSeq})`,
-                        row.userSeq ?? "-",
-                        row.method,
-                        row.uri,
-                        row.status,
-                        row.remoteAddress,
-                        row.durationMilli,
-                        row.userAgent,
-                    ]),
-                )}
-                <Group mt="md" gap="xs">
-                    <Button size="xs" variant="light" disabled={accessLogPage <= 1} onClick={() => {
-                        setAccessLogPage(1);
-                        loadAccessLogs({page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
-                    }}>&lt;&lt;</Button>
-                    <Button size="xs" variant="light" disabled={accessLogPage <= 1} onClick={() => {
-                        const nextPage = Math.max(1, accessLogPage - 1);
-                        setAccessLogPage(nextPage);
-                        loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
-                    }}>&lt;</Button>
-                    {accessLogPageNumbers.map((pageNumber) => (
-                        <Button key={pageNumber} size="xs" variant={pageNumber === accessLogPage ? "filled" : "light"} onClick={() => {
-                            setAccessLogPage(pageNumber);
-                            loadAccessLogs({page: pageNumber, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
-                        }}>{pageNumber}</Button>
-                    ))}
-                    <Button size="xs" variant="light" disabled={accessLogPage >= accessLogTotalPages} onClick={() => {
-                        const nextPage = Math.min(accessLogTotalPages, accessLogPage + 1);
-                        setAccessLogPage(nextPage);
-                        loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
-                    }}>&gt;</Button>
-                    <Button size="xs" variant="light" disabled={accessLogPage >= accessLogTotalPages} onClick={() => {
-                        setAccessLogPage(accessLogTotalPages);
-                        loadAccessLogs({page: accessLogTotalPages, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
-                    }}>&gt;&gt;</Button>
+                <Table.ScrollContainer minWidth={1200}>
+                    <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader>
+                        <Table.Thead>
+                            <Table.Tr>
+                                <Table.Th><AccessLogSortHeader label="When" field="dateInserted" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th>Site</Table.Th>
+                                <Table.Th>User</Table.Th>
+                                <Table.Th><AccessLogSortHeader label="Method" field="method" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th><AccessLogSortHeader label="URI" field="uri" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th><AccessLogSortHeader label="Status" field="status" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th>IP</Table.Th>
+                                <Table.Th><AccessLogSortHeader label="Duration(ms)" field="durationMilli" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
+                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
+                                    setAccessLogSortBy(field);
+                                    setAccessLogSortOrder(nextOrder);
+                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
+                                }}/></Table.Th>
+                                <Table.Th>User-Agent</Table.Th>
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {(Array.isArray(accessLogs) ? accessLogs : []).map((row) => (
+                                <Table.Tr key={row.seq}>
+                                    <Table.Td>{row.dateInserted}</Table.Td>
+                                    <Table.Td>{`${row.siteName} (#${row.siteSeq})`}</Table.Td>
+                                    <Table.Td>{row.userSeq ?? "-"}</Table.Td>
+                                    <Table.Td>{row.method}</Table.Td>
+                                    <Table.Td>{row.uri}</Table.Td>
+                                    <Table.Td>{row.status}</Table.Td>
+                                    <Table.Td>{row.remoteAddress}</Table.Td>
+                                    <Table.Td>{row.durationMilli}</Table.Td>
+                                    <Table.Td>{row.userAgent}</Table.Td>
+                                </Table.Tr>
+                            ))}
+                        </Table.Tbody>
+                    </Table>
+                </Table.ScrollContainer>
+                <Group mt="md" justify="space-between">
+                    <Text size="sm" c="dimmed">Page {accessLogPage} / {accessLogTotalPages}</Text>
+                    <Pagination
+                        value={accessLogPage}
+                        onChange={(nextPage) => {
+                            setAccessLogPage(nextPage);
+                            loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                        }}
+                        total={accessLogTotalPages}
+                        siblings={1}
+                        boundaries={1}
+                        size="sm"
+                    />
                 </Group>
             </Card>
         );
