@@ -1,11 +1,21 @@
+@(implicit wikiContext: models.ContextWikiPage)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <div class="macroRecentChanges">
+    @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Preview) {
+        <div style="height : 500px ; position : relative ;">
+            <div class="adjacentPagesPreviewPlaceholder">
+                <i class="fas fa-history"></i>
+                <div class="title">Recent changes table is skipped in preview mode.</div>
+                <div class="description">Open the page to load the latest recent changes.</div>
+            </div>
+        </div>
+    } else {
         <form id="macro-recent-changes-form-@id" class="macro-recent-changes-form">
-        <label>
-            <input type="checkbox" name="includeMinorEdit">
-            Include minor edits
-        </label>
-        <button type="submit">Load</button>
+            <label>
+                <input type="checkbox" name="includeMinorEdit">
+                Include minor edits
+            </label>
+            <button type="submit">Load</button>
         </form>
         <div id="macro-recent-changes-@id" class="macro-recent-changes">
             <div class="macro-recent-changes-status">Click Load to fetch recent changes.</div>
@@ -25,62 +35,63 @@
             </div>
         </div>
         <script>
-(function () {
-    function esc(v) {
-        return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
-            return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
-        });
-    }
+            (function () {
+                function esc(v) {
+                    return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+                        return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+                    });
+                }
 
-    function render(container, rows) {
-        var status = container.querySelector('.macro-recent-changes-status');
-        var table = container.querySelector('.macro-recent-changes-table');
-        var tbody = table.querySelector('tbody');
-        tbody.innerHTML = rows.map(function (row) {
-            var comment = (row.isMinorEdit ? "[minor] " : "") + (row.comment || "");
-            var author = row.nickname ? row.nickname : row.remoteAddressMasked;
-            return "<tr>" +
-                    "<td><a href='/w/" + encodeURIComponent(row.name) + "'>" + esc(row.name) + "</a></td>" +
-                    "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
-                    "<td>" + esc(row.dateTime) + "</td>" +
-                    "<td>" + esc(author) + "</td>" +
-                    "<td>" + esc(comment) + "</td>" +
-                    "</tr>";
-        }).join("");
+                function render(container, rows) {
+                    var status = container.querySelector('.macro-recent-changes-status');
+                    var table = container.querySelector('.macro-recent-changes-table');
+                    var tbody = table.querySelector('tbody');
+                    tbody.innerHTML = rows.map(function (row) {
+                        var comment = (row.isMinorEdit ? "[minor] " : "") + (row.comment || "");
+                        var author = row.nickname ? row.nickname : row.remoteAddressMasked;
+                        return "<tr>" +
+                                "<td><a href='/w/" + encodeURIComponent(row.name) + "'>" + esc(row.name) + "</a></td>" +
+                                "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
+                                "<td>" + esc(row.dateTime) + "</td>" +
+                                "<td>" + esc(author) + "</td>" +
+                                "<td>" + esc(comment) + "</td>" +
+                                "</tr>";
+                    }).join("");
 
-        status.style.display = "none";
-        table.style.display = "";
-    }
+                    status.style.display = "none";
+                    table.style.display = "";
+                }
 
-    function load(container, includeMinorEdit) {
-        var status = container.querySelector('.macro-recent-changes-status');
-        var table = container.querySelector('.macro-recent-changes-table');
-        status.textContent = "Loading recent changes...";
-        status.style.display = "";
-        table.style.display = "none";
-        fetch("/api/change?includeMinorEdit=" + includeMinorEdit, {credentials: "same-origin"})
-                .then(function (res) {
-                    if (!res.ok) throw new Error("HTTP " + res.status);
-                    return res.json();
-                })
-                .then(function (rows) {
-                    render(container, rows || []);
-                })
-                .catch(function (e) {
-                    status.textContent = "Failed to load recent changes. " + e;
-                });
-    }
+                function load(container, includeMinorEdit) {
+                    var status = container.querySelector('.macro-recent-changes-status');
+                    var table = container.querySelector('.macro-recent-changes-table');
+                    status.textContent = "Loading recent changes...";
+                    status.style.display = "";
+                    table.style.display = "none";
+                    fetch("/api/change?includeMinorEdit=" + includeMinorEdit, {credentials: "same-origin"})
+                            .then(function (res) {
+                                if (!res.ok) throw new Error("HTTP " + res.status);
+                                return res.json();
+                            })
+                            .then(function (rows) {
+                                render(container, rows || []);
+                            })
+                            .catch(function (e) {
+                                status.textContent = "Failed to load recent changes. " + e;
+                            });
+                }
 
-    var container = document.getElementById("macro-recent-changes-@id");
-    var form = document.getElementById("macro-recent-changes-form-@id");
-    if (container && form) {
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
-            var includeMinorEdit = form.includeMinorEdit && form.includeMinorEdit.checked ? "1" : "0";
-            load(container, includeMinorEdit);
-        });
-    }
-})();
+                var container = document.getElementById("macro-recent-changes-@id");
+                var form = document.getElementById("macro-recent-changes-form-@id");
+                if (container && form) {
+                    form.addEventListener("submit", function (event) {
+                        event.preventDefault();
+                        var includeMinorEdit = form.includeMinorEdit && form.includeMinorEdit.checked ? "1" : "0";
+                        load(container, includeMinorEdit);
+                    });
+                }
+            })();
         </script>
+    }
     </div>
 }
