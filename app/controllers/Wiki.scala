@@ -384,7 +384,7 @@ controllerComponents: ControllerComponents,
     val listSchemaOrg = CalculatedSchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
-      s"""==== [schema:$k $k]
+      s"""==== [schema:$k $k] ==== #$k-Generated
          |[[Html(<div class="columnWidth350">)]]
          |${mapClsList(k).map(t => s""" 1. [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
          |[[Html(</div>)]]
