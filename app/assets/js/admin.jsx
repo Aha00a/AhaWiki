@@ -22,8 +22,8 @@ import {
     TextInput,
     ThemeIcon,
     Title,
-    UnstyledButton,
 } from "@mantine/core";
+import {DataTable} from "mantine-datatable";
 import {
     Area,
     AreaChart,
@@ -688,20 +688,6 @@ function useAdminData(page) {
     };
 }
 
-
-function AccessLogSortHeader({label, field, sortBy, sortOrder, onSort}) {
-    const isActive = sortBy === field;
-    const arrow = isActive ? (sortOrder === "asc" ? "▲" : "▼") : "";
-    return (
-        <UnstyledButton
-            type="button"
-            onClick={() => onSort(field)}
-            style={{fontWeight: 600, cursor: "pointer", color: "inherit"}}
-        >
-            {label} {arrow}
-        </UnstyledButton>
-    );
-}
 
 function makeTable(headers, rows) {
     return (
@@ -1793,78 +1779,42 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         조회
                     </Button>
                 </Group>
-                <Table.ScrollContainer minWidth={1200}>
-                    <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader>
-                        <Table.Thead>
-                            <Table.Tr>
-                                <Table.Th><AccessLogSortHeader label="seq" field="seq" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th><AccessLogSortHeader label="DateInserted" field="dateInserted" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th>Site</Table.Th>
-                                <Table.Th>IpDeny</Table.Th>
-                                <Table.Th>User</Table.Th>
-                                <Table.Th><AccessLogSortHeader label="Method" field="method" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th>Scheme</Table.Th>
-                                <Table.Th>Host</Table.Th>
-                                <Table.Th><AccessLogSortHeader label="URI" field="uri" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th>URL</Table.Th>
-                                <Table.Th><AccessLogSortHeader label="Status" field="status" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th>IP</Table.Th>
-                                <Table.Th><AccessLogSortHeader label="Duration(ms)" field="durationMilli" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
-                                    const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
-                                    setAccessLogSortBy(field);
-                                    setAccessLogSortOrder(nextOrder);
-                                    loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
-                                }}/></Table.Th>
-                                <Table.Th>User-Agent</Table.Th>
-                            </Table.Tr>
-                        </Table.Thead>
-                        <Table.Tbody>
-                            {(Array.isArray(accessLogs) ? accessLogs : []).map((row) => (
-                                <Table.Tr key={row.seq}>
-                                    <Table.Td>{row.seq}</Table.Td>
-                                    <Table.Td>{row.dateInserted}</Table.Td>
-                                    <Table.Td>{`${row.siteName} (#${row.siteSeq})`}</Table.Td>
-                                    <Table.Td>{row.ipDenySeq ?? "-"}</Table.Td>
-                                    <Table.Td>{row.userSeq ?? "-"}</Table.Td>
-                                    <Table.Td>{row.method}</Table.Td>
-                                    <Table.Td>{row.scheme}</Table.Td>
-                                    <Table.Td>{row.host}</Table.Td>
-                                    <Table.Td>{row.uri}</Table.Td>
-                                    <Table.Td>{row.url}</Table.Td>
-                                    <Table.Td>{row.status}</Table.Td>
-                                    <Table.Td>{row.remoteAddress}</Table.Td>
-                                    <Table.Td>{row.durationMilli}</Table.Td>
-                                    <Table.Td>{row.userAgent}</Table.Td>
-                                </Table.Tr>
-                            ))}
-                        </Table.Tbody>
-                    </Table>
-                </Table.ScrollContainer>
+                <DataTable
+                    withTableBorder
+                    borderRadius="sm"
+                    striped
+                    highlightOnHover
+                    minHeight={420}
+                    records={Array.isArray(accessLogs) ? accessLogs : []}
+                    columns={[
+                        {accessor: "seq", title: "seq", sortable: true},
+                        {accessor: "dateInserted", title: "DateInserted", sortable: true},
+                        {accessor: "siteName", title: "Site", render: (row) => `${row.siteName} (#${row.siteSeq})`},
+                        {accessor: "ipDenySeq", title: "IpDeny", render: (row) => row.ipDenySeq ?? "-"},
+                        {accessor: "userSeq", title: "User", render: (row) => row.userSeq ?? "-"},
+                        {accessor: "method", title: "Method", sortable: true},
+                        {accessor: "scheme", title: "Scheme"},
+                        {accessor: "host", title: "Host"},
+                        {accessor: "uri", title: "URI", sortable: true},
+                        {accessor: "url", title: "URL"},
+                        {accessor: "status", title: "Status", sortable: true},
+                        {accessor: "remoteAddress", title: "IP"},
+                        {accessor: "durationMilli", title: "Duration(ms)", sortable: true},
+                        {accessor: "userAgent", title: "User-Agent"},
+                    ]}
+                    sortStatus={{columnAccessor: accessLogSortBy, direction: accessLogSortOrder}}
+                    onSortStatusChange={(nextSortStatus) => {
+                        setAccessLogSortBy(nextSortStatus.columnAccessor);
+                        setAccessLogSortOrder(nextSortStatus.direction);
+                        loadAccessLogs({
+                            page: accessLogPage,
+                            pageSize: ACCESS_LOG_PAGE_SIZE,
+                            search: accessLogSearchInput,
+                            sortBy: nextSortStatus.columnAccessor,
+                            sortOrder: nextSortStatus.direction,
+                        });
+                    }}
+                />
                 <Group mt="md" justify="space-between">
                     <Text size="sm" c="dimmed">Page {accessLogPage} / {accessLogTotalPages}</Text>
                     <Pagination

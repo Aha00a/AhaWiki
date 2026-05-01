@@ -9,7 +9,7 @@ const ctx = await context({
   bundle: true,
   format: "esm",
   platform: "browser",
-  external: ["react", "react-dom/client", "@mantine/core", "recharts"],
+  external: ["react", "react-dom/client", "@mantine/core", "mantine-datatable", "recharts"],
   minify: false,
   sourcemap: false,
   logLevel: "info",
