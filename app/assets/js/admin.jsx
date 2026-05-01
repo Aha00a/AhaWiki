@@ -1804,6 +1804,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                     loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
                                 }}/></Table.Th>
                                 <Table.Th>Site</Table.Th>
+                                <Table.Th>IpDeny</Table.Th>
                                 <Table.Th>User</Table.Th>
                                 <Table.Th><AccessLogSortHeader label="Method" field="method" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
                                     const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
@@ -1811,12 +1812,15 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                     setAccessLogSortOrder(nextOrder);
                                     loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
                                 }}/></Table.Th>
+                                <Table.Th>Scheme</Table.Th>
+                                <Table.Th>Host</Table.Th>
                                 <Table.Th><AccessLogSortHeader label="URI" field="uri" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
                                     const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
                                     setAccessLogSortBy(field);
                                     setAccessLogSortOrder(nextOrder);
                                     loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder});
                                 }}/></Table.Th>
+                                <Table.Th>URL</Table.Th>
                                 <Table.Th><AccessLogSortHeader label="Status" field="status" sortBy={accessLogSortBy} sortOrder={accessLogSortOrder} onSort={(field) => {
                                     const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
                                     setAccessLogSortBy(field);
@@ -1838,9 +1842,13 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 <Table.Tr key={row.seq}>
                                     <Table.Td>{row.dateInserted}</Table.Td>
                                     <Table.Td>{`${row.siteName} (#${row.siteSeq})`}</Table.Td>
+                                    <Table.Td>{row.ipDenySeq ?? "-"}</Table.Td>
                                     <Table.Td>{row.userSeq ?? "-"}</Table.Td>
                                     <Table.Td>{row.method}</Table.Td>
+                                    <Table.Td>{row.scheme}</Table.Td>
+                                    <Table.Td>{row.host}</Table.Td>
                                     <Table.Td>{row.uri}</Table.Td>
+                                    <Table.Td>{row.url}</Table.Td>
                                     <Table.Td>{row.status}</Table.Td>
                                     <Table.Td>{row.remoteAddress}</Table.Td>
                                     <Table.Td>{row.durationMilli}</Table.Td>

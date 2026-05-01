@@ -1265,17 +1265,17 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       setAccessLogSortBy(field);
       setAccessLogSortOrder(nextOrder);
       loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
-    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "User"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Method", field: "method", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "Site"), /* @__PURE__ */ React.createElement(Table.Th, null, "IpDeny"), /* @__PURE__ */ React.createElement(Table.Th, null, "User"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Method", field: "method", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
       const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
       setAccessLogSortBy(field);
       setAccessLogSortOrder(nextOrder);
       loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
-    } })), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "URI", field: "uri", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "Scheme"), /* @__PURE__ */ React.createElement(Table.Th, null, "Host"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "URI", field: "uri", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
       const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
       setAccessLogSortBy(field);
       setAccessLogSortOrder(nextOrder);
       loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
-    } })), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Status", field: "status", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "URL"), /* @__PURE__ */ React.createElement(Table.Th, null, /* @__PURE__ */ React.createElement(AccessLogSortHeader, { label: "Status", field: "status", sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, onSort: (field) => {
       const nextOrder = accessLogSortBy === field && accessLogSortOrder === "desc" ? "asc" : "desc";
       setAccessLogSortBy(field);
       setAccessLogSortOrder(nextOrder);
@@ -1285,7 +1285,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       setAccessLogSortBy(field);
       setAccessLogSortOrder(nextOrder);
       loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: field, sortOrder: nextOrder });
-    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "User-Agent"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, (Array.isArray(accessLogs) ? accessLogs : []).map((row) => /* @__PURE__ */ React.createElement(Table.Tr, { key: row.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, row.dateInserted), /* @__PURE__ */ React.createElement(Table.Td, null, `${row.siteName} (#${row.siteSeq})`), /* @__PURE__ */ React.createElement(Table.Td, null, row.userSeq ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, row.method), /* @__PURE__ */ React.createElement(Table.Td, null, row.uri), /* @__PURE__ */ React.createElement(Table.Td, null, row.status), /* @__PURE__ */ React.createElement(Table.Td, null, row.remoteAddress), /* @__PURE__ */ React.createElement(Table.Td, null, row.durationMilli), /* @__PURE__ */ React.createElement(Table.Td, null, row.userAgent)))))), /* @__PURE__ */ React.createElement(Group, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React.createElement(
+    } })), /* @__PURE__ */ React.createElement(Table.Th, null, "User-Agent"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, (Array.isArray(accessLogs) ? accessLogs : []).map((row) => /* @__PURE__ */ React.createElement(Table.Tr, { key: row.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, row.dateInserted), /* @__PURE__ */ React.createElement(Table.Td, null, `${row.siteName} (#${row.siteSeq})`), /* @__PURE__ */ React.createElement(Table.Td, null, row.ipDenySeq ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, row.userSeq ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, row.method), /* @__PURE__ */ React.createElement(Table.Td, null, row.scheme), /* @__PURE__ */ React.createElement(Table.Td, null, row.host), /* @__PURE__ */ React.createElement(Table.Td, null, row.uri), /* @__PURE__ */ React.createElement(Table.Td, null, row.url), /* @__PURE__ */ React.createElement(Table.Td, null, row.status), /* @__PURE__ */ React.createElement(Table.Td, null, row.remoteAddress), /* @__PURE__ */ React.createElement(Table.Td, null, row.durationMilli), /* @__PURE__ */ React.createElement(Table.Td, null, row.userAgent)))))), /* @__PURE__ */ React.createElement(Group, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React.createElement(
       Pagination,
       {
         value: accessLogPage,
