@@ -34,7 +34,7 @@
             lastMouseY: 0,
             nodeDegree: new Map(),
             depthFromRoot: new Map(),
-            focusDepth: 2,
+            focusDepth: 32,
             minDegree: 0,
             nodeScale: 1,
             labelScale: 1,
@@ -565,6 +565,13 @@
 
         controls.bindActionControl('.toggleFullscreenD3Canvas.@(id)', function() {
             toggleFullscreen();
+        });
+
+        controls.bindRangeControl('.focusDepthD3Canvas.@(id)', function() {
+            state.focusDepth = parseInt($(this).val(), 10);
+            $('.focusDepthValueD3Canvas.@(id)').text('≤ ' + state.focusDepth);
+            updateCounter();
+            draw();
         });
 
         controls.bindRangeControl('.degreeFilterD3Canvas.@(id)', function() {
