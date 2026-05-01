@@ -25,9 +25,11 @@
                         <tr>
                             <th>Name</th>
                             <th>Revision</th>
-                            <th>At</th>
-                            <th>By</th>
+                            <th>DateTime</th>
+                            <th>User</th>
+                            <th>RemoteAddress</th>
                             <th>Comment</th>
+                            <th>MinorEdit</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -54,6 +56,8 @@
                                 "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
                                 "<td>" + esc(row.dateTime) + "</td>" +
                                 "<td>" + esc(author) + "</td>" +
+                                "<td>" + esc(comment) + "</td>" +
+                                "<td>" + esc(comment) + "</td>" +
                                 "<td>" + esc(comment) + "</td>" +
                                 "</tr>";
                     }).join("");
@@ -89,6 +93,13 @@
                         var includeMinorEdit = form.includeMinorEdit && form.includeMinorEdit.checked ? "1" : "0";
                         load(container, includeMinorEdit);
                     });
+
+                    var loadButton = form.querySelector('button[type="submit"]');
+                    if (loadButton) {
+                        loadButton.click();
+                    } else if (typeof form.requestSubmit === "function") {
+                        form.requestSubmit();
+                    }
                 }
             })();
         </script>
