@@ -831,7 +831,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
 
     useEffect(() => {
-        if (page !== "site-detail") {
+        if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
             return;
         }
         const siteSeqByPath = parseSiteSeqFromPathname(pathname);
@@ -843,7 +843,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     }, [page, pathname, selectedSiteSeq]);
 
     useEffect(() => {
-        if ((page === "site-detail" || page === "site-cache") && selectedSiteSeq) {
+        if ((page === "site-detail" || page === "site-config" || page === "site-cache") && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
             loadAdminSitePageNames(selectedSiteSeq)

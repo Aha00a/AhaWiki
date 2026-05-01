@@ -969,7 +969,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
   useEffect2(() => {
-    if (page !== "site-detail") {
+    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
       return;
     }
     const siteSeqByPath = parseSiteSeqFromPathname2(pathname);
@@ -980,7 +980,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }
   }, [page, pathname, selectedSiteSeq]);
   useEffect2(() => {
-    if ((page === "site-detail" || page === "site-cache") && selectedSiteSeq) {
+    if ((page === "site-detail" || page === "site-config" || page === "site-cache") && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
       loadAdminSitePageNames(selectedSiteSeq).then((pageNames) => {
