@@ -269,9 +269,12 @@ kbd {
 		padding: 0 0 25px 0;
 		word-break: break-all;
 		>.limitWidth>div {
-			&>, >div, >div>div {
-				>p, >ul, >ol, >blockquote, >pre, >table, >.math, >.error, >.info {
+			&>, >div, >div>div, >div>div>div {
+				>p, >blockquote, >pre, >table, >.math, >.error, >.info, >.adjacentPagesGraphWrapper {
 					margin-left: 30px;
+				}
+				>ul, ol {
+					margin-left: 40px;
 				}
 			}
 		}
