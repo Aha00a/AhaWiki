@@ -37,6 +37,24 @@ import {
     YAxis,
 } from "recharts";
 
+
+function IconChevronUp({size = 14}) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M18 15l-6-6-6 6"/>
+        </svg>
+    );
+}
+
+function IconSelector({size = 14}) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M8 9l4-4 4 4"/>
+            <path d="M16 15l-4 4-4-4"/>
+        </svg>
+    );
+}
+
 const LOG_PREFIX = "[AdminUI]";
 
 function logInfo(...args) {
@@ -117,6 +135,7 @@ function parseSiteSeqFromPathname(pathname) {
     const siteSeq = Number.parseInt(matched[1], 10);
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
 }
+
 
 function pageTitleByKey(page) {
     if (page === "recent-changes") {
@@ -1292,6 +1311,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     }}>검색</Button>
                 </Group>
                 <DataTable
+                    sortIcons={{
+                        sorted: <IconChevronUp size={14} />,
+                        unsorted: <IconSelector size={14} />,
+                    }}
                     withTableBorder
                     striped
                     highlightOnHover
@@ -1309,9 +1332,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     ]}
                     sortStatus={{columnAccessor: allUserSortBy, direction: allUserSortOrder}}
                     onSortStatusChange={(nextSortStatus) => {
+                        const nextDirection = nextSortStatus.direction ?? "desc";
+                        setAllUserPage(1);
                         setAllUserSortBy(nextSortStatus.columnAccessor);
-                        setAllUserSortOrder(nextSortStatus.direction);
-                        loadAllUsers({page: allUserPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextSortStatus.direction});
+                        setAllUserSortOrder(nextDirection);
+                        loadAllUsers({page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection});
                     }}
                     totalRecords={allUserCount}
                     recordsPerPage={ACCESS_LOG_PAGE_SIZE}
@@ -1812,6 +1837,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     </Button>
                 </Group>
                 <DataTable
+                    sortIcons={{
+                        sorted: <IconChevronUp size={14} />,
+                        unsorted: <IconSelector size={14} />,
+                    }}
                     withTableBorder
                     borderRadius="sm"
                     striped
@@ -1836,14 +1865,16 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     ]}
                     sortStatus={{columnAccessor: accessLogSortBy, direction: accessLogSortOrder}}
                     onSortStatusChange={(nextSortStatus) => {
+                        const nextDirection = nextSortStatus.direction ?? "desc";
+                        setAccessLogPage(1);
                         setAccessLogSortBy(nextSortStatus.columnAccessor);
-                        setAccessLogSortOrder(nextSortStatus.direction);
+                        setAccessLogSortOrder(nextDirection);
                         loadAccessLogs({
-                            page: accessLogPage,
+                            page: 1,
                             pageSize: ACCESS_LOG_PAGE_SIZE,
                             search: accessLogSearchInput,
                             sortBy: nextSortStatus.columnAccessor,
-                            sortOrder: nextSortStatus.direction,
+                            sortOrder: nextDirection,
                         });
                     }}
                 />

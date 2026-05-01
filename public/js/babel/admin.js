@@ -37,6 +37,12 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+function IconChevronUp({ size = 14 }) {
+  return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M18 15l-6-6-6 6" }));
+}
+function IconSelector({ size = 14 }) {
+  return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React.createElement("path", { d: "M16 15l-4 4-4-4" }));
+}
 var LOG_PREFIX = "[AdminUI]";
 function logInfo(...args) {
   console.log(LOG_PREFIX, ...args);
@@ -977,6 +983,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     } }, "\uAC80\uC0C9")), /* @__PURE__ */ React.createElement(
       DataTable,
       {
+        sortIcons: {
+          sorted: /* @__PURE__ */ React.createElement(IconChevronUp, { size: 14 }),
+          unsorted: /* @__PURE__ */ React.createElement(IconSelector, { size: 14 })
+        },
         withTableBorder: true,
         striped: true,
         highlightOnHover: true,
@@ -994,9 +1004,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         ],
         sortStatus: { columnAccessor: allUserSortBy, direction: allUserSortOrder },
         onSortStatusChange: (nextSortStatus) => {
+          const nextDirection = nextSortStatus.direction ?? "desc";
+          setAllUserPage(1);
           setAllUserSortBy(nextSortStatus.columnAccessor);
-          setAllUserSortOrder(nextSortStatus.direction);
-          loadAllUsers({ page: allUserPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextSortStatus.direction });
+          setAllUserSortOrder(nextDirection);
+          loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection });
         },
         totalRecords: allUserCount,
         recordsPerPage: ACCESS_LOG_PAGE_SIZE,
@@ -1305,6 +1317,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     )), /* @__PURE__ */ React.createElement(
       DataTable,
       {
+        sortIcons: {
+          sorted: /* @__PURE__ */ React.createElement(IconChevronUp, { size: 14 }),
+          unsorted: /* @__PURE__ */ React.createElement(IconSelector, { size: 14 })
+        },
         withTableBorder: true,
         borderRadius: "sm",
         striped: true,
@@ -1329,14 +1345,16 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         ],
         sortStatus: { columnAccessor: accessLogSortBy, direction: accessLogSortOrder },
         onSortStatusChange: (nextSortStatus) => {
+          const nextDirection = nextSortStatus.direction ?? "desc";
+          setAccessLogPage(1);
           setAccessLogSortBy(nextSortStatus.columnAccessor);
-          setAccessLogSortOrder(nextSortStatus.direction);
+          setAccessLogSortOrder(nextDirection);
           loadAccessLogs({
-            page: accessLogPage,
+            page: 1,
             pageSize: ACCESS_LOG_PAGE_SIZE,
             search: accessLogSearchInput,
             sortBy: nextSortStatus.columnAccessor,
-            sortOrder: nextSortStatus.direction
+            sortOrder: nextDirection
           });
         }
       }
