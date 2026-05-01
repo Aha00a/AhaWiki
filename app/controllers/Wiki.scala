@@ -373,6 +373,7 @@ controllerComponents: ControllerComponents,
        |
        |$similarPagesMarkup
        |
+       |[[Html(<div style="clear: both;"></div>)]]
        |=== Adjacent Pages === #Adjacent-Pages-Generated
        |[[AdjacentPages]]
        |""".stripMargin
