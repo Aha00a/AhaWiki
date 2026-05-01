@@ -1,25 +1,24 @@
 // app/assets/js/admin.jsx
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React2, { useCallback, useEffect as useEffect2, useMemo as useMemo2, useState as useState2 } from "react";
 import { createRoot } from "react-dom/client";
 import {
   MantineProvider,
   Anchor,
   AppShell,
-  Badge,
+  Badge as Badge2,
   Button,
   Card,
   ColorInput,
-  Divider,
-  Group,
+  Divider as Divider2,
+  Group as Group2,
   Loader,
-  NavLink,
-  Paper,
+  Paper as Paper2,
   Pagination,
   Progress,
   SimpleGrid,
-  Stack,
+  Stack as Stack2,
   Table,
-  Text,
+  Text as Text2,
   TextInput,
   ThemeIcon,
   Title
@@ -37,11 +36,125 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+
+// app/assets/js/admin/navigation.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { Badge, Divider, Group, NavLink, Paper, Stack, Text } from "@mantine/core";
+function fetchJson(url) {
+  return fetch(url, { credentials: "same-origin" }).then((response) => {
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  });
+}
+function parseSiteSeqFromPathname(pathname) {
+  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+  if (!matched) return "";
+  const siteSeq = Number.parseInt(matched[1], 10);
+  return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+}
+function Navigation({ activePage, onNavigate }) {
+  const [siteLinks, setSiteLinks] = useState([]);
+  const currentPathname = window.location.pathname;
+  const currentSiteSeq = parseSiteSeqFromPathname(currentPathname);
+  useEffect(() => {
+    let mounted = true;
+    fetchJson("/api/Admin/Sites").then((siteData) => {
+      if (mounted) setSiteLinks(Array.isArray(siteData) ? siteData : []);
+    }).catch((caughtError) => {
+      console.error("[AdminUI] navigation:sites:error", caughtError);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  const links = useMemo(() => [
+    { href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line" },
+    { href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap" },
+    { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
+    { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
+    { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
+    { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" }
+  ], []);
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites";
+    return /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        key: link.key,
+        href: link.href,
+        label: link.label,
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
+        active: isActive,
+        variant: isActive ? "filled" : "light",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(link.href);
+        }
+      }
+    );
+  }))), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
+    NavLink,
+    {
+      key: `site-${site.seq}`,
+      href: `/Admin/Site/${site.seq}`,
+      label: `${site.name} (#${site.seq})`,
+      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
+      active: currentSiteSeq === String(site.seq),
+      opened: true,
+      variant: currentSiteSeq === String(site.seq) ? "filled" : "light",
+      onClick: (event) => {
+        event.preventDefault();
+        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+      }
+    },
+    /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        href: `/Admin/Site/${site.seq}/Config`,
+        label: "Config",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/Site/${site.seq}/Config`,
+        variant: currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
+        }
+      }
+    ),
+    /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        href: `/Admin/Site/${site.seq}/Cache`,
+        label: "Cache",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/Site/${site.seq}/Cache`,
+        variant: currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
+        }
+      }
+    )
+  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
+    NavLink,
+    {
+      href: "/",
+      label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30",
+      description: "\uAD00\uB9AC\uC790 \uC601\uC5ED\uC744 \uB098\uAC00 \uBA54\uC778 \uC704\uD0A4\uB85C \uC774\uB3D9",
+      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-arrow-left", "aria-hidden": "true" }),
+      rightSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-external-link-alt", "aria-hidden": "true" }),
+      color: "gray",
+      variant: "subtle"
+    }
+  )));
+}
+
+// app/assets/js/admin.jsx
 function IconChevronUp({ size = 14 }) {
-  return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M18 15l-6-6-6 6" }));
+  return /* @__PURE__ */ React2.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React2.createElement("path", { d: "M18 15l-6-6-6 6" }));
 }
 function IconSelector({ size = 14 }) {
-  return /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React.createElement("path", { d: "M16 15l-4 4-4-4" }));
+  return /* @__PURE__ */ React2.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React2.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React2.createElement("path", { d: "M16 15l-4 4-4-4" }));
 }
 var LOG_PREFIX = "[AdminUI]";
 function logInfo(...args) {
@@ -116,7 +229,7 @@ function parseUserSeqFromPathname(pathname) {
   const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
   return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
-function parseSiteSeqFromPathname(pathname) {
+function parseSiteSeqFromPathname2(pathname) {
   const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
   if (!matched) {
     return "";
@@ -142,7 +255,7 @@ function pageTitleByKey(page) {
   }
   return "Dashboard";
 }
-async function fetchJson(url) {
+async function fetchJson2(url) {
   logInfo("fetch:start", url);
   const response = await fetch(url, { credentials: "same-origin" });
   if (!response.ok) {
@@ -164,40 +277,40 @@ async function fetchCsrfToken() {
   };
 }
 function useAdminData(page) {
-  const [loading, setLoading] = useState(true);
-  const [sites, setSites] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [allUsers, setAllUsers] = useState([]);
-  const [allUserCount, setAllUserCount] = useState(0);
-  const [schedulers, setSchedulers] = useState([]);
-  const [dailyStats, setDailyStats] = useState({
+  const [loading, setLoading] = useState2(true);
+  const [sites, setSites] = useState2([]);
+  const [users, setUsers] = useState2([]);
+  const [allUsers, setAllUsers] = useState2([]);
+  const [allUserCount, setAllUserCount] = useState2(0);
+  const [schedulers, setSchedulers] = useState2([]);
+  const [dailyStats, setDailyStats] = useState2({
     userCreated: [],
     siteUserCreated: [],
     pageCreated: [],
     pageEdited: []
   });
-  const [recentChanges, setRecentChanges] = useState([]);
-  const [accessLogs, setAccessLogs] = useState([]);
-  const [accessLogCount, setAccessLogCount] = useState(0);
-  const [topViewedPages, setTopViewedPages] = useState([]);
-  const [userViewHistories, setUserViewHistories] = useState([]);
-  const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
-  const [runningSchedulerName, setRunningSchedulerName] = useState("");
-  const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
-  const [siteFaviconUrl, setSiteFaviconUrl] = useState("/public/favicon.png");
-  const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState("");
-  const [uploadingFavicon, setUploadingFavicon] = useState(false);
-  const [deletingFavicon, setDeletingFavicon] = useState(false);
-  const [siteTheme, setSiteTheme] = useState({
+  const [recentChanges, setRecentChanges] = useState2([]);
+  const [accessLogs, setAccessLogs] = useState2([]);
+  const [accessLogCount, setAccessLogCount] = useState2(0);
+  const [topViewedPages, setTopViewedPages] = useState2([]);
+  const [userViewHistories, setUserViewHistories] = useState2([]);
+  const [loadingUserViewHistories, setLoadingUserViewHistories] = useState2(false);
+  const [runningSchedulerName, setRunningSchedulerName] = useState2("");
+  const [clearingSiteSeq, setClearingSiteSeq] = useState2(0);
+  const [siteFaviconUrl, setSiteFaviconUrl] = useState2("/public/favicon.png");
+  const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState2("");
+  const [uploadingFavicon, setUploadingFavicon] = useState2(false);
+  const [deletingFavicon, setDeletingFavicon] = useState2(false);
+  const [siteTheme, setSiteTheme] = useState2({
     headerBackgroundColor: "",
     headerForegroundColor: "",
     footerBackgroundColor: "",
     footerForegroundColor: ""
   });
-  const [savingSiteTheme, setSavingSiteTheme] = useState(false);
-  const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
-  const [memoryCacheStats, setMemoryCacheStats] = useState([]);
-  const [error, setError] = useState("");
+  const [savingSiteTheme, setSavingSiteTheme] = useState2(false);
+  const [calculatingSiteSeq, setCalculatingSiteSeq] = useState2(0);
+  const [memoryCacheStats, setMemoryCacheStats] = useState2([]);
+  const [error, setError] = useState2("");
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
     pageSize = 20,
@@ -212,7 +325,7 @@ function useAdminData(page) {
       sortBy,
       sortOrder
     });
-    const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
+    const data = await fetchJson2(`/api/Admin/AccessLogs?${params.toString()}`);
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAccessLogs(rows);
     setAccessLogCount(Number(data?.count ?? rows.length));
@@ -231,20 +344,20 @@ function useAdminData(page) {
       sortBy,
       sortOrder
     });
-    const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
+    const data = await fetchJson2(`/api/Admin/Users?${params.toString()}`);
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAllUsers(rows);
     setAllUserCount(Number(data?.count ?? rows.length));
   }, []);
   const loadRecentChanges = useCallback(async (n = 50) => {
-    const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
+    const data = await fetchJson2(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
     setRecentChanges(data);
   }, []);
   const loadUserViewHistories = useCallback(async (userSeq, n = 200) => {
     setLoadingUserViewHistories(true);
     try {
       const clampedN = Math.min(1e3, Math.max(1, Number.parseInt(String(n), 10) || 200));
-      const data = await fetchJson(
+      const data = await fetchJson2(
         `/api/Admin/UserViews?userSeq=${encodeURIComponent(userSeq)}&n=${encodeURIComponent(clampedN)}`
       );
       setUserViewHistories(data);
@@ -254,13 +367,13 @@ function useAdminData(page) {
   }, []);
   const loadDashboard = useCallback(async () => {
     const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
-      fetchJson("/api/Admin/Sites"),
-      fetchJson("/api/Admin/SiteUsers"),
-      fetchJson("/api/Admin/Users"),
-      fetchJson("/api/Admin/Schedulers"),
-      fetchJson("/api/Admin/DailyStats"),
-      fetchJson("/api/Admin/RecentChanges?n=30"),
-      fetchJson("/api/Admin/TopViewedPages?n=20")
+      fetchJson2("/api/Admin/Sites"),
+      fetchJson2("/api/Admin/SiteUsers"),
+      fetchJson2("/api/Admin/Users"),
+      fetchJson2("/api/Admin/Schedulers"),
+      fetchJson2("/api/Admin/DailyStats"),
+      fetchJson2("/api/Admin/RecentChanges?n=30"),
+      fetchJson2("/api/Admin/TopViewedPages?n=20")
     ]);
     const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
     setSites(siteData);
@@ -277,14 +390,14 @@ function useAdminData(page) {
     });
   }, []);
   const reloadSchedulers = useCallback(async () => {
-    const data = await fetchJson("/api/Admin/Schedulers");
+    const data = await fetchJson2("/api/Admin/Schedulers");
     setSchedulers(data);
   }, []);
   const runScheduler = useCallback(async (name) => {
     setRunningSchedulerName(name);
     setError("");
     try {
-      await fetchJson(`/api/Admin/Schedulers/Run/${encodeURIComponent(name)}`);
+      await fetchJson2(`/api/Admin/Schedulers/Run/${encodeURIComponent(name)}`);
       await reloadSchedulers();
     } catch (caughtError) {
       logError("scheduler:run:error", name, caughtError);
@@ -323,7 +436,7 @@ function useAdminData(page) {
       return;
     }
     try {
-      const data = await fetchJson(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`);
+      const data = await fetchJson2(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`);
       setSiteFaviconUrl(data?.faviconUrl || "/public/favicon.png");
       setSiteFaviconObjectKey(data?.objectKey || "");
     } catch (caughtError) {
@@ -407,7 +520,7 @@ function useAdminData(page) {
       return;
     }
     try {
-      const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
+      const data = await fetchJson2(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
       setSiteTheme({
         headerBackgroundColor: data?.headerBackgroundColor ?? "",
         headerForegroundColor: data?.headerForegroundColor ?? "",
@@ -467,7 +580,7 @@ function useAdminData(page) {
     if (!siteSeq) {
       return [];
     }
-    const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
+    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
     return Array.isArray(data) ? data : [];
   }, []);
   const runSiteCalculate = useCallback(async (siteSeq, pageName = "") => {
@@ -504,21 +617,21 @@ function useAdminData(page) {
   }, []);
   const loadMemoryCacheStats = useCallback(async () => {
     try {
-      const data = await fetchJson("/api/Admin/MemoryCacheStats");
+      const data = await fetchJson2("/api/Admin/MemoryCacheStats");
       setMemoryCacheStats(Array.isArray(data) ? data : []);
     } catch (caughtError) {
       logError("memory-cache:load:error", caughtError);
       setMemoryCacheStats([]);
     }
   }, []);
-  useEffect(() => {
+  useEffect2(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
       setError("");
       try {
         if (page === "sites") {
-          const data = await fetchJson("/api/Admin/Sites");
+          const data = await fetchJson2("/api/Admin/Sites");
           if (mounted) {
             setSites(data);
             setUsers([]);
@@ -534,7 +647,7 @@ function useAdminData(page) {
           return;
         }
         if (page === "users") {
-          const data = await fetchJson("/api/Admin/SiteUsers");
+          const data = await fetchJson2("/api/Admin/SiteUsers");
           if (mounted) {
             setUsers(data);
             setSites([]);
@@ -686,111 +799,11 @@ function useAdminData(page) {
   };
 }
 function makeTable(headers, rows) {
-  return /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
-}
-function Navigation({ activePage, onNavigate }) {
-  const [siteLinks, setSiteLinks] = useState([]);
-  const currentSiteSeq = parseSiteSeqFromPathname(window.location.pathname);
-  useEffect(() => {
-    let mounted = true;
-    fetchJson("/api/Admin/Sites").then((siteData) => {
-      if (!mounted) {
-        return;
-      }
-      setSiteLinks(Array.isArray(siteData) ? siteData : []);
-    }).catch((caughtError) => {
-      logError("navigation:sites:error", caughtError);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-  const links = useMemo(
-    () => [
-      { href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line" },
-      { href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap" },
-      { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
-      { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
-      { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
-      { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" }
-    ],
-    []
-  );
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites";
-    return /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        key: link.key,
-        href: link.href,
-        label: link.label,
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
-        active: isActive,
-        variant: isActive ? "filled" : "light",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(link.href);
-        }
-      }
-    );
-  }))), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
-    NavLink,
-    {
-      key: `site-${site.seq}`,
-      href: `/Admin/Site/${site.seq}`,
-      label: `${site.name} (#${site.seq})`,
-      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
-      active: currentSiteSeq === String(site.seq),
-      variant: currentSiteSeq === String(site.seq) ? "filled" : "light",
-      onClick: (event) => {
-        event.preventDefault();
-        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-      }
-    },
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Config`,
-        label: "Config",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }),
-        active: window.location.pathname === `/Admin/Site/${site.seq}/Config`,
-        variant: window.location.pathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
-        }
-      }
-    ),
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Cache`,
-        label: "Cache",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }),
-        active: window.location.pathname === `/Admin/Site/${site.seq}/Cache`,
-        variant: window.location.pathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
-        }
-      }
-    )
-  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
-    NavLink,
-    {
-      href: "/",
-      label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30",
-      description: "\uAD00\uB9AC\uC790 \uC601\uC5ED\uC744 \uB098\uAC00 \uBA54\uC778 \uC704\uD0A4\uB85C \uC774\uB3D9",
-      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-arrow-left", "aria-hidden": "true" }),
-      rightSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-external-link-alt", "aria-hidden": "true" }),
-      color: "gray",
-      variant: "subtle"
-    }
-  )));
+  return /* @__PURE__ */ React2.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React2.createElement(Table.Thead, null, /* @__PURE__ */ React2.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React2.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React2.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React2.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React2.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
 }
 function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) {
   const schedulersWithoutCalculate = schedulers.filter((scheduler) => scheduler.name !== "Calculate");
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "Schedulers"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "Calculate\uB294 \uC0AC\uC774\uD2B8 \uC0C1\uC138(/Admin/Site/:seq)\uC5D0\uC11C \uC2E4\uD589\uD558\uC138\uC694."), /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React2.createElement(Stack2, { gap: "sm" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between" }, /* @__PURE__ */ React2.createElement(Title, { order: 4 }, "Schedulers"), /* @__PURE__ */ React2.createElement(Button, { size: "xs", variant: "light", onClick: onRefresh }, "Refresh")), /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "Calculate\uB294 \uC0AC\uC774\uD2B8 \uC0C1\uC138(/Admin/Site/:seq)\uC5D0\uC11C \uC2E4\uD589\uD558\uC138\uC694."), /* @__PURE__ */ React2.createElement(
     Progress,
     {
       size: "sm",
@@ -798,7 +811,7 @@ function SchedulerTable({ schedulers, runningSchedulerName, onRun, onRefresh }) 
       color: "blue",
       radius: "xl"
     }
-  ), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Interval"), /* @__PURE__ */ React.createElement(Table.Th, null, "Next Delay(s)"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Started"), /* @__PURE__ */ React.createElement(Table.Th, null, "Last Finished"), /* @__PURE__ */ React.createElement(Table.Th, null, "Result"), /* @__PURE__ */ React.createElement(Table.Th, null, "Run Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, schedulersWithoutCalculate.map((scheduler) => /* @__PURE__ */ React.createElement(Table.Tr, { key: scheduler.name }, /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.name), /* @__PURE__ */ React.createElement(Table.Td, null, `${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.nextDelaySeconds ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastStartedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastFinishedAt ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.lastResult ?? "-"), /* @__PURE__ */ React.createElement(Table.Td, null, scheduler.runCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React2.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React2.createElement(Table.Thead, null, /* @__PURE__ */ React2.createElement(Table.Tr, null, /* @__PURE__ */ React2.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Interval"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Next Delay(s)"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Last Started"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Last Finished"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Result"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Run Count"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React2.createElement(Table.Tbody, null, schedulersWithoutCalculate.map((scheduler) => /* @__PURE__ */ React2.createElement(Table.Tr, { key: scheduler.name }, /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.name), /* @__PURE__ */ React2.createElement(Table.Td, null, `${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`), /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.nextDelaySeconds ?? "-"), /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.lastStartedAt ?? "-"), /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.lastFinishedAt ?? "-"), /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.lastResult ?? "-"), /* @__PURE__ */ React2.createElement(Table.Td, null, scheduler.runCount ?? 0), /* @__PURE__ */ React2.createElement(Table.Td, null, /* @__PURE__ */ React2.createElement(
     Button,
     {
       size: "xs",
@@ -819,20 +832,20 @@ function normalizeDailyRows(rows) {
 function Sparkline({ rows, color }) {
   const data = normalizeDailyRows(rows).slice(-30);
   if (data.length === 0) {
-    return /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "No data");
+    return /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "No data");
   }
   const latest = data[data.length - 1]?.count ?? 0;
   const previous = data[data.length - 2]?.count ?? latest;
   const delta = latest - previous;
   const deltaColor = delta >= 0 ? "teal" : "red";
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React.createElement("defs", null, /* @__PURE__ */ React.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React2.createElement(Stack2, { gap: 4 }, /* @__PURE__ */ React2.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React2.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React2.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React2.createElement("defs", null, /* @__PURE__ */ React2.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React2.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React2.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React2.createElement(
     Tooltip,
     {
       cursor: false,
       labelFormatter: (value) => `Date: ${value}`,
       formatter: (value) => [value, "Count"]
     }
-  ), /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React2.createElement(
     Area,
     {
       type: "monotone",
@@ -844,10 +857,10 @@ function Sparkline({ rows, color }) {
       activeDot: { r: 3 },
       isAnimationActive: false
     }
-  )))), /* @__PURE__ */ React.createElement(Group, { justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React.createElement(Badge, { color: deltaColor, variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
+  )))), /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between" }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React2.createElement(Badge2, { color: deltaColor, variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
 }
 function StatTrendCard({ title, total, rows, color }) {
-  return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React.createElement(Badge, { color, variant: "light" }, "30d")), /* @__PURE__ */ React.createElement(Title, { order: 3 }, total), /* @__PURE__ */ React.createElement(Sparkline, { rows, color })));
+  return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 8 }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React2.createElement(Badge2, { color, variant: "light" }, "30d")), /* @__PURE__ */ React2.createElement(Title, { order: 3 }, total), /* @__PURE__ */ React2.createElement(Sparkline, { rows, color })));
 }
 function MultiTrendChart({ series }) {
   const dateSet = /* @__PURE__ */ new Set();
@@ -858,7 +871,7 @@ function MultiTrendChart({ series }) {
   });
   const dates = [...dateSet].sort().slice(-30);
   if (dates.length === 0) {
-    return /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uCC28\uD2B8 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
+    return /* @__PURE__ */ React2.createElement(Text2, { c: "dimmed", size: "sm" }, "\uCC28\uD2B8 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
   }
   const colorByName = {};
   const chartDataByDate = new Map(dates.map((date) => [date, { date }]));
@@ -871,7 +884,7 @@ function MultiTrendChart({ series }) {
   });
   const chartData = dates.map((date) => chartDataByDate.get(date));
   const xAxisTickFormatter = (value) => value.slice(5);
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React.createElement(XAxis, { dataKey: "date", tickFormatter: xAxisTickFormatter, tick: { fontSize: 12 } }), /* @__PURE__ */ React.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React.createElement(Tooltip, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React2.createElement(Stack2, { gap: 8 }, /* @__PURE__ */ React2.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React2.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React2.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React2.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React2.createElement(XAxis, { dataKey: "date", tickFormatter: xAxisTickFormatter, tick: { fontSize: 12 } }), /* @__PURE__ */ React2.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React2.createElement(Tooltip, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React2.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React2.createElement(
     Line,
     {
       key: line.name,
@@ -883,7 +896,7 @@ function MultiTrendChart({ series }) {
       activeDot: { r: 4 },
       isAnimationActive: false
     }
-  ))))), /* @__PURE__ */ React.createElement(Group, { gap: 8 }, series.map((line) => /* @__PURE__ */ React.createElement(Badge, { key: line.name, color: line.color, variant: "light" }, line.name))));
+  ))))), /* @__PURE__ */ React2.createElement(Group2, { gap: 8 }, series.map((line) => /* @__PURE__ */ React2.createElement(Badge2, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 function AdminContent({ page, onNavigate, pathname, search }) {
   const ACCESS_LOG_PAGE_SIZE = 20;
@@ -929,25 +942,25 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     loadMemoryCacheStats,
     error
   } = useAdminData(page);
-  const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-  const [accessLogPage, setAccessLogPage] = useState(1);
-  const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
-  const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
-  const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
-  const [allUserPage, setAllUserPage] = useState(1);
-  const [allUserSearchInput, setAllUserSearchInput] = useState("");
-  const [allUserSortBy, setAllUserSortBy] = useState("seq");
-  const [allUserSortOrder, setAllUserSortOrder] = useState("desc");
-  const [faviconFile, setFaviconFile] = useState(null);
-  const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
-  const [sitePageNames, setSitePageNames] = useState([]);
-  const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
-  const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
-  const selectedSite = useMemo(
+  const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
+  const [accessLogPage, setAccessLogPage] = useState2(1);
+  const [accessLogSearchInput, setAccessLogSearchInput] = useState2("");
+  const [accessLogSortBy, setAccessLogSortBy] = useState2("seq");
+  const [accessLogSortOrder, setAccessLogSortOrder] = useState2("desc");
+  const [allUserPage, setAllUserPage] = useState2(1);
+  const [allUserSearchInput, setAllUserSearchInput] = useState2("");
+  const [allUserSortBy, setAllUserSortBy] = useState2("seq");
+  const [allUserSortOrder, setAllUserSortOrder] = useState2("desc");
+  const [faviconFile, setFaviconFile] = useState2(null);
+  const [selectedSiteSeq, setSelectedSiteSeq] = useState2("");
+  const [sitePageNames, setSitePageNames] = useState2([]);
+  const [selectedCalculatePageName, setSelectedCalculatePageName] = useState2("");
+  const [siteCalculateMessage, setSiteCalculateMessage] = useState2("");
+  const selectedSite = useMemo2(
     () => sites.find((site) => String(site.seq) === selectedSiteSeq) ?? null,
     [sites, selectedSiteSeq]
   );
-  const selectedUserSeq = useMemo(() => {
+  const selectedUserSeq = useMemo2(() => {
     const userSeqByPath = parseUserSeqFromPathname(pathname);
     if (userSeqByPath > 0) {
       return userSeqByPath;
@@ -956,29 +969,29 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     const userSeqByQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
     return Number.isFinite(userSeqByQuery) && userSeqByQuery > 0 ? userSeqByQuery : 0;
   }, [page, pathname, search]);
-  const selectedAllUser = useMemo(
+  const selectedAllUser = useMemo2(
     () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
     [allUsers, selectedUserSeq]
   );
-  const selectedSiteDomainsText = useMemo(
+  const selectedSiteDomainsText = useMemo2(
     () => (selectedSite?.domains ?? []).join(", ") || "-",
     [selectedSite]
   );
   const isSiteConfigPage = page === "site-config";
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
-  useEffect(() => {
+  useEffect2(() => {
     if (page !== "site-detail") {
       return;
     }
-    const siteSeqByPath = parseSiteSeqFromPathname(pathname);
+    const siteSeqByPath = parseSiteSeqFromPathname2(pathname);
     if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
       setSelectedSiteSeq(siteSeqByPath);
       setSelectedCalculatePageName("");
       setSiteCalculateMessage("");
     }
   }, [page, pathname, selectedSiteSeq]);
-  useEffect(() => {
+  useEffect2(() => {
     if ((page === "site-detail" || page === "site-cache") && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
@@ -990,13 +1003,13 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }
   }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
   if (loading) {
-    return /* @__PURE__ */ React.createElement(Paper, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React.createElement(Stack, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React.createElement(Text, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
+    return /* @__PURE__ */ React2.createElement(Paper2, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React2.createElement(Stack2, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React2.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React2.createElement(Title, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React2.createElement(Text2, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
   }
   if (error) {
-    return /* @__PURE__ */ React.createElement(Paper, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React.createElement(Text, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
+    return /* @__PURE__ */ React2.createElement(Paper2, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React2.createElement(Text2, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
   }
   if (page === "sites") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site List"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React.createElement(Table.Th, null, "Users"), /* @__PURE__ */ React.createElement(Table.Th, null, "Pages"), /* @__PURE__ */ React.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React.createElement(Table.Td, null, site.name), /* @__PURE__ */ React.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React.createElement(Table.Td, null, site.userCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Site List"), /* @__PURE__ */ React2.createElement(Badge2, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React2.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React2.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React2.createElement(Table.Thead, null, /* @__PURE__ */ React2.createElement(Table.Tr, null, /* @__PURE__ */ React2.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Users"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Pages"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React2.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React2.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React2.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React2.createElement(Table.Td, null, site.name), /* @__PURE__ */ React2.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React2.createElement(Table.Td, null, site.userCount ?? 0), /* @__PURE__ */ React2.createElement(Table.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React2.createElement(Table.Td, null, /* @__PURE__ */ React2.createElement(
       Button,
       {
         size: "xs",
@@ -1007,21 +1020,21 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     )))))));
   }
   if (page === "users") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Site Users"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, users.length, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uD638\uC2A4\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), makeTable(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Site Users"), /* @__PURE__ */ React2.createElement(Badge2, { color: "teal", variant: "light" }, users.length, " users")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uD638\uC2A4\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Divider2, { mb: "md" }), makeTable(
       ["User", "Email", "Nickname", "Created"],
       users.map((user) => [user.user, user.email, user.nickname, user.created])
     ));
   }
   if (page === "all-users") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, allUserCount, " users")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Divider, { mb: "md" }), /* @__PURE__ */ React.createElement(Group, { mb: "sm", align: "end" }, /* @__PURE__ */ React.createElement(TextInput, { label: "search", value: allUserSearchInput, onChange: (event) => setAllUserSearchInput(event.currentTarget.value), placeholder: "email, nickname, seq" }), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => {
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "All Users"), /* @__PURE__ */ React2.createElement(Badge2, { color: "blue", variant: "light" }, allUserCount, " users")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React2.createElement(Group2, { mb: "sm", align: "end" }, /* @__PURE__ */ React2.createElement(TextInput, { label: "search", value: allUserSearchInput, onChange: (event) => setAllUserSearchInput(event.currentTarget.value), placeholder: "email, nickname, seq" }), /* @__PURE__ */ React2.createElement(Button, { variant: "light", onClick: () => {
       setAllUserPage(1);
       loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder });
-    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React.createElement(
+    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React2.createElement(
       DataTable,
       {
         sortIcons: {
-          sorted: /* @__PURE__ */ React.createElement(IconChevronUp, { size: 14 }),
-          unsorted: /* @__PURE__ */ React.createElement(IconSelector, { size: 14 })
+          sorted: /* @__PURE__ */ React2.createElement(IconChevronUp, { size: 14 }),
+          unsorted: /* @__PURE__ */ React2.createElement(IconSelector, { size: 14 })
         },
         withTableBorder: true,
         striped: true,
@@ -1036,7 +1049,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           { accessor: "siteCount", title: "Sites", sortable: true },
           { accessor: "visitCount", title: "Visits", sortable: true },
           { accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-" },
-          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`) }, "\uC5F4\uB78C \uC774\uB825") }
+          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React2.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`) }, "\uC5F4\uB78C \uC774\uB825") }
         ],
         sortStatus: { columnAccessor: allUserSortBy, direction: allUserSortOrder },
         onSortStatusChange: (nextSortStatus) => {
@@ -1056,32 +1069,32 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
         minHeight: 380
       }
-    ), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", allUserPage, " / ", allUserTotalPages));
+    ), /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", allUserPage, " / ", allUserTotalPages));
   }
   if (page === "user-views") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "User View Histories"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React.createElement(Text, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "User View Histories"), /* @__PURE__ */ React2.createElement(Badge2, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Group2, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React2.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React2.createElement(Text2, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React2.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React2.createElement(Group2, null, /* @__PURE__ */ React2.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
       ["When", "Site", "Page", "History Seq"],
       userViewHistories.map((history) => {
         const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";
         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(history.pageName)}` : "";
         return [
           history.viewedAt,
-          siteUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: siteUrl, target: "_blank" }, history.siteName, " (#", history.site, ")") : `${history.siteName} (#${history.site})`,
-          pageUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: pageUrl, target: "_blank" }, history.pageName) : history.pageName,
+          siteUrl ? /* @__PURE__ */ React2.createElement(Anchor, { href: siteUrl, target: "_blank" }, history.siteName, " (#", history.site, ")") : `${history.siteName} (#${history.site})`,
+          pageUrl ? /* @__PURE__ */ React2.createElement(Anchor, { href: pageUrl, target: "_blank" }, history.pageName) : history.pageName,
           history.seq
         ];
       })
     ));
   }
   if (page === "site-detail" || page === "site-config" || page === "site-cache") {
-    return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, sitePageNames.length.toLocaleString()))))), isSiteConfigPage ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Config \xB7 Site Favicon"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React.createElement(Stack, { gap: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React2.createElement(Stack2, { gap: "lg" }, /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React2.createElement(Title, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React2.createElement(Badge2, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Stack2, { gap: "sm" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React2.createElement(Button, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React2.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React2.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React2.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React2.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, sitePageNames.length.toLocaleString()))))), isSiteConfigPage ? /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Config \xB7 Site Favicon"), /* @__PURE__ */ React2.createElement(Badge2, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Group2, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 6 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React2.createElement(
       "img",
       {
         src: siteFaviconUrl,
         alt: "Current favicon",
         style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" }
       }
-    ), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, siteFaviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React.createElement(Anchor, { size: "xs", href: siteFaviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, siteFaviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React2.createElement(Anchor, { size: "xs", href: siteFaviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React2.createElement(Stack2, { gap: 8 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React2.createElement(
       "input",
       {
         type: "file",
@@ -1091,7 +1104,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           setFaviconFile(selected);
         }
       }
-    ), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(Group2, null, /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "filled",
@@ -1103,7 +1116,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Upload favicon"
-    ), /* @__PURE__ */ React.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteFavicon(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteFavicon(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React2.createElement(
       Button,
       {
         color: "red",
@@ -1117,7 +1130,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Reset to default"
-    )), /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), !isSiteConfigPage ? /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Operation \xB7 Site Calculate Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "teal", variant: "light" }, "\uC6B4\uC601 \uC791\uC5C5")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Stack, { gap: "sm" }, /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), !isSiteConfigPage ? /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Operation \xB7 Site Calculate Operation"), /* @__PURE__ */ React2.createElement(Badge2, { color: "teal", variant: "light" }, "\uC6B4\uC601 \uC791\uC5C5")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Stack2, { gap: "sm" }, /* @__PURE__ */ React2.createElement(
       TextInput,
       {
         label: "Calculate\uD560 \uD398\uC774\uC9C0 (\uC790\uB3D9\uC644\uC131)",
@@ -1127,7 +1140,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         list: "site-calculate-page-name-list",
         disabled: !selectedSiteSeq
       }
-    ), /* @__PURE__ */ React.createElement("datalist", { id: "site-calculate-page-name-list" }, sitePageNames.map((pageName) => /* @__PURE__ */ React.createElement("option", { key: `calculate-page-${pageName}`, value: pageName }))), /* @__PURE__ */ React.createElement(Group, null, /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement("datalist", { id: "site-calculate-page-name-list" }, sitePageNames.map((pageName) => /* @__PURE__ */ React2.createElement("option", { key: `calculate-page-${pageName}`, value: pageName }))), /* @__PURE__ */ React2.createElement(Group2, null, /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "filled",
@@ -1147,7 +1160,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Calculate 1 page"
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "light",
@@ -1161,7 +1174,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "\uD398\uC774\uC9C0 \uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
-    )), siteCalculateMessage ? /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))) : null), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Config \xB7 Site Header/Footer Theme"), /* @__PURE__ */ React.createElement(Badge, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
+    )), siteCalculateMessage ? /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))) : null), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Config \xB7 Site Header/Footer Theme"), /* @__PURE__ */ React2.createElement(Badge2, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 \uAE30\uBCF8 \uC2A4\uD0C0\uC77C\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React2.createElement(
       ColorInput,
       {
         label: "Header \uBC30\uACBD\uC0C9",
@@ -1173,7 +1186,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         withEyeDropper: false,
         clearable: true
       }
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       ColorInput,
       {
         label: "Header \uC804\uACBD\uC0C9",
@@ -1185,7 +1198,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         withEyeDropper: false,
         clearable: true
       }
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       ColorInput,
       {
         label: "Footer \uBC30\uACBD\uC0C9",
@@ -1197,7 +1210,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         withEyeDropper: false,
         clearable: true
       }
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       ColorInput,
       {
         label: "Footer \uC804\uACBD\uC0C9",
@@ -1209,7 +1222,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         withEyeDropper: false,
         clearable: true
       }
-    )), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React.createElement(Text, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Stack, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React2.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React2.createElement(Stack2, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React2.createElement(
       "div",
       {
         style: {
@@ -1220,7 +1233,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Header Preview"
-    ), /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement("div", { style: { padding: "16px 14px", backgroundColor: "#ffffff", color: "#495057" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React2.createElement(
       "div",
       {
         style: {
@@ -1231,7 +1244,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Footer Preview"
-    )))), /* @__PURE__ */ React.createElement(Group, { mt: "md" }, /* @__PURE__ */ React.createElement(
+    )))), /* @__PURE__ */ React2.createElement(Group2, { mt: "md" }, /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "filled",
@@ -1244,7 +1257,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Save theme"
-    ), /* @__PURE__ */ React.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteTheme(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(Button, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteTheme(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React2.createElement(
       Button,
       {
         color: "gray",
@@ -1263,7 +1276,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Reset"
-    )))) : null, page === "site-cache" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React.createElement(Badge, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4. \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uAC00 \uAC15\uC81C\uB85C \uAC31\uC2E0\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React.createElement(Text, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React.createElement(
+    )))) : null, page === "site-cache" ? /* @__PURE__ */ React2.createElement(React2.Fragment, null, /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React2.createElement(Badge2, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4. \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uAC00 \uAC15\uC81C\uB85C \uAC31\uC2E0\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "center" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React2.createElement(Text2, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React2.createElement(
       Button,
       {
         color: "orange",
@@ -1278,10 +1291,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "Clear current site cache"
-    ))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React.createElement(Table.Thead, null, /* @__PURE__ */ React.createElement(Table.Tr, null, /* @__PURE__ */ React.createElement(Table.Th, null, "Port"), /* @__PURE__ */ React.createElement(Table.Th, null, "Key Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Value Count"), /* @__PURE__ */ React.createElement(Table.Th, null, "Captured At"))), /* @__PURE__ */ React.createElement(Table.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React.createElement(Table.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React.createElement(Table.Td, null, row.instancePort), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React.createElement(Table.Td, null, row.stats?.capturedAtIso8601 ?? "-"))))))) : null);
+    ))), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React2.createElement(Button, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React2.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React2.createElement(Table.Thead, null, /* @__PURE__ */ React2.createElement(Table.Tr, null, /* @__PURE__ */ React2.createElement(Table.Th, null, "Port"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Key Count"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Value Count"), /* @__PURE__ */ React2.createElement(Table.Th, null, "Captured At"))), /* @__PURE__ */ React2.createElement(Table.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React2.createElement(Table.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React2.createElement(Table.Td, null, row.instancePort), /* @__PURE__ */ React2.createElement(Table.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React2.createElement(Table.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React2.createElement(Table.Td, null, row.stats?.capturedAtIso8601 ?? "-"))))))) : null);
   }
   if (page === "operations") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(
       SchedulerTable,
       {
         schedulers,
@@ -1292,7 +1305,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "recent-changes") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React2.createElement(Badge2, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Group2, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React2.createElement(
       TextInput,
       {
         label: "\uC870\uD68C \uAC1C\uC218 n",
@@ -1300,7 +1313,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         onChange: (event) => setRecentChangeLimitInput(event.currentTarget.value),
         placeholder: "1 ~ 500"
       }
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "filled",
@@ -1326,7 +1339,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "access-logs") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React2.createElement(Badge2, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(Group2, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React2.createElement(
       TextInput,
       {
         label: "search",
@@ -1334,7 +1347,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         onChange: (event) => setAccessLogSearchInput(event.currentTarget.value),
         placeholder: "site/method/uri/ip/user-agent"
       }
-    ), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(
       Button,
       {
         variant: "filled",
@@ -1350,12 +1363,12 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         }
       },
       "\uC870\uD68C"
-    )), /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React2.createElement(
       DataTable,
       {
         sortIcons: {
-          sorted: /* @__PURE__ */ React.createElement(IconChevronUp, { size: 14 }),
-          unsorted: /* @__PURE__ */ React.createElement(IconSelector, { size: 14 })
+          sorted: /* @__PURE__ */ React2.createElement(IconChevronUp, { size: 14 }),
+          unsorted: /* @__PURE__ */ React2.createElement(IconSelector, { size: 14 })
         },
         withTableBorder: true,
         borderRadius: "sm",
@@ -1394,7 +1407,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           });
         }
       }
-    ), /* @__PURE__ */ React.createElement(Group, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React2.createElement(Group2, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React2.createElement(
       Pagination,
       {
         value: accessLogPage,
@@ -1409,7 +1422,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       }
     )));
   }
-  return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Running Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.filter((scheduler) => scheduler.running).length, "/", schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/Operation") }, "\uC6B4\uC601 \uC791\uC5C5 \uC5F4\uAE30"))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React2.createElement(Stack2, { gap: "lg" }, /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React2.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React2.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React2.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React2.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React2.createElement(Title, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React2.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E"))), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed" }, "Running Schedulers"), /* @__PURE__ */ React2.createElement(Title, { order: 2 }, schedulers.filter((scheduler) => scheduler.running).length, "/", schedulers.length)), /* @__PURE__ */ React2.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React2.createElement(Badge2, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React2.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React2.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"), /* @__PURE__ */ React2.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/Operation") }, "\uC6B4\uC601 \uC791\uC5C5 \uC5F4\uAE30"))), /* @__PURE__ */ React2.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React2.createElement(
     StatTrendCard,
     {
       title: "New Users",
@@ -1417,7 +1430,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       rows: dailyStats.userCreated,
       total: dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)
     }
-  ), /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React2.createElement(
     StatTrendCard,
     {
       title: "Site User Joins",
@@ -1425,7 +1438,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       rows: dailyStats.siteUserCreated,
       total: dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)
     }
-  ), /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React2.createElement(
     StatTrendCard,
     {
       title: "New Pages",
@@ -1433,7 +1446,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       rows: dailyStats.pageCreated,
       total: dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)
     }
-  ), /* @__PURE__ */ React.createElement(
+  ), /* @__PURE__ */ React2.createElement(
     StatTrendCard,
     {
       title: "Page Edits",
@@ -1441,7 +1454,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       rows: dailyStats.pageEdited,
       total: dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)
     }
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React.createElement(Badge, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC2E0\uADDC \uC0AC\uC6A9\uC790, \uC0AC\uC774\uD2B8 \uAC00\uC785, \uBB38\uC11C \uC0DD\uC131/\uC218\uC815 \uC9C0\uD45C\uB97C \uD558\uB098\uC758 \uC2DC\uACC4\uC5F4 \uCC28\uD2B8\uB85C \uBE44\uAD50\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(
+  )), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React2.createElement(Badge2, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC2E0\uADDC \uC0AC\uC6A9\uC790, \uC0AC\uC774\uD2B8 \uAC00\uC785, \uBB38\uC11C \uC0DD\uC131/\uC218\uC815 \uC9C0\uD45C\uB97C \uD558\uB098\uC758 \uC2DC\uACC4\uC5F4 \uCC28\uD2B8\uB85C \uBE44\uAD50\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React2.createElement(
     MultiTrendChart,
     {
       series: [
@@ -1451,20 +1464,20 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }
       ]
     }
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React.createElement(Badge, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 10))), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4. \uD575\uC2EC 10\uAC1C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."), makeTable(
+  )), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React2.createElement(Badge2, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 10))), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4. \uD575\uC2EC 10\uAC1C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."), makeTable(
     ["Rank", "Site", "Page", "Views", "Last Viewed"],
     topViewedPages.slice(0, 10).map((row, index) => {
       const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
       const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
       return [
         index + 1,
-        siteUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
-        pageUrl ? /* @__PURE__ */ React.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName,
+        siteUrl ? /* @__PURE__ */ React2.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
+        pageUrl ? /* @__PURE__ */ React2.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName,
         row.viewCount,
         row.lastViewedAt
       ];
     })
-  )), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
+  )), /* @__PURE__ */ React2.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React2.createElement(Title, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React2.createElement(Badge2, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React2.createElement(Text2, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
     recentChanges.slice(0, 10).map((row) => [
       row.dateTime,
@@ -1477,11 +1490,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   )));
 }
 function AdminApp({ initialPage }) {
-  const [page, setPage] = useState(initialPage);
-  const [pathname, setPathname] = useState(window.location.pathname);
-  const [search, setSearch] = useState(window.location.search);
+  const [page, setPage] = useState2(initialPage);
+  const [pathname, setPathname] = useState2(window.location.pathname);
+  const [search, setSearch] = useState2(window.location.search);
   const pageTitle = pageTitleByKey(page);
-  useEffect(() => {
+  useEffect2(() => {
     const onPopState = () => {
       setPathname(window.location.pathname);
       setSearch(window.location.search);
@@ -1506,7 +1519,7 @@ function AdminApp({ initialPage }) {
     },
     []
   );
-  return /* @__PURE__ */ React.createElement(
+  return /* @__PURE__ */ React2.createElement(
     MantineProvider,
     {
       defaultColorScheme: "light",
@@ -1515,7 +1528,7 @@ function AdminApp({ initialPage }) {
         defaultRadius: "md"
       }
     },
-    /* @__PURE__ */ React.createElement(
+    /* @__PURE__ */ React2.createElement(
       AppShell,
       {
         padding: "md",
@@ -1524,8 +1537,8 @@ function AdminApp({ initialPage }) {
           breakpoint: "sm"
         }
       },
-      /* @__PURE__ */ React.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React.createElement(Stack, { mb: "md", gap: 4 }, /* @__PURE__ */ React.createElement(Text, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React.createElement(Navigation, { activePage: page, onNavigate })),
-      /* @__PURE__ */ React.createElement(AppShell.Main, null, /* @__PURE__ */ React.createElement(Stack, { gap: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "center" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Title, { order: 2 }, pageTitle)), /* @__PURE__ */ React.createElement(Badge, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React.createElement(AdminContent, { page, onNavigate, pathname, search })))
+      /* @__PURE__ */ React2.createElement(AppShell.Navbar, { p: "md" }, /* @__PURE__ */ React2.createElement(Stack2, { mb: "md", gap: 4 }, /* @__PURE__ */ React2.createElement(Text2, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React2.createElement(Navigation, { activePage: page, onNavigate })),
+      /* @__PURE__ */ React2.createElement(AppShell.Main, null, /* @__PURE__ */ React2.createElement(Stack2, { gap: "md" }, /* @__PURE__ */ React2.createElement(Group2, { justify: "space-between", align: "center" }, /* @__PURE__ */ React2.createElement(Stack2, { gap: 2 }, /* @__PURE__ */ React2.createElement(Title, { order: 2 }, pageTitle)), /* @__PURE__ */ React2.createElement(Badge2, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React2.createElement(AdminContent, { page, onNavigate, pathname, search })))
     )
   );
 }
@@ -1539,7 +1552,7 @@ function pageLoad() {
   const page = routeToPage(window.location.pathname);
   logInfo("pageLoad:render", { page });
   const root = createRoot(rootElement);
-  root.render(/* @__PURE__ */ React.createElement(AdminApp, { initialPage: page }));
+  root.render(/* @__PURE__ */ React2.createElement(AdminApp, { initialPage: page }));
 }
 window.addEventListener("error", (event) => {
   logError("window:error", event.message, event.error);
