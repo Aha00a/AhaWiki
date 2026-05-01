@@ -66,6 +66,9 @@ function logError(...args) {
 }
 
 function routeToPage(pathname) {
+    if (/^\/Admin\/Site\/\d+\/Config$/.test(pathname)) {
+        return "site-config";
+    }
     if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
         return "site-detail";
     }
@@ -128,7 +131,7 @@ function parseUserSeqFromPathname(pathname) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/Site\/(\d+)$/);
+    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/Config)?$/);
     if (!matched) {
         return "";
     }
@@ -144,7 +147,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site-detail" || page === "sites" || page === "users") {
+    if (page === "site-detail" || page === "site-config" || page === "sites" || page === "users") {
         return "Site";
     }
     if (page === "operations") {
@@ -799,7 +802,7 @@ function Navigation({activePage, onNavigate}) {
                     {links.map((link) => {
                         const isActive = activePage === link.key
                             || (activePage === "user-views" && link.key === "all-users")
-                            || (activePage === "site-detail" && link.key === "sites");
+                            || ((activePage === "site-detail" || activePage === "site-config") && link.key === "sites");
                         return (
                             <NavLink
                                 key={link.key}
@@ -836,7 +839,19 @@ function Navigation({activePage, onNavigate}) {
                                 event.preventDefault();
                                 onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
                             }}
-                        />
+                        >
+                            <NavLink
+                                href={`/Admin/Site/${site.seq}/Config`}
+                                label="Config"
+                                leftSection={<i className="fas fa-sliders-h" aria-hidden="true" />}
+                                active={window.location.pathname === `/Admin/Site/${site.seq}/Config`}
+                                variant={window.location.pathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle"}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
+                                }}
+                            />
+                        </NavLink>
                     ))}
                     {siteLinks.length === 0 && (
                         <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>
@@ -1174,6 +1189,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => (selectedSite?.domains ?? []).join(", ") || "-",
         [selectedSite],
     );
+    const isSiteConfigPage = page === "site-config";
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
 
@@ -1400,7 +1416,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         );
     }
 
-    if (page === "site-detail") {
+    if (page === "site-detail" || page === "site-config") {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
@@ -1409,7 +1425,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Badge color="blue" variant="light">Site Detail</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
-                        /Admin/Site/{`{seq}`} 경로로 접근한 사이트의 favicon/테마를 설정합니다.
+                        /Admin/Site/{`{seq}`} 경로로 접근한 사이트 상세 정보입니다.
                     </Text>
                     <Stack gap="sm">
                         <Group justify="space-between" align="flex-start" wrap="wrap">
@@ -1442,7 +1458,9 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         </SimpleGrid>
                     </Stack>
                 </Card>
-                <SimpleGrid cols={{base: 1, xl: 2}} spacing="lg">
+                {isSiteConfigPage ? (
+                    <>
+                        <SimpleGrid cols={{base: 1, xl: 2}} spacing="lg">
                     <Card withBorder radius="md" padding="lg">
                         <Group justify="space-between" mb="md">
                             <Title order={3}>Config · Site Favicon</Title>
@@ -1509,6 +1527,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             </Stack>
                         </Group>
                     </Card>
+                    {!isSiteConfigPage ? (
                     <Card withBorder radius="md" padding="lg">
                         <Group justify="space-between" mb="md">
                             <Title order={3}>Operation · Site Calculate Operation</Title>
@@ -1573,6 +1592,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             </Text>
                         </Stack>
                     </Card>
+                    ) : null}
                 </SimpleGrid>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
@@ -1690,6 +1710,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         </Button>
                     </Group>
                 </Card>
+                    </>
+                ) : null}
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Operation · Site Cache Operation</Title>
