@@ -173,7 +173,9 @@
             $.post('/preview', {
                 csrfToken: $('[name=csrfToken]').val(),
                 name: '@(page.name)',
-                text: $('textarea[name=text]').val()
+                text: $('textarea[name=text]').val(),
+                lineStart: $('input[name=lineStart]').val(),
+                lineEnd: $('input[name=lineEnd]').val()
             }, function (data, textStatus, jqXHR) {
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);

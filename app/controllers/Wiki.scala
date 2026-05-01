@@ -623,11 +623,17 @@ controllerComponents: ControllerComponents,
 
 
   def preview(): Action[AnyContent] = Action { implicit request =>
-    val (name, body) = Form(tuple("name" -> text, "text" -> text)).bindFromRequest.get
+    val (name, body, partialLineStart, partialLineEnd) = Form(tuple(
+      "name" -> text,
+      "text" -> text,
+      "lineStart" -> optional(number),
+      "lineEnd" -> optional(number)
+    )).bindFromRequest.get
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
-      val additionalInfo = getAhaMarkAdditionalInfo(name)
+      val isPartialEditPreview = partialLineStart.isDefined && partialLineEnd.isDefined
+      val additionalInfo = if (isPartialEditPreview) "" else getAhaMarkAdditionalInfo(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")
     }
   }
