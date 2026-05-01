@@ -830,18 +830,16 @@ class Api @Inject()(
   }
 
   def change(includeMinorEdit: Int): Action[AnyContent] = Action { implicit request =>
-    // TODO: check permission
+    // TODO: improve check permission
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      case class ChangeRow(
-                            name: String,
-                            revision: Long,
-                            dateTime: String,
-                            nickname: Option[String],
-                            remoteAddressMasked: String,
-                            comment: String,
-                            isMinorEdit: Boolean,
-                          )
+      implicit val contextSite: ContextSite = ContextSite()
+
+      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddressMasked: String, comment: String, isMinorEdit: Boolean)
+      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
+
+      implicit val provider: RequestWrapper = RequestWrapper()
+      val wikiPermission = WikiPermission()
 
       val rows = SQL"""
         SELECT
@@ -851,27 +849,32 @@ class Api @Inject()(
           U.nickname,
           P.remoteAddress,
           P.comment,
-          P.isMinorEdit
+          P.isMinorEdit,
+          P.content
         FROM Page P
         LEFT JOIN User U ON U.seq = P.user
         WHERE P.site = ${site.seq}
           AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
         ORDER BY P.dateTime DESC
         LIMIT 500
-      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
-        case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
-          ChangeRow(
-            name = name,
-            revision = revision,
-            dateTime = dateTime,
-            nickname = nickname,
-            remoteAddressMasked = IpAddressUtil.mask(remoteAddress),
-            comment = comment,
-            isMinorEdit = isMinorEdit,
-          )
+      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
+        case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
+          ChangeSourceRow(name, revision, dateTime, nickname, remoteAddress, comment, isMinorEdit, content)
       }.*)
 
-      Ok(rows.asJson)
+      val readableRows = rows.filter(row => wikiPermission.isReadable(PageContent(row.content))).map { row =>
+        ChangeRow(
+          name = row.name,
+          revision = row.revision,
+          dateTime = row.dateTime,
+          nickname = row.nickname,
+          remoteAddressMasked = IpAddressUtil.mask(row.remoteAddress),
+          comment = row.comment,
+          isMinorEdit = row.isMinorEdit,
+        )
+      }
+
+      Ok(readableRows.asJson)
     }
   }
 
