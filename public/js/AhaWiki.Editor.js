@@ -12,10 +12,32 @@
         return value.substring(0, start) + text + value.substring(end);
     }
 
-    function applyEditorRule({value, selectionStart, selectionEnd, key, shiftKey}) {
+    function normalizeKey({key, code, shiftKey, isComposing}) {
+        if (isComposing)
+            return { key, fromCode: false };
+
+        const fallbackAllowed = key === 'Unidentified' || key === '' || key === 'Process';
+        if (!fallbackAllowed)
+            return { key, fromCode: false };
+
+        const byCode = {
+            BracketLeft: shiftKey ? '{' : '[',
+            BracketRight: shiftKey ? '}' : ']',
+            Quote: shiftKey ? '"' : "'",
+            Backquote: shiftKey ? '~' : '`',
+            Digit9: shiftKey ? '(' : '9',
+            Digit0: shiftKey ? ')' : '0',
+        };
+
+        return { key: byCode[code] ?? key, fromCode: !!byCode[code] };
+    }
+
+    function applyEditorRule({value, selectionStart, selectionEnd, key, code, shiftKey, isComposing}) {
+        const normalized = normalizeKey({key, code, shiftKey, isComposing});
+        const normalizedKey = normalized.key;
         const selected = value.substring(selectionStart, selectionEnd);
 
-        if (key === 'Tab') {
+        if (normalizedKey === 'Tab') {
             if (selectionStart === 0 || value.length === selectionStart)
                 return { handled: false };
 
@@ -60,7 +82,7 @@
             };
         }
 
-        if (key === '[') {
+        if (normalizedKey === '[' && !(normalized.fromCode && key === 'Process')) {
             if (value.slice(selectionStart - 3, selectionStart) === '[[[') {
                 const insertText = '[' + selected + '\n]';
                 const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
@@ -98,7 +120,18 @@
         }
 
         for (const { open, close } of openClose) {
-            if (key === open) {
+            if (normalizedKey === open) {
+                if (normalized.fromCode && key === 'Process') {
+                    const newValue = replaceRange(value, selectionStart, selectionEnd, selected + close);
+                    const newPos = selectionStart + selected.length;
+                    return {
+                        handled: true,
+                        value: newValue,
+                        selectionStart: newPos,
+                        selectionEnd: newPos,
+                    };
+                }
+
                 const insertText = open + selected + close;
                 const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
                 return {
@@ -110,7 +143,7 @@
             }
         }
 
-        if (key === 'Backspace') {
+        if (normalizedKey === 'Backspace') {
             if (
                 value.slice(selectionStart - 3, selectionStart) === '[[[' &&
                 value[selectionEnd] === '\n' &&
@@ -161,7 +194,9 @@
             selectionStart: el.selectionStart,
             selectionEnd: el.selectionEnd,
             key: e.key,
+            code: e.code,
             shiftKey: !!e.shiftKey,
+            isComposing: !!e.isComposing,
         });
         if (!result.handled)
             return;
@@ -186,7 +221,9 @@
             selectionStart,
             selectionEnd,
             key: e.key,
+            code: e.code,
             shiftKey: !!e.shiftKey,
+            isComposing: !!e.isComposing,
         });
 
         if (!result.handled)
