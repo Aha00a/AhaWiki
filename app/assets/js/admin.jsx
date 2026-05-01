@@ -1072,7 +1072,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <SimpleGrid cols={{base: 1, xl: 2}} spacing="lg">
                     <Card withBorder radius="md" padding="lg">
                         <Group justify="space-between" mb="md">
-                            <Title order={3}>Config · Site Favicon</Title>
+                            <Title order={3}>Favicon</Title>
                             <Badge color="blue" variant="light">브랜딩</Badge>
                         </Group>
                         <Text size="sm" c="dimmed" mb="md">
@@ -1205,7 +1205,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </SimpleGrid>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
-                        <Title order={3}>Config · Site Header/Footer Theme</Title>
+                        <Title order={3}>Theme</Title>
                         <Badge color="grape" variant="light">디자인</Badge>
                     </Group>
                     <Text size="sm" c="dimmed" mb="md">
