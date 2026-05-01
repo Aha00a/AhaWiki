@@ -1874,10 +1874,16 @@ kbd {
 				cursor: pointer;
 			}
 
+			.tocBody {
+				overflow: hidden;
+				max-height: 3000px;
+				opacity: 1;
+				transition: max-height 250ms linear;
+			}
+
 			&.collapsed {
 				.tocBody {
-					height: 26px;
-					overflow: hidden;
+					max-height: 26px;
 				}
 			}
 		}

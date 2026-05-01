@@ -164,9 +164,8 @@
             $('.wikiContent .toc').each(function () {
                 var $toc = $(this);
                 var isMobile = window.matchMedia('(max-width: 768px)').matches;
-                var shouldCollapse = isMobile;
-                $toc.toggleClass('collapsed', shouldCollapse);
-                updateTocToggleLabel($toc, shouldCollapse);
+                $toc.toggleClass('collapsed', isMobile);
+                updateTocToggleLabel($toc, isMobile);
 
                 $toc.find('.tocToggle').first().on('click', function () {
                     $toc.toggleClass('collapsed');

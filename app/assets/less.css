@@ -3364,8 +3364,13 @@ kbd:hover > kbd {
   color: #2f4583;
   cursor: pointer;
 }
-.AhaWiki .wikiContent div.toc.collapsed .tocBody {
-  height: 26px;
+.AhaWiki .wikiContent div.toc .tocBody {
   overflow: hidden;
+  max-height: 3000px;
+  opacity: 1;
+  transition: max-height 250ms linear;
+}
+.AhaWiki .wikiContent div.toc.collapsed .tocBody {
+  max-height: 26px;
 }
 /*# sourceMappingURL=less.css.map */
