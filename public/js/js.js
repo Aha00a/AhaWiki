@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var href = wrapper.getAttribute('data-edit-link');
         var title = wrapper.getAttribute('data-edit-title');
+        var heading = content.querySelector('h2, h3, h4, h5, h6');
         if (!href) {
             return;
         }
@@ -103,6 +104,90 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.title = title;
         }
 
+        var foldToggle = null;
+        if (heading) {
+            foldToggle = wrapper.querySelector('.InterpreterRenderFoldToggle');
+            if (!foldToggle) {
+                foldToggle = document.createElement('button');
+                foldToggle.type = 'button';
+                foldToggle.className = 'InterpreterRenderFoldToggle';
+                foldToggle.style.position = 'absolute';
+                foldToggle.style.display = 'inline-flex';
+                foldToggle.style.alignItems = 'center';
+                foldToggle.style.justifyContent = 'center';
+                foldToggle.style.width = '50px';
+                foldToggle.style.height = '20px';
+                foldToggle.style.borderRadius = '50px';
+                foldToggle.style.border = '1px solid #888';
+                foldToggle.style.background = '#fff';
+                foldToggle.style.color = '#000';
+                foldToggle.style.textDecoration = 'none';
+                foldToggle.style.opacity = '.4';
+                foldToggle.style.fontSize = '12px';
+                foldToggle.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
+                foldToggle.style.pointerEvents = 'auto';
+                foldToggle.style.cursor = 'pointer';
+                foldToggle.addEventListener('mouseenter', function () {
+                    foldToggle.style.opacity = '1';
+                });
+                foldToggle.addEventListener('mouseleave', function () {
+                    foldToggle.style.opacity = '.4';
+                });
+                foldToggle.addEventListener('focus', function () {
+                    foldToggle.style.opacity = '1';
+                });
+                foldToggle.addEventListener('blur', function () {
+                    foldToggle.style.opacity = '.4';
+                });
+                wrapper.appendChild(foldToggle);
+            }
+
+            var section = wrapper.parentElement;
+            var headingLevel = parseInt(heading.tagName.replace('H', ''), 10);
+            var getSectionHeadingLevel = function (sectionElement) {
+                var sectionHeading = sectionElement.querySelector(':scope > .InterpreterRenderMetaWrapper .InterpreterRenderContent h2, :scope > .InterpreterRenderMetaWrapper .InterpreterRenderContent h3, :scope > .InterpreterRenderMetaWrapper .InterpreterRenderContent h4, :scope > .InterpreterRenderMetaWrapper .InterpreterRenderContent h5, :scope > .InterpreterRenderMetaWrapper .InterpreterRenderContent h6');
+                if (!sectionHeading) {
+                    return null;
+                }
+                return parseInt(sectionHeading.tagName.replace('H', ''), 10);
+            };
+            var getChildSections = function () {
+                var childSections = [];
+                var sibling = section.nextElementSibling;
+                while (sibling) {
+                    var siblingHeadingLevel = getSectionHeadingLevel(sibling);
+                    if (siblingHeadingLevel !== null && siblingHeadingLevel <= headingLevel) {
+                        break;
+                    }
+                    if (siblingHeadingLevel !== null && siblingHeadingLevel > headingLevel) {
+                        childSections.push(sibling);
+                    }
+                    sibling = sibling.nextElementSibling;
+                }
+                return childSections;
+            };
+            var updateFoldState = function (isCollapsed) {
+                section.classList.toggle('sectionCollapsed', isCollapsed);
+                Array.prototype.forEach.call(section.children, function (child) {
+                    if (child !== wrapper) {
+                        child.style.display = isCollapsed ? 'none' : '';
+                    }
+                });
+                var childSections = getChildSections();
+                childSections.forEach(function (childSection) {
+                    childSection.style.display = isCollapsed ? 'none' : '';
+                });
+                foldToggle.textContent = isCollapsed ? 'Unfold' : 'Fold';
+                foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
+            };
+            updateFoldState(section.classList.contains('sectionCollapsed'));
+
+            foldToggle.onclick = function () {
+                updateFoldState(!section.classList.contains('sectionCollapsed'));
+                schedulePositionEditLink();
+            };
+        }
+
         var positionEditLink = function () {
             var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
@@ -111,6 +196,13 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
+            if (foldToggle) {
+                var gap = 6;
+                var foldLeft = left - foldToggle.offsetWidth - gap;
+                foldToggle.style.top = top + 'px';
+                foldToggle.style.left = (foldLeft < 0 ? 0 : foldLeft) + 'px';
+                foldToggle.style.right = 'auto';
+            }
         };
 
         var schedulePositionEditLink = function () {
