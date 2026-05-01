@@ -1,4 +1,4 @@
-@(implicit wikiContext: models.ContextWikiPage)
+@(limit: Option[Int] = None)(implicit wikiContext: models.ContextWikiPage)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <div class="macroRecentChanges">
     @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Preview) {
@@ -14,6 +14,10 @@
             <label>
                 <input type="checkbox" name="includeMinorEdit">
                 Include minor edits
+            </label>
+            <label>
+                Limit
+                <input type="number" name="limit" min="1" max="1000" value="@limit.getOrElse(100)">
             </label>
             <button type="submit">Load</button>
         </form>
@@ -66,13 +70,13 @@
                     table.style.display = "";
                 }
 
-                function load(container, includeMinorEdit) {
+                function load(container, includeMinorEdit, limit) {
                     var status = container.querySelector('.macro-recent-changes-status');
                     var table = container.querySelector('.macro-recent-changes-table');
                     status.textContent = "Loading recent changes...";
                     status.style.display = "";
                     table.style.display = "none";
-                    fetch("/api/change?includeMinorEdit=" + includeMinorEdit, {credentials: "same-origin"})
+                    fetch("/api/change?includeMinorEdit=" + includeMinorEdit + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
                             .then(function (res) {
                                 if (!res.ok) throw new Error("HTTP " + res.status);
                                 return res.json();
@@ -91,7 +95,8 @@
                     form.addEventListener("submit", function (event) {
                         event.preventDefault();
                         var includeMinorEdit = form.includeMinorEdit && form.includeMinorEdit.checked ? "1" : "0";
-                        load(container, includeMinorEdit);
+                        var rawLimit = form.limit && form.limit.value ? form.limit.value : "100";
+                        load(container, includeMinorEdit, rawLimit);
                     });
 
                     var loadButton = form.querySelector('button[type="submit"]');

@@ -79,7 +79,7 @@ GET           /api/schemaClassNames                  controllers.Api.schemaClass
 GET           /api/schemaPropertyNames               controllers.Api.schemaPropertyNames
 GET           /api/links/*nameEncoded                controllers.Api.links(nameEncoded)
 GET           /api/statistics                        controllers.Api.statistics()
-GET           /api/change                            controllers.Api.change(includeMinorEdit: Int ?= 0)
+GET           /api/change                            controllers.Api.change(includeMinorEdit: Int ?= 0, limit: Int ?= 100)
 POST          /api/uploadClipboardImage              controllers.Wiki.uploadClipboardImage()
 POST          /api/uploadAttachment                  controllers.Wiki.uploadAttachment()
 GET           /api/pageAttachments                   controllers.Wiki.pageAttachments()

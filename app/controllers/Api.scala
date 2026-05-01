@@ -829,7 +829,7 @@ class Api @Inject()(
     }
   }
 
-  def change(includeMinorEdit: Int): Action[AnyContent] = Action { implicit request =>
+  def change(includeMinorEdit: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
     // TODO: improve check permission
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
@@ -840,6 +840,7 @@ class Api @Inject()(
 
       implicit val provider: RequestWrapper = RequestWrapper()
       val wikiPermission = WikiPermission()
+      val boundedLimit = limit.max(1).min(1000)
 
       val rows = SQL"""
         SELECT
@@ -856,7 +857,7 @@ class Api @Inject()(
         WHERE P.site = ${site.seq}
           AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
         ORDER BY P.dateTime DESC
-        LIMIT 10
+        LIMIT $boundedLimit
       """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
         case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
           ChangeSourceRow(name, revision, dateTime, nickname, remoteAddress, comment, isMinorEdit, content)
