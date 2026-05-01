@@ -122,11 +122,13 @@ object InterpreterWiki extends TraitInterpreter {
       val headingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
       val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
       val wrapperClass = idNotEmpty
-      val headingClassAttribute = headingClasses.mkString(" ")
+      val isGeneratedHeading = headingClasses.contains("generated")
+      val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
+      val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
       val lineEnd = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber)
       val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEnd)
       val editTitle = s"Edit section (r$revision, L$lineNumber-L$lineEnd)"
-      val editDataAttrs = if (Option(id).exists(_.endsWith("-Generated"))) {
+      val editDataAttrs = if (isGeneratedHeading) {
         ""
       } else {
         s""" data-edit-link="$editUrl" data-edit-title="$editTitle""""

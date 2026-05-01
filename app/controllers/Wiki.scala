@@ -350,13 +350,13 @@ controllerComponents: ControllerComponents,
   }
 
   private def generateSchemaMarkup(schema: String): String =
-    s"=== [schema:Schema Schema] === #Schema-Generated\n$schema"
+    s"=== [schema:Schema Schema] === #Schema-Generated.generated\n$schema"
 
   private def generateBacklinksMarkup: String =
-    "=== Backlinks === #Backlinks-Generated\n[[Backlinks]]"
+    "=== Backlinks === #Backlinks-Generated.generated\n[[Backlinks]]"
 
   private def generateSimilarPagesMarkup: String =
-    "=== Similar Pages === #Similar-Pages-Generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
+    "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
 
   private def isEmptyMarkup(context: MarkupContext): Boolean =
     context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0
@@ -366,7 +366,7 @@ controllerComponents: ControllerComponents,
     val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
 
     s"""
-       |== See Also == #See-Also-Generated
+       |== See Also == #See-Also-Generated.generated
        |${context.schema}
        |
        |$backlinksMarkup
@@ -374,7 +374,7 @@ controllerComponents: ControllerComponents,
        |$similarPagesMarkup
        |
        |[[Html(<div style="clear: both;"></div>)]]
-       |=== Adjacent Pages === #Adjacent-Pages-Generated
+       |=== Adjacent Pages === #Adjacent-Pages-Generated.generated
        |[[AdjacentPages]]
        |""".stripMargin
   }
@@ -384,7 +384,7 @@ controllerComponents: ControllerComponents,
     val listSchemaOrg = CalculatedSchemaOrg.selectWhereValue(name).filter(s => s.and(wikiContext.pageCanSee))
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
-      s"""==== [schema:$k $k] ==== #$k-Generated
+      s"""==== [schema:$k $k] ==== #$k-Generated.generated
          |[[Html(<div class="columnWidth350">)]]
          |${mapClsList(k).map(t => s""" 1. [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
          |[[Html(</div>)]]
