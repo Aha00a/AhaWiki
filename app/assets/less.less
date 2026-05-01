@@ -268,9 +268,11 @@ kbd {
 	.commonAhaWiki {
 		padding: 0 0 25px 0;
 		word-break: break-all;
-		& > {
-			p, ul, ol, dl, blockquote, pre, table, .math, .error, .info, .footnote {
-				margin-left: 30px;
+		>.limitWidth>div {
+			&>, >div, >div>div {
+				>p, >ul, >ol, >blockquote, >pre, >table, >.math, >.error, >.info {
+					margin-left: 30px;
+				}
 			}
 		}
 
