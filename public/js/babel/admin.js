@@ -822,6 +822,7 @@ function MultiTrendChart({ series }) {
   ))))), /* @__PURE__ */ React.createElement(Group, { gap: 8 }, series.map((line) => /* @__PURE__ */ React.createElement(Badge, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 function AdminContent({ page, onNavigate, pathname, search }) {
+  const ACCESS_LOG_PAGE_SIZE = 20;
   const {
     loading,
     sites,
@@ -863,8 +864,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-  const [accessLogPageInput, setAccessLogPageInput] = useState("1");
-  const [accessLogPageSizeInput, setAccessLogPageSizeInput] = useState("20");
+  const [accessLogPage, setAccessLogPage] = useState(1);
   const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
   const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
   const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
@@ -894,6 +894,9 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     () => (selectedSite?.domains ?? []).join(", ") || "-",
     [selectedSite]
   );
+  const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
+  const accessLogPageStart = Math.floor((accessLogPage - 1) / 5) * 5 + 1;
+  const accessLogPageNumbers = Array.from({ length: 5 }, (_, index) => accessLogPageStart + index).filter((pageNumber) => pageNumber <= accessLogTotalPages);
   useEffect(() => {
     if (page !== "site-detail") {
       return;
@@ -1218,23 +1221,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "access-logs") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD398\uC774\uC9C0/\uAC80\uC0C9/\uC815\uB82C \uC870\uAC74\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
-      TextInput,
-      {
-        label: "page",
-        value: accessLogPageInput,
-        onChange: (event) => setAccessLogPageInput(event.currentTarget.value),
-        placeholder: "1"
-      }
-    ), /* @__PURE__ */ React.createElement(
-      TextInput,
-      {
-        label: "pageSize (optional)",
-        value: accessLogPageSizeInput,
-        onChange: (event) => setAccessLogPageSizeInput(event.currentTarget.value),
-        placeholder: "20"
-      }
-    ), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
       TextInput,
       {
         label: "search",
@@ -1243,35 +1230,14 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         placeholder: "site/method/uri/ip/user-agent"
       }
     ), /* @__PURE__ */ React.createElement(
-      TextInput,
-      {
-        label: "sortBy",
-        value: accessLogSortBy,
-        onChange: (event) => setAccessLogSortBy(event.currentTarget.value),
-        placeholder: "seq|dateInserted|status|durationMilli|remoteAddress|method|uri"
-      }
-    ), /* @__PURE__ */ React.createElement(
-      TextInput,
-      {
-        label: "sortOrder",
-        value: accessLogSortOrder,
-        onChange: (event) => setAccessLogSortOrder(event.currentTarget.value),
-        placeholder: "asc|desc"
-      }
-    ), /* @__PURE__ */ React.createElement(
       Button,
       {
         variant: "filled",
         onClick: () => {
-          const parsedPage = Number.parseInt(accessLogPageInput, 10);
-          const parsedPageSize = Number.parseInt(accessLogPageSizeInput, 10);
-          const page2 = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
-          const pageSize = Number.isFinite(parsedPageSize) ? Math.min(1e3, Math.max(1, parsedPageSize)) : 20;
-          setAccessLogPageInput(String(page2));
-          setAccessLogPageSizeInput(String(pageSize));
+          setAccessLogPage(1);
           loadAccessLogs({
-            page: page2,
-            pageSize,
+            page: 1,
+            pageSize: ACCESS_LOG_PAGE_SIZE,
             search: accessLogSearchInput,
             sortBy: accessLogSortBy,
             sortOrder: accessLogSortOrder
@@ -1280,7 +1246,42 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       },
       "\uC870\uD68C"
     )), makeTable(
-      ["When", "Site", "User", "Method", "URI", "Status", "IP", "Duration(ms)", "User-Agent"],
+      [
+        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+          const nextOrder = accessLogSortBy === "dateInserted" && accessLogSortOrder === "desc" ? "asc" : "desc";
+          setAccessLogSortBy("dateInserted");
+          setAccessLogSortOrder(nextOrder);
+          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "dateInserted", sortOrder: nextOrder });
+        } }, "When ", accessLogSortBy === "dateInserted" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
+        "Site",
+        "User",
+        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+          const nextOrder = accessLogSortBy === "method" && accessLogSortOrder === "desc" ? "asc" : "desc";
+          setAccessLogSortBy("method");
+          setAccessLogSortOrder(nextOrder);
+          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "method", sortOrder: nextOrder });
+        } }, "Method ", accessLogSortBy === "method" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
+        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+          const nextOrder = accessLogSortBy === "uri" && accessLogSortOrder === "desc" ? "asc" : "desc";
+          setAccessLogSortBy("uri");
+          setAccessLogSortOrder(nextOrder);
+          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "uri", sortOrder: nextOrder });
+        } }, "URI ", accessLogSortBy === "uri" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
+        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+          const nextOrder = accessLogSortBy === "status" && accessLogSortOrder === "desc" ? "asc" : "desc";
+          setAccessLogSortBy("status");
+          setAccessLogSortOrder(nextOrder);
+          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "status", sortOrder: nextOrder });
+        } }, "Status ", accessLogSortBy === "status" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
+        "IP",
+        /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+          const nextOrder = accessLogSortBy === "durationMilli" && accessLogSortOrder === "desc" ? "asc" : "desc";
+          setAccessLogSortBy("durationMilli");
+          setAccessLogSortOrder(nextOrder);
+          loadAccessLogs({ page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "durationMilli", sortOrder: nextOrder });
+        } }, "Duration(ms) ", accessLogSortBy === "durationMilli" ? accessLogSortOrder === "asc" ? "\u25B2" : "\u25BC" : ""),
+        "User-Agent"
+      ],
       (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
         row.dateInserted,
         `${row.siteName} (#${row.siteSeq})`,
@@ -1292,7 +1293,24 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         row.durationMilli,
         row.userAgent
       ])
-    ));
+    ), /* @__PURE__ */ React.createElement(Group, { mt: "md", gap: "xs" }, /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage <= 1, onClick: () => {
+      setAccessLogPage(1);
+      loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+    } }, "<<"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage <= 1, onClick: () => {
+      const nextPage = Math.max(1, accessLogPage - 1);
+      setAccessLogPage(nextPage);
+      loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+    } }, "<"), accessLogPageNumbers.map((pageNumber) => /* @__PURE__ */ React.createElement(Button, { key: pageNumber, size: "xs", variant: pageNumber === accessLogPage ? "filled" : "light", onClick: () => {
+      setAccessLogPage(pageNumber);
+      loadAccessLogs({ page: pageNumber, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+    } }, pageNumber)), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage >= accessLogTotalPages, onClick: () => {
+      const nextPage = Math.min(accessLogTotalPages, accessLogPage + 1);
+      setAccessLogPage(nextPage);
+      loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+    } }, ">"), /* @__PURE__ */ React.createElement(Button, { size: "xs", variant: "light", disabled: accessLogPage >= accessLogTotalPages, onClick: () => {
+      setAccessLogPage(accessLogTotalPages);
+      loadAccessLogs({ page: accessLogTotalPages, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder });
+    } }, ">>")));
   }
   return /* @__PURE__ */ React.createElement(Stack, { gap: "lg" }, /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, sites.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, allUsers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E"))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed" }, "Running Schedulers"), /* @__PURE__ */ React.createElement(Title, { order: 2 }, schedulers.filter((scheduler) => scheduler.running).length, "/", schedulers.length)), /* @__PURE__ */ React.createElement(ThemeIcon, { color: "blue", variant: "light", radius: "xl" }, "R")))), /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"), /* @__PURE__ */ React.createElement(Button, { variant: "light", onClick: () => onNavigate("/Admin/Operation") }, "\uC6B4\uC601 \uC791\uC5C5 \uC5F4\uAE30"))), /* @__PURE__ */ React.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 4 }, spacing: "md" }, /* @__PURE__ */ React.createElement(
     StatTrendCard,

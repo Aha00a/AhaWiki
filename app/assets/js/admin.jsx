@@ -1048,6 +1048,7 @@ function MultiTrendChart({series}) {
 
 
 function AdminContent({page, onNavigate, pathname, search}) {
+    const ACCESS_LOG_PAGE_SIZE = 20;
     const {
         loading,
         sites,
@@ -1089,8 +1090,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-    const [accessLogPageInput, setAccessLogPageInput] = useState("1");
-    const [accessLogPageSizeInput, setAccessLogPageSizeInput] = useState("20");
+    const [accessLogPage, setAccessLogPage] = useState(1);
     const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
     const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
     const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
@@ -1120,6 +1120,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => (selectedSite?.domains ?? []).join(", ") || "-",
         [selectedSite],
     );
+    const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
+    const accessLogPageStart = Math.floor((accessLogPage - 1) / 5) * 5 + 1;
+    const accessLogPageNumbers = Array.from({length: 5}, (_, index) => accessLogPageStart + index)
+        .filter((pageNumber) => pageNumber <= accessLogTotalPages);
 
     useEffect(() => {
         if (page !== "site-detail") {
@@ -1751,50 +1755,21 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     <Title order={3}>Access Logs (All Sites)</Title>
                     <Badge color="cyan" variant="light">{accessLogs.length} / {accessLogCount} rows</Badge>
                 </Group>
-                <Text size="sm" c="dimmed" mb="md">페이지/검색/정렬 조건으로 요청 로그를 조회할 수 있습니다.</Text>
+                <Text size="sm" c="dimmed" mb="md">검색과 헤더 정렬, 페이지 이동으로 요청 로그를 조회할 수 있습니다.</Text>
                 <Group align="flex-end" mb="md">
-                    <TextInput
-                        label="page"
-                        value={accessLogPageInput}
-                        onChange={(event) => setAccessLogPageInput(event.currentTarget.value)}
-                        placeholder="1"
-                    />
-                    <TextInput
-                        label="pageSize (optional)"
-                        value={accessLogPageSizeInput}
-                        onChange={(event) => setAccessLogPageSizeInput(event.currentTarget.value)}
-                        placeholder="20"
-                    />
                     <TextInput
                         label="search"
                         value={accessLogSearchInput}
                         onChange={(event) => setAccessLogSearchInput(event.currentTarget.value)}
                         placeholder="site/method/uri/ip/user-agent"
                     />
-                    <TextInput
-                        label="sortBy"
-                        value={accessLogSortBy}
-                        onChange={(event) => setAccessLogSortBy(event.currentTarget.value)}
-                        placeholder="seq|dateInserted|status|durationMilli|remoteAddress|method|uri"
-                    />
-                    <TextInput
-                        label="sortOrder"
-                        value={accessLogSortOrder}
-                        onChange={(event) => setAccessLogSortOrder(event.currentTarget.value)}
-                        placeholder="asc|desc"
-                    />
                     <Button
                         variant="filled"
                         onClick={() => {
-                            const parsedPage = Number.parseInt(accessLogPageInput, 10);
-                            const parsedPageSize = Number.parseInt(accessLogPageSizeInput, 10);
-                            const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
-                            const pageSize = Number.isFinite(parsedPageSize) ? Math.min(1000, Math.max(1, parsedPageSize)) : 20;
-                            setAccessLogPageInput(String(page));
-                            setAccessLogPageSizeInput(String(pageSize));
+                            setAccessLogPage(1);
                             loadAccessLogs({
-                                page,
-                                pageSize,
+                                page: 1,
+                                pageSize: ACCESS_LOG_PAGE_SIZE,
                                 search: accessLogSearchInput,
                                 sortBy: accessLogSortBy,
                                 sortOrder: accessLogSortOrder,
@@ -1805,7 +1780,42 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     </Button>
                 </Group>
                 {makeTable(
-                    ["When", "Site", "User", "Method", "URI", "Status", "IP", "Duration(ms)", "User-Agent"],
+                    [
+                        <button type="button" onClick={() => {
+                            const nextOrder = accessLogSortBy === "dateInserted" && accessLogSortOrder === "desc" ? "asc" : "desc";
+                            setAccessLogSortBy("dateInserted");
+                            setAccessLogSortOrder(nextOrder);
+                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "dateInserted", sortOrder: nextOrder});
+                        }}>When {accessLogSortBy === "dateInserted" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
+                        "Site",
+                        "User",
+                        <button type="button" onClick={() => {
+                            const nextOrder = accessLogSortBy === "method" && accessLogSortOrder === "desc" ? "asc" : "desc";
+                            setAccessLogSortBy("method");
+                            setAccessLogSortOrder(nextOrder);
+                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "method", sortOrder: nextOrder});
+                        }}>Method {accessLogSortBy === "method" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
+                        <button type="button" onClick={() => {
+                            const nextOrder = accessLogSortBy === "uri" && accessLogSortOrder === "desc" ? "asc" : "desc";
+                            setAccessLogSortBy("uri");
+                            setAccessLogSortOrder(nextOrder);
+                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "uri", sortOrder: nextOrder});
+                        }}>URI {accessLogSortBy === "uri" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
+                        <button type="button" onClick={() => {
+                            const nextOrder = accessLogSortBy === "status" && accessLogSortOrder === "desc" ? "asc" : "desc";
+                            setAccessLogSortBy("status");
+                            setAccessLogSortOrder(nextOrder);
+                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "status", sortOrder: nextOrder});
+                        }}>Status {accessLogSortBy === "status" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
+                        "IP",
+                        <button type="button" onClick={() => {
+                            const nextOrder = accessLogSortBy === "durationMilli" && accessLogSortOrder === "desc" ? "asc" : "desc";
+                            setAccessLogSortBy("durationMilli");
+                            setAccessLogSortOrder(nextOrder);
+                            loadAccessLogs({page: accessLogPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: "durationMilli", sortOrder: nextOrder});
+                        }}>Duration(ms) {accessLogSortBy === "durationMilli" ? (accessLogSortOrder === "asc" ? "▲" : "▼") : ""}</button>,
+                        "User-Agent",
+                    ],
                     (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
                         row.dateInserted,
                         `${row.siteName} (#${row.siteSeq})`,
@@ -1818,6 +1828,32 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         row.userAgent,
                     ]),
                 )}
+                <Group mt="md" gap="xs">
+                    <Button size="xs" variant="light" disabled={accessLogPage <= 1} onClick={() => {
+                        setAccessLogPage(1);
+                        loadAccessLogs({page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                    }}>&lt;&lt;</Button>
+                    <Button size="xs" variant="light" disabled={accessLogPage <= 1} onClick={() => {
+                        const nextPage = Math.max(1, accessLogPage - 1);
+                        setAccessLogPage(nextPage);
+                        loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                    }}>&lt;</Button>
+                    {accessLogPageNumbers.map((pageNumber) => (
+                        <Button key={pageNumber} size="xs" variant={pageNumber === accessLogPage ? "filled" : "light"} onClick={() => {
+                            setAccessLogPage(pageNumber);
+                            loadAccessLogs({page: pageNumber, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                        }}>{pageNumber}</Button>
+                    ))}
+                    <Button size="xs" variant="light" disabled={accessLogPage >= accessLogTotalPages} onClick={() => {
+                        const nextPage = Math.min(accessLogTotalPages, accessLogPage + 1);
+                        setAccessLogPage(nextPage);
+                        loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                    }}>&gt;</Button>
+                    <Button size="xs" variant="light" disabled={accessLogPage >= accessLogTotalPages} onClick={() => {
+                        setAccessLogPage(accessLogTotalPages);
+                        loadAccessLogs({page: accessLogTotalPages, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder});
+                    }}>&gt;&gt;</Button>
+                </Group>
             </Card>
         );
     }
