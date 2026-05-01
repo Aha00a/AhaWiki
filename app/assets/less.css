@@ -870,6 +870,86 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1f2937;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form button:hover {
+  background: #1d4ed8;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-status {
+  padding: 14px;
+  color: #4b5563;
+  font-size: 14px;
+  background: #f9fafb;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
+  background: #fcfdff;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
+  text-decoration: underline;
+}
 .AhaWiki .commonAhaWiki .previewPane div.toc,
 .AhaWiki .commonAhaWiki .previewPane div.schema {
   max-width: 25vw;
@@ -1495,6 +1575,86 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1f2937;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form button:hover {
+  background: #1d4ed8;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-status {
+  padding: 14px;
+  color: #4b5563;
+  font-size: 14px;
+  background: #f9fafb;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
+  background: #fcfdff;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
+  text-decoration: underline;
 }
 .AhaWiki .wikiContent .previewPane div.toc,
 .AhaWiki .wikiContent .previewPane div.schema {
@@ -2437,6 +2597,86 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+  margin-bottom: 12px;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1f2937;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form button:hover {
+  background: #1d4ed8;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-status {
+  padding: 14px;
+  color: #4b5563;
+  font-size: 14px;
+  background: #f9fafb;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 760px;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  vertical-align: top;
+  font-size: 14px;
+  color: #111827;
+  word-break: break-word;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th {
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
+  background: #fcfdff;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
+  text-decoration: underline;
 }
 .AhaWiki .paperContent .page .pageContent .previewPane div.toc,
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema {

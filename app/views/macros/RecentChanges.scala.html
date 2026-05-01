@@ -1,27 +1,30 @@
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
-    <form id="macro-recent-changes-form-@id">
+    <div class="macroRecentChanges">
+        <form id="macro-recent-changes-form-@id" class="macro-recent-changes-form">
         <label>
             <input type="checkbox" name="includeMinorEdit">
             Include minor edits
         </label>
         <button type="submit">Load</button>
-    </form>
-    <div id="macro-recent-changes-@id" class="macro-recent-changes">
-        <div class="macro-recent-changes-status">Click Load to fetch recent changes.</div>
-        <table class="macro-recent-changes-table" style="display : none ;">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Revision</th>
-                    <th>At</th>
-                    <th>By</th>
-                    <th>Comment</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <script>
+        </form>
+        <div id="macro-recent-changes-@id" class="macro-recent-changes">
+            <div class="macro-recent-changes-status">Click Load to fetch recent changes.</div>
+            <div class="macro-recent-changes-table-wrap">
+                <table class="macro-recent-changes-table" style="display : none ;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Revision</th>
+                            <th>At</th>
+                            <th>By</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <script>
 (function () {
     function esc(v) {
         return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
@@ -78,5 +81,6 @@
         });
     }
 })();
-</script>
+        </script>
+    </div>
 }
