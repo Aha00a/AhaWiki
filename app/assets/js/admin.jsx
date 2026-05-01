@@ -172,6 +172,7 @@ function useAdminData(page) {
     });
     const [recentChanges, setRecentChanges] = useState([]);
     const [accessLogs, setAccessLogs] = useState([]);
+    const [accessLogCount, setAccessLogCount] = useState(0);
     const [topViewedPages, setTopViewedPages] = useState([]);
     const [userViewHistories, setUserViewHistories] = useState([]);
     const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
@@ -191,9 +192,26 @@ function useAdminData(page) {
     const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
     const [memoryCacheStats, setMemoryCacheStats] = useState([]);
     const [error, setError] = useState("");
-    const loadAccessLogs = useCallback(async (n = 100) => {
-        const data = await fetchJson(`/api/Admin/AccessLogs?n=${encodeURIComponent(n)}`);
-        setAccessLogs(data);
+    const loadAccessLogs = useCallback(async ({
+        page = 1,
+        pageSize = 20,
+        search = "",
+        sortBy = "seq",
+        sortOrder = "desc",
+    } = {}) => {
+        const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            search,
+            sortBy,
+            sortOrder,
+        });
+        const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
+        const rows = Array.isArray(data?.array)
+            ? data.array
+            : (Array.isArray(data) ? data : []);
+        setAccessLogs(rows);
+        setAccessLogCount(Number(data?.count ?? rows.length));
     }, []);
 
     const loadRecentChanges = useCallback(async (n = 50) => {
@@ -587,7 +605,7 @@ function useAdminData(page) {
                     return;
                 }
                 if (page === "access-logs") {
-                    await loadAccessLogs(100);
+                    await loadAccessLogs();
                     if (mounted) {
                         setSites([]);
                         setUsers([]);
@@ -635,6 +653,7 @@ function useAdminData(page) {
         dailyStats,
         recentChanges,
         accessLogs,
+        accessLogCount,
         topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
@@ -1038,6 +1057,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         dailyStats,
         recentChanges,
         accessLogs,
+        accessLogCount,
         topViewedPages,
         userViewHistories,
         loadingUserViewHistories,
@@ -1069,7 +1089,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-    const [accessLogLimitInput, setAccessLogLimitInput] = useState("100");
+    const [accessLogPageInput, setAccessLogPageInput] = useState("1");
+    const [accessLogPageSizeInput, setAccessLogPageSizeInput] = useState("20");
+    const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
+    const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
+    const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
     const [sitePageNames, setSitePageNames] = useState([]);
@@ -1725,23 +1749,56 @@ function AdminContent({page, onNavigate, pathname, search}) {
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
                     <Title order={3}>Access Logs (All Sites)</Title>
-                    <Badge color="cyan" variant="light">{accessLogs.length} rows</Badge>
+                    <Badge color="cyan" variant="light">{accessLogs.length} / {accessLogCount} rows</Badge>
                 </Group>
-                <Text size="sm" c="dimmed" mb="md">사이트 전체 요청 로그를 n개 단위로 조회할 수 있습니다.</Text>
+                <Text size="sm" c="dimmed" mb="md">페이지/검색/정렬 조건으로 요청 로그를 조회할 수 있습니다.</Text>
                 <Group align="flex-end" mb="md">
                     <TextInput
-                        label="조회 개수 n"
-                        value={accessLogLimitInput}
-                        onChange={(event) => setAccessLogLimitInput(event.currentTarget.value)}
-                        placeholder="1 ~ 500"
+                        label="page"
+                        value={accessLogPageInput}
+                        onChange={(event) => setAccessLogPageInput(event.currentTarget.value)}
+                        placeholder="1"
+                    />
+                    <TextInput
+                        label="pageSize (optional)"
+                        value={accessLogPageSizeInput}
+                        onChange={(event) => setAccessLogPageSizeInput(event.currentTarget.value)}
+                        placeholder="20"
+                    />
+                    <TextInput
+                        label="search"
+                        value={accessLogSearchInput}
+                        onChange={(event) => setAccessLogSearchInput(event.currentTarget.value)}
+                        placeholder="site/method/uri/ip/user-agent"
+                    />
+                    <TextInput
+                        label="sortBy"
+                        value={accessLogSortBy}
+                        onChange={(event) => setAccessLogSortBy(event.currentTarget.value)}
+                        placeholder="seq|dateInserted|status|durationMilli|remoteAddress|method|uri"
+                    />
+                    <TextInput
+                        label="sortOrder"
+                        value={accessLogSortOrder}
+                        onChange={(event) => setAccessLogSortOrder(event.currentTarget.value)}
+                        placeholder="asc|desc"
                     />
                     <Button
                         variant="filled"
                         onClick={() => {
-                            const parsed = Number.parseInt(accessLogLimitInput, 10);
-                            const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 100;
-                            setAccessLogLimitInput(String(n));
-                            loadAccessLogs(n);
+                            const parsedPage = Number.parseInt(accessLogPageInput, 10);
+                            const parsedPageSize = Number.parseInt(accessLogPageSizeInput, 10);
+                            const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+                            const pageSize = Number.isFinite(parsedPageSize) ? Math.min(1000, Math.max(1, parsedPageSize)) : 20;
+                            setAccessLogPageInput(String(page));
+                            setAccessLogPageSizeInput(String(pageSize));
+                            loadAccessLogs({
+                                page,
+                                pageSize,
+                                search: accessLogSearchInput,
+                                sortBy: accessLogSortBy,
+                                sortOrder: accessLogSortOrder,
+                            });
                         }}
                     >
                         조회
@@ -1749,7 +1806,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Group>
                 {makeTable(
                     ["When", "Site", "User", "Method", "URI", "Status", "IP", "Duration(ms)", "User-Agent"],
-                    accessLogs.map((row) => [
+                    (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
                         row.dateInserted,
                         `${row.siteName} (#${row.siteSeq})`,
                         row.userSeq ?? "-",

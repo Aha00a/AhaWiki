@@ -163,6 +163,7 @@ function useAdminData(page) {
   });
   const [recentChanges, setRecentChanges] = useState([]);
   const [accessLogs, setAccessLogs] = useState([]);
+  const [accessLogCount, setAccessLogCount] = useState(0);
   const [topViewedPages, setTopViewedPages] = useState([]);
   const [userViewHistories, setUserViewHistories] = useState([]);
   const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
@@ -182,9 +183,24 @@ function useAdminData(page) {
   const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
   const [memoryCacheStats, setMemoryCacheStats] = useState([]);
   const [error, setError] = useState("");
-  const loadAccessLogs = useCallback(async (n = 100) => {
-    const data = await fetchJson(`/api/Admin/AccessLogs?n=${encodeURIComponent(n)}`);
-    setAccessLogs(data);
+  const loadAccessLogs = useCallback(async ({
+    page: page2 = 1,
+    pageSize = 20,
+    search = "",
+    sortBy = "seq",
+    sortOrder = "desc"
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page2),
+      pageSize: String(pageSize),
+      search,
+      sortBy,
+      sortOrder
+    });
+    const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
+    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+    setAccessLogs(rows);
+    setAccessLogCount(Number(data?.count ?? rows.length));
   }, []);
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
@@ -556,7 +572,7 @@ function useAdminData(page) {
           return;
         }
         if (page === "access-logs") {
-          await loadAccessLogs(100);
+          await loadAccessLogs();
           if (mounted) {
             setSites([]);
             setUsers([]);
@@ -601,6 +617,7 @@ function useAdminData(page) {
     dailyStats,
     recentChanges,
     accessLogs,
+    accessLogCount,
     topViewedPages,
     userViewHistories,
     loadingUserViewHistories,
@@ -814,6 +831,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     dailyStats,
     recentChanges,
     accessLogs,
+    accessLogCount,
     topViewedPages,
     userViewHistories,
     loadingUserViewHistories,
@@ -845,7 +863,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
-  const [accessLogLimitInput, setAccessLogLimitInput] = useState("100");
+  const [accessLogPageInput, setAccessLogPageInput] = useState("1");
+  const [accessLogPageSizeInput, setAccessLogPageSizeInput] = useState("20");
+  const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
+  const [accessLogSortBy, setAccessLogSortBy] = useState("seq");
+  const [accessLogSortOrder, setAccessLogSortOrder] = useState("desc");
   const [faviconFile, setFaviconFile] = useState(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
   const [sitePageNames, setSitePageNames] = useState([]);
@@ -1196,29 +1218,70 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "access-logs") {
-    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, accessLogs.length, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uC694\uCCAD \uB85C\uADF8\uB97C n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React.createElement(Title, { order: 3 }, "Access Logs (All Sites)"), /* @__PURE__ */ React.createElement(Badge, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", mb: "md" }, "\uD398\uC774\uC9C0/\uAC80\uC0C9/\uC815\uB82C \uC870\uAC74\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React.createElement(Group, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React.createElement(
       TextInput,
       {
-        label: "\uC870\uD68C \uAC1C\uC218 n",
-        value: accessLogLimitInput,
-        onChange: (event) => setAccessLogLimitInput(event.currentTarget.value),
-        placeholder: "1 ~ 500"
+        label: "page",
+        value: accessLogPageInput,
+        onChange: (event) => setAccessLogPageInput(event.currentTarget.value),
+        placeholder: "1"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "pageSize (optional)",
+        value: accessLogPageSizeInput,
+        onChange: (event) => setAccessLogPageSizeInput(event.currentTarget.value),
+        placeholder: "20"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "search",
+        value: accessLogSearchInput,
+        onChange: (event) => setAccessLogSearchInput(event.currentTarget.value),
+        placeholder: "site/method/uri/ip/user-agent"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "sortBy",
+        value: accessLogSortBy,
+        onChange: (event) => setAccessLogSortBy(event.currentTarget.value),
+        placeholder: "seq|dateInserted|status|durationMilli|remoteAddress|method|uri"
+      }
+    ), /* @__PURE__ */ React.createElement(
+      TextInput,
+      {
+        label: "sortOrder",
+        value: accessLogSortOrder,
+        onChange: (event) => setAccessLogSortOrder(event.currentTarget.value),
+        placeholder: "asc|desc"
       }
     ), /* @__PURE__ */ React.createElement(
       Button,
       {
         variant: "filled",
         onClick: () => {
-          const parsed = Number.parseInt(accessLogLimitInput, 10);
-          const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 100;
-          setAccessLogLimitInput(String(n));
-          loadAccessLogs(n);
+          const parsedPage = Number.parseInt(accessLogPageInput, 10);
+          const parsedPageSize = Number.parseInt(accessLogPageSizeInput, 10);
+          const page2 = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1;
+          const pageSize = Number.isFinite(parsedPageSize) ? Math.min(1e3, Math.max(1, parsedPageSize)) : 20;
+          setAccessLogPageInput(String(page2));
+          setAccessLogPageSizeInput(String(pageSize));
+          loadAccessLogs({
+            page: page2,
+            pageSize,
+            search: accessLogSearchInput,
+            sortBy: accessLogSortBy,
+            sortOrder: accessLogSortOrder
+          });
         }
       },
       "\uC870\uD68C"
     )), makeTable(
       ["When", "Site", "User", "Method", "URI", "Status", "IP", "Duration(ms)", "User-Agent"],
-      accessLogs.map((row) => [
+      (Array.isArray(accessLogs) ? accessLogs : []).map((row) => [
         row.dateInserted,
         `${row.siteName} (#${row.siteSeq})`,
         row.userSeq ?? "-",

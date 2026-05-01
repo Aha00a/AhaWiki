@@ -783,12 +783,47 @@ class Api @Inject()(
           dateInserted: String,
         )
 
-        val limit = request.getQueryString("n")
+        val page = request.getQueryString("page")
           .flatMap(raw => scala.util.Try(raw.toInt).toOption)
-          .map(_.max(1).min(500))
-          .getOrElse(100)
+          .map(_.max(1))
+          .getOrElse(1)
+        val pageSize = request.getQueryString("pageSize")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .map(_.max(1).min(1000))
+          .getOrElse(20)
+        val search = request.getQueryString("search").map(_.trim).getOrElse("")
+        val sortByRaw = request.getQueryString("sortBy").map(_.trim).getOrElse("seq")
+        val sortOrderRaw = request.getQueryString("sortOrder").map(_.trim.toLowerCase).getOrElse("desc")
 
-        val rows = SQL"""
+        val sortBy = sortByRaw match {
+          case "dateInserted" => "AL.dateInserted"
+          case "status" => "AL.status"
+          case "durationMilli" => "AL.durationMilli"
+          case "remoteAddress" => "AL.remoteAddress"
+          case "method" => "AL.method"
+          case "uri" => "AL.uri"
+          case _ => "AL.seq"
+        }
+        val sortOrder = if (sortOrderRaw == "asc") "ASC" else "DESC"
+        val offset = (page - 1) * pageSize
+        val searchLike = s"%$search%"
+
+        val count = SQL"""
+          SELECT COUNT(*) AS count_value
+          FROM AccessLog AL
+          INNER JOIN Site S ON S.seq = AL.site
+          WHERE (
+            ${search.isEmpty} = TRUE OR
+            S.name LIKE $searchLike OR
+            AL.method LIKE $searchLike OR
+            AL.uri LIKE $searchLike OR
+            AL.remoteAddress LIKE $searchLike OR
+            AL.userAgent LIKE $searchLike
+          )
+        """.as(long("count_value").single)
+
+        val orderBySql = s"$sortBy $sortOrder"
+        val rows = SQL(s"""
           SELECT
             AL.seq,
             AL.site AS site_seq,
@@ -803,9 +838,22 @@ class Api @Inject()(
             DATE_FORMAT(AL.dateInserted, '%Y-%m-%d %H:%i:%s') AS date_inserted
           FROM AccessLog AL
           INNER JOIN Site S ON S.seq = AL.site
-          ORDER BY AL.seq DESC
-          LIMIT $limit
-        """.as((long("seq") ~ long("site_seq") ~ str("site_name") ~ long("user_seq").? ~ str("method") ~ str("uri") ~ int("status") ~ str("remoteAddress") ~ int("durationMilli") ~ str("userAgent") ~ str("date_inserted")).map {
+          WHERE (
+            {searchIsEmpty} = TRUE OR
+            S.name LIKE {searchLike} OR
+            AL.method LIKE {searchLike} OR
+            AL.uri LIKE {searchLike} OR
+            AL.remoteAddress LIKE {searchLike} OR
+            AL.userAgent LIKE {searchLike}
+          )
+          ORDER BY $orderBySql
+          LIMIT {pageSize} OFFSET {offset}
+        """).on(
+          "searchIsEmpty" -> search.isEmpty,
+          "searchLike" -> searchLike,
+          "pageSize" -> pageSize,
+          "offset" -> offset,
+        ).as((long("seq") ~ long("site_seq") ~ str("site_name") ~ long("user_seq").? ~ str("method") ~ str("uri") ~ int("status") ~ str("remoteAddress") ~ int("durationMilli") ~ str("userAgent") ~ str("date_inserted")).map {
           case seq ~ siteSeq ~ siteName ~ userSeq ~ method ~ uri ~ status ~ remoteAddress ~ durationMilli ~ userAgent ~ dateInserted =>
             AdminAccessLog(
               seq = seq,
@@ -822,7 +870,12 @@ class Api @Inject()(
             )
         }.*)
 
-        Ok(rows.asJson)
+        Ok(Map(
+          "array" -> rows.asJson,
+          "page" -> page.asJson,
+          "pageSize" -> pageSize.asJson,
+          "count" -> count.asJson,
+        ).asJson)
       }
     }
   }
