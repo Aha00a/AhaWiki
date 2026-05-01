@@ -121,7 +121,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle.style.color = '#000';
                 foldToggle.style.textDecoration = 'none';
                 foldToggle.style.opacity = '.4';
-                foldToggle.style.fontSize = '12px';
+                foldToggle.style.fontSize = '0.75em';
+                foldToggle.style.lineHeight = '1';
                 foldToggle.style.marginRight = '0px';
                 foldToggle.style.verticalAlign = 'middle';
                 foldToggle.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
