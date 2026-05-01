@@ -35,7 +35,7 @@ function fetchJson(url) {
   });
 }
 function parseSiteSeqFromPathname(pathname) {
-  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|AccessLog))?$/);
   if (!matched) return "";
   const siteSeq = Number.parseInt(matched[1], 10);
   return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -64,7 +64,7 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites";
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
     return /* @__PURE__ */ React.createElement(
       NavLink,
       {
@@ -120,6 +120,20 @@ function Navigation({ activePage, onNavigate }) {
         onClick: (event) => {
           event.preventDefault();
           onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
+        }
+      }
+    ),
+    /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        href: `/Admin/${site.seq}/AccessLog`,
+        label: "AccessLog",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/${site.seq}/AccessLog`,
+        variant: currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
         }
       }
     )

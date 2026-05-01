@@ -9,7 +9,7 @@ function fetchJson(url) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|AccessLog))?$/);
     if (!matched) return "";
     const siteSeq = Number.parseInt(matched[1], 10);
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -50,7 +50,8 @@ export default function Navigation({activePage, onNavigate}) {
                 {links.map((link) => {
                     const isActive = activePage === link.key
                         || (activePage === "user-views" && link.key === "all-users")
-                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites");
+                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites")
+                        || (activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites");
                     return <NavLink
                         key={link.key}
                         href={link.href}
@@ -108,6 +109,18 @@ export default function Navigation({activePage, onNavigate}) {
                             onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
                         }}
                     />
+                    <NavLink
+                        href={`/Admin/${site.seq}/AccessLog`}
+                        label="AccessLog"
+                        leftSection={<i className="fas fa-network-wired" aria-hidden="true" />}
+                        active={currentPathname === `/Admin/${site.seq}/AccessLog`}
+                        variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
+                        }}
+                    />
+
                 </NavLink>)}
                 {siteLinks.length === 0 && <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>}
             </Stack>
