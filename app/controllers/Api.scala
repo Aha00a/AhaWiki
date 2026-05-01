@@ -856,7 +856,7 @@ class Api @Inject()(
         WHERE P.site = ${site.seq}
           AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
         ORDER BY P.dateTime DESC
-        LIMIT 500
+        LIMIT 10
       """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
         case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
           ChangeSourceRow(name, revision, dateTime, nickname, remoteAddress, comment, isMinorEdit, content)

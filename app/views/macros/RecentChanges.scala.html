@@ -1,4 +1,5 @@
-<div class="macro-recent-changes" data-include-minor-edit="0">
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+<div id="macro-recent-changes-@id" class="macro-recent-changes" data-include-minor-edit="0">
   <div class="macro-recent-changes-status">Loading recent changes...</div>
   <table class="macro-recent-changes-table" style="display:none;">
     <thead>
@@ -58,7 +59,8 @@
       });
   }
 
-  var containers = document.querySelectorAll(".macro-recent-changes");
-  for (var i = 0; i < containers.length; i++) load(containers[i]);
+  var container = document.getElementById("macro-recent-changes-@id");
+  if (container) load(container);
 })();
 </script>
+}
