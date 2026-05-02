@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
 
-    var requestAddList = function (pageName, title, lineEnd) {
+    var requestAddList = function (pageName, title, lineStart) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     title: title,
-                    lineEnd: lineEnd
+                    lineStart: lineStart
                 })
             }).then(function (response) {
                 return response.json().catch(function () {
@@ -291,7 +291,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var columns = parseKanbanText(pre.textContent || '');
         var pageName = root.getAttribute('data-page-name') || '';
         var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
-        var lineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
+        var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
+        var lineStart = Math.max(1, interpreterLineEnd - 1);
         pre.style.display = 'none';
         board.style.display = 'flex';
         board.style.gap = '12px';
@@ -407,7 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeListEditor();
 
-            requestAddList(pageName, trimmed, lineEnd)
+            requestAddList(pageName, trimmed, lineStart)
                 .then(function (result) {
                     console.info('[Kanban] list added', result);
                 })

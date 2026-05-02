@@ -35,7 +35,7 @@ controllerComponents: ControllerComponents,
                        wsClient: WSClient,
                        executionContext: ExecutionContext,
                        configuration: Configuration) extends BaseController {
-  private case class AddListRequest(title: String, lineEnd: Int)
+  private case class AddListRequest(title: String, lineStart: Int)
   private implicit val addListRequestReads = Json.reads[AddListRequest]
 
   def put(pageName: String): Action[AnyContent] = Action { implicit request =>
@@ -63,7 +63,7 @@ controllerComponents: ControllerComponents,
                 Forbidden(Json.obj("status" -> "error", "message" -> "Permission denied."))
               } else {
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
-                val insertAt = Math.max(0, Math.min(payload.lineEnd - 2, lines.length))
+                val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 lines.insert(insertAt, s"== ${payload.title}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
@@ -76,7 +76,7 @@ controllerComponents: ControllerComponents,
                     "message" -> "Kanban list saved.",
                     "pageName" -> pageName,
                     "title" -> payload.title,
-                    "lineEnd" -> payload.lineEnd,
+                    "lineStart" -> payload.lineStart,
                     "revision" -> nextRevision
                   )
                 )
