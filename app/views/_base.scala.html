@@ -11,42 +11,22 @@
 } {
     <nav class="topNavbar">
         <div class="wrap">
-                <a class="homeLink" href="/">Home</a>
-                <ul class="actionAuth">
-                    @if(contextSite.requestWrapper.getUser) {
-                        @contextSite.requestWrapper.getUser.map { user =>
-                            <li>
-                                <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
-                            </li>
-                        }
-                        @if(isAdmin) {
-                            <li>
-                                <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
-                            </li>
-                        }
-                        <li>
-                            <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
-                        </li>
-                    } else {
-                        <li>
-                            <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
-                        </li>
-                    }
-                </ul>
-                <ul class="actionNavigate">
-                    @if(wikiContextOpt.isDefined && canWrite) {
-                        <li>
-                            <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
-                        </li>
-                    }
+            <a class="homeLink" href="/">Home</a>
+
+            <ul class="actionNavigate">
+                <li>
+                    <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
+                </li>
+                <li>
+                    <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
+                </li>
+                @if(wikiContextOpt.isDefined && canWrite) {
                     <li>
-                        <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
+                        <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
                     </li>
-                    <li>
-                        <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
-                    </li>
-                </ul>
-                @if(wikiContextOpt.isDefined) {
+                }
+            </ul>
+            @if(wikiContextOpt.isDefined) {
                 <ul class="actionPage">
                     <li>
                         <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
@@ -63,7 +43,28 @@
                         </li>
                     }
                 </ul>
+            }
+            <ul class="actionAuth">
+                @if(contextSite.requestWrapper.getUser) {
+                    @contextSite.requestWrapper.getUser.map { user =>
+                        <li>
+                            <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                        </li>
+                    }
+                    @if(isAdmin) {
+                        <li>
+                            <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
+                        </li>
+                    }
+                    <li>
+                        <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                    </li>
+                } else {
+                    <li>
+                        <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
+                    </li>
                 }
+            </ul>
         </div>
     </nav>
     <script type="text/javascript">

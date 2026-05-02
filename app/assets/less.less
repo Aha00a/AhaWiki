@@ -25,43 +25,61 @@ html, body {
 nav.topNavbar {
 	position: sticky;
 	top: 0;
-	background-color: #ffffff;
-	border-bottom: 1px solid #e5e9f0;
+	left: 0;
+	right: 0;
+	background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+	border-bottom: 1px solid #d9e1ee;
+	box-shadow: 0 8px 24px rgba(9, 30, 66, 0.08);
+	backdrop-filter: saturate(130%) blur(2px);
 
 	> .wrap {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		padding: 10px 30px;
+		gap: 12px;
+		flex-wrap: wrap;
+		padding: 10px 24px;
 	}
 
 	a {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		height: 34px;
+		padding: 0 12px;
+		border-radius: 999px;
 		text-decoration: none;
+		color: #000;
+		transition: all 160ms ease;
+
+		&:hover {
+			background-color: #eaf2ff;
+		}
 	}
 
 	.homeLink {
-		font-weight: 700;
+		font-size: 18px;
+		font-weight: 800;
+		color: #0b57d0;
+		margin-right: auto;
 	}
 
-	.authArea {
+	ul {
+		list-style: none;
 		display: inline-flex;
 		align-items: center;
-		gap: 12px;
-		font-size: 14px;
+		flex-wrap: wrap;
+		gap: 6px;
+		margin: 0;
+		padding: 0;
 	}
 
-	.authArea i.fas {
-		margin-right: 4px;
+	i.fas {
+		font-size: 12px;
+		opacity: 0.85;
 	}
 
-	@media @widthTablet {
-		> .wrap {
-			padding: 8px 12px;
-		}
-		.authArea {
-			font-size: 13px;
-			gap: 8px;
-		}
+	.actionPage a {
+		background-color: #f5f8ff;
 	}
 }
 
