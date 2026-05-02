@@ -35,10 +35,33 @@ controllerComponents: ControllerComponents,
                        wsClient: WSClient,
                        executionContext: ExecutionContext,
                        configuration: Configuration) extends BaseController {
-  private case class AddListRequest(title: String, lineStart: Int)
+  private case class AddListRequest(title: String, id: Option[String], lineStart: Int)
   private implicit val addListRequestReads = Json.reads[AddListRequest]
-  private case class AddCardRequest(text: String, lineStart: Int)
+  private case class AddCardRequest(text: String, id: Option[String], lineStart: Int)
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
+
+
+
+  private val ExplicitIdRegex = """#([A-Za-z0-9_-]+)""".r
+
+  private def normalizeId(input: String): String = {
+    input.trim
+      .replaceAll("""\s+""", "-")
+      .replaceAll("""[^\p{L}\p{N}_-]""", "")
+      .replaceAll("""-+""", "-")
+      .stripPrefix("-")
+      .stripSuffix("-")
+  }
+
+  private def buildUniqueId(content: String, candidate: String): String = {
+    val base = Option(candidate).map(normalizeId).filter(_.nonEmpty).getOrElse(s"kanban-${java.util.UUID.randomUUID().toString.take(8)}")
+    val existing = ExplicitIdRegex.findAllMatchIn(content).map(_.group(1)).toSet
+
+    if (!existing.contains(base)) base
+    else {
+      LazyList.from(2).map(n => s"$base-$n").find(id => !existing.contains(id)).getOrElse(s"$base-${java.util.UUID.randomUUID().toString.take(8)}")
+    }
+  }
 
   def listAdd(pageName: String): Action[AnyContent] = Action { implicit request =>
     request.body.asJson match {
@@ -67,7 +90,9 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
-                lines.insert(insertAt, s"== ${payload.title}")
+                val requestId = payload.id.filter(_.trim.nonEmpty).getOrElse(payload.title)
+                val uniqueId = buildUniqueId(latestContent, requestId)
+                lines.insert(insertAt, s"== ${payload.title} == #$uniqueId")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -79,6 +104,7 @@ controllerComponents: ControllerComponents,
                     "message" -> "Kanban list saved.",
                     "pageName" -> pageName,
                     "title" -> payload.title,
+                    "id" -> uniqueId,
                     "lineStart" -> insertedLine,
                     "lineEnd" -> insertedLine,
                     "revision" -> nextRevision
@@ -119,7 +145,9 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
-                lines.insert(insertAt, s"* ${payload.text}")
+                val requestId = payload.id.filter(_.trim.nonEmpty).getOrElse(payload.text)
+                val uniqueId = buildUniqueId(latestContent, requestId)
+                lines.insert(insertAt, s"=== ${payload.text} === #$uniqueId")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -130,6 +158,7 @@ controllerComponents: ControllerComponents,
                   "message" -> "Kanban card saved.",
                   "pageName" -> pageName,
                   "text" -> payload.text,
+                  "id" -> uniqueId,
                   "lineStart" -> insertedLine,
                   "lineEnd" -> insertedLine,
                   "revision" -> nextRevision
