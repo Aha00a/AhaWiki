@@ -1733,6 +1733,12 @@ kbd {
 		top: 30%;
 		left: 40%;
 		width: 20%;
+
+		@media @widthTablet {
+			left: 10%;
+			width: 80%;
+		}
+
 		form {
 			.boxShadow();
 			input {
@@ -1742,12 +1748,7 @@ kbd {
 			}
 		}
 	}
-	@media @widthTablet {
-		.search {
-			left: 10%;
-			width: 80%;
-		}
-	}
+
 	.autocomplete-suggestions { border: 1px solid #999; background: #fff; cursor: default; overflow: auto; }
 	.autocomplete-suggestion { padding: 10px 5px; font-size: 1.2em; white-space: nowrap; overflow: hidden; }
 	.autocomplete-selected { background: #f0f0f0; }

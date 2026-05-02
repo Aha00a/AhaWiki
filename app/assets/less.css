@@ -3371,6 +3371,12 @@ kbd:hover > kbd {
   left: 40%;
   width: 20%;
 }
+@media (max-width: 767px) {
+  .AhaWiki .search {
+    left: 10%;
+    width: 80%;
+  }
+}
 .AhaWiki .search form {
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
@@ -3380,12 +3386,6 @@ kbd:hover > kbd {
   width: 100%;
   padding: 10px;
   font-size: 25px;
-}
-@media (max-width: 767px) {
-  .AhaWiki .search {
-    left: 10%;
-    width: 80%;
-  }
 }
 .AhaWiki .autocomplete-suggestions {
   border: 1px solid #999;
