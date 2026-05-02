@@ -79,7 +79,7 @@
                     status.textContent = "Loading recent changes...";
                     status.style.display = "";
                     table.style.display = "none";
-                    fetch("/api/change?includeMinorEdit=" + includeMinorEdit + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
+                    fetch("/api/change?name=" + encodeURIComponent("@wikiContext.name") + "&includeMinorEdit=" + includeMinorEdit + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
                             .then(function (res) {
                                 if (!res.ok) throw new Error("HTTP " + res.status);
                                 return res.json();

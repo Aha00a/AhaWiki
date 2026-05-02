@@ -830,11 +830,11 @@ class Api @Inject()(
     }
   }
 
-  def change(includeMinorEdit: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
+  def change(name: String, includeMinorEdit: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
     // TODO: improve check permission
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("") // TODO: name
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
 
       case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
       case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
