@@ -27,6 +27,7 @@ nav.topNavbar {
 	top: 0;
 	left: 0;
 	right: 0;
+	z-index: 1;
 	background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
 	border-bottom: 1px solid #d9e1ee;
 	box-shadow: 0 8px 24px rgba(9, 30, 66, 0.08);
@@ -347,12 +348,15 @@ kbd {
 
 		h1, h2, h3, h4, h5, h6 {
 			margin: 0;
+			scroll-margin-top: 65px;
 			overflow: hidden;
+			word-break: keep-all;
+
 			@media screen {
 				text-shadow: 1px 1px 2px #99a;
 			}
 
-			word-break: keep-all;
+
 			.headingNumber {
 				text-decoration: none;
 			}
@@ -755,9 +759,7 @@ kbd {
 						background: #f8fafc;
 						color: #334155;
 						font-weight: 700;
-						position: sticky;
 						top: 0;
-						z-index: 1;
 					}
 
 					tr:nth-child(even) td {

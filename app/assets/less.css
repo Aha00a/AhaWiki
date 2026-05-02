@@ -82,6 +82,7 @@ nav.topNavbar {
   top: 0;
   left: 0;
   right: 0;
+  z-index: 1;
   background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
   border-bottom: 1px solid #d9e1ee;
   box-shadow: 0 8px 24px rgba(9, 30, 66, 0.08);
@@ -525,6 +526,7 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki h5,
 .AhaWiki .commonAhaWiki h6 {
   margin: 0;
+  scroll-margin-top: 65px;
   overflow: hidden;
   word-break: keep-all;
 }
@@ -997,9 +999,7 @@ kbd:hover > kbd {
   background: #f8fafc;
   color: #334155;
   font-weight: 700;
-  position: sticky;
   top: 0;
-  z-index: 1;
 }
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
@@ -1232,6 +1232,7 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent h5,
 .AhaWiki .wikiContent h6 {
   margin: 0;
+  scroll-margin-top: 65px;
   overflow: hidden;
   word-break: keep-all;
 }
@@ -1704,9 +1705,7 @@ kbd:hover > kbd {
   background: #f8fafc;
   color: #334155;
   font-weight: 700;
-  position: sticky;
   top: 0;
-  z-index: 1;
 }
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
@@ -2255,6 +2254,7 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent h5,
 .AhaWiki .paperContent .page .pageContent h6 {
   margin: 0;
+  scroll-margin-top: 65px;
   overflow: hidden;
   word-break: keep-all;
 }
@@ -2727,9 +2727,7 @@ kbd:hover > kbd {
   background: #f8fafc;
   color: #334155;
   font-weight: 700;
-  position: sticky;
   top: 0;
-  z-index: 1;
 }
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
