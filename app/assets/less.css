@@ -130,6 +130,14 @@ nav.topNavbar i.fas {
   font-size: 12px;
   opacity: 0.85;
 }
+nav.topNavbar .groupMenu .groupMenuToggle {
+  display: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+}
 nav.topNavbar .actionAuth .authMenu {
   position: relative;
 }
@@ -167,6 +175,35 @@ nav.topNavbar .actionAuth .authSubmenu a {
 }
 nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   display: block;
+}
+@media (max-width: 1024px) {
+  nav.topNavbar .groupMenu {
+    position: relative;
+  }
+  nav.topNavbar .groupMenu .groupMenuToggle {
+    display: inline-flex;
+  }
+  nav.topNavbar .groupMenu .groupMenuList {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #fff;
+    border: 1px solid #d9e1ee;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+    z-index: 4;
+    min-width: 180px;
+  }
+  nav.topNavbar .groupMenu .groupMenuList a {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  nav.topNavbar .groupMenu.open .groupMenuList {
+    display: block;
+  }
 }
 .header > .wrap,
 .footer > .wrap {

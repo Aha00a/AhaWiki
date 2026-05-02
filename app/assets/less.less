@@ -79,6 +79,16 @@ nav.topNavbar {
 		opacity: 0.85;
 	}
 
+	.groupMenu {
+		.groupMenuToggle {
+			display: none;
+			.defaultFont();
+			border: 0;
+			cursor: pointer;
+			font-size: 14px;
+		}
+	}
+
 	.actionAuth {
 		.authMenu {
 			position: relative;
@@ -124,6 +134,44 @@ nav.topNavbar {
 		}
 	}
 }
+
+@media (max-width: 1024px) {
+	nav.topNavbar {
+		.groupMenu {
+			position: relative;
+
+			.groupMenuToggle {
+				display: inline-flex;
+			}
+
+			.groupMenuList {
+				display: none;
+				position: absolute;
+				top: calc(100% + 8px);
+				left: 0;
+				background: #fff;
+				border: 1px solid #d9e1ee;
+				border-radius: 12px;
+				padding: 6px;
+				box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+				z-index: 4;
+				min-width: 180px;
+
+				a {
+					display: flex;
+					width: 100%;
+					box-sizing: border-box;
+				}
+			}
+
+			&.open .groupMenuList {
+				display: block;
+			}
+		}
+	}
+}
+
+
 
 .header, .footer {
 	> .wrap {

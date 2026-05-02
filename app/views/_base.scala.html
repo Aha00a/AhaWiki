@@ -13,7 +13,9 @@
         <div class="wrap">
             <a class="homeLink" href="/">Home</a>
 
-            <ul class="actionNavigate">
+            <div class="groupMenu actionNavigateMenu">
+                <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open navigation menu"><i class="fas fa-compass"></i>Navigate</button>
+                <ul class="actionNavigate groupMenuList">
                 <li>
                     <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
                 </li>
@@ -26,8 +28,11 @@
                     </li>
                 }
             </ul>
+            </div>
             @if(wikiContextOpt.isDefined) {
-                <ul class="actionPage">
+                <div class="groupMenu actionPageMenu">
+                <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open page menu"><i class="fas fa-file-alt"></i>Page</button>
+                <ul class="actionPage groupMenuList">
                     <li>
                         <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
                     </li>
@@ -43,6 +48,7 @@
                         </li>
                     }
                 </ul>
+                </div>
             }
             <ul class="actionAuth">
                 @if(contextSite.requestWrapper.getUser) {
@@ -87,6 +93,18 @@
             $(document).on('click', function () {
                 $authMenu.removeClass('open');
                 $authToggle.attr('aria-expanded', 'false');
+                $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
+            });
+
+            $('nav.topNavbar .groupMenu .groupMenuToggle').on('click', function (event) {
+                event.stopPropagation();
+                const $menu = $(this).closest('.groupMenu');
+                const willOpen = !$menu.hasClass('open');
+                $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
+                if (willOpen) {
+                    $menu.addClass('open');
+                    $(this).attr('aria-expanded', 'true');
+                }
             });
 
             $('nav.topNavbar .gnb .action').each(function () {
