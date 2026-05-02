@@ -1057,7 +1057,7 @@
                     .filter(Boolean);
 
                 const containing = candidates
-                    .filter((item) => item.lineStart <= line && line <= item.lineEnd)
+                    .filter((item) => item.lineStart <= line && line < item.lineEnd)
                     .sort((a, b) => a.span - b.span)[0];
                 const nearest = candidates.sort((a, b) => Math.abs(a.lineStart - line) - Math.abs(b.lineStart - line))[0];
                 const target = (containing || nearest || {}).node;

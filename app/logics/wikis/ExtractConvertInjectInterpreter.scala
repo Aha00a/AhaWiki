@@ -59,12 +59,13 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
       val converted = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(value, "text"))
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>
-          val editUrl = getEditUrl(revision, chunk.lineStart, chunk.lineEnd)
-          val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${chunk.lineEnd})"
+          val lineEndExclusive = chunk.lineEnd + 1
+          val editUrl = getEditUrl(revision, chunk.lineStart, lineEndExclusive)
+          val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${lineEndExclusive - 1})"
           s"""<div class="InterpreterRenderMetaWrapper" style="position: relative;"
              |  data-edit-link="$editUrl"
              |  data-line-start="${chunk.lineStart}"
-             |  data-line-end="${chunk.lineEnd}"
+             |  data-line-end="$lineEndExclusive"
              |  data-edit-title="$editTitle">
              |  <div class="InterpreterRenderContent">$converted</div>
              |</div>""".stripMargin

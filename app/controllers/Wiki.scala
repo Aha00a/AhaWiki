@@ -236,9 +236,9 @@ controllerComponents: ControllerComponents,
     } yield (start, end)
 
     val pageLines = pageContent.split("""\r\n|\n""", -1).toSeq
-    val partialRangeInBounds = partialRange.filter { case (_, end) => end <= pageLines.length }
+    val partialRangeInBounds = partialRange.filter { case (_, end) => end <= pageLines.length + 1 }
     val initialEditorText = partialRangeInBounds
-      .map { case (start, end) => pageLines.slice(start - 1, end).mkString("\n") }
+      .map { case (start, end) => pageLines.slice(start - 1, end - 1).mkString("\n") }
       .getOrElse(pageContent)
 
     (initialEditorText, partialRangeInBounds)
@@ -482,11 +482,11 @@ controllerComponents: ControllerComponents,
       Left("invalid partial line range")
     } else {
       val latestLines = latestText.split("""\r\n|\n""", -1).toVector
-      if (lineEnd > latestLines.length) {
+      if (lineEnd > latestLines.length + 1) {
         Left("partial line range out of bounds")
       } else {
         val partialLines = stripGeneratedSeeAlso(partialBody.split("""\r\n|\n""", -1).toVector)
-        val mergedLines = latestLines.take(lineStart - 1) ++ partialLines ++ latestLines.drop(lineEnd)
+        val mergedLines = latestLines.take(lineStart - 1) ++ partialLines ++ latestLines.drop(lineEnd - 1)
         Right(mergedLines.mkString("\n"))
       }
     }

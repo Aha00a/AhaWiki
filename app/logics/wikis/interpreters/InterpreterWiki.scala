@@ -125,13 +125,13 @@ object InterpreterWiki extends TraitInterpreter {
       val isGeneratedHeading = headingClasses.contains("generated")
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
       val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
-      val lineEnd = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber)
-      val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEnd)
-      val editTitle = s"Edit section (r$revision, L$lineNumber-L$lineEnd)"
+      val lineEndExclusive = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber) + 1
+      val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEndExclusive)
+      val editTitle = s"Edit section (r$revision, L$lineNumber-L${lineEndExclusive - 1})"
       val editDataAttrs = if (isGeneratedHeading) {
         ""
       } else {
-        s""" data-edit-link="$editUrl" data-line-start="$lineNumber" data-line-end="$lineEnd" data-edit-title="$editTitle""""
+        s""" data-edit-link="$editUrl" data-line-start="$lineNumber" data-line-end="$lineEndExclusive" data-edit-title="$editTitle""""
       }
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
