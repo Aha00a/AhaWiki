@@ -86,8 +86,10 @@
 
             $authToggle.on('click', function (event) {
                 event.stopPropagation();
-                const isOpen = $authMenu.toggleClass('open').hasClass('open');
-                $authToggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+                const willOpen = !$authMenu.hasClass('open');
+                $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
+                $authMenu.toggleClass('open', willOpen);
+                $authToggle.attr('aria-expanded', willOpen ? 'true' : 'false');
             });
 
             $(document).on('click', function () {
@@ -100,6 +102,8 @@
                 event.stopPropagation();
                 const $menu = $(this).closest('.groupMenu');
                 const willOpen = !$menu.hasClass('open');
+                $authMenu.removeClass('open');
+                $authToggle.attr('aria-expanded', 'false');
                 $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
                 if (willOpen) {
                     $menu.addClass('open');
