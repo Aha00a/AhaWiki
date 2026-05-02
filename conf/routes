@@ -52,6 +52,7 @@ GET           /Admin/RecentChanges                   controllers.Admin.index
 
 
 GET           /api/csrf                              controllers.Api.csrf
+PUT           /api/Kanban/:pageName                  controllers.api.Kanban.put(pageName: String)
 GET           /api/Admin/Sites                       controllers.Api.adminSites
 GET           /api/Admin/SiteUsers                   controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                       controllers.Api.adminUsers
