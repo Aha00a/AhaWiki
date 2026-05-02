@@ -77,6 +77,7 @@ controllerComponents: ControllerComponents,
                     "pageName" -> pageName,
                     "title" -> payload.title,
                     "lineStart" -> payload.lineStart,
+                    "lineEnd" -> (payload.lineStart + 1),
                     "revision" -> nextRevision
                   )
                 )

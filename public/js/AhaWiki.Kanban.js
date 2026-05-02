@@ -292,7 +292,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var pageName = root.getAttribute('data-page-name') || '';
         var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
-        var lineStart = Math.max(1, interpreterLineEnd - 1);
+        var getNextListInsertLineStart = function () {
+            var currentLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
+            return Math.max(1, currentLineEnd - 1);
+        };
         pre.style.display = 'none';
         board.style.display = 'flex';
         board.style.gap = '12px';
@@ -408,8 +411,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeListEditor();
 
-            requestAddList(pageName, trimmed, lineStart)
+            var requestLineStart = getNextListInsertLineStart();
+            if (metaWrapper) {
+                metaWrapper.setAttribute('data-line-end', String(requestLineStart + 2));
+            }
+
+            requestAddList(pageName, trimmed, requestLineStart)
                 .then(function (result) {
+                    if (metaWrapper && result && Number.isFinite(result.lineEnd) && result.lineEnd > 1) {
+                        metaWrapper.setAttribute('data-line-end', String(result.lineEnd + 1));
+                    }
                     console.info('[Kanban] list added', result);
                 })
                 .catch(function (error) {
