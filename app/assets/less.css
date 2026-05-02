@@ -951,13 +951,6 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
 }
-.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
-  color: #1d4ed8;
-  text-decoration: none;
-}
-.AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
-  text-decoration: underline;
-}
 .AhaWiki .commonAhaWiki .previewPane div.toc,
 .AhaWiki .commonAhaWiki .previewPane div.schema {
   max-width: 25vw;
@@ -1664,13 +1657,6 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
-}
-.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
-  color: #1d4ed8;
-  text-decoration: none;
-}
-.AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
-  text-decoration: underline;
 }
 .AhaWiki .wikiContent .previewPane div.toc,
 .AhaWiki .wikiContent .previewPane div.schema {
@@ -2694,13 +2680,6 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table tr:nth-child(even) td {
   background: #fcfdff;
-}
-.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a {
-  color: #1d4ed8;
-  text-decoration: none;
-}
-.AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table a:hover {
-  text-decoration: underline;
 }
 .AhaWiki .paperContent .page .pageContent .previewPane div.toc,
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema {
