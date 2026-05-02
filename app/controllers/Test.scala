@@ -225,6 +225,8 @@ class Test @Inject()(implicit val
         val interpretedWithWiki =
           s"""<div><div class="InterpreterRenderMetaWrapper" style="position: relative;"
              |  data-edit-link="/w/UnitTest?action=edit&revision=0&lineStart=1&lineEnd=5"
+             |  data-line-start="1"
+             |  data-line-end="5"
              |  data-edit-title="Edit (r0, L1-L5)">
              |  <div class="InterpreterRenderContent">$interpreted</div>
              |</div></div>""".stripMargin

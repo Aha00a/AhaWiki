@@ -63,6 +63,8 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
           val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${chunk.lineEnd})"
           s"""<div class="InterpreterRenderMetaWrapper" style="position: relative;"
              |  data-edit-link="$editUrl"
+             |  data-line-start="${chunk.lineStart}"
+             |  data-line-end="${chunk.lineEnd}"
              |  data-edit-title="$editTitle">
              |  <div class="InterpreterRenderContent">$converted</div>
              |</div>""".stripMargin

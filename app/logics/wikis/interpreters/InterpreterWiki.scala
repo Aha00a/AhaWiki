@@ -131,7 +131,7 @@ object InterpreterWiki extends TraitInterpreter {
       val editDataAttrs = if (isGeneratedHeading) {
         ""
       } else {
-        s""" data-edit-link="$editUrl" data-edit-title="$editTitle""""
+        s""" data-edit-link="$editUrl" data-line-start="$lineNumber" data-line-end="$lineEnd" data-edit-title="$editTitle""""
       }
 
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
