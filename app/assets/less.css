@@ -227,6 +227,13 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   nav.topNavbar .mobileFlatMenu a {
     width: 100%;
   }
+  nav.topNavbar .mobileFlatMenu li.menuSplitter {
+    list-style: none;
+    height: 0;
+    margin: 4px 0;
+    border-top: 1px solid #e3e8ef;
+    pointer-events: none;
+  }
   nav.topNavbar.menuOpen .mobileFlatMenu {
     display: flex;
   }
