@@ -2969,57 +2969,6 @@ kbd:hover > kbd {
 .AhaWiki .wikiHistory table {
   margin-top: 20px;
 }
-.AhaWiki .login form {
-  width: 500px;
-  margin: 100px auto;
-  padding: 50px;
-  border: 1px solid #ccc;
-  background-color: #eee;
-}
-.AhaWiki .login form input {
-  display: block;
-  padding: 10px;
-  margin: 20px;
-  width: 400px;
-  border: 1px solid #ccc;
-}
-.AhaWiki .login form input[type=submit] {
-  display: block;
-  padding: 10px;
-  margin: 20px;
-  width: 424px;
-  background-color: #fff;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  font-weight: bold;
-}
-.AhaWiki .login form .error {
-  color: #770000;
-  background-color: #ffdddd;
-  border: 1px solid #dd0000;
-  padding: 10px;
-}
-.AhaWiki .login form .valid {
-  color: #007700;
-  background-color: #ddffdd;
-  border: 1px solid #00aa00;
-  padding: 10px;
-}
-@media (max-width: 767px) {
-  .AhaWiki .login form {
-    box-sizing: border-box;
-    width: auto;
-    margin: 30px 12px;
-    padding: 20px;
-  }
-  .AhaWiki .login form input,
-  .AhaWiki .login form input[type=submit] {
-    box-sizing: border-box;
-    width: 100%;
-    margin: 12px 0;
-  }
-}
 .AhaWiki .edit > div.ui > form {
   display: flex;
   flex-direction: row;
