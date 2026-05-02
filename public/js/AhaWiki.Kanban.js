@@ -67,6 +67,129 @@ document.addEventListener('DOMContentLoaded', function () {
 
         columnElement.appendChild(cardList);
 
+        var cardComposer = document.createElement('div');
+        cardComposer.style.marginTop = '6px';
+
+        var addCardButton = document.createElement('button');
+        addCardButton.type = 'button';
+        addCardButton.textContent = 'Add a Card';
+        addCardButton.style.display = 'block';
+        addCardButton.style.width = '100%';
+        addCardButton.style.padding = '8px';
+        addCardButton.style.textAlign = 'left';
+        addCardButton.style.border = 'none';
+        addCardButton.style.borderRadius = '6px';
+        addCardButton.style.background = 'transparent';
+        addCardButton.style.color = '#44546f';
+        addCardButton.style.cursor = 'pointer';
+
+        var cardEditor = document.createElement('div');
+        cardEditor.style.display = 'none';
+
+        var cardTextarea = document.createElement('textarea');
+        cardTextarea.rows = 3;
+        cardTextarea.placeholder = 'Enter a Title';
+        cardTextarea.style.width = '100%';
+        cardTextarea.style.boxSizing = 'border-box';
+        cardTextarea.style.border = '1px solid #b6c2cf';
+        cardTextarea.style.borderRadius = '6px';
+        cardTextarea.style.padding = '8px';
+        cardTextarea.style.resize = 'vertical';
+
+        var cardActions = document.createElement('div');
+        cardActions.style.marginTop = '8px';
+        cardActions.style.display = 'flex';
+        cardActions.style.alignItems = 'center';
+        cardActions.style.gap = '8px';
+
+        var submitCardButton = document.createElement('button');
+        submitCardButton.type = 'button';
+        submitCardButton.textContent = 'Add a Card';
+        submitCardButton.style.border = 'none';
+        submitCardButton.style.borderRadius = '4px';
+        submitCardButton.style.padding = '8px 12px';
+        submitCardButton.style.background = '#0c66e4';
+        submitCardButton.style.color = '#fff';
+        submitCardButton.style.cursor = 'pointer';
+
+        var cancelCardButton = document.createElement('button');
+        cancelCardButton.type = 'button';
+        cancelCardButton.textContent = 'Cancel';
+        cancelCardButton.style.border = 'none';
+        cancelCardButton.style.background = 'transparent';
+        cancelCardButton.style.color = '#44546f';
+        cancelCardButton.style.cursor = 'pointer';
+
+        cardActions.appendChild(submitCardButton);
+        cardActions.appendChild(cancelCardButton);
+        cardEditor.appendChild(cardTextarea);
+        cardEditor.appendChild(cardActions);
+        cardComposer.appendChild(addCardButton);
+        cardComposer.appendChild(cardEditor);
+        columnElement.appendChild(cardComposer);
+
+        var closeCardEditor = function () {
+            cardEditor.style.display = 'none';
+            addCardButton.style.display = 'block';
+            cardTextarea.value = '';
+        };
+
+        addCardButton.addEventListener('click', function () {
+            addCardButton.style.display = 'none';
+            cardEditor.style.display = 'block';
+            cardTextarea.focus();
+        });
+
+        cancelCardButton.addEventListener('click', function () {
+            closeCardEditor();
+        });
+
+        var submitCard = function () {
+            var value = (cardTextarea.value || '').trim();
+            if (!value) {
+                cardTextarea.focus();
+                return;
+            }
+
+            var newCard = {
+                text: value,
+                lineNumber: column.lineNumber || 1
+            };
+
+            column.cards = column.cards || [];
+            column.cards.push(newCard);
+
+            var cardElement = document.createElement('div');
+            cardElement.className = 'kanban-card';
+            cardElement.textContent = newCard.text;
+            cardElement.setAttribute('data-line-number', String(toDocumentLine(newCard.lineNumber)));
+            cardElement.style.background = '#fff';
+            cardElement.style.border = '1px solid #cfd5dd';
+            cardElement.style.borderRadius = '6px';
+            cardElement.style.padding = '8px';
+            cardElement.style.marginBottom = '8px';
+            cardList.appendChild(cardElement);
+
+            root.dispatchEvent(new CustomEvent('kanban:cardAdded', {
+                detail: {
+                    text: value,
+                    columnIndex: index,
+                    cardIndex: column.cards.length - 1
+                }
+            }));
+
+            closeCardEditor();
+        };
+
+        submitCardButton.addEventListener('click', submitCard);
+
+        cardTextarea.addEventListener('keydown', function (evt) {
+            if (evt.key === 'Enter' && !evt.shiftKey) {
+                evt.preventDefault();
+                submitCard();
+            }
+        });
+
         if (window.Sortable) {
             Sortable.create(cardList, {
                 group: root.id || 'kanban-default',
@@ -133,11 +256,63 @@ document.addEventListener('DOMContentLoaded', function () {
         board.style.alignItems = 'flex-start';
         board.style.overflowX = 'auto';
 
+        var addListWrapper = document.createElement('div');
+        addListWrapper.style.flex = '0 0 280px';
+        addListWrapper.style.minWidth = '280px';
+
         var addListButton = document.createElement('button');
         addListButton.type = 'button';
-        addListButton.textContent = '+ 리스트 추가';
-        addListButton.style.flex = '0 0 auto';
-        addListButton.style.height = '36px';
+        addListButton.textContent = '+ Add a List';
+        addListButton.style.width = '100%';
+        addListButton.style.padding = '10px 12px';
+        addListButton.style.textAlign = 'left';
+        addListButton.style.border = '1px solid #d7dce2';
+        addListButton.style.borderRadius = '8px';
+        addListButton.style.background = 'rgba(9, 30, 66, 0.04)';
+        addListButton.style.cursor = 'pointer';
+
+        var addListEditor = document.createElement('div');
+        addListEditor.style.display = 'none';
+        addListEditor.style.background = '#f6f7f9';
+        addListEditor.style.border = '1px solid #d7dce2';
+        addListEditor.style.borderRadius = '8px';
+        addListEditor.style.padding = '10px';
+
+        var addListInput = document.createElement('input');
+        addListInput.type = 'text';
+        addListInput.placeholder = 'Enter list name';
+        addListInput.style.width = '100%';
+        addListInput.style.boxSizing = 'border-box';
+        addListInput.style.border = '1px solid #b6c2cf';
+        addListInput.style.borderRadius = '4px';
+        addListInput.style.padding = '8px';
+
+        var addListActions = document.createElement('div');
+        addListActions.style.display = 'flex';
+        addListActions.style.gap = '8px';
+        addListActions.style.marginTop = '8px';
+
+        var submitListButton = document.createElement('button');
+        submitListButton.type = 'button';
+        submitListButton.textContent = 'Add a List';
+        submitListButton.style.border = 'none';
+        submitListButton.style.borderRadius = '4px';
+        submitListButton.style.padding = '8px 12px';
+        submitListButton.style.background = '#0c66e4';
+        submitListButton.style.color = '#fff';
+
+        var cancelListButton = document.createElement('button');
+        cancelListButton.type = 'button';
+        cancelListButton.textContent = 'Cancel';
+        cancelListButton.style.border = 'none';
+        cancelListButton.style.background = 'transparent';
+
+        addListActions.appendChild(submitListButton);
+        addListActions.appendChild(cancelListButton);
+        addListEditor.appendChild(addListInput);
+        addListEditor.appendChild(addListActions);
+        addListWrapper.appendChild(addListButton);
+        addListWrapper.appendChild(addListEditor);
 
         var renderColumns = function () {
             Array.prototype.slice.call(board.querySelectorAll('.kanban-column')).forEach(function (node) {
@@ -145,18 +320,30 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, column, index, toDocumentLine), addListButton);
+                board.insertBefore(createColumnElement(root, column, index, toDocumentLine), addListWrapper);
             });
         };
 
-        addListButton.addEventListener('click', function () {
-            var title = window.prompt('새 리스트 이름을 입력하세요.');
-            if (!title) {
-                return;
-            }
+        var closeListEditor = function () {
+            addListEditor.style.display = 'none';
+            addListButton.style.display = 'block';
+            addListInput.value = '';
+        };
 
-            var trimmed = title.trim();
+        addListButton.addEventListener('click', function () {
+            addListButton.style.display = 'none';
+            addListEditor.style.display = 'block';
+            addListInput.focus();
+        });
+
+        cancelListButton.addEventListener('click', function () {
+            closeListEditor();
+        });
+
+        var submitList = function () {
+            var trimmed = (addListInput.value || '').trim();
             if (!trimmed) {
+                addListInput.focus();
                 return;
             }
 
@@ -173,9 +360,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     listIndex: columns.length - 1
                 }
             }));
+
+            closeListEditor();
+        };
+
+        submitListButton.addEventListener('click', submitList);
+
+        addListInput.addEventListener('keydown', function (evt) {
+            if (evt.key === 'Enter') {
+                evt.preventDefault();
+                submitList();
+            }
         });
 
-        board.appendChild(addListButton);
+        board.appendChild(addListWrapper);
         renderColumns();
     });
 });
