@@ -2048,7 +2048,6 @@ kbd:hover > kbd {
     margin-top: 12px;
   }
 }
-.AhaWiki .gnb,
 .AhaWiki .revisionInfo {
   clear: right;
   float: right;
@@ -2057,158 +2056,27 @@ kbd:hover > kbd {
   text-align: right;
   color: #222;
 }
-.AhaWiki .gnb .action .mobileActionHeader,
-.AhaWiki .revisionInfo .action .mobileActionHeader {
-  display: block;
-}
-.AhaWiki .gnb .action .mobileActionToggle,
-.AhaWiki .revisionInfo .action .mobileActionToggle {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #cfd6de;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #ffffff 0%, #f6f8fb 100%);
-  padding: 7px 13px;
-  box-shadow: 0 1px 2px rgba(18, 24, 40, 0.08);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: #1b2330;
-  cursor: pointer;
-  transition: all 120ms ease-in-out;
-}
-.AhaWiki .gnb .action ul,
-.AhaWiki .revisionInfo .action ul {
-  vertical-align: top;
-  display: inline-block;
-  margin: 0;
-  border-left: 1px solid #ccc;
-  list-style-type: none;
-  padding: 0 10px;
-  text-align: left;
-}
-.AhaWiki .gnb .action ul li,
-.AhaWiki .revisionInfo .action ul li {
-  padding: 5px;
-  display: inline-block;
-}
-@media (max-width: 1279px) {
-  .AhaWiki .gnb .action ul li,
-  .AhaWiki .revisionInfo .action ul li {
-    display: block;
-  }
-}
-@media (max-width: 767px) {
-  .AhaWiki .gnb .action ul li,
-  .AhaWiki .revisionInfo .action ul li {
-    display: inline-block;
-  }
-}
-.AhaWiki .gnb .action .mobileAuthSummary,
-.AhaWiki .revisionInfo .action .mobileAuthSummary {
-  display: none;
-}
-.AhaWiki .gnb .action a,
-.AhaWiki .revisionInfo .action a {
-  display: inline-block;
-}
-.AhaWiki .gnb a,
 .AhaWiki .revisionInfo a {
   color: #222;
 }
-.AhaWiki .gnb a i.fas,
 .AhaWiki .revisionInfo a i.fas {
   margin-right: 5px;
 }
 @media print {
-  .AhaWiki .gnb,
   .AhaWiki .revisionInfo {
     display: none;
   }
 }
 @media (max-width: 767px) {
-  .AhaWiki .gnb,
   .AhaWiki .revisionInfo {
     float: none;
     clear: both;
-    margin: 0 0 12px;
-    padding-top: 10px;
-    text-align: left;
-  }
-  .AhaWiki .revisionInfo {
+    margin: 10px 0 12px;
     padding: 10px 12px;
+    text-align: left;
     border: 1px solid #ddd;
     border-radius: 8px;
     background-color: #fafafa;
-  }
-  .AhaWiki .gnb .action {
-    padding: 12px;
-    border: 1px solid #dce2ea;
-    border-radius: 8px;
-    background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-    box-shadow: 0 3px 12px rgba(18, 24, 40, 0.08);
-  }
-  .AhaWiki .gnb .action .mobileActionHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-  .AhaWiki .gnb .action .mobileActionToggle {
-    display: inline-flex;
-  }
-  .AhaWiki .gnb .action .mobileAuthSummary {
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .AhaWiki .gnb .action .mobileAuthSummary a {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 8px;
-    border-radius: 8px;
-    border: 1px solid #d9e1eb;
-    background-color: #fff;
-    text-decoration: none;
-    font-size: 12px;
-    line-height: 1.2;
-  }
-  .AhaWiki .gnb .action ul {
-    display: none;
-    border-left: none;
-    margin-top: 10px;
-    padding: 10px 0 0;
-    border-top: 1px solid #e3e8ef;
-  }
-  .AhaWiki .gnb .action ul + ul {
-    margin-top: 6px;
-  }
-  .AhaWiki .gnb .action ul li {
-    display: block;
-    padding: 0;
-    margin-bottom: 6px;
-  }
-  .AhaWiki .gnb .action ul li:last-child {
-    margin-bottom: 0;
-  }
-  .AhaWiki .gnb .action ul li > a {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 9px 10px;
-    border-radius: 10px;
-    text-decoration: none;
-    background-color: transparent;
-    transition: background-color 120ms ease-in-out;
-  }
-  .AhaWiki .gnb .action ul li > a:hover,
-  .AhaWiki .gnb .action ul li > a:focus-visible {
-    background-color: #ecf2fb;
-  }
-  .AhaWiki .gnb .action.mobileMenuOpen ul {
-    display: block;
   }
 }
 .AhaWiki .revisionInfo {
@@ -2223,7 +2091,6 @@ kbd:hover > kbd {
     background-color: #ddd;
   }
 }
-.AhaWiki .Paper .gnb,
 .AhaWiki .Paper .revisionInfo {
   float: none;
   margin: 0;

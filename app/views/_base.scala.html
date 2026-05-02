@@ -96,7 +96,6 @@
     </nav>
     <script type="text/javascript">
         $(function () {
-            const mobileMediaQuery = window.matchMedia('(max-width: 767px)');
             const $nav = $('nav.topNavbar');
             const $drawerToggle = $nav.find('.navDrawerToggle');
             const $authMenu = $('nav.topNavbar .actionAuth .authMenu');
@@ -155,29 +154,6 @@
             } else if (topNavMediaQuery.addListener) {
                 topNavMediaQuery.addListener(resetTopNavDesktopState);
             }
-
-            $('nav.topNavbar .gnb .action').each(function () {
-                const $action = $(this);
-                const $toggle = $action.find('.mobileActionToggle').first();
-
-                function resetDesktopState() {
-                    if (!mobileMediaQuery.matches) {
-                        $action.removeClass('mobileMenuOpen');
-                        $toggle.attr('aria-expanded', 'false');
-                    }
-                }
-
-                $toggle.on('click', function () {
-                    const isOpen = $action.toggleClass('mobileMenuOpen').hasClass('mobileMenuOpen');
-                    $toggle.attr('aria-expanded', isOpen ? 'true' : 'false');
-                });
-
-                if (mobileMediaQuery.addEventListener) {
-                    mobileMediaQuery.addEventListener('change', resetDesktopState);
-                } else if (mobileMediaQuery.addListener) {
-                    mobileMediaQuery.addListener(resetDesktopState);
-                }
-            });
         });
     </script>
     <div class="header" style="@Seq(
