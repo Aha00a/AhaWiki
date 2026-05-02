@@ -398,6 +398,11 @@ kbd {
 	.limitWidth {
 		width: 97%;
 		margin: 0 auto;
+
+		@media @widthTablet {
+			width: auto;
+			margin: 0 12px;
+		}
 	}
 
 	.aspectRatioWrapper {
@@ -1017,10 +1022,6 @@ kbd {
 	}
 
 	@media @widthTablet {
-		.limitWidth {
-			width: auto;
-			margin: 0 12px;
-		}
 		.commonAhaWiki {
 			padding: 0 0 20px;
 

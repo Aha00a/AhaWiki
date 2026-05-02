@@ -553,6 +553,12 @@ kbd:hover > kbd {
   width: 97%;
   margin: 0 auto;
 }
+@media (max-width: 767px) {
+  .AhaWiki .limitWidth {
+    width: auto;
+    margin: 0 12px;
+  }
+}
 .AhaWiki .aspectRatioWrapper {
   position: relative;
 }
@@ -2008,10 +2014,6 @@ kbd:hover > kbd {
   }
 }
 @media (max-width: 767px) {
-  .AhaWiki .limitWidth {
-    width: auto;
-    margin: 0 12px;
-  }
   .AhaWiki .commonAhaWiki {
     padding: 0 0 20px;
   }
