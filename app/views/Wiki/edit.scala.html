@@ -197,16 +197,14 @@
                 if (window.AhaWikiCodeMirrorEditor) {
                     window.AhaWikiCodeMirrorEditor.setSize(null, height - 9 - $('.attachmentList').height() - $('.editorAdditional').height());
                 }
-                if (typeof window.AhaWikiSchedulePreviewSyncScroll === 'function') {
-                    window.AhaWikiSchedulePreviewSyncScroll();
+                if (typeof window.AhaWikiSyncPreviewScrollNow === 'function') {
+                    window.AhaWikiSyncPreviewScrollNow();
                 }
             });
         }
 
         var timer;
         $(function(){
-            let previewScrollTimer = null;
-
             $.fn.insertAtCaret = function(myValue) {
                 return this.each(function() {
                     var me = this;
@@ -1077,14 +1075,7 @@
                 target.classList.add('previewSyncBlink');
             }
 
-            function schedulePreviewSyncScroll() {
-                if (previewScrollTimer)
-                    clearTimeout(previewScrollTimer);
-                previewScrollTimer = setTimeout(function () {
-                    scrollPreviewToCurrentLine();
-                }, 120);
-            }
-            window.AhaWikiSchedulePreviewSyncScroll = schedulePreviewSyncScroll;
+            window.AhaWikiSyncPreviewScrollNow = scrollPreviewToCurrentLine;
 
             $textarea.bind('input cut paste keydown keyup keypress blur change', function () {
                 if(timer) {
@@ -1093,13 +1084,7 @@
                 }
 
                 timer = setTimeout(preview, clamp(200, this.value.length, 1000))
-                schedulePreviewSyncScroll();
             });
-
-            $textarea.on('click keyup', schedulePreviewSyncScroll);
-            if (window.AhaWikiCodeMirrorEditor) {
-                window.AhaWikiCodeMirrorEditor.on('cursorActivity', schedulePreviewSyncScroll);
-            }
 
             $('.checkboxWrap').off('change').on('change', function () {
                 const cm = getEditor();
