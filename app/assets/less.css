@@ -2064,11 +2064,6 @@ kbd:hover > kbd {
 .AhaWiki .revisionInfo a i.fas {
   margin-right: 5px;
 }
-@media print {
-  .AhaWiki .revisionInfo {
-    display: none;
-  }
-}
 @media (max-width: 767px) {
   .AhaWiki .revisionInfo {
     float: none;
@@ -2079,6 +2074,11 @@ kbd:hover > kbd {
     border: 1px solid #ddd;
     border-radius: 8px;
     background-color: #fafafa;
+  }
+}
+@media print {
+  .AhaWiki .revisionInfo {
+    display: none;
   }
 }
 .AhaWiki .revisionInfo {

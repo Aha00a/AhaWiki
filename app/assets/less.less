@@ -1073,13 +1073,8 @@ kbd {
 			}
 			color: #222;
 		}
-		@media print {
-			display: none;
-		}
-	}
 
-	@media @widthTablet {
-		.revisionInfo {
+		@media @widthTablet {
 			float: none;
 			clear: both;
 			margin: 10px 0 12px;
@@ -1089,7 +1084,12 @@ kbd {
 			border-radius: 8px;
 			background-color: #fafafa;
 		}
+
+		@media print {
+			display: none;
+		}
 	}
+
 
 	.revisionInfo {
 		font-style: italic;
