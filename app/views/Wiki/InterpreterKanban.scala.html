@@ -1,5 +1,6 @@
-@(id:String, content:String, shebangLine:String)
-<div class="Interpreter InterpreterKanban" id="@id">
+@import models.ContextWikiPage
+@(id:String, content:String, shebangLine:String)(implicit wikiContext:ContextWikiPage)
+<div class="Interpreter InterpreterKanban" id="@id" data-page-name="@wikiContext.name">
     <pre data-shebang="@shebangLine">@content</pre>
     <div class="kanban-board" data-kanban-board="@id"></div>
 </div>

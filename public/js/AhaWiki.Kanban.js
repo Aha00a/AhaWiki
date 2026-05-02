@@ -1,6 +1,45 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
 
+    var requestAddList = function (pageName, title, lineEnd) {
+        if (!pageName) {
+            return Promise.resolve(null);
+        }
+
+        return fetch('/api/csrf', {
+            credentials: 'same-origin'
+        }).then(function (csrfResponse) {
+            return csrfResponse.json().catch(function () {
+                return {};
+            });
+        }).then(function (csrfToken) {
+            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+
+            return fetch('/api/Kanban/' + encodeURIComponent(pageName), {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Csrf-Token': tokenValue,
+                    'X-CSRF-Token': tokenValue
+                },
+                body: JSON.stringify({
+                    title: title,
+                    lineEnd: lineEnd
+                })
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw new Error(payload.message || payload.error || 'Failed to add list.');
+                    }
+                    return payload;
+                });
+            });
+        });
+    };
+
     var parseKanbanText = function (text) {
         var lines = text.split(/\r?\n/);
         var columns = [];
@@ -250,6 +289,9 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         var columns = parseKanbanText(pre.textContent || '');
+        var pageName = root.getAttribute('data-page-name') || '';
+        var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
+        var lineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         pre.style.display = 'none';
         board.style.display = 'flex';
         board.style.gap = '12px';
@@ -347,6 +389,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            submitListButton.disabled = true;
+
             columns.push({
                 title: trimmed,
                 lineNumber: 1,
@@ -362,6 +406,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }));
 
             closeListEditor();
+
+            requestAddList(pageName, trimmed, lineEnd)
+                .then(function (result) {
+                    console.info('[Kanban] list added', result);
+                })
+                .catch(function (error) {
+                    console.error('[Kanban] failed to call list add api', error);
+                })
+                .finally(function () {
+                    submitListButton.disabled = false;
+                });
         };
 
         submitListButton.addEventListener('click', submitList);
