@@ -870,6 +870,9 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .commonAhaWiki .Macro {
+  margin-left: 30px;
+}
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form {
   display: flex;
   flex-wrap: wrap;
@@ -918,9 +921,14 @@ kbd:hover > kbd {
   overflow-x: auto;
 }
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  margin-left: 0;
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+    min-width: 760px;
+  }
 }
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
@@ -1576,6 +1584,9 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .wikiContent .Macro {
+  margin-left: 30px;
+}
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form {
   display: flex;
   flex-wrap: wrap;
@@ -1624,9 +1635,14 @@ kbd:hover > kbd {
   overflow-x: auto;
 }
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  margin-left: 0;
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+    min-width: 760px;
+  }
 }
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
@@ -2598,6 +2614,9 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .paperContent .page .pageContent .Macro {
+  margin-left: 30px;
+}
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form {
   display: flex;
   flex-wrap: wrap;
@@ -2646,9 +2665,14 @@ kbd:hover > kbd {
   overflow-x: auto;
 }
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+  margin-left: 0;
   width: 100%;
   border-collapse: collapse;
-  min-width: 760px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table {
+    min-width: 760px;
+  }
 }
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {

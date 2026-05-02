@@ -1,6 +1,6 @@
 @(limit: Option[Int] = None)(implicit wikiContext: models.ContextWikiPage)
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
-    <div class="macroRecentChanges">
+    <div class="macroRecentChanges Macro">
     @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Preview) {
         <div style="height : 500px ; position : relative ;">
             <div class="adjacentPagesPreviewPlaceholder">

@@ -613,6 +613,10 @@ kbd {
             clear: right;
 		}
 
+		.Macro {
+			margin-left: 30px;
+		}
+
 		.macroRecentChanges {
 			.macro-recent-changes-form {
 				display: flex;
@@ -668,9 +672,13 @@ kbd {
 				}
 
 				.macro-recent-changes-table {
+					margin-left: 0;
 					width: 100%;
 					border-collapse: collapse;
-					min-width: 760px;
+
+					@media (max-width: 767px) {
+						min-width: 760px;
+					}
 
 					th, td {
 						padding: 10px 12px;
