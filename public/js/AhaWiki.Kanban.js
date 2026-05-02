@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).then(function (csrfToken) {
             var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
 
-            return fetch('/api/Kanban/' + encodeURIComponent(pageName), {
+            return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/list', {
                 method: 'PUT',
                 credentials: 'same-origin',
                 headers: {
@@ -33,6 +33,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 }).then(function (payload) {
                     if (!response.ok) {
                         throw new Error(payload.message || payload.error || 'Failed to add list.');
+                    }
+                    return payload;
+                });
+            });
+        });
+    };
+
+    var requestAddCard = function (pageName, text, lineStart) {
+        if (!pageName) {
+            return Promise.resolve(null);
+        }
+
+        return fetch('/api/csrf', {
+            credentials: 'same-origin'
+        }).then(function (csrfResponse) {
+            return csrfResponse.json().catch(function () {
+                return {};
+            });
+        }).then(function (csrfToken) {
+            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+
+            return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/card', {
+                method: 'PUT',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Csrf-Token': tokenValue,
+                    'X-CSRF-Token': tokenValue
+                },
+                body: JSON.stringify({
+                    text: text,
+                    lineStart: lineStart
+                })
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw new Error(payload.message || payload.error || 'Failed to add card.');
                     }
                     return payload;
                 });
@@ -70,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     var createColumnElement = function (root, column, index, toDocumentLine) {
+        var interpreterBaseLine = toDocumentLine(1) - 1;
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
@@ -190,9 +230,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            var previousCard = (column.cards || []).length > 0
+                ? column.cards[column.cards.length - 1]
+                : null;
+
             var newCard = {
                 text: value,
-                lineNumber: column.lineNumber || 1
+                lineNumber: previousCard
+                    ? previousCard.lineNumber + 1
+                    : (column.lineNumber || 1) + 1
             };
 
             column.cards = column.cards || [];
@@ -218,6 +264,20 @@ document.addEventListener('DOMContentLoaded', function () {
             }));
 
             closeCardEditor();
+
+            var cardLineStart = toDocumentLine(newCard.lineNumber);
+
+            requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
+                .then(function (result) {
+                    if (result && Number.isFinite(result.lineStart)) {
+                        cardElement.setAttribute('data-line-number', String(result.lineStart));
+                        newCard.lineNumber = result.lineStart - interpreterBaseLine;
+                    }
+                    console.info('[Kanban] card added', result);
+                })
+                .catch(function (error) {
+                    console.error('[Kanban] failed to call card add api', error);
+                });
         };
 
         submitCardButton.addEventListener('click', submitCard);
