@@ -47,18 +47,23 @@
             <ul class="actionAuth">
                 @if(contextSite.requestWrapper.getUser) {
                     @contextSite.requestWrapper.getUser.map { user =>
-                        <li>
-                            <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                        <li class="authMenu">
+                            <button type="button" class="authMenuToggle" aria-expanded="false" aria-label="Open account menu"><i class="fas fa-user-cog"></i> @(user.nickname)</button>
+                            <ul class="authSubmenu">
+                                <li>
+                                    <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>Profile</a>
+                                </li>
+                                @if(isAdmin) {
+                                    <li>
+                                        <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
+                                    </li>
+                                }
+                                <li>
+                                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                                </li>
+                            </ul>
                         </li>
                     }
-                    @if(isAdmin) {
-                        <li>
-                            <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
-                        </li>
-                    }
-                    <li>
-                        <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
-                    </li>
                 } else {
                     <li>
                         <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
@@ -70,6 +75,19 @@
     <script type="text/javascript">
         $(function () {
             const mobileMediaQuery = window.matchMedia('(max-width: 767px)');
+            const $authMenu = $('nav.topNavbar .actionAuth .authMenu');
+            const $authToggle = $authMenu.find('.authMenuToggle').first();
+
+            $authToggle.on('click', function (event) {
+                event.stopPropagation();
+                const isOpen = $authMenu.toggleClass('open').hasClass('open');
+                $authToggle.attr('aria-expanded', isOpen ? 'true' : 'false');
+            });
+
+            $(document).on('click', function () {
+                $authMenu.removeClass('open');
+                $authToggle.attr('aria-expanded', 'false');
+            });
 
             $('nav.topNavbar .gnb .action').each(function () {
                 const $action = $(this);

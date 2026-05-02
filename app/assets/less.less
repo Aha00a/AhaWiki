@@ -41,15 +41,15 @@ nav.topNavbar {
 		padding: 10px 24px;
 	}
 
-	a {
+	a, button {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		height: 34px;
 		padding: 0 12px;
-		border-radius: 999px;
 		text-decoration: none;
 		color: #000;
+		background-color: transparent;
 		transition: all 160ms ease;
 
 		&:hover {
@@ -79,8 +79,49 @@ nav.topNavbar {
 		opacity: 0.85;
 	}
 
-	.actionPage a {
-		background-color: #f5f8ff;
+	.actionAuth {
+		.authMenu {
+			position: relative;
+		}
+
+		.authMenuToggle {
+			.defaultFont();
+			border: 0;
+			display: inline-flex;
+			align-items: center;
+			height: 34px;
+			padding: 0 12px;
+			cursor: pointer;
+			font-size: 14px;
+		}
+
+		.authSubmenu {
+			display: none;
+			position: absolute;
+			top: calc(100% + 8px);
+			right: 0;
+			min-width: 160px;
+			background: #fff;
+			border: 1px solid #d9e1ee;
+			border-radius: 12px;
+			padding: 6px;
+			box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+			z-index: 4;
+
+			li {
+				width: 100%;
+			}
+
+			a {
+				display: flex;
+				width: 100%;
+				box-sizing: border-box;
+			}
+		}
+
+		.authMenu.open .authSubmenu {
+			display: block;
+		}
 	}
 }
 

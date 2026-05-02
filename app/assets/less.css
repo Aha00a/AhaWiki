@@ -95,18 +95,20 @@ nav.topNavbar > .wrap {
   flex-wrap: wrap;
   padding: 10px 24px;
 }
-nav.topNavbar a {
+nav.topNavbar a,
+nav.topNavbar button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 34px;
   padding: 0 12px;
-  border-radius: 999px;
   text-decoration: none;
   color: #000;
+  background-color: transparent;
   transition: all 160ms ease;
 }
-nav.topNavbar a:hover {
+nav.topNavbar a:hover,
+nav.topNavbar button:hover {
   background-color: #eaf2ff;
 }
 nav.topNavbar .homeLink {
@@ -128,8 +130,43 @@ nav.topNavbar i.fas {
   font-size: 12px;
   opacity: 0.85;
 }
-nav.topNavbar .actionPage a {
-  background-color: #f5f8ff;
+nav.topNavbar .actionAuth .authMenu {
+  position: relative;
+}
+nav.topNavbar .actionAuth .authMenuToggle {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+nav.topNavbar .actionAuth .authSubmenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: #fff;
+  border: 1px solid #d9e1ee;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+  z-index: 4;
+}
+nav.topNavbar .actionAuth .authSubmenu li {
+  width: 100%;
+}
+nav.topNavbar .actionAuth .authSubmenu a {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+}
+nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
+  display: block;
 }
 .header > .wrap,
 .footer > .wrap {
