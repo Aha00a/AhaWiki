@@ -62,7 +62,22 @@ nav.topNavbar {
 		font-weight: 800;
 		color: #0b57d0;
 		margin-right: auto;
+		min-width: 0;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
+
+	.navDrawerToggle {
+		display: none;
+		.defaultFont();
+		border: 0;
+		cursor: pointer;
+		font-size: 14px;
+	}
+
+	.mobileFlatMenu { display: none; }
 
 	ul {
 		list-style: none;
@@ -135,15 +150,39 @@ nav.topNavbar {
 	}
 }
 
+@media (max-width: 767px) {
+	nav.topNavbar {
+		> .wrap { padding: 10px 12px; }
+		.navDrawerToggle { display: inline-flex; margin-left: auto; }
+		.groupMenu { display: none; }
+		.actionAuth { margin-left: 0; }
+		.mobileFlatMenu {
+			display: none;
+			position: absolute;
+			top: calc(100% + 8px);
+			left: 12px;
+			right: 12px;
+			flex-wrap: nowrap;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 8px;
+			background: #fff;
+			border: 1px solid #d9e1ee;
+			border-radius: 12px;
+			padding: 8px;
+			box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+			z-index: 5;
+			li, a { width: 100%; }
+		}
+		&.menuOpen .mobileFlatMenu { display: flex; }
+	}
+}
+
 @media (max-width: 1024px) {
 	nav.topNavbar {
 		.groupMenu {
 			position: relative;
-
-			.groupMenuToggle {
-				display: inline-flex;
-			}
-
+			.groupMenuToggle { display: inline-flex; }
 			.groupMenuList {
 				display: none;
 				position: absolute;
@@ -156,17 +195,9 @@ nav.topNavbar {
 				box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
 				z-index: 4;
 				min-width: 180px;
-
-				a {
-					display: flex;
-					width: 100%;
-					box-sizing: border-box;
-				}
+				a { display: flex; width: 100%; box-sizing: border-box; }
 			}
-
-			&.open .groupMenuList {
-				display: block;
-			}
+			&.open .groupMenuList { display: block; }
 		}
 	}
 }

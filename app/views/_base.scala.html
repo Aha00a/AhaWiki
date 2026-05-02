@@ -12,41 +12,41 @@
     <nav class="topNavbar">
         <div class="wrap">
             <a class="homeLink" href="/">Home</a>
-
+            <button type="button" class="navDrawerToggle" aria-expanded="false" aria-label="Open main menu"><i class="fas fa-bars"></i>Menu</button>
             <div class="groupMenu actionNavigateMenu">
                 <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open navigation menu"><i class="fas fa-compass"></i>Navigate</button>
                 <ul class="actionNavigate groupMenuList">
-                <li>
-                    <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
-                </li>
-                <li>
-                    <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
-                </li>
-                @if(wikiContextOpt.isDefined && canWrite) {
                     <li>
-                        <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
+                        <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
                     </li>
-                }
+                    <li>
+                        <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
+                    </li>
+                    @if(wikiContextOpt.isDefined && canWrite) {
+                        <li>
+                            <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
+                        </li>
+                    }
             </ul>
             </div>
             @if(wikiContextOpt.isDefined) {
                 <div class="groupMenu actionPageMenu">
-                <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open page menu"><i class="fas fa-file-alt"></i>Page</button>
-                <ul class="actionPage groupMenuList">
-                    <li>
-                        <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
-                    </li>
-                    <li>
-                        <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History@kbdHotKey("H")</a>
-                    </li>
-                    <li>
-                        <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame@kbdHotKey("B")</a>
-                    </li>
-                    @if(canWrite) {
+                    <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open page menu"><i class="fas fa-file-alt"></i>Page</button>
+                    <ul class="actionPage groupMenuList">
                         <li>
-                            <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit@kbdHotKey("E")</a>
+                            <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
                         </li>
-                    }
+                        <li>
+                            <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History@kbdHotKey("H")</a>
+                        </li>
+                        <li>
+                            <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame@kbdHotKey("B")</a>
+                        </li>
+                        @if(canWrite) {
+                            <li>
+                                <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit@kbdHotKey("E")</a>
+                            </li>
+                        }
                 </ul>
                 </div>
             }
@@ -76,11 +76,28 @@
                     </li>
                 }
             </ul>
+            <ul class="mobileFlatMenu">
+                <li><a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search</a></li>
+                <li><a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random</a></li>
+                @if(wikiContextOpt.isDefined && canWrite) {
+                    <li><a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log</a></li>
+                }
+                @if(wikiContextOpt.isDefined) {
+                    <li><a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a></li>
+                    <li><a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History</a></li>
+                    <li><a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame</a></li>
+                    @if(canWrite) {
+                        <li><a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit</a></li>
+                    }
+                }
+            </ul>
         </div>
     </nav>
     <script type="text/javascript">
         $(function () {
             const mobileMediaQuery = window.matchMedia('(max-width: 767px)');
+            const $nav = $('nav.topNavbar');
+            const $drawerToggle = $nav.find('.navDrawerToggle');
             const $authMenu = $('nav.topNavbar .actionAuth .authMenu');
             const $authToggle = $authMenu.find('.authMenuToggle').first();
 
@@ -93,6 +110,8 @@
             });
 
             $(document).on('click', function () {
+                $nav.removeClass('menuOpen');
+                $drawerToggle.attr('aria-expanded', 'false');
                 $authMenu.removeClass('open');
                 $authToggle.attr('aria-expanded', 'false');
                 $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
@@ -110,6 +129,31 @@
                     $(this).attr('aria-expanded', 'true');
                 }
             });
+
+            $drawerToggle.on('click', function (event) {
+                event.stopPropagation();
+                const willOpen = !$nav.hasClass('menuOpen');
+                $nav.toggleClass('menuOpen', willOpen);
+                $(this).attr('aria-expanded', willOpen ? 'true' : 'false');
+                if (!willOpen) {
+                    $authMenu.removeClass('open');
+                    $authToggle.attr('aria-expanded', 'false');
+                    $('nav.topNavbar .groupMenu').removeClass('open').find('.groupMenuToggle').attr('aria-expanded', 'false');
+                }
+            });
+
+            function resetTopNavDesktopState() {
+                if (!window.matchMedia('(max-width: 1024px)').matches) {
+                    $nav.removeClass('menuOpen');
+                    $drawerToggle.attr('aria-expanded', 'false');
+                }
+            }
+            const topNavMediaQuery = window.matchMedia('(max-width: 767px)');
+            if (topNavMediaQuery.addEventListener) {
+                topNavMediaQuery.addEventListener('change', resetTopNavDesktopState);
+            } else if (topNavMediaQuery.addListener) {
+                topNavMediaQuery.addListener(resetTopNavDesktopState);
+            }
 
             $('nav.topNavbar .gnb .action').each(function () {
                 const $action = $(this);

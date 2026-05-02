@@ -116,6 +116,22 @@ nav.topNavbar .homeLink {
   font-weight: 800;
   color: #0b57d0;
   margin-right: auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+nav.topNavbar .navDrawerToggle {
+  display: none;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+nav.topNavbar .mobileFlatMenu {
+  display: none;
 }
 nav.topNavbar ul {
   list-style: none;
@@ -175,6 +191,45 @@ nav.topNavbar .actionAuth .authSubmenu a {
 }
 nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   display: block;
+}
+@media (max-width: 767px) {
+  nav.topNavbar > .wrap {
+    padding: 10px 12px;
+  }
+  nav.topNavbar .navDrawerToggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+  nav.topNavbar .groupMenu {
+    display: none;
+  }
+  nav.topNavbar .actionAuth {
+    margin-left: 0;
+  }
+  nav.topNavbar .mobileFlatMenu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 12px;
+    right: 12px;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #d9e1ee;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+    z-index: 5;
+  }
+  nav.topNavbar .mobileFlatMenu li,
+  nav.topNavbar .mobileFlatMenu a {
+    width: 100%;
+  }
+  nav.topNavbar.menuOpen .mobileFlatMenu {
+    display: flex;
+  }
 }
 @media (max-width: 1024px) {
   nav.topNavbar .groupMenu {
