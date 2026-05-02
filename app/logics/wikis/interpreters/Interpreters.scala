@@ -27,6 +27,7 @@ object Interpreters extends TraitInterpreter {
     InterpreterMath,
     InterpreterMap,
     InterpreterMermaid,
+    InterpreterKanban,
 
     InterpreterSchema,
   ).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
