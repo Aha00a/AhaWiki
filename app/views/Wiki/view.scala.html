@@ -163,13 +163,25 @@
 
             $('.wikiContent .toc').each(function () {
                 var $toc = $(this);
+                var $toggleButton = $toc.find('.tocToggle').first();
                 var isMobile = window.matchMedia('(max-width: 768px)').matches;
                 $toc.toggleClass('collapsed', isMobile);
                 updateTocToggleLabel($toc, isMobile);
 
-                $toc.find('.tocToggle').first().on('click', function () {
+                var toggleToc = function () {
                     $toc.toggleClass('collapsed');
                     updateTocToggleLabel($toc, $toc.hasClass('collapsed'));
+                };
+
+                $toggleButton.on('click', function () {
+                    toggleToc();
+                });
+
+                $toc.on('click', function (event) {
+                    if ($(event.target).closest('.tocToggle, .tocBody a, button, input, textarea, select, label').length) {
+                        return;
+                    }
+                    toggleToc();
                 });
             });
 
