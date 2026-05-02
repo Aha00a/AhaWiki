@@ -77,6 +77,42 @@ body {
   font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
 }
+nav.topNavbar {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e9f0;
+}
+nav.topNavbar > .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+}
+nav.topNavbar a {
+  text-decoration: none;
+}
+nav.topNavbar .homeLink {
+  font-weight: 700;
+}
+nav.topNavbar .authArea {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+nav.topNavbar .authArea i.fas {
+  margin-right: 4px;
+}
+@media (max-width: 767px) {
+  nav.topNavbar > .wrap {
+    padding: 8px 12px;
+  }
+  nav.topNavbar .authArea {
+    font-size: 13px;
+    gap: 8px;
+  }
+}
 .header > .wrap,
 .footer > .wrap {
   padding: 10px 30px;

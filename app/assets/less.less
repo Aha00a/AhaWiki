@@ -22,6 +22,49 @@ html, body {
 	.defaultFont();
 }
 
+nav.topNavbar {
+	position: sticky;
+	top: 0;
+	background-color: #ffffff;
+	border-bottom: 1px solid #e5e9f0;
+
+	> .wrap {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 10px 30px;
+	}
+
+	a {
+		text-decoration: none;
+	}
+
+	.homeLink {
+		font-weight: 700;
+	}
+
+	.authArea {
+		display: inline-flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 14px;
+	}
+
+	.authArea i.fas {
+		margin-right: 4px;
+	}
+
+	@media @widthTablet {
+		> .wrap {
+			padding: 8px 12px;
+		}
+		.authArea {
+			font-size: 13px;
+			gap: 8px;
+		}
+	}
+}
+
 .header, .footer {
 	> .wrap {
 		padding: 10px 30px;

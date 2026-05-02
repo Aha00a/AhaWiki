@@ -2,6 +2,21 @@
 @_baseSkeleton(title, description, canonicalUrl, ogType){
     @head
 } {
+    <nav class="topNavbar">
+        <div class="wrap">
+            <a class="homeLink" href="/">Home</a>
+            <div class="authArea">
+                @if(contextSite.requestWrapper.getUser) {
+                    @contextSite.requestWrapper.getUser.map { user =>
+                        <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>@(user.nickname)</a>
+                    }
+                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                } else {
+                    <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
+                }
+            </div>
+        </div>
+    </nav>
     <div class="header" style="@Seq(
         Some(s"background-color: ${Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
         Some(s"color: ${Option(contextSite.headerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
