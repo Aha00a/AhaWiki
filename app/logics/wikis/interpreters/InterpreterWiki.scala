@@ -57,8 +57,8 @@ object InterpreterWiki extends TraitInterpreter {
           case regexHr() => hr(s)
           case regexHr2() => hr2(s)
           case regexHeading(heading, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber)
-          case regexList(indentString, style, _, content) => list(indentString, style, content);
-          case _ => others(s)
+          case regexList(indentString, style, _, content) => list(indentString, style, content, lineNumber);
+          case _ => others(s, lineNumber)
         }
       }
       result()
@@ -68,8 +68,8 @@ object InterpreterWiki extends TraitInterpreter {
     def hr(s: String): Unit
     def hr2(s: String): Unit
     def heading(heading: String, title: String, id: String, lineNumber: Int): Unit
-    def list(indentString: String, style: String, content: String): Unit
-    def others(s: String): Unit
+    def list(indentString: String, style: String, content: String, lineNumber: Int): Unit
+    def others(s: String, lineNumber: Int): Unit
     def result(): T
   }
 
@@ -81,6 +81,9 @@ object InterpreterWiki extends TraitInterpreter {
     private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(backQuoteExtracted, regexHeading)
 
     var oldIndent = 0
+    private def previewLineStartAttr(lineNumber: Int): String =
+      if (wikiContext.renderingMode == RenderingMode.Preview) s""" data-line-start="$lineNumber"""" else ""
+
     val variableHolderState: VariableHolder[State.Value] = new VariableHolder(State.Normal, (_:State.State, after:State.State) => {
       if(after != State.List) {
         while (0 < oldIndent) {
@@ -138,7 +141,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""</div><div class="$wrapperClass"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty" class="$headingClassAttribute"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
-    override def list(indentString: String, style: String, content: String): Unit = {
+    override def list(indentString: String, style: String, content: String, lineNumber: Int): Unit = {
       variableHolderState := State.List
       val indent = indentString.length
 
@@ -168,16 +171,16 @@ object InterpreterWiki extends TraitInterpreter {
       if(indent == 0) {
         arrayBuffer += inlineToHtmlString(content)
       } else {
-        arrayBuffer += "<li>" + inlineToHtmlString(content) + "</li>"
+        arrayBuffer += s"<li${previewLineStartAttr(lineNumber)}>" + inlineToHtmlString(content) + "</li>"
       }
 
       oldIndent = indent
     }
 
-    override def others(s: String): Unit = {
+    override def others(s: String, lineNumber: Int): Unit = {
       variableHolderState := State.Normal
       if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
-        arrayBuffer += s"<p>${inlineToHtmlString(s)}</p>"
+        arrayBuffer += s"<p${previewLineStartAttr(lineNumber)}>${inlineToHtmlString(s)}</p>"
       } else {
         arrayBuffer += inlineToHtmlString(s)
       }
