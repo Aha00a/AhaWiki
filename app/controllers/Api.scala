@@ -28,6 +28,7 @@ import logics.wikis.WikiPermission
 import logics.wikis.SignedReadUrlLogic
 import logics.wikis.ExtractConvertInjectMacro
 import logics.wikis.interpreters.Interpreters
+import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros.S3AttachmentUrlLogic
 import models.Adjacent
 import models.ContextSite
@@ -833,9 +834,9 @@ class Api @Inject()(
     // TODO: improve check permission
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextSite: ContextSite = ContextSite()
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("") // TODO: name
 
-      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddressMasked: String, comment: String, isMinorEdit: Boolean)
+      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
       case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
 
       implicit val provider: RequestWrapper = RequestWrapper()
@@ -871,6 +872,7 @@ class Api @Inject()(
           nickname = row.nickname,
           remoteAddressMasked = IpAddressUtil.mask(row.remoteAddress),
           comment = row.comment,
+          commentInlineHtml = InterpreterWiki.inlineToHtmlString(row.comment),
           isMinorEdit = row.isMinorEdit,
         )
       }
