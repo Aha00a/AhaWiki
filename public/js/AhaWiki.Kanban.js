@@ -6,11 +6,12 @@ document.addEventListener('DOMContentLoaded', function () {
         var columns = [];
         var currentColumn = null;
 
-        lines.forEach(function (line) {
+        lines.forEach(function (line, lineIndex) {
             var sectionMatch = line.match(/^==\s+(.+)$/);
             if (sectionMatch) {
                 currentColumn = {
                     title: sectionMatch[1].trim(),
+                    lineNumber: lineIndex + 1,
                     cards: []
                 };
                 columns.push(currentColumn);
@@ -19,7 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var cardMatch = line.match(/^\s*\*\s+(.+)$/);
             if (cardMatch && currentColumn) {
-                currentColumn.cards.push(cardMatch[1].trim());
+                currentColumn.cards.push({
+                    text: cardMatch[1].trim(),
+                    lineNumber: lineIndex + 1
+                });
             }
         });
 
@@ -33,6 +37,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        var interpreterStartLine = Number(root.getAttribute('data-interpreter-start-line') || 1);
+        var toDocumentLine = function (lineNumber) {
+            return interpreterStartLine + lineNumber - 1;
+        };
+
         var columns = parseKanbanText(pre.textContent || '');
         pre.style.display = 'none';
         board.style.display = 'flex';
@@ -44,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var columnElement = document.createElement('div');
             columnElement.className = 'kanban-column';
             columnElement.setAttribute('data-column-index', String(index));
+            columnElement.setAttribute('data-column-line-number', String(toDocumentLine(column.lineNumber)));
             columnElement.style.minWidth = '220px';
             columnElement.style.background = '#f6f7f9';
             columnElement.style.border = '1px solid #d7dce2';
@@ -64,7 +74,8 @@ document.addEventListener('DOMContentLoaded', function () {
             column.cards.forEach(function (card) {
                 var cardElement = document.createElement('div');
                 cardElement.className = 'kanban-card';
-                cardElement.textContent = card;
+                cardElement.textContent = card.text;
+                cardElement.setAttribute('data-line-number', String(toDocumentLine(card.lineNumber)));
                 cardElement.style.background = '#fff';
                 cardElement.style.border = '1px solid #cfd5dd';
                 cardElement.style.borderRadius = '6px';
@@ -79,7 +90,44 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.Sortable) {
                 Sortable.create(cardList, {
                     group: root.id || 'kanban-default',
-                    animation: 120
+                    animation: 120,
+                    onEnd: function (evt) {
+                        var movedLine = Number(evt.item.getAttribute('data-line-number'));
+                        var fromColumnIndex = Number(evt.from.parentElement.getAttribute('data-column-index'));
+                        var toColumnIndex = Number(evt.to.parentElement.getAttribute('data-column-index'));
+
+                        var previousCard = evt.item.previousElementSibling;
+                        var nextCard = evt.item.nextElementSibling;
+                        var targetLine;
+
+                        if (previousCard && previousCard.getAttribute('data-line-number')) {
+                            targetLine = Number(previousCard.getAttribute('data-line-number')) + 1;
+                        } else if (nextCard && nextCard.getAttribute('data-line-number')) {
+                            targetLine = Number(nextCard.getAttribute('data-line-number'));
+                        } else {
+                            targetLine = Number(evt.to.parentElement.getAttribute('data-column-line-number')) + 1;
+                        }
+
+                        console.info('[Kanban] card moved', {
+                            movedLine: movedLine,
+                            targetLine: targetLine,
+                            fromColumnIndex: fromColumnIndex,
+                            toColumnIndex: toColumnIndex,
+                            oldIndex: evt.oldIndex,
+                            newIndex: evt.newIndex
+                        });
+
+                        root.dispatchEvent(new CustomEvent('kanban:cardMoved', {
+                            detail: {
+                                movedLine: movedLine,
+                                targetLine: targetLine,
+                                fromColumnIndex: fromColumnIndex,
+                                toColumnIndex: toColumnIndex,
+                                oldIndex: evt.oldIndex,
+                                newIndex: evt.newIndex
+                            }
+                        }));
+                    }
                 });
             }
         });
