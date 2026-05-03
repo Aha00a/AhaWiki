@@ -77,7 +77,23 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
       val displayText = countryFlagEmoji.map(flag => s"$flag ${aliasWithDefault.escapeHtml()}").getOrElse(aliasWithDefault.escapeHtml())
-      s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${displayText}</a>"""
+      val linkHtml = s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${displayText}</a>"""
+
+      val isUserPage = !external && uriNormalized.startsWith("User:")
+      if (isUserPage) {
+        val nickname = uriNormalized.stripPrefix("User:").trim
+        val profileImageUrl = wikiContext.database.withConnection { implicit connection =>
+          models.tables.User.selectByNickname(nickname).flatMap(_.profileImageUrl)
+        }
+
+        profileImageUrl
+          .map { imageUrl =>
+            s"""<span class="userInlineProfile"><img src="${imageUrl.escapeHtmlAttribute()}" alt="${nickname.escapeHtmlAttribute()}" class="userInlineProfileImage"/>$linkHtml</span>"""
+          }
+          .getOrElse(linkHtml)
+      } else {
+        linkHtml
+      }
     }
   }
 
