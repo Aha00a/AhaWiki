@@ -119,7 +119,7 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
-                lines.insert(insertAt, s"* ${payload.text}")
+                lines.insert(insertAt, s" * ${payload.text}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
