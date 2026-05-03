@@ -1329,12 +1329,19 @@ kbd {
 				> div.right {
 					min-width: 200px;
 					min-height: 200px;
+					@media @widthTablet {
+						min-width: 0;
+						width: 100%;
+					}
 
 					> div.toolbar,
 					> div.editorAdditional,
 					> div.previewAdditional  {
 						display: flex;
 						flex-direction: row;
+						flex-wrap: wrap;
+						gap: 4px 10px;
+
 						>div.toolbarLeft,
 						>div.toolbarRight {
 							> a, > label {
@@ -1355,12 +1362,21 @@ kbd {
 				}
 				> div.left {
 					width: 50%;
+					@media @widthTablet {
+						width: 100%;
+					}
+
 					> div.editorBody {
 						> textarea {
 							width: 100%;
 							box-sizing: border-box;
 							height: 500px;
 							resize: vertical;
+
+							@media @widthTablet {
+								height: 55vh;
+								min-height: 320px;
+							}
 						}
 					}
 				}

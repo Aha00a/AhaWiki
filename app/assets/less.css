@@ -2983,6 +2983,13 @@ kbd:hover > kbd {
   min-width: 200px;
   min-height: 200px;
 }
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left,
+  .AhaWiki .edit > div.ui > form > div.right {
+    min-width: 0;
+    width: 100%;
+  }
+}
 .AhaWiki .edit > div.ui > form > div.left > div.toolbar,
 .AhaWiki .edit > div.ui > form > div.right > div.toolbar,
 .AhaWiki .edit > div.ui > form > div.left > div.editorAdditional,
@@ -2991,6 +2998,8 @@ kbd:hover > kbd {
 .AhaWiki .edit > div.ui > form > div.right > div.previewAdditional {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 10px;
 }
 .AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > a,
 .AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > a,
@@ -3041,11 +3050,22 @@ kbd:hover > kbd {
 .AhaWiki .edit > div.ui > form > div.left {
   width: 50%;
 }
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left {
+    width: 100%;
+  }
+}
 .AhaWiki .edit > div.ui > form > div.left > div.editorBody > textarea {
   width: 100%;
   box-sizing: border-box;
   height: 500px;
   resize: vertical;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left > div.editorBody > textarea {
+    height: 55vh;
+    min-height: 320px;
+  }
 }
 .AhaWiki .edit > div.ui > form > div.divider {
   width: 5px;
