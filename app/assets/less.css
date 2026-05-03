@@ -3642,13 +3642,6 @@ kbd:hover > kbd {
     transform: rotate(360deg);
   }
 }
-.Test.gradient table {
-  border-collapse: collapse;
-}
-.Test.gradient table td {
-  width: 5px;
-  height: 30px;
-}
 .AhaWiki .wikiContent div.toc button.tocToggle {
   float: left;
   display: inline-block;
@@ -3696,5 +3689,12 @@ kbd:hover > kbd {
   margin-top: 2px;
   color: #6b7280;
   font-size: 12px;
+}
+.Test.gradient table {
+  border-collapse: collapse;
+}
+.Test.gradient table td {
+  width: 5px;
+  height: 30px;
 }
 /*# sourceMappingURL=less.css.map */
