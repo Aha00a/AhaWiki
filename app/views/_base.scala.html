@@ -54,7 +54,9 @@
                 @if(contextSite.requestWrapper.getUser) {
                     @contextSite.requestWrapper.getUser.map { user =>
                         <li class="authMenu">
-                            <button type="button" class="authMenuToggle" aria-expanded="false" aria-label="Open account menu"><i class="fas fa-user-cog"></i> @(user.nickname)</button>
+                            <button type="button" class="authMenuToggle" aria-expanded="false" aria-label="Open account menu">
+                                <i class="fas fa-user-cog"></i> @(user.nickname)
+                            </button>
                             <ul class="authSubmenu">
                                 <li>
                                     <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>Profile</a>

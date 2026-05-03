@@ -839,8 +839,8 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
 
-      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
-      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
+      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
+      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
 
       implicit val provider: RequestWrapper = RequestWrapper()
       val wikiPermission = WikiPermission()
@@ -852,6 +852,7 @@ class Api @Inject()(
           P.revision,
           DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
           U.nickname,
+          U.profileImageUrl,
           P.remoteAddress,
           P.comment,
           P.isMinorEdit,
@@ -862,9 +863,9 @@ class Api @Inject()(
           AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
         ORDER BY P.dateTime DESC
         LIMIT $boundedLimit
-      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
-        case name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
-          ChangeSourceRow(name, revision, dateTime, nickname, remoteAddress, comment, isMinorEdit, content)
+      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
+        case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
+          ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, content)
       }.*)
 
       val readableRows = rows.filter(row => wikiPermission.isReadable(PageContent(row.content))).map { row =>
@@ -873,6 +874,7 @@ class Api @Inject()(
           revision = row.revision,
           dateTime = row.dateTime,
           nickname = row.nickname,
+          profileImageUrl = row.profileImageUrl,
           remoteAddressMasked = IpAddressUtil.mask(row.remoteAddress),
           comment = row.comment,
           commentInlineHtml = InterpreterWiki.inlineToHtmlString(row.comment),

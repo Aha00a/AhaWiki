@@ -221,6 +221,18 @@ nav.topNavbar .actionAuth .authSubmenu a {
 nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   display: block;
 }
+.userInlineProfile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.userInlineProfileImage {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  object-fit: cover;
+  vertical-align: middle;
+}
 @media (max-width: 767px) {
   nav.topNavbar > .wrap {
     padding: 10px 12px;

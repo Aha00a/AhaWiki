@@ -56,7 +56,10 @@
                         var minorPrefix = row.isMinorEdit ? "[minor] " : "";
                         var commentInlineHtml = minorPrefix + (row.commentInlineHtml || esc(row.comment || ""));
                         var authorHtml = row.nickname
-                            ? "<a href='/w/" + encodeURIComponent("User:" + row.nickname) + "'>" + esc(row.nickname) + "</a>"
+                            ? "<span class='userInlineProfile'>" +
+                                (row.profileImageUrl ? "<img src='" + esc(row.profileImageUrl) + "' alt='" + esc(row.nickname) + "' class='userInlineProfileImage'/>" : "") +
+                                "<a href='/w/" + encodeURIComponent("User:" + row.nickname) + "'>" + esc(row.nickname) + "</a>" +
+                              "</span>"
                             : esc(row.remoteAddressMasked);
                         return "<tr>" +
                                 "<td><a href='/w/" + encodeURIComponent(row.name) + "'>" + esc(row.name) + "</a></td>" +

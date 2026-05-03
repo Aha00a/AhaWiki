@@ -32,6 +32,17 @@ object User {
       .map(User.tupled)
   }
 
+  def selectByNickname(nickname: String)(implicit connection: Connection): Option[User] = {
+    SQL"""
+      SELECT
+          U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
+          FROM User U
+          WHERE U.nickname = $nickname
+     """
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
+      .map(User.tupled)
+  }
+
   def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
     val base = email.takeWhile(_ != '@').take(3).toLowerCase
 
