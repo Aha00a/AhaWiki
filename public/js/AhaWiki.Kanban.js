@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return columns;
     };
 
-    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert) {
+    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
@@ -229,15 +229,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            var previousCard = (column.cards || []).length > 0
-                ? column.cards[column.cards.length - 1]
-                : null;
-
+            var cardLineStart = getCardInsertLineStart(index);
             var newCard = {
                 text: value,
-                lineNumber: previousCard
-                    ? previousCard.lineNumber + 1
-                    : (column.lineNumber || 1) + 1
+                lineNumber: cardLineStart
             };
 
             column.cards = column.cards || [];
@@ -264,7 +259,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeCardEditor();
 
-            var cardLineStart = newCard.lineNumber;
             shiftLineNumbersAfterInsert(cardLineStart);
 
             requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
@@ -343,10 +337,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        var interpreterStartLine = Number(root.getAttribute('data-interpreter-start-line') || 1);
-        var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var pageName = root.getAttribute('data-page-name') || '';
         var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
+        var metaLineStart = Number(metaWrapper ? metaWrapper.getAttribute('data-line-start') : 1) || 1;
+        var hasShebang = Boolean(pre.getAttribute('data-shebang'));
+        var interpreterStartLine = Math.max(1, metaLineStart + (hasShebang ? 1 : 0));
+        var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         var getNextListInsertLineStart = function () {
             var currentLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
@@ -437,8 +433,33 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, column, index, shiftLineNumbersAfterInsert), addListWrapper);
+                board.insertBefore(createColumnElement(root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart), addListWrapper);
             });
+        };
+
+        var getCardInsertLineStart = function (columnIndex) {
+            var column = columns[columnIndex] || {};
+            var cards = column.cards || [];
+            var lastCard = cards.length > 0 ? cards[cards.length - 1] : null;
+
+            if (lastCard && Number.isFinite(lastCard.lineNumber) && lastCard.lineNumber > 0) {
+                return lastCard.lineNumber + 1;
+            }
+
+            for (var i = columnIndex + 1; i < columns.length; i += 1) {
+                var nextColumnLine = Number(columns[i].lineNumber);
+                if (Number.isFinite(nextColumnLine) && nextColumnLine > 0) {
+                    return nextColumnLine;
+                }
+            }
+
+            var fallbackLine = getNextListInsertLineStart();
+            if (Number.isFinite(fallbackLine) && fallbackLine > 0) {
+                return fallbackLine;
+            }
+
+            var columnLine = Number(column.lineNumber);
+            return Number.isFinite(columnLine) && columnLine > 0 ? columnLine + 1 : 1;
         };
 
         var closeListEditor = function () {
