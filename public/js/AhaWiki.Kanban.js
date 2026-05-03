@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return columns;
     };
 
-    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart) {
+    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
@@ -228,50 +228,44 @@ document.addEventListener('DOMContentLoaded', function () {
                 cardTextarea.focus();
                 return;
             }
-
-            var cardLineStart = getCardInsertLineStart(index);
-            var newCard = {
-                text: value,
-                lineNumber: cardLineStart
-            };
-
-            column.cards = column.cards || [];
-            column.cards.push(newCard);
-
-            var cardElement = document.createElement('div');
-            cardElement.className = 'kanban-card';
-            cardElement.textContent = newCard.text;
-            cardElement.setAttribute('data-line-number', String(newCard.lineNumber));
-            cardElement.style.background = '#fff';
-            cardElement.style.border = '1px solid #cfd5dd';
-            cardElement.style.borderRadius = '6px';
-            cardElement.style.padding = '8px';
-            cardElement.style.marginBottom = '8px';
-            cardList.appendChild(cardElement);
-
-            root.dispatchEvent(new CustomEvent('kanban:cardAdded', {
-                detail: {
-                    text: value,
-                    columnIndex: index,
-                    cardIndex: column.cards.length - 1
-                }
-            }));
-
+            submitCardButton.disabled = true;
             closeCardEditor();
 
-            shiftLineNumbersAfterInsert(cardLineStart);
+            enqueueMutation(function () {
+                var cardLineStart = getCardInsertLineStart(index);
+                var newCard = {
+                    text: value,
+                    lineNumber: cardLineStart
+                };
 
-            requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
-                .then(function (result) {
-                    if (result && Number.isFinite(result.lineStart)) {
-                        cardElement.setAttribute('data-line-number', String(result.lineStart));
-                        newCard.lineNumber = result.lineStart;
+                column.cards = column.cards || [];
+                column.cards.push(newCard);
+                shiftLineNumbersAfterInsert();
+                rerenderColumns();
+
+                root.dispatchEvent(new CustomEvent('kanban:cardAdded', {
+                    detail: {
+                        text: value,
+                        columnIndex: index,
+                        cardIndex: column.cards.length - 1
                     }
-                    console.info('[Kanban] card added', result);
-                })
-                .catch(function (error) {
-                    console.error('[Kanban] failed to call card add api', error);
-                });
+                }));
+
+                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
+                    .then(function (result) {
+                        if (result && Number.isFinite(result.lineStart)) {
+                            shiftLineNumbersAfterInsert();
+                        }
+                        rerenderColumns();
+                        console.info('[Kanban] card added', result);
+                    })
+                    .catch(function (error) {
+                        console.error('[Kanban] failed to call card add api', error);
+                    })
+                    .finally(function () {
+                        submitCardButton.disabled = false;
+                    });
+            });
         };
 
         submitCardButton.addEventListener('click', submitCard);
@@ -344,6 +338,17 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterStartLine = Math.max(1, metaLineStart + (hasShebang ? 1 : 0));
         var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
+        var mutationQueue = Promise.resolve();
+        var enqueueMutation = function (executor) {
+            mutationQueue = mutationQueue
+                .then(function () {
+                    return executor();
+                })
+                .catch(function (error) {
+                    console.error('[Kanban] queued mutation failed', error);
+                });
+            return mutationQueue;
+        };
         var getNextListInsertLineStart = function () {
             var currentLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
             return Math.max(1, currentLineEnd - 1);
@@ -413,16 +418,15 @@ document.addEventListener('DOMContentLoaded', function () {
         addListWrapper.appendChild(addListEditor);
 
 
-        var shiftLineNumbersAfterInsert = function (insertedDocumentLine) {
+        var normalizeLineNumbers = function () {
+            var cursor = interpreterStartLine;
             columns.forEach(function (targetColumn) {
-                if (Number(targetColumn.lineNumber) && targetColumn.lineNumber >= insertedDocumentLine) {
-                    targetColumn.lineNumber += 1;
-                }
+                targetColumn.lineNumber = cursor;
+                cursor += 1;
 
                 (targetColumn.cards || []).forEach(function (targetCard) {
-                    if (Number(targetCard.lineNumber) && targetCard.lineNumber >= insertedDocumentLine) {
-                        targetCard.lineNumber += 1;
-                    }
+                    targetCard.lineNumber = cursor;
+                    cursor += 1;
                 });
             });
         };
@@ -433,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart), addListWrapper);
+                board.insertBefore(createColumnElement(root, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns), addListWrapper);
             });
         };
 
@@ -486,46 +490,46 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             submitListButton.disabled = true;
-
-            var requestLineStart = getNextListInsertLineStart();
-            var localLineNumber = Math.max(1, requestLineStart);
-            var newColumn = {
-                title: trimmed,
-                lineNumber: localLineNumber,
-                cards: []
-            };
-            columns.push(newColumn);
-            renderColumns();
-
-            root.dispatchEvent(new CustomEvent('kanban:listAdded', {
-                detail: {
-                    title: trimmed,
-                    listIndex: columns.length - 1
-                }
-            }));
-
             closeListEditor();
 
-            shiftLineNumbersAfterInsert(requestLineStart);
+            enqueueMutation(function () {
+                var requestLineStart = getNextListInsertLineStart();
+                var localLineNumber = Math.max(1, requestLineStart);
+                var newColumn = {
+                    title: trimmed,
+                    lineNumber: localLineNumber,
+                    cards: []
+                };
+                columns.push(newColumn);
+                normalizeLineNumbers();
+                renderColumns();
 
-            requestAddList(pageName, trimmed, requestLineStart)
-                .then(function (result) {
-                    if (result && Number.isFinite(result.lineStart)) {
-                        newColumn.lineNumber = Math.max(1, result.lineStart);
+                root.dispatchEvent(new CustomEvent('kanban:listAdded', {
+                    detail: {
+                        title: trimmed,
+                        listIndex: columns.length - 1
+                    }
+                }));
+
+                return requestAddList(pageName, trimmed, requestLineStart)
+                    .then(function (result) {
+                        if (result && Number.isFinite(result.lineStart)) {
+                            normalizeLineNumbers();
+                        }
                         renderColumns();
-                    }
-                    if (metaWrapper) {
-                        var currentLineEnd = Number(metaWrapper.getAttribute('data-line-end') || interpreterLineEnd) || interpreterLineEnd;
-                        metaWrapper.setAttribute('data-line-end', String(currentLineEnd + 1));
-                    }
-                    console.info('[Kanban] list added', result);
-                })
-                .catch(function (error) {
-                    console.error('[Kanban] failed to call list add api', error);
-                })
-                .finally(function () {
-                    submitListButton.disabled = false;
-                });
+                        if (metaWrapper) {
+                            var currentLineEnd = Number(metaWrapper.getAttribute('data-line-end') || interpreterLineEnd) || interpreterLineEnd;
+                            metaWrapper.setAttribute('data-line-end', String(currentLineEnd + 1));
+                        }
+                        console.info('[Kanban] list added', result);
+                    })
+                    .catch(function (error) {
+                        console.error('[Kanban] failed to call list add api', error);
+                    })
+                    .finally(function () {
+                        submitListButton.disabled = false;
+                    });
+            });
         };
 
         submitListButton.addEventListener('click', submitList);
