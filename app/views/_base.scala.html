@@ -115,6 +115,7 @@
         </div>
     </nav>
     <script type="text/javascript">
+        window.AhaWikiCurrentUserNickname = "@currentUserOpt.map(_.nickname).getOrElse("")";
         $(function () {
             const $nav = $('nav.topNavbar');
             const $drawerToggle = $nav.find('.navDrawerToggle');

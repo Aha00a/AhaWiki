@@ -133,10 +133,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     };
+    var COMMENT_PREFIX = '  * ';
     var parseKanbanText = function (text, interpreterStartLine) {
         var lines = text.split(/\r?\n/);
         var columns = [];
         var currentColumn = null;
+        var currentCard = null;
 
         lines.forEach(function (line, lineIndex) {
             var sectionMatch = line.match(/^==\s+(.+)$/);
@@ -147,21 +149,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     cards: []
                 };
                 columns.push(currentColumn);
+                currentCard = null;
                 return;
             }
 
-            var cardMatch = line.match(/^\s*\*\s+(.+)$/);
+            var commentMatch = line.match(/^\s{2,}\*\s+(.+)$/);
+            if (commentMatch && currentCard) {
+                currentCard.comments = currentCard.comments || [];
+                currentCard.comments.push(commentMatch[1].trim());
+                return;
+            }
+
+            var cardMatch = line.match(/^\s\*\s+(.+)$/);
             if (cardMatch && currentColumn) {
-                currentColumn.cards.push({
+                currentCard = {
                     text: cardMatch[1].trim(),
-                    lineNumber: interpreterStartLine + lineIndex
-                });
+                    lineNumber: interpreterStartLine + lineIndex,
+                    comments: []
+                };
+                currentColumn.cards.push(currentCard);
             }
         });
 
         return columns;
     };
 
+    var openCardDetail = function () {};
     var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
@@ -194,6 +207,10 @@ document.addEventListener('DOMContentLoaded', function () {
             cardElement.style.borderRadius = '6px';
             cardElement.style.padding = '8px';
             cardElement.style.marginBottom = '8px';
+            cardElement.style.cursor = 'pointer';
+            cardElement.addEventListener('click', function () {
+                openCardDetail(card);
+            });
             cardList.appendChild(cardElement);
         });
 
@@ -289,7 +306,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var cardLineStart = getCardInsertLineStart(index);
                 var newCard = {
                     text: value,
-                    lineNumber: cardLineStart
+                    lineNumber: cardLineStart,
+                    comments: []
                 };
 
                 column.cards = column.cards || [];
@@ -408,6 +426,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 var lines = ['== ' + (column.title || '')];
                 (column.cards || []).forEach(function (card) {
                     lines.push(' * ' + (card.text || ''));
+                    (card.comments || []).forEach(function (comment) {
+                        lines.push(COMMENT_PREFIX + comment);
+                    });
                 });
                 return lines.join('\n');
             }).join('\n');
@@ -620,6 +641,85 @@ document.addEventListener('DOMContentLoaded', function () {
 
         board.appendChild(addListWrapper);
         renderColumns();
+
+        openCardDetail = function (card) {
+            if (!card) {
+                return;
+            }
+            var existing = document.querySelector('.kanban-card-detail-overlay');
+            if (existing && existing.parentNode) {
+                existing.parentNode.removeChild(existing);
+            }
+            var overlay = document.createElement('div');
+            overlay.className = 'kanban-card-detail-overlay';
+            overlay.style.position = 'fixed';
+            overlay.style.inset = '0';
+            overlay.style.background = 'rgba(9, 30, 66, 0.5)';
+            overlay.style.zIndex = '1000';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+            overlay.style.justifyContent = 'center';
+            var modal = document.createElement('div');
+            modal.style.width = 'min(640px, calc(100vw - 24px))';
+            modal.style.maxHeight = 'calc(100vh - 24px)';
+            modal.style.overflowY = 'auto';
+            modal.style.background = '#fff';
+            modal.style.borderRadius = '10px';
+            modal.style.padding = '16px';
+            var title = document.createElement('h3');
+            title.textContent = card.text || '';
+            var textarea = document.createElement('textarea');
+            textarea.placeholder = 'Write a comment...';
+            textarea.rows = 3;
+            textarea.style.width = '100%';
+            var submit = document.createElement('button');
+            submit.type = 'button';
+            submit.textContent = 'Add Comment';
+            submit.style.marginTop = '8px';
+            var comments = document.createElement('div');
+            comments.style.marginTop = '12px';
+            var renderComments = function () {
+                comments.innerHTML = '';
+                (card.comments || []).slice().reverse().forEach(function (line) {
+                    var row = document.createElement('div');
+                    row.textContent = line;
+                    row.style.padding = '8px 0';
+                    row.style.borderBottom = '1px solid #eceff3';
+                    comments.appendChild(row);
+                });
+            };
+            submit.addEventListener('click', function () {
+                var body = (textarea.value || '').trim();
+                if (!body) {
+                    return;
+                }
+                var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
+                var author = window.AhaWikiCurrentUserNickname || 'Anonymous';
+                var commentLine = '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10) + ': ' + body;
+                card.comments = card.comments || [];
+                card.comments.push(commentLine);
+                textarea.value = '';
+                renderComments();
+                enqueueMutation(function () {
+                    return persistColumns().catch(function (error) {
+                        console.error('[Kanban] failed to save comments', error);
+                    });
+                });
+            });
+            overlay.addEventListener('click', function () {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            });
+            modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
+            modal.appendChild(title);
+            modal.appendChild(textarea);
+            modal.appendChild(submit);
+            modal.appendChild(comments);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            renderComments();
+        };
 
         if (window.Sortable) {
             Sortable.create(board, {
