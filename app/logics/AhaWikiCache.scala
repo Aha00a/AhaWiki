@@ -75,6 +75,17 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     override def key()(implicit contextSite: ContextSite): String = s"${getClass.getSimpleName}:${contextSite.site}"
   }
 
+  def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
+    implicit val ds = (database, site)
+    SiteDomain.invalidate()
+    SiteDomain.Map.invalidate()
+    Site.invalidate()
+    Site.Map.invalidate()
+    Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+    Header.invalidate()
+    Footer.invalidate()
+    Config.invalidate()
+  }
 
   object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
     override def key()(implicit i: Database): String = keyDefault

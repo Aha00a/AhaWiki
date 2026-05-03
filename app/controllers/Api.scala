@@ -1220,16 +1220,7 @@ class Api @Inject()(
     SiteLogic.get(siteSeq) foreach { implicit site =>
       implicit val tupleDatabaseSite: (Database, Site) = (database, site)
       implicit val contextSite: ContextSite = ContextSite()
-      Seq(
-        () => { ahaWikiCache.SiteDomain.invalidate() },
-        () => { ahaWikiCache.SiteDomain.Map.invalidate() },
-        () => { ahaWikiCache.Site.invalidate() },
-        () => { ahaWikiCache.Site.Map.invalidate() },
-        () => { ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate() },
-        () => { ahaWikiCache.Header.invalidate() },
-      ).zipWithIndex foreach { case (f, i) =>
-        actorSystem.scheduler.scheduleOnce((2 * i) second) {f()}
-      }
+      ahaWikiCache.invalidateSiteCaches()
     }
     Ok("ok")
   }
