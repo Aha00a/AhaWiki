@@ -89,7 +89,7 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
 
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s match {
     case regex(name, argument) =>
-      ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
+      val result = ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
         name match {
           case "Set" => MacroSet(argument)
           case "Get" => MacroGet(argument)
@@ -110,8 +110,12 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
             }
         }
       }
+      if(name == "Set") result else wrapMacro(name, result)
     case _ => "error"
   }
+
+  private def wrapMacro(name: String, body: String): String =
+    s"""<span class="Macro $name">$body</span>"""
 
   def extractLink()(implicit wikiContext: ContextWikiPage): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {
@@ -133,4 +137,3 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   }
 
 }
-

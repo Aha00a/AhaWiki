@@ -1073,9 +1073,6 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
-.AhaWiki .commonAhaWiki .Macro {
-  margin-left: 30px;
-}
 .AhaWiki .commonAhaWiki .macroRecentChanges .macro-recent-changes-form {
   display: flex;
   flex-wrap: wrap;
@@ -1775,9 +1772,6 @@ kbd:hover > kbd {
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
-}
-.AhaWiki .wikiContent .Macro {
-  margin-left: 30px;
 }
 .AhaWiki .wikiContent .macroRecentChanges .macro-recent-changes-form {
   display: flex;
@@ -2657,9 +2651,6 @@ kbd:hover > kbd {
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
-}
-.AhaWiki .paperContent .page .pageContent .Macro {
-  margin-left: 30px;
 }
 .AhaWiki .paperContent .page .pageContent .macroRecentChanges .macro-recent-changes-form {
   display: flex;

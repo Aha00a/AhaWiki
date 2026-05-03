@@ -2,7 +2,9 @@
 You can use raw html and wiki, freely.
 ]]]
 
-= [. [[SiteName]]]
+[[Html(<h1><a href='/'>)]]
+[[SiteName]]
+[[Html(</a></h1>)]]
 
 [[Navigation]]
 
