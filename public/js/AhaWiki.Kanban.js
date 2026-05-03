@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return columns;
     };
 
-    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns) {
+    var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     enqueueMutation(function () {
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
-                        normalizeLineNumbers();
+                        shiftLineNumbersAfterInsert();
                         return persistColumns().catch(function (error) {
                             console.error('[Kanban] failed to save card order', error);
                         });
@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns), addListWrapper);
+                board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns), addListWrapper);
             });
         };
 
