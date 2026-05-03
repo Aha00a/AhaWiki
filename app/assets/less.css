@@ -607,6 +607,12 @@ kbd:hover > kbd {
   border: 1px solid #aaaa00;
   padding: 10px;
 }
+.AhaWiki .flash .warning {
+  color: #442200;
+  background-color: #ffeedd;
+  border: 1px solid #aa5500;
+  padding: 10px;
+}
 .AhaWiki .commonAhaWiki {
   padding: 0 0 25px 0;
   word-break: break-all;
