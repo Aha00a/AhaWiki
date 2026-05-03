@@ -974,10 +974,16 @@
                 editor.on('blur', function () {
                     setTimeout(hideMacroAutocomplete, 120);
                 });
+                editor.on('cursorActivity', function () {
+                    scrollPreviewToCurrentLine();
+                });
             }
 
             $textarea.on('input click keyup', function () {
                 updateMacroAutocompleteForTextarea();
+            });
+            $textarea.on('click keyup', function () {
+                scrollPreviewToCurrentLine();
             });
             $textarea.on('keydown', function (e) {
                 if (!$macroAutocomplete.is(':visible'))
