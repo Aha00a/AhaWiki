@@ -146,6 +146,22 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
   }
 
+  object UserProfileImageUrl extends CacheEntity[Option[String], (Database, Site, String)] {
+    override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 10 minutes
+
+    override def key()(implicit t3: (Database, Site, String)): String = s"${getClass.getName}:${t3._2}:${t3._3}"
+
+    override def orElse()(implicit t3: (Database, Site, String)): Option[String] = t3._1.withConnection { implicit connection =>
+      val (_, _, nickname) = t3
+      models.tables.User.selectByNickname(nickname).flatMap(_.profileImageUrl)
+    }
+
+    def invalidate(nickname: String)(implicit database: Database, site: Site): Unit = {
+      implicit val cacheKeyInput: (Database, Site, String) = (database, site, nickname)
+      super.invalidate()
+    }
+  }
+
   object Page {
     object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
