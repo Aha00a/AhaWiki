@@ -79,6 +79,33 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
+
+    var shiftMetaLineRangeAfterInsert = function (anchorWrapper, insertedLineNumber, delta) {
+        if (!anchorWrapper || !Number.isFinite(insertedLineNumber) || !Number.isFinite(delta) || delta === 0) {
+            return;
+        }
+
+        var wrappers = Array.prototype.slice.call(document.querySelectorAll('.InterpreterRenderMetaWrapper'));
+        wrappers.forEach(function (wrapper) {
+            var rawStart = Number(wrapper.getAttribute('data-line-start'));
+            var rawEnd = Number(wrapper.getAttribute('data-line-end'));
+            if (!Number.isFinite(rawStart) || !Number.isFinite(rawEnd)) {
+                return;
+            }
+
+            if (wrapper === anchorWrapper) {
+                wrapper.setAttribute('data-line-end', String(rawEnd + delta));
+                return;
+            }
+
+            if (rawStart >= insertedLineNumber) {
+                wrapper.setAttribute('data-line-start', String(rawStart + delta));
+                wrapper.setAttribute('data-line-end', String(rawEnd + delta));
+            } else if (rawEnd > insertedLineNumber) {
+                wrapper.setAttribute('data-line-end', String(rawEnd + delta));
+            }
+        });
+    };
     var parseKanbanText = function (text, interpreterStartLine) {
         var lines = text.split(/\r?\n/);
         var columns = [];
@@ -255,6 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(function (result) {
                         if (result && Number.isFinite(result.lineStart)) {
                             shiftLineNumbersAfterInsert();
+                            shiftMetaLineRangeAfterInsert(root.closest('.InterpreterRenderMetaWrapper'), result.lineStart, 1);
                         }
                         rerenderColumns();
                         console.info('[Kanban] card added', result);
@@ -515,12 +543,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(function (result) {
                         if (result && Number.isFinite(result.lineStart)) {
                             normalizeLineNumbers();
+                            shiftMetaLineRangeAfterInsert(metaWrapper, result.lineStart, 1);
                         }
                         renderColumns();
-                        if (metaWrapper) {
-                            var currentLineEnd = Number(metaWrapper.getAttribute('data-line-end') || interpreterLineEnd) || interpreterLineEnd;
-                            metaWrapper.setAttribute('data-line-end', String(currentLineEnd + 1));
-                        }
                         console.info('[Kanban] list added', result);
                     })
                     .catch(function (error) {
