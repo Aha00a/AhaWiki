@@ -5,6 +5,7 @@ import {
   MantineProvider,
   Anchor,
   AppShell,
+  Avatar,
   Badge as Badge4,
   Button as Button3,
   Card as Card3,
@@ -321,6 +322,10 @@ function pageTitleByKey(page) {
     return "AccessLog";
   }
   return "Dashboard";
+}
+function UserProfileCell({ user }) {
+  const fallbackText = user?.nickname?.[0] || user?.email?.[0] || "?";
+  return /* @__PURE__ */ React5.createElement(Group4, { gap: 8, wrap: "nowrap" }, /* @__PURE__ */ React5.createElement(Avatar, { src: user?.profileImageUrl || null, radius: "xl", size: "sm" }, fallbackText), /* @__PURE__ */ React5.createElement(Stack3, { gap: 0 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, user?.nickname || "-"), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, user?.email || "-")));
 }
 async function fetchJson2(url) {
   logInfo("fetch:start", url);
@@ -1015,8 +1020,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   }
   if (page === "users") {
     return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Site Users"), /* @__PURE__ */ React5.createElement(Badge4, { color: "teal", variant: "light" }, users.length, " users")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uD638\uC2A4\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Divider3, { mb: "md" }), makeTable(
-      ["User", "Email", "Nickname", "Created"],
-      users.map((user) => [user.user, user.email, user.nickname, user.created])
+      ["User", "Profile", "Created"],
+      users.map((user) => [user.user, /* @__PURE__ */ React5.createElement(UserProfileCell, { user }), user.created])
     ));
   }
   if (page === "all-users") {
@@ -1036,6 +1041,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         records: allUsers,
         columns: [
           { accessor: "seq", title: "Seq", sortable: true },
+          { accessor: "profile", title: "Profile", render: (row) => /* @__PURE__ */ React5.createElement(UserProfileCell, { user: row }) },
           { accessor: "email", title: "Email", sortable: true },
           { accessor: "nickname", title: "Nickname", sortable: true },
           { accessor: "created", title: "Created", sortable: true },
@@ -1066,7 +1072,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", allUserPage, " / ", allUserTotalPages));
   }
   if (page === "user-views") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "User View Histories"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React5.createElement(Button3, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, "\uC0AC\uC6A9\uC790: ", /* @__PURE__ */ React5.createElement("b", null, selectedAllUser.nickname), " (", selectedAllUser.email, ")") : /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React5.createElement(Group4, null, /* @__PURE__ */ React5.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "User View Histories"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React5.createElement(Button3, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React5.createElement(Group4, { gap: 8 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, "\uC0AC\uC6A9\uC790:"), /* @__PURE__ */ React5.createElement(UserProfileCell, { user: selectedAllUser })) : /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React5.createElement(Group4, null, /* @__PURE__ */ React5.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
       ["When", "Site", "Page", "History Seq"],
       userViewHistories.map((history) => {
         const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";

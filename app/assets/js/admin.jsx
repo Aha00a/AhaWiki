@@ -4,6 +4,7 @@ import {
     MantineProvider,
     Anchor,
     AppShell,
+    Avatar,
     Badge,
     Button,
     Card,
@@ -146,6 +147,19 @@ function pageTitleByKey(page) {
         return "AccessLog";
     }
     return "Dashboard";
+}
+
+function UserProfileCell({user}) {
+    const fallbackText = user?.nickname?.[0] || user?.email?.[0] || "?";
+    return (
+        <Group gap={8} wrap="nowrap">
+            <Avatar src={user?.profileImageUrl || null} radius="xl" size="sm">{fallbackText}</Avatar>
+            <Stack gap={0}>
+                <Text size="sm" fw={600}>{user?.nickname || "-"}</Text>
+                <Text size="xs" c="dimmed">{user?.email || "-"}</Text>
+            </Stack>
+        </Group>
+    );
 }
 
 async function fetchJson(url) {
@@ -913,8 +927,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Text>
                 <Divider mb="md"/>
                 {makeTable(
-                    ["User", "Email", "Nickname", "Created"],
-                    users.map((user) => [user.user, user.email, user.nickname, user.created]),
+                    ["User", "Profile", "Created"],
+                    users.map((user) => [user.user, <UserProfileCell user={user}/>, user.created]),
                 )}
             </Card>
         );
@@ -949,6 +963,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     records={allUsers}
                     columns={[
                         {accessor: "seq", title: "Seq", sortable: true},
+                        {accessor: "profile", title: "Profile", render: (row) => <UserProfileCell user={row}/>},
                         {accessor: "email", title: "Email", sortable: true},
                         {accessor: "nickname", title: "Nickname", sortable: true},
                         {accessor: "created", title: "Created", sortable: true},
@@ -996,9 +1011,10 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         ← User
                     </Button>
                     {selectedAllUser ? (
-                        <Text size="sm">
-                            사용자: <b>{selectedAllUser.nickname}</b> ({selectedAllUser.email})
-                        </Text>
+                        <Group gap={8}>
+                            <Text size="sm">사용자:</Text>
+                            <UserProfileCell user={selectedAllUser}/>
+                        </Group>
                     ) : (
                         <Text size="sm" c="dimmed">seq를 지정해 주세요. (/Admin/User/UserViewHistory?seq=숫자)</Text>
                     )}

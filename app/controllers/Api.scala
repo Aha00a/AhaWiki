@@ -258,8 +258,8 @@ class Api @Inject()(
     } else {
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
-        case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String)
-        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toString, u.email, u.nickname))
+        case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String, profileImageUrl: Option[String])
+        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toString, u.email, u.nickname, u.profileImageUrl))
         Ok(users.asJson)
       }
     }
@@ -457,6 +457,7 @@ class Api @Inject()(
           updated: String,
           email: String,
           nickname: String,
+          profileImageUrl: Option[String],
           siteCount: Long,
           visitCount: Long,
           lastViewed: Option[String],
@@ -507,6 +508,7 @@ class Api @Inject()(
             DATE_FORMAT(U.updated, '%Y-%m-%d %H:%i:%s') AS updated,
             U.email,
             U.nickname,
+            U.profileImageUrl,
             COALESCE(US.site_count, 0) AS site_count,
             COALESCE(UV.visit_count, 0) AS visit_count,
             UV.last_viewed,
@@ -539,14 +541,15 @@ class Api @Inject()(
           "searchLike" -> searchLike,
           "pageSize" -> pageSize,
           "offset" -> offset,
-        ).as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
-          case seq ~ created ~ updated ~ email ~ nickname ~ siteCount ~ visitCount ~ lastViewed =>
+        ).as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
+          case seq ~ created ~ updated ~ email ~ nickname ~ profileImageUrl ~ siteCount ~ visitCount ~ lastViewed =>
             AdminUser(
               seq = seq,
               created = created,
               updated = updated,
               email = email,
               nickname = nickname,
+              profileImageUrl = profileImageUrl,
               siteCount = siteCount,
               visitCount = visitCount,
               lastViewed = lastViewed,
