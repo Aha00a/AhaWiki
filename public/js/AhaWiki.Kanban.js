@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
 
-    var requestAddList = function (pageName, title, id, lineStart) {
+    var requestAddList = function (pageName, title, lineStart) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -25,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     title: title,
-                    id: id,
                     lineStart: lineStart
                 })
             }).then(function (response) {
@@ -41,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    var requestAddCard = function (pageName, text, id, lineStart) {
+    var requestAddCard = function (pageName, text, lineStart) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -65,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     text: text,
-                    id: id,
                     lineStart: lineStart
                 })
             }).then(function (response) {
@@ -81,39 +79,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    var parseHeadingLine = function (line, level) {
-        var trimmed = (line || '').trim();
-        var m = trimmed.match(/^(=+)\s*(.*?)\s*=+\s*(?:#([A-Za-z0-9_-]+))?\s*$/);
-        if (!m || m[1].length !== level) {
-            return null;
-        }
-
-        return {
-            title: (m[2] || '').trim(),
-            id: m[3] || ''
-        };
-    };
-
-    var makeSafeId = function (text) {
-        return (text || '')
-            .trim()
-            .replace(/\s+/g, '-')
-            .replace(/[^\p{L}\p{N}_-]/gu, '')
-            .replace(/-+/g, '-')
-            .replace(/^-+|-+$/g, '') || ('kanban-' + Math.random().toString(36).slice(2, 10));
-    };
-
     var parseKanbanText = function (text) {
         var lines = text.split(/\r?\n/);
         var columns = [];
         var currentColumn = null;
 
         lines.forEach(function (line, lineIndex) {
-            var sectionMatch = parseHeadingLine(line, 2);
+            var sectionMatch = line.match(/^==\s+(.+)$/);
             if (sectionMatch) {
                 currentColumn = {
-                    title: sectionMatch.title,
-                    id: sectionMatch.id,
+                    title: sectionMatch[1].trim(),
                     lineNumber: lineIndex + 1,
                     cards: []
                 };
@@ -121,11 +96,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            var cardMatch = parseHeadingLine(line, 3);
+            var cardMatch = line.match(/^\s*\*\s+(.+)$/);
             if (cardMatch && currentColumn) {
                 currentColumn.cards.push({
-                    text: cardMatch.title,
-                    id: cardMatch.id,
+                    text: cardMatch[1].trim(),
                     lineNumber: lineIndex + 1
                 });
             }
@@ -262,7 +236,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var newCard = {
                 text: value,
-                id: makeSafeId(value),
                 lineNumber: previousCard
                     ? previousCard.lineNumber + 1
                     : (column.lineNumber || 1) + 1
@@ -294,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var cardLineStart = toDocumentLine(newCard.lineNumber);
 
-            requestAddCard(root.getAttribute('data-page-name') || '', value, newCard.id, cardLineStart)
+            requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
                 .then(function (result) {
                     if (result && Number.isFinite(result.lineStart)) {
                         cardElement.setAttribute('data-line-number', String(result.lineStart));
@@ -484,7 +457,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             columns.push({
                 title: trimmed,
-                id: makeSafeId(trimmed),
                 lineNumber: 1,
                 cards: []
             });
@@ -504,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 metaWrapper.setAttribute('data-line-end', String(requestLineStart + 2));
             }
 
-            requestAddList(pageName, trimmed, makeSafeId(trimmed), requestLineStart)
+            requestAddList(pageName, trimmed, requestLineStart)
                 .then(function (result) {
                     if (metaWrapper && result && Number.isFinite(result.lineEnd) && result.lineEnd > 1) {
                         metaWrapper.setAttribute('data-line-end', String(result.lineEnd + 1));
