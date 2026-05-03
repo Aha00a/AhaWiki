@@ -73,7 +73,7 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), "add kanban list", isMinorEdit = false, updated)
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:list:add title="${payload.title}" line=$insertedLine""", isMinorEdit = false, updated)
 
                 Ok(
                   Json.obj(
@@ -125,7 +125,7 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), "add kanban card", isMinorEdit = false, updated)
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:card:add text="${payload.text}" line=$insertedLine""", isMinorEdit = false, updated)
 
                 Ok(Json.obj(
                   "status" -> "ok",
@@ -175,7 +175,7 @@ controllerComponents: ControllerComponents,
                 lines.insertAll(startIndex, replacement)
 
                 val updated = lines.mkString("\n")
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), "save kanban order", isMinorEdit = false, updated)
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:order:save range=$safeStart-$safeEndExclusive replacedLines=${replacement.size}""", isMinorEdit = false, updated)
 
                 Ok(Json.obj(
                   "status" -> "ok",
