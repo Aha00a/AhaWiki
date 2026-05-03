@@ -42,11 +42,17 @@ class GoogleOAuth @Inject()(
       confApi.clientId(),
       confApi.clientSecret(),
       googleApiRedirectUri
-    ).map(_.flatMap(profile => database.withConnection { implicit connection => User.selectOrInsert(profile.email, profile.profileImageUrl) })
-      .map(user => Redirect(redirectUrl)
-        .withSession(SessionLogic.login(request, user))
-        .flashing("success" -> "Successfully logged in.")
-      )
+    ).map(_.flatMap { profile =>
+      database.withConnection { implicit connection =>
+        User.selectOrInsert(profile.email, profile.profileImageUrl)
+          .map(user => (user, profile.profileImageUrl))
+      }
+    }
+      .map { case (user, profileImageUrl) =>
+        Redirect(redirectUrl)
+          .withSession(SessionLogic.login(request, user, profileImageUrl))
+          .flashing("success" -> "Successfully logged in.")
+      }
       .getOrElse(Redirect(redirectUrl)
         .withNewSession
         .flashing("error" -> "User creation failed")

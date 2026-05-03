@@ -9,6 +9,7 @@ object SessionLogic {
   val sessionKeySeq = "seq"
   val sessionKeyEmail = "email"
   val sessionKeyNickname = "nickname"
+  val sessionKeyProfileImageUrl = "profileImageUrl"
 
   def getUser(request: RequestHeader): Option[User.IdEmailNickname] = {
     for {
@@ -18,10 +19,18 @@ object SessionLogic {
     } yield User.IdEmailNickname(seq, email, nickname)
   }
 
-  def login(request: Request[Any], user: User.IdEmailNickname): Session = {
-    request.session +
+  def getUserProfileImageUrl(request: RequestHeader): Option[String] =
+    request.session.get(sessionKeyProfileImageUrl).filter(_.nonEmpty)
+
+  def login(request: Request[Any], user: User.IdEmailNickname, profileImageUrl: Option[String] = None): Session = {
+    val baseSession = request.session +
       (sessionKeySeq -> user.seq.toString) +
       (sessionKeyEmail -> user.email) +
       (sessionKeyNickname -> user.nickname)
+
+    profileImageUrl.filter(_.nonEmpty) match {
+      case Some(url) => baseSession + (sessionKeyProfileImageUrl -> url)
+      case None => baseSession - sessionKeyProfileImageUrl
+    }
   }
 }
