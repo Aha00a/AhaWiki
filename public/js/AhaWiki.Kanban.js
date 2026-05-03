@@ -455,11 +455,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             submitListButton.disabled = true;
 
-            columns.push({
+            var requestLineStart = getNextListInsertLineStart();
+            var localLineNumber = Math.max(1, requestLineStart - interpreterStartLine + 1);
+            var newColumn = {
                 title: trimmed,
-                lineNumber: 1,
+                lineNumber: localLineNumber,
                 cards: []
-            });
+            };
+            columns.push(newColumn);
             renderColumns();
 
             root.dispatchEvent(new CustomEvent('kanban:listAdded', {
@@ -471,15 +474,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeListEditor();
 
-            var requestLineStart = getNextListInsertLineStart();
-            if (metaWrapper) {
-                metaWrapper.setAttribute('data-line-end', String(requestLineStart + 2));
-            }
-
             requestAddList(pageName, trimmed, requestLineStart)
                 .then(function (result) {
-                    if (metaWrapper && result && Number.isFinite(result.lineEnd) && result.lineEnd > 1) {
-                        metaWrapper.setAttribute('data-line-end', String(result.lineEnd + 1));
+                    if (result && Number.isFinite(result.lineStart)) {
+                        newColumn.lineNumber = Math.max(1, result.lineStart - interpreterStartLine + 1);
+                        renderColumns();
+                    }
+                    if (metaWrapper) {
+                        var currentLineEnd = Number(metaWrapper.getAttribute('data-line-end') || interpreterLineEnd) || interpreterLineEnd;
+                        metaWrapper.setAttribute('data-line-end', String(currentLineEnd + 1));
                     }
                     console.info('[Kanban] list added', result);
                 })
