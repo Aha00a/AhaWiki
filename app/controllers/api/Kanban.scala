@@ -165,9 +165,9 @@ controllerComponents: ControllerComponents,
               } else {
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val safeStart = Math.max(1, payload.lineStart)
-                val safeEnd = Math.max(safeStart, payload.lineEnd)
+                val safeEndExclusive = Math.max(safeStart, payload.lineEnd)
                 val startIndex = Math.min(safeStart - 1, lines.length)
-                val endIndex = Math.min(safeEnd, lines.length)
+                val endIndex = Math.min(safeEndExclusive - 1, lines.length)
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
                 val replacement = payload.content.split("""\r\n|\n""", -1).toSeq
 
@@ -182,7 +182,7 @@ controllerComponents: ControllerComponents,
                   "message" -> "Kanban order saved.",
                   "pageName" -> pageName,
                   "lineStart" -> safeStart,
-                  "lineEnd" -> (safeStart + replacement.size - 1),
+                  "lineEnd" -> (safeStart + replacement.size),
                   "revision" -> nextRevision
                 ))
               }
