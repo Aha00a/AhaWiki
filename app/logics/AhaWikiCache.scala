@@ -155,11 +155,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       val (_, _, nickname) = t3
       models.tables.User.selectByNickname(nickname).flatMap(_.profileImageUrl)
     }
-
-    def invalidate(nickname: String)(implicit database: Database, site: Site): Unit = {
-      implicit val cacheKeyInput: (Database, Site, String) = (database, site, nickname)
-      super.invalidate()
-    }
   }
 
   object Page {
