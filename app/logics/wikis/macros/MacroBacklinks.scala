@@ -4,6 +4,7 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 
 object MacroBacklinks extends TraitMacro {
+  override def isBlock: Boolean = true
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     wikiContext.database.withConnection { implicit connection =>
       import com.aha00a.commons.Implicits._

@@ -4,6 +4,7 @@ import models.ContextWikiPage
 import views.html.macros
 
 object MacroRecentChanges extends TraitMacro {
+  override def isBlock: Boolean = true
 
   private def parseLimit(argument: String): Option[Int] =
     Option(argument)

@@ -4,6 +4,7 @@ import models.ContextWikiPage
 
 trait TraitMacro {
   val name: String = getClass.getSimpleName.replaceAll("^Macro", "").replaceAll("""\$$""", "")
+  def isBlock: Boolean = false
 
   def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument
 

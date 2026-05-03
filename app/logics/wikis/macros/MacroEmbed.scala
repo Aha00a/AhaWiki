@@ -3,6 +3,7 @@ package logics.wikis.macros
 import models.ContextWikiPage
 
 object MacroEmbed extends TraitMacro {
+  override def isBlock: Boolean = true
 
   import scala.util.matching.Regex
 

@@ -6,6 +6,7 @@ import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 
 object MacroDayHeader extends TraitMacro {
+  override def isBlock: Boolean = true
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {

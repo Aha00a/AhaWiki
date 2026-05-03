@@ -9,6 +9,7 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 
 object MacroCalendar extends TraitMacro {
+  override def isBlock: Boolean = true
   import com.aha00a.commons.utils.DateTimeUtil._
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {

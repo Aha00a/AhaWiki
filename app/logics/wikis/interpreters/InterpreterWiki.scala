@@ -179,10 +179,16 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def others(s: String, lineNumber: Int): Unit = {
       variableHolderState := State.Normal
-      if(Seq(extractConvertInjectInterpreter, extractConvertInjectMacro, extractConvertInjectBackQuote).forall(!_.contains(s))) {
-        arrayBuffer += s"<p${previewLineStartAttr(lineNumber)}>${inlineToHtmlString(s)}</p>"
-      } else {
+      if (extractConvertInjectInterpreter.contains(s) || extractConvertInjectBackQuote.contains(s)) {
         arrayBuffer += inlineToHtmlString(s)
+      } else if (extractConvertInjectMacro.contains(s)) {
+        if (extractConvertInjectMacro.isBlockToken(s)) {
+          arrayBuffer += inlineToHtmlString(s)
+        } else {
+          arrayBuffer += s"<p${previewLineStartAttr(lineNumber)}>${inlineToHtmlString(s)}</p>"
+        }
+      } else {
+        arrayBuffer += s"<p${previewLineStartAttr(lineNumber)}>${inlineToHtmlString(s)}</p>"
       }
     }
 

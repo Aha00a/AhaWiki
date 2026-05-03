@@ -115,7 +115,19 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   }
 
   private def wrapMacro(name: String, body: String): String =
-    s"""<span class="Macro $name">$body</span>"""
+    ExtractConvertInjectMacro.mapMacros.get(name).filter(_.isBlock) match {
+      case Some(_) => s"""<div class="Macro BlockMacro $name">$body</div>"""
+      case None => s"""<span class="Macro InlineMacro $name">$body</span>"""
+    }
+
+  def isBlockToken(token: String): Boolean = {
+    arrayBuffer.find(_._1 == token).exists { case (_, raw) =>
+      raw match {
+        case regex(name, _) => ExtractConvertInjectMacro.mapMacros.get(name).exists(_.isBlock)
+        case _ => false
+      }
+    }
+  }
 
   def extractLink()(implicit wikiContext: ContextWikiPage): Seq[String] = {
     arrayBuffer.map(_._2).flatMap {

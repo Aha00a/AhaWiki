@@ -3654,6 +3654,9 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc.collapsed .tocBody {
   max-height: 26px;
 }
+.Macro.BlockMacro {
+  margin-left: 30px;
+}
 .Macro.WikiStatistics .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));

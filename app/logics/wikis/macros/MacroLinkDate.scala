@@ -8,6 +8,7 @@ import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 
 object MacroLinkDate extends TraitMacro {
+  override def isBlock: Boolean = true
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.name)

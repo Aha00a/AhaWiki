@@ -10,6 +10,7 @@ import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 
 object MacroNavigationYear extends TraitMacro {
+  override def isBlock: Boolean = true
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {

@@ -13,6 +13,7 @@ import java.time.YearMonth
 import scala.util.matching.Regex
 
 object MacroIncludeDays extends TraitMacro {
+  override def isBlock: Boolean = true
   val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
   //noinspection ScalaUnusedSymbol

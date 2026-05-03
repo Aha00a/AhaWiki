@@ -5,6 +5,7 @@ import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 
 object MacroTitleIndex extends TraitMacro {
+  override def isBlock: Boolean = true
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     val listPageName: Seq[String] = wikiContext.seqPageNameByPermission
     InterpreterWiki.toHtmlString(
