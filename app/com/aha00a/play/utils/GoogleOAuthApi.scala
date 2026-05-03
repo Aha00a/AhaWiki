@@ -10,10 +10,19 @@ import scala.async.Async.{async, await}
 
 case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: ExecutionContext) extends Logging {
 
+  case class GoogleProfile(email: String, profileImageUrl: Option[String])
+
 
   def retrieveEmailWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[String]] = {
     retrieveMeWithCode(code, googleClientId, googleClientSecret, redirectUri).map {
       case Some(s) => Some(getEmail(s))
+      case None => None
+    }
+  }
+
+  def retrieveProfileWithCode(code: String, googleClientId: String, googleClientSecret: String, redirectUri: String): Future[Option[GoogleProfile]] = {
+    retrieveMeWithCode(code, googleClientId, googleClientSecret, redirectUri).map {
+      case Some(me) => Some(GoogleProfile(getEmail(me), getProfileImageUrl(me)))
       case None => None
     }
   }
@@ -57,7 +66,7 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
       .url("https://people.googleapis.com/v1/people/me")
       .withQueryStringParameters(
         "access_token" -> accessToken,
-        "personFields" -> "emailAddresses"
+        "personFields" -> "emailAddresses,photos"
       )
       .get()
       .map(responseToOptionJsValue)
@@ -84,5 +93,12 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
     } catch  {
       case _: Exception => ((jsValue \ "emails")(0) \ "value").as[String] // Legacy Api
     }
+  }
+
+  def getProfileImageUrl(jsValue: JsValue): Option[String] = {
+    (jsValue \ "photos").asOpt[Seq[JsValue]]
+      .flatMap(_.headOption)
+      .flatMap(photo => (photo \ "url").asOpt[String])
+      .orElse((jsValue \ "image" \ "url").asOpt[String])
   }
 }

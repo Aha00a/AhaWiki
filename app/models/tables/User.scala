@@ -11,7 +11,7 @@ import java.sql.Connection
 import java.time.LocalDateTime
 import scala.annotation.tailrec
 
-case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, email: String, nickname: String) {
+case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, email: String, nickname: String, profileImageUrl: Option[String]) {
   def toIdEmailNickname: User.IdEmailNickname = User.IdEmailNickname(seq, email, nickname)
 }
 
@@ -24,15 +24,15 @@ object User {
   def selectWhereEmail(email: String)(implicit connection: Connection): Option[User] = {
       SQL"""
         SELECT
-            U.seq, U.created, U.updated, U.email, U.nickname
+            U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
             FROM User U
             WHERE U.email = $email
          """
-      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
       .map(User.tupled)
   }
 
-  def insert(email: String)(implicit connection: Connection): Option[(Long, String)] = {
+  def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
     val base = email.takeWhile(_ != '@').take(3).toLowerCase
 
     def generateSuffix(): String =
@@ -52,7 +52,7 @@ object User {
       else {
         val nickname = generateNickname()
         try {
-          SQL"""INSERT INTO User (email, nickname) VALUES ($email, $nickname)"""
+          SQL"""INSERT INTO User (email, nickname, profileImageUrl) VALUES ($email, $nickname, $profileImageUrl)"""
             .executeInsert(scalar[Long].singleOpt)
             .map(id => (id, nickname))
         } catch {
@@ -65,10 +65,15 @@ object User {
     tryInsert(0)
   }
 
-  def selectOrInsert(email: String)(implicit connection: Connection): Option[IdEmailNickname] = {
+  def selectOrInsert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[IdEmailNickname] = {
     selectWhereEmail(email)
-      .map(_.toIdEmailNickname)
-      .orElse(insert(email).map {
+      .map { user =>
+        if (profileImageUrl.isDefined && user.profileImageUrl != profileImageUrl) {
+          SQL"""UPDATE User SET profileImageUrl = $profileImageUrl WHERE seq = ${user.seq}""".executeUpdate()
+        }
+        user.toIdEmailNickname
+      }
+      .orElse(insert(email, profileImageUrl).map {
         case (id, nickname) => IdEmailNickname(id, email, nickname)
       })
   }

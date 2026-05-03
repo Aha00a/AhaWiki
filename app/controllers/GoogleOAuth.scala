@@ -37,12 +37,12 @@ class GoogleOAuth @Inject()(
   def callback(code: String): Action[AnyContent] = Action.async { implicit request =>
     val redirectUrl = request.flash.get("redirect").getOrElse("/")
 
-    GoogleOAuthApi().retrieveEmailWithCode(
+    GoogleOAuthApi().retrieveProfileWithCode(
       code,
       confApi.clientId(),
       confApi.clientSecret(),
       googleApiRedirectUri
-    ).map(_.flatMap(email => database.withConnection { implicit connection => User.selectOrInsert(email) })
+    ).map(_.flatMap(profile => database.withConnection { implicit connection => User.selectOrInsert(profile.email, profile.profileImageUrl) })
       .map(user => Redirect(redirectUrl)
         .withSession(SessionLogic.login(request, user))
         .flashing("success" -> "Successfully logged in.")
@@ -54,4 +54,3 @@ class GoogleOAuth @Inject()(
     )
   }
 }
-
