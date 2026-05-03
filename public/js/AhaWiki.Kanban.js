@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    var parseKanbanText = function (text) {
+    var parseKanbanText = function (text, interpreterStartLine) {
         var lines = text.split(/\r?\n/);
         var columns = [];
         var currentColumn = null;
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (sectionMatch) {
                 currentColumn = {
                     title: sectionMatch[1].trim(),
-                    lineNumber: lineIndex + 1,
+                    lineNumber: interpreterStartLine + lineIndex,
                     cards: []
                 };
                 columns.push(currentColumn);
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cardMatch && currentColumn) {
                 currentColumn.cards.push({
                     text: cardMatch[1].trim(),
-                    lineNumber: lineIndex + 1
+                    lineNumber: interpreterStartLine + lineIndex
                 });
             }
         });
@@ -108,12 +108,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return columns;
     };
 
-    var createColumnElement = function (root, column, index, toDocumentLine) {
-        var interpreterBaseLine = toDocumentLine(1) - 1;
+    var createColumnElement = function (root, column, index, shiftLineNumbersAfterInsert) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
-        columnElement.setAttribute('data-column-line-number', String(toDocumentLine(column.lineNumber || 1)));
+        columnElement.setAttribute('data-column-line-number', String(column.lineNumber || 1));
         columnElement.style.minWidth = '220px';
         columnElement.style.background = '#f6f7f9';
         columnElement.style.border = '1px solid #d7dce2';
@@ -135,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var cardElement = document.createElement('div');
             cardElement.className = 'kanban-card';
             cardElement.textContent = card.text;
-            cardElement.setAttribute('data-line-number', String(toDocumentLine(card.lineNumber)));
+            cardElement.setAttribute('data-line-number', String(card.lineNumber));
             cardElement.style.background = '#fff';
             cardElement.style.border = '1px solid #cfd5dd';
             cardElement.style.borderRadius = '6px';
@@ -247,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var cardElement = document.createElement('div');
             cardElement.className = 'kanban-card';
             cardElement.textContent = newCard.text;
-            cardElement.setAttribute('data-line-number', String(toDocumentLine(newCard.lineNumber)));
+            cardElement.setAttribute('data-line-number', String(newCard.lineNumber));
             cardElement.style.background = '#fff';
             cardElement.style.border = '1px solid #cfd5dd';
             cardElement.style.borderRadius = '6px';
@@ -265,13 +264,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeCardEditor();
 
-            var cardLineStart = toDocumentLine(newCard.lineNumber);
+            var cardLineStart = newCard.lineNumber;
+            shiftLineNumbersAfterInsert(cardLineStart);
 
             requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
                 .then(function (result) {
                     if (result && Number.isFinite(result.lineStart)) {
                         cardElement.setAttribute('data-line-number', String(result.lineStart));
-                        newCard.lineNumber = result.lineStart - interpreterBaseLine;
+                        newCard.lineNumber = result.lineStart;
                     }
                     console.info('[Kanban] card added', result);
                 })
@@ -344,11 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var interpreterStartLine = Number(root.getAttribute('data-interpreter-start-line') || 1);
-        var toDocumentLine = function (lineNumber) {
-            return interpreterStartLine + lineNumber - 1;
-        };
-
-        var columns = parseKanbanText(pre.textContent || '');
+        var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var pageName = root.getAttribute('data-page-name') || '';
         var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
@@ -420,13 +416,28 @@ document.addEventListener('DOMContentLoaded', function () {
         addListWrapper.appendChild(addListButton);
         addListWrapper.appendChild(addListEditor);
 
+
+        var shiftLineNumbersAfterInsert = function (insertedDocumentLine) {
+            columns.forEach(function (targetColumn) {
+                if (Number(targetColumn.lineNumber) && targetColumn.lineNumber >= insertedDocumentLine) {
+                    targetColumn.lineNumber += 1;
+                }
+
+                (targetColumn.cards || []).forEach(function (targetCard) {
+                    if (Number(targetCard.lineNumber) && targetCard.lineNumber >= insertedDocumentLine) {
+                        targetCard.lineNumber += 1;
+                    }
+                });
+            });
+        };
+
         var renderColumns = function () {
             Array.prototype.slice.call(board.querySelectorAll('.kanban-column')).forEach(function (node) {
                 board.removeChild(node);
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, column, index, toDocumentLine), addListWrapper);
+                board.insertBefore(createColumnElement(root, column, index, shiftLineNumbersAfterInsert), addListWrapper);
             });
         };
 
@@ -456,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
             submitListButton.disabled = true;
 
             var requestLineStart = getNextListInsertLineStart();
-            var localLineNumber = Math.max(1, requestLineStart - interpreterStartLine + 1);
+            var localLineNumber = Math.max(1, requestLineStart);
             var newColumn = {
                 title: trimmed,
                 lineNumber: localLineNumber,
@@ -474,10 +485,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             closeListEditor();
 
+            shiftLineNumbersAfterInsert(requestLineStart);
+
             requestAddList(pageName, trimmed, requestLineStart)
                 .then(function (result) {
                     if (result && Number.isFinite(result.lineStart)) {
-                        newColumn.lineNumber = Math.max(1, result.lineStart - interpreterStartLine + 1);
+                        newColumn.lineNumber = Math.max(1, result.lineStart);
                         renderColumns();
                     }
                     if (metaWrapper) {
