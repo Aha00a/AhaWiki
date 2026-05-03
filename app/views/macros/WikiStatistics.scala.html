@@ -1,90 +1,58 @@
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
-    <style>
-        #@(id)3 .statsGrid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        #@(id)3 .statCard {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 12px;
-            background: #fff;
-        }
-
-        #@(id)3 .statLabel {
-            color: #6b7280;
-            font-size: 12px;
-            margin-bottom: 4px;
-        }
-
-        #@(id)3 .statValue {
-            font-size: 20px;
-            font-weight: 600;
-            line-height: 1.2;
-        }
-
-        #@(id)3 .statSub {
-            margin-top: 2px;
-            color: #6b7280;
-            font-size: 12px;
-        }
-    </style>
-
-    <div id="@(id)3">
-        <div class="statsGrid">
-            <div class="statCard">
-                <div class="statLabel">Total pages</div>
-                <div class="statValue pageCount">0</div>
+    <div class="Macro WikiStatistics">
+        <div id="@(id)3">
+            <div class="statsGrid">
+                <div class="statCard">
+                    <div class="statLabel">Total pages</div>
+                    <div class="statValue pageCount">0</div>
+                </div>
+                <div class="statCard">
+                    <div class="statLabel">Average page length</div>
+                    <div class="statValue avgPageSize">0</div>
+                    <div class="statSub">characters</div>
+                </div>
+                <div class="statCard">
+                    <div class="statLabel">Recorded period</div>
+                    <div class="statValue recordedPeriod">0</div>
+                    <div class="statSub">days</div>
+                </div>
+                <div class="statCard">
+                    <div class="statLabel">Average growth</div>
+                    <div class="statValue avgGrowthRateDay">0</div>
+                    <div class="statSub">pages / day</div>
+                </div>
             </div>
-            <div class="statCard">
-                <div class="statLabel">Average page length</div>
-                <div class="statValue avgPageSize">0</div>
-                <div class="statSub">characters</div>
-            </div>
-            <div class="statCard">
-                <div class="statLabel">Recorded period</div>
-                <div class="statValue recordedPeriod">0</div>
-                <div class="statSub">days</div>
-            </div>
-            <div class="statCard">
-                <div class="statLabel">Average growth</div>
-                <div class="statValue avgGrowthRateDay">0</div>
-                <div class="statSub">pages / day</div>
-            </div>
+
+            <p>
+                Weekly <strong class="avgGrowthRateWeek">0</strong> / week,
+                Monthly <strong class="avgGrowthRateMonth">0</strong> / month,
+                Yearly <strong class="avgGrowthRateYear">0</strong> / year
+            </p>
         </div>
 
-        <p>
-            Weekly <strong class="avgGrowthRateWeek">0</strong> / week,
-            Monthly <strong class="avgGrowthRateMonth">0</strong> / month,
-            Yearly <strong class="avgGrowthRateYear">0</strong> / year
-        </p>
+        <table class="layout" style="width: 100%">
+            <thead>
+                <cols>
+                    <col width="50%"/>
+                    <col width="50%"/>
+                </cols>
+            </thead>
+            <tr>
+                <td>
+                    <div class="aspectRatioWrapper">
+                        <div class="ratio_16_9"></div>
+                        <div class="aspectRatioContent" id="@{id}1"></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="aspectRatioWrapper">
+                        <div class="ratio_16_9"></div>
+                        <div class="aspectRatioContent" id="@{id}2"></div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
-
-    <table class="layout" style="width: 100%">
-        <thead>
-            <cols>
-                <col width="50%"/>
-                <col width="50%"/>
-            </cols>
-        </thead>
-        <tr>
-            <td>
-                <div class="aspectRatioWrapper">
-                    <div class="ratio_16_9"></div>
-                    <div class="aspectRatioContent" id="@{id}1"></div>
-                </div>
-            </td>
-            <td>
-                <div class="aspectRatioWrapper">
-                    <div class="ratio_16_9"></div>
-                    <div class="aspectRatioContent" id="@{id}2"></div>
-                </div>
-            </td>
-        </tr>
-    </table>
 
     <script type="text/javascript">
         $(function () {

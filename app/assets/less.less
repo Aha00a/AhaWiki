@@ -2016,3 +2016,41 @@ kbd {
 		}
 	}
 }
+
+
+
+.Macro {
+	&.WikiStatistics {
+		.statsGrid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+			gap: 12px;
+			margin-bottom: 16px;
+		}
+
+		.statCard {
+			border: 1px solid #e5e7eb;
+			border-radius: 8px;
+			padding: 12px;
+			background: #fff;
+		}
+
+		.statLabel {
+			color: #6b7280;
+			font-size: 12px;
+			margin-bottom: 4px;
+		}
+
+		.statValue {
+			font-size: 20px;
+			font-weight: 600;
+			line-height: 1.2;
+		}
+
+		.statSub {
+			margin-top: 2px;
+			color: #6b7280;
+			font-size: 12px;
+		}
+	}
+}

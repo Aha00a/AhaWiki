@@ -3670,4 +3670,31 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc.collapsed .tocBody {
   max-height: 26px;
 }
+.Macro.WikiStatistics .statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.Macro.WikiStatistics .statCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.Macro.WikiStatistics .statLabel {
+  color: #6b7280;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.Macro.WikiStatistics .statValue {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.Macro.WikiStatistics .statSub {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
 /*# sourceMappingURL=less.css.map */
