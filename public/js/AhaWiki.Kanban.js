@@ -134,6 +134,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     var COMMENT_PREFIX = '  * ';
+    var updateCardCommentCount = function (card) {
+        if (!card || !card.commentCountElement) {
+            return;
+        }
+        var count = (card.comments || []).length;
+        card.commentCountElement.textContent = '💬 ' + count;
+    };
     var parseKanbanText = function (text, interpreterStartLine) {
         var lines = text.split(/\r?\n/);
         var columns = [];
@@ -200,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function () {
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
             cardElement.className = 'kanban-card';
-            cardElement.textContent = card.text;
             cardElement.setAttribute('data-line-number', String(card.lineNumber));
             cardElement.style.background = '#fff';
             cardElement.style.border = '1px solid #cfd5dd';
@@ -208,6 +214,21 @@ document.addEventListener('DOMContentLoaded', function () {
             cardElement.style.padding = '8px';
             cardElement.style.marginBottom = '8px';
             cardElement.style.cursor = 'pointer';
+
+            var cardText = document.createElement('div');
+            cardText.textContent = card.text;
+            cardText.style.marginBottom = '6px';
+
+            var cardMeta = document.createElement('div');
+            cardMeta.style.fontSize = '12px';
+            cardMeta.style.color = '#6b778c';
+
+            card.commentCountElement = document.createElement('span');
+            updateCardCommentCount(card);
+            cardMeta.appendChild(card.commentCountElement);
+
+            cardElement.appendChild(cardText);
+            cardElement.appendChild(cardMeta);
             cardElement.addEventListener('click', function () {
                 openCardDetail(card);
             });
@@ -698,6 +719,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var commentLine = '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10) + ': ' + body;
                 card.comments = card.comments || [];
                 card.comments.push(commentLine);
+                updateCardCommentCount(card);
                 textarea.value = '';
                 renderComments();
                 enqueueMutation(function () {
