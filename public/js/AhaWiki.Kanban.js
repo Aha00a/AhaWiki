@@ -78,6 +78,33 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+    var requestSaveKanban = function (pageName, lineStart, lineEnd, content) {
+        if (!pageName) {
+            return Promise.resolve(null);
+        }
+        return fetch('/api/csrf', { credentials: 'same-origin' })
+            .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
+            .then(function (csrfToken) {
+                var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+                return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/save', {
+                    method: 'PUT',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Csrf-Token': tokenValue,
+                        'X-CSRF-Token': tokenValue
+                    },
+                    body: JSON.stringify({ lineStart: lineStart, lineEnd: lineEnd, content: content })
+                }).then(function (response) {
+                    return response.json().catch(function () { return {}; }).then(function (payload) {
+                        if (!response.ok) {
+                            throw new Error(payload.message || payload.error || 'Failed to save kanban.');
+                        }
+                        return payload;
+                    });
+                });
+            });
+    };
 
 
     var shiftMetaLineRangeAfterInsert = function (anchorWrapper, insertedLineNumber, delta) {
@@ -345,6 +372,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             newIndex: evt.newIndex
                         }
                     }));
+
+                    enqueueMutation(function () {
+                        var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
+                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
+                        normalizeLineNumbers();
+                        return persistColumns().catch(function (error) {
+                            console.error('[Kanban] failed to save card order', error);
+                        });
+                    });
                 }
             });
         }
@@ -367,6 +403,19 @@ document.addEventListener('DOMContentLoaded', function () {
         var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         var mutationQueue = Promise.resolve();
+        var serializeColumns = function () {
+            return columns.map(function (column) {
+                var lines = ['== ' + (column.title || '')];
+                (column.cards || []).forEach(function (card) {
+                    lines.push(' * ' + (card.text || ''));
+                });
+                return lines.join('\n');
+            }).join('\n');
+        };
+        var persistColumns = function () {
+            var latestLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
+            return requestSaveKanban(pageName, interpreterStartLine, Math.max(interpreterStartLine, latestLineEnd - 1), serializeColumns());
+        };
         var enqueueMutation = function (executor) {
             mutationQueue = mutationQueue
                 .then(function () {
@@ -386,6 +435,9 @@ document.addEventListener('DOMContentLoaded', function () {
         board.style.gap = '12px';
         board.style.alignItems = 'flex-start';
         board.style.overflowX = 'auto';
+        board.style.background = 'linear-gradient(135deg, #eef 0%, #eff 100%)';
+        board.style.borderRadius = '10px';
+        board.style.padding = '12px';
 
         var addListWrapper = document.createElement('div');
         addListWrapper.style.flex = '0 0 280px';
@@ -568,5 +620,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
         board.appendChild(addListWrapper);
         renderColumns();
+
+        if (window.Sortable) {
+            Sortable.create(board, {
+                draggable: '.kanban-column',
+                animation: 120,
+                onEnd: function (evt) {
+                    if (evt.oldIndex === evt.newIndex || evt.oldIndex < 0 || evt.newIndex < 0) {
+                        return;
+                    }
+
+                    var movedColumn = columns.splice(evt.oldIndex, 1)[0];
+                    columns.splice(evt.newIndex, 0, movedColumn);
+                    normalizeLineNumbers();
+                    renderColumns();
+
+                    root.dispatchEvent(new CustomEvent('kanban:listMoved', {
+                        detail: {
+                            oldIndex: evt.oldIndex,
+                            newIndex: evt.newIndex
+                        }
+                    }));
+
+                    enqueueMutation(function () {
+                        return persistColumns().catch(function (error) {
+                            console.error('[Kanban] failed to save list order', error);
+                        });
+                    });
+                }
+            });
+        }
     });
 });

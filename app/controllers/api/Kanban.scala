@@ -39,6 +39,8 @@ controllerComponents: ControllerComponents,
   private implicit val addListRequestReads = Json.reads[AddListRequest]
   private case class AddCardRequest(text: String, lineStart: Int)
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
+  private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String)
+  private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
 
   def listAdd(pageName: String): Action[AnyContent] = Action { implicit request =>
     request.body.asJson match {
@@ -132,6 +134,55 @@ controllerComponents: ControllerComponents,
                   "text" -> payload.text,
                   "lineStart" -> insertedLine,
                   "lineEnd" -> insertedLine,
+                  "revision" -> nextRevision
+                ))
+              }
+            }
+          }
+        )
+      case None =>
+        BadRequest(Json.obj("status" -> "error", "message" -> "JSON body is required"))
+    }
+  }
+
+  def save(pageName: String): Action[AnyContent] = Action { implicit request =>
+    request.body.asJson match {
+      case Some(body) =>
+        body.validate[SaveKanbanRequest].fold(
+          errors => {
+            BadRequest(Json.obj("status" -> "error", "message" -> "Invalid payload", "errors" -> JsError.toJson(errors)))
+          },
+          payload => {
+            database.withConnection { implicit connection =>
+              implicit val site: Site = SiteLogic.get(request.host)
+              implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
+              implicit val provider: RequestWrapper = wikiContext.requestWrapper
+
+              val latest = Page.selectLastRevision(pageName)
+              val latestContent = latest.map(_.content).getOrElse("")
+              if (!WikiPermission().isWritable(PageContent(latestContent))) {
+                Forbidden(Json.obj("status" -> "error", "message" -> "Permission denied."))
+              } else {
+                val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
+                val safeStart = Math.max(1, payload.lineStart)
+                val safeEnd = Math.max(safeStart, payload.lineEnd)
+                val startIndex = Math.min(safeStart - 1, lines.length)
+                val endIndex = Math.min(safeEnd, lines.length)
+                val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
+                val replacement = payload.content.split("""\r\n|\n""", -1).toSeq
+
+                lines.remove(startIndex, Math.max(0, endIndex - startIndex))
+                lines.insertAll(startIndex, replacement)
+
+                val updated = lines.mkString("\n")
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), "save kanban order", isMinorEdit = false, updated)
+
+                Ok(Json.obj(
+                  "status" -> "ok",
+                  "message" -> "Kanban order saved.",
+                  "pageName" -> pageName,
+                  "lineStart" -> safeStart,
+                  "lineEnd" -> (safeStart + replacement.size - 1),
                   "revision" -> nextRevision
                 ))
               }
