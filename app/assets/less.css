@@ -319,7 +319,7 @@ kbd:hover > kbd {
 }
 .AhaWiki a:hover,
 .AhaWiki a:active {
-  background-color: #ddf;
+  background-color: #eaf2ff;
 }
 .AhaWiki a.missing {
   color: inherit;
