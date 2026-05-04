@@ -134,6 +134,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     var COMMENT_PREFIX = '  * ';
+
+    var buildCommentLine = function (message) {
+        var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
+        var author = window.AhaWikiCurrentUserNickname || 'Anonymous';
+        return '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10) + ' - ' + message;
+    };
+
     var updateCardCommentCount = function (card) {
         if (!card || !card.commentCountElement) {
             return;
@@ -328,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var newCard = {
                     text: value,
                     lineNumber: cardLineStart,
-                    comments: []
+                    comments: [buildCommentLine('Created')]
                 };
 
                 column.cards = column.cards || [];
@@ -413,8 +420,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }));
 
                     enqueueMutation(function () {
+                        var fromColumn = columns[fromColumnIndex];
+                        var toColumn = columns[toColumnIndex];
+                        var fromTitle = (fromColumn && fromColumn.title) ? fromColumn.title : '';
+                        var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
-                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
+                        movedCard.comments = movedCard.comments || [];
+                        movedCard.comments.push(buildCommentLine('Move from [#' + fromTitle + '] to [#' + toTitle + ']'));                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         return persistColumns().catch(function (error) {
                             console.error('[Kanban] failed to save card order', error);
@@ -714,9 +726,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!body) {
                     return;
                 }
-                var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
-                var author = window.AhaWikiCurrentUserNickname || 'Anonymous';
-                var commentLine = '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10) + ': ' + body;
+                var commentLine = buildCommentLine(body);
                 card.comments = card.comments || [];
                 card.comments.push(commentLine);
                 updateCardCommentCount(card);
