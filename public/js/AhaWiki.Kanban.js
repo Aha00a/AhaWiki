@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         var count = (card.comments || []).length;
-        card.commentCountElement.textContent = '💬 ' + count;
+        card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> ' + count;
     };
     var parseKanbanText = function (text, interpreterStartLine) {
         var parseCardHeading = function (line) {
@@ -297,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var deleteListButton = document.createElement('button');
         deleteListButton.type = 'button';
-        deleteListButton.textContent = '🗑';
+        deleteListButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
         deleteListButton.title = 'Delete list';
         deleteListButton.style.border = 'none';
         deleteListButton.style.background = 'transparent';
