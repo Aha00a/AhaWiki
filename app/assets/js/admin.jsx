@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {createRoot} from "react-dom/client";
-import dayjs from "./lib/dayjsLocal";
+import dayjs from "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/+esm";
 import {
     MantineProvider,
     Anchor,
