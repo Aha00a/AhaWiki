@@ -808,17 +808,31 @@ document.addEventListener('DOMContentLoaded', function () {
             overlay.style.display = 'flex';
             overlay.style.alignItems = 'center';
             overlay.style.justifyContent = 'center';
+            overlay.style.backdropFilter = 'blur(2px)';
             var modal = document.createElement('div');
             modal.style.width = 'min(640px, calc(100vw - 24px))';
             modal.style.maxHeight = 'calc(100vh - 24px)';
             modal.style.overflowY = 'auto';
             modal.style.background = '#fff';
-            modal.style.borderRadius = '10px';
-            modal.style.padding = '16px';
+            modal.style.borderRadius = '14px';
+            modal.style.padding = '20px';
+            modal.style.boxShadow = '0 20px 48px rgba(9, 30, 66, 0.28)';
+            modal.style.border = '1px solid rgba(9, 30, 66, 0.12)';
+
+            var header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.alignItems = 'flex-start';
+            header.style.justifyContent = 'space-between';
+            header.style.gap = '12px';
+
             var title = document.createElement('h3');
             title.textContent = card.text || '';
             title.style.cursor = 'pointer';
             title.title = 'Click to edit title';
+            title.style.margin = '0';
+            title.style.fontSize = '22px';
+            title.style.lineHeight = '1.35';
+            title.style.color = '#172b4d';
 
             var titleEditor = document.createElement('input');
             titleEditor.type = 'text';
@@ -826,10 +840,25 @@ document.addEventListener('DOMContentLoaded', function () {
             titleEditor.style.display = 'none';
             titleEditor.style.width = '100%';
             titleEditor.style.boxSizing = 'border-box';
-            titleEditor.style.marginBottom = '8px';
+            titleEditor.style.margin = '0 0 12px 0';
             titleEditor.style.border = '1px solid #b6c2cf';
-            titleEditor.style.borderRadius = '4px';
-            titleEditor.style.padding = '6px 8px';
+            titleEditor.style.borderRadius = '8px';
+            titleEditor.style.padding = '10px 12px';
+            titleEditor.style.fontSize = '18px';
+            titleEditor.style.fontWeight = '600';
+            titleEditor.style.color = '#172b4d';
+
+            var closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.textContent = '✕';
+            closeButton.style.border = 'none';
+            closeButton.style.background = 'transparent';
+            closeButton.style.cursor = 'pointer';
+            closeButton.style.width = '32px';
+            closeButton.style.height = '32px';
+            closeButton.style.borderRadius = '50%';
+            closeButton.style.fontSize = '18px';
+            closeButton.style.color = '#44546f';
 
             var closeTitleEditor = function () {
                 titleEditor.style.display = 'none';
@@ -886,16 +915,47 @@ document.addEventListener('DOMContentLoaded', function () {
             textarea.placeholder = 'Write a comment...';
             textarea.rows = 3;
             textarea.style.width = '100%';
+            textarea.style.boxSizing = 'border-box';
+            textarea.style.border = '1px solid #b6c2cf';
+            textarea.style.borderRadius = '8px';
+            textarea.style.padding = '10px 12px';
+            textarea.style.resize = 'vertical';
+            textarea.style.fontSize = '14px';
+            textarea.style.marginTop = '8px';
+
+            var actionBar = document.createElement('div');
+            actionBar.style.display = 'flex';
+            actionBar.style.alignItems = 'center';
+            actionBar.style.gap = '8px';
+            actionBar.style.marginTop = '10px';
+
             var submit = document.createElement('button');
             submit.type = 'button';
             submit.textContent = 'Add Comment';
-            submit.style.marginTop = '8px';
+            submit.style.border = 'none';
+            submit.style.borderRadius = '8px';
+            submit.style.padding = '8px 12px';
+            submit.style.background = '#0c66e4';
+            submit.style.color = '#fff';
+            submit.style.cursor = 'pointer';
 
             var deleteCardButton = document.createElement('button');
             deleteCardButton.type = 'button';
             deleteCardButton.textContent = 'Delete Card';
-            deleteCardButton.style.marginTop = '8px';
-            deleteCardButton.style.marginLeft = '8px';
+            deleteCardButton.style.border = '1px solid #f1b5b5';
+            deleteCardButton.style.borderRadius = '8px';
+            deleteCardButton.style.padding = '8px 12px';
+            deleteCardButton.style.background = '#fff5f5';
+            deleteCardButton.style.color = '#ae2a19';
+            deleteCardButton.style.cursor = 'pointer';
+
+            var commentsTitle = document.createElement('div');
+            commentsTitle.textContent = 'Activity';
+            commentsTitle.style.marginTop = '16px';
+            commentsTitle.style.fontWeight = '600';
+            commentsTitle.style.fontSize = '14px';
+            commentsTitle.style.color = '#44546f';
+
             var comments = document.createElement('div');
             comments.style.marginTop = '12px';
             var renderComments = function () {
@@ -903,8 +963,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 (card.comments || []).slice().reverse().forEach(function (line) {
                     var row = document.createElement('div');
                     row.textContent = line;
-                    row.style.padding = '8px 0';
-                    row.style.borderBottom = '1px solid #eceff3';
+                    row.style.padding = '10px 12px';
+                    row.style.border = '1px solid #eceff3';
+                    row.style.borderRadius = '8px';
+                    row.style.background = '#fafbfc';
+                    row.style.marginBottom = '8px';
+                    row.style.color = '#172b4d';
+                    row.style.lineHeight = '1.4';
                     comments.appendChild(row);
                 });
             };
@@ -954,12 +1019,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     overlay.parentNode.removeChild(overlay);
                 }
             });
+            closeButton.addEventListener('click', function () {
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
-            modal.appendChild(title);
+            header.appendChild(title);
+            header.appendChild(closeButton);
+            modal.appendChild(header);
             modal.appendChild(titleEditor);
             modal.appendChild(textarea);
-            modal.appendChild(submit);
-            modal.appendChild(deleteCardButton);
+            actionBar.appendChild(submit);
+            actionBar.appendChild(deleteCardButton);
+            modal.appendChild(actionBar);
+            modal.appendChild(commentsTitle);
             modal.appendChild(comments);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
