@@ -62,7 +62,8 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
     { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
     { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
-    { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" }
+    { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" },
+    { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
     const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
@@ -248,6 +249,9 @@ function routeToPage(pathname) {
   if (pathname === "/Admin/Operation") {
     return "operations";
   }
+  if (pathname === "/Admin/S3") {
+    return "s3-browser";
+  }
   if (pathname === "/Admin/AccessLog") {
     return "access-logs";
   }
@@ -268,6 +272,9 @@ function routeToPage(pathname) {
   }
   if (pathname === "/Admin/Operations") {
     return "operations";
+  }
+  if (pathname === "/Admin/S3Browser") {
+    return "s3-browser";
   }
   if (pathname === "/Admin/AccessLogs") {
     return "access-logs";
@@ -320,6 +327,9 @@ function pageTitleByKey(page) {
   }
   if (page === "access-logs") {
     return "AccessLog";
+  }
+  if (page === "s3-browser") {
+    return "S3 Browser";
   }
   return "Dashboard";
 }
@@ -385,6 +395,11 @@ function useAdminData(page) {
   const [calculatingSiteSeq, setCalculatingSiteSeq] = useState2(0);
   const [memoryCacheStats, setMemoryCacheStats] = useState2([]);
   const [error, setError] = useState2("");
+  const [s3Items, setS3Items] = useState2([]);
+  const [loadingS3, setLoadingS3] = useState2(false);
+  const [deletingS3, setDeletingS3] = useState2(false);
+  const [selectedS3Keys, setSelectedS3Keys] = useState2([]);
+  const [expandedS3Nodes, setExpandedS3Nodes] = useState2({});
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
     pageSize = 20,
@@ -407,6 +422,66 @@ function useAdminData(page) {
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAccessLogs(rows);
     setAccessLogCount(Number(data?.count ?? rows.length));
+  }, []);
+  const loadS3Objects = useCallback(async () => {
+    setLoadingS3(true);
+    try {
+      const params = new URLSearchParams({ prefix: "", maxKeys: "5000", recursive: "true" });
+      const data = await fetchJson2(`/api/Admin/S3Objects?${params.toString()}`);
+      setS3Items(Array.isArray(data?.items) ? data.items : []);
+      setSelectedS3Keys([]);
+      setExpandedS3Nodes({ "__root__": true });
+    } catch (caughtError) {
+      logError("s3:load:error", caughtError);
+      setError(`S3 \uC870\uD68C \uC2E4\uD328: ${caughtError.message}`);
+    } finally {
+      setLoadingS3(false);
+    }
+  }, []);
+  const toggleS3Node = useCallback((key) => {
+    setExpandedS3Nodes((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const expandAllS3Nodes = useCallback(() => {
+    const next = { "__root__": true };
+    (Array.isArray(s3Items) ? s3Items : []).filter((item) => !item.isDirectory).forEach((item) => {
+      const parts = String(item.key || "").split("/").filter(Boolean);
+      for (let i = 1; i < parts.length; i += 1) {
+        next[parts.slice(0, i).join("/")] = true;
+      }
+    });
+    setExpandedS3Nodes(next);
+  }, [s3Items]);
+  const deleteS3Selected = useCallback(async () => {
+    if (selectedS3Keys.length === 0) return;
+    setDeletingS3(true);
+    try {
+      const csrf = await fetchCsrfToken();
+      const response = await fetch("/api/Admin/S3Objects", {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", [csrf.name]: csrf.value },
+        body: JSON.stringify({ keys: selectedS3Keys })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadS3Objects();
+    } catch (caughtError) {
+      logError("s3:delete:error", caughtError);
+      setError(`S3 \uC0AD\uC81C \uC2E4\uD328: ${caughtError.message}`);
+    } finally {
+      setDeletingS3(false);
+    }
+  }, [loadS3Objects, selectedS3Keys]);
+  const downloadS3Object = useCallback(async (key) => {
+    try {
+      const params = new URLSearchParams({ key });
+      const data = await fetchJson2(`/api/Admin/S3DownloadUrl?${params.toString()}`);
+      if (data?.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      }
+    } catch (caughtError) {
+      logError("s3:download:error", caughtError);
+      setError(`\uB2E4\uC6B4\uB85C\uB4DC URL \uC0DD\uC131 \uC2E4\uD328: ${caughtError.message}`);
+    }
   }, []);
   const loadAllUsers = useCallback(async ({
     page: page2 = 1,
@@ -820,6 +895,18 @@ function useAdminData(page) {
           }
           return;
         }
+        if (page === "s3-browser") {
+          if (mounted) {
+            setSites([]);
+            setUsers([]);
+            setAllUsers([]);
+            setSchedulers([]);
+            setDailyStats({ userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: [] });
+            setTopViewedPages([]);
+          }
+          await loadS3Objects();
+          return;
+        }
         if (mounted) {
           await loadDashboard();
           await loadMemoryCacheStats();
@@ -839,7 +926,7 @@ function useAdminData(page) {
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers]);
+  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects]);
   return {
     loading,
     sites,
@@ -880,6 +967,17 @@ function useAdminData(page) {
     calculatingSiteSeq,
     memoryCacheStats,
     loadMemoryCacheStats,
+    s3Items,
+    loadS3Objects,
+    selectedS3Keys,
+    setSelectedS3Keys,
+    deleteS3Selected,
+    downloadS3Object,
+    loadingS3,
+    deletingS3,
+    expandedS3Nodes,
+    toggleS3Node,
+    expandAllS3Nodes,
     error
   };
 }
@@ -925,6 +1023,17 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     calculatingSiteSeq,
     memoryCacheStats,
     loadMemoryCacheStats,
+    s3Items,
+    loadS3Objects,
+    selectedS3Keys,
+    setSelectedS3Keys,
+    deleteS3Selected,
+    downloadS3Object,
+    loadingS3,
+    deletingS3,
+    expandedS3Nodes,
+    toggleS3Node,
+    expandAllS3Nodes,
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
@@ -1329,6 +1438,53 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         onRefresh: reloadSchedulers
       }
     ));
+  }
+  if (page === "s3-browser") {
+    const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
+    const root = { children: {} };
+    fileRows.forEach((item) => {
+      const parts = String(item.key || "").split("/").filter(Boolean);
+      if (parts.length === 0) return;
+      let node = root;
+      parts.forEach((part, index) => {
+        const currentPath = parts.slice(0, index + 1).join("/");
+        if (!node.children[part]) {
+          node.children[part] = { name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null };
+        }
+        if (index === parts.length - 1) {
+          node.children[part].isFile = true;
+          node.children[part].meta = item;
+        }
+        node = node.children[part];
+      });
+    });
+    const rows = [];
+    const visit = (node, depth = 0) => {
+      Object.values(node.children).sort((a, b) => {
+        if (a.isFile === b.isFile) return a.name.localeCompare(b.name);
+        return a.isFile ? 1 : -1;
+      }).forEach((child) => {
+        rows.push({ depth, node: child });
+        if (!child.isFile && expandedS3Nodes[child.path]) {
+          visit(child, depth + 1);
+        }
+      });
+    };
+    visit(root, 0);
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React5.createElement(Badge4, { color: "red", variant: "light" }, "Admin Only")), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button3, { loading: loadingS3, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: expandAllS3Nodes, leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React5.createElement(Button3, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: deleteS3Selected, leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React5.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table4.Thead, null, /* @__PURE__ */ React5.createElement(Table4.Tr, null, /* @__PURE__ */ React5.createElement(Table4.Th, null, /* @__PURE__ */ React5.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (event) => {
+      if (event.currentTarget.checked) {
+        setSelectedS3Keys(fileRows.map((item) => item.key));
+      } else {
+        setSelectedS3Keys([]);
+      }
+    } })), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React5.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React5.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React5.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React5.createElement(Table4.Tbody, null, rows.map(({ depth, node }) => {
+      const key = node.path;
+      const checked = selectedS3Keys.includes(key);
+      return /* @__PURE__ */ React5.createElement(Table4.Tr, { key }, /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (event) => {
+        if (event.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
+        else setSelectedS3Keys((prev) => prev.filter((selectedKey) => selectedKey !== key));
+      } })), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React5.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React5.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React5.createElement("span", null, /* @__PURE__ */ React5.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React5.createElement("span", null, node.name))), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? node.meta?.lastModified || "-" : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+    }))));
   }
   if (page === "recent-changes") {
     return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(

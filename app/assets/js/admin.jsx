@@ -68,6 +68,9 @@ function routeToPage(pathname) {
     if (pathname === "/Admin/Operation") {
         return "operations";
     }
+    if (pathname === "/Admin/S3") {
+        return "s3-browser";
+    }
     if (pathname === "/Admin/AccessLog") {
         return "access-logs";
     }
@@ -88,6 +91,9 @@ function routeToPage(pathname) {
     }
     if (pathname === "/Admin/Operations") {
         return "operations";
+    }
+    if (pathname === "/Admin/S3Browser") {
+        return "s3-browser";
     }
     if (pathname === "/Admin/AccessLogs") {
         return "access-logs";
@@ -145,6 +151,9 @@ function pageTitleByKey(page) {
     }
     if (page === "access-logs") {
         return "AccessLog";
+    }
+    if (page === "s3-browser") {
+        return "S3 Browser";
     }
     return "Dashboard";
 }
@@ -222,6 +231,11 @@ function useAdminData(page) {
     const [calculatingSiteSeq, setCalculatingSiteSeq] = useState(0);
     const [memoryCacheStats, setMemoryCacheStats] = useState([]);
     const [error, setError] = useState("");
+    const [s3Items, setS3Items] = useState([]);
+    const [loadingS3, setLoadingS3] = useState(false);
+    const [deletingS3, setDeletingS3] = useState(false);
+    const [selectedS3Keys, setSelectedS3Keys] = useState([]);
+    const [expandedS3Nodes, setExpandedS3Nodes] = useState({});
     const loadAccessLogs = useCallback(async ({
         page = 1,
         pageSize = 20,
@@ -246,6 +260,70 @@ function useAdminData(page) {
             : (Array.isArray(data) ? data : []);
         setAccessLogs(rows);
         setAccessLogCount(Number(data?.count ?? rows.length));
+    }, []);
+
+    const loadS3Objects = useCallback(async () => {
+        setLoadingS3(true);
+        try {
+            const params = new URLSearchParams({prefix: "", maxKeys: "5000", recursive: "true"});
+            const data = await fetchJson(`/api/Admin/S3Objects?${params.toString()}`);
+            setS3Items(Array.isArray(data?.items) ? data.items : []);
+            setSelectedS3Keys([]);
+            setExpandedS3Nodes({"__root__": true});
+        } catch (caughtError) {
+            logError("s3:load:error", caughtError);
+            setError(`S3 조회 실패: ${caughtError.message}`);
+        } finally {
+            setLoadingS3(false);
+        }
+    }, []);
+
+    const toggleS3Node = useCallback((key) => {
+        setExpandedS3Nodes((prev) => ({...prev, [key]: !prev[key]}));
+    }, []);
+    const expandAllS3Nodes = useCallback(() => {
+        const next = {"__root__": true};
+        (Array.isArray(s3Items) ? s3Items : [])
+            .filter((item) => !item.isDirectory)
+            .forEach((item) => {
+                const parts = String(item.key || "").split("/").filter(Boolean);
+                for (let i = 1; i < parts.length; i += 1) {
+                    next[parts.slice(0, i).join("/")] = true;
+                }
+            });
+        setExpandedS3Nodes(next);
+    }, [s3Items]);
+    const deleteS3Selected = useCallback(async () => {
+        if (selectedS3Keys.length === 0) return;
+        setDeletingS3(true);
+        try {
+            const csrf = await fetchCsrfToken();
+            const response = await fetch("/api/Admin/S3Objects", {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/json", [csrf.name]: csrf.value},
+                body: JSON.stringify({keys: selectedS3Keys}),
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await loadS3Objects();
+        } catch (caughtError) {
+            logError("s3:delete:error", caughtError);
+            setError(`S3 삭제 실패: ${caughtError.message}`);
+        } finally {
+            setDeletingS3(false);
+        }
+    }, [loadS3Objects, selectedS3Keys]);
+    const downloadS3Object = useCallback(async (key) => {
+        try {
+            const params = new URLSearchParams({key});
+            const data = await fetchJson(`/api/Admin/S3DownloadUrl?${params.toString()}`);
+            if (data?.url) {
+                window.open(data.url, "_blank", "noopener,noreferrer");
+            }
+        } catch (caughtError) {
+            logError("s3:download:error", caughtError);
+            setError(`다운로드 URL 생성 실패: ${caughtError.message}`);
+        }
     }, []);
     const loadAllUsers = useCallback(async ({
         page = 1,
@@ -685,6 +763,18 @@ function useAdminData(page) {
                     }
                     return;
                 }
+                if (page === "s3-browser") {
+                    if (mounted) {
+                        setSites([]);
+                        setUsers([]);
+                        setAllUsers([]);
+                        setSchedulers([]);
+                        setDailyStats({userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: []});
+                        setTopViewedPages([]);
+                    }
+                    await loadS3Objects();
+                    return;
+                }
 
                 if (mounted) {
                     await loadDashboard();
@@ -706,7 +796,7 @@ function useAdminData(page) {
         return () => {
             mounted = false;
         };
-    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers]);
+    }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects]);
 
     return {
         loading,
@@ -748,6 +838,17 @@ function useAdminData(page) {
         calculatingSiteSeq,
         memoryCacheStats,
         loadMemoryCacheStats,
+        s3Items,
+        loadS3Objects,
+        selectedS3Keys,
+        setSelectedS3Keys,
+        deleteS3Selected,
+        downloadS3Object,
+        loadingS3,
+        deletingS3,
+        expandedS3Nodes,
+        toggleS3Node,
+        expandAllS3Nodes,
         error,
     };
 }
@@ -795,6 +896,17 @@ function AdminContent({page, onNavigate, pathname, search}) {
         calculatingSiteSeq,
         memoryCacheStats,
         loadMemoryCacheStats,
+        s3Items,
+        loadS3Objects,
+        selectedS3Keys,
+        setSelectedS3Keys,
+        deleteS3Selected,
+        downloadS3Object,
+        loadingS3,
+        deletingS3,
+        expandedS3Nodes,
+        toggleS3Node,
+        expandAllS3Nodes,
         error,
     } = useAdminData(page);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
@@ -1435,6 +1547,80 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 />
             </Card>
         );
+    }
+    if (page === "s3-browser") {
+        const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
+        const root = {children: {}};
+        fileRows.forEach((item) => {
+            const parts = String(item.key || "").split("/").filter(Boolean);
+            if (parts.length === 0) return;
+            let node = root;
+            parts.forEach((part, index) => {
+                const currentPath = parts.slice(0, index + 1).join("/");
+                if (!node.children[part]) {
+                    node.children[part] = {name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null};
+                }
+                if (index === parts.length - 1) {
+                    node.children[part].isFile = true;
+                    node.children[part].meta = item;
+                }
+                node = node.children[part];
+            });
+        });
+        const rows = [];
+        const visit = (node, depth = 0) => {
+            Object.values(node.children).sort((a, b) => {
+                if (a.isFile === b.isFile) return a.name.localeCompare(b.name);
+                return a.isFile ? 1 : -1;
+            }).forEach((child) => {
+                rows.push({depth, node: child});
+                if (!child.isFile && expandedS3Nodes[child.path]) {
+                    visit(child, depth + 1);
+                }
+            });
+        };
+        visit(root, 0);
+        return <Card withBorder radius="md" padding="lg">
+            <Group justify="space-between" mb="md">
+                <Title order={3}>S3 파일 브라우저</Title>
+                <Badge color="red" variant="light">Admin Only</Badge>
+            </Group>
+            <Group align="flex-end" mb="md">
+                <Button loading={loadingS3} onClick={() => loadS3Objects()} leftSection={<i className="fas fa-sync-alt" aria-hidden="true"/>}>새로고침</Button>
+                <Button variant="light" onClick={expandAllS3Nodes} leftSection={<i className="fas fa-angle-double-down" aria-hidden="true"/>}>모두 펼치기</Button>
+                <Button color="red" variant="light" disabled={selectedS3Keys.length === 0} loading={deletingS3} onClick={deleteS3Selected} leftSection={<i className="fas fa-trash-alt" aria-hidden="true"/>}>선택 삭제 ({selectedS3Keys.length})</Button>
+            </Group>
+            <Table striped highlightOnHover withTableBorder withColumnBorders>
+                <Table.Thead><Table.Tr><Table.Th><input type="checkbox" checked={selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length} onChange={(event) => {
+                    if (event.currentTarget.checked) {
+                        setSelectedS3Keys(fileRows.map((item) => item.key));
+                    } else {
+                        setSelectedS3Keys([]);
+                    }
+                }}/></Table.Th><Table.Th>Key</Table.Th><Table.Th style={{textAlign: "right"}}>Size(bytes)</Table.Th><Table.Th style={{textAlign: "center"}}>Last Modified</Table.Th><Table.Th style={{textAlign: "center"}}>Action</Table.Th></Table.Tr></Table.Thead>
+                <Table.Tbody>
+                    {rows.map(({depth, node}) => {
+                        const key = node.path;
+                        const checked = selectedS3Keys.includes(key);
+                        return <Table.Tr key={key}>
+                            <Table.Td><input type="checkbox" disabled={!node.isFile} checked={checked} onChange={(event) => {
+                                if (event.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
+                                else setSelectedS3Keys((prev) => prev.filter((selectedKey) => selectedKey !== key));
+                            }}/></Table.Td>
+                            <Table.Td>
+                                <div style={{display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`}}>
+                                    {!node.isFile ? <Button size="compact-xs" variant="subtle" onClick={() => toggleS3Node(node.path)}><i className={`fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`} aria-hidden="true"/></Button> : <span style={{display: "inline-block", width: 20}}/>}
+                                    <span><i className={`fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`} aria-hidden="true"/></span>
+                                    <span>{node.name}</span>
+                                </div>
+                            </Table.Td>
+                            <Table.Td style={{textAlign: "right"}}>{node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"}</Table.Td><Table.Td style={{textAlign: "center"}}>{node.isFile ? (node.meta?.lastModified || "-") : "-"}</Table.Td>
+                            <Table.Td style={{textAlign: "center"}}>{node.isFile ? <Button size="xs" variant="light" onClick={() => downloadS3Object(key)} leftSection={<i className="fas fa-download" aria-hidden="true"/>}>다운로드</Button> : "-"}</Table.Td>
+                        </Table.Tr>;
+                    })}
+                </Table.Tbody>
+            </Table>
+        </Card>;
     }
 
     if (page === "recent-changes") {
