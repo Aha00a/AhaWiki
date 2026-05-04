@@ -528,7 +528,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         rerenderColumns();
-                        return persistColumns('card:move', { cardTitle: movedCard.text || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
+                        return persistColumns('card:move', {
+                            cardTitle: movedCard.text || '',
+                            fromOrder: String((evt.oldIndex || 0) + 1),
+                            toOrder: String((evt.newIndex || 0) + 1),
+                            fromList: fromTitle,
+                            toList: toTitle
+                        }).catch(function (error) {
                             console.error('[Kanban] failed to save card order', error);
                         });
                     });
