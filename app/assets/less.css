@@ -3759,4 +3759,107 @@ kbd:hover > kbd {
   gap: 8px;
   margin-top: 8px;
 }
+.InterpreterKanban .kanban-column {
+  min-width: 220px;
+  background: #f6f7f9;
+  border: 1px solid #d7dce2;
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+.InterpreterKanban .kanban-column-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.InterpreterKanban .kanban-column-title {
+  font-weight: bold;
+  cursor: pointer;
+}
+.InterpreterKanban .kanban-icon-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+}
+.InterpreterKanban .kanban-column-title-editor {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  border: 1px solid #b6c2cf;
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+.InterpreterKanban .kanban-card-list {
+  min-height: 20px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+.InterpreterKanban .kanban-card {
+  background: #fff;
+  border: 1px solid #cfd5dd;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+.InterpreterKanban .kanban-card-text {
+  margin-bottom: 6px;
+}
+.InterpreterKanban .kanban-card-meta {
+  font-size: 12px;
+  color: #6b778c;
+}
+.InterpreterKanban .kanban-card-id {
+  margin-bottom: 4px;
+}
+.InterpreterKanban .kanban-card-stat {
+  margin-right: 10px;
+}
+.InterpreterKanban .kanban-card-composer {
+  margin-top: 6px;
+}
+.InterpreterKanban .kanban-add-card-button {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  text-align: left;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #44546f;
+  cursor: pointer;
+}
+.InterpreterKanban .kanban-card-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #b6c2cf;
+  border-radius: 6px;
+  padding: 8px;
+  resize: vertical;
+}
+.InterpreterKanban .kanban-inline-actions {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.InterpreterKanban .kanban-primary-button {
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  background: #0c66e4;
+  color: #fff;
+  cursor: pointer;
+}
+.InterpreterKanban .kanban-ghost-button {
+  border: none;
+  background: transparent;
+  color: #44546f;
+  cursor: pointer;
+}
 /*# sourceMappingURL=less.css.map */

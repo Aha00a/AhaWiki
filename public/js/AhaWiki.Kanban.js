@@ -435,36 +435,21 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
         columnElement.setAttribute('data-column-line-number', String(column.lineNumber || 1));
-        columnElement.style.minWidth = '220px';
-        columnElement.style.background = '#f6f7f9';
-        columnElement.style.border = '1px solid #d7dce2';
-        columnElement.style.borderRadius = '6px';
-        columnElement.style.padding = '10px';
-        columnElement.style.boxSizing = 'border-box';
-        columnElement.style.display = 'flex';
-        columnElement.style.flexDirection = 'column';
-        columnElement.style.maxHeight = '80vh';
+        
 
         var titleRow = document.createElement('div');
-        titleRow.style.display = 'flex';
-        titleRow.style.alignItems = 'center';
-        titleRow.style.justifyContent = 'space-between';
-        titleRow.style.marginBottom = '8px';
+        titleRow.className = 'kanban-column-title-row';
 
         var title = document.createElement('div');
         title.textContent = column.title;
-        title.style.fontWeight = 'bold';
-        title.style.cursor = 'pointer';
+        title.className = 'kanban-column-title';
         title.title = 'Click to edit list name';
 
         var deleteListButton = document.createElement('button');
         deleteListButton.type = 'button';
         deleteListButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
         deleteListButton.title = 'Delete list';
-        deleteListButton.style.border = 'none';
-        deleteListButton.style.background = 'transparent';
-        deleteListButton.style.cursor = 'pointer';
-        deleteListButton.style.fontSize = '14px';
+        deleteListButton.className = 'kanban-icon-button';
 
         titleRow.appendChild(title);
         titleRow.appendChild(deleteListButton);
@@ -473,24 +458,19 @@ document.addEventListener('DOMContentLoaded', function () {
         var titleEditor = document.createElement('input');
         titleEditor.type = 'text';
         titleEditor.value = column.title || '';
-        titleEditor.style.display = 'none';
-        titleEditor.style.width = '100%';
-        titleEditor.style.boxSizing = 'border-box';
-        titleEditor.style.marginBottom = '8px';
-        titleEditor.style.border = '1px solid #b6c2cf';
-        titleEditor.style.borderRadius = '4px';
-        titleEditor.style.padding = '6px 8px';
+        titleEditor.className = 'kanban-column-title-editor';
+        titleEditor.classList.add('kanban-hidden');
         columnElement.appendChild(titleEditor);
 
         var closeTitleEditor = function () {
-            titleEditor.style.display = 'none';
-            title.style.display = 'block';
+            titleEditor.classList.add('kanban-hidden');
+            title.classList.remove('kanban-hidden');
             titleEditor.value = column.title || '';
         };
 
         var openTitleEditor = function () {
-            title.style.display = 'none';
-            titleEditor.style.display = 'block';
+            title.classList.add('kanban-hidden');
+            titleEditor.classList.remove('kanban-hidden');
             titleEditor.value = column.title || '';
             titleEditor.focus();
             titleEditor.select();
@@ -549,9 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var cardList = document.createElement('div');
         cardList.className = 'kanban-card-list';
-        cardList.style.minHeight = '20px';
-        cardList.style.flex = '1 1 auto';
-        cardList.style.overflowY = 'auto';
+        
 
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
@@ -565,31 +543,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             cardElement.setAttribute('data-line-number', String(card.lineNumber));
-            cardElement.style.background = '#fff';
-            cardElement.style.border = '1px solid #cfd5dd';
-            cardElement.style.borderRadius = '6px';
-            cardElement.style.padding = '8px';
-            cardElement.style.marginBottom = '8px';
-            cardElement.style.cursor = 'pointer';
+            
 
             var cardText = document.createElement('div');
             cardText.textContent = card.text;
-            cardText.style.marginBottom = '6px';
+            cardText.className = 'kanban-card-text';
 
             var cardMeta = document.createElement('div');
-            cardMeta.style.fontSize = '12px';
-            cardMeta.style.color = '#6b778c';
+            cardMeta.className = 'kanban-card-meta';
 
             var cardIdText = document.createElement('div');
-            cardIdText.style.marginBottom = '4px';
+            cardIdText.className = 'kanban-card-id';
             cardIdText.textContent = card.id || '-';
             cardMeta.appendChild(cardIdText);
 
             var cardStat = document.createElement('div');
             card.commentCountElement = document.createElement('span');
             card.attachmentCountElement = document.createElement('span');
-            card.attachmentCountElement.style.marginRight = '10px';
-            card.commentCountElement.style.marginRight = '10px';
+            card.attachmentCountElement.className = 'kanban-card-stat';
+            card.commentCountElement.className = 'kanban-card-stat';
             updateCardCommentCount(card);
             var dueDateValues = (card.properties && card.properties.DueDate) || [];
             var dueDateText = dueDateValues.length > 0 ? String(dueDateValues[0]).replace(/^\[|\]$/g, '').trim() : '';
@@ -615,57 +587,33 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.appendChild(cardList);
 
         var cardComposer = document.createElement('div');
-        cardComposer.style.marginTop = '6px';
+        cardComposer.className = 'kanban-card-composer';
 
         var addCardButton = document.createElement('button');
         addCardButton.type = 'button';
         addCardButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a Card';
-        addCardButton.style.display = 'block';
-        addCardButton.style.width = '100%';
-        addCardButton.style.padding = '8px';
-        addCardButton.style.textAlign = 'left';
-        addCardButton.style.border = 'none';
-        addCardButton.style.borderRadius = '6px';
-        addCardButton.style.background = 'transparent';
-        addCardButton.style.color = '#44546f';
-        addCardButton.style.cursor = 'pointer';
+        addCardButton.className = 'kanban-add-card-button';
 
         var cardEditor = document.createElement('div');
-        cardEditor.style.display = 'none';
+        cardEditor.className = 'kanban-card-editor kanban-hidden';
 
         var cardTextarea = document.createElement('textarea');
         cardTextarea.rows = 3;
         cardTextarea.placeholder = 'Enter a Title';
-        cardTextarea.style.width = '100%';
-        cardTextarea.style.boxSizing = 'border-box';
-        cardTextarea.style.border = '1px solid #b6c2cf';
-        cardTextarea.style.borderRadius = '6px';
-        cardTextarea.style.padding = '8px';
-        cardTextarea.style.resize = 'vertical';
+        cardTextarea.className = 'kanban-card-textarea';
 
         var cardActions = document.createElement('div');
-        cardActions.style.marginTop = '8px';
-        cardActions.style.display = 'flex';
-        cardActions.style.alignItems = 'center';
-        cardActions.style.gap = '8px';
+        cardActions.className = 'kanban-inline-actions';
 
         var submitCardButton = document.createElement('button');
         submitCardButton.type = 'button';
         submitCardButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a Card';
-        submitCardButton.style.border = 'none';
-        submitCardButton.style.borderRadius = '4px';
-        submitCardButton.style.padding = '8px 12px';
-        submitCardButton.style.background = '#0c66e4';
-        submitCardButton.style.color = '#fff';
-        submitCardButton.style.cursor = 'pointer';
+        submitCardButton.className = 'kanban-primary-button';
 
         var cancelCardButton = document.createElement('button');
         cancelCardButton.type = 'button';
         cancelCardButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i> Cancel';
-        cancelCardButton.style.border = 'none';
-        cancelCardButton.style.background = 'transparent';
-        cancelCardButton.style.color = '#44546f';
-        cancelCardButton.style.cursor = 'pointer';
+        cancelCardButton.className = 'kanban-ghost-button';
 
         cardActions.appendChild(submitCardButton);
         cardActions.appendChild(cancelCardButton);
@@ -676,14 +624,14 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.appendChild(cardComposer);
 
         var closeCardEditor = function () {
-            cardEditor.style.display = 'none';
-            addCardButton.style.display = 'block';
+            cardEditor.className = 'kanban-card-editor kanban-hidden';
+            addCardButton.classList.remove('kanban-hidden');
             cardTextarea.value = '';
         };
 
         addCardButton.addEventListener('click', function () {
-            addCardButton.style.display = 'none';
-            cardEditor.style.display = 'block';
+            addCardButton.classList.add('kanban-hidden');
+            cardEditor.classList.remove('kanban-hidden');
             cardTextarea.focus();
         });
 
@@ -1303,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var titleEditor = document.createElement('input');
             titleEditor.type = 'text';
             titleEditor.value = card.text || '';
-            titleEditor.style.display = 'none';
+            titleEditor.classList.add('kanban-hidden');
             titleEditor.style.width = '100%';
             titleEditor.style.boxSizing = 'border-box';
             titleEditor.style.margin = '0 0 12px 0';
@@ -1327,14 +1275,14 @@ document.addEventListener('DOMContentLoaded', function () {
             closeButton.style.color = '#44546f';
 
             var closeTitleEditor = function () {
-                titleEditor.style.display = 'none';
-                title.style.display = 'block';
+                titleEditor.classList.add('kanban-hidden');
+                title.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
-                title.style.display = 'none';
-                titleEditor.style.display = 'block';
+                title.classList.add('kanban-hidden');
+                titleEditor.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
                 titleEditor.select();
