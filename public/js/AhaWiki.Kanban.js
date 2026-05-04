@@ -163,11 +163,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     var COMMENT_PREFIX = ' * ';
+    var COMMENT_DETAIL_PREFIX = '  * ';
 
-    var buildCommentLine = function (message) {
+    var buildCommentEntry = function (details) {
         var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
         var author = window.AhaWikiCurrentUserNickname || 'Anonymous';
-        return '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10) + ' - ' + message;
+        return {
+            header: '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10),
+            details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
+        };
     };
 
     var updateCardCommentCount = function (card) {
@@ -196,12 +200,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            var commentMatch = line.match(/^\s\*\s+(.+)$/);
-            if (commentMatch && currentCard) {
-                currentCard.comments = currentCard.comments || [];
-                currentCard.comments.push(commentMatch[1].trim());
+            var commentDetailMatch = line.match(/^\s{2}\*\s+(.+)$/);
+            if (commentDetailMatch && currentCard && currentCard.comments.length > 0) {
+                var currentComment = currentCard.comments[currentCard.comments.length - 1];
+                currentComment.details = currentComment.details || [];
+                currentComment.details.push(commentDetailMatch[1].trim());
                 return;
             }
+
+            var commentHeaderMatch = line.match(/^\s\*\s+(.+)$/);
+            if (commentHeaderMatch && currentCard) {
+                currentCard.comments = currentCard.comments || [];
+                currentCard.comments.push({
+                    header: commentHeaderMatch[1].trim(),
+                    details: []
+                });
+                return;
+            }
+
 
             var cardMatch = line.match(/^====\s+(.+)$/);
             if (cardMatch && currentColumn) {
@@ -460,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var newCard = {
                     text: value,
                     lineNumber: cardLineStart,
-                    comments: [buildCommentLine('Created card')]
+                    comments: [buildCommentEntry(['Created card'])]
                 };
 
                 column.cards = column.cards || [];
@@ -551,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
                         movedCard.comments = movedCard.comments || [];
-                        movedCard.comments.push(buildCommentLine('Moved from [#' + fromTitle + '] to [#' + toTitle + ']'));
+                        movedCard.comments.push(buildCommentEntry(['Moved from [#' + fromTitle + '] to [#' + toTitle + ']']));
                         updateCardCommentCount(movedCard);
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
@@ -594,7 +610,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 (column.cards || []).forEach(function (card) {
                     lines.push('==== ' + (card.text || ''));
                     (card.comments || []).forEach(function (comment) {
-                        lines.push(COMMENT_PREFIX + comment);
+                        if (!comment || !comment.header) {
+                            return;
+                        }
+                        lines.push(COMMENT_PREFIX + comment.header);
+                        (comment.details || []).forEach(function (detail) {
+                            lines.push(COMMENT_DETAIL_PREFIX + detail);
+                        });
                     });
                 });
                 return lines.join('\n');
@@ -912,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var previousCardTitle = card.text || '';
                 card.text = nextTitle;
                 card.comments = card.comments || [];
-                card.comments.push(buildCommentLine('Renamed Card Title - ["' + previousCardTitle + '"] to ["' + nextTitle + '"]'));
+                card.comments.push(buildCommentEntry(['Renamed Card Title', '["' + previousCardTitle + '"] to ["' + nextTitle + '"]']));
                 updateCardCommentCount(card);
                 title.textContent = nextTitle;
                 closeTitleEditor();
@@ -989,9 +1011,12 @@ document.addEventListener('DOMContentLoaded', function () {
             var renderComments = function () {
                 comments.innerHTML = '';
                 var pageName = root.getAttribute('data-page-name') || '';
-                (card.comments || []).slice().reverse().forEach(function (line) {
+                (card.comments || []).slice().reverse().forEach(function (entry) {
+                    if (!entry || !entry.header) {
+                        return;
+                    }
+
                     var row = document.createElement('div');
-                    row.textContent = line;
                     row.style.padding = '10px 12px';
                     row.style.border = '1px solid #eceff3';
                     row.style.borderRadius = '8px';
@@ -999,15 +1024,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     row.style.marginBottom = '8px';
                     row.style.color = '#172b4d';
                     row.style.lineHeight = '1.4';
-                    comments.appendChild(row);
 
-                    requestRenderInlineComment(pageName, line).then(function (html) {
+                    var header = document.createElement('div');
+                    header.style.fontWeight = '600';
+                    header.style.marginBottom = '6px';
+                    row.appendChild(header);
+
+                    requestRenderInlineComment(pageName, entry.header).then(function (html) {
                         if (html) {
-                            row.innerHTML = html;
+                            header.innerHTML = html;
                         }
                     }).catch(function (error) {
-                        console.error('[Kanban] failed to render comment', error);
+                        console.error('[Kanban] failed to render comment header', error);
+                        header.textContent = entry.header;
                     });
+
+                    (entry.details || []).forEach(function (detailLine) {
+                        var detailRow = document.createElement('div');
+                        detailRow.style.paddingLeft = '12px';
+                        detailRow.style.marginTop = '4px';
+                        detailRow.textContent = '• ' + detailLine;
+                        row.appendChild(detailRow);
+
+                        requestRenderInlineComment(pageName, detailLine).then(function (html) {
+                            if (html) {
+                                detailRow.innerHTML = '• ' + html;
+                            }
+                        }).catch(function (error) {
+                            console.error('[Kanban] failed to render comment detail', error);
+                        });
+                    });
+
+                    comments.appendChild(row);
                 });
             };
             submit.addEventListener('click', function () {
@@ -1015,9 +1063,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!body) {
                     return;
                 }
-                var commentLine = buildCommentLine(body);
+                var commentEntry = buildCommentEntry(['Commented', body]);
                 card.comments = card.comments || [];
-                card.comments.push(commentLine);
+                card.comments.push(commentEntry);
                 updateCardCommentCount(card);
                 textarea.value = '';
                 renderComments();
