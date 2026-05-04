@@ -51,7 +51,8 @@ controllerComponents: ControllerComponents,
   private def actorLabel(implicit provider: RequestWrapper): String = provider.getUser.map(_.nickname).getOrElse("Anonymous")
   private def nowLabel(): String = LocalDateTime.now().withNano(0).toString
   private def eventPrefix(implicit provider: RequestWrapper): String = s"[User:${actorLabel}] [${nowLabel()}]"
-  private def quote(value: String): String = s"""["${value.trim}"]"""
+  private def quoteCard(value: String): String = s"""["${value.trim}"]"""
+  private def quoteList(value: String): String = s"""'''${value.trim}'''"""
   private def resolve(meta: Map[String, String], key: String, fallback: String = ""): String = meta.getOrElse(key, fallback).trim
 
   private def trimmedPreview(text: String, maxLength: Int = CommentPreviewMaxLength): String = {
@@ -103,22 +104,22 @@ controllerComponents: ControllerComponents,
     val meta = actionMeta.getOrElse(Map.empty)
     val prefix = eventPrefix
     val text = actionType.map {
-      case "list:add" => withKanbanPrefix(s"""$prefix - Added a List - ${quote("#" + resolve(meta, "listTitle"))}""")
-      case "list:rename" => withKanbanPrefix(s"""$prefix - Renamed List Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
-      case "list:move" => withKanbanPrefix(s"""$prefix - Moved a List ${quote("#" + resolve(meta, "listTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
-      case "list:delete" => withKanbanPrefix(s"""$prefix - Deleted a List - ${quote("#" + resolve(meta, "listTitle"))}""")
-      case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quote("#" + resolve(meta, "cardTitle"))}""")
-      case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
+      case "list:add" => withKanbanPrefix(s"""$prefix - Added a List - ${quoteList(resolve(meta, "listTitle"))}""")
+      case "list:rename" => withKanbanPrefix(s"""$prefix - Renamed List Title - ${quoteList(resolve(meta, "fromTitle"))} to ${quoteList(resolve(meta, "toTitle"))}""")
+      case "list:move" => withKanbanPrefix(s"""$prefix - Moved a List ${quoteList(resolve(meta, "listTitle"))} Order - ${quoteCard("#" + resolve(meta, "fromOrder"))} to ${quoteCard("#" + resolve(meta, "toOrder"))}""")
+      case "list:delete" => withKanbanPrefix(s"""$prefix - Deleted a List - ${quoteList(resolve(meta, "listTitle"))}""")
+      case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quoteCard("#" + resolve(meta, "cardTitle"))}""")
+      case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quoteCard("#" + resolve(meta, "fromTitle"))} to ${quoteCard("#" + resolve(meta, "toTitle"))}""")
       case "card:move" =>
         val fromList = resolve(meta, "fromList")
         val toList = resolve(meta, "toList")
         if (fromList.nonEmpty && toList.nonEmpty) {
-          withKanbanPrefix(s"""$prefix - Moved a Card ${quote("#" + resolve(meta, "cardTitle"))} - ${quote("#" + fromList)} to ${quote("#" + toList)}""")
+          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCard("#" + resolve(meta, "cardTitle"))} - ${quoteList(fromList)} to ${quoteList(toList)}""")
         } else {
-          withKanbanPrefix(s"""$prefix - Moved a Card ${quote("#" + resolve(meta, "cardTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
+          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCard("#" + resolve(meta, "cardTitle"))} Order - ${quoteCard("#" + resolve(meta, "fromOrder"))} to ${quoteCard("#" + resolve(meta, "toOrder"))}""")
         }
-      case "card:delete" => withKanbanPrefix(s"""$prefix - Deleted a Card - ${quote("#" + resolve(meta, "cardTitle"))}""")
-      case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quote("#" + resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
+      case "card:delete" => withKanbanPrefix(s"""$prefix - Deleted a Card - ${quoteCard("#" + resolve(meta, "cardTitle"))}""")
+      case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quoteCard("#" + resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
       case _ => ""
     }.getOrElse("").trim
     if (text.isEmpty) None else Some(text)

@@ -567,7 +567,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
                         movedCard.comments = movedCard.comments || [];
-                        movedCard.comments.push(buildCommentEntry(['Moved from [#' + fromTitle + '] to [#' + toTitle + ']']));
+                        movedCard.comments.push(buildCommentEntry(["Moved from '''" + fromTitle + "''' to '''" + toTitle + "'''"]));
                         updateCardCommentCount(movedCard);
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
@@ -934,7 +934,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var previousCardTitle = card.text || '';
                 card.text = nextTitle;
                 card.comments = card.comments || [];
-                card.comments.push(buildCommentEntry(['Renamed Card Title', '["' + previousCardTitle + '"] to ["' + nextTitle + '"]']));
+                card.comments.push(buildCommentEntry(['Renamed Card Title', '["#' + previousCardTitle + '"] to ["#' + nextTitle + '"]']));
                 updateCardCommentCount(card);
                 title.textContent = nextTitle;
                 closeTitleEditor();
