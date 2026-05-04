@@ -38,7 +38,7 @@ object InterpreterWiki extends TraitInterpreter {
   abstract class HandlerContentIterateBase[T](override val pageContent: PageContent) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHr2: Regex = """^={4,}$""".r
-    val regexHeading: Regex = """^(={1,6})\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
+    val regexHeading: Regex = """^(={1,6})(>)?\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
     val regexListUnordered: Regex = """[*-]""".r
     val regexListDecimal: Regex = """\d+\.""".r
@@ -56,7 +56,7 @@ object InterpreterWiki extends TraitInterpreter {
           case "" => emptyLine()
           case regexHr() => hr(s)
           case regexHr2() => hr2(s)
-          case regexHeading(heading, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber)
+          case regexHeading(heading, collapseMarker, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber, collapseMarker != null)
           case regexList(indentString, style, _, content) => list(indentString, style, content, lineNumber);
           case _ => others(s, lineNumber)
         }
@@ -67,7 +67,7 @@ object InterpreterWiki extends TraitInterpreter {
     def emptyLine(): Unit
     def hr(s: String): Unit
     def hr2(s: String): Unit
-    def heading(heading: String, title: String, id: String, lineNumber: Int): Unit
+    def heading(heading: String, title: String, id: String, lineNumber: Int, isInitiallyCollapsed: Boolean): Unit
     def list(indentString: String, style: String, content: String, lineNumber: Int): Unit
     def others(s: String, lineNumber: Int): Unit
     def result(): T
@@ -107,7 +107,7 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<hr class="hr${s.length} pageBreakAfterAlways"/>"""
     }
 
-    override def heading(heading: String, title: String, id: String, lineNumber: Int): Unit = {
+    override def heading(heading: String, title: String, id: String, lineNumber: Int, isInitiallyCollapsed: Boolean): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
@@ -124,7 +124,7 @@ object InterpreterWiki extends TraitInterpreter {
       val headingId = headingAttributes.collectFirst { case m if m.group(1) == "#" => m.group(2) }
       val headingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
       val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
-      val wrapperClass = idNotEmpty
+      val wrapperClass = Seq(idNotEmpty, if (isInitiallyCollapsed) "sectionCollapsed" else "").filter(_.nonEmpty).mkString(" ")
       val isGeneratedHeading = headingClasses.contains("generated")
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
       val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
@@ -209,7 +209,7 @@ object InterpreterWiki extends TraitInterpreter {
     val lines = content.split("""\r\n|\n""", -1).toVector
     val headings = lines.zipWithIndex.flatMap { case (line, index) =>
       line match {
-        case regexHeading(heading, _, _, _) => Some((index + 1, heading.length))
+        case regexHeading(heading, _, _, _, _) => Some((index + 1, heading.length))
         case _ => None
       }
     }

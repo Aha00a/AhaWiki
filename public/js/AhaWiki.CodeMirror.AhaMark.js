@@ -11,7 +11,7 @@
                 token: function (stream, state) {
                     if (stream.sol()) {
                         state.inTripleInterpreter = false;
-                        if (stream.match(/\s*={1,6}\s.+/))
+                        if (stream.match(/\s*={1,6}>?\s.+/))
                             return 'ahamark-header';
                         if (stream.match(/\s*#.+/))
                             return 'ahamark-comment';

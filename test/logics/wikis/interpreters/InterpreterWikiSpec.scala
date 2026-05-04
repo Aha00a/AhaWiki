@@ -39,5 +39,13 @@ class InterpreterWikiSpec extends AnyFreeSpec with EmptyContextWikiPage {
       assert(html.contains("""<h1 id="Hello-World" class="hero">"""))
       assert(html.contains("""href="#Hello-World"""))
     }
+
+    "supports initially-collapsed headings with > syntax" in {
+      val html = InterpreterWiki.toHtmlString("==> Collapsed")
+
+      assert(html.contains("""<div class="Collapsed sectionCollapsed">"""))
+      assert(html.contains("""<h2 id="Collapsed" class="">"""))
+    }
+
   }
 }
