@@ -1,5 +1,34 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
+    var getHashCardId = function () {
+        return (window.location.hash || '').replace(/^#/, '').trim();
+    };
+    var setHashCardId = function (cardId) {
+        if (!cardId) {
+            return;
+        }
+        var nextHash = '#' + cardId;
+        if (window.location.hash === nextHash) {
+            return;
+        }
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', nextHash);
+            return;
+        }
+        window.location.hash = cardId;
+    };
+    var clearHashCardId = function (cardId) {
+        var currentHash = getHashCardId();
+        if (!currentHash || (cardId && currentHash !== cardId)) {
+            return;
+        }
+        var baseUrl = window.location.pathname + window.location.search;
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', baseUrl);
+            return;
+        }
+        window.location.hash = '';
+    };
 
     var requestAddList = function (pageName, title, lineStart) {
         if (!pageName) {
@@ -271,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     var openCardDetail = function () {};
+    var openCardDetailById = function () {};
     var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
@@ -909,6 +939,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (existing && existing.parentNode) {
                 existing.parentNode.removeChild(existing);
             }
+            setHashCardId(card.id || '');
             var overlay = document.createElement('div');
             overlay.className = 'kanban-card-detail-overlay';
             overlay.style.position = 'fixed';
@@ -1155,6 +1186,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (overlay.parentNode) {
                     overlay.parentNode.removeChild(overlay);
                 }
+                clearHashCardId(card.id || '');
 
                 enqueueMutation(function () {
                     return persistColumns('card:delete', { cardTitle: card.text || '' }).catch(function (error) {
@@ -1166,11 +1198,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (overlay.parentNode) {
                     overlay.parentNode.removeChild(overlay);
                 }
+                clearHashCardId(card.id || '');
             });
             closeButton.addEventListener('click', function () {
                 if (overlay.parentNode) {
                     overlay.parentNode.removeChild(overlay);
                 }
+                clearHashCardId(card.id || '');
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
             header.appendChild(title);
@@ -1187,6 +1221,31 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(overlay);
             renderComments();
         };
+        openCardDetailById = function (cardId) {
+            if (!cardId) {
+                return false;
+            }
+            var targetCard = null;
+            columns.some(function (column) {
+                return (column.cards || []).some(function (card) {
+                    if (card && card.id === cardId) {
+                        targetCard = card;
+                        return true;
+                    }
+                    return false;
+                });
+            });
+            if (!targetCard) {
+                return false;
+            }
+            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            openCardDetail(targetCard);
+            return true;
+        };
+        var initialHashCardId = getHashCardId();
+        if (initialHashCardId) {
+            openCardDetailById(initialHashCardId);
+        }
 
         if (window.Sortable) {
             Sortable.create(board, {
