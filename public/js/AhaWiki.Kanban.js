@@ -234,9 +234,26 @@ document.addEventListener('DOMContentLoaded', function () {
     var COMMENT_PREFIX = ' * ';
     var COMMENT_DETAIL_PREFIX = '  * ';
 
+    var getCurrentAuthor = function () {
+        return window.AhaWikiCurrentUserNickname || 'Anonymous';
+    };
+    var toUserLinkMarkup = function (author) {
+        var safeAuthor = (author || '').trim();
+        if (!safeAuthor) {
+            return '';
+        }
+        if (/^\[User:[^\]]+\]$/.test(safeAuthor)) {
+            return safeAuthor;
+        }
+        return '[User:' + safeAuthor + ']';
+    };
+    var getNowIsoWithoutMillis = function () {
+        return new Date().toISOString().replace(/\.\d{3}Z$/, '');
+    };
+
     var buildCommentEntry = function (details) {
-        var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
-        var author = window.AhaWikiCurrentUserNickname || 'Anonymous';
+        var nowIso = getNowIsoWithoutMillis();
+        var author = getCurrentAuthor();
         return {
             header: '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10),
             details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
@@ -399,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     classNames: cardHeading.classNames,
                     lineNumber: interpreterStartLine + lineIndex,
                     comments: [],
-                    structured: false,
+                    structured: true,
                     properties: {}
                 };
                 cardSection = '';
@@ -690,7 +707,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     id: '',
                     classNames: [],
                     lineNumber: cardLineStart,
-                    comments: [buildCommentEntry(['Created card'])]
+                    comments: [buildCommentEntry(['Created card'])],
+                    structured: true,
+                    properties: {
+                        Creator: [toUserLinkMarkup(getCurrentAuthor())],
+                        dateCreated: ['[' + getNowIsoWithoutMillis() + ']']
+                    }
                 };
 
                 column.cards = column.cards || [];
@@ -912,25 +934,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     var attrSuffix = attrs.length > 0 ? ' ' + attrs.join('') : '';
                     lines.push('==== ' + (card.text || '') + ' ====' + attrSuffix);
-                    if (card.structured) {
-                        lines.push('===== Property');
-                        Object.keys(card.properties || {}).forEach(function (key) {
-                            var values = card.properties[key] || [];
-                            if (values.length <= 1) {
-                                if (values.length === 1) {
-                                    lines.push(COMMENT_PREFIX + key + ': ' + values[0]);
-                                } else {
-                                    lines.push(COMMENT_PREFIX + key);
-                                }
+                    lines.push('===== Property');
+                    Object.keys(card.properties || {}).forEach(function (key) {
+                        var values = card.properties[key] || [];
+                        if (values.length <= 1) {
+                            if (values.length === 1) {
+                                lines.push(COMMENT_PREFIX + key + ': ' + values[0]);
                             } else {
                                 lines.push(COMMENT_PREFIX + key);
-                                values.forEach(function (value) {
-                                    lines.push(COMMENT_DETAIL_PREFIX + value);
-                                });
                             }
-                        });
-                        lines.push('===== Activity');
-                    }
+                        } else {
+                            lines.push(COMMENT_PREFIX + key);
+                            values.forEach(function (value) {
+                                lines.push(COMMENT_DETAIL_PREFIX + value);
+                            });
+                        }
+                    });
+                    lines.push('===== Activity');
                     (card.comments || []).forEach(function (comment) {
                         if (!comment || !comment.header) {
                             return;
@@ -1388,6 +1408,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 propertyList.innerHTML = '';
                 var propertyEntries = Object.keys(card.properties || {}).filter(function (key) {
                     return Array.isArray(card.properties[key]) && card.properties[key].length > 0;
+                }).sort(function (a, b) {
+                    if (a === 'Creator') {
+                        return -1;
+                    }
+                    if (b === 'Creator') {
+                        return 1;
+                    }
+                    return a.localeCompare(b);
                 });
                 if (propertyEntries.length === 0) {
                     var empty = document.createElement('div');
@@ -1415,14 +1443,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     row.appendChild(label);
 
                     values.forEach(function (value) {
+                        var displayValue = value;
+                        if (key === 'Creator') {
+                            displayValue = toUserLinkMarkup(value);
+                        }
                         var valueRow = document.createElement('div');
-                        valueRow.textContent = value;
+                        valueRow.textContent = displayValue;
                         valueRow.style.fontSize = '13px';
                         valueRow.style.color = '#172b4d';
                         valueRow.style.paddingLeft = '8px';
                         row.appendChild(valueRow);
 
-                        requestRenderInlineComment(pageName, value).then(function (html) {
+                        requestRenderInlineComment(pageName, displayValue).then(function (html) {
                             if (html) {
                                 valueRow.innerHTML = html;
                             }
