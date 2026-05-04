@@ -567,7 +567,19 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         var persistColumns = function (actionType, actionMeta) {
             var latestLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
-            return requestSaveKanban(pageName, interpreterStartLine, Math.max(interpreterStartLine, latestLineEnd - 1), serializeColumns(), actionType, actionMeta);
+            var requestLineEnd = Math.max(interpreterStartLine, latestLineEnd - 1);
+            return requestSaveKanban(pageName, interpreterStartLine, requestLineEnd, serializeColumns(), actionType, actionMeta)
+                .then(function (result) {
+                    var nextLineEnd = Number(result && result.lineEnd);
+                    if (metaWrapper && Number.isFinite(nextLineEnd) && nextLineEnd >= interpreterStartLine) {
+                        var delta = nextLineEnd - requestLineEnd;
+                        if (delta !== 0) {
+                            shiftMetaLineRangeAfterInsert(metaWrapper, requestLineEnd, delta);
+                        }
+                        metaWrapper.setAttribute('data-line-end', String(nextLineEnd + 1));
+                    }
+                    return result;
+                });
         };
         var enqueueMutation = function (executor) {
             mutationQueue = mutationQueue
