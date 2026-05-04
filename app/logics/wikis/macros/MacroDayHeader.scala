@@ -2,7 +2,6 @@ package logics.wikis.macros
 
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
-import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 
 object MacroDayHeader extends TraitMacro {
@@ -12,18 +11,19 @@ object MacroDayHeader extends TraitMacro {
     argument match {
       case "" | null => toHtmlString(wikiContext.nameTop)
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop == wikiContext.nameBottom =>
-        Interpreters.toHtmlString(
-          s"""
-             |[[LinkDate($y-$m-$d)]]
-             |= ["$y-$m"]-$d [[WeekdayName($y-$m-$d)]]
-             |""".stripMargin
-        )
+        val ymd = s"$y-$m-$d"
+        val ymLink = AhaMarkLink(s"$y-$m", s"$y-$m", noFollow = true).toHtmlString()
+        val weekday = MacroWeekdayName.toHtmlString(ymd)
+        s"""
+           |${MacroLinkDate.toHtmlString(ymd)}
+           |<h1>${ymLink}-$d $weekday</h1>
+           |""".stripMargin
       case DateTimeUtil.regexIsoLocalDate(y, m, d) if wikiContext.nameTop != wikiContext.nameBottom =>
-        Interpreters.toHtmlString(
-          s"""
-             |== [${wikiContext.nameTop}] [[WeekdayName($y-$m-$d)]]
-             |""".stripMargin
-        )
+        val ymd = s"$y-$m-$d"
+        val weekday = MacroWeekdayName.toHtmlString(ymd)
+        s"""
+           |<h2>${wikiContext.nameTop} $weekday</h2>
+           |""".stripMargin
       case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
     }
   }
