@@ -182,6 +182,33 @@ document.addEventListener('DOMContentLoaded', function () {
         card.commentCountElement.textContent = '💬 ' + count;
     };
     var parseKanbanText = function (text, interpreterStartLine) {
+        var parseCardHeading = function (line) {
+            var match = line.match(/^====\s+(.+?)(\s+====(?:\s+([#.].+))?)?$/);
+            if (!match) {
+                return null;
+            }
+
+            var title = (match[1] || '').trim();
+            var rawAttrs = (match[3] || '').trim();
+            var id = '';
+            var classNames = [];
+
+            rawAttrs.replace(/([#.])([^#.\s]+)/g, function (_, prefix, value) {
+                if (prefix === '#') {
+                    id = value;
+                } else if (prefix === '.') {
+                    classNames.push(value);
+                }
+                return _;
+            });
+
+            return {
+                text: title,
+                id: id,
+                classNames: classNames
+            };
+        };
+
         var lines = text.split(/\r?\n/);
         var columns = [];
         var currentColumn = null;
@@ -219,10 +246,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
 
-            var cardMatch = line.match(/^====\s+(.+)$/);
-            if (cardMatch && currentColumn) {
+            var cardHeading = parseCardHeading(line);
+            if (cardHeading && currentColumn) {
                 currentCard = {
-                    text: cardMatch[1].trim(),
+                    text: cardHeading.text,
+                    id: cardHeading.id,
+                    classNames: cardHeading.classNames,
                     lineNumber: interpreterStartLine + lineIndex,
                     comments: []
                 };
@@ -355,6 +384,14 @@ document.addEventListener('DOMContentLoaded', function () {
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
             cardElement.className = 'kanban-card';
+            if (card.id) {
+                cardElement.id = card.id;
+            }
+            (card.classNames || []).forEach(function (className) {
+                if (className) {
+                    cardElement.classList.add(className);
+                }
+            });
             cardElement.setAttribute('data-line-number', String(card.lineNumber));
             cardElement.style.background = '#fff';
             cardElement.style.border = '1px solid #cfd5dd';
@@ -475,6 +512,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 var cardLineStart = getCardInsertLineStart(index);
                 var newCard = {
                     text: value,
+                    id: '',
+                    classNames: [],
                     lineNumber: cardLineStart,
                     comments: [buildCommentEntry(['Created card'])]
                 };
@@ -492,8 +531,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }));
 
-                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart, newCard.comments[0])
+                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart, newCard.comments[0].header)
                     .then(function (result) {
+                        if (result && result.cardId) {
+                            newCard.id = result.cardId;
+                        }
                         if (result && Number.isFinite(result.lineStart)) {
                             shiftLineNumbersAfterInsert();
                             shiftMetaLineRangeAfterInsert(root.closest('.InterpreterRenderMetaWrapper'), result.lineStart, 1);
@@ -608,7 +650,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return columns.map(function (column) {
                 var lines = ['=== ' + (column.title || '')];
                 (column.cards || []).forEach(function (card) {
-                    lines.push('==== ' + (card.text || ''));
+                    var attrs = [];
+                    if (card.id) {
+                        attrs.push('#' + card.id);
+                    }
+                    (card.classNames || []).forEach(function (className) {
+                        if (className) {
+                            attrs.push('.' + className);
+                        }
+                    });
+                    var attrSuffix = attrs.length > 0 ? ' ' + attrs.join('') : '';
+                    lines.push('==== ' + (card.text || '') + ' ====' + attrSuffix);
                     (card.comments || []).forEach(function (comment) {
                         if (!comment || !comment.header) {
                             return;

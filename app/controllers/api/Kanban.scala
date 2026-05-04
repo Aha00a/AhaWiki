@@ -2,6 +2,7 @@ package controllers.api
 
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
+import com.aha00a.commons.utils.NanoIdUtil
 import logics.AhaWikiCache
 import logics.ApplicationConf
 
@@ -214,7 +215,8 @@ controllerComponents: ControllerComponents,
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
                 val creationCommentLine = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse(eventPrefix + " - Created card")
-                lines.insert(insertAt, s"==== ${payload.text}")
+                val cardId = NanoIdUtil.newId()
+                lines.insert(insertAt, s"==== ${payload.text} ==== #$cardId")
                 lines.insert(insertAt + 1, s" * ${creationCommentLine}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
@@ -235,6 +237,7 @@ controllerComponents: ControllerComponents,
                   "message" -> "Kanban card saved.",
                   "pageName" -> pageName,
                   "text" -> payload.text,
+                  "cardId" -> cardId,
                   "lineStart" -> insertedLine,
                   "lineEnd" -> (insertedLine + 1),
                   "revision" -> nextRevision
