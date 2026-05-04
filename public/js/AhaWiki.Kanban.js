@@ -1043,12 +1043,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         var detailRow = document.createElement('div');
                         detailRow.style.paddingLeft = '12px';
                         detailRow.style.marginTop = '4px';
-                        detailRow.textContent = '• ' + detailLine;
+                        detailRow.textContent = detailLine;
                         row.appendChild(detailRow);
 
                         requestRenderInlineComment(pageName, detailLine).then(function (html) {
                             if (html) {
-                                detailRow.innerHTML = '• ' + html;
+                                detailRow.innerHTML = html;
                             }
                         }).catch(function (error) {
                             console.error('[Kanban] failed to render comment detail', error);
