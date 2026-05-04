@@ -418,6 +418,9 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.style.borderRadius = '6px';
         columnElement.style.padding = '10px';
         columnElement.style.boxSizing = 'border-box';
+        columnElement.style.display = 'flex';
+        columnElement.style.flexDirection = 'column';
+        columnElement.style.maxHeight = '80vh';
 
         var titleRow = document.createElement('div');
         titleRow.style.display = 'flex';
@@ -524,6 +527,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var cardList = document.createElement('div');
         cardList.className = 'kanban-card-list';
         cardList.style.minHeight = '20px';
+        cardList.style.flex = '1 1 auto';
+        cardList.style.overflowY = 'auto';
 
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
@@ -1079,6 +1084,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!card) {
                 return;
             }
+            var pageName = root.getAttribute('data-page-name') || '';
             var existing = document.querySelector('.kanban-card-detail-overlay');
             if (existing && existing.parentNode) {
                 existing.parentNode.removeChild(existing);
@@ -1246,6 +1252,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var propertyList = document.createElement('div');
             propertyList.style.marginTop = '8px';
+            var dueDateEditor = document.createElement('div');
+            dueDateEditor.style.marginTop = '10px';
+            dueDateEditor.style.display = 'flex';
+            dueDateEditor.style.alignItems = 'center';
+            dueDateEditor.style.gap = '8px';
+
+            var dueDateInput = document.createElement('input');
+            dueDateInput.type = 'date';
+
+            var dueDateSaveButton = document.createElement('button');
+            dueDateSaveButton.type = 'button';
+            dueDateSaveButton.textContent = 'Save DueDate';
 
             var renderProperties = function () {
                 propertyList.innerHTML = '';
@@ -1295,6 +1313,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     propertyList.appendChild(row);
                 });
+                var dueDates = (card.properties && card.properties.DueDate) || [];
+                dueDateInput.value = dueDates.length > 0 ? String(dueDates[0]).replace(/^\[|\]$/g, '') : '';
+            };
+            dueDateInput.style.border = '1px solid #b6c2cf';
+            dueDateInput.style.borderRadius = '6px';
+            dueDateInput.style.padding = '6px 8px';
+            dueDateInput.style.fontSize = '13px';
+            dueDateInput.style.color = '#172b4d';
+            dueDateSaveButton.style.border = '1px solid #d0d7de';
+            dueDateSaveButton.style.borderRadius = '6px';
+            dueDateSaveButton.style.padding = '6px 10px';
+            dueDateSaveButton.style.background = '#f6f8fa';
+            dueDateSaveButton.style.color = '#172b4d';
+            dueDateSaveButton.style.cursor = 'pointer';
+
+            var submitDueDate = function () {
+                var nextDueDate = (dueDateInput.value || '').trim();
+                var previousDueDates = (card.properties && card.properties.DueDate) || [];
+                var previousDueDate = previousDueDates.length > 0 ? String(previousDueDates[0]).replace(/^\[|\]$/g, '') : '';
+                if (nextDueDate === previousDueDate) {
+                    return;
+                }
+                card.structured = true;
+                card.properties = card.properties || {};
+                if (nextDueDate) {
+                    card.properties.DueDate = ['[' + nextDueDate + ']'];
+                } else {
+                    delete card.properties.DueDate;
+                }
+                card.comments = card.comments || [];
+                card.comments.push(buildCommentEntry(['Updated DueDate', (previousDueDate || '(none)') + ' to ' + (nextDueDate || '(none)')]));
+                updateCardCommentCount(card);
+                renderColumns();
+                renderProperties();
+                renderComments();
+                enqueueMutation(function () {
+                    return persistColumns('card:property:update', {
+                        cardTitle: card.text || '',
+                        property: 'DueDate',
+                        value: nextDueDate || ''
+                    }).catch(function (error) {
+                        console.error('[Kanban] failed to save due date', error);
+                    });
+                });
             };
 
             var commentsTitle = document.createElement('div');
@@ -1308,7 +1370,6 @@ document.addEventListener('DOMContentLoaded', function () {
             comments.style.marginTop = '12px';
             var renderComments = function () {
                 comments.innerHTML = '';
-                var pageName = root.getAttribute('data-page-name') || '';
                 (card.comments || []).slice().reverse().forEach(function (entry) {
                     if (!entry || !entry.header) {
                         return;
@@ -1432,6 +1493,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 });
             });
+            dueDateSaveButton.addEventListener('click', submitDueDate);
+            dueDateInput.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Enter') {
+                    evt.preventDefault();
+                    submitDueDate();
+                }
+            });
 
             deleteCardButton.addEventListener('click', function () {
                 var shouldDelete = window.confirm('Delete card "' + (card.text || '') + '"?');
@@ -1477,9 +1545,12 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.appendChild(textarea);
             actionBar.appendChild(submit);
             actionBar.appendChild(deleteCardButton);
+            dueDateEditor.appendChild(dueDateInput);
+            dueDateEditor.appendChild(dueDateSaveButton);
             modal.appendChild(actionBar);
             modal.appendChild(propertyTitle);
             modal.appendChild(propertyList);
+            modal.appendChild(dueDateEditor);
             modal.appendChild(commentsTitle);
             modal.appendChild(comments);
             overlay.appendChild(modal);
