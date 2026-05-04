@@ -268,17 +268,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (card.commentCountElement) {
             var count = (card.comments || []).length;
-            card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> ' + count;
+            card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> Act ' + count;
         }
         if (card.attachmentCountElement) {
             var attachmentCount = getCardAttachmentCount(card);
-            if (attachmentCount > 0) {
-                card.attachmentCountElement.style.display = '';
-                card.attachmentCountElement.innerHTML = '<i class="fas fa-paperclip" aria-hidden="true"></i> ' + attachmentCount;
-            } else {
-                card.attachmentCountElement.style.display = 'none';
-                card.attachmentCountElement.innerHTML = '';
-            }
+            card.attachmentCountElement.style.display = '';
+            card.attachmentCountElement.innerHTML = '<i class="fas fa-paperclip" aria-hidden="true"></i> Attach ' + attachmentCount;
         }
     };
     var parseKanbanText = function (text, interpreterStartLine) {
@@ -557,12 +552,25 @@ document.addEventListener('DOMContentLoaded', function () {
             cardMeta.style.fontSize = '12px';
             cardMeta.style.color = '#6b778c';
 
+            var cardIdText = document.createElement('div');
+            cardIdText.style.marginBottom = '4px';
+            cardIdText.textContent = card.id || '-';
+            cardMeta.appendChild(cardIdText);
+
+            var cardStat = document.createElement('div');
             card.commentCountElement = document.createElement('span');
             card.attachmentCountElement = document.createElement('span');
-            card.attachmentCountElement.style.marginLeft = '10px';
+            card.attachmentCountElement.style.marginRight = '10px';
+            card.commentCountElement.style.marginRight = '10px';
             updateCardCommentCount(card);
-            cardMeta.appendChild(card.commentCountElement);
-            cardMeta.appendChild(card.attachmentCountElement);
+            var dueDateValues = (card.properties && card.properties.DueDate) || [];
+            var dueDateText = dueDateValues.length > 0 ? String(dueDateValues[0]).replace(/^\[|\]$/g, '') : '-';
+            var dueDateElement = document.createElement('span');
+            dueDateElement.innerHTML = '<i class="far fa-calendar-alt" aria-hidden="true"></i> DueDate ' + dueDateText;
+            cardStat.appendChild(card.attachmentCountElement);
+            cardStat.appendChild(card.commentCountElement);
+            cardStat.appendChild(dueDateElement);
+            cardMeta.appendChild(cardStat);
 
             cardElement.appendChild(cardText);
             cardElement.appendChild(cardMeta);
@@ -1125,6 +1133,17 @@ document.addEventListener('DOMContentLoaded', function () {
             title.style.lineHeight = '1.35';
             title.style.color = '#172b4d';
 
+            var cardIdLabel = document.createElement('div');
+            cardIdLabel.textContent = card.id || '-';
+            cardIdLabel.style.marginTop = '4px';
+            cardIdLabel.style.fontSize = '12px';
+            cardIdLabel.style.color = '#6b778c';
+
+            var titleWrap = document.createElement('div');
+            titleWrap.style.flex = '1 1 auto';
+            titleWrap.appendChild(title);
+            titleWrap.appendChild(cardIdLabel);
+
             var titleEditor = document.createElement('input');
             titleEditor.type = 'text';
             titleEditor.value = card.text || '';
@@ -1538,7 +1557,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
-            header.appendChild(title);
+            header.appendChild(titleWrap);
             header.appendChild(closeButton);
             modal.appendChild(header);
             modal.appendChild(titleEditor);
