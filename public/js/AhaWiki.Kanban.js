@@ -1003,6 +1003,66 @@ document.addEventListener('DOMContentLoaded', function () {
         board.style.borderRadius = '10px';
         board.style.padding = '12px';
 
+
+        var backgroundDragState = {
+            active: false,
+            startX: 0,
+            startScrollLeft: 0,
+            moved: false
+        };
+        var clearBackgroundDrag = function () {
+            if (!backgroundDragState.active) {
+                return;
+            }
+            backgroundDragState.active = false;
+            board.style.cursor = 'grab';
+            board.style.userSelect = '';
+            document.body.style.userSelect = '';
+        };
+        var canStartBackgroundDrag = function (event) {
+            if (!event || event.button !== 0) {
+                return false;
+            }
+            if (board.scrollWidth <= board.clientWidth) {
+                return false;
+            }
+            return event.target === board;
+        };
+        board.style.cursor = 'grab';
+        board.addEventListener('mousedown', function (event) {
+            if (!canStartBackgroundDrag(event)) {
+                return;
+            }
+            backgroundDragState.active = true;
+            backgroundDragState.startX = event.clientX;
+            backgroundDragState.startScrollLeft = board.scrollLeft;
+            backgroundDragState.moved = false;
+            board.style.cursor = 'grabbing';
+            board.style.userSelect = 'none';
+            document.body.style.userSelect = 'none';
+            event.preventDefault();
+        });
+        document.addEventListener('mousemove', function (event) {
+            if (!backgroundDragState.active) {
+                return;
+            }
+            var deltaX = event.clientX - backgroundDragState.startX;
+            if (Math.abs(deltaX) > 2) {
+                backgroundDragState.moved = true;
+            }
+            board.scrollLeft = backgroundDragState.startScrollLeft - deltaX;
+        });
+        document.addEventListener('mouseup', function () {
+            clearBackgroundDrag();
+        });
+        board.addEventListener('mouseleave', function () {
+            if (!backgroundDragState.active) {
+                return;
+            }
+            board.style.cursor = 'grab';
+        });
+
+
         var addListWrapper = document.createElement('div');
         addListWrapper.style.flex = '0 0 280px';
         addListWrapper.style.minWidth = '280px';
