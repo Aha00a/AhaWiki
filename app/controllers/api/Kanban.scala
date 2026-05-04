@@ -72,10 +72,10 @@ controllerComponents: ControllerComponents,
                                      safeEndExclusive: Int,
                                      original: Seq[String],
                                      replacement: Seq[String]): String = {
-    val beforeCards = original.count(_.trim.startsWith("* "))
-    val afterCards = replacement.count(_.trim.startsWith("* "))
-    val beforeLists = original.count(_.trim.startsWith("== "))
-    val afterLists = replacement.count(_.trim.startsWith("== "))
+    val beforeCards = original.count(_.trim.startsWith("==== "))
+    val afterCards = replacement.count(_.trim.startsWith("==== "))
+    val beforeLists = original.count(_.trim.startsWith("=== "))
+    val afterLists = replacement.count(_.trim.startsWith("=== "))
 
     val cardDelta = afterCards - beforeCards
     val listDelta = afterLists - beforeLists
@@ -147,7 +147,7 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
-                lines.insert(insertAt, s"== ${payload.title}")
+                lines.insert(insertAt, s"=== ${payload.title}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -209,8 +209,8 @@ controllerComponents: ControllerComponents,
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
                 val creationCommentLine = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse(eventPrefix + " - Created card")
-                lines.insert(insertAt, s" * ${payload.text}")
-                lines.insert(insertAt + 1, s"  * ${creationCommentLine}")
+                lines.insert(insertAt, s"==== ${payload.text}")
+                lines.insert(insertAt + 1, s" * ${creationCommentLine}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 

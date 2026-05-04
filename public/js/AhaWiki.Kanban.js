@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     };
-    var COMMENT_PREFIX = '  * ';
+    var COMMENT_PREFIX = ' * ';
 
     var buildCommentLine = function (message) {
         var nowIso = new Date().toISOString().replace(/\.\d{3}Z$/, '');
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var currentCard = null;
 
         lines.forEach(function (line, lineIndex) {
-            var sectionMatch = line.match(/^==\s+(.+)$/);
+            var sectionMatch = line.match(/^===\s+(.+)$/);
             if (sectionMatch) {
                 currentColumn = {
                     title: sectionMatch[1].trim(),
@@ -168,14 +168,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            var commentMatch = line.match(/^\s{2,}\*\s+(.+)$/);
+            var commentMatch = line.match(/^\s\*\s+(.+)$/);
             if (commentMatch && currentCard) {
                 currentCard.comments = currentCard.comments || [];
                 currentCard.comments.push(commentMatch[1].trim());
                 return;
             }
 
-            var cardMatch = line.match(/^\s\*\s+(.+)$/);
+            var cardMatch = line.match(/^====\s+(.+)$/);
             if (cardMatch && currentColumn) {
                 currentCard = {
                     text: cardMatch[1].trim(),
@@ -562,9 +562,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var mutationQueue = Promise.resolve();
         var serializeColumns = function () {
             return columns.map(function (column) {
-                var lines = ['== ' + (column.title || '')];
+                var lines = ['=== ' + (column.title || '')];
                 (column.cards || []).forEach(function (card) {
-                    lines.push(' * ' + (card.text || ''));
+                    lines.push('==== ' + (card.text || ''));
                     (card.comments || []).forEach(function (comment) {
                         lines.push(COMMENT_PREFIX + comment);
                     });
