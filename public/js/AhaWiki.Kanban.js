@@ -1126,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!body) {
                     return;
                 }
-                var commentEntry = buildCommentEntry(['Commented', body]);
+                var commentEntry = buildCommentEntry([body]);
                 card.comments = card.comments || [];
                 card.comments.push(commentEntry);
                 updateCardCommentCount(card);
