@@ -47,7 +47,8 @@
  * Assignee
   * [User:Aha00a]
  * Attachment
-
+  * [[Attachment(clipboard/clipboard.2026-05-04T20-49-15.png)]]
+  * [[Attachment(clipboard/clipboard.2026-05-04T20-54-56.png)]]
 ===== Activity
  * [User:Aha00a] [2026-05-04]T10:29:55
  * [User:Aha00a] [2026-05-04]T10:36:17
