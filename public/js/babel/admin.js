@@ -459,7 +459,7 @@ function useAdminData(page) {
       const response = await fetch("/api/Admin/S3Objects", {
         method: "DELETE",
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json", [csrf.name]: csrf.value },
+        headers: { "Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value },
         body: JSON.stringify({ keys: selectedS3Keys })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
