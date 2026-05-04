@@ -35,12 +35,42 @@ controllerComponents: ControllerComponents,
                        wsClient: WSClient,
                        executionContext: ExecutionContext,
                        configuration: Configuration) extends BaseController {
+  private val CommentPreviewMaxLength = 80
+
   private case class AddListRequest(title: String, lineStart: Int)
   private implicit val addListRequestReads = Json.reads[AddListRequest]
   private case class AddCardRequest(text: String, lineStart: Int)
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
   private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String)
   private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
+
+  private def buildKanbanSaveComment(pageName: String,
+                                     safeStart: Int,
+                                     safeEndExclusive: Int,
+                                     original: Seq[String],
+                                     replacement: Seq[String]): String = {
+    val beforeCards = original.count(_.trim.startsWith("* "))
+    val afterCards = replacement.count(_.trim.startsWith("* "))
+    val beforeLists = original.count(_.trim.startsWith("== "))
+    val afterLists = replacement.count(_.trim.startsWith("== "))
+
+    val cardDelta = afterCards - beforeCards
+    val listDelta = afterLists - beforeLists
+
+    val cardDeltaText = if (cardDelta == 0) "cards=0" else s"cards=${if (cardDelta > 0) "+" else ""}$cardDelta"
+    val listDeltaText = if (listDelta == 0) "lists=0" else s"lists=${if (listDelta > 0) "+" else ""}$listDelta"
+
+    val preview = replacement
+      .map(_.trim)
+      .find(_.nonEmpty)
+      .orElse(original.map(_.trim).find(_.nonEmpty))
+      .getOrElse("")
+      .take(CommentPreviewMaxLength)
+
+    val previewText = if (preview.nonEmpty) s""" preview="$preview"""" else ""
+
+    s"kanban:save page=$pageName range=$safeStart-$safeEndExclusive replaced=${original.size}->${replacement.size} $cardDeltaText $listDeltaText$previewText"
+  }
 
   def listAdd(pageName: String): Action[AnyContent] = Action { implicit request =>
     request.body.asJson match {
@@ -170,12 +200,14 @@ controllerComponents: ControllerComponents,
                 val endIndex = Math.min(safeEndExclusive - 1, lines.length)
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
                 val replacement = payload.content.split("""\r\n|\n""", -1).toSeq
+                val originalSlice = lines.slice(startIndex, endIndex).toSeq
 
                 lines.remove(startIndex, Math.max(0, endIndex - startIndex))
                 lines.insertAll(startIndex, replacement)
 
                 val updated = lines.mkString("\n")
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:order:save range=$safeStart-$safeEndExclusive replacedLines=${replacement.size}""", isMinorEdit = false, updated)
+                val comment = buildKanbanSaveComment(pageName, safeStart, safeEndExclusive, originalSlice, replacement)
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(Json.obj(
                   "status" -> "ok",
