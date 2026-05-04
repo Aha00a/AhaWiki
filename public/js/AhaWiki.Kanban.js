@@ -268,12 +268,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (card.commentCountElement) {
             var count = (card.comments || []).length;
-            card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> Act ' + count;
+            if (count > 0) {
+                card.commentCountElement.style.display = '';
+                card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> ' + count;
+            } else {
+                card.commentCountElement.style.display = 'none';
+                card.commentCountElement.innerHTML = '';
+            }
         }
         if (card.attachmentCountElement) {
             var attachmentCount = getCardAttachmentCount(card);
-            card.attachmentCountElement.style.display = '';
-            card.attachmentCountElement.innerHTML = '<i class="fas fa-paperclip" aria-hidden="true"></i> Attach ' + attachmentCount;
+            if (attachmentCount > 0) {
+                card.attachmentCountElement.style.display = '';
+                card.attachmentCountElement.innerHTML = '<i class="fas fa-paperclip" aria-hidden="true"></i> ' + attachmentCount;
+            } else {
+                card.attachmentCountElement.style.display = 'none';
+                card.attachmentCountElement.innerHTML = '';
+            }
         }
     };
     var parseKanbanText = function (text, interpreterStartLine) {
@@ -564,9 +575,13 @@ document.addEventListener('DOMContentLoaded', function () {
             card.commentCountElement.style.marginRight = '10px';
             updateCardCommentCount(card);
             var dueDateValues = (card.properties && card.properties.DueDate) || [];
-            var dueDateText = dueDateValues.length > 0 ? String(dueDateValues[0]).replace(/^\[|\]$/g, '') : '-';
+            var dueDateText = dueDateValues.length > 0 ? String(dueDateValues[0]).replace(/^\[|\]$/g, '').trim() : '';
             var dueDateElement = document.createElement('span');
-            dueDateElement.innerHTML = '<i class="far fa-calendar-alt" aria-hidden="true"></i> DueDate ' + dueDateText;
+            if (dueDateText) {
+                dueDateElement.innerHTML = '<i class="far fa-calendar-alt" aria-hidden="true"></i> ' + dueDateText;
+            } else {
+                dueDateElement.style.display = 'none';
+            }
             cardStat.appendChild(card.attachmentCountElement);
             cardStat.appendChild(card.commentCountElement);
             cardStat.appendChild(dueDateElement);
@@ -1133,11 +1148,20 @@ document.addEventListener('DOMContentLoaded', function () {
             title.style.lineHeight = '1.35';
             title.style.color = '#172b4d';
 
-            var cardIdLabel = document.createElement('div');
-            cardIdLabel.textContent = card.id || '-';
+            var cardIdLabel = document.createElement('a');
+            var cardId = (card.id || '').trim();
+            if (cardId) {
+                cardIdLabel.href = window.location.pathname + window.location.search + '#' + encodeURIComponent(cardId);
+                cardIdLabel.textContent = cardId;
+            } else {
+                cardIdLabel.href = '#';
+                cardIdLabel.textContent = '-';
+            }
             cardIdLabel.style.marginTop = '4px';
             cardIdLabel.style.fontSize = '12px';
             cardIdLabel.style.color = '#6b778c';
+            cardIdLabel.style.textDecoration = 'underline';
+            cardIdLabel.title = 'Copy/share this link to reopen this card popup';
 
             var titleWrap = document.createElement('div');
             titleWrap.style.flex = '1 1 auto';
