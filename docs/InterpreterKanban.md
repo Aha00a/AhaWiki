@@ -48,7 +48,7 @@
   * [User:Aha00a]
  * Attachment
 
-===== Activities
+===== Activity
  * [User:Aha00a] [2026-05-04]T10:29:55
  * [User:Aha00a] [2026-05-04]T10:36:17
   * Moved from '''Done''' to '''Info'''
@@ -58,7 +58,7 @@
 - `=== 리스트명` → Kanban **리스트(Column)**
 - `==== 카드 제목 ==== #cardId` → **카드 헤더(제목 + 안정 ID)**
 - `===== Property` → 구조 데이터(마감일/담당자/첨부 등)
-- `===== Activities` → 활동 로그(append-only 이벤트)
+- `===== Activity` → 활동 로그(append-only 이벤트)
 
 공통 제약(권장):
 - 카드 ID(`#...`)는 생성 후 유지.
@@ -81,8 +81,8 @@
   - title: string
   - format: `simple | structured`
   - comments: Comment[] (simple 전용)
-  - properties: Map[String, Seq[String]] (structured 전용)
-  - activities: Activity[] (structured 전용)
+  - property: Map[String, Seq[String]] (structured 전용)
+  - activity: Activity[] (structured 전용)
 - Comment
   - text: string
 - Activity
@@ -107,7 +107,7 @@ ID 전략(중요):
 
 UI 동작 권장:
 - 단순 카드: 카드/댓글 편집 UI 제공.
-- 구조형 카드: `Property`는 폼 위젯(DueDate/Assignee/Attachment), `Activities`는 로그 타임라인으로 표시.
+- 구조형 카드: `Property`는 폼 위젯(DueDate/Assignee/Attachment), `Activity`는 로그 타임라인으로 표시.
 - 저장 전 "위키 텍스트 미리보기" 제공.
 - 충돌 시(동시 편집) 머지 안내.
 
@@ -128,7 +128,7 @@ UI 동작 권장:
 - `==== 카드 제목 ==== #cardId`
 - `===== Property`
 - ` * Key: Value` 또는 ` * Key` + 하위 값 불릿
-- `===== Activities`
+- `===== Activity`
 - 기존 로그 라인 보존(append-only)
 
 저장 시 주의점:
@@ -163,7 +163,7 @@ UI 동작 권장:
 
 2차
 - 구조형 `Property` 편집 UI(DueDate/Assignee/Attachment)
-- `Activities` append-only 로깅
+- `Activity` append-only 로깅
 - 새 카드/컬럼 추가
 
 3차
