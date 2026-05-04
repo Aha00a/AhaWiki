@@ -173,6 +173,14 @@ document.addEventListener('DOMContentLoaded', function () {
             details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
         };
     };
+    var buildCardLinkText = function (cardId, cardName) {
+        var safeCardName = (cardName || '').trim();
+        var safeCardId = (cardId || '').trim();
+        if (!safeCardId) {
+            return '["#' + safeCardName + '"]';
+        }
+        return '["#' + safeCardId + '" ' + safeCardName + ']';
+    };
 
     var updateCardCommentCount = function (card) {
         if (!card || !card.commentCountElement) {
@@ -986,7 +994,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 var previousCardTitle = card.text || '';
                 card.text = nextTitle;
                 card.comments = card.comments || [];
-                card.comments.push(buildCommentEntry(['Renamed Card Title', '["#' + previousCardTitle + '"] to ["#' + nextTitle + '"]']));
+                card.comments.push(buildCommentEntry([
+                    'Renamed Card Title',
+                    buildCardLinkText(card.id, previousCardTitle) + ' to ' + buildCardLinkText(card.id, nextTitle)
+                ]));
                 updateCardCommentCount(card);
                 title.textContent = nextTitle;
                 closeTitleEditor();
