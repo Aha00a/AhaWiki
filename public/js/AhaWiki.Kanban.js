@@ -737,10 +737,73 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (window.Sortable) {
-            Sortable.create(cardList, {
+            var dragCancelled = false;
+            var draggingCard = false;
+            var draggingItem = null;
+            var draggingFromList = null;
+            var draggingOldIndex = -1;
+            var cardSortable = null;
+            var restoreDraggedItem = function (item, fromList, oldIndex) {
+                var restoreItem = item || draggingItem;
+                var restoreFromList = fromList || draggingFromList;
+                var restoreOldIndex = Number.isFinite(oldIndex) ? oldIndex : draggingOldIndex;
+                if (!restoreItem || !restoreFromList || restoreOldIndex < 0) {
+                    return;
+                }
+                var children = restoreFromList.children;
+                if (restoreOldIndex >= children.length) {
+                    restoreFromList.appendChild(restoreItem);
+                    return;
+                }
+                if (children[restoreOldIndex] === restoreItem) {
+                    return;
+                }
+                restoreFromList.insertBefore(restoreItem, children[restoreOldIndex]);
+            };
+            var handleDragEscape = function (evt) {
+                if (!draggingCard || evt.key !== 'Escape') {
+                    return;
+                }
+                evt.preventDefault();
+                dragCancelled = true;
+            };
+
+            cardSortable = Sortable.create(cardList, {
                 group: root.id || 'kanban-default',
                 animation: 120,
+                onStart: function (evt) {
+                    draggingCard = true;
+                    dragCancelled = false;
+                    draggingItem = evt.item;
+                    draggingFromList = evt.from;
+                    draggingOldIndex = evt.oldIndex;
+                    window.addEventListener('keydown', handleDragEscape, true);
+                },
                 onEnd: function (evt) {
+                    draggingCard = false;
+                    window.removeEventListener('keydown', handleDragEscape, true);
+
+                    var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || !Number.isFinite(evt.newIndex);
+                    var droppedOutsideList = !(evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list'));
+                    var returnedToSameSpot = evt.from === evt.to && evt.oldIndex === evt.newIndex;
+                    if (dragCancelled || droppedOutsideList || hasInvalidIndex || returnedToSameSpot) {
+                        restoreDraggedItem(evt.item, evt.from, evt.oldIndex);
+                        console.info('[Kanban] card move canceled', {
+                            reason: dragCancelled ? 'escape' : (droppedOutsideList ? 'outside-dropzone' : (hasInvalidIndex ? 'invalid-index' : 'no-change')),
+                            oldIndex: evt.oldIndex,
+                            newIndex: evt.newIndex
+                        });
+                        dragCancelled = false;
+                        draggingItem = null;
+                        draggingFromList = null;
+                        draggingOldIndex = -1;
+                        rerenderColumns();
+                        return;
+                    }
+                    draggingItem = null;
+                    draggingFromList = null;
+                    draggingOldIndex = -1;
+
                     var movedLine = Number(evt.item.getAttribute('data-line-number'));
                     var fromColumnIndex = Number(evt.from.parentElement.getAttribute('data-column-index'));
                     var toColumnIndex = Number(evt.to.parentElement.getAttribute('data-column-index'));
