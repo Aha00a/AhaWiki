@@ -102,6 +102,20 @@ controllerComponents: ControllerComponents,
     }
   }
 
+  private def listPageAttachmentObjectKeysFromS3(siteSeq: Long, pageName: String): Seq[String] = {
+    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+    val prefix = s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/"
+    val amazonS3 = buildAmazonS3Client()
+    val request = new com.amazonaws.services.s3.model.ListObjectsV2Request()
+      .withBucketName(bucket)
+      .withPrefix(prefix)
+      .withMaxKeys(200)
+    val result = amazonS3.listObjectsV2(request)
+    result.getObjectSummaries.asScala.toSeq
+      .map(_.getKey)
+      .filter(key => key != null && key.nonEmpty && !key.endsWith("/"))
+  }
+
   private def getWritablePageContext(pageName: String)
                                     (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
     implicit val site: Site = SiteLogic.get(request.host)
@@ -310,7 +324,6 @@ controllerComponents: ControllerComponents,
         actorAhaWiki ! Calculate(site, name)
     }
   }
-
   private def renderDiffPage(name: String)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
     val after = request.getQueryString("after").getOrElse("0").toInt
     val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
@@ -329,7 +342,7 @@ controllerComponents: ControllerComponents,
     Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaderRobotNoIndexNoFollow
   }
 
-  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
+  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int, attachments: Int)
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     import models.tables.CalculatedLink
@@ -338,12 +351,14 @@ controllerComponents: ControllerComponents,
     val hasBacklinks = CalculatedLink.selectDstLimit1(name).isDefined
     val similarPages = CalculatedCosineSimilarity.select(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
     val adjacentPagesCount = Adjacent.getSeqLinkFiltered(name).length
+    val attachmentCount = Attachment.selectUploadedByPage(site.seq, name).length
 
     val context = MarkupContext(
       schema = schemaMarkup.toOption.map(generateSchemaMarkup).getOrElse(""),
       backlinks = hasBacklinks,
       similarPages = similarPages.nonEmpty,
-      adjacentPages = adjacentPagesCount
+      adjacentPages = adjacentPagesCount,
+      attachments = attachmentCount,
     )
 
     if (isEmptyMarkup(context)) "" else generateFullMarkup(context)
@@ -358,12 +373,16 @@ controllerComponents: ControllerComponents,
   private def generateSimilarPagesMarkup: String =
     "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
 
+  private def generateAttachmentsMarkup(count: Int): String =
+    s"=== Attachments ($count) === #Attachments-Generated.generated\n[[PageAttachments]]"
+
   private def isEmptyMarkup(context: MarkupContext): Boolean =
-    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0
+    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0 && context.attachments == 0
 
   private def generateFullMarkup(context: MarkupContext): String = {
     val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup else ""
     val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
+    val attachmentsMarkup = if (context.attachments > 0) generateAttachmentsMarkup(context.attachments) else ""
 
     s"""
        |== See Also == #See-Also-Generated.generated
@@ -372,6 +391,8 @@ controllerComponents: ControllerComponents,
        |$backlinksMarkup
        |
        |$similarPagesMarkup
+       |
+       |$attachmentsMarkup
        |
        |[[Html(<div style="clear: both;"></div>)]]
        |=== Adjacent Pages === #Adjacent-Pages-Generated.generated
@@ -728,15 +749,35 @@ controllerComponents: ControllerComponents,
             implicit val site: Site = site0
             implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
             implicit val provider: RequestWrapper = provider0
-            val attachments = Attachment.selectUploadedByPage(site.seq, pageName)
+            val dbAttachments = Attachment.selectUploadedByPage(site.seq, pageName).map { attachment =>
+              val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(attachment.objectKey).toOption
+              (attachment, presignedUrlOption)
+            }
+            val dbObjectKeys = dbAttachments.map(_._1.objectKey).toSet
+            val s3OnlyObjects = listPageAttachmentObjectKeysFromS3(site.seq, pageName).filterNot(dbObjectKeys.contains)
+            val s3OnlyJson = s3OnlyObjects.map { objectKey =>
+              val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption
+              val inferredFilename = objectKey.split("/").toSeq.lastOption.getOrElse(objectKey)
+              Json.obj(
+                "objectKey" -> objectKey,
+                "originalFilename" -> inferredFilename,
+                "contentType" -> "unknown",
+                "fileSize" -> 0,
+                "fileUrl" -> presignedUrlOption,
+                "integrityStatus" -> "S3_ONLY",
+                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+              )
+            }
             Ok(Json.obj(
-              "attachments" -> attachments.map(attachment => Json.obj(
+              "attachments" -> (dbAttachments.map { case (attachment, presignedUrlOption) => Json.obj(
                 "objectKey" -> attachment.objectKey,
                 "originalFilename" -> attachment.originalFilename,
                 "contentType" -> attachment.contentType,
                 "fileSize" -> attachment.fileSize,
+                "fileUrl" -> presignedUrlOption,
+                "integrityStatus" -> (if (presignedUrlOption.isDefined) "OK" else "DB_ONLY"),
                 "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
-              ))
+              )} ++ s3OnlyJson)
             ))
         }
       }

@@ -729,7 +729,10 @@
                         .html('<i class="fas fa-file-import"></i>');
                     const $delete = $('<button/>', { type: 'button', class: 'attachmentButton delete', title: '삭제' })
                         .html('<i class="fas fa-trash-alt"></i>');
-                    const $subMeta = $('<div/>', { class: 'attachmentMeta' }).text((attachment.contentType || '') + ' · ' + formatFileSize(attachment.fileSize || 0));
+                    const integrityStatus = attachment.integrityStatus || 'UNKNOWN';
+                    const integrityLabel = integrityStatus === 'OK' ? '' : (integrityStatus === 'S3_ONLY' ? ' · S3_ONLY (DB 레코드 없음)' : ' · DB_ONLY (S3 확인 필요)');
+                    const metaClass = integrityStatus === 'OK' ? 'attachmentMeta' : 'attachmentMeta failed';
+                    const $subMeta = $('<div/>', { class: metaClass }).text((attachment.contentType || '') + ' · ' + Number(attachment.fileSize || 0).toLocaleString() + ' bytes' + integrityLabel);
 
                     $insert.on('click', function () {
                         if (!attachment.attachmentMacro)
@@ -751,7 +754,9 @@
                         });
                     });
 
-                    $actions.append($insert, $delete);
+                    if (integrityStatus !== 'S3_ONLY') {
+                        $actions.append($insert, $delete);
+                    }
                     $meta.append($name, $actions);
                     $content.append($meta, $subMeta);
                     $body.append($thumbWrap, $content);

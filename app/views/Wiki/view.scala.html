@@ -191,7 +191,7 @@
             }
 
             function TocGeneratedContentToggle() {
-                $('[href="#See-Also-Generated"],[href="#Backlinks-Generated"],[href="#Similar-Pages-Generated"],[href="#Adjacent-Pages-Generated"]').each(function (i, v) {
+                $('[href="#See-Also-Generated"],[href="#Backlinks-Generated"],[href="#Similar-Pages-Generated"],[href="#Attachments-Generated"],[href="#Adjacent-Pages-Generated"]').each(function (i, v) {
                     return $(v).parent('li').toggle();
                 });
             }
@@ -216,6 +216,7 @@
                 @Html(contentInterpreted)
             </div>
             <div style="clear: both;"></div>
+
         </div>
     </div>
 }
