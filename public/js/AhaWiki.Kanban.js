@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    var requestAddCard = function (pageName, text, lineStart) {
+    var requestAddCard = function (pageName, text, lineStart, creationComment) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -64,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 body: JSON.stringify({
                     text: text,
-                    lineStart: lineStart
+                    lineStart: lineStart,
+                    creationComment: creationComment
                 })
             }).then(function (response) {
                 return response.json().catch(function () {
@@ -431,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var newCard = {
                     text: value,
                     lineNumber: cardLineStart,
-                    comments: []
+                    comments: [buildCommentLine('Created card')]
                 };
 
                 column.cards = column.cards || [];
@@ -447,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }));
 
-                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart)
+                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart, newCard.comments[0])
                     .then(function (result) {
                         if (result && Number.isFinite(result.lineStart)) {
                             shiftLineNumbersAfterInsert();

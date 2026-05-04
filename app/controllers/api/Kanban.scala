@@ -39,7 +39,7 @@ controllerComponents: ControllerComponents,
 
   private case class AddListRequest(title: String, lineStart: Int)
   private implicit val addListRequestReads = Json.reads[AddListRequest]
-  private case class AddCardRequest(text: String, lineStart: Int)
+  private case class AddCardRequest(text: String, lineStart: Int, creationComment: Option[String])
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
   private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String, actionType: Option[String], actionMeta: Option[Map[String, String]])
   private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
@@ -201,7 +201,9 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
+                val creationCommentLine = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse(eventPrefix + " - Created card")
                 lines.insert(insertAt, s" * ${payload.text}")
+                lines.insert(insertAt + 1, s"  * ${creationCommentLine}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -222,7 +224,7 @@ controllerComponents: ControllerComponents,
                   "pageName" -> pageName,
                   "text" -> payload.text,
                   "lineStart" -> insertedLine,
-                  "lineEnd" -> insertedLine,
+                  "lineEnd" -> (insertedLine + 1),
                   "revision" -> nextRevision
                 ))
               }
