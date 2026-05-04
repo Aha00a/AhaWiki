@@ -79,6 +79,34 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+    var requestRenderInlineComment = function (pageName, comment) {
+        if (!pageName) {
+            return Promise.resolve('');
+        }
+        return fetch('/api/csrf', { credentials: 'same-origin' })
+            .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
+            .then(function (csrfToken) {
+                var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+                return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/renderAhaMark', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Csrf-Token': tokenValue,
+                        'X-CSRF-Token': tokenValue
+                    },
+                    body: JSON.stringify({ comment: comment || '' })
+                }).then(function (response) {
+                    return response.json().catch(function () { return {}; }).then(function (payload) {
+                        if (!response.ok) {
+                            throw new Error(payload.message || payload.error || 'Failed to render comment.');
+                        }
+                        return payload.html || '';
+                    });
+                });
+            });
+    };
+
     var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta) {
         if (!pageName) {
             return Promise.resolve(null);
@@ -960,6 +988,7 @@ document.addEventListener('DOMContentLoaded', function () {
             comments.style.marginTop = '12px';
             var renderComments = function () {
                 comments.innerHTML = '';
+                var pageName = root.getAttribute('data-page-name') || '';
                 (card.comments || []).slice().reverse().forEach(function (line) {
                     var row = document.createElement('div');
                     row.textContent = line;
@@ -971,6 +1000,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     row.style.color = '#172b4d';
                     row.style.lineHeight = '1.4';
                     comments.appendChild(row);
+
+                    requestRenderInlineComment(pageName, line).then(function (html) {
+                        if (html) {
+                            row.innerHTML = html;
+                        }
+                    }).catch(function (error) {
+                        console.error('[Kanban] failed to render comment', error);
+                    });
                 });
             };
             submit.addEventListener('click', function () {

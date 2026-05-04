@@ -9,6 +9,7 @@ import javax.inject._
 import logics.SiteLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
+import logics.wikis.interpreters.InterpreterWiki
 import models.RequestWrapper
 import models.{ContextWikiPage, PageContent}
 import models.tables.Page
@@ -43,6 +44,9 @@ controllerComponents: ControllerComponents,
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
   private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String, actionType: Option[String], actionMeta: Option[Map[String, String]])
   private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
+
+  private case class RenderAhaMarkRequest(comment: String)
+  private implicit val renderAhaMarkRequestReads = Json.reads[RenderAhaMarkRequest]
 
   private def actorLabel(implicit provider: RequestWrapper): String = provider.getUser.map(_.nickname).getOrElse("Anonymous")
   private def nowLabel(): String = LocalDateTime.now().withNano(0).toString
@@ -294,4 +298,21 @@ controllerComponents: ControllerComponents,
         BadRequest(Json.obj("status" -> "error", "message" -> "JSON body is required"))
     }
   }
+  def renderAhaMark(pageName: String): Action[AnyContent] = Action { implicit request =>
+    request.body.asJson match {
+      case Some(body) =>
+        body.validate[RenderAhaMarkRequest].fold(
+          errors => BadRequest(Json.obj("status" -> "error", "message" -> "Invalid payload", "errors" -> JsError.toJson(errors))),
+          payload => {
+            implicit val site: Site = SiteLogic.get(request.host)
+            implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
+            val html = InterpreterWiki.inlineToHtmlString(payload.comment)
+            Ok(Json.obj("status" -> "ok", "html" -> html))
+          }
+        )
+      case None =>
+        BadRequest(Json.obj("status" -> "error", "message" -> "JSON body is required"))
+    }
+  }
+
 }
