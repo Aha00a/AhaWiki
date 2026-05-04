@@ -4,6 +4,8 @@ import anorm._
 
 import java.sql.Connection
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import anorm.SqlParser.{flatten, long, str}
 
 case class AttachmentRow(
   seq: Long,
@@ -17,7 +19,33 @@ case class AttachmentRow(
 )
 
 object Attachment {
-  private val attachmentRowParser: RowParser[AttachmentRow] = Macro.namedParser[AttachmentRow]
+  private val dateTimeParserCandidates: Seq[DateTimeFormatter] = Seq(
+    DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+  )
+
+  private def parseLocalDateTime(raw: String): LocalDateTime = {
+    val trimmed = Option(raw).map(_.trim).getOrElse("")
+    dateTimeParserCandidates.view.flatMap { formatter =>
+      scala.util.Try(LocalDateTime.parse(trimmed, formatter)).toOption
+    }.headOption.getOrElse(throw new IllegalArgumentException(s"Invalid dateInserted: $trimmed"))
+  }
+
+  private val attachmentRowParser: RowParser[AttachmentRow] = {
+    (long("seq") ~ str("dateInserted") ~ str("pageName") ~ str("originalFilename") ~ str("objectKey") ~ str("contentType") ~ long("fileSize") ~ str("status")).map {
+      case seq ~ dateInsertedRaw ~ pageName ~ originalFilename ~ objectKey ~ contentType ~ fileSize ~ status =>
+        AttachmentRow(
+          seq = seq,
+          dateInserted = parseLocalDateTime(dateInsertedRaw),
+          pageName = pageName,
+          originalFilename = originalFilename,
+          objectKey = objectKey,
+          contentType = contentType,
+          fileSize = fileSize,
+          status = status,
+        )
+    }
+  }
 
   def insertInitiated(
     site: Long,
@@ -68,7 +96,7 @@ object Attachment {
     SQL"""
       SELECT
         seq,
-        dateInserted,
+        DATE_FORMAT(dateInserted, '%Y-%m-%d %H:%i:%s') AS dateInserted,
         pageName,
         originalFilename,
         objectKey,
@@ -88,7 +116,7 @@ object Attachment {
     SQL"""
       SELECT
         seq,
-        dateInserted,
+        DATE_FORMAT(dateInserted, '%Y-%m-%d %H:%i:%s') AS dateInserted,
         pageName,
         originalFilename,
         objectKey,

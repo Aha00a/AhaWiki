@@ -108,6 +108,46 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
+
+    var requestUploadClipboardImage = function (pageName, dataUrl) {
+        if (!pageName || !dataUrl) {
+            return Promise.resolve(null);
+        }
+
+        return fetch('/api/csrf', {
+            credentials: 'same-origin'
+        }).then(function (csrfResponse) {
+            return csrfResponse.json().catch(function () {
+                return {};
+            });
+        }).then(function (csrfToken) {
+            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+            var params = new URLSearchParams();
+            params.set('pageName', pageName);
+            params.set('dataUrl', dataUrl);
+
+            return fetch('/api/uploadClipboardImage', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Csrf-Token': tokenValue,
+                    'X-CSRF-Token': tokenValue
+                },
+                body: params.toString()
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw new Error(payload.error || payload.message || 'Failed to upload clipboard image.');
+                    }
+                    return payload;
+                });
+            });
+        });
+    };
+
     var requestRenderInlineComment = function (pageName, comment) {
         if (!pageName) {
             return Promise.resolve('');
@@ -1168,6 +1208,59 @@ document.addEventListener('DOMContentLoaded', function () {
                     comments.appendChild(row);
                 });
             };
+
+            var handleClipboardImagePaste = function (evt) {
+                if (!evt || !evt.clipboardData || !evt.clipboardData.items) {
+                    return;
+                }
+                var clipboardItems = Array.prototype.slice.call(evt.clipboardData.items || []);
+                var imageItem = clipboardItems.find(function (item) {
+                    return item && item.kind === 'file' && /^image\//i.test(item.type || '');
+                });
+                if (!imageItem) {
+                    return;
+                }
+
+                evt.preventDefault();
+                var file = imageItem.getAsFile();
+                if (!file) {
+                    return;
+                }
+
+                var pageName = root.getAttribute('data-page-name') || '';
+                var reader = new FileReader();
+                reader.onload = function (loadEvent) {
+                    var dataUrl = loadEvent && loadEvent.target ? loadEvent.target.result : '';
+                    if (!dataUrl) {
+                        return;
+                    }
+
+                    requestUploadClipboardImage(pageName, dataUrl).then(function (payload) {
+                        var macro = payload && payload.attachmentMacro ? payload.attachmentMacro : '';
+                        if (!macro) {
+                            throw new Error('Missing attachment macro.');
+                        }
+                        var commentText = macro;
+                        var commentEntry = buildCommentEntry([commentText]);
+                        card.comments = card.comments || [];
+                        card.comments.push(commentEntry);
+                        updateCardCommentCount(card);
+                        renderComments();
+                        enqueueMutation(function () {
+                            return persistColumns('card:comment:add', { cardTitle: card.text || '', comment: commentText }).catch(function (error) {
+                                console.error('[Kanban] failed to save clipboard image comment', error);
+                            });
+                        });
+                    }).catch(function (error) {
+                        console.error('[Kanban] failed to upload clipboard image', error);
+                        alert('Image upload failed. ' + (error && error.message ? error.message : ''));
+                    });
+                };
+                reader.readAsDataURL(file);
+            };
+
+            textarea.addEventListener('paste', handleClipboardImagePaste);
+
             submit.addEventListener('click', function () {
                 var body = (textarea.value || '').trim();
                 if (!body) {
