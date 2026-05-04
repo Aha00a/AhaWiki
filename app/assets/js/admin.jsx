@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {createRoot} from "react-dom/client";
+import dayjs from "./lib/dayjsLocal";
 import {
     MantineProvider,
     Anchor,
@@ -38,6 +39,14 @@ function logInfo(...args) {
 
 function logError(...args) {
     console.error(LOG_PREFIX, ...args);
+}
+
+
+function formatDateTimeInClientTimezone(value) {
+    if (!value) return "-";
+    const parsed = dayjs(value);
+    if (!parsed.isValid()) return value;
+    return parsed.format("YYYY-MM-DDTHH:mm:ssZ");
 }
 
 function routeToPage(pathname) {
@@ -1614,7 +1623,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                     <span>{node.name}</span>
                                 </div>
                             </Table.Td>
-                            <Table.Td style={{textAlign: "right"}}>{node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"}</Table.Td><Table.Td style={{textAlign: "center"}}>{node.isFile ? (node.meta?.lastModified || "-") : "-"}</Table.Td>
+                            <Table.Td style={{textAlign: "right"}}>{node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"}</Table.Td><Table.Td style={{textAlign: "center"}}>{node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"}</Table.Td>
                             <Table.Td style={{textAlign: "center"}}>{node.isFile ? <Button size="xs" variant="light" onClick={() => downloadS3Object(key)} leftSection={<i className="fas fa-download" aria-hidden="true"/>}>다운로드</Button> : "-"}</Table.Td>
                         </Table.Tr>;
                     })}

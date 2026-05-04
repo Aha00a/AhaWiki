@@ -1,6 +1,36 @@
 // app/assets/js/admin.jsx
 import React5, { useCallback, useEffect as useEffect2, useMemo as useMemo2, useState as useState2 } from "react";
 import { createRoot } from "react-dom/client";
+
+// app/assets/js/lib/dayjsLocal.js
+function dayjs(value) {
+  const date = new Date(value);
+  return {
+    isValid() {
+      return !Number.isNaN(date.getTime());
+    },
+    format(pattern) {
+      if (pattern !== "YYYY-MM-DDTHH:mm:ssZ") {
+        throw new Error(`Unsupported format: ${pattern}`);
+      }
+      const pad = (num) => String(num).padStart(2, "0");
+      const year = date.getFullYear();
+      const month = pad(date.getMonth() + 1);
+      const day = pad(date.getDate());
+      const hours = pad(date.getHours());
+      const minutes = pad(date.getMinutes());
+      const seconds = pad(date.getSeconds());
+      const offsetMinutes = -date.getTimezoneOffset();
+      const sign = offsetMinutes >= 0 ? "+" : "-";
+      const absOffsetMinutes = Math.abs(offsetMinutes);
+      const offsetHours = pad(Math.floor(absOffsetMinutes / 60));
+      const offsetMins = pad(absOffsetMinutes % 60);
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${sign}${offsetHours}:${offsetMins}`;
+    }
+  };
+}
+
+// app/assets/js/admin.jsx
 import {
   MantineProvider,
   Anchor,
@@ -220,6 +250,12 @@ function logInfo(...args) {
 }
 function logError(...args) {
   console.error(LOG_PREFIX, ...args);
+}
+function formatDateTimeInClientTimezone(value) {
+  if (!value) return "-";
+  const parsed = dayjs(value);
+  if (!parsed.isValid()) return value;
+  return parsed.format("YYYY-MM-DDTHH:mm:ssZ");
 }
 function routeToPage(pathname) {
   if (/^\/Admin\/\d+\/AccessLog$/.test(pathname)) {
@@ -1483,7 +1519,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       return /* @__PURE__ */ React5.createElement(Table4.Tr, { key }, /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (event) => {
         if (event.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
         else setSelectedS3Keys((prev) => prev.filter((selectedKey) => selectedKey !== key));
-      } })), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React5.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React5.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React5.createElement("span", null, /* @__PURE__ */ React5.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React5.createElement("span", null, node.name))), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? node.meta?.lastModified || "-" : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+      } })), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React5.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React5.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React5.createElement("span", null, /* @__PURE__ */ React5.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React5.createElement("span", null, node.name))), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
     }))));
   }
   if (page === "recent-changes") {
