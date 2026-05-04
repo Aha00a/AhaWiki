@@ -435,7 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var addCardButton = document.createElement('button');
         addCardButton.type = 'button';
-        addCardButton.textContent = 'Add a Card';
+        addCardButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a Card';
         addCardButton.style.display = 'block';
         addCardButton.style.width = '100%';
         addCardButton.style.padding = '8px';
@@ -467,7 +467,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var submitCardButton = document.createElement('button');
         submitCardButton.type = 'button';
-        submitCardButton.textContent = 'Add a Card';
+        submitCardButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a Card';
         submitCardButton.style.border = 'none';
         submitCardButton.style.borderRadius = '4px';
         submitCardButton.style.padding = '8px 12px';
@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var cancelCardButton = document.createElement('button');
         cancelCardButton.type = 'button';
-        cancelCardButton.textContent = 'Cancel';
+        cancelCardButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i> Cancel';
         cancelCardButton.style.border = 'none';
         cancelCardButton.style.background = 'transparent';
         cancelCardButton.style.color = '#44546f';
@@ -727,7 +727,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var addListButton = document.createElement('button');
         addListButton.type = 'button';
-        addListButton.textContent = '+ Add a List';
+        addListButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a List';
         addListButton.style.width = '100%';
         addListButton.style.padding = '10px 12px';
         addListButton.style.textAlign = 'left';
@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var submitListButton = document.createElement('button');
         submitListButton.type = 'button';
-        submitListButton.textContent = 'Add a List';
+        submitListButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a List';
         submitListButton.style.border = 'none';
         submitListButton.style.borderRadius = '4px';
         submitListButton.style.padding = '8px 12px';
@@ -768,7 +768,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var cancelListButton = document.createElement('button');
         cancelListButton.type = 'button';
-        cancelListButton.textContent = 'Cancel';
+        cancelListButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i> Cancel';
         cancelListButton.style.border = 'none';
         cancelListButton.style.background = 'transparent';
 
@@ -960,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var closeButton = document.createElement('button');
             closeButton.type = 'button';
-            closeButton.textContent = '✕';
+            closeButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
             closeButton.style.border = 'none';
             closeButton.style.background = 'transparent';
             closeButton.style.cursor = 'pointer';
@@ -1044,7 +1044,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var submit = document.createElement('button');
             submit.type = 'button';
-            submit.textContent = 'Add Comment';
+            submit.innerHTML = '<i class="fas fa-comment-medical" aria-hidden="true"></i> Add Comment';
             submit.style.border = 'none';
             submit.style.borderRadius = '8px';
             submit.style.padding = '8px 12px';
@@ -1054,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var deleteCardButton = document.createElement('button');
             deleteCardButton.type = 'button';
-            deleteCardButton.textContent = 'Delete Card';
+            deleteCardButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i> Delete Card';
             deleteCardButton.style.border = '1px solid #f1b5b5';
             deleteCardButton.style.borderRadius = '8px';
             deleteCardButton.style.padding = '8px 12px';
@@ -1063,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteCardButton.style.cursor = 'pointer';
 
             var commentsTitle = document.createElement('div');
-            commentsTitle.textContent = 'Activity';
+            commentsTitle.innerHTML = '<i class="fas fa-history" aria-hidden="true"></i> Activity';
             commentsTitle.style.marginTop = '16px';
             commentsTitle.style.fontWeight = '600';
             commentsTitle.style.fontSize = '14px';
