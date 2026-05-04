@@ -44,6 +44,21 @@ controllerComponents: ControllerComponents,
   private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String)
   private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
 
+  private def trimmedPreview(text: String, maxLength: Int = CommentPreviewMaxLength): String = {
+    text.trim.take(maxLength)
+  }
+
+  private def buildKanbanActionComment(action: String,
+                                       pageName: String,
+                                       line: Int,
+                                       detail: String,
+                                       boardHint: Option[String] = None): String = {
+    val safeDetail = trimmedPreview(detail)
+    val boardScope = boardHint.map(value => s""" board="${trimmedPreview(value, 40)}"""").getOrElse("")
+
+    s"""kanban:$action page=$pageName line=$line detail="$safeDetail"$boardScope"""
+  }
+
   private def buildKanbanSaveComment(pageName: String,
                                      safeStart: Int,
                                      safeEndExclusive: Int,
@@ -103,7 +118,13 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:list:add title="${payload.title}" line=$insertedLine""", isMinorEdit = false, updated)
+                val comment = buildKanbanActionComment(
+                  action = "list:add",
+                  pageName = pageName,
+                  line = insertedLine,
+                  detail = payload.title
+                )
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(
                   Json.obj(
@@ -155,7 +176,13 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), s"""kanban:card:add text="${payload.text}" line=$insertedLine""", isMinorEdit = false, updated)
+                val comment = buildKanbanActionComment(
+                  action = "card:add",
+                  pageName = pageName,
+                  line = insertedLine,
+                  detail = payload.text
+                )
+                PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(Json.obj(
                   "status" -> "ok",
