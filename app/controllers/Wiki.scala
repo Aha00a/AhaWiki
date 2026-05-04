@@ -374,7 +374,7 @@ controllerComponents: ControllerComponents,
     "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
 
   private def generateAttachmentsMarkup(count: Int): String =
-    s"=== Attachments ($count) === #Attachments-Generated.generated\n[[PageAttachments]]"
+    s"=== Attachments === #Attachments-Generated.generated\n[[AttachmentList]]"
 
   private def isEmptyMarkup(context: MarkupContext): Boolean =
     context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0 && context.attachments == 0

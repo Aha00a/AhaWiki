@@ -4,7 +4,7 @@ import com.aha00a.commons.Implicits._
 import models.ContextWikiPage
 import models.tables.Attachment
 
-object MacroPageAttachments extends TraitMacro {
+object MacroAttachmentList extends TraitMacro {
   override def isBlock: Boolean = true
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
@@ -33,7 +33,7 @@ object MacroPageAttachments extends TraitMacro {
         }
       }.mkString("\n")
 
-      s"""<div class="wikiAttachmentSection"><ul class="wikiAttachmentList">$items</ul></div>"""
+      s"""<div class="wikiAttachmentSection columnWidth350"><ol class="wikiAttachmentList">$items</ol></div>"""
     }
   }
 }
