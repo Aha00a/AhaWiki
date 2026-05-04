@@ -290,6 +290,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var columns = [];
         var currentColumn = null;
         var currentCard = null;
+        var cardSection = '';
+        var propertyKey = '';
 
         lines.forEach(function (line, lineIndex) {
             var sectionMatch = line.match(/^===\s+(.+)$/);
@@ -301,11 +303,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
                 columns.push(currentColumn);
                 currentCard = null;
+                cardSection = '';
+                propertyKey = '';
+                return;
+            }
+            var cardSectionMatch = line.match(/^=====\s+(Property|Activity)\s*$/);
+            if (cardSectionMatch && currentCard) {
+                cardSection = cardSectionMatch[1];
+                propertyKey = '';
+                if (cardSection === 'Property') {
+                    currentCard.structured = true;
+                }
                 return;
             }
 
+            if (cardSection === 'Property' && currentCard) {
+                var propertyHeaderMatch = line.match(/^\s\*\s+([^:]+)\s*:\s*(.+)$/);
+                if (propertyHeaderMatch) {
+                    var key = (propertyHeaderMatch[1] || '').trim();
+                    var value = (propertyHeaderMatch[2] || '').trim();
+                    currentCard.properties[key] = currentCard.properties[key] || [];
+                    if (value) {
+                        currentCard.properties[key].push(value);
+                    }
+                    propertyKey = key;
+                    return;
+                }
+                var propertyKeyOnlyMatch = line.match(/^\s\*\s+(.+)$/);
+                if (propertyKeyOnlyMatch) {
+                    propertyKey = (propertyKeyOnlyMatch[1] || '').trim();
+                    currentCard.properties[propertyKey] = currentCard.properties[propertyKey] || [];
+                    return;
+                }
+                var propertyValueMatch = line.match(/^\s{2}\*\s+(.+)$/);
+                if (propertyValueMatch && propertyKey) {
+                    currentCard.properties[propertyKey] = currentCard.properties[propertyKey] || [];
+                    currentCard.properties[propertyKey].push((propertyValueMatch[1] || '').trim());
+                    return;
+                }
+            }
+
             var commentDetailMatch = line.match(/^\s{2}\*\s+(.+)$/);
-            if (commentDetailMatch && currentCard && currentCard.comments.length > 0) {
+            if (commentDetailMatch && currentCard && cardSection !== 'Property' && currentCard.comments.length > 0) {
                 var currentComment = currentCard.comments[currentCard.comments.length - 1];
                 currentComment.details = currentComment.details || [];
                 currentComment.details.push(commentDetailMatch[1].trim());
@@ -313,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             var commentHeaderMatch = line.match(/^\s\*\s+(.+)$/);
-            if (commentHeaderMatch && currentCard) {
+            if (commentHeaderMatch && currentCard && cardSection !== 'Property') {
                 currentCard.comments = currentCard.comments || [];
                 currentCard.comments.push({
                     header: commentHeaderMatch[1].trim(),
@@ -330,8 +369,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     id: cardHeading.id,
                     classNames: cardHeading.classNames,
                     lineNumber: interpreterStartLine + lineIndex,
-                    comments: []
+                    comments: [],
+                    structured: false,
+                    properties: {}
                 };
+                cardSection = '';
+                propertyKey = '';
                 currentColumn.cards.push(currentCard);
             }
         });
@@ -739,6 +782,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     var attrSuffix = attrs.length > 0 ? ' ' + attrs.join('') : '';
                     lines.push('==== ' + (card.text || '') + ' ====' + attrSuffix);
+                    if (card.structured) {
+                        lines.push('===== Property');
+                        Object.keys(card.properties || {}).forEach(function (key) {
+                            var values = card.properties[key] || [];
+                            if (values.length <= 1) {
+                                if (values.length === 1) {
+                                    lines.push(COMMENT_PREFIX + key + ': ' + values[0]);
+                                } else {
+                                    lines.push(COMMENT_PREFIX + key);
+                                }
+                            } else {
+                                lines.push(COMMENT_PREFIX + key);
+                                values.forEach(function (value) {
+                                    lines.push(COMMENT_DETAIL_PREFIX + value);
+                                });
+                            }
+                        });
+                        lines.push('===== Activity');
+                    }
                     (card.comments || []).forEach(function (comment) {
                         if (!comment || !comment.header) {
                             return;
@@ -1241,6 +1303,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             throw new Error('Missing attachment macro.');
                         }
                         var commentText = macro;
+                        card.structured = true;
+                        card.properties = card.properties || {};
+                        card.properties.Attachment = card.properties.Attachment || [];
+                        card.properties.Attachment.push(commentText);
                         var commentEntry = buildCommentEntry([commentText]);
                         card.comments = card.comments || [];
                         card.comments.push(commentEntry);
