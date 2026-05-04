@@ -760,8 +760,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 restoreFromList.insertBefore(restoreItem, children[restoreOldIndex]);
             };
+            var isEscapeKey = function (evt) {
+                return evt && (evt.key === 'Escape' || evt.key === 'Esc' || evt.keyCode === 27 || evt.which === 27);
+            };
             var handleDragEscape = function (evt) {
-                if (!draggingCard || evt.key !== 'Escape') {
+                if (!draggingCard || !isEscapeKey(evt)) {
                     return;
                 }
                 evt.preventDefault();
@@ -772,21 +775,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 group: root.id || 'kanban-default',
                 animation: 120,
                 onStart: function (evt) {
+                    var doc = root && root.ownerDocument ? root.ownerDocument : document;
                     draggingCard = true;
                     dragCancelled = false;
                     draggingItem = evt.item;
                     draggingFromList = evt.from;
                     draggingOldIndex = evt.oldIndex;
                     window.addEventListener('keydown', handleDragEscape, true);
+                    doc.addEventListener('keydown', handleDragEscape, true);
+                },
+                onMove: function () {
+                    if (dragCancelled) {
+                        return false;
+                    }
+                    return true;
                 },
                 onEnd: function (evt) {
+                    var doc = root && root.ownerDocument ? root.ownerDocument : document;
                     draggingCard = false;
                     window.removeEventListener('keydown', handleDragEscape, true);
+                    doc.removeEventListener('keydown', handleDragEscape, true);
 
                     var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || !Number.isFinite(evt.newIndex);
                     var droppedOutsideList = !(evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list'));
                     var returnedToSameSpot = evt.from === evt.to && evt.oldIndex === evt.newIndex;
-                    if (dragCancelled || droppedOutsideList || hasInvalidIndex || returnedToSameSpot) {
+                    if (dragCancelled || droppedOutsideList || hasInvalidIndex || returnedToSameSpot || !evt.to) {
                         restoreDraggedItem(evt.item, evt.from, evt.oldIndex);
                         console.info('[Kanban] card move canceled', {
                             reason: dragCancelled ? 'escape' : (droppedOutsideList ? 'outside-dropzone' : (hasInvalidIndex ? 'invalid-index' : 'no-change')),
@@ -1694,6 +1707,12 @@ document.addEventListener('DOMContentLoaded', function () {
             Sortable.create(board, {
                 draggable: '.kanban-column',
                 animation: 120,
+                onMove: function () {
+                    if (dragCancelled) {
+                        return false;
+                    }
+                    return true;
+                },
                 onEnd: function (evt) {
                     if (evt.oldIndex === evt.newIndex || evt.oldIndex < 0 || evt.newIndex < 0) {
                         return;
