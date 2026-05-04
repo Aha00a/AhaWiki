@@ -30,7 +30,6 @@ object ExtractConvertInjectMacro {
     MacroWikiStatistics,
 
     MacroAdjacentPages,
-    MacroAttachmentList,
     MacroPageMap,
     MacroSimilarPages,
     MacroBacklinks,

@@ -342,7 +342,7 @@ controllerComponents: ControllerComponents,
     Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaderRobotNoIndexNoFollow
   }
 
-  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int, attachments: Int)
+  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     import models.tables.CalculatedLink
@@ -351,14 +351,12 @@ controllerComponents: ControllerComponents,
     val hasBacklinks = CalculatedLink.selectDstLimit1(name).isDefined
     val similarPages = CalculatedCosineSimilarity.select(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
     val adjacentPagesCount = Adjacent.getSeqLinkFiltered(name).length
-    val attachmentCount = Attachment.selectUploadedByPage(site.seq, name).length
 
     val context = MarkupContext(
       schema = schemaMarkup.toOption.map(generateSchemaMarkup).getOrElse(""),
       backlinks = hasBacklinks,
       similarPages = similarPages.nonEmpty,
       adjacentPages = adjacentPagesCount,
-      attachments = attachmentCount,
     )
 
     if (isEmptyMarkup(context)) "" else generateFullMarkup(context)
@@ -373,16 +371,12 @@ controllerComponents: ControllerComponents,
   private def generateSimilarPagesMarkup: String =
     "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
 
-  private def generateAttachmentsMarkup(count: Int): String =
-    s"=== Attachments === #Attachments-Generated.generated\n[[AttachmentList]]"
-
   private def isEmptyMarkup(context: MarkupContext): Boolean =
-    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0 && context.attachments == 0
+    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0
 
   private def generateFullMarkup(context: MarkupContext): String = {
     val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup else ""
     val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
-    val attachmentsMarkup = if (context.attachments > 0) generateAttachmentsMarkup(context.attachments) else ""
 
     s"""
        |== See Also == #See-Also-Generated.generated
@@ -391,8 +385,6 @@ controllerComponents: ControllerComponents,
        |$backlinksMarkup
        |
        |$similarPagesMarkup
-       |
-       |$attachmentsMarkup
        |
        |[[Html(<div style="clear: both;"></div>)]]
        |=== Adjacent Pages === #Adjacent-Pages-Generated.generated
