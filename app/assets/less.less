@@ -2067,3 +2067,52 @@ kbd {
 	}
 }
 
+
+.InterpreterKanban {
+	.kanban-hidden { display: none; }
+	.kanban-board-ready {
+		display: flex;
+		gap: 12px;
+		align-items: flex-start;
+		overflow-x: auto;
+		background: linear-gradient(135deg, #eef 0%, #eff 100%);
+		border-radius: 10px;
+		padding: 12px;
+	}
+	.kanban-draggable { cursor: grab; }
+	.kanban-dragging {
+		cursor: grabbing;
+		.userSelect(none);
+	}
+	.kanban-add-list-wrapper {
+		flex: 0 0 280px;
+		min-width: 280px;
+	}
+	.kanban-add-list-button {
+		width: 100%;
+		padding: 10px 12px;
+		text-align: left;
+		border: 1px solid #d7dce2;
+		border-radius: 8px;
+		background: rgba(9, 30, 66, 0.04);
+		cursor: pointer;
+	}
+	.kanban-add-list-editor {
+		background: #f6f7f9;
+		border: 1px solid #d7dce2;
+		border-radius: 8px;
+		padding: 10px;
+	}
+	.kanban-add-list-input {
+		width: 100%;
+		box-sizing: border-box;
+		border: 1px solid #b6c2cf;
+		border-radius: 4px;
+		padding: 8px;
+	}
+	.kanban-add-list-actions {
+		display: flex;
+		gap: 8px;
+		margin-top: 8px;
+	}
+}

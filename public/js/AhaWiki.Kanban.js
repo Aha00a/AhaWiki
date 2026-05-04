@@ -994,14 +994,8 @@ document.addEventListener('DOMContentLoaded', function () {
             var currentLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
             return Math.max(1, currentLineEnd - 1);
         };
-        pre.style.display = 'none';
-        board.style.display = 'flex';
-        board.style.gap = '12px';
-        board.style.alignItems = 'flex-start';
-        board.style.overflowX = 'auto';
-        board.style.background = 'linear-gradient(135deg, #eef 0%, #eff 100%)';
-        board.style.borderRadius = '10px';
-        board.style.padding = '12px';
+        pre.classList.add('kanban-hidden');
+        board.classList.add('kanban-board-ready');
 
 
         var backgroundDragState = {
@@ -1015,7 +1009,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             backgroundDragState.active = false;
-            board.style.cursor = 'grab';
+            board.classList.add('kanban-draggable');
             board.style.userSelect = '';
             document.body.style.userSelect = '';
         };
@@ -1028,7 +1022,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             return event.target === board;
         };
-        board.style.cursor = 'grab';
+        board.classList.add('kanban-draggable');
         board.addEventListener('mousedown', function (event) {
             if (!canStartBackgroundDrag(event)) {
                 return;
@@ -1037,8 +1031,7 @@ document.addEventListener('DOMContentLoaded', function () {
             backgroundDragState.startX = event.clientX;
             backgroundDragState.startScrollLeft = board.scrollLeft;
             backgroundDragState.moved = false;
-            board.style.cursor = 'grabbing';
-            board.style.userSelect = 'none';
+            board.classList.add('kanban-dragging');
             document.body.style.userSelect = 'none';
             event.preventDefault();
         });
@@ -1059,45 +1052,28 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!backgroundDragState.active) {
                 return;
             }
-            board.style.cursor = 'grab';
+            board.classList.add('kanban-draggable');
         });
 
 
         var addListWrapper = document.createElement('div');
-        addListWrapper.style.flex = '0 0 280px';
-        addListWrapper.style.minWidth = '280px';
+        addListWrapper.className = 'kanban-add-list-wrapper';
 
         var addListButton = document.createElement('button');
         addListButton.type = 'button';
         addListButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a List';
-        addListButton.style.width = '100%';
-        addListButton.style.padding = '10px 12px';
-        addListButton.style.textAlign = 'left';
-        addListButton.style.border = '1px solid #d7dce2';
-        addListButton.style.borderRadius = '8px';
-        addListButton.style.background = 'rgba(9, 30, 66, 0.04)';
-        addListButton.style.cursor = 'pointer';
+        addListButton.className = 'kanban-add-list-button';
 
         var addListEditor = document.createElement('div');
-        addListEditor.style.display = 'none';
-        addListEditor.style.background = '#f6f7f9';
-        addListEditor.style.border = '1px solid #d7dce2';
-        addListEditor.style.borderRadius = '8px';
-        addListEditor.style.padding = '10px';
+        addListEditor.className = 'kanban-add-list-editor kanban-hidden';
 
         var addListInput = document.createElement('input');
         addListInput.type = 'text';
         addListInput.placeholder = 'Enter list name';
-        addListInput.style.width = '100%';
-        addListInput.style.boxSizing = 'border-box';
-        addListInput.style.border = '1px solid #b6c2cf';
-        addListInput.style.borderRadius = '4px';
-        addListInput.style.padding = '8px';
+        addListInput.className = 'kanban-add-list-input';
 
         var addListActions = document.createElement('div');
-        addListActions.style.display = 'flex';
-        addListActions.style.gap = '8px';
-        addListActions.style.marginTop = '8px';
+        addListActions.className = 'kanban-add-list-actions';
 
         var submitListButton = document.createElement('button');
         submitListButton.type = 'button';
@@ -1184,14 +1160,14 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         var closeListEditor = function () {
-            addListEditor.style.display = 'none';
-            addListButton.style.display = 'block';
+            addListEditor.classList.add('kanban-hidden');
+            addListButton.classList.remove('kanban-hidden');
             addListInput.value = '';
         };
 
         addListButton.addEventListener('click', function () {
-            addListButton.style.display = 'none';
-            addListEditor.style.display = 'block';
+            addListButton.classList.add('kanban-hidden');
+            addListEditor.classList.remove('kanban-hidden');
             addListInput.focus();
         });
 
