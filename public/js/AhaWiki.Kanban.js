@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     };
-    var requestSaveKanban = function (pageName, lineStart, lineEnd, content) {
+    var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         'Csrf-Token': tokenValue,
                         'X-CSRF-Token': tokenValue
                     },
-                    body: JSON.stringify({ lineStart: lineStart, lineEnd: lineEnd, content: content })
+                    body: JSON.stringify({ lineStart: lineStart, lineEnd: lineEnd, content: content, actionType: actionType || null, actionMeta: actionMeta || null })
                 }).then(function (response) {
                     return response.json().catch(function () { return {}; }).then(function (payload) {
                         if (!response.ok) {
@@ -242,12 +242,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            var previousTitle = column.title || '';
             column.title = nextTitle;
             title.textContent = nextTitle;
             closeTitleEditor();
 
             enqueueMutation(function () {
-                return persistColumns().catch(function (error) {
+                return persistColumns('list:rename', { fromTitle: previousTitle, toTitle: nextTitle || '' }).catch(function (error) {
                     console.error('[Kanban] failed to save list title', error);
                 });
             });
@@ -491,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         rerenderColumns();
-                        return persistColumns().catch(function (error) {
+                        return persistColumns('card:move', { cardTitle: movedCard.text || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
                             console.error('[Kanban] failed to save card order', error);
                         });
                     });
@@ -529,9 +530,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return lines.join('\n');
             }).join('\n');
         };
-        var persistColumns = function () {
+        var persistColumns = function (actionType, actionMeta) {
             var latestLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
-            return requestSaveKanban(pageName, interpreterStartLine, Math.max(interpreterStartLine, latestLineEnd - 1), serializeColumns());
+            return requestSaveKanban(pageName, interpreterStartLine, Math.max(interpreterStartLine, latestLineEnd - 1), serializeColumns(), actionType, actionMeta);
         };
         var enqueueMutation = function (executor) {
             mutationQueue = mutationQueue
@@ -799,13 +800,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
+                var previousCardTitle = card.text || '';
                 card.text = nextTitle;
+                card.comments = card.comments || [];
+                card.comments.push(buildCommentLine('Renamed Card Title - ["' + previousCardTitle + '"] to ["' + nextTitle + '"]'));
+                updateCardCommentCount(card);
                 title.textContent = nextTitle;
                 closeTitleEditor();
                 renderColumns();
 
                 enqueueMutation(function () {
-                    return persistColumns().catch(function (error) {
+                    return persistColumns('card:rename', { fromTitle: previousCardTitle, toTitle: nextTitle || '' }).catch(function (error) {
                         console.error('[Kanban] failed to save card title', error);
                     });
                 });
@@ -857,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 textarea.value = '';
                 renderComments();
                 enqueueMutation(function () {
-                    return persistColumns().catch(function (error) {
+                    return persistColumns('card:comment:add', { cardTitle: card.text || '', comment: body }).catch(function (error) {
                         console.error('[Kanban] failed to save comments', error);
                     });
                 });
@@ -900,7 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }));
 
                     enqueueMutation(function () {
-                        return persistColumns().catch(function (error) {
+                        return persistColumns('list:move', { listTitle: movedColumn.title || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
                             console.error('[Kanban] failed to save list order', error);
                         });
                     });

@@ -41,12 +41,20 @@ controllerComponents: ControllerComponents,
   private implicit val addListRequestReads = Json.reads[AddListRequest]
   private case class AddCardRequest(text: String, lineStart: Int)
   private implicit val addCardRequestReads = Json.reads[AddCardRequest]
-  private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String)
+  private case class SaveKanbanRequest(lineStart: Int, lineEnd: Int, content: String, actionType: Option[String], actionMeta: Option[Map[String, String]])
   private implicit val saveKanbanRequestReads = Json.reads[SaveKanbanRequest]
+
+  private def actorLabel(implicit provider: RequestWrapper): String = provider.getUser.map(_.nickname).getOrElse("Anonymous")
+  private def nowLabel(): String = LocalDateTime.now().withNano(0).toString
+  private def eventPrefix(implicit provider: RequestWrapper): String = s"[User:${actorLabel}] [${nowLabel()}]"
+  private def quote(value: String): String = s"""["${value.trim}"]"""
+  private def resolve(meta: Map[String, String], key: String, fallback: String = ""): String = meta.getOrElse(key, fallback).trim
 
   private def trimmedPreview(text: String, maxLength: Int = CommentPreviewMaxLength): String = {
     text.trim.take(maxLength)
   }
+
+  private def withKanbanPrefix(text: String): String = s"Kanban - $text"
 
   private def buildKanbanActionComment(action: String,
                                        pageName: String,
@@ -56,7 +64,7 @@ controllerComponents: ControllerComponents,
     val safeDetail = trimmedPreview(detail)
     val boardScope = boardHint.map(value => s""" board="${trimmedPreview(value, 40)}"""").getOrElse("")
 
-    s"""kanban:$action page=$pageName line=$line detail="$safeDetail"$boardScope"""
+    withKanbanPrefix(s"""kanban:$action page=$pageName line=$line detail="$safeDetail"$boardScope""")
   }
 
   private def buildKanbanSaveComment(pageName: String,
@@ -84,7 +92,23 @@ controllerComponents: ControllerComponents,
 
     val previewText = if (preview.nonEmpty) s""" preview="$preview"""" else ""
 
-    s"kanban:save page=$pageName range=$safeStart-$safeEndExclusive replaced=${original.size}->${replacement.size} $cardDeltaText $listDeltaText$previewText"
+    withKanbanPrefix(s"kanban:save page=$pageName range=$safeStart-$safeEndExclusive replaced=${original.size}->${replacement.size} $cardDeltaText $listDeltaText$previewText")
+  }
+
+  private def buildReadableComment(actionType: Option[String], actionMeta: Option[Map[String, String]])(implicit provider: RequestWrapper): Option[String] = {
+    val meta = actionMeta.getOrElse(Map.empty)
+    val prefix = eventPrefix
+    val text = actionType.map {
+      case "list:add" => withKanbanPrefix(s"""$prefix - Added a List - ${quote("#" + resolve(meta, "listTitle"))}""")
+      case "list:rename" => withKanbanPrefix(s"""$prefix - Renamed List Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
+      case "list:move" => withKanbanPrefix(s"""$prefix - Moved a List ${quote("#" + resolve(meta, "listTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
+      case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quote("#" + resolve(meta, "cardTitle"))}""")
+      case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
+      case "card:move" => withKanbanPrefix(s"""$prefix - Moved a Card ${quote("#" + resolve(meta, "cardTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
+      case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quote("#" + resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
+      case _ => ""
+    }.getOrElse("").trim
+    if (text.isEmpty) None else Some(text)
   }
 
   def listAdd(pageName: String): Action[AnyContent] = Action { implicit request =>
@@ -118,12 +142,15 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                val comment = buildKanbanActionComment(
+                val comment = buildReadableComment(
+                  actionType = Some("list:add"),
+                  actionMeta = Some(Map("listTitle" -> payload.title))
+                ).getOrElse(buildKanbanActionComment(
                   action = "list:add",
                   pageName = pageName,
                   line = insertedLine,
                   detail = payload.title
-                )
+                ))
                 PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(
@@ -176,12 +203,15 @@ controllerComponents: ControllerComponents,
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
-                val comment = buildKanbanActionComment(
+                val comment = buildReadableComment(
+                  actionType = Some("card:add"),
+                  actionMeta = Some(Map("cardTitle" -> payload.text))
+                ).getOrElse(buildKanbanActionComment(
                   action = "card:add",
                   pageName = pageName,
                   line = insertedLine,
                   detail = payload.text
-                )
+                ))
                 PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(Json.obj(
@@ -233,7 +263,8 @@ controllerComponents: ControllerComponents,
                 lines.insertAll(startIndex, replacement)
 
                 val updated = lines.mkString("\n")
-                val comment = buildKanbanSaveComment(pageName, safeStart, safeEndExclusive, originalSlice, replacement)
+                val comment = buildReadableComment(payload.actionType, payload.actionMeta)
+                  .getOrElse(buildKanbanSaveComment(pageName, safeStart, safeEndExclusive, originalSlice, replacement))
                 PageLogic.insert(pageName, nextRevision, LocalDateTime.now(), comment, isMinorEdit = false, updated)
 
                 Ok(Json.obj(
