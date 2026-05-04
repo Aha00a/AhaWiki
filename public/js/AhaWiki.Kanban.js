@@ -837,6 +837,21 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
 
+        var scrollToKanbanForHashCard = function () {
+            var rawHash = window.location.hash || '';
+            if (!rawHash || rawHash.length <= 1) {
+                return;
+            }
+
+            var hashId = rawHash.slice(1);
+            var targetCard = board.querySelector('.kanban-card[id="' + CSS.escape(hashId) + '"]');
+            if (!targetCard) {
+                return;
+            }
+
+            root.scrollIntoView({ block: 'start' });
+        };
+
         var getCardInsertLineStart = function (columnIndex) {
             var column = columns[columnIndex] || {};
 
@@ -930,6 +945,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         board.appendChild(addListWrapper);
         renderColumns();
+        window.requestAnimationFrame(scrollToKanbanForHashCard);
 
         openCardDetail = function (card) {
             if (!card) {
