@@ -764,6 +764,67 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.style.padding = '16px';
             var title = document.createElement('h3');
             title.textContent = card.text || '';
+            title.style.cursor = 'pointer';
+            title.title = 'Click to edit title';
+
+            var titleEditor = document.createElement('input');
+            titleEditor.type = 'text';
+            titleEditor.value = card.text || '';
+            titleEditor.style.display = 'none';
+            titleEditor.style.width = '100%';
+            titleEditor.style.boxSizing = 'border-box';
+            titleEditor.style.marginBottom = '8px';
+            titleEditor.style.border = '1px solid #b6c2cf';
+            titleEditor.style.borderRadius = '4px';
+            titleEditor.style.padding = '6px 8px';
+
+            var closeTitleEditor = function () {
+                titleEditor.style.display = 'none';
+                title.style.display = 'block';
+                titleEditor.value = card.text || '';
+            };
+
+            var openTitleEditor = function () {
+                title.style.display = 'none';
+                titleEditor.style.display = 'block';
+                titleEditor.value = card.text || '';
+                titleEditor.focus();
+                titleEditor.select();
+            };
+
+            var submitTitleEditor = function () {
+                var nextTitle = (titleEditor.value || '').trim();
+                if (!nextTitle || nextTitle === card.text) {
+                    closeTitleEditor();
+                    return;
+                }
+
+                card.text = nextTitle;
+                title.textContent = nextTitle;
+                closeTitleEditor();
+                renderColumns();
+
+                enqueueMutation(function () {
+                    return persistColumns().catch(function (error) {
+                        console.error('[Kanban] failed to save card title', error);
+                    });
+                });
+            };
+
+            title.addEventListener('click', openTitleEditor);
+            titleEditor.addEventListener('blur', submitTitleEditor);
+            titleEditor.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Enter') {
+                    evt.preventDefault();
+                    submitTitleEditor();
+                    return;
+                }
+                if (evt.key === 'Escape') {
+                    evt.preventDefault();
+                    closeTitleEditor();
+                }
+            });
+
             var textarea = document.createElement('textarea');
             textarea.placeholder = 'Write a comment...';
             textarea.rows = 3;
@@ -808,6 +869,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
             modal.appendChild(title);
+            modal.appendChild(titleEditor);
             modal.appendChild(textarea);
             modal.appendChild(submit);
             modal.appendChild(comments);
