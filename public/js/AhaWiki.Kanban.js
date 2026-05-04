@@ -431,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var newCard = {
                     text: value,
                     lineNumber: cardLineStart,
-                    comments: [buildCommentLine('Created')]
+                    comments: []
                 };
 
                 column.cards = column.cards || [];
@@ -672,6 +672,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 (targetColumn.cards || []).forEach(function (targetCard) {
                     targetCard.lineNumber = cursor;
                     cursor += 1;
+                    var commentCount = (targetCard.comments || []).length;
+                    if (commentCount > 0) {
+                        cursor += commentCount;
+                    }
                 });
             });
         };
@@ -688,12 +692,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var getCardInsertLineStart = function (columnIndex) {
             var column = columns[columnIndex] || {};
-            var cards = column.cards || [];
-            var lastCard = cards.length > 0 ? cards[cards.length - 1] : null;
-
-            if (lastCard && Number.isFinite(lastCard.lineNumber) && lastCard.lineNumber > 0) {
-                return lastCard.lineNumber + 1;
-            }
 
             for (var i = columnIndex + 1; i < columns.length; i += 1) {
                 var nextColumnLine = Number(columns[i].lineNumber);
