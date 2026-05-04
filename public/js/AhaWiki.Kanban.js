@@ -1740,9 +1740,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 draggable: '.kanban-column',
                 animation: 120,
                 onMove: function () {
-                    if (dragCancelled) {
-                        return false;
-                    }
                     return true;
                 },
                 onEnd: function (evt) {
