@@ -201,13 +201,30 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.style.padding = '10px';
         columnElement.style.boxSizing = 'border-box';
 
+        var titleRow = document.createElement('div');
+        titleRow.style.display = 'flex';
+        titleRow.style.alignItems = 'center';
+        titleRow.style.justifyContent = 'space-between';
+        titleRow.style.marginBottom = '8px';
+
         var title = document.createElement('div');
         title.textContent = column.title;
         title.style.fontWeight = 'bold';
-        title.style.marginBottom = '8px';
         title.style.cursor = 'pointer';
         title.title = 'Click to edit list name';
-        columnElement.appendChild(title);
+
+        var deleteListButton = document.createElement('button');
+        deleteListButton.type = 'button';
+        deleteListButton.textContent = '🗑';
+        deleteListButton.title = 'Delete list';
+        deleteListButton.style.border = 'none';
+        deleteListButton.style.background = 'transparent';
+        deleteListButton.style.cursor = 'pointer';
+        deleteListButton.style.fontSize = '14px';
+
+        titleRow.appendChild(title);
+        titleRow.appendChild(deleteListButton);
+        columnElement.appendChild(titleRow);
 
         var titleEditor = document.createElement('input');
         titleEditor.type = 'text';
@@ -266,6 +283,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 evt.preventDefault();
                 closeTitleEditor();
             }
+        });
+
+        deleteListButton.addEventListener('click', function () {
+            var shouldDelete = window.confirm('Delete list "' + (column.title || '') + '" and all cards?');
+            if (!shouldDelete) {
+                return;
+            }
+
+            var removedTitle = column.title || '';
+            columns.splice(index, 1);
+            shiftLineNumbersAfterInsert();
+            rerenderColumns();
+
+            enqueueMutation(function () {
+                return persistColumns('list:delete', { listTitle: removedTitle }).catch(function (error) {
+                    console.error('[Kanban] failed to delete list', error);
+                });
+            });
         });
 
         var cardList = document.createElement('div');
@@ -838,6 +873,12 @@ document.addEventListener('DOMContentLoaded', function () {
             submit.type = 'button';
             submit.textContent = 'Add Comment';
             submit.style.marginTop = '8px';
+
+            var deleteCardButton = document.createElement('button');
+            deleteCardButton.type = 'button';
+            deleteCardButton.textContent = 'Delete Card';
+            deleteCardButton.style.marginTop = '8px';
+            deleteCardButton.style.marginLeft = '8px';
             var comments = document.createElement('div');
             comments.style.marginTop = '12px';
             var renderComments = function () {
@@ -867,6 +908,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 });
             });
+
+            deleteCardButton.addEventListener('click', function () {
+                var shouldDelete = window.confirm('Delete card "' + (card.text || '') + '"?');
+                if (!shouldDelete) {
+                    return;
+                }
+
+                columns.forEach(function (targetColumn) {
+                    var cardIndex = (targetColumn.cards || []).indexOf(card);
+                    if (cardIndex >= 0) {
+                        targetColumn.cards.splice(cardIndex, 1);
+                    }
+                });
+                renderColumns();
+                if (overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+
+                enqueueMutation(function () {
+                    return persistColumns('card:delete', { cardTitle: card.text || '' }).catch(function (error) {
+                        console.error('[Kanban] failed to delete card', error);
+                    });
+                });
+            });
             overlay.addEventListener('click', function () {
                 if (overlay.parentNode) {
                     overlay.parentNode.removeChild(overlay);
@@ -877,6 +942,7 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.appendChild(titleEditor);
             modal.appendChild(textarea);
             modal.appendChild(submit);
+            modal.appendChild(deleteCardButton);
             modal.appendChild(comments);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);

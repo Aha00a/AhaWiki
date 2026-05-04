@@ -102,9 +102,11 @@ controllerComponents: ControllerComponents,
       case "list:add" => withKanbanPrefix(s"""$prefix - Added a List - ${quote("#" + resolve(meta, "listTitle"))}""")
       case "list:rename" => withKanbanPrefix(s"""$prefix - Renamed List Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
       case "list:move" => withKanbanPrefix(s"""$prefix - Moved a List ${quote("#" + resolve(meta, "listTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
+      case "list:delete" => withKanbanPrefix(s"""$prefix - Deleted a List - ${quote("#" + resolve(meta, "listTitle"))}""")
       case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quote("#" + resolve(meta, "cardTitle"))}""")
       case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quote(resolve(meta, "fromTitle"))} to ${quote(resolve(meta, "toTitle"))}""")
       case "card:move" => withKanbanPrefix(s"""$prefix - Moved a Card ${quote("#" + resolve(meta, "cardTitle"))} Order - ${quote("#" + resolve(meta, "fromOrder"))} to ${quote("#" + resolve(meta, "toOrder"))}""")
+      case "card:delete" => withKanbanPrefix(s"""$prefix - Deleted a Card - ${quote("#" + resolve(meta, "cardTitle"))}""")
       case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quote("#" + resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
       case _ => ""
     }.getOrElse("").trim
