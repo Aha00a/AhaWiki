@@ -251,12 +251,35 @@ document.addEventListener('DOMContentLoaded', function () {
         return '["#' + safeCardId + '" ' + safeCardName + ']';
     };
 
+    var getCardAttachmentCount = function (card) {
+        if (!card || !card.properties) {
+            return 0;
+        }
+        var attachments = card.properties.Attachment;
+        if (!Array.isArray(attachments)) {
+            return 0;
+        }
+        return attachments.filter(function (value) { return Boolean((value || '').trim()); }).length;
+    };
+
     var updateCardCommentCount = function (card) {
-        if (!card || !card.commentCountElement) {
+        if (!card) {
             return;
         }
-        var count = (card.comments || []).length;
-        card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> ' + count;
+        if (card.commentCountElement) {
+            var count = (card.comments || []).length;
+            card.commentCountElement.innerHTML = '<i class="fas fa-comment" aria-hidden="true"></i> ' + count;
+        }
+        if (card.attachmentCountElement) {
+            var attachmentCount = getCardAttachmentCount(card);
+            if (attachmentCount > 0) {
+                card.attachmentCountElement.style.display = '';
+                card.attachmentCountElement.innerHTML = '<i class="fas fa-paperclip" aria-hidden="true"></i> ' + attachmentCount;
+            } else {
+                card.attachmentCountElement.style.display = 'none';
+                card.attachmentCountElement.innerHTML = '';
+            }
+        }
     };
     var parseKanbanText = function (text, interpreterStartLine) {
         var parseCardHeading = function (line) {
@@ -530,8 +553,11 @@ document.addEventListener('DOMContentLoaded', function () {
             cardMeta.style.color = '#6b778c';
 
             card.commentCountElement = document.createElement('span');
+            card.attachmentCountElement = document.createElement('span');
+            card.attachmentCountElement.style.marginLeft = '10px';
             updateCardCommentCount(card);
             cardMeta.appendChild(card.commentCountElement);
+            cardMeta.appendChild(card.attachmentCountElement);
 
             cardElement.appendChild(cardText);
             cardElement.appendChild(cardMeta);
@@ -1211,6 +1237,66 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteCardButton.style.color = '#ae2a19';
             deleteCardButton.style.cursor = 'pointer';
 
+            var propertyTitle = document.createElement('div');
+            propertyTitle.innerHTML = '<i class="fas fa-tags" aria-hidden="true"></i> Properties';
+            propertyTitle.style.marginTop = '16px';
+            propertyTitle.style.fontWeight = '600';
+            propertyTitle.style.fontSize = '14px';
+            propertyTitle.style.color = '#44546f';
+
+            var propertyList = document.createElement('div');
+            propertyList.style.marginTop = '8px';
+
+            var renderProperties = function () {
+                propertyList.innerHTML = '';
+                var propertyEntries = Object.keys(card.properties || {}).filter(function (key) {
+                    return Array.isArray(card.properties[key]) && card.properties[key].length > 0;
+                });
+                if (propertyEntries.length === 0) {
+                    var empty = document.createElement('div');
+                    empty.textContent = 'No properties';
+                    empty.style.color = '#6b778c';
+                    empty.style.fontSize = '13px';
+                    propertyList.appendChild(empty);
+                    return;
+                }
+
+                propertyEntries.forEach(function (key) {
+                    var values = card.properties[key] || [];
+                    var row = document.createElement('div');
+                    row.style.padding = '8px 10px';
+                    row.style.border = '1px solid #eceff3';
+                    row.style.borderRadius = '8px';
+                    row.style.background = '#fafbfc';
+                    row.style.marginBottom = '8px';
+
+                    var label = document.createElement('div');
+                    label.textContent = key;
+                    label.style.fontWeight = '600';
+                    label.style.fontSize = '13px';
+                    label.style.marginBottom = '4px';
+                    row.appendChild(label);
+
+                    values.forEach(function (value) {
+                        var valueRow = document.createElement('div');
+                        valueRow.textContent = value;
+                        valueRow.style.fontSize = '13px';
+                        valueRow.style.color = '#172b4d';
+                        valueRow.style.paddingLeft = '8px';
+                        row.appendChild(valueRow);
+
+                        requestRenderInlineComment(pageName, value).then(function (html) {
+                            if (html) {
+                                valueRow.innerHTML = html;
+                            }
+                        }).catch(function (error) {
+                            console.error('[Kanban] failed to render property value', error);
+                        });
+                    });
+                    propertyList.appendChild(row);
+                });
+            };
+
             var commentsTitle = document.createElement('div');
             commentsTitle.innerHTML = '<i class="fas fa-history" aria-hidden="true"></i> Activity';
             commentsTitle.style.marginTop = '16px';
@@ -1312,6 +1398,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         card.comments.push(commentEntry);
                         updateCardCommentCount(card);
                         renderComments();
+                        renderProperties();
+                        renderColumns();
                         enqueueMutation(function () {
                             return persistColumns('card:comment:add', { cardTitle: card.text || '', comment: commentText }).catch(function (error) {
                                 console.error('[Kanban] failed to save clipboard image comment', error);
@@ -1390,10 +1478,13 @@ document.addEventListener('DOMContentLoaded', function () {
             actionBar.appendChild(submit);
             actionBar.appendChild(deleteCardButton);
             modal.appendChild(actionBar);
+            modal.appendChild(propertyTitle);
+            modal.appendChild(propertyList);
             modal.appendChild(commentsTitle);
             modal.appendChild(comments);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
+            renderProperties();
             renderComments();
         };
         openCardDetailById = function (cardId) {
