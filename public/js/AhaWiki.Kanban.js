@@ -426,7 +426,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
                         movedCard.comments = movedCard.comments || [];
-                        movedCard.comments.push(buildCommentLine('Move from [#' + fromTitle + '] to [#' + toTitle + ']'));                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
+                        movedCard.comments.push(buildCommentLine('Moved from [#' + fromTitle + '] to [#' + toTitle + ']'));                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         return persistColumns().catch(function (error) {
                             console.error('[Kanban] failed to save card order', error);
