@@ -310,7 +310,7 @@ controllerComponents: ControllerComponents,
           payload => {
             implicit val site: Site = SiteLogic.get(request.host)
             implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
-            val html = InterpreterWiki.inlineToHtmlString(payload.comment)
+            val html = InterpreterWiki.toHtmlString(payload.comment)
             Ok(Json.obj("status" -> "ok", "html" -> html))
           }
         )
