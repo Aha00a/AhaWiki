@@ -76,10 +76,11 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       val attrClass = if (classList.nonEmpty) s""" class="${classList.mkString(" ")}"""" else ""
       val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
-      val displayText = countryFlagEmoji.map(flag => s"$flag ${aliasWithDefault.escapeHtml()}").getOrElse(aliasWithDefault.escapeHtml())
+      val isUserPage = !external && uriNormalized.startsWith("User:")
+      val rawDisplayText = if (isUserPage && (alias == null || alias.isEmpty)) uriNormalized.stripPrefix("User:").trim else aliasWithDefault
+      val displayText = countryFlagEmoji.map(flag => s"$flag ${rawDisplayText.escapeHtml()}").getOrElse(rawDisplayText.escapeHtml())
       val linkHtml = s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${displayText}</a>"""
 
-      val isUserPage = !external && uriNormalized.startsWith("User:")
       if (isUserPage) {
         val nickname = uriNormalized.stripPrefix("User:").trim
         implicit val userProfileImageCacheKey: (play.api.db.Database, models.tables.Site, String) = (wikiContext.database, wikiContext.site, nickname)
@@ -87,7 +88,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
 
         profileImageUrl
           .map { imageUrl =>
-            s"""<span class="userInlineProfile"><img src="${imageUrl.escapeHtmlAttribute()}" alt="${nickname.escapeHtmlAttribute()}" class="userInlineProfileImage"/>$linkHtml</span>"""
+            s"""<span class="userInlineProfile"><a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel><img src="${imageUrl.escapeHtmlAttribute()}" alt="${nickname.escapeHtmlAttribute()}" class="userInlineProfileImage"/>${displayText}</a></span>"""
           }
           .getOrElse(linkHtml)
       } else {
