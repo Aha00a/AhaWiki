@@ -108,13 +108,13 @@
             }
 
             if (value.slice(selectionStart - 2, selectionStart) === '[[') {
-                const insertText = '[' + selected + '\n]';
+                const insertText = '[#!' + selected + '\n]';
                 const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
                 return {
                     handled: true,
                     value: newValue,
-                    selectionStart: selectionStart + 1,
-                    selectionEnd: selectionStart + 1 + selected.length,
+                    selectionStart: selectionStart + 3,
+                    selectionEnd: selectionStart + 3 + selected.length,
                 };
             }
         }
