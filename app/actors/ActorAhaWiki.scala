@@ -5,6 +5,7 @@ import akka.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
+import logics.AhaWikiCacheMemoryApiLinks
 import logics.ApplicationConf
 import logics.wikis.PageLogic
 import models.RequestWrapper
@@ -33,6 +34,7 @@ class ActorAhaWiki @Inject()(
   executionContext: ExecutionContext,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
+  ahaWikiCacheMemoryApiLinks: AhaWikiCacheMemoryApiLinks,
 ) extends Actor with Logging {
   implicit val provider: RequestWrapper = RequestWrapper.empty
 
@@ -44,6 +46,7 @@ class ActorAhaWiki @Inject()(
           implicit val implicitLogger: Logger = logger
           implicit val implicitSite: Site = site
           PageLogic.calculate(name)
+          ahaWikiCacheMemoryApiLinks.invalidate(site.seq, name)
         }
       }
 

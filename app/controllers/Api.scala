@@ -75,7 +75,8 @@ class Api @Inject()(
   executionContext: ExecutionContext,
   applicationLifecycleHook: ApplicationLifecycleHook,
   configuration: Configuration,
-  syncCacheApi: SyncCacheApi
+  syncCacheApi: SyncCacheApi,
+  ahaWikiCacheMemoryApiLinks: AhaWikiCacheMemoryApiLinks,
 ) extends BaseController with Logging {
   private case class MemoryCacheStatsPayload(instancePort: String, stats: Snapshot)
 
@@ -87,7 +88,6 @@ class Api @Inject()(
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
-  private val ahaWikiCacheMemoryApiLinks = new AhaWikiCacheMemoryApiLinks()
   private val memoryCacheSnapshotKey = "admin:memoryCacheStats:instances"
   private val instancePort: String = configuration.getOptional[String]("play.server.http.port").getOrElse("unknown")
   private def readMemoryCacheSnapshots(): Map[String, Snapshot] = {

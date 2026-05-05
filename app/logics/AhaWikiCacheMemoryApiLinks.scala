@@ -4,6 +4,7 @@ import models.tables.CalculatedLink
 
 import java.time.Instant
 import scala.collection.concurrent.TrieMap
+import javax.inject.Singleton
 
 object AhaWikiCacheMemoryApiLinks {
   case class Snapshot(
@@ -15,6 +16,7 @@ object AhaWikiCacheMemoryApiLinks {
   )
 }
 
+@Singleton
 class AhaWikiCacheMemoryApiLinks {
   private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
   private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
@@ -44,6 +46,10 @@ class AhaWikiCacheMemoryApiLinks {
   }
 
   def clear(): Unit = linksCache.clear()
+
+  def invalidate(siteSeq: Long, pageName: String): Unit = {
+    linksCache.remove((siteSeq, pageName))
+  }
 
   def snapshot(instancePort: String): AhaWikiCacheMemoryApiLinks.Snapshot = {
     AhaWikiCacheMemoryApiLinks.Snapshot(
