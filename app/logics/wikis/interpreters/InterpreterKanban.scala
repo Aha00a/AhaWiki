@@ -11,5 +11,13 @@ object InterpreterKanban extends TraitInterpreter {
     views.html.Wiki.InterpreterKanban(id, pageContent.content, shebangLine).toString()
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq() // TODO
+  override def toText(content: String)(implicit wikiContext: ContextWikiPage): String = {
+    val pageContent = PageContent(content)
+    InterpreterWiki.toText(pageContent.content)
+  }
+
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
+    val pageContent = PageContent(content)
+    InterpreterWiki.toSeqLink(pageContent.content)
+  }
 }

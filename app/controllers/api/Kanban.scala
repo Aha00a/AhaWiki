@@ -22,7 +22,7 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -50,8 +50,11 @@ controllerComponents: ControllerComponents,
   private implicit val renderAhaMarkRequestReads = Json.reads[RenderAhaMarkRequest]
 
   private def actorLabel(implicit provider: RequestWrapper): String = provider.getUser.map(_.nickname).getOrElse("Anonymous")
-  private def nowLabel(): String = LocalDateTime.now().withNano(0).toString
-  private def eventPrefix(implicit provider: RequestWrapper): String = s"[User:${actorLabel}] [${nowLabel()}]"
+  private def nowLabel(): String = {
+    val isoUtc = LocalDateTime.now(ZoneOffset.UTC).withNano(0).toString + "Z"
+    if (isoUtc.length > 10) s"${isoUtc.take(10)}]${isoUtc.drop(10)}" else s"$isoUtc]"
+  }
+  private def eventPrefix(implicit provider: RequestWrapper): String = s"[User:${actorLabel}] [${nowLabel()}"
   private def quoteCard(value: String): String = s"""["${value.trim}"]"""
   private def quoteList(value: String): String = s"""'''${value.trim}'''"""
   private def resolve(meta: Map[String, String], key: String, fallback: String = ""): String = meta.getOrElse(key, fallback).trim

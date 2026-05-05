@@ -248,14 +248,49 @@ document.addEventListener('DOMContentLoaded', function () {
         return '[User:' + safeAuthor + ']';
     };
     var getNowIsoWithoutMillis = function () {
-        return new Date().toISOString().replace(/\.\d{3}Z$/, '');
+        return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    };
+
+    var formatKanbanDateTime = function (isoDateTime) {
+        var value = (isoDateTime || '').trim();
+        if (!value) {
+            return '';
+        }
+        if (value.length <= 10) {
+            return '[' + value + ']';
+        }
+        return '[' + value.slice(0, 10) + ']' + value.slice(10);
+    };
+
+
+    var toClientKanbanDateTime = function (value) {
+        var raw = (value || '').trim();
+        var matched = raw.match(/^\[(\d{4}-\d{2}-\d{2})\]T(\d{2}:\d{2}:\d{2})(Z|[+-]\d{2}:\d{2})$/);
+        if (!matched) {
+            return raw;
+        }
+        var date = new Date(matched[1] + 'T' + matched[2] + matched[3]);
+        if (Number.isNaN(date.getTime())) {
+            return raw;
+        }
+        var pad = function (n) { return String(n).padStart(2, '0'); };
+        return '[' + date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ']T' + pad(date.getHours()) + ':' + pad(date.getMinutes()) + ':' + pad(date.getSeconds());
+    };
+
+    var toClientKanbanCommentHeader = function (header) {
+        var raw = (header || '').trim();
+        var matched = raw.match(/^(\[User:[^\]]+\]\s+)\[(\d{4}-\d{2}-\d{2})\]T(\d{2}:\d{2}:\d{2})(Z|[+-]\d{2}:\d{2})$/);
+        if (!matched) {
+            return raw;
+        }
+        return matched[1] + toClientKanbanDateTime('[' + matched[2] + ']T' + matched[3] + matched[4]);
     };
 
     var buildCommentEntry = function (details) {
         var nowIso = getNowIsoWithoutMillis();
         var author = getCurrentAuthor();
         return {
-            header: '[User:' + author + '] [' + nowIso.slice(0, 10) + ']' + nowIso.slice(10),
+            header: '[User:' + author + '] ' + formatKanbanDateTime(nowIso),
             details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
         };
     };
@@ -660,7 +695,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     structured: true,
                     properties: {
                         Creator: [toUserLinkMarkup(getCurrentAuthor())],
-                        dateCreated: ['[' + getNowIsoWithoutMillis() + ']']
+                        dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())]
                     }
                 };
 
@@ -1480,6 +1515,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         var displayValue = value;
                         if (key === 'Creator') {
                             displayValue = toUserLinkMarkup(value);
+                        } else if (key === 'dateCreated') {
+                            displayValue = toClientKanbanDateTime(value);
                         }
                         var valueRow = document.createElement('div');
                         valueRow.textContent = displayValue;
@@ -1574,13 +1611,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     header.style.marginBottom = '6px';
                     row.appendChild(header);
 
-                    requestRenderInlineComment(pageName, entry.header).then(function (html) {
+                    var displayHeader = toClientKanbanCommentHeader(entry.header);
+                    requestRenderInlineComment(pageName, displayHeader).then(function (html) {
                         if (html) {
                             header.innerHTML = html;
                         }
                     }).catch(function (error) {
                         console.error('[Kanban] failed to render comment header', error);
-                        header.textContent = entry.header;
+                        header.textContent = displayHeader;
                     });
 
                     (entry.details || []).forEach(function (detailLine) {
