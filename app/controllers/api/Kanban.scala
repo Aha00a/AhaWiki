@@ -23,6 +23,7 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.time.format.DateTimeFormatter
 import java.time.{LocalDateTime, ZoneOffset}
 import scala.concurrent.ExecutionContext
 
@@ -220,7 +221,7 @@ controllerComponents: ControllerComponents,
                 val insertedLine = insertAt + 1
                 val cardId = NanoIdUtil.newId()
                 val createdComment = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse("Created card")
-                val createdAtIsoUtc = LocalDateTime.now(ZoneOffset.UTC).withNano(0).toString + "Z"
+                val createdAtIsoUtc = LocalDateTime.now(ZoneOffset.UTC).withNano(0).format(DateTimeFormatter.ofPattern("yyyy-MM-dd\'T\'HH:mm:ss\'Z\'"))
                 val createdAtFormatted = if (createdAtIsoUtc.length > 10) s"[${createdAtIsoUtc.take(10)}]${createdAtIsoUtc.drop(10)}" else createdAtIsoUtc
                 val cardLines = Seq(
                   s"==== ${payload.text} ==== #$cardId",
