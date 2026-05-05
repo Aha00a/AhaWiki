@@ -181,9 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (siblingHeadingLevel !== null && siblingHeadingLevel <= headingLevel) {
                         break;
                     }
-                    if (siblingHeadingLevel !== null && siblingHeadingLevel > headingLevel) {
-                        childSections.push(sibling);
-                    }
+                    childSections.push(sibling);
                     sibling = sibling.nextElementSibling;
                 }
                 return childSections;
@@ -202,9 +200,29 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                     var childSections = getChildSections();
-                    childSections.forEach(function (childSection) {
-                        childSection.style.display = isCollapsed ? 'none' : '';
-                    });
+                    if (isCollapsed) {
+                        childSections.forEach(function (childSection) {
+                            childSection.style.display = 'none';
+                        });
+                    } else if (section.style.display !== 'none') {
+                        var blockedLevel = null;
+                        childSections.forEach(function (childSection) {
+                            var childHeadingLevel = getSectionHeadingLevel(childSection);
+                            if (childHeadingLevel !== null && blockedLevel !== null && childHeadingLevel <= blockedLevel) {
+                                blockedLevel = null;
+                            }
+
+                            if (blockedLevel !== null) {
+                                childSection.style.display = 'none';
+                                return;
+                            }
+
+                            childSection.style.display = '';
+                            if (childHeadingLevel !== null && childSection.classList.contains('sectionCollapsed')) {
+                                blockedLevel = childHeadingLevel;
+                            }
+                        });
+                    }
                 }
                 foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right fa-fw"></i>' : '<i class="fas fa-chevron-down fa-fw"></i>';
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
