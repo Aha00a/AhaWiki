@@ -284,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 }
+                heading.style.opacity = isCollapsed ? '0.5' : '';
                 foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right fa-fw"></i>' : '<i class="fas fa-chevron-down fa-fw"></i>';
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
             };
