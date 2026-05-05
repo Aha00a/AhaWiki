@@ -240,6 +240,10 @@
             $('.wikiContent .toc').each(function () {
                 var $toc = $(this);
                 var $toggleButton = $toc.find('.tocToggle').first();
+                if (!$toggleButton.length) {
+                    $toggleButton = $('<button type="button" class="tocToggle" aria-label="Toggle table of contents"></button>');
+                    $toc.prepend($toggleButton);
+                }
                 var isMobile = window.matchMedia('(max-width: 768px)').matches;
                 $toc.toggleClass('collapsed', isMobile);
                 updateTocToggleLabel($toc, isMobile);
@@ -249,7 +253,9 @@
                     updateTocToggleLabel($toc, $toc.hasClass('collapsed'));
                 };
 
-                $toggleButton.on('click', function () {
+                $toggleButton.on('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     toggleToc();
                 });
 

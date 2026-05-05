@@ -1963,12 +1963,13 @@ kbd {
 				overflow: hidden;
 				max-height: 3000px;
 				opacity: 1;
-				transition: max-height 250ms linear;
+				transition: max-height 250ms linear, opacity 200ms ease;
 			}
 
 			&.collapsed {
 				.tocBody {
 					max-height: 26px;
+					opacity: 0.6;
 				}
 			}
 		}
