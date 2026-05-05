@@ -19,7 +19,6 @@ object MacroBacklinks extends TraitMacro {
       markup
         .toOption
         .map(InterpreterWiki.toHtmlString)
-        .map(s => s"""<div class="columnWidth350"><div>$s</div></div>""".stripMargin )
         .getOrElse("")
     }
   }

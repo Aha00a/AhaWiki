@@ -73,14 +73,23 @@ object InterpreterWiki extends TraitInterpreter {
     def result(): T
   }
 
-  class HandlerToHtmlString(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends HandlerContentIterateBase[String](pageContent) {
+  class HandlerToHtmlString(
+                             override val pageContent: PageContent,
+                             suppressToc: Boolean = false
+                           )(implicit wikiContext:ContextWikiPage) extends HandlerContentIterateBase[String](pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
     private val revision = InterpreterWiki.getRevisionForPartialEdit
-    private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(backQuoteExtracted, regexHeading)
+    private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(pageContent.content, regexHeading)
 
     var oldIndent = 0
+    private val regexColumnsStart: Regex = """^\s*<Columns(?:\s+([^>]*))?>\s*$""".r
+    private val regexColumnsEnd: Regex = """^\s*</Columns>\s*$""".r
+    private val regexDivStart: Regex = """^\s*<div(?:\s+([^>]*))?>\s*$""".r
+    private val regexDivEnd: Regex = """^\s*</div>\s*$""".r
+    private val regexSpanStart: Regex = """^\s*<span(?:\s+([^>]*))?>\s*$""".r
+    private val regexSpanEnd: Regex = """^\s*</span>\s*$""".r
     private def previewLineStartAttr(lineNumber: Int): String =
       if (wikiContext.renderingMode == RenderingMode.Preview) s""" data-line-start="$lineNumber"""" else ""
 
@@ -92,6 +101,47 @@ object InterpreterWiki extends TraitInterpreter {
         }
       }
     })
+
+    override def process(): String = {
+      val lines = backQuoteExtracted.split("""(\r\n|\n)""", -1).toVector
+      var index = 0
+      while (index < lines.length) {
+        val s = lines(index)
+        val lineNumber = index + 1
+        s match {
+          case _ =>
+            s match {
+              case regexColumnsStart(attrsRaw) =>
+                variableHolderState := State.Normal
+                arrayBuffer += renderColumnsOpen(attrsRaw)
+              case regexColumnsEnd() =>
+                variableHolderState := State.Normal
+                arrayBuffer += "</div>"
+              case regexDivStart(attrsRaw) =>
+                variableHolderState := State.Normal
+                arrayBuffer += s"<div${renderAllowedAttributes(attrsRaw)}>"
+              case regexDivEnd() =>
+                variableHolderState := State.Normal
+                arrayBuffer += "</div>"
+              case regexSpanStart(attrsRaw) =>
+                variableHolderState := State.Normal
+                arrayBuffer += s"<span${renderAllowedAttributes(attrsRaw)}>"
+              case regexSpanEnd() =>
+                variableHolderState := State.Normal
+                arrayBuffer += "</span>"
+              case "" => emptyLine()
+              case regexHr() => hr(s)
+              case regexHr2() => hr2(s)
+              case regexHeading(heading, collapseMarker, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber, collapseMarker != null)
+              case regexList(indentString, style, _, content) => list(indentString, style, content, lineNumber)
+              case _ => others(s, lineNumber)
+            }
+            index += 1
+        }
+      }
+      result()
+    }
+
 
     override def emptyLine(): Unit = {
       variableHolderState := State.Normal
@@ -194,15 +244,56 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def result(): String = {
       variableHolderState := State.Normal
-      if (arrayBufferHeading.length > 6)
+      if (!suppressToc && arrayBufferHeading.length > 6)
         arrayBuffer.insert(0,
           """<div class="toc" data-default-collapsed-mobile="true"><button type="button" class="tocToggle" aria-expanded="true"><i class="fas fa-chevron-down fa-fw"></i></button><div class="tocBody">""" +
             InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) +
             """</div></div>""")
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
-      extractConvertInjectInterpreter.inject(extractConvertInjectMacro.inject(extractConvertInjectBackQuote.inject(str)))
+      extractConvertInjectInterpreter.inject(
+        extractConvertInjectMacro.inject(
+          extractConvertInjectBackQuote.inject(str)
+        )
+      )
     }
+
+    private def renderColumnsOpen(attrsRaw: String): String = {
+      val raw = Option(attrsRaw).getOrElse("")
+      val count = extractIntAttr(raw, "count").filter(_ > 0).getOrElse(3)
+      val gap = extractIntAttr(raw, "gap").filter(_ >= 0).getOrElse(16)
+      val minWidth = extractIntAttr(raw, "minWidth").filter(_ > 0).getOrElse(220)
+      s"""<div class="WikiColumns" style="column-count: $count; column-gap: ${gap}px; --column-min-width: ${minWidth}px;">"""
+    }
+
+    private def renderAllowedAttributes(attrsRaw: String): String = {
+      val raw = Option(attrsRaw).getOrElse("")
+      val allowedKeys = Set("id", "class", "style")
+      val attrPattern = """([a-zA-Z_:][-a-zA-Z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))""".r
+      val sanitized = attrPattern.findAllMatchIn(raw).flatMap { m =>
+        val key = Option(m.group(1)).map(_.toLowerCase).getOrElse("")
+        if (!allowedKeys.contains(key)) None
+        else {
+          val value = Option(m.group(2)).orElse(Option(m.group(3))).orElse(Option(m.group(4))).getOrElse("")
+          Some(s"""$key="${escapeHtmlAttr(value)}"""")
+        }
+      }.toSeq.mkString(" ")
+      if (sanitized.nonEmpty) s" $sanitized" else ""
+    }
+
+    private def extractIntAttr(rawAttrs: String, key: String): Option[Int] = {
+      (s"""\\b$key\\s*=\\s*"([0-9]+)"""".r.findFirstMatchIn(rawAttrs).map(_.group(1))
+        .orElse(s"""\\b$key\\s*=\\s*'([0-9]+)'""".r.findFirstMatchIn(rawAttrs).map(_.group(1)))
+        .orElse(s"""\\b$key\\s*=\\s*([0-9]+)""".r.findFirstMatchIn(rawAttrs).map(_.group(1))))
+        .flatMap(v => scala.util.Try(v.toInt).toOption)
+    }
+
+    private def escapeHtmlAttr(v: String): String =
+      v
+        .replace("&", "&amp;")
+        .replace("\"", "&quot;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
   }
 
   private def buildHeadingLineRangeByLineStart(content: String, regexHeading: Regex): Map[Int, Int] = {
