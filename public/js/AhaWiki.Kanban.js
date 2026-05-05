@@ -729,9 +729,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         rerenderColumns();
                         console.info('[Kanban] card added', result);
-                        return persistColumns('card:add', { cardTitle: value }).catch(function (error) {
-                            console.error('[Kanban] failed to persist structured card after add', error);
-                        });
+                        return Promise.resolve();
                     })
                     .catch(function (error) {
                         console.error('[Kanban] failed to call card add api', error);

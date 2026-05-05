@@ -9,6 +9,7 @@ import logics.ApplicationConf
 import javax.inject._
 import logics.SiteLogic
 import logics.wikis.PageLogic
+import logics.wikis.UserPageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterWiki
 import models.RequestWrapper
@@ -218,7 +219,19 @@ controllerComponents: ControllerComponents,
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
                 val cardId = NanoIdUtil.newId()
-                lines.insert(insertAt, s"==== ${payload.text} ==== #$cardId")
+                val createdComment = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse("Created card")
+                val createdAtIsoUtc = LocalDateTime.now(ZoneOffset.UTC).withNano(0).toString + "Z"
+                val createdAtFormatted = if (createdAtIsoUtc.length > 10) s"[${createdAtIsoUtc.take(10)}]${createdAtIsoUtc.drop(10)}" else createdAtIsoUtc
+                val cardLines = Seq(
+                  s"==== ${payload.text} ==== #$cardId",
+                  "===== Property",
+                  s""" * Creator: ["${UserPageLogic.pageName(actorLabel)}"]""",
+                  s" * dateCreated: $createdAtFormatted",
+                  "===== Activity",
+                  s" * $createdComment",
+                  "  * Created card"
+                )
+                lines.insertAll(insertAt, cardLines)
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -240,7 +253,7 @@ controllerComponents: ControllerComponents,
                   "text" -> payload.text,
                   "cardId" -> cardId,
                   "lineStart" -> insertedLine,
-                  "lineEnd" -> insertedLine,
+                  "lineEnd" -> (insertedLine + cardLines.size - 1),
                   "revision" -> nextRevision
                 ))
               }
