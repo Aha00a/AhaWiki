@@ -224,9 +224,9 @@ class Test @Inject()(implicit val
             |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"$currentPageUrl","@id":"$currentPageUrl","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
         val interpretedWithWiki =
           s"""<div><div class="InterpreterRenderMetaWrapper" style="position: relative;"
-             |  data-edit-link="/w/UnitTest?action=edit&revision=0&lineStart=1&lineEnd=5"
+             |  data-edit-link="/w/UnitTest?action=edit&revision=0&lineStart=1&lineEnd=6"
              |  data-line-start="1"
-             |  data-line-end="5"
+             |  data-line-end="6"
              |  data-edit-title="Edit (r0, L1-L5)">
              |  <div class="InterpreterRenderContent">$interpreted</div>
              |</div></div>""".stripMargin
