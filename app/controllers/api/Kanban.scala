@@ -58,6 +58,14 @@ controllerComponents: ControllerComponents,
   }
   private def eventPrefix(implicit provider: RequestWrapper): String = s"[User:${actorLabel}] [${nowLabel()}"
   private def quoteCard(value: String): String = s"""["${value.trim}"]"""
+  private def quoteCardRef(cardId: String, cardTitle: String): String = {
+    val safeId = cardId.trim
+    val safeTitle = cardTitle.trim
+    if (safeId.nonEmpty && safeTitle.nonEmpty) s"""["#${safeId}" ${safeTitle}]"""
+    else if (safeId.nonEmpty) s"""["#${safeId}"]"""
+    else if (safeTitle.nonEmpty) s"""["#${safeTitle}"]"""
+    else ""
+  }
   private def quoteList(value: String): String = s"""'''${value.trim}'''"""
   private def resolve(meta: Map[String, String], key: String, fallback: String = ""): String = meta.getOrElse(key, fallback).trim
 
@@ -114,18 +122,19 @@ controllerComponents: ControllerComponents,
       case "list:rename" => withKanbanPrefix(s"""$prefix - Renamed List Title - ${quoteList(resolve(meta, "fromTitle"))} to ${quoteList(resolve(meta, "toTitle"))}""")
       case "list:move" => withKanbanPrefix(s"""$prefix - Moved a List ${quoteList(resolve(meta, "listTitle"))} Order - ${quoteCard("#" + resolve(meta, "fromOrder"))} to ${quoteCard("#" + resolve(meta, "toOrder"))}""")
       case "list:delete" => withKanbanPrefix(s"""$prefix - Deleted a List - ${quoteList(resolve(meta, "listTitle"))}""")
-      case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quoteCard("#" + resolve(meta, "cardTitle"))}""")
-      case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quoteCard("#" + resolve(meta, "fromTitle"))} to ${quoteCard("#" + resolve(meta, "toTitle"))}""")
+      case "card:add" => withKanbanPrefix(s"""$prefix - Added a Card - ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))}""")
+      case "card:rename" => withKanbanPrefix(s"""$prefix - Renamed Card Title - ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "fromTitle"))} to ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "toTitle"))}""")
       case "card:move" =>
         val fromList = resolve(meta, "fromList")
         val toList = resolve(meta, "toList")
         if (fromList.nonEmpty && toList.nonEmpty) {
-          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCard("#" + resolve(meta, "cardTitle"))} - ${quoteList(fromList)} to ${quoteList(toList)}""")
+          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))} - ${quoteList(fromList)} to ${quoteList(toList)}""")
         } else {
-          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCard("#" + resolve(meta, "cardTitle"))} Order - ${quoteCard("#" + resolve(meta, "fromOrder"))} to ${quoteCard("#" + resolve(meta, "toOrder"))}""")
+          withKanbanPrefix(s"""$prefix - Moved a Card ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))} Order - ${quoteCard("#" + resolve(meta, "fromOrder"))} to ${quoteCard("#" + resolve(meta, "toOrder"))}""")
         }
-      case "card:delete" => withKanbanPrefix(s"""$prefix - Deleted a Card - ${quoteCard("#" + resolve(meta, "cardTitle"))}""")
-      case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quoteCard("#" + resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
+      case "card:delete" => withKanbanPrefix(s"""$prefix - Deleted a Card - ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))}""")
+      case "card:comment:add" => withKanbanPrefix(s"""$prefix - Added a comment on ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))} - ${resolve(meta, "comment")}""")
+      case "card:property:update" => withKanbanPrefix(s"""$prefix - Updated Card Property - ${quoteCardRef(resolve(meta, "cardId"), resolve(meta, "cardTitle"))} ${resolve(meta, "property")}=${resolve(meta, "value")}""")
       case _ => ""
     }.getOrElse("").trim
     if (text.isEmpty) None else Some(text)
@@ -238,7 +247,7 @@ controllerComponents: ControllerComponents,
 
                 val comment = buildReadableComment(
                   actionType = Some("card:add"),
-                  actionMeta = Some(Map("cardTitle" -> payload.text))
+                  actionMeta = Some(Map("cardId" -> cardId, "cardTitle" -> payload.text))
                 ).getOrElse(buildKanbanActionComment(
                   action = "card:add",
                   pageName = pageName,

@@ -879,6 +879,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         shiftLineNumbersAfterInsert();
                         rerenderColumns();
                         return persistColumns('card:move', {
+                            cardId: movedCard.id || '',
                             cardTitle: movedCard.text || '',
                             fromOrder: String((evt.oldIndex || 0) + 1),
                             toOrder: String((evt.newIndex || 0) + 1),
@@ -1391,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderColumns();
 
                 enqueueMutation(function () {
-                    return persistColumns('card:rename', { fromTitle: previousCardTitle, toTitle: nextTitle || '' }).catch(function (error) {
+                    return persistColumns('card:rename', { cardId: card.id || '', fromTitle: previousCardTitle, toTitle: nextTitle || '' }).catch(function (error) {
                         console.error('[Kanban] failed to save card title', error);
                     });
                 });
@@ -1570,6 +1571,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderComments();
                 enqueueMutation(function () {
                     return persistColumns('card:property:update', {
+                        cardId: card.id || '',
                         cardTitle: card.text || '',
                         property: 'DueDate',
                         value: nextDueDate || ''
@@ -1683,7 +1685,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         renderProperties();
                         renderColumns();
                         enqueueMutation(function () {
-                            return persistColumns('card:comment:add', { cardTitle: card.text || '', comment: commentText }).catch(function (error) {
+                            return persistColumns('card:comment:add', { cardId: card.id || '', cardTitle: card.text || '', comment: commentText }).catch(function (error) {
                                 console.error('[Kanban] failed to save clipboard image comment', error);
                             });
                         });
@@ -1709,7 +1711,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 textarea.value = '';
                 renderComments();
                 enqueueMutation(function () {
-                    return persistColumns('card:comment:add', { cardTitle: card.text || '', comment: body }).catch(function (error) {
+                    return persistColumns('card:comment:add', { cardId: card.id || '', cardTitle: card.text || '', comment: body }).catch(function (error) {
                         console.error('[Kanban] failed to save comments', error);
                     });
                 });
@@ -1741,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
 
                 enqueueMutation(function () {
-                    return persistColumns('card:delete', { cardTitle: card.text || '' }).catch(function (error) {
+                    return persistColumns('card:delete', { cardId: card.id || '', cardTitle: card.text || '' }).catch(function (error) {
                         console.error('[Kanban] failed to delete card', error);
                     });
                 });
