@@ -2,6 +2,11 @@ package controllers
 
 import actors.ActorAhaWiki.Calculate
 import akka.actor._
+import akka.{NotUsed}
+import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.scaladsl.SourceQueueWithComplete
+import akka.stream.scaladsl.Keep
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
@@ -30,6 +35,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
 import play.api.libs.json.JsValue
+import play.api.libs.json.Json
 import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -49,6 +55,9 @@ import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
 import java.util.Base64
+import java.util.UUID
+import scala.collection.concurrent.TrieMap
+import scala.util.Try
 
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
@@ -61,7 +70,30 @@ controllerComponents: ControllerComponents,
                      wsClient: WSClient,
                      executionContext: ExecutionContext,
                      configuration: Configuration
-                    ) extends BaseController with Logging {
+) extends BaseController with Logging {
+  private object PageCursorHub {
+    private val subscribers = TrieMap.empty[String, TrieMap[String, SourceQueueWithComplete[String]]]
+
+    def subscribe(page: String, id: String, queue: SourceQueueWithComplete[String]): Unit = {
+      val pageMap = subscribers.getOrElseUpdate(page, TrieMap.empty[String, SourceQueueWithComplete[String]])
+      pageMap.put(id, queue)
+    }
+
+    def unsubscribe(page: String, id: String): Unit = {
+      subscribers.get(page).foreach { pageMap =>
+        pageMap.remove(id).foreach(_.complete())
+        if (pageMap.isEmpty) subscribers.remove(page)
+      }
+    }
+
+    def broadcast(page: String, senderId: String, payload: String): Unit = {
+      subscribers.get(page).foreach { pageMap =>
+        pageMap.foreach { case (id, queue) =>
+          if (id != senderId) queue.offer(payload)
+        }
+      }
+    }
+  }
 
   implicit class RichResult(result: Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -232,6 +264,57 @@ controllerComponents: ControllerComponents,
         case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
+      }
+    }
+  }
+
+  def watch(nameEncoded: String): WebSocket = WebSocket.acceptOrResult[String, String] { request =>
+    Future {
+      val name = decodeWikiName(nameEncoded)
+      implicit val provider: RequestWrapper = RequestWrapper()(request)
+
+      def latestRevisionAndContent(): (Long, Option[PageContent]) = {
+        database.withConnection { implicit connection =>
+          implicit val site: Site = SiteLogic.get(request.host)
+          val latest = Page.selectLastRevision(name)
+          (latest.map(_.revision).getOrElse(0L), latest.map(v => PageContent(v.content)))
+        }
+      }
+
+      val (_, pageLastRevisionContent) = latestRevisionAndContent()
+      val isReadable = database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        val ctxSite = ContextSite.empty()(database, actorAhaWiki, applicationConf, ahaWikiCache, site)
+        val permission = WikiPermission()(provider, connection, ctxSite)
+        permission.isReadable(pageLastRevisionContent)
+      }
+      if (!isReadable) {
+        Left(Forbidden("Permission denied."))
+      } else {
+        val connectionId = UUID.randomUUID().toString
+        val source = Source.queue[String](32, OverflowStrategy.dropHead)
+        val sink = Sink.foreach[String] { incoming =>
+          val payload = Try(Json.parse(incoming).asOpt[play.api.libs.json.JsObject].getOrElse(Json.obj())).getOrElse(Json.obj())
+          if ((payload \ "type").asOpt[String].contains("cursor")) {
+            val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d)
+            val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d)
+            val outgoing = Json.obj(
+              "type" -> "cursor",
+              "senderId" -> connectionId,
+              "x" -> x,
+              "y" -> y
+            ).toString()
+            PageCursorHub.broadcast(name, connectionId, outgoing)
+          }
+        }
+        val flow = Flow.fromSinkAndSourceCoupledMat(sink, source)(Keep.right).mapMaterializedValue { queue =>
+          PageCursorHub.subscribe(name, connectionId, queue)
+          NotUsed
+        }.watchTermination() { (_, done) =>
+          done.onComplete(_ => PageCursorHub.unsubscribe(name, connectionId))(executionContext)
+          NotUsed
+        }
+        Right(flow)
       }
     }
   }

@@ -19,6 +19,8 @@ GET           /search                                controllers.Search.index(q:
 GET           /w/*nameEncoded                        controllers.Wiki.view(nameEncoded:String, revision:Int?=0, action:String?="")
 POST          /w/*nameEncoded                        controllers.Wiki.save(nameEncoded:String)
 
+GET           /ws/w/*nameEncoded                     controllers.Wiki.watch(nameEncoded:String)
+
 POST          /actions/delete                        controllers.Wiki.delete()
 POST          /actions/deleteLastRevision            controllers.Wiki.deleteLastRevision()
 POST          /actions/rename                        controllers.Wiki.rename()

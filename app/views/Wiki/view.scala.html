@@ -118,6 +118,74 @@
     @views.html.Wiki.hotkey()
     <script type="text/javascript">
         $(function(){
+            (function () {
+                var encodedTitle = encodeURIComponent('@title').replace(/\+/g, '%20');
+                var wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+                var wsUrl = wsProtocol + '://' + window.location.host + '/ws/w/' + encodedTitle;
+                var reconnectDelayMs = 1500;
+                var socket;
+                var lastSentAt = 0;
+                var pointerMap = {};
+
+                function colorFromSenderId(senderId) {
+                    var hash = 0;
+                    for (var i = 0; i < senderId.length; i++) {
+                        hash = ((hash << 5) - hash) + senderId.charCodeAt(i);
+                        hash |= 0;
+                    }
+                    var hue = Math.abs(hash) % 360;
+                    return 'hsla(' + hue + ', 85%, 55%, 0.28)';
+                }
+
+                function upsertCursor(senderId, x, y) {
+                    var key = 'cursor-' + senderId;
+                    var $cursor = pointerMap[key];
+                    if (!$cursor) {
+                        $cursor = $('<div class="remoteCursor">⬤</div>').css({
+                            position: 'absolute',
+                            width: '12px',
+                            height: '12px',
+                            marginLeft: '-6px',
+                            marginTop: '-6px',
+                            color: colorFromSenderId(senderId),
+                            fontSize: '12px',
+                            lineHeight: '12px',
+                            zIndex: 9998,
+                            pointerEvents: 'none'
+                        }).appendTo('body');
+                        pointerMap[key] = $cursor;
+                    }
+                    $cursor.css({ left: x + 'px', top: y + 'px' });
+                }
+
+                function connect() {
+                    socket = new WebSocket(wsUrl);
+                    socket.onmessage = function (event) {
+                        try {
+                            var data = JSON.parse(event.data);
+                            if (data.type === 'cursor') {
+                                upsertCursor(data.senderId, data.x, data.y);
+                            }
+                        } catch (e) {
+                            console.log('websocket parse error', e);
+                        }
+                    };
+                    socket.onclose = function () {
+                        setTimeout(connect, reconnectDelayMs);
+                    };
+                }
+
+                $(document).on('mousemove', function (e) {
+                    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+                    var now = Date.now();
+                    if (now - lastSentAt < 50) return;
+                    lastSentAt = now;
+                    socket.send(JSON.stringify({ type: 'cursor', x: e.pageX, y: e.pageY }));
+                });
+
+                connect();
+            })();
+
             $('a[target=_blank]').hover(function () {
                 var href = $(this).attr('href');
                 var div = $('<div class="crawlerPreview"><div class="circle"/></div>')
