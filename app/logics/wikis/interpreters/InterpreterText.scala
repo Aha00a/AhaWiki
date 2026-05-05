@@ -9,7 +9,7 @@ object InterpreterText extends TraitInterpreter {
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     val contentEscaped = pageContent.content.replaceAll("""&""", "&amp;").replaceAll("<", "&lt;")
-    s"""<pre class="text">$contentEscaped</pre>"""
+    s"""<pre class="Interpreter Text text">$contentEscaped</pre>"""
   }
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = Seq()

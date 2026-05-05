@@ -638,10 +638,6 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > blockquote,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > blockquote,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > blockquote,
-.AhaWiki .commonAhaWiki > .limitWidth > div > pre,
-.AhaWiki .commonAhaWiki > .limitWidth > div > div > pre,
-.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > pre,
-.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > pre,
 .AhaWiki .commonAhaWiki > .limitWidth > div > table,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > table,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > table,
@@ -661,7 +657,15 @@ kbd:hover > kbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > .adjacentPagesGraphWrapper,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > .adjacentPagesGraphWrapper,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .adjacentPagesGraphWrapper,
-.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper {
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper,
+.AhaWiki .commonAhaWiki > .limitWidth > div > .Text,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > .Text,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .Text,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .Text,
+.AhaWiki .commonAhaWiki > .limitWidth > div > .Vim,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > .Vim,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .Vim,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .Vim {
   margin-left: 30px;
 }
 .AhaWiki .commonAhaWiki > .limitWidth > div > ul,
@@ -780,77 +784,6 @@ kbd:hover > kbd {
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
-}
-.AhaWiki .commonAhaWiki .vim {
-  position: relative;
-  padding-left: 1em;
-  margin-top: 1px;
-  margin-bottom: 1px;
-  overflow: hidden;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang] {
-  border: 2px solid #9999cc;
-  background-color: #9999cc;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang]:before {
-  background: #9999cc;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=scala] {
-  border: 2px solid #DC322F;
-  background-color: #DC322F;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=scala]:before {
-  background: #DC322F;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=perl] {
-  border: 2px solid #004065;
-  background-color: #004065;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=perl]:before {
-  background: #004065;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=python] {
-  border: 2px solid #75A8D3;
-  background-color: #75A8D3;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=python]:before {
-  background: #75A8D3;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=javascript] {
-  border: 2px solid #F0DB4F;
-  background-color: #F0DB4F;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=javascript]:before {
-  background: #F0DB4F;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=css] {
-  border: 2px solid #FF6600;
-  background-color: #FF6600;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=css]:before {
-  background: #FF6600;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=html] {
-  border: 2px solid #E44D26;
-  background-color: #E44D26;
-}
-.AhaWiki .commonAhaWiki .vim[data-lang=html]:before {
-  background: #E44D26;
-}
-.AhaWiki .commonAhaWiki .vim::before {
-  background: #f00;
-  content: attr(data-lang);
-  -webkit-writing-mode: vertical-lr;
-  -ms-writing-mode: tb-lr;
-  writing-mode: vertical-lr;
-  color: #fff;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  padding: 5px 1px;
-  overflow: hidden;
-  word-break: initial;
 }
 .AhaWiki .commonAhaWiki pre {
   margin-top: 0;
@@ -1338,10 +1271,6 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent > .limitWidth > div > div > blockquote,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > blockquote,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div > blockquote,
-.AhaWiki .wikiContent > .limitWidth > div > pre,
-.AhaWiki .wikiContent > .limitWidth > div > div > pre,
-.AhaWiki .wikiContent > .limitWidth > div > div > div > pre,
-.AhaWiki .wikiContent > .limitWidth > div > div > div > div > pre,
 .AhaWiki .wikiContent > .limitWidth > div > table,
 .AhaWiki .wikiContent > .limitWidth > div > div > table,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > table,
@@ -1361,7 +1290,15 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent > .limitWidth > div > .adjacentPagesGraphWrapper,
 .AhaWiki .wikiContent > .limitWidth > div > div > .adjacentPagesGraphWrapper,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > .adjacentPagesGraphWrapper,
-.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper {
+.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper,
+.AhaWiki .wikiContent > .limitWidth > div > .Text,
+.AhaWiki .wikiContent > .limitWidth > div > div > .Text,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > .Text,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .Text,
+.AhaWiki .wikiContent > .limitWidth > div > .Vim,
+.AhaWiki .wikiContent > .limitWidth > div > div > .Vim,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > .Vim,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .Vim {
   margin-left: 30px;
 }
 .AhaWiki .wikiContent > .limitWidth > div > ul,
@@ -1480,77 +1417,6 @@ kbd:hover > kbd {
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
-}
-.AhaWiki .wikiContent .vim {
-  position: relative;
-  padding-left: 1em;
-  margin-top: 1px;
-  margin-bottom: 1px;
-  overflow: hidden;
-}
-.AhaWiki .wikiContent .vim[data-lang] {
-  border: 2px solid #9999cc;
-  background-color: #9999cc;
-}
-.AhaWiki .wikiContent .vim[data-lang]:before {
-  background: #9999cc;
-}
-.AhaWiki .wikiContent .vim[data-lang=scala] {
-  border: 2px solid #DC322F;
-  background-color: #DC322F;
-}
-.AhaWiki .wikiContent .vim[data-lang=scala]:before {
-  background: #DC322F;
-}
-.AhaWiki .wikiContent .vim[data-lang=perl] {
-  border: 2px solid #004065;
-  background-color: #004065;
-}
-.AhaWiki .wikiContent .vim[data-lang=perl]:before {
-  background: #004065;
-}
-.AhaWiki .wikiContent .vim[data-lang=python] {
-  border: 2px solid #75A8D3;
-  background-color: #75A8D3;
-}
-.AhaWiki .wikiContent .vim[data-lang=python]:before {
-  background: #75A8D3;
-}
-.AhaWiki .wikiContent .vim[data-lang=javascript] {
-  border: 2px solid #F0DB4F;
-  background-color: #F0DB4F;
-}
-.AhaWiki .wikiContent .vim[data-lang=javascript]:before {
-  background: #F0DB4F;
-}
-.AhaWiki .wikiContent .vim[data-lang=css] {
-  border: 2px solid #FF6600;
-  background-color: #FF6600;
-}
-.AhaWiki .wikiContent .vim[data-lang=css]:before {
-  background: #FF6600;
-}
-.AhaWiki .wikiContent .vim[data-lang=html] {
-  border: 2px solid #E44D26;
-  background-color: #E44D26;
-}
-.AhaWiki .wikiContent .vim[data-lang=html]:before {
-  background: #E44D26;
-}
-.AhaWiki .wikiContent .vim::before {
-  background: #f00;
-  content: attr(data-lang);
-  -webkit-writing-mode: vertical-lr;
-  -ms-writing-mode: tb-lr;
-  writing-mode: vertical-lr;
-  color: #fff;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  padding: 5px 1px;
-  overflow: hidden;
-  word-break: initial;
 }
 .AhaWiki .wikiContent pre {
   margin-top: 0;
@@ -2217,10 +2083,6 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > blockquote,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > blockquote,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > blockquote,
-.AhaWiki .paperContent .page .pageContent > .limitWidth > div > pre,
-.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > pre,
-.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > pre,
-.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > pre,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > table,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > table,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > table,
@@ -2240,7 +2102,15 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > .adjacentPagesGraphWrapper,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .adjacentPagesGraphWrapper,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .adjacentPagesGraphWrapper,
-.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper {
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .adjacentPagesGraphWrapper,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > .Text,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .Text,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .Text,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .Text,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > .Vim,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .Vim,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .Vim,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .Vim {
   margin-left: 30px;
 }
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > ul,
@@ -2359,77 +2229,6 @@ kbd:hover > kbd {
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
-}
-.AhaWiki .paperContent .page .pageContent .vim {
-  position: relative;
-  padding-left: 1em;
-  margin-top: 1px;
-  margin-bottom: 1px;
-  overflow: hidden;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang] {
-  border: 2px solid #9999cc;
-  background-color: #9999cc;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang]:before {
-  background: #9999cc;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=scala] {
-  border: 2px solid #DC322F;
-  background-color: #DC322F;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=scala]:before {
-  background: #DC322F;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=perl] {
-  border: 2px solid #004065;
-  background-color: #004065;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=perl]:before {
-  background: #004065;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=python] {
-  border: 2px solid #75A8D3;
-  background-color: #75A8D3;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=python]:before {
-  background: #75A8D3;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript] {
-  border: 2px solid #F0DB4F;
-  background-color: #F0DB4F;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=javascript]:before {
-  background: #F0DB4F;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=css] {
-  border: 2px solid #FF6600;
-  background-color: #FF6600;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=css]:before {
-  background: #FF6600;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=html] {
-  border: 2px solid #E44D26;
-  background-color: #E44D26;
-}
-.AhaWiki .paperContent .page .pageContent .vim[data-lang=html]:before {
-  background: #E44D26;
-}
-.AhaWiki .paperContent .page .pageContent .vim::before {
-  background: #f00;
-  content: attr(data-lang);
-  -webkit-writing-mode: vertical-lr;
-  -ms-writing-mode: tb-lr;
-  writing-mode: vertical-lr;
-  color: #fff;
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  padding: 5px 1px;
-  overflow: hidden;
-  word-break: initial;
 }
 .AhaWiki .paperContent .page .pageContent pre {
   margin-top: 0;
@@ -3667,35 +3466,116 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.toc.collapsed .tocBody {
   max-height: 26px;
 }
-.Macro.BlockMacro {
+.AhaWiki .Macro.BlockMacro {
   margin-left: 30px;
 }
-.Macro.WikiStatistics .statsGrid {
+.AhaWiki .Macro.WikiStatistics .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 12px;
   margin-bottom: 16px;
 }
-.Macro.WikiStatistics .statCard {
+.AhaWiki .Macro.WikiStatistics .statCard {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 12px;
   background: #fff;
 }
-.Macro.WikiStatistics .statLabel {
+.AhaWiki .Macro.WikiStatistics .statLabel {
   color: #6b7280;
   font-size: 12px;
   margin-bottom: 4px;
 }
-.Macro.WikiStatistics .statValue {
+.AhaWiki .Macro.WikiStatistics .statValue {
   font-size: 20px;
   font-weight: 600;
   line-height: 1.2;
 }
-.Macro.WikiStatistics .statSub {
+.AhaWiki .Macro.WikiStatistics .statSub {
   margin-top: 2px;
   color: #6b7280;
   font-size: 12px;
+}
+.AhaWiki .Interpreter.Text,
+.AhaWiki .Interpreter.Vim {
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+.AhaWiki .Interpreter.Vim {
+  position: relative;
+  overflow: hidden;
+}
+.AhaWiki .Interpreter.Vim[data-lang] {
+  border: 2px solid #9999cc;
+  border-left-width: 15px;
+  background-color: #9999cc;
+}
+.AhaWiki .Interpreter.Vim[data-lang]:before {
+  color: #fff;
+  background: #9999cc;
+}
+.AhaWiki .Interpreter.Vim[data-lang=scala] {
+  border: 2px solid #DC322F;
+  border-left-width: 15px;
+  background-color: #DC322F;
+}
+.AhaWiki .Interpreter.Vim[data-lang=scala]:before {
+  color: #fff;
+  background: #DC322F;
+}
+.AhaWiki .Interpreter.Vim[data-lang=perl] {
+  border: 2px solid #004065;
+  border-left-width: 15px;
+  background-color: #004065;
+}
+.AhaWiki .Interpreter.Vim[data-lang=perl]:before {
+  color: #fff;
+  background: #004065;
+}
+.AhaWiki .Interpreter.Vim[data-lang=python] {
+  border: 2px solid #75A8D3;
+  border-left-width: 15px;
+  background-color: #75A8D3;
+}
+.AhaWiki .Interpreter.Vim[data-lang=python]:before {
+  color: #fff;
+  background: #75A8D3;
+}
+.AhaWiki .Interpreter.Vim[data-lang=javascript] {
+  border: 2px solid #F0DB4F;
+  border-left-width: 15px;
+  background-color: #F0DB4F;
+}
+.AhaWiki .Interpreter.Vim[data-lang=javascript]:before {
+  color: #000;
+  background: #F0DB4F;
+}
+.AhaWiki .Interpreter.Vim[data-lang=css] {
+  border: 2px solid #FF6600;
+  border-left-width: 15px;
+  background-color: #FF6600;
+}
+.AhaWiki .Interpreter.Vim[data-lang=css]:before {
+  color: #fff;
+  background: #FF6600;
+}
+.AhaWiki .Interpreter.Vim[data-lang=html] {
+  border: 2px solid #E44D26;
+  border-left-width: 15px;
+  background-color: #E44D26;
+}
+.AhaWiki .Interpreter.Vim[data-lang=html]:before {
+  color: #fff;
+  background: #E44D26;
+}
+.AhaWiki .Interpreter.Vim::before {
+  content: attr(data-lang);
+  color: #fff;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 1px 70px 5px 10px;
+  overflow: hidden;
 }
 .Test.gradient table {
   border-collapse: collapse;
