@@ -392,9 +392,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cardSectionMatch && currentCard) {
                 cardSection = cardSectionMatch[1];
                 propertyKey = '';
-                if (cardSection === 'Property') {
-                    currentCard.structured = true;
-                }
                 return;
             }
 
@@ -451,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     classNames: cardHeading.classNames,
                     lineNumber: interpreterStartLine + lineIndex,
                     comments: [],
-                    structured: true,
                     properties: {}
                 };
                 cardSection = '';
@@ -692,7 +688,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     classNames: [],
                     lineNumber: cardLineStart,
                     comments: [buildCommentEntry(['Created card'])],
-                    structured: true,
                     properties: {
                         Creator: [toUserLinkMarkup(getCurrentAuthor())],
                         dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())]
@@ -1556,7 +1551,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (nextDueDate === previousDueDate) {
                     return;
                 }
-                card.structured = true;
                 card.properties = card.properties || {};
                 if (nextDueDate) {
                     card.properties.DueDate = ['[' + nextDueDate + ']'];
@@ -1673,7 +1667,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             throw new Error('Missing attachment macro.');
                         }
                         var commentText = macro;
-                        card.structured = true;
                         card.properties = card.properties || {};
                         card.properties.Attachment = card.properties.Attachment || [];
                         card.properties.Attachment.push(commentText);
