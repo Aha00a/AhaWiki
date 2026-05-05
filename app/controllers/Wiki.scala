@@ -289,6 +289,7 @@ controllerComponents: ControllerComponents,
         permission.isReadable(pageLastRevisionContent)
       }
       if (!isReadable) {
+        logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")
         Left(Forbidden("Permission denied."))
       } else {
         val connectionId = UUID.randomUUID().toString

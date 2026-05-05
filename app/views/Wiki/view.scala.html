@@ -119,9 +119,13 @@
     <script type="text/javascript">
         $(function(){
             (function () {
-                var encodedTitle = encodeURIComponent('@title').replace(/\+/g, '%20');
                 var wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-                var wsUrl = wsProtocol + '://' + window.location.host + '/ws/w/' + encodedTitle;
+                var wikiPath = window.location.pathname;
+                var wsPath = wikiPath.replace(/^\/w\//, '/ws/w/');
+                if (wsPath === wikiPath) {
+                    wsPath = '/ws/w/' + encodeURIComponent('@title').replace(/\+/g, '%20');
+                }
+                var wsUrl = wsProtocol + '://' + window.location.host + wsPath;
                 var reconnectDelayMs = 1500;
                 var socket;
                 var lastSentAt = 0;
@@ -170,7 +174,11 @@
                             console.log('websocket parse error', e);
                         }
                     };
-                    socket.onclose = function () {
+                    socket.onerror = function (event) {
+                        console.warn('websocket error', wsUrl, event);
+                    };
+                    socket.onclose = function (event) {
+                        console.warn('websocket closed', wsUrl, 'code=' + event.code, 'reason=' + event.reason);
                         setTimeout(connect, reconnectDelayMs);
                     };
                 }
