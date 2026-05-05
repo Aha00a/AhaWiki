@@ -214,10 +214,8 @@ controllerComponents: ControllerComponents,
                 val lines = latestContent.split("""\r\n|\n""", -1).toBuffer
                 val insertAt = Math.max(0, Math.min(payload.lineStart - 1, lines.length))
                 val insertedLine = insertAt + 1
-                val creationCommentLine = payload.creationComment.map(_.trim).filter(_.nonEmpty).getOrElse(eventPrefix + " - Created card")
                 val cardId = NanoIdUtil.newId()
                 lines.insert(insertAt, s"==== ${payload.text} ==== #$cardId")
-                lines.insert(insertAt + 1, s" * ${creationCommentLine}")
                 val updated = lines.mkString("\n")
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
 
@@ -239,7 +237,7 @@ controllerComponents: ControllerComponents,
                   "text" -> payload.text,
                   "cardId" -> cardId,
                   "lineStart" -> insertedLine,
-                  "lineEnd" -> (insertedLine + 1),
+                  "lineEnd" -> insertedLine,
                   "revision" -> nextRevision
                 ))
               }
@@ -273,7 +271,10 @@ controllerComponents: ControllerComponents,
                 val safeStart = Math.max(1, payload.lineStart)
                 val safeEndExclusive = Math.max(safeStart, payload.lineEnd)
                 val startIndex = Math.min(safeStart - 1, lines.length)
-                val endIndex = Math.min(safeEndExclusive - 1, lines.length)
+                var endIndex = Math.min(safeEndExclusive - 1, lines.length)
+                if (endIndex > startIndex && lines.isDefinedAt(endIndex - 1) && lines(endIndex - 1).trim == "]]]") {
+                  endIndex = Math.max(startIndex, endIndex - 1)
+                }
                 val nextRevision = latest.map(_.revision + 1).getOrElse(1L)
                 val replacement = payload.content.split("""\r\n|\n""", -1).toSeq
                 val originalSlice = lines.slice(startIndex, endIndex).toSeq

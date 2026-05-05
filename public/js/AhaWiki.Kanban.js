@@ -649,6 +649,7 @@ document.addEventListener('DOMContentLoaded', function () {
             closeCardEditor();
 
             enqueueMutation(function () {
+                shiftLineNumbersAfterInsert();
                 var cardLineStart = getCardInsertLineStart(index);
                 var newCard = {
                     text: value,
@@ -683,10 +684,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         if (result && Number.isFinite(result.lineStart)) {
                             shiftLineNumbersAfterInsert();
-                            shiftMetaLineRangeAfterInsert(root.closest('.InterpreterRenderMetaWrapper'), result.lineStart, 1);
+                            var insertedLineDelta = Number(result.lineEnd) - Number(result.lineStart) + 1;
+                            if (!Number.isFinite(insertedLineDelta) || insertedLineDelta <= 0) {
+                                insertedLineDelta = 1;
+                            }
+                            shiftMetaLineRangeAfterInsert(root.closest('.InterpreterRenderMetaWrapper'), result.lineStart, insertedLineDelta);
+                            var currentLineCount = Number(root.getAttribute('data-kanban-line-count')) || 0;
+                            root.setAttribute('data-kanban-line-count', String(currentLineCount + insertedLineDelta));
                         }
                         rerenderColumns();
                         console.info('[Kanban] card added', result);
+                        return persistColumns('card:add', { cardTitle: value }).catch(function (error) {
+                            console.error('[Kanban] failed to persist structured card after add', error);
+                        });
                     })
                     .catch(function (error) {
                         console.error('[Kanban] failed to call card add api', error);
@@ -866,6 +876,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterStartLine = Math.max(1, metaLineStart + (hasShebang ? 1 : 0));
         var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
+        var lineCountForText = function (value) {
+            if (!value) {
+                return 0;
+            }
+            var rows = String(value).split(/\r?\n/);
+            while (rows.length > 0 && rows[rows.length - 1] === '') {
+                rows.pop();
+            }
+            return rows.length;
+        };
+        var currentKanbanLineCount = lineCountForText(pre.textContent || '');
+        root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
         var mutationQueue = Promise.resolve();
         var serializeColumns = function () {
             return columns.map(function (column) {
@@ -913,9 +935,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }).join('\n');
         };
         var persistColumns = function (actionType, actionMeta) {
+            var content = serializeColumns();
+            var replacementLineCount = lineCountForText(content);
+            var trackedLineCount = Number(root.getAttribute('data-kanban-line-count'));
+            if (!Number.isFinite(trackedLineCount) || trackedLineCount < 0) {
+                trackedLineCount = currentKanbanLineCount;
+            }
             var latestLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
-            var requestLineEnd = Math.max(interpreterStartLine, latestLineEnd - 1);
-            return requestSaveKanban(pageName, interpreterStartLine, requestLineEnd, serializeColumns(), actionType, actionMeta)
+            var metaDerivedLineCount = Math.max(0, latestLineEnd - interpreterStartLine);
+            var requestLineEnd = interpreterStartLine + Math.max(trackedLineCount, metaDerivedLineCount);
+            return requestSaveKanban(pageName, interpreterStartLine, requestLineEnd, content, actionType, actionMeta)
                 .then(function (result) {
                     var nextLineEnd = Number(result && result.lineEnd);
                     if (metaWrapper && Number.isFinite(nextLineEnd) && nextLineEnd >= interpreterStartLine) {
@@ -923,8 +952,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (delta !== 0) {
                             shiftMetaLineRangeAfterInsert(metaWrapper, requestLineEnd, delta);
                         }
-                        metaWrapper.setAttribute('data-line-end', String(nextLineEnd + 1));
+                        metaWrapper.setAttribute('data-line-end', String(nextLineEnd));
                     }
+                    currentKanbanLineCount = replacementLineCount;
+                    root.setAttribute('data-kanban-line-count', String(replacementLineCount));
+                    pre.textContent = content;
                     return result;
                 });
         };
@@ -1046,6 +1078,28 @@ document.addEventListener('DOMContentLoaded', function () {
         addListWrapper.appendChild(addListEditor);
 
 
+        var countSerializedCardLines = function (targetCard) {
+            var total = 1; // ==== title ====
+            total += 1; // ===== Property
+            Object.keys((targetCard && targetCard.properties) || {}).forEach(function (key) {
+                var values = (((targetCard && targetCard.properties) || {})[key]) || [];
+                if (values.length <= 1) {
+                    total += 1;
+                } else {
+                    total += 1 + values.length;
+                }
+            });
+            total += 1; // ===== Activity
+            (targetCard && targetCard.comments || []).forEach(function (comment) {
+                if (!comment || !comment.header) {
+                    return;
+                }
+                total += 1;
+                total += (comment.details || []).length;
+            });
+            return total;
+        };
+
         var normalizeLineNumbers = function () {
             var cursor = interpreterStartLine;
             columns.forEach(function (targetColumn) {
@@ -1054,11 +1108,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 (targetColumn.cards || []).forEach(function (targetCard) {
                     targetCard.lineNumber = cursor;
-                    cursor += 1;
-                    var commentCount = (targetCard.comments || []).length;
-                    if (commentCount > 0) {
-                        cursor += commentCount;
-                    }
+                    cursor += countSerializedCardLines(targetCard);
                 });
             });
         };
