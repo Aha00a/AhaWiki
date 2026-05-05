@@ -226,7 +226,7 @@ controllerComponents: ControllerComponents,
                 val cardLines = Seq(
                   s"==== ${payload.text} ==== #$cardId",
                   "===== Property",
-                  s""" * Creator: ["${UserPageLogic.pageName(actorLabel)}"]""",
+                  s""" * Creator: [${UserPageLogic.pageName(actorLabel)}]""",
                   s" * dateCreated: $createdAtFormatted",
                   "===== Activity",
                   s" * $createdComment",
