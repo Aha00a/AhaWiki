@@ -57,7 +57,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var href = wrapper.getAttribute('data-edit-link');
         var title = wrapper.getAttribute('data-edit-title');
         var heading = content.querySelector('h2, h3, h4, h5, h6');
+        var interpreterCodeBlock = content.querySelector('.Interpreter.Text, .Interpreter.Vim');
         var editLink = null;
+        var copyButton = null;
         if (href) {
             editLink = wrapper.querySelector('.InterpreterRenderEditLink');
             if (!editLink) {
@@ -100,6 +102,64 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.href = href;
             if (title) {
                 editLink.title = title;
+            }
+        }
+
+        if (interpreterCodeBlock) {
+            copyButton = wrapper.querySelector('.InterpreterRenderCopyButton');
+            if (!copyButton) {
+                copyButton = document.createElement('button');
+                copyButton.type = 'button';
+                copyButton.className = 'InterpreterRenderCopyButton';
+                copyButton.innerHTML = '<i class="fas fa-copy"></i>&nbsp;Copy';
+                copyButton.style.position = 'absolute';
+                copyButton.style.top = '6px';
+                copyButton.style.right = '8px';
+                copyButton.style.display = 'inline-flex';
+                copyButton.style.alignItems = 'center';
+                copyButton.style.justifyContent = 'center';
+                copyButton.style.width = '64px';
+                copyButton.style.whiteSpace = 'nowrap';
+                copyButton.style.height = '22px';
+                copyButton.style.borderRadius = '50px';
+                copyButton.style.border = '1px solid #888';
+                copyButton.style.background = '#fff';
+                copyButton.style.color = '#000';
+                copyButton.style.textDecoration = 'none';
+                copyButton.style.opacity = '.4';
+                copyButton.style.fontSize = '12px';
+                copyButton.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
+                copyButton.style.pointerEvents = 'auto';
+                copyButton.style.cursor = 'pointer';
+                copyButton.addEventListener('mouseenter', function () {
+                    copyButton.style.opacity = '1';
+                });
+                copyButton.addEventListener('mouseleave', function () {
+                    copyButton.style.opacity = '.4';
+                });
+                copyButton.addEventListener('focus', function () {
+                    copyButton.style.opacity = '1';
+                });
+                copyButton.addEventListener('blur', function () {
+                    copyButton.style.opacity = '.4';
+                });
+                copyButton.addEventListener('click', function () {
+                    var text = interpreterCodeBlock.innerText || '';
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text);
+                    } else {
+                        var fallback = document.createElement('textarea');
+                        fallback.value = text;
+                        fallback.style.position = 'fixed';
+                        fallback.style.opacity = '0';
+                        document.body.appendChild(fallback);
+                        fallback.focus();
+                        fallback.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(fallback);
+                    }
+                });
+                wrapper.appendChild(copyButton);
             }
         }
 
@@ -273,10 +333,17 @@ document.addEventListener('DOMContentLoaded', function () {
             var targetRect = contentAnchorTarget.getBoundingClientRect();
             var wrapperRect = wrapper.getBoundingClientRect();
             var top = targetRect.top - wrapperRect.top + 4;
-            var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - 8;
+            var rightOffset = 8;
+            var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - rightOffset;
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
+            if (copyButton) {
+                rightOffset += editLink.offsetWidth + 4;
+                copyButton.style.top = top + 'px';
+                copyButton.style.left = (targetRect.right - wrapperRect.left - copyButton.offsetWidth - rightOffset) + 'px';
+                copyButton.style.right = 'auto';
+            }
         };
 
         var schedulePositionEditLink = function () {
@@ -309,4 +376,3 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(schedulePositionEditLink, 100);
     });
 });
-
