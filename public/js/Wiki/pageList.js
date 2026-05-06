@@ -1,3 +1,0 @@
-$(function () {
-    $(".simpleTable").tablesorter();
-});
