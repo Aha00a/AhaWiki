@@ -11,8 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.location.hash === nextHash) {
             return;
         }
-        if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', nextHash);
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', nextHash);
             return;
         }
         window.location.hash = cardId;
@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         var baseUrl = window.location.pathname + window.location.search;
-        if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', baseUrl);
+        if (window.history && window.history.pushState) {
+            window.history.pushState(null, '', baseUrl);
             return;
         }
         window.location.hash = '';
@@ -90,6 +90,18 @@ document.addEventListener('DOMContentLoaded', function () {
         var text = String(value || '').trim();
         return text || '(empty)';
     };
+    var truncateRevisionText = function (value, maxLength) {
+        var text = String(value || '').trim();
+        if (!text) {
+            return '';
+        }
+        var limit = Number.isFinite(maxLength) && maxLength > 0 ? Math.floor(maxLength) : 80;
+        if (text.length <= limit) {
+            return text;
+        }
+        return text.slice(0, limit) + '...';
+    };
+
     var normalizeEventPrefixForRevisionComment = function (eventPrefix) {
         var raw = String(eventPrefix || '').trim();
         if (!raw) { return ''; }
@@ -106,23 +118,37 @@ document.addEventListener('DOMContentLoaded', function () {
         var cardId = getActionMetaValue(actionMeta, 'cardId');
         var cardTitle = getActionMetaValue(actionMeta, 'cardTitle');
         switch (actionType) {
-            case 'list:add': return "Kanban - " + eventPrefix + " - List Add - '''" + getActionMetaValue(actionMeta, 'listTitle') + "'''";
-            case 'list:rename': return "Kanban - " + eventPrefix + " - List Rename - '''" + getActionMetaValue(actionMeta, 'fromTitle') + "''' to '''" + getActionMetaValue(actionMeta, 'toTitle') + "'''";
-            case 'list:move': return "Kanban - " + eventPrefix + " - List Move - '''" + getActionMetaValue(actionMeta, 'listTitle') + "''' Order - " + getActionMetaValue(actionMeta, 'fromOrder') + " -> " + getActionMetaValue(actionMeta, 'toOrder');
-            case 'list:delete': return "Kanban - " + eventPrefix + " - List Delete - '''" + getActionMetaValue(actionMeta, 'listTitle') + "'''";
-            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(pageName, cardId, cardTitle);
-            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(pageName, cardId, getActionMetaValue(actionMeta, 'fromTitle')) + ' to ' + buildCardLinkText(pageName, cardId, getActionMetaValue(actionMeta, 'toTitle'));
+            case 'list:add': return "Kanban - " + eventPrefix + " - List Add - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "'''";
+            case 'list:rename': return "Kanban - " + eventPrefix + " - List Rename - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60) + "''' to '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60) + "'''";
+            case 'list:move': return "Kanban - " + eventPrefix + " - List Move - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "''' Order - " + getActionMetaValue(actionMeta, 'fromOrder') + " -> " + getActionMetaValue(actionMeta, 'toOrder');
+            case 'list:delete': return "Kanban - " + eventPrefix + " - List Delete - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "'''";
+            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60));
+            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)) + ' to ' + buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60));
             case 'card:move':
-                if (getActionMetaValue(actionMeta, 'fromList') && getActionMetaValue(actionMeta, 'toList') && getActionMetaValue(actionMeta, 'fromList') !== getActionMetaValue(actionMeta, 'toList')) {
-                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(pageName, cardId, cardTitle) + " - '''" + getActionMetaValue(actionMeta, 'fromList') + "''' to '''" + getActionMetaValue(actionMeta, 'toList') + "'''";
+                if (truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) !== truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)) {
+                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + " - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) + "''' to '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) + "'''";
                 }
-                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
-            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(pageName, cardId, cardTitle);
-            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
-            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' - ' + getActionMetaValue(actionMeta, 'property') + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
+                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
+            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60));
+            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
+            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40) + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
             default: return 'Kanban - ' + (actionType || 'save');
         }
     };
+    if (typeof window !== 'undefined') {
+        window.__AhaWikiKanbanTestHooks = Object.assign({}, window.__AhaWikiKanbanTestHooks || {}, {
+            getActionMetaValue: getActionMetaValue,
+            shortenCardCommentForRevision: shortenCardCommentForRevision,
+            serializePropertyValueForRevision: serializePropertyValueForRevision,
+            truncateRevisionText: truncateRevisionText,
+            buildKanbanSaveComment: buildKanbanSaveComment,
+            getHashCardId: getHashCardId,
+            setHashCardId: setHashCardId,
+            clearHashCardId: clearHashCardId,
+            requestSaveKanban: requestSaveKanban
+        });
+    }
+
     var extractActivityDetailFromRevisionComment = function (comment) {
         var raw = String(comment || '').trim();
         var marker = ' - ';
@@ -251,6 +277,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     };
 
+
+    if (typeof window !== 'undefined' && window.__AhaWikiKanbanTestHooks) {
+        window.__AhaWikiKanbanTestHooks.requestSaveKanban = requestSaveKanban;
+    }
 
     var shiftMetaLineRangeAfterInsert = function (anchorWrapper, insertedLineNumber, delta) {
         if (!anchorWrapper || !Number.isFinite(insertedLineNumber) || !Number.isFinite(delta) || delta === 0) {
@@ -515,6 +545,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var openCardDetail = function () {};
     var openCardDetailById = function () {};
+    var getOpenedCardOverlay = function () {
+        return document.querySelector('.kanban-card-detail-overlay');
+    };
+    var closeOpenedCardOverlay = function () {
+        var overlay = getOpenedCardOverlay();
+        if (overlay && overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+            return true;
+        }
+        return false;
+    };
     var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
         var columnElement = document.createElement('div');
         columnElement.className = 'kanban-column';
@@ -1292,13 +1333,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             var pageName = root.getAttribute('data-page-name') || '';
-            var existing = document.querySelector('.kanban-card-detail-overlay');
-            if (existing && existing.parentNode) {
-                existing.parentNode.removeChild(existing);
-            }
+            closeOpenedCardOverlay();
             setHashCardId(card.id || '');
             var overlay = document.createElement('div');
             overlay.className = 'kanban-card-detail-overlay';
+            overlay.setAttribute('data-card-id', card.id || '');
             overlay.style.position = 'fixed';
             overlay.style.inset = '0';
             overlay.style.background = 'rgba(9, 30, 66, 0.5)';
@@ -1800,9 +1839,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 renderColumns();
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
 
                 enqueueMutation(function () {
@@ -1812,15 +1849,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
             overlay.addEventListener('click', function () {
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
             });
             closeButton.addEventListener('click', function () {
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
@@ -1871,6 +1904,21 @@ document.addEventListener('DOMContentLoaded', function () {
         if (initialHashCardId) {
             openCardDetailById(initialHashCardId);
         }
+
+        window.addEventListener('hashchange', function () {
+            var hashCardId = getHashCardId();
+            var openedOverlay = getOpenedCardOverlay();
+            var openedCardId = openedOverlay ? (openedOverlay.getAttribute('data-card-id') || '') : '';
+
+            if (!hashCardId) {
+                closeOpenedCardOverlay();
+                return;
+            }
+            if (openedCardId === hashCardId) {
+                return;
+            }
+            openCardDetailById(hashCardId);
+        });
 
         if (window.Sortable) {
             Sortable.create(board, {

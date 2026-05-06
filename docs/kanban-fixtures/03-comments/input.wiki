@@ -1,0 +1,8 @@
+=== Review
+==== 코멘트 카드 ==== #card-comment
+===== Property
+ * Creator: [User:Reviewer]
+===== Activity
+ * [User:Reviewer] [2026-05-03]T09:00:00Z
+  * 첫 줄 코멘트
+  * 둘째 줄 상세

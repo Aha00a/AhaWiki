@@ -1,0 +1,12 @@
+=== Doing
+==== 속성 카드 ==== #card-prop
+===== Property
+ * DueDate: [2026-12-31]
+ * Assignee
+  * [User:Alice]
+  * [User:Bob]
+ * Attachment
+  * [[Attachment(files/spec.pdf)]]
+===== Activity
+ * [User:Alice] [2026-05-02]T11:11:11Z
+  * Updated properties
