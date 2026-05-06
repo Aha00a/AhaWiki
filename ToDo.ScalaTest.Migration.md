@@ -23,7 +23,7 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 - [ ] test/models/BlameSpec.scala
 - [ ] test/models/JsonSpec.scala
 - [ ] test/models/PageContentSpec.scala
-- [ ] test/logics/SchemaOrgSpec.scala
+- [x] test/logics/SchemaOrgSpec.scala
 - [x] test/logics/wikis/HeadingNumberSpec.scala
 - [ ] test/logics/wikis/interpreters/InterpreterSchemaSpec.scala
 - [ ] test/logics/wikis/interpreters/TraitInterpreterSpec.scala
