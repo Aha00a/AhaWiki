@@ -1421,6 +1421,23 @@ document.addEventListener('DOMContentLoaded', function () {
             titleSaveButton.style.color = '#fff';
             titleSaveButton.style.cursor = 'pointer';
 
+            var headerActions = document.createElement('div');
+            headerActions.style.display = 'flex';
+            headerActions.style.alignItems = 'center';
+            headerActions.style.gap = '6px';
+
+            var deleteCardButton = document.createElement('button');
+            deleteCardButton.type = 'button';
+            deleteCardButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+            deleteCardButton.title = 'Delete Card';
+            deleteCardButton.style.border = '1px solid #f1b5b5';
+            deleteCardButton.style.borderRadius = '50%';
+            deleteCardButton.style.width = '32px';
+            deleteCardButton.style.height = '32px';
+            deleteCardButton.style.background = '#fff5f5';
+            deleteCardButton.style.color = '#ae2a19';
+            deleteCardButton.style.cursor = 'pointer';
+
             var closeButton = document.createElement('button');
             closeButton.type = 'button';
             closeButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
@@ -1436,11 +1453,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var closeTitleEditor = function () {
                 titleEditorWrap.classList.add('kanban-hidden');
                 title.classList.remove('kanban-hidden');
+                cardIdLabel.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
                 title.classList.add('kanban-hidden');
+                cardIdLabel.classList.add('kanban-hidden');
                 titleEditorWrap.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
@@ -1510,16 +1529,6 @@ document.addEventListener('DOMContentLoaded', function () {
             submit.style.background = '#0c66e4';
             submit.style.color = '#fff';
             submit.style.cursor = 'pointer';
-
-            var deleteCardButton = document.createElement('button');
-            deleteCardButton.type = 'button';
-            deleteCardButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i> Delete Card';
-            deleteCardButton.style.border = '1px solid #f1b5b5';
-            deleteCardButton.style.borderRadius = '8px';
-            deleteCardButton.style.padding = '8px 12px';
-            deleteCardButton.style.background = '#fff5f5';
-            deleteCardButton.style.color = '#ae2a19';
-            deleteCardButton.style.cursor = 'pointer';
 
             var propertyTitle = document.createElement('div');
             propertyTitle.innerHTML = '<i class="fas fa-tags" aria-hidden="true"></i> Properties';
@@ -1624,8 +1633,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         valueRow.textContent = displayValue;
                         valueRow.style.fontSize = '13px';
                         valueRow.style.color = '#172b4d';
-                        valueRow.style.textAlign = 'right';
+                        valueRow.style.textAlign = 'left';
                         valueRow.style.wordBreak = 'break-word';
+                        valueRow.style.marginLeft = '8px';
                         row.appendChild(valueRow);
 
                         requestRenderInlineComment(pageName, displayValue).then(function (html) {
@@ -1857,14 +1867,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
+            headerActions.appendChild(deleteCardButton);
+            headerActions.appendChild(closeButton);
             header.appendChild(titleWrap);
-            header.appendChild(closeButton);
+            header.appendChild(headerActions);
             modal.appendChild(header);
             titleEditorWrap.appendChild(titleEditor);
             titleEditorWrap.appendChild(titleSaveButton);
             titleWrap.appendChild(titleEditorWrap);
             actionBar.appendChild(submit);
-            actionBar.appendChild(deleteCardButton);
             dueDateEditor.appendChild(dueDateInput);
             dueDateEditor.appendChild(dueDateSaveButton);
             modal.appendChild(propertyTitle);
