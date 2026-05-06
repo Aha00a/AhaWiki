@@ -2999,12 +2999,14 @@ kbd:hover > kbd {
   left: 0;
   background: rgba(9, 30, 66, 0.5);
   backdrop-filter: blur(2px);
+  z-index: 1;
 }
 .AhaWiki .search {
   position: fixed;
   top: 30%;
   left: 40%;
   width: 20%;
+  z-index: 1;
 }
 @media (max-width: 767px) {
   .AhaWiki .search {
@@ -3277,6 +3279,7 @@ kbd:hover > kbd {
   left: 0;
   background: rgba(9, 30, 66, 0.5);
   backdrop-filter: blur(2px);
+  z-index: 1;
 }
 .AhaWiki .ahaWikiLoader.circle {
   width: 10vmin;
