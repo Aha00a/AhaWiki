@@ -1352,19 +1352,35 @@ document.addEventListener('DOMContentLoaded', function () {
             titleWrap.appendChild(title);
             titleWrap.appendChild(cardIdLabel);
 
+            var titleEditorWrap = document.createElement('div');
+            titleEditorWrap.classList.add('kanban-hidden');
+            titleEditorWrap.style.display = 'flex';
+            titleEditorWrap.style.alignItems = 'center';
+            titleEditorWrap.style.gap = '8px';
+            titleEditorWrap.style.margin = '0';
+
             var titleEditor = document.createElement('input');
             titleEditor.type = 'text';
             titleEditor.value = card.text || '';
-            titleEditor.classList.add('kanban-hidden');
-            titleEditor.style.width = '100%';
+            titleEditor.style.flex = '1 1 auto';
             titleEditor.style.boxSizing = 'border-box';
-            titleEditor.style.margin = '0 0 12px 0';
+            titleEditor.style.margin = '0';
             titleEditor.style.border = '1px solid #b6c2cf';
             titleEditor.style.borderRadius = '8px';
             titleEditor.style.padding = '10px 12px';
             titleEditor.style.fontSize = '18px';
             titleEditor.style.fontWeight = '600';
             titleEditor.style.color = '#172b4d';
+
+            var titleSaveButton = document.createElement('button');
+            titleSaveButton.type = 'button';
+            titleSaveButton.textContent = 'Save';
+            titleSaveButton.style.border = 'none';
+            titleSaveButton.style.borderRadius = '8px';
+            titleSaveButton.style.padding = '10px 12px';
+            titleSaveButton.style.background = '#0c66e4';
+            titleSaveButton.style.color = '#fff';
+            titleSaveButton.style.cursor = 'pointer';
 
             var closeButton = document.createElement('button');
             closeButton.type = 'button';
@@ -1379,14 +1395,14 @@ document.addEventListener('DOMContentLoaded', function () {
             closeButton.style.color = '#44546f';
 
             var closeTitleEditor = function () {
-                titleEditor.classList.add('kanban-hidden');
+                titleEditorWrap.classList.add('kanban-hidden');
                 title.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
                 title.classList.add('kanban-hidden');
-                titleEditor.classList.remove('kanban-hidden');
+                titleEditorWrap.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
                 titleEditor.select();
@@ -1415,7 +1431,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             title.addEventListener('click', openTitleEditor);
-            titleEditor.addEventListener('blur', submitTitleEditor);
+            titleSaveButton.addEventListener('click', submitTitleEditor);
             titleEditor.addEventListener('keydown', function (evt) {
                 if (evt.key === 'Enter') {
                     evt.preventDefault();
@@ -1491,7 +1507,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var renderProperties = function () {
                 propertyList.innerHTML = '';
                 var propertyEntries = Object.keys(card.properties || {}).filter(function (key) {
-                    return Array.isArray(card.properties[key]) && card.properties[key].length > 0;
+                    var value = card.properties[key];
+                    if (Array.isArray(value)) {
+                        return value.length > 0;
+                    }
+                    return value !== undefined && value !== null && String(value).trim() !== '';
                 }).sort(function (a, b) {
                     if (a === 'Creator') {
                         return -1;
@@ -1511,7 +1531,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 propertyEntries.forEach(function (key) {
-                    var values = card.properties[key] || [];
+                    var values = card.properties[key];
                     var row = document.createElement('div');
                     row.style.padding = '8px 10px';
                     row.style.border = '1px solid #eceff3';
@@ -1523,21 +1543,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     label.textContent = key;
                     label.style.fontWeight = '600';
                     label.style.fontSize = '13px';
-                    label.style.marginBottom = '4px';
-                    row.appendChild(label);
+                    if (Array.isArray(values)) {
+                        label.style.marginBottom = '4px';
+                        row.appendChild(label);
+                        values.forEach(function (value) {
+                            var displayValue = value;
+                            if (key === 'Creator') {
+                                displayValue = toUserLinkMarkup(value);
+                            } else if (key === 'dateCreated') {
+                                displayValue = toClientKanbanDateTime(value);
+                            }
+                            var valueRow = document.createElement('div');
+                            valueRow.textContent = displayValue;
+                            valueRow.style.fontSize = '13px';
+                            valueRow.style.color = '#172b4d';
+                            valueRow.style.paddingLeft = '8px';
+                            row.appendChild(valueRow);
 
-                    values.forEach(function (value) {
-                        var displayValue = value;
+                            requestRenderInlineComment(pageName, displayValue).then(function (html) {
+                                if (html) {
+                                    valueRow.innerHTML = html;
+                                }
+                            }).catch(function (error) {
+                                console.error('[Kanban] failed to render property value', error);
+                            });
+                        });
+                    } else {
+                        row.style.display = 'flex';
+                        row.style.alignItems = 'center';
+                        row.style.justifyContent = 'space-between';
+                        row.style.gap = '12px';
+                        label.style.marginBottom = '0';
+                        row.appendChild(label);
+                        var displayValue = values;
                         if (key === 'Creator') {
-                            displayValue = toUserLinkMarkup(value);
+                            displayValue = toUserLinkMarkup(values);
                         } else if (key === 'dateCreated') {
-                            displayValue = toClientKanbanDateTime(value);
+                            displayValue = toClientKanbanDateTime(values);
                         }
                         var valueRow = document.createElement('div');
                         valueRow.textContent = displayValue;
                         valueRow.style.fontSize = '13px';
                         valueRow.style.color = '#172b4d';
-                        valueRow.style.paddingLeft = '8px';
+                        valueRow.style.textAlign = 'right';
+                        valueRow.style.wordBreak = 'break-word';
                         row.appendChild(valueRow);
 
                         requestRenderInlineComment(pageName, displayValue).then(function (html) {
@@ -1547,7 +1596,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         }).catch(function (error) {
                             console.error('[Kanban] failed to render property value', error);
                         });
-                    });
+                    }
                     propertyList.appendChild(row);
                 });
                 var dueDates = (card.properties && card.properties.DueDate) || [];
@@ -1778,17 +1827,19 @@ document.addEventListener('DOMContentLoaded', function () {
             header.appendChild(titleWrap);
             header.appendChild(closeButton);
             modal.appendChild(header);
-            modal.appendChild(titleEditor);
-            modal.appendChild(textarea);
+            titleEditorWrap.appendChild(titleEditor);
+            titleEditorWrap.appendChild(titleSaveButton);
+            titleWrap.appendChild(titleEditorWrap);
             actionBar.appendChild(submit);
             actionBar.appendChild(deleteCardButton);
             dueDateEditor.appendChild(dueDateInput);
             dueDateEditor.appendChild(dueDateSaveButton);
-            modal.appendChild(actionBar);
             modal.appendChild(propertyTitle);
             modal.appendChild(propertyList);
             modal.appendChild(dueDateEditor);
             modal.appendChild(commentsTitle);
+            modal.appendChild(textarea);
+            modal.appendChild(actionBar);
             modal.appendChild(comments);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
