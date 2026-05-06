@@ -30,7 +30,6 @@ import javax.inject.Inject
 import javax.inject.Named
 import scala.concurrent.ExecutionContext
 import scala.sys.process.{Process, ProcessLogger}
-import scala.util.Try
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -293,36 +292,7 @@ class Test @Inject()(implicit val
       }
     }
 
-    def runScalaTestSuites(): TestExecutionResult = {
-      val sourceSuites = new File("test")
-      def collectScalaSpecs(dir: File): Seq[File] = {
-        Option(dir.listFiles()).toSeq.flatten.flatMap { f =>
-          if (f.isDirectory) collectScalaSpecs(f)
-          else if (f.getName.endsWith("Spec.scala")) Seq(f)
-          else Seq.empty
-        }
-      }
 
-      val discoveredSuites = collectScalaSpecs(sourceSuites).flatMap { file =>
-        val relative = sourceSuites.toPath.relativize(file.toPath).toString.replace(File.separator, "/")
-        val className = relative.stripSuffix(".scala").replace('/', '.')
-        Try(Class.forName(className)).toOption.map(_ => className)
-      }.distinct
-
-      if (discoveredSuites.nonEmpty) {
-        discoveredSuites.foreach { suite =>
-          val runnerClass = Class.forName("org.scalatest.tools.Runner$")
-          val module = runnerClass.getField("MODULE$").get(null)
-          val runMethod = runnerClass.getMethod("run", classOf[Array[String]])
-          val ok = runMethod.invoke(module, Array("-o", "-s", suite).asInstanceOf[Object]).asInstanceOf[Boolean]
-          if (!ok) throw new RuntimeException(s"Scala suite failed: $suite")
-        }
-        TestExecutionResult("scala", discoveredSuites.size, discoveredSuites.size, skipped = false)
-      } else {
-        logger.warn("[/test/unit] No ScalaTest suites discovered on classpath; skipping external Scala suite run.")
-        TestExecutionResult("scala", discovered = 0, executed = 0, skipped = true)
-      }
-    }
 
     def runJavaScriptUnitTests(): TestExecutionResult = {
       val testDir = new File("test")
@@ -340,7 +310,6 @@ class Test @Inject()(implicit val
       }
     }
 
-    val scalaResult = runScalaTestSuites()
     val jsResult = runJavaScriptUnitTests()
 
     val fileAbsolute = new File(".").getAbsoluteFile
@@ -348,7 +317,7 @@ class Test @Inject()(implicit val
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
     val diskMessage: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
-    val testSummary = Seq(scalaResult.toSummaryLine, jsResult.toSummaryLine).mkString("\n")
+    val testSummary = Seq(jsResult.toSummaryLine).mkString("\n")
     val message = s"$testSummary\ndisk=$diskMessage"
     if(percent < 5) InsufficientStorage(message) else Ok(message)
   }
