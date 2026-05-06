@@ -1,13 +1,13 @@
 package logics.wikis.interpreters
 
+import com.aha00a.tests.provider.EmptyContextWikiPage
+import com.aha00a.tests.provider.RealContextWikiPage
 import logics.wikis.interpreters.InterpreterSchema.ParseResult
 import models.ContextWikiPage
 import models.PageContent
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerTest
-import provider.EmptyContextWikiPage
-import provider.RealContextWikiPage
 
 //class InterpreterSchemaSpecExample extends AnyFreeSpec with GuiceOneAppPerTest with RealContextWikiPage {
 //  implicit val contextWikiPage: ContextWikiPage = createContextWikiPage()

@@ -1,4 +1,4 @@
-package provider
+package com.aha00a.tests.provider
 
 import akka.actor.ActorRef
 import logics.AhaWikiCache

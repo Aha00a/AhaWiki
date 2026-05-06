@@ -1,4 +1,4 @@
-package provider
+package com.aha00a.tests.provider
 
 import akka.actor.ActorRef
 import logics.AhaWikiCache
@@ -32,6 +32,8 @@ trait RealContextWikiPage {
       override def flashGet(key: String): Option[String] = Some("")
 
       override def host: String = "localhost"
+
+      override def getUserProfileImageUrl: Option[String] = None
     }
     implicit val site: Site = Site(1, "Aha00a")
 

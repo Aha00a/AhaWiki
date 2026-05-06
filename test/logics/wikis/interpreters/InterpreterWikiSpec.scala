@@ -1,7 +1,7 @@
 package logics.wikis.interpreters
 
+import com.aha00a.tests.provider.EmptyContextWikiPage
 import org.scalatest.freespec.AnyFreeSpec
-import provider.EmptyContextWikiPage
 
 class InterpreterWikiSpec extends AnyFreeSpec with EmptyContextWikiPage {
   "toHtmlString" - {

@@ -21,17 +21,17 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 ### 대상 Spec
 - [ ] test/models/tables/PermissionSpec.scala
 - [ ] test/models/BlameSpec.scala
-- [ ] test/models/JsonSpec.scala
+- [x] test/models/JsonSpec.scala
 - [ ] test/models/PageContentSpec.scala
 - [x] test/logics/SchemaOrgSpec.scala
 - [x] test/logics/wikis/HeadingNumberSpec.scala
 - [ ] test/logics/wikis/interpreters/InterpreterSchemaSpec.scala
-- [ ] test/logics/wikis/interpreters/TraitInterpreterSpec.scala
+- [x] test/logics/wikis/interpreters/TraitInterpreterSpec.scala
 - [x] test/logics/wikis/interpreters/InterpreterVimSpec.scala
-- [ ] test/logics/wikis/interpreters/ahaMark/AhaMarkLinkSpec.scala
-- [ ] test/logics/wikis/interpreters/InterpreterMarkdownSpec.scala
+- [x] test/logics/wikis/interpreters/ahaMark/AhaMarkLinkSpec.scala
+- [x] test/logics/wikis/interpreters/InterpreterMarkdownSpec.scala
 - [ ] test/logics/wikis/interpreters/InterpreterWikiSpec.scala
-- [ ] test/logics/wikis/SignedReadUrlLogicSpec.scala
+- [x] test/logics/wikis/SignedReadUrlLogicSpec.scala
 - [x] test/logics/wikis/macros/MacroColorCodeSpec.scala
 - [x] test/logics/wikis/macros/MacroBrSpec.scala
 - [x] test/logics/wikis/macros/MacroUptimeSpec.scala
@@ -65,4 +65,4 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
   - test/logics/UrlDetectorSpec.scala
 - 2차 이후로 미루는 대상(사유)
   - `InterpreterWikiSpec`, `InterpreterSchemaSpec`, `PermissionLogicSpec`: 케이스 수/연관 로직이 커서 회귀 범위가 넓음
-  - `PageContentSpec`, `BlameSpec`, `JsonSpec`, `PermissionSpec`: 도메인 fixture/파싱 케이스가 상대적으로 많음
+  - `PageContentSpec`, `BlameSpec`, `PermissionSpec`: 도메인 fixture/파싱 케이스가 상대적으로 많음
