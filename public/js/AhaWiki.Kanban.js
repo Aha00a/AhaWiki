@@ -63,17 +63,66 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return rows.length;
     };
-    var buildKanbanSaveComment = function (actionType, actionMeta) {
-        var base = 'Kanban - ' + (actionType || 'save');
+    var getActionMetaValue = function (actionMeta, key) {
         if (!actionMeta || typeof actionMeta !== 'object') {
-            return base;
+            return '';
         }
-        var detail = Object.keys(actionMeta)
-            .filter(function (key) { return actionMeta[key] !== null && typeof actionMeta[key] !== 'undefined' && String(actionMeta[key]).trim() !== ''; })
-            .slice(0, 3)
-            .map(function (key) { return key + '=' + String(actionMeta[key]).trim(); })
-            .join(' ');
-        return detail ? (base + ' ' + detail) : base;
+        var value = actionMeta[key];
+        return value === null || typeof value === 'undefined' ? '' : String(value).trim();
+    };
+    var shortenCardCommentForRevision = function (commentText) {
+        var raw = String(commentText || '').trim();
+        if (!raw) {
+            return '';
+        }
+        var firstLine = raw.split(/\r?\n/)[0].trim();
+        var base = firstLine.length <= 80 ? firstLine : firstLine.slice(0, 80);
+        if (base.length < firstLine.length) {
+            return base + '...';
+        }
+        return base;
+    };
+    var serializePropertyValueForRevision = function (value) {
+        if (Array.isArray(value)) {
+            var filtered = value.map(function (item) { return String(item || '').trim(); }).filter(Boolean);
+            return filtered.length > 0 ? filtered.join(', ') : '(empty)';
+        }
+        var text = String(value || '').trim();
+        return text || '(empty)';
+    };
+    var buildKanbanSaveComment = function (actionType, actionMeta) {
+        var eventPrefix = getActionMetaValue(actionMeta, 'eventPrefix');
+        if (!eventPrefix) {
+            return 'Kanban - ' + (actionType || 'save');
+        }
+        var cardId = getActionMetaValue(actionMeta, 'cardId');
+        var cardTitle = getActionMetaValue(actionMeta, 'cardTitle');
+        switch (actionType) {
+            case 'list:add': return "Kanban - " + eventPrefix + " - List Add - '''" + getActionMetaValue(actionMeta, 'listTitle') + "'''";
+            case 'list:rename': return "Kanban - " + eventPrefix + " - List Rename - '''" + getActionMetaValue(actionMeta, 'fromTitle') + "''' to '''" + getActionMetaValue(actionMeta, 'toTitle') + "'''";
+            case 'list:move': return "Kanban - " + eventPrefix + " - List Move - '''" + getActionMetaValue(actionMeta, 'listTitle') + "''' Order - " + getActionMetaValue(actionMeta, 'fromOrder') + " -> " + getActionMetaValue(actionMeta, 'toOrder');
+            case 'list:delete': return "Kanban - " + eventPrefix + " - List Delete - '''" + getActionMetaValue(actionMeta, 'listTitle') + "'''";
+            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(cardId, cardTitle);
+            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(cardId, getActionMetaValue(actionMeta, 'fromTitle')) + ' to ' + buildCardLinkText(cardId, getActionMetaValue(actionMeta, 'toTitle'));
+            case 'card:move':
+                if (getActionMetaValue(actionMeta, 'fromList') && getActionMetaValue(actionMeta, 'toList') && getActionMetaValue(actionMeta, 'fromList') !== getActionMetaValue(actionMeta, 'toList')) {
+                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(cardId, cardTitle) + " - '''" + getActionMetaValue(actionMeta, 'fromList') + "''' to '''" + getActionMetaValue(actionMeta, 'toList') + "'''";
+                }
+                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(cardId, cardTitle) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
+            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(cardId, cardTitle);
+            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(cardId, cardTitle) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
+            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(cardId, cardTitle) + ' - ' + getActionMetaValue(actionMeta, 'property') + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
+            default: return 'Kanban - ' + (actionType || 'save');
+        }
+    };
+    var extractActivityDetailFromRevisionComment = function (comment) {
+        var raw = String(comment || '').trim();
+        var marker = ' - ';
+        var first = raw.indexOf(marker);
+        if (first < 0) { return raw; }
+        var second = raw.indexOf(marker, first + marker.length);
+        if (second < 0) { return raw; }
+        return raw.slice(second + marker.length).trim();
     };
 
     var requestUploadClipboardImage = function (pageName, dataUrl) {
@@ -290,6 +339,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return '["#' + safeCardName + '"]';
         }
         return '["#' + safeCardId + '" ' + safeCardName + ']';
+    };
+
+    var prependCardActivity = function (card, details) {
+        var entry = buildCommentEntry(details);
+        card.comments = card.comments || [];
+        card.comments.unshift(entry);
     };
 
     var getCardAttachmentCount = function (card) {
@@ -509,7 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
             closeTitleEditor();
 
             enqueueMutation(function () {
-                return persistColumns('list:rename', { fromTitle: previousTitle, toTitle: nextTitle || '' }).catch(function (error) {
+                return persistColumns('list:rename', { eventPrefix: 'User:' + getCurrentAuthor(), fromTitle: previousTitle, toTitle: nextTitle || '' }).catch(function (error) {
                     console.error('[Kanban] failed to save list title', error);
                 });
             });
@@ -541,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function () {
             rerenderColumns();
 
             enqueueMutation(function () {
-                return persistColumns('list:delete', { listTitle: removedTitle }).catch(function (error) {
+                return persistColumns('list:delete', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: removedTitle }).catch(function (error) {
                     console.error('[Kanban] failed to delete list', error);
                 });
             });
@@ -676,7 +731,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     id: generateCardId(),
                     classNames: [],
                     lineNumber: cardLineStart,
-                    comments: [buildCommentEntry(['Created card'])],
+                    comments: [],
                     properties: {
                         Creator: [toUserLinkMarkup(getCurrentAuthor())],
                         dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())]
@@ -685,6 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 column.cards = column.cards || [];
                 column.cards.push(newCard);
+                prependCardActivity(newCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: newCard.id, cardTitle: value }))]);
                 shiftLineNumbersAfterInsert();
                 rerenderColumns();
 
@@ -697,6 +753,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }));
 
                 return persistColumns('card:add', {
+                    eventPrefix: 'User:' + getCurrentAuthor(),
                     cardId: newCard.id,
                     cardTitle: value
                 })
@@ -845,13 +902,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         var fromTitle = (fromColumn && fromColumn.title) ? fromColumn.title : '';
                         var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
                         var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
-                        movedCard.comments = movedCard.comments || [];
-                        movedCard.comments.push(buildCommentEntry(["Moved from '''" + fromTitle + "''' to '''" + toTitle + "'''"]));
+                        prependCardActivity(movedCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:move', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: movedCard.id || '', cardTitle: movedCard.text || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1), fromList: fromTitle, toList: toTitle }))]);
                         updateCardCommentCount(movedCard);
                         columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         rerenderColumns();
                         return persistColumns('card:move', {
+                            eventPrefix: 'User:' + getCurrentAuthor(),
                             cardId: movedCard.id || '',
                             cardTitle: movedCard.text || '',
                             fromOrder: String((evt.oldIndex || 0) + 1),
@@ -1193,7 +1250,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }));
 
-                return persistColumns('list:add', { listTitle: trimmed })
+                return persistColumns('list:add', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: trimmed })
                     .then(function (result) {
                         renderColumns();
                         console.info('[Kanban] list added', result);
@@ -1334,18 +1391,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 var previousCardTitle = card.text || '';
                 card.text = nextTitle;
-                card.comments = card.comments || [];
-                card.comments.push(buildCommentEntry([
-                    'Renamed Card Title',
-                    buildCardLinkText(card.id, previousCardTitle) + ' to ' + buildCardLinkText(card.id, nextTitle)
-                ]));
+                prependCardActivity(card, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:rename', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', fromTitle: previousCardTitle, toTitle: nextTitle || '' }))]);
                 updateCardCommentCount(card);
                 title.textContent = nextTitle;
                 closeTitleEditor();
                 renderColumns();
 
                 enqueueMutation(function () {
-                    return persistColumns('card:rename', { cardId: card.id || '', fromTitle: previousCardTitle, toTitle: nextTitle || '' }).catch(function (error) {
+                    return persistColumns('card:rename', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', fromTitle: previousCardTitle, toTitle: nextTitle || '' }).catch(function (error) {
                         console.error('[Kanban] failed to save card title', error);
                     });
                 });
@@ -1515,14 +1568,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     delete card.properties.DueDate;
                 }
-                card.comments = card.comments || [];
-                card.comments.push(buildCommentEntry(['Updated DueDate', (previousDueDate || '(none)') + ' to ' + (nextDueDate || '(none)')]));
+                prependCardActivity(card, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:property:update', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', property: 'DueDate', value: nextDueDate || '' }))]);
                 updateCardCommentCount(card);
                 renderColumns();
                 renderProperties();
                 renderComments();
                 enqueueMutation(function () {
                     return persistColumns('card:property:update', {
+                        eventPrefix: 'User:' + getCurrentAuthor(),
                         cardId: card.id || '',
                         cardTitle: card.text || '',
                         property: 'DueDate',
@@ -1544,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', function () {
             comments.style.marginTop = '12px';
             var renderComments = function () {
                 comments.innerHTML = '';
-                (card.comments || []).slice().reverse().forEach(function (entry) {
+                (card.comments || []).forEach(function (entry) {
                     if (!entry || !entry.header) {
                         return;
                     }
@@ -1630,13 +1683,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         card.properties.Attachment.push(commentText);
                         var commentEntry = buildCommentEntry([commentText]);
                         card.comments = card.comments || [];
-                        card.comments.push(commentEntry);
+                        card.comments.unshift(commentEntry);
                         updateCardCommentCount(card);
                         renderComments();
                         renderProperties();
                         renderColumns();
                         enqueueMutation(function () {
-                            return persistColumns('card:comment:add', { cardId: card.id || '', cardTitle: card.text || '', comment: commentText }).catch(function (error) {
+                            return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: commentText }).catch(function (error) {
                                 console.error('[Kanban] failed to save clipboard image comment', error);
                             });
                         });
@@ -1657,12 +1710,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 var commentEntry = buildCommentEntry([body]);
                 card.comments = card.comments || [];
-                card.comments.push(commentEntry);
+                card.comments.unshift(commentEntry);
                 updateCardCommentCount(card);
                 textarea.value = '';
                 renderComments();
                 enqueueMutation(function () {
-                    return persistColumns('card:comment:add', { cardId: card.id || '', cardTitle: card.text || '', comment: body }).catch(function (error) {
+                    return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: body }).catch(function (error) {
                         console.error('[Kanban] failed to save comments', error);
                     });
                 });
@@ -1694,7 +1747,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
 
                 enqueueMutation(function () {
-                    return persistColumns('card:delete', { cardId: card.id || '', cardTitle: card.text || '' }).catch(function (error) {
+                    return persistColumns('card:delete', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '' }).catch(function (error) {
                         console.error('[Kanban] failed to delete card', error);
                     });
                 });
@@ -1783,7 +1836,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }));
 
                     enqueueMutation(function () {
-                        return persistColumns('list:move', { listTitle: movedColumn.title || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
+                        return persistColumns('list:move', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: movedColumn.title || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
                             console.error('[Kanban] failed to save list order', error);
                         });
                     });
