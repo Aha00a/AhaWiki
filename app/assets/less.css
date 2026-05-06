@@ -2997,8 +2997,8 @@ kbd:hover > kbd {
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: #000;
-  opacity: 0.25;
+  background: rgba(9, 30, 66, 0.5);
+  backdrop-filter: blur(2px);
 }
 .AhaWiki .search {
   position: fixed;
@@ -3275,8 +3275,8 @@ kbd:hover > kbd {
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: #000;
-  opacity: 0.25;
+  background: rgba(9, 30, 66, 0.5);
+  backdrop-filter: blur(2px);
 }
 .AhaWiki .ahaWikiLoader.circle {
   width: 10vmin;
