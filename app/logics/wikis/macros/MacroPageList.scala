@@ -12,7 +12,7 @@ object MacroPageList extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     val sb = new StringBuilder(4096)
 
-    sb.append("<table class=\"tablesorter\"><thead><tr>")
+    sb.append("<table class=\"simpleTable tablesorter\"><thead><tr>")
       .append("<th>Name</th><th>Date</th><th>Size</th><th>Revision</th><th>Author</th><th>Remote Address</th><th>Comment</th>")
       .append("</tr></thead><tbody>")
 
