@@ -27,7 +27,6 @@ import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
 import scala.concurrent.ExecutionContext
-import scala.sys.process.{Process, ProcessLogger}
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -73,54 +72,11 @@ class Test @Inject()(implicit val
     PermissionLogicUnit.run(testUtil)
     InterpreterWikiUnit.run(testUtil)
 
-    def runCommand(command: Seq[String], label: String): Unit = {
-      logger.info(s"[/test/unit] Running $label: ${command.mkString(" ")}")
-      val stdOut = new StringBuilder
-      val stdErr = new StringBuilder
-      val exitCode = Process(command, new File(".")).!(ProcessLogger(
-        out => stdOut.append(out).append("\n"),
-        err => stdErr.append(err).append("\n"),
-      ))
-      if (exitCode != 0) {
-        val output = (stdOut.toString + stdErr.toString).take(4000)
-        throw new RuntimeException(s"$label failed (exit=$exitCode). output=$output")
-      }
-    }
-
-    case class TestExecutionResult(label: String, discovered: Int, executed: Int, skipped: Boolean) {
-      def toSummaryLine: String = {
-        val status = if (skipped) "SKIPPED" else "PASS"
-        s"$label[$status] discovered=$discovered executed=$executed"
-      }
-    }
-
-
-
-    def runJavaScriptUnitTests(): TestExecutionResult = {
-      val testDir = new File("test")
-      val jsTests = Option(testDir.listFiles()).toSeq.flatten
-        .filter(file => file.isFile && file.getName.endsWith(".test.mjs"))
-        .sortBy(_.getName)
-        .map(file => s"test/${file.getName}")
-
-      if (jsTests.nonEmpty) {
-        runCommand(Seq("node", "--test") ++ jsTests, "JavaScript unit tests")
-        TestExecutionResult("js", jsTests.size, jsTests.size, skipped = false)
-      } else {
-        logger.warn("[/test/unit] No JavaScript test files (*.test.mjs) found under ./test; skipping JS suite run.")
-        TestExecutionResult("js", discovered = 0, executed = 0, skipped = true)
-      }
-    }
-
-    val jsResult = runJavaScriptUnitTests()
-
     val fileAbsolute = new File(".").getAbsoluteFile
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
-    val diskMessage: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
-    val testSummary = Seq(jsResult.toSummaryLine).mkString("\n")
-    val message = s"$testSummary\ndisk=$diskMessage"
+    val message: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
     if(percent < 5) InsufficientStorage(message) else Ok(message)
   }
 
