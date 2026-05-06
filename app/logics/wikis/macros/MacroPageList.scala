@@ -7,11 +7,14 @@ import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 
+import scala.collection.mutable
+
 object MacroPageList extends TraitMacro {
   override def isBlock: Boolean = true
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     val sb = new StringBuilder(4096)
+    val authorHtmlByNickname = mutable.HashMap.empty[String, String]
 
     sb.append("<table class=\"simpleTable tablesorter\"><thead><tr>")
       .append("<th>Name</th><th>DateTime</th><th>Size</th><th>Revision</th><th>Author</th><th>Remote Address</th><th>Comment</th>")
@@ -34,7 +37,11 @@ object MacroPageList extends TraitMacro {
         .append("\">")
         .append(page.revision)
         .append("</a></td><td>")
-        .append(page.nickname.map(nickname => AhaMarkLink("User:" + nickname).toHtmlString()).getOrElse(""))
+        .append(
+          page.nickname
+            .map(nickname => authorHtmlByNickname.getOrElseUpdate(nickname, AhaMarkLink("User:" + nickname).toHtmlString()))
+            .getOrElse("")
+        )
         .append("</td><td>")
         .append(IpAddressUtil.mask(page.remoteAddress).escapeHtml())
         .append("</td><td>")
