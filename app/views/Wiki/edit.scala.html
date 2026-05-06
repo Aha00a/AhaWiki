@@ -261,6 +261,13 @@
 
             function getPagePrefix(value, cursorIndex) {
                 const left = value.slice(0, cursorIndex);
+                const quotedMatch = left.match(/(^|[^\[])\["([^"\n]*)$/);
+                if (quotedMatch)
+                    return {
+                        start: cursorIndex - quotedMatch[2].length,
+                        prefix: quotedMatch[2]
+                    };
+
                 const match = left.match(/(^|[^\[])\[([^\[\]\n]*)$/);
                 if (!match)
                     return null;
