@@ -286,7 +286,14 @@ class Test @Inject()(implicit val
       }
     }
 
-    def runScalaTestSuites(): Unit = {
+    case class TestExecutionResult(label: String, discovered: Int, executed: Int, skipped: Boolean, details: String) {
+      def toSummaryLine: String = {
+        val status = if (skipped) "SKIPPED" else "PASS"
+        s"$label[$status] discovered=$discovered executed=$executed details=$details"
+      }
+    }
+
+    def runScalaTestSuites(): TestExecutionResult = {
       val sourceSuites = new File("test")
       def collectScalaSpecs(dir: File): Seq[File] = {
         Option(dir.listFiles()).toSeq.flatten.flatMap { f =>
@@ -310,12 +317,14 @@ class Test @Inject()(implicit val
           val ok = runMethod.invoke(module, Array("-o", "-s", suite).asInstanceOf[Object]).asInstanceOf[Boolean]
           if (!ok) throw new RuntimeException(s"Scala suite failed: $suite")
         }
+        TestExecutionResult("scala", discoveredSuites.size, discoveredSuites.size, skipped = false, discoveredSuites.mkString(","))
       } else {
         logger.warn("[/test/unit] No ScalaTest suites discovered on classpath; skipping external Scala suite run.")
+        TestExecutionResult("scala", discovered = 0, executed = 0, skipped = true, "no compatible suites discovered")
       }
     }
 
-    def runJavaScriptUnitTests(): Unit = {
+    def runJavaScriptUnitTests(): TestExecutionResult = {
       val testDir = new File("test")
       val jsTests = Option(testDir.listFiles()).toSeq.flatten
         .filter(file => file.isFile && file.getName.endsWith(".test.mjs"))
@@ -324,19 +333,23 @@ class Test @Inject()(implicit val
 
       if (jsTests.nonEmpty) {
         runCommand(Seq("node", "--test") ++ jsTests, "JavaScript unit tests")
+        TestExecutionResult("js", jsTests.size, jsTests.size, skipped = false, jsTests.mkString(","))
       } else {
         logger.warn("[/test/unit] No JavaScript test files (*.test.mjs) found under ./test; skipping JS suite run.")
+        TestExecutionResult("js", discovered = 0, executed = 0, skipped = true, "no *.test.mjs in ./test")
       }
     }
 
-    runScalaTestSuites()
-    runJavaScriptUnitTests()
+    val scalaResult = runScalaTestSuites()
+    val jsResult = runJavaScriptUnitTests()
 
     val fileAbsolute = new File(".").getAbsoluteFile
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
-    val message: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
+    val diskMessage: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
+    val testSummary = Seq(scalaResult.toSummaryLine, jsResult.toSummaryLine).mkString("\n")
+    val message = s"$testSummary\ndisk=$diskMessage"
     if(percent < 5) InsufficientStorage(message) else Ok(message)
   }
 
