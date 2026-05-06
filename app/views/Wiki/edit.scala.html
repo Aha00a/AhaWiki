@@ -1201,52 +1201,8 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
         </script>
     }
 } {
-    <script type="text/javascript">
-        $(function () {
-            $(".edit").keydown(function (e) {
-                if(!e.altKey)
-                    return;
-
-                if(e.key === 'Alt')
-                    return;
-
-                document.querySelectorAll(`kbd[data-hotkey-alt=${e.key.toUpperCase()}]`).forEach(kbd => {
-                    kbd.click();
-                    return false;
-                });
-            });
-        });
-    </script>
-    <script type="text/javascript">
-        $(function () {
-            const divider = document.querySelector('div.ui > form > .divider');
-            const left = document.querySelector('div.ui > form > div.left');
-
-            let isDragging = false;
-            divider.addEventListener("mousedown", (e) => {
-                isDragging = true;
-                document.body.style.userSelect = 'none'; // 텍스트 선택 방지
-            });
-
-            document.addEventListener("mousemove", (e) => {
-                if (!isDragging)
-                    return;
-
-                // TODO: console.log all x coordinates
-                console.log(e.x, left.getBoundingClientRect().left);
-
-
-                const dividerWidthWithMargin = 25;
-                const newWidth = e.clientX - left.getBoundingClientRect().left - dividerWidthWithMargin / 2;
-                left.style.width = `${newWidth}px`;
-            });
-
-            document.addEventListener("mouseup", () => {
-                isDragging = false;
-                document.body.style.userSelect = ''; // 원상 복구
-            });
-        });
-    </script>
+    <script type="text/javascript" src="/public/js/Wiki/edit.hotkeyAlt.js"></script>
+    <script type="text/javascript" src="/public/js/Wiki/edit.divider.js"></script>
     <div class="wikiContent">
         <div id="uploadDragOverlay" class="uploadDragOverlay">파일을 여기에 놓아 업로드</div>
         <div class="limitWidth">

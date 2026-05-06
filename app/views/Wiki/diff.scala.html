@@ -6,14 +6,7 @@
 
     @views.html.Wiki.hotkey()
 
-    <script type="text/javascript">
-        $(function(){
-            $('.selectOutputFormat').change(function () {
-                var diff2htmlUi = new Diff2HtmlUI({diff: $('.unifiedDiff').html()});
-                diff2htmlUi.draw('.diff2HtmlResult', { outputFormat: $(this).val() });
-            }).change();
-        });
-    </script>
+    <script type="text/javascript" src="/public/js/Wiki/diff.js"></script>
 } {
     <div class="wikiContent diff">
         <div class="limitWidth">

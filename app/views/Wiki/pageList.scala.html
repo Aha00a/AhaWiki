@@ -1,10 +1,5 @@
 @(listPage: List[models.tables.PageWithoutContentWithSize])(implicit wikiContext: models.ContextWikiPage)
-<script type="text/javascript">
-    $(function(){
-        $(".simpleTable").tablesorter();
-    });
-
-</script>
+<script type="text/javascript" src="/public/js/Wiki/pageList.js"></script>
 <div class="pageList">
     <table class="simpleTable">
         <thead>
