@@ -3727,6 +3727,7 @@ kbd:hover > kbd {
 }
 .AhaWiki .WikiColumns {
   padding-top: 15px;
+  padding-bottom: 5px;
 }
 .AhaWiki .WikiColumns > :first-child {
   margin-top: 0;

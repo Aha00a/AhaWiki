@@ -157,9 +157,9 @@ object DefaultPageLogic {
                    |]]]
                    |[https://schema.org/${schemaType.id}]
                    |== Pages
-                   |[[Html(<div class="columnWidth350">)]]
+                   |<Columns count="3" gap="16" minWidth="220">
                    |${listSchemaOrg.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
-                   |[[Html(</div>)]]
+                   |</Columns>
                    |""".stripMargin
               } else {
                 val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereProp(schema)
@@ -173,9 +173,9 @@ object DefaultPageLogic {
                   s"""== ["schema:${t._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t._1)}]
                      |${t._2.toSeq.sortBy(_._1).map(t2 =>
                     s"""=== ["${t2._1}" ${t2._1}]
-                       |[[Html(<div class="columnWidth350">)]]
+                       |<Columns count="3" gap="16" minWidth="220">
                        |${t2._2.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
-                       |[[Html(</div>)]]
+                       |</Columns>
                        |""".stripMargin).mkString("\n")}
                      |""".stripMargin).mkString("\n")}
                    |""".stripMargin

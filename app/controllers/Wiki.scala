@@ -485,9 +485,9 @@ controllerComponents: ControllerComponents,
     val mapClsList = listSchemaOrg.groupBy(_.cls)
     mapClsList.keys.toSeq.sorted.map(k => {
       s"""==== [schema:$k $k] ==== #$k-Generated.generated
-         |[[Html(<div class="columnWidth350">)]]
+         |<Columns count="3" gap="16" minWidth="220">
          |${mapClsList(k).map(t => s""" 1. [schema:${t.prop} ${t.prop}] of ["${t.page}"]""").mkString("\n")}
-         |[[Html(</div>)]]
+         |</Columns>
          |""".stripMargin
     }).mkString("\n")
   }
