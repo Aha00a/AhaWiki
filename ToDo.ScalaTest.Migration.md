@@ -36,7 +36,7 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 - [x] test/logics/wikis/macros/MacroBrSpec.scala
 - [x] test/logics/wikis/macros/MacroUptimeSpec.scala
 - [x] test/logics/wikis/macros/TraitMacroSpec.scala
-- [ ] test/logics/wikis/macros/MacroPeriodSpec.scala
+- [x] test/logics/wikis/macros/MacroPeriodSpec.scala
 - [x] test/logics/UrlDetectorSpec.scala
 - [ ] test/logics/PermissionLogicSpec.scala
 
