@@ -1983,6 +1983,9 @@ kbd {
 			margin-left: 30px;
 		}
 
+		&.Backlinks {
+			margin-left: 0;
+		}
 		&.WikiStatistics {
 			.statsGrid {
 				display: grid;
@@ -2071,6 +2074,19 @@ kbd {
 				right: 0;
 				padding: 1px 142px 5px 10px;
 				overflow: hidden;
+			}
+		}
+	}
+
+	.WikiColumns {
+		padding-top: 15px;
+		> :first-child {
+			margin-top: 0;
+			> :first-child {
+				margin-top: 0;
+				> :first-child {
+					margin-top: 0;
+				}
 			}
 		}
 	}

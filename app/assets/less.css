@@ -3470,6 +3470,9 @@ kbd:hover > kbd {
 .AhaWiki .Macro.BlockMacro {
   margin-left: 30px;
 }
+.AhaWiki .Macro.Backlinks {
+  margin-left: 0;
+}
 .AhaWiki .Macro.WikiStatistics .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -3721,6 +3724,18 @@ kbd:hover > kbd {
   right: 0;
   padding: 1px 142px 5px 10px;
   overflow: hidden;
+}
+.AhaWiki .WikiColumns {
+  padding-top: 15px;
+}
+.AhaWiki .WikiColumns > :first-child {
+  margin-top: 0;
+}
+.AhaWiki .WikiColumns > :first-child > :first-child {
+  margin-top: 0;
+}
+.AhaWiki .WikiColumns > :first-child > :first-child > :first-child {
+  margin-top: 0;
 }
 .Test.gradient table {
   border-collapse: collapse;
