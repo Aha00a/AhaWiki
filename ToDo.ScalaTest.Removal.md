@@ -1,6 +1,6 @@
 # ScalaTest Removal To-Do
 
-- [ ] 현재 ScalaTest 사용 현황 인벤토리 작성 (`test/**/*.scala` 중 `org.scalatest` import/상속 구조 정리).
+- [x] 현재 ScalaTest 사용 현황 인벤토리 작성 (`test/**/*.scala` 중 `org.scalatest` import/상속 구조 정리).
 - [ ] 마이그레이션 대상 분류표 작성 (로직 테스트 / 모델 테스트 / 컨트롤러 테스트 / 유틸 테스트).
 - [ ] `Test.unit` 내 테스트 섹션 구조 표준안 정의 (도메인별 함수 분리, 네이밍 규칙, 실패 메시지 규칙).
 - [ ] 공통 assertion 유틸 정리 (`TestUtil.assertEquals` 확장 필요 여부, 컬렉션/예외/assertAll 패턴 정리).
@@ -19,3 +19,56 @@
 ## Notes
 - 이번 문서는 **작업범위 정의용**이며, 실제 변환은 배치 단위로 진행.
 - 각 배치 완료 시 체크박스를 업데이트.
+
+
+## Step 1 결과: ScalaTest 사용 현황 인벤토리
+
+### 요약
+- ScalaTest 관련 import(`org.scalatest...`)를 사용하는 활성 테스트 파일: **32개**
+- 기본 테스트 베이스: 대부분 `AnyFreeSpec` 상속
+- 추가 믹스인/확장:
+  - `org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper` 사용 1건
+  - `org.scalatestplus.play.guice.GuiceOneAppPerTest` import 1건(실사용은 주석 처리)
+
+### 패턴별 분류
+- `extends AnyFreeSpec`: 32개 파일
+- `with ...` 믹스인 사용:
+  - `EmptyContextWikiPage` (여러 위키 인터프리터/매크로 스펙)
+  - `GuiceOneAppPerTest` 는 import만 존재, 실제 class 선언에서는 미사용(주석 예시만 존재)
+
+### 파일 목록 (`org.scalatest` import 기준)
+- [ ] test/models/tables/PermissionSpec.scala
+- [ ] test/models/BlameSpec.scala
+- [ ] test/models/JsonSpec.scala
+- [ ] test/models/PageContentSpec.scala
+- [ ] test/logics/SchemaOrgSpec.scala
+- [ ] test/logics/wikis/HeadingNumberSpec.scala
+- [ ] test/logics/wikis/interpreters/InterpreterSchemaSpec.scala
+- [ ] test/logics/wikis/interpreters/TraitInterpreterSpec.scala
+- [ ] test/logics/wikis/interpreters/InterpreterVimSpec.scala
+- [ ] test/logics/wikis/interpreters/ahaMark/AhaMarkLinkSpec.scala
+- [ ] test/logics/wikis/interpreters/InterpreterMarkdownSpec.scala
+- [ ] test/logics/wikis/interpreters/InterpreterWikiSpec.scala
+- [ ] test/logics/wikis/SignedReadUrlLogicSpec.scala
+- [ ] test/logics/wikis/macros/MacroColorCodeSpec.scala
+- [ ] test/logics/wikis/macros/MacroBrSpec.scala
+- [ ] test/logics/wikis/macros/MacroUptimeSpec.scala
+- [ ] test/logics/wikis/macros/TraitMacroSpec.scala
+- [ ] test/logics/wikis/macros/MacroPeriodSpec.scala
+- [ ] test/logics/UrlDetectorSpec.scala
+- [ ] test/logics/PermissionLogicSpec.scala
+- [ ] test/com/aha00a/commons/utils/EnglishCaseConverterSpec.scala
+- [ ] test/com/aha00a/commons/utils/IpAddressUtilSpec.scala
+- [ ] test/com/aha00a/commons/utils/LetterUtilSpec.scala
+- [ ] test/com/aha00a/commons/utils/DoubleUtilSpec.scala
+- [ ] test/com/aha00a/commons/utils/UriUtilSpec.scala
+- [ ] test/com/aha00a/commons/utils/SeqUtilSpec.scala
+- [ ] test/com/aha00a/commons/ImplicitsSpec.scala
+- [ ] test/com/aha00a/commons/utils/NanoIdUtilSpec.scala
+- [ ] test/com/aha00a/commons/utils/HangulSpec.scala
+- [ ] test/com/aha00a/commons/utils/DateTimeUtilSpec.scala
+- [ ] test/com/aha00a/colors/GradientPresetSpec.scala
+- [ ] test/com/aha00a/colors/ColorSpec.scala
+
+### 확인 커맨드
+- `rg -n "org\.scalatest|AnyFreeSpec|mustBe| in \\{" test --glob '*.scala'`
