@@ -156,7 +156,7 @@ UI 동작 권장:
 
 - 리비전 코멘트 접두어: `Kanban - `
 - 사용자 친화 포맷(지원 액션): `Kanban - <EventPrefix> - ...`
-- 비지원 액션/메타 누락 시 fallback: `Kanban - kanban:save ...`
+- 비지원 액션 fallback: `Kanban - kanban:save ...` (지원 액션의 필수 메타 누락은 UI에서 차단)
 
 ### 액션별 매핑
 
@@ -164,13 +164,13 @@ UI 동작 권장:
 |-----------------------------|-------------------------------------------------------------------------------------------------------------|
 | `list:add`                  | `Kanban - <EventPrefix> - List Add - '''<listTitle>'''`                                                     |
 | `list:rename`               | `Kanban - <EventPrefix> - List Rename - '''<fromTitle>''' to '''<toTitle>'''`                               |
-| `list:move`                 | `Kanban - <EventPrefix> - List Move - '''<listTitle>''' - ["#<fromOrder>"] to ["#<toOrder>"]`               |
+| `list:move`                 | `Kanban - <EventPrefix> - List Move - '''<listTitle>''' Order - <fromOrder> -> <toOrder>`                           |
 | `list:delete`               | `Kanban - <EventPrefix> - List Delete - '''<listTitle>'''`                                                  |
 | `card:add`                  | `Kanban - <EventPrefix> - Card Add - ["#<cardId>" <cardTitle>]`                                             |
 | `card:rename`               | `Kanban - <EventPrefix> - Card Rename - ["#<cardId>" <fromTitle>] to ["#<cardId>" <toTitle>]`               |
 | `card:move` (to other list) | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] - '''<fromList>''' to '''<toList>'''`       |
-| `card:move` (in same list)  | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] Order - ["#<fromOrder>"] to ["#<toOrder>"]` |
-| `card:delete`               | `Kanban - <EventPrefix> - Card Deleted - ["#<cardId>" <cardTitle>]`                                         |
+| `card:move` (in same list)  | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] Order - <fromOrder> -> <toOrder>`                  |
+| `card:delete`               | `Kanban - <EventPrefix> - Card Delete - ["#<cardId>" <cardTitle>]`                                          |
 | `card:comment:add`          | `Kanban - <EventPrefix> - Card Comment Add - ["#<cardId>" <cardTitle>] - <comment>`                         |
 | `card:property:update`      | `Kanban - <EventPrefix> - Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`          |
 
@@ -181,10 +181,23 @@ Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
 ```
 를 삽입해준다. <comment>는 위 표의 Page.comment 메시지에서 `Kanban - <EventPrefix> - `를 지우고 뒷부분만 넣어준다. 
 
+추가 규칙(필수):
+- 액션별 메타데이터(`actionType/actionMeta`)는 모두 **필수값**으로 간주합니다. 누락이 발생하면 안 되며, UI에서 저장 전 검증으로 차단해야 합니다.
+- `card:comment:add`의 `<comment>`는 **(a) 첫 줄 텍스트**와 **(b) 앞 80자** 중 더 짧은 값을 사용합니다. 잘린 경우 문자열 끝에 `...`를 붙입니다.
+- `card:delete`는 카드 자체가 삭제되므로 `===== Activity`에 로그를 남기지 않습니다(리비전 코멘트만 남김).
+
+`card:property:update` 보강 규칙:
+- 기본 포맷은 `Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`를 유지합니다.
+- `<value>` 직렬화 규칙을 고정합니다.
+  - 단일값: 그대로 문자열 1개
+  - 다중값: `, `로 join한 문자열
+  - 빈 값(삭제): `(empty)`
+- 값 비교 기준(저장 직전): trim 기준으로 이전 값과 동일하면 이벤트를 생성하지 않습니다(no-op).
+
 ### 참고
 
 - 표의 `<EventPrefix>`는 서버의 `eventPrefix` 값(예: 사용자/행위 prefix)입니다.
-- Activity 엔트리의 header는 JS에서 `[User:<author>] [YYYY-MM-DD]THH:mm:ssZ` 형태로 저장되고, 클라이언트 표시 시 timezone 변환되어 보일 수 있습니다.
+- Activity 엔트리의 header는 JS에서 `[User:<author>] [YYYY-MM-DD]THH:mm:ssZ` 형태(UTC 오프셋 `Z` 포함)로 저장되고, 클라이언트 표시 시 timezone 변환되어 보일 수 있습니다.
 
 ---
 
@@ -215,7 +228,7 @@ Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
 - 코멘트 렌더링: `POST /api/renderAhaMark/:pageName`
 
 ### 구현 기준
-- [x] `actionType/actionMeta`는 기존 키를 최대한 재사용하고, 누락 시 fallback comment 허용
+- [x] `actionType/actionMeta`는 기존 키를 최대한 재사용하고, 지원 액션의 필수 메타 누락은 UI에서 저장 전 차단
 - [x] 실패 처리 정책은 단순화(실패 알림 + 사용자 재시도)하고 자동 복구/롤백 로직은 두지 않음
 - [x] 성능/운영 지표, 단계적 deprecate 공지, 장기 병행 운영은 생략
 
