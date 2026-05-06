@@ -48,27 +48,82 @@
                     });
                 }
 
+                function groupConsecutiveRows(rows) {
+                    return (rows || []).reduce(function (groups, row) {
+                        var prevGroup = groups.length > 0 ? groups[groups.length - 1] : null;
+                        var isSameGroup = prevGroup &&
+                            prevGroup.name === row.name &&
+                            prevGroup.nickname === (row.nickname || "") &&
+                            prevGroup.remoteAddressMasked === (row.remoteAddressMasked || "");
+
+                        if (isSameGroup) {
+                            prevGroup.rows.push(row);
+                        } else {
+                            groups.push({
+                                name: row.name,
+                                nickname: row.nickname || "",
+                                remoteAddressMasked: row.remoteAddressMasked || "",
+                                rows: [row]
+                            });
+                        }
+                        return groups;
+                    }, []);
+                }
+
+                function revisionRangeText(rows) {
+                    if (!rows || rows.length === 0) return "";
+                    var revisions = rows.map(function (row) { return Number(row.revision) || 0; });
+                    var minRevision = Math.min.apply(null, revisions);
+                    var maxRevision = Math.max.apply(null, revisions);
+                    return minRevision === maxRevision ? String(maxRevision) : (minRevision + "~" + maxRevision);
+                }
+
+                function buildRevisionDiffLink(name, rows) {
+                    if (!rows || rows.length === 0) return "#";
+                    var revisions = rows.map(function (row) { return Number(row.revision) || 0; });
+                    var minRevision = Math.min.apply(null, revisions);
+                    var maxRevision = Math.max.apply(null, revisions);
+                    if (minRevision === maxRevision) {
+                        return "/w/" + encodeURIComponent(name) + "?action=diff&after=" + encodeURIComponent(maxRevision);
+                    }
+                    return "/w/" + encodeURIComponent(name) + "?action=diff&before=" + encodeURIComponent(minRevision) + "&after=" + encodeURIComponent(maxRevision);
+                }
+
                 function render(container, rows) {
                     var status = container.querySelector('.macro-recent-changes-status');
                     var table = container.querySelector('.macro-recent-changes-table');
                     var tbody = table.querySelector('tbody');
-                    tbody.innerHTML = rows.map(function (row) {
-                        var minorPrefix = row.isMinorEdit ? "[minor] " : "";
-                        var commentInlineHtml = minorPrefix + (row.commentInlineHtml || esc(row.comment || ""));
-                        var authorHtml = row.nickname
+                    var groups = groupConsecutiveRows(rows);
+                    tbody.innerHTML = groups.map(function (group) {
+                        var firstRow = group.rows[0];
+                        var hasMinorEdit = group.rows.some(function (row) { return !!row.isMinorEdit; });
+                        var allMinorEdit = group.rows.length > 0 && group.rows.every(function (row) { return !!row.isMinorEdit; });
+                        var minorEditMark = allMinorEdit ? "○" : (hasMinorEdit ? "△" : "");
+                        var authorHtml = firstRow.nickname
                             ? "<span class='userInlineProfile'>" +
-                                (row.profileImageUrl ? "<img src='" + esc(row.profileImageUrl) + "' alt='" + esc(row.nickname) + "' class='userInlineProfileImage'/>" : "") +
-                                "<a href='/w/" + encodeURIComponent("User:" + row.nickname) + "'>" + esc(row.nickname) + "</a>" +
+                                (firstRow.profileImageUrl ? "<img src='" + esc(firstRow.profileImageUrl) + "' alt='" + esc(firstRow.nickname) + "' class='userInlineProfileImage'/>" : "") +
+                                "<a href='/w/" + encodeURIComponent("User:" + firstRow.nickname) + "'>" + esc(firstRow.nickname) + "</a>" +
                               "</span>"
-                            : esc(row.remoteAddressMasked);
+                            : esc(firstRow.remoteAddressMasked);
+                        var commentsHtml = group.rows.map(function (row) {
+                            var rowMinorPrefix = row.isMinorEdit ? "[minor] " : "";
+                            var commentInlineHtml = row.commentInlineHtml || esc(row.comment || "");
+                            return "<div>" + rowMinorPrefix + commentInlineHtml + "</div>";
+                        }).join("");
+                        var dateTimeText = group.rows.length === 1
+                            ? esc(firstRow.dateTime)
+                            : esc(group.rows[group.rows.length - 1].dateTime) + " ~ " + esc(firstRow.dateTime);
+                        var revisionText = revisionRangeText(group.rows);
+                        var diffLink = buildRevisionDiffLink(firstRow.name, group.rows);
+
                         return "<tr>" +
-                                "<td><a href='/w/" + encodeURIComponent(row.name) + "'>" + esc(row.name) + "</a></td>" +
-                                "<td><a rel='nofollow' href='/w/" + encodeURIComponent(row.name) + "?action=diff&after=" + encodeURIComponent(row.revision) + "'>" + esc(row.revision) + "</a></td>" +
-                                "<td>" + esc(row.dateTime) + "</td>" +
+                                "<td><a href='/w/" + encodeURIComponent(firstRow.name) + "'>" + esc(firstRow.name) + "</a></td>" +
+                                "<td><a rel='nofollow' href='" + diffLink + "'>" + esc(revisionText) + "</a></td>" +
+                                "<td>" + dateTimeText + "</td>" +
                                 "<td>" + authorHtml + "</td>" +
-                                "<td>" + esc(row.remoteAddressMasked || "") + "</td>" +
-                                "<td>" + commentInlineHtml + "</td>" +
-                                "<td>" + esc(row.isMinorEdit ? "Y" : "") + "</td>" +
+                                "<td>" + esc(firstRow.remoteAddressMasked || "") + "</td>" +
+                                "<td>" + commentsHtml + "</td>" +
+                                "<td>" + esc(minorEditMark) + "</td>" +
                                 "</tr>";
                     }).join("");
 
