@@ -46,6 +46,7 @@ object CalculatedSchemaOrg {
   }
 
   case class PropCnt(prop: String, cnt: Int)
+  case class ClsCnt(cls: String, cnt: Int)
 
   def selectPropCountWhereCls(cls: String)(implicit connection: Connection, site: Site): List[PropCnt] = {
     SQL"""
@@ -60,6 +61,20 @@ object CalculatedSchemaOrg {
       """
       .as(str("prop") ~ int("cnt") *).map(flatten)
       .map(PropCnt.tupled)
+  }
+
+  def selectClsCount()(implicit connection: Connection, site: Site): List[ClsCnt] = {
+    SQL"""
+        SELECT cls, COUNT(*) cnt
+            FROM CalculatedSchemaOrg
+            WHERE
+                site = ${site.seq} AND
+                cls <> ''
+            GROUP BY cls
+            ORDER BY cnt DESC, cls ASC
+      """
+      .as(str("cls") ~ int("cnt") *).map(flatten)
+      .map(ClsCnt.tupled)
   }
 
   def selectWherePage(page: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {

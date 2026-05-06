@@ -1155,7 +1155,13 @@ class Api @Inject()(
   }
 
   def schemaClassNames: Action[AnyContent] = Action { implicit request =>
-    Ok(logics.CalculatedSchemaOrg.mapClass.keys.toSeq.sorted.asJson)
+    implicit val site: Site = SiteLogic.get(request.host)
+    val weightedClassNames = database.withConnection { implicit connection =>
+      models.tables.CalculatedSchemaOrg.selectClsCount().map(_.cls)
+    }
+    val allClassNames = logics.CalculatedSchemaOrg.mapClass.keys.toSeq.sorted
+    val orderedClassNames = (weightedClassNames ++ allClassNames).distinct
+    Ok(orderedClassNames.asJson)
   }
 
   def schemaPropertyNames: Action[AnyContent] = Action { implicit request =>
