@@ -5,6 +5,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
+import com.aha00a.tests.unit.{HeadingNumberUnit, InterpreterVimUnit, UrlDetectorUnit, WikiMacrosUnit}
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.PermissionLogic
@@ -180,6 +181,11 @@ class Test @Inject()(implicit val
       assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(CalculatedLink("UnitTest", "link", "alias"), CalculatedLink("UnitTest", "b", "")))
 
     }; testInterpreterWiki()
+
+    HeadingNumberUnit.run(testUtil)
+    InterpreterVimUnit.run(testUtil)
+    WikiMacrosUnit.run(testUtil)
+    UrlDetectorUnit.run(testUtil)
 
     def testInterpreterSchema()(implicit request: Request[Any]): Unit = {
       import models.tables.CalculatedSchemaOrg
