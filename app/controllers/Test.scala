@@ -29,6 +29,8 @@ import java.util.Date
 import javax.inject.Inject
 import javax.inject.Named
 import scala.concurrent.ExecutionContext
+import scala.sys.process.{Process, ProcessLogger}
+import scala.util.Try
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -269,6 +271,66 @@ class Test @Inject()(implicit val
         )
       )
     }; testInterpreterSchema()
+
+    def runCommand(command: Seq[String], label: String): Unit = {
+      logger.info(s"[/test/unit] Running $label: ${command.mkString(" ")}")
+      val stdOut = new StringBuilder
+      val stdErr = new StringBuilder
+      val exitCode = Process(command, new File(".")).!(ProcessLogger(
+        out => stdOut.append(out).append("\n"),
+        err => stdErr.append(err).append("\n"),
+      ))
+      if (exitCode != 0) {
+        val output = (stdOut.toString + stdErr.toString).take(4000)
+        throw new RuntimeException(s"$label failed (exit=$exitCode). output=$output")
+      }
+    }
+
+    def runScalaTestSuites(): Unit = {
+      val sourceSuites = new File("test")
+      def collectScalaSpecs(dir: File): Seq[File] = {
+        Option(dir.listFiles()).toSeq.flatten.flatMap { f =>
+          if (f.isDirectory) collectScalaSpecs(f)
+          else if (f.getName.endsWith("Spec.scala")) Seq(f)
+          else Seq.empty
+        }
+      }
+
+      val discoveredSuites = collectScalaSpecs(sourceSuites).flatMap { file =>
+        val relative = sourceSuites.toPath.relativize(file.toPath).toString.replace(File.separator, "/")
+        val className = relative.stripSuffix(".scala").replace('/', '.')
+        Try(Class.forName(className)).toOption.map(_ => className)
+      }.distinct
+
+      if (discoveredSuites.nonEmpty) {
+        discoveredSuites.foreach { suite =>
+          val runnerClass = Class.forName("org.scalatest.tools.Runner$")
+          val module = runnerClass.getField("MODULE$").get(null)
+          val runMethod = runnerClass.getMethod("run", classOf[Array[String]])
+          val ok = runMethod.invoke(module, Array("-o", "-s", suite).asInstanceOf[Object]).asInstanceOf[Boolean]
+          if (!ok) throw new RuntimeException(s"Scala suite failed: $suite")
+        }
+      } else {
+        logger.warn("[/test/unit] No ScalaTest suites discovered on classpath; skipping external Scala suite run.")
+      }
+    }
+
+    def runJavaScriptUnitTests(): Unit = {
+      val testDir = new File("test")
+      val jsTests = Option(testDir.listFiles()).toSeq.flatten
+        .filter(file => file.isFile && file.getName.endsWith(".test.mjs"))
+        .sortBy(_.getName)
+        .map(file => s"test/${file.getName}")
+
+      if (jsTests.nonEmpty) {
+        runCommand(Seq("node", "--test") ++ jsTests, "JavaScript unit tests")
+      } else {
+        logger.warn("[/test/unit] No JavaScript test files (*.test.mjs) found under ./test; skipping JS suite run.")
+      }
+    }
+
+    runScalaTestSuites()
+    runJavaScriptUnitTests()
 
     val fileAbsolute = new File(".").getAbsoluteFile
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
