@@ -286,10 +286,10 @@ class Test @Inject()(implicit val
       }
     }
 
-    case class TestExecutionResult(label: String, discovered: Int, executed: Int, skipped: Boolean, details: String) {
+    case class TestExecutionResult(label: String, discovered: Int, executed: Int, skipped: Boolean) {
       def toSummaryLine: String = {
         val status = if (skipped) "SKIPPED" else "PASS"
-        s"$label[$status] discovered=$discovered executed=$executed details=$details"
+        s"$label[$status] discovered=$discovered executed=$executed"
       }
     }
 
@@ -317,10 +317,10 @@ class Test @Inject()(implicit val
           val ok = runMethod.invoke(module, Array("-o", "-s", suite).asInstanceOf[Object]).asInstanceOf[Boolean]
           if (!ok) throw new RuntimeException(s"Scala suite failed: $suite")
         }
-        TestExecutionResult("scala", discoveredSuites.size, discoveredSuites.size, skipped = false, discoveredSuites.mkString(","))
+        TestExecutionResult("scala", discoveredSuites.size, discoveredSuites.size, skipped = false)
       } else {
         logger.warn("[/test/unit] No ScalaTest suites discovered on classpath; skipping external Scala suite run.")
-        TestExecutionResult("scala", discovered = 0, executed = 0, skipped = true, "no compatible suites discovered")
+        TestExecutionResult("scala", discovered = 0, executed = 0, skipped = true)
       }
     }
 
@@ -333,10 +333,10 @@ class Test @Inject()(implicit val
 
       if (jsTests.nonEmpty) {
         runCommand(Seq("node", "--test") ++ jsTests, "JavaScript unit tests")
-        TestExecutionResult("js", jsTests.size, jsTests.size, skipped = false, jsTests.mkString(","))
+        TestExecutionResult("js", jsTests.size, jsTests.size, skipped = false)
       } else {
         logger.warn("[/test/unit] No JavaScript test files (*.test.mjs) found under ./test; skipping JS suite run.")
-        TestExecutionResult("js", discovered = 0, executed = 0, skipped = true, "no *.test.mjs in ./test")
+        TestExecutionResult("js", discovered = 0, executed = 0, skipped = true)
       }
     }
 
