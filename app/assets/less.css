@@ -1842,6 +1842,8 @@ kbd:hover > kbd {
   margin-left: 10px;
   text-align: right;
   color: #222;
+  font-style: italic;
+  font-size: 13px;
 }
 .AhaWiki .revisionInfo a {
   color: #222;
@@ -1865,10 +1867,6 @@ kbd:hover > kbd {
   .AhaWiki .revisionInfo {
     display: none;
   }
-}
-.AhaWiki .revisionInfo {
-  font-style: italic;
-  font-size: 13px;
 }
 .AhaWiki .revisionInfo .revision {
   font-weight: bold;
