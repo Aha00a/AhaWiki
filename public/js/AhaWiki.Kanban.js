@@ -90,8 +90,15 @@ document.addEventListener('DOMContentLoaded', function () {
         var text = String(value || '').trim();
         return text || '(empty)';
     };
+    var normalizeEventPrefixForRevisionComment = function (eventPrefix) {
+        var raw = String(eventPrefix || '').trim();
+        if (!raw) { return ''; }
+        if (/^\[[^\]]+\]$/.test(raw)) { return raw; }
+        return '[' + raw + ']';
+    };
+
     var buildKanbanSaveComment = function (actionType, actionMeta) {
-        var eventPrefix = getActionMetaValue(actionMeta, 'eventPrefix');
+        var eventPrefix = normalizeEventPrefixForRevisionComment(getActionMetaValue(actionMeta, 'eventPrefix'));
         if (!eventPrefix) {
             return 'Kanban - ' + (actionType || 'save');
         }
