@@ -170,14 +170,14 @@ UI 동작 권장:
 | `card:rename`               | `Kanban - <EventPrefix> - Card Rename - ["#<cardId>" <fromTitle>] to ["#<cardId>" <toTitle>]`               |
 | `card:move` (to other list) | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] - '''<fromList>''' to '''<toList>'''`       |
 | `card:move` (in same list)  | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] Order - <fromOrder> -> <toOrder>`                  |
-| `card:delete`               | `Kanban - <EventPrefix> - Card Delete - ["#<cardId>" <cardTitle>]`                                          |
-| `card:comment:add`          | `Kanban - <EventPrefix> - Card Comment Add - ["#<cardId>" <cardTitle>] - <comment>`                         |
+| `card:delete`               | `Kanban - <EventPrefix> - Card Delete - ["#<cardId>" <cardTitle>]` *(Activity 없음)*                        |
+| `card:comment:add`          | `Kanban - <EventPrefix> - Card Comment Add - ["#<cardId>" <cardTitle>] - <comment(shortened)>`              |
 | `card:property:update`      | `Kanban - <EventPrefix> - Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`          |
 
 Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
 ```
- * `[User:<author>] [<date>]T<time>`
-  * <comment> 
+ * [User:<author>] [<date>]T<time>
+  * <comment>
 ```
 를 삽입해준다. <comment>는 위 표의 Page.comment 메시지에서 `Kanban - <EventPrefix> - `를 지우고 뒷부분만 넣어준다. 
 
@@ -185,6 +185,12 @@ Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
 - 액션별 메타데이터(`actionType/actionMeta`)는 모두 **필수값**으로 간주합니다. 누락이 발생하면 안 되며, UI에서 저장 전 검증으로 차단해야 합니다.
 - `card:comment:add`의 `<comment>`는 **(a) 첫 줄 텍스트**와 **(b) 앞 80자** 중 더 짧은 값을 사용합니다. 잘린 경우 문자열 끝에 `...`를 붙입니다.
 - `card:delete`는 카드 자체가 삭제되므로 `===== Activity`에 로그를 남기지 않습니다(리비전 코멘트만 남김).
+
+- `card:property:update`의 `<property>`는 화이트리스트 키만 허용합니다.
+  - `Creator` - 1개. 생성한 사용자.
+  - `DueDate` - 1개. 년월일.
+  - `Assignee` - n개. 사용자들.
+  - `Attachment` - n개. 첨부파일들.
 
 `card:property:update` 보강 규칙:
 - 기본 포맷은 `Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`를 유지합니다.
