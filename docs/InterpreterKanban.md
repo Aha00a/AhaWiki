@@ -166,13 +166,13 @@ UI 동작 권장:
 | `list:rename`               | `Kanban - <EventPrefix> - List Rename - '''<fromTitle>''' to '''<toTitle>'''`                               |
 | `list:move`                 | `Kanban - <EventPrefix> - List Move - '''<listTitle>''' Order - <fromOrder> -> <toOrder>`                           |
 | `list:delete`               | `Kanban - <EventPrefix> - List Delete - '''<listTitle>'''`                                                  |
-| `card:add`                  | `Kanban - <EventPrefix> - Card Add - ["#<cardId>" <cardTitle>]`                                             |
-| `card:rename`               | `Kanban - <EventPrefix> - Card Rename - ["#<cardId>" <fromTitle>] to ["#<cardId>" <toTitle>]`               |
-| `card:move` (to other list) | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] - '''<fromList>''' to '''<toList>'''`       |
-| `card:move` (in same list)  | `Kanban - <EventPrefix> - Card Move - ["#<cardId>" <cardTitle>] Order - <fromOrder> -> <toOrder>`                  |
-| `card:delete`               | `Kanban - <EventPrefix> - Card Delete - ["#<cardId>" <cardTitle>]` *(Activity 없음)*                        |
-| `card:comment:add`          | `Kanban - <EventPrefix> - Card Comment Add - ["#<cardId>" <cardTitle>] - <comment(shortened)>`              |
-| `card:property:update`      | `Kanban - <EventPrefix> - Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`          |
+| `card:add`                  | `Kanban - <EventPrefix> - Card Add - ["<pageName>#<cardId>" <pageName>#<cardTitle>]`                                             |
+| `card:rename`               | `Kanban - <EventPrefix> - Card Rename - ["<pageName>#<cardId>" <pageName>#<fromTitle>] to ["<pageName>#<cardId>" <pageName>#<toTitle>]`               |
+| `card:move` (to other list) | `Kanban - <EventPrefix> - Card Move - ["<pageName>#<cardId>" <pageName>#<cardTitle>] - '''<fromList>''' to '''<toList>'''`       |
+| `card:move` (in same list)  | `Kanban - <EventPrefix> - Card Move - ["<pageName>#<cardId>" <pageName>#<cardTitle>] Order - <fromOrder> -> <toOrder>`                  |
+| `card:delete`               | `Kanban - <EventPrefix> - Card Delete - ["<pageName>#<cardId>" <pageName>#<cardTitle>]` *(Activity 없음)*                        |
+| `card:comment:add`          | `Kanban - <EventPrefix> - Card Comment Add - ["<pageName>#<cardId>" <pageName>#<cardTitle>] - <comment(shortened)>`              |
+| `card:property:update`      | `Kanban - <EventPrefix> - Card Property Update - ["<pageName>#<cardId>" <pageName>#<cardTitle>] - <property> - <value>`          |
 
 Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
 ```
@@ -193,7 +193,7 @@ Card에 관한 Action이 이루어질 경우 Activity 맨 처음에
   - `Attachment` - n개. 첨부파일들.
 
 `card:property:update` 보강 규칙:
-- 기본 포맷은 `Card Property Update - ["#<cardId>" <cardTitle>] - <property> - <value>`를 유지합니다.
+- 기본 포맷은 `Card Property Update - ["<pageName>#<cardId>" <pageName>#<cardTitle>] - <property> - <value>`를 유지합니다.
 - `<value>` 직렬화 규칙을 고정합니다.
   - 단일값: 그대로 문자열 1개
   - 다중값: `, `로 join한 문자열

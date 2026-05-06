@@ -102,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!eventPrefix) {
             return 'Kanban - ' + (actionType || 'save');
         }
+        var pageName = getActionMetaValue(actionMeta, 'pageName');
         var cardId = getActionMetaValue(actionMeta, 'cardId');
         var cardTitle = getActionMetaValue(actionMeta, 'cardTitle');
         switch (actionType) {
@@ -109,16 +110,16 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'list:rename': return "Kanban - " + eventPrefix + " - List Rename - '''" + getActionMetaValue(actionMeta, 'fromTitle') + "''' to '''" + getActionMetaValue(actionMeta, 'toTitle') + "'''";
             case 'list:move': return "Kanban - " + eventPrefix + " - List Move - '''" + getActionMetaValue(actionMeta, 'listTitle') + "''' Order - " + getActionMetaValue(actionMeta, 'fromOrder') + " -> " + getActionMetaValue(actionMeta, 'toOrder');
             case 'list:delete': return "Kanban - " + eventPrefix + " - List Delete - '''" + getActionMetaValue(actionMeta, 'listTitle') + "'''";
-            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(cardId, cardTitle);
-            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(cardId, getActionMetaValue(actionMeta, 'fromTitle')) + ' to ' + buildCardLinkText(cardId, getActionMetaValue(actionMeta, 'toTitle'));
+            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(pageName, cardId, cardTitle);
+            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(pageName, cardId, getActionMetaValue(actionMeta, 'fromTitle')) + ' to ' + buildCardLinkText(pageName, cardId, getActionMetaValue(actionMeta, 'toTitle'));
             case 'card:move':
                 if (getActionMetaValue(actionMeta, 'fromList') && getActionMetaValue(actionMeta, 'toList') && getActionMetaValue(actionMeta, 'fromList') !== getActionMetaValue(actionMeta, 'toList')) {
-                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(cardId, cardTitle) + " - '''" + getActionMetaValue(actionMeta, 'fromList') + "''' to '''" + getActionMetaValue(actionMeta, 'toList') + "'''";
+                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(pageName, cardId, cardTitle) + " - '''" + getActionMetaValue(actionMeta, 'fromList') + "''' to '''" + getActionMetaValue(actionMeta, 'toList') + "'''";
                 }
-                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(cardId, cardTitle) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
-            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(cardId, cardTitle);
-            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(cardId, cardTitle) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
-            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(cardId, cardTitle) + ' - ' + getActionMetaValue(actionMeta, 'property') + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
+                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
+            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(pageName, cardId, cardTitle);
+            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
+            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(pageName, cardId, cardTitle) + ' - ' + getActionMetaValue(actionMeta, 'property') + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
             default: return 'Kanban - ' + (actionType || 'save');
         }
     };
@@ -215,7 +216,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
             .then(function (csrfToken) {
                 var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-                var comment = buildKanbanSaveComment(actionType, actionMeta);
+                var actionMetaWithPageName = Object.assign({ pageName: pageName }, actionMeta || {});
+                var comment = buildKanbanSaveComment(actionType, actionMetaWithPageName);
                 var params = new URLSearchParams();
                 params.set('revision', String(getCurrentRevision()));
                 params.set('text', content || '');
@@ -339,13 +341,14 @@ document.addEventListener('DOMContentLoaded', function () {
             details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
         };
     };
-    var buildCardLinkText = function (cardId, cardName) {
+    var buildCardLinkText = function (pageName, cardId, cardName) {
+        var safePageName = (pageName || '').trim();
         var safeCardName = (cardName || '').trim();
         var safeCardId = (cardId || '').trim();
         if (!safeCardId) {
-            return '["#' + safeCardName + '"]';
+            return '["' + safePageName + '#" ' + safeCardName + ']';
         }
-        return '["#' + safeCardId + '" ' + safeCardName + ']';
+        return '["' + safePageName + '#' + safeCardId + '" ' + safePageName + '#' + safeCardName + ']';
     };
 
     var prependCardActivity = function (card, details) {
