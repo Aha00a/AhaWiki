@@ -48,6 +48,7 @@ import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
 import play.api.libs.Files.TemporaryFile
+import play.api.libs.json.{Json => PlayJson}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.filters.csrf.CSRF
@@ -1105,6 +1106,27 @@ class Api @Inject()(
   def csrf: Action[AnyContent] = Action { implicit request =>
     val token: Option[CSRF.Token] = CSRF.getToken
     Ok(token.asJson)
+  }
+
+  def pageRevision(pageName: String): Action[AnyContent] = Action { implicit request =>
+    database.withConnection { implicit connection =>
+      implicit val site: Site = SiteLogic.get(request.host)
+      val revision = Page.selectLastRevision(pageName).map(_.revision).getOrElse(0L)
+      Results.Ok(PlayJson.obj("status" -> "ok", "pageName" -> pageName, "revision" -> revision)).as(JSON)
+    }
+  }
+
+  def renderAhaMark(pageName: String): Action[AnyContent] = Action { implicit request =>
+    request.body.asJson match {
+      case Some(body) =>
+        val comment = (body \ "comment").asOpt[String].getOrElse("")
+        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
+        val html = InterpreterWiki.toHtmlString(comment)
+        Results.Ok(PlayJson.obj("status" -> "ok", "html" -> html)).as(JSON)
+      case None =>
+        Results.BadRequest(PlayJson.obj("status" -> "error", "message" -> "JSON body is required")).as(JSON)
+    }
   }
 
   def pageMap: Action[AnyContent] = Action { implicit request =>

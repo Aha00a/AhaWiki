@@ -188,3 +188,41 @@ UI 동작 권장:
 
 즉, **UI는 Kanban**, **저장은 위키 텍스트**라는 목표를 유지하면서,
 실무에 필요한 구조화 메타데이터까지 유연하게 다룰 수 있습니다.
+
+---
+
+## 10) 간소화 이관 체크리스트 (미사용 기능 기준)
+
+현재 Kanban은 **실사용 기능이 아니므로**, 안전장치/장기 병행 없이 빠르게 **페이지 저장(`POST /w/:pageName`) 단일 경로**로 이관합니다.
+
+### Fast Track — 1회성 정리
+- [x] 클라이언트에서 리스트/카드 생성 포함 모든 변경을 `persistColumns(actionType, actionMeta)` + `POST /w/:pageName` 저장으로 통일
+- [x] `/api/Kanban/:pageName/list`, `/api/Kanban/:pageName/card` 호출 코드 제거
+- [x] 서버 라우트에서 `/api/Kanban/*` 엔드포인트 제거
+- [x] 문서의 API 예시/설명을 `POST /w/:pageName`/`/api/pageRevision`/`/api/renderAhaMark` 기준으로 정리
+
+#### 현재 API 기준 (최신)
+- 저장: `POST /w/:pageName`
+  - 주요 필드: `revision`, `text`, `comment`, `minorEdit`, `recaptcha`, `lineStart`, `lineEnd`
+- 최신 리비전 조회: `GET /api/pageRevision/:pageName`
+- 코멘트 렌더링: `POST /api/renderAhaMark/:pageName`
+
+### 구현 기준
+- [x] `actionType/actionMeta`는 기존 키를 최대한 재사용하고, 누락 시 fallback comment 허용
+- [x] 실패 처리 정책은 단순화(실패 알림 + 사용자 재시도)하고 자동 복구/롤백 로직은 두지 않음
+- [x] 성능/운영 지표, 단계적 deprecate 공지, 장기 병행 운영은 생략
+
+### 완료 기준 (Done)
+- [x] Kanban 변경 요청이 `POST /w/:pageName`로만 전송됨
+- [x] `/list`, `/card` 관련 코드/라우트는 저장소에서 제거됨
+- [x] 기본 동작(리스트 추가, 카드 추가, 이동, 제목/속성/코멘트 저장) 수동 확인 완료
+
+#### 수동 확인 체크리스트 (최종)
+- [x] 리스트 추가 후 페이지 히스토리에 새 revision이 생성된다.
+- [x] 카드 추가 후 카드 ID/Property/Activity가 직렬화되어 저장된다.
+- [x] 카드 순서 이동(같은 리스트) 후 새로고침 시 순서가 유지된다.
+- [x] 카드 이동(리스트 간) 후 새로고침 시 위치가 유지된다.
+- [x] 카드 제목 수정/삭제가 저장 후 그대로 반영된다.
+- [x] 카드 DueDate/속성 변경이 저장 후 그대로 반영된다.
+- [x] 카드 코멘트 추가(텍스트/클립보드 이미지)가 저장 후 그대로 반영된다.
+- [x] 충돌 상황(다른 탭에서 먼저 저장)에서 409 재시도 후 저장이 정상 완료된다.

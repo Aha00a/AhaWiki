@@ -30,83 +30,50 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.hash = '';
     };
 
-    var requestAddList = function (pageName, title, lineStart) {
-        if (!pageName) {
-            return Promise.resolve(null);
-        }
-
-        return fetch('/api/csrf', {
-            credentials: 'same-origin'
-        }).then(function (csrfResponse) {
-            return csrfResponse.json().catch(function () {
-                return {};
-            });
-        }).then(function (csrfToken) {
-            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-
-            return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/list', {
-                method: 'PUT',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Csrf-Token': tokenValue,
-                    'X-CSRF-Token': tokenValue
-                },
-                body: JSON.stringify({
-                    title: title,
-                    lineStart: lineStart
-                })
-            }).then(function (response) {
-                return response.json().catch(function () {
-                    return {};
-                }).then(function (payload) {
-                    if (!response.ok) {
-                        throw new Error(payload.message || payload.error || 'Failed to add list.');
-                    }
-                    return payload;
-                });
-            });
-        });
+    var generateCardId = function () {
+        return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     };
-
-    var requestAddCard = function (pageName, text, lineStart, creationComment) {
-        if (!pageName) {
-            return Promise.resolve(null);
+    var getCurrentRevision = function () {
+        var node = document.querySelector('.revision a');
+        var revision = Number(node ? node.textContent : 0);
+        return Number.isFinite(revision) ? revision : 0;
+    };
+    var setCurrentRevision = function (nextRevision) {
+        var node = document.querySelector('.revision a');
+        if (!node || !Number.isFinite(nextRevision) || nextRevision < 0) {
+            return;
         }
-
-        return fetch('/api/csrf', {
-            credentials: 'same-origin'
-        }).then(function (csrfResponse) {
-            return csrfResponse.json().catch(function () {
-                return {};
+        node.textContent = String(nextRevision);
+    };
+    var fetchLatestRevision = function (pageName) {
+        return fetch('/api/pageRevision/' + encodeURIComponent(pageName), { credentials: 'same-origin' })
+            .then(function (response) { return response.json().catch(function () { return {}; }); })
+            .then(function (payload) {
+                var revision = Number(payload && payload.revision);
+                return Number.isFinite(revision) ? revision : 0;
             });
-        }).then(function (csrfToken) {
-            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-
-            return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/card', {
-                method: 'PUT',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Csrf-Token': tokenValue,
-                    'X-CSRF-Token': tokenValue
-                },
-                body: JSON.stringify({
-                    text: text,
-                    lineStart: lineStart,
-                    creationComment: creationComment
-                })
-            }).then(function (response) {
-                return response.json().catch(function () {
-                    return {};
-                }).then(function (payload) {
-                    if (!response.ok) {
-                        throw new Error(payload.message || payload.error || 'Failed to add card.');
-                    }
-                    return payload;
-                });
-            });
-        });
+    };
+    var getLineCountForText = function (value) {
+        if (!value) {
+            return 0;
+        }
+        var rows = String(value).split(/\r?\n/);
+        while (rows.length > 0 && rows[rows.length - 1] === '') {
+            rows.pop();
+        }
+        return rows.length;
+    };
+    var buildKanbanSaveComment = function (actionType, actionMeta) {
+        var base = 'Kanban - ' + (actionType || 'save');
+        if (!actionMeta || typeof actionMeta !== 'object') {
+            return base;
+        }
+        var detail = Object.keys(actionMeta)
+            .filter(function (key) { return actionMeta[key] !== null && typeof actionMeta[key] !== 'undefined' && String(actionMeta[key]).trim() !== ''; })
+            .slice(0, 3)
+            .map(function (key) { return key + '=' + String(actionMeta[key]).trim(); })
+            .join(' ');
+        return detail ? (base + ' ' + detail) : base;
     };
 
     var requestUploadClipboardImage = function (pageName, dataUrl) {
@@ -156,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
             .then(function (csrfToken) {
                 var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-                return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/renderAhaMark', {
+                return fetch('/api/renderAhaMark/' + encodeURIComponent(pageName), {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -176,30 +143,52 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     };
 
-    var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta) {
+    var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta, retryCount) {
         if (!pageName) {
             return Promise.resolve(null);
+        }
+        var attempt = Number.isFinite(retryCount) ? retryCount : 0;
+        var knownRevision = getCurrentRevision();
+        if ((!Number.isFinite(knownRevision) || knownRevision <= 0) && attempt < 1) {
+            return fetchLatestRevision(pageName).then(function (latestRevision) {
+                setCurrentRevision(latestRevision);
+                return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt);
+            });
         }
         return fetch('/api/csrf', { credentials: 'same-origin' })
             .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
             .then(function (csrfToken) {
                 var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-                return fetch('/api/Kanban/' + encodeURIComponent(pageName) + '/save', {
-                    method: 'PUT',
+                var comment = buildKanbanSaveComment(actionType, actionMeta);
+                var params = new URLSearchParams();
+                params.set('revision', String(getCurrentRevision()));
+                params.set('text', content || '');
+                params.set('comment', comment);
+                params.set('minorEdit', 'false');
+                params.set('recaptcha', '');
+                params.set('lineStart', String(lineStart));
+                params.set('lineEnd', String(lineEnd));
+                return fetch('/w/' + encodeURIComponent(pageName), {
+                    method: 'POST',
                     credentials: 'same-origin',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                         'Csrf-Token': tokenValue,
                         'X-CSRF-Token': tokenValue
                     },
-                    body: JSON.stringify({ lineStart: lineStart, lineEnd: lineEnd, content: content, actionType: actionType || null, actionMeta: actionMeta || null })
+                    body: params.toString()
                 }).then(function (response) {
-                    return response.json().catch(function () { return {}; }).then(function (payload) {
-                        if (!response.ok) {
-                            throw new Error(payload.message || payload.error || 'Failed to save kanban.');
+                    if (!response.ok) {
+                        if (response.status === 409 && attempt < 1) {
+                            return fetchLatestRevision(pageName).then(function (latestRevision) {
+                                setCurrentRevision(latestRevision);
+                                return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt + 1);
+                            });
                         }
-                        return payload;
-                    });
+                        throw new Error('Failed to save kanban. status=' + response.status);
+                    }
+                    setCurrentRevision(getCurrentRevision() + 1);
+                    return { lineEnd: lineStart + getLineCountForText(content || '') };
                 });
             });
     };
@@ -684,7 +673,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 var cardLineStart = getCardInsertLineStart(index);
                 var newCard = {
                     text: value,
-                    id: '',
+                    id: generateCardId(),
                     classNames: [],
                     lineNumber: cardLineStart,
                     comments: [buildCommentEntry(['Created card'])],
@@ -707,27 +696,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }));
 
-                return requestAddCard(root.getAttribute('data-page-name') || '', value, cardLineStart, newCard.comments[0].header)
+                return persistColumns('card:add', {
+                    cardId: newCard.id,
+                    cardTitle: value
+                })
                     .then(function (result) {
-                        if (result && result.cardId) {
-                            newCard.id = result.cardId;
-                        }
-                        if (result && Number.isFinite(result.lineStart)) {
-                            shiftLineNumbersAfterInsert();
-                            var insertedLineDelta = Number(result.lineEnd) - Number(result.lineStart) + 1;
-                            if (!Number.isFinite(insertedLineDelta) || insertedLineDelta <= 0) {
-                                insertedLineDelta = 1;
-                            }
-                            shiftMetaLineRangeAfterInsert(root.closest('.InterpreterRenderMetaWrapper'), result.lineStart, insertedLineDelta);
-                            var currentLineCount = Number(root.getAttribute('data-kanban-line-count')) || 0;
-                            root.setAttribute('data-kanban-line-count', String(currentLineCount + insertedLineDelta));
-                        }
                         rerenderColumns();
                         console.info('[Kanban] card added', result);
-                        return Promise.resolve();
                     })
                     .catch(function (error) {
-                        console.error('[Kanban] failed to call card add api', error);
+                        console.error('[Kanban] failed to save card add', error);
                     })
                     .finally(function () {
                         submitCardButton.disabled = false;
@@ -905,17 +883,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterStartLine = Math.max(1, metaLineStart + (hasShebang ? 1 : 0));
         var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
-        var lineCountForText = function (value) {
-            if (!value) {
-                return 0;
-            }
-            var rows = String(value).split(/\r?\n/);
-            while (rows.length > 0 && rows[rows.length - 1] === '') {
-                rows.pop();
-            }
-            return rows.length;
-        };
-        var currentKanbanLineCount = lineCountForText(pre.textContent || '');
+        var currentKanbanLineCount = getLineCountForText(pre.textContent || '');
         root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
         var mutationQueue = Promise.resolve();
         var serializeColumns = function () {
@@ -965,14 +933,8 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         var persistColumns = function (actionType, actionMeta) {
             var content = serializeColumns();
-            var replacementLineCount = lineCountForText(content);
-            var trackedLineCount = Number(root.getAttribute('data-kanban-line-count'));
-            if (!Number.isFinite(trackedLineCount) || trackedLineCount < 0) {
-                trackedLineCount = currentKanbanLineCount;
-            }
-            var latestLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : interpreterLineEnd) || interpreterLineEnd;
-            var metaDerivedLineCount = Math.max(0, latestLineEnd - interpreterStartLine);
-            var requestLineEnd = interpreterStartLine + Math.max(trackedLineCount, metaDerivedLineCount);
+            var replacementLineCount = getLineCountForText(content);
+            var requestLineEnd = interpreterStartLine + Math.max(0, currentKanbanLineCount);
             return requestSaveKanban(pageName, interpreterStartLine, requestLineEnd, content, actionType, actionMeta)
                 .then(function (result) {
                     var nextLineEnd = Number(result && result.lineEnd);
@@ -1231,17 +1193,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }));
 
-                return requestAddList(pageName, trimmed, requestLineStart)
+                return persistColumns('list:add', { listTitle: trimmed })
                     .then(function (result) {
-                        if (result && Number.isFinite(result.lineStart)) {
-                            normalizeLineNumbers();
-                            shiftMetaLineRangeAfterInsert(metaWrapper, result.lineStart, 1);
-                        }
                         renderColumns();
                         console.info('[Kanban] list added', result);
                     })
                     .catch(function (error) {
-                        console.error('[Kanban] failed to call list add api', error);
+                        console.error('[Kanban] failed to save list add', error);
                     })
                     .finally(function () {
                         submitListButton.disabled = false;

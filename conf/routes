@@ -55,10 +55,8 @@ GET           /Admin/RecentChanges                   controllers.Admin.index
 
 
 GET           /api/csrf                              controllers.Api.csrf
-PUT           /api/Kanban/:pageName/list             controllers.api.Kanban.listAdd(pageName: String)
-PUT           /api/Kanban/:pageName/card             controllers.api.Kanban.cardAdd(pageName: String)
-PUT           /api/Kanban/:pageName/save             controllers.api.Kanban.save(pageName: String)
-POST          /api/Kanban/:pageName/renderAhaMark controllers.api.Kanban.renderAhaMark(pageName: String)
+GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
+POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
 GET           /api/Admin/Sites                       controllers.Api.adminSites
 GET           /api/Admin/SiteUsers                   controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                       controllers.Api.adminUsers
