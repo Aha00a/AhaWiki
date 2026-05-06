@@ -1,7 +1,7 @@
 # ScalaTest Removal To-Do
 
 - [x] 현재 ScalaTest 사용 현황 인벤토리 작성 (`test/**/*.scala` 중 `org.scalatest` import/상속 구조 정리).
-- [ ] 마이그레이션 대상 분류표 작성 (로직 테스트 / 모델 테스트 / 컨트롤러 테스트 / 유틸 테스트).
+- [x] 마이그레이션 대상 분류표 작성 (로직 테스트 / 모델 테스트 / 컨트롤러 테스트 / 유틸 테스트).
 - [ ] `Test.unit` 내 테스트 섹션 구조 표준안 정의 (도메인별 함수 분리, 네이밍 규칙, 실패 메시지 규칙).
 - [ ] 공통 assertion 유틸 정리 (`TestUtil.assertEquals` 확장 필요 여부, 컬렉션/예외/assertAll 패턴 정리).
 - [ ] ScalaTest DSL(`AnyFreeSpec`, `in`, `mustBe` 등) → 순수 assertion 변환 규칙 문서화.
@@ -72,3 +72,23 @@
 
 ### 확인 커맨드
 - `rg -n "org\.scalatest|AnyFreeSpec|mustBe| in \\{" test --glob '*.scala'`
+
+## Step 2 결과: 마이그레이션 대상 분류표
+
+Step 1 인벤토리(총 32개 파일)를 기준으로, 실제 테스트 대상 책임에 따라 1차 분류를 완료했다.
+
+| 분류 | 파일 수 | 포함 파일 |
+|---|---:|---|
+| 로직 테스트 | 16 | `test/logics/SchemaOrgSpec.scala`, `test/logics/UrlDetectorSpec.scala`, `test/logics/PermissionLogicSpec.scala`, `test/logics/wikis/HeadingNumberSpec.scala`, `test/logics/wikis/SignedReadUrlLogicSpec.scala`, `test/logics/wikis/interpreters/InterpreterSchemaSpec.scala`, `test/logics/wikis/interpreters/TraitInterpreterSpec.scala`, `test/logics/wikis/interpreters/InterpreterVimSpec.scala`, `test/logics/wikis/interpreters/ahaMark/AhaMarkLinkSpec.scala`, `test/logics/wikis/interpreters/InterpreterMarkdownSpec.scala`, `test/logics/wikis/interpreters/InterpreterWikiSpec.scala`, `test/logics/wikis/macros/MacroColorCodeSpec.scala`, `test/logics/wikis/macros/MacroBrSpec.scala`, `test/logics/wikis/macros/MacroUptimeSpec.scala`, `test/logics/wikis/macros/TraitMacroSpec.scala`, `test/logics/wikis/macros/MacroPeriodSpec.scala` |
+| 모델 테스트 | 4 | `test/models/tables/PermissionSpec.scala`, `test/models/BlameSpec.scala`, `test/models/JsonSpec.scala`, `test/models/PageContentSpec.scala` |
+| 컨트롤러 테스트 | 0 | (현재 ScalaTest import 사용 파일 없음) |
+| 유틸 테스트 | 12 | `test/com/aha00a/commons/utils/EnglishCaseConverterSpec.scala`, `test/com/aha00a/commons/utils/IpAddressUtilSpec.scala`, `test/com/aha00a/commons/utils/LetterUtilSpec.scala`, `test/com/aha00a/commons/utils/DoubleUtilSpec.scala`, `test/com/aha00a/commons/utils/UriUtilSpec.scala`, `test/com/aha00a/commons/utils/SeqUtilSpec.scala`, `test/com/aha00a/commons/utils/NanoIdUtilSpec.scala`, `test/com/aha00a/commons/utils/HangulSpec.scala`, `test/com/aha00a/commons/utils/DateTimeUtilSpec.scala`, `test/com/aha00a/commons/ImplicitsSpec.scala`, `test/com/aha00a/colors/GradientPresetSpec.scala`, `test/com/aha00a/colors/ColorSpec.scala` |
+
+### 분류 기준
+- 로직 테스트: 도메인 규칙/파서/매크로/권한 판단 등 비즈니스 로직 중심.
+- 모델 테스트: 모델/테이블/직렬화 구조의 값/스키마 검증 중심.
+- 컨트롤러 테스트: Play request/response, route, DI 컨텍스트 의존 테스트.
+- 유틸 테스트: 순수 함수성 헬퍼/확장 메서드/포맷 변환 검증 중심.
+
+### 비고
+- `GuiceOneAppPerTest` import가 있는 파일은 존재하지만(주석 예시), 이번 인벤토리 범위에서는 컨트롤러 분류로 편입할 활성 테스트는 확인되지 않음.
