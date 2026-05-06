@@ -5,7 +5,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
-import com.aha00a.tests.unit.{HeadingNumberUnit, InterpreterMarkdownUnit, InterpreterVimUnit, JsonUnit, MacroPeriodUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit}
+import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit}
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.PermissionLogic
@@ -192,6 +192,12 @@ class Test @Inject()(implicit val
     SignedReadUrlLogicUnit.run(testUtil)
     InterpreterMarkdownUnit.run(testUtil)
     JsonUnit.run(testUtil)
+    InterpreterSchemaUnit.run(testUtil)
+    PermissionUnit.run(testUtil)
+    BlameUnit.run(testUtil)
+    PageContentUnit.run(testUtil)
+    PermissionLogicUnit.run(testUtil)
+    InterpreterWikiUnit.run(testUtil)
 
     def testInterpreterSchema()(implicit request: Request[Any]): Unit = {
       import models.tables.CalculatedSchemaOrg

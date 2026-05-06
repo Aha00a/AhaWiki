@@ -6,7 +6,7 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 - [x] 공통 assertion 유틸 정리 (`TestUtil.assertEquals` 확장 필요 여부, 컬렉션/예외/assertAll 패턴 정리).
 - [x] 우선순위 1차 배치 선정 (변환 리스크 낮은 Spec부터).
 - [x] 1차 배치 파일 마이그레이션 수행.
-- [ ] 2차 배치(의존성/fixture 복잡도 중간) 파일 마이그레이션 수행.
+- [x] 2차 배치(의존성/fixture 복잡도 중간) 파일 마이그레이션 수행.
 - [ ] 컨트롤러/Play 의존 테스트의 대체 전략 수립 (통합 테스트로 분리 or `Test.unit` 내 최소 검증으로 축소).
 - [ ] 남은 고난도 Spec(비동기/환경의존) 처리 계획 확정.
 - [ ] 전체 Spec 마이그레이션 완료 후 `test/**/*.scala` 내 ScalaTest import 잔여 여부 점검.
@@ -19,18 +19,18 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 - 각 배치 완료 시 체크박스를 업데이트.
 
 ### 대상 Spec
-- [ ] test/models/tables/PermissionSpec.scala
-- [ ] test/models/BlameSpec.scala
+- [x] test/models/tables/PermissionSpec.scala
+- [x] test/models/BlameSpec.scala
 - [x] test/models/JsonSpec.scala
-- [ ] test/models/PageContentSpec.scala
+- [x] test/models/PageContentSpec.scala
 - [x] test/logics/SchemaOrgSpec.scala
 - [x] test/logics/wikis/HeadingNumberSpec.scala
-- [ ] test/logics/wikis/interpreters/InterpreterSchemaSpec.scala
+- [x] test/logics/wikis/interpreters/InterpreterSchemaSpec.scala
 - [x] test/logics/wikis/interpreters/TraitInterpreterSpec.scala
 - [x] test/logics/wikis/interpreters/InterpreterVimSpec.scala
 - [x] test/logics/wikis/interpreters/ahaMark/AhaMarkLinkSpec.scala
 - [x] test/logics/wikis/interpreters/InterpreterMarkdownSpec.scala
-- [ ] test/logics/wikis/interpreters/InterpreterWikiSpec.scala
+- [x] test/logics/wikis/interpreters/InterpreterWikiSpec.scala
 - [x] test/logics/wikis/SignedReadUrlLogicSpec.scala
 - [x] test/logics/wikis/macros/MacroColorCodeSpec.scala
 - [x] test/logics/wikis/macros/MacroBrSpec.scala
@@ -38,7 +38,7 @@ Wiki와 관련된 로직들을 Test.unit()으로 이관함을 목적으로 함.
 - [x] test/logics/wikis/macros/TraitMacroSpec.scala
 - [x] test/logics/wikis/macros/MacroPeriodSpec.scala
 - [x] test/logics/UrlDetectorSpec.scala
-- [ ] test/logics/PermissionLogicSpec.scala
+- [x] test/logics/PermissionLogicSpec.scala
 
 
 
