@@ -3,7 +3,8 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.IpAddressUtil
 import com.aha00a.commons.utils.UriUtil
-import logics.wikis.UserPageLogic
+import logics.wikis.interpreters.InterpreterWiki
+import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 
 object MacroPageList extends TraitMacro {
@@ -13,7 +14,7 @@ object MacroPageList extends TraitMacro {
     val sb = new StringBuilder(4096)
 
     sb.append("<table class=\"simpleTable tablesorter\"><thead><tr>")
-      .append("<th>Name</th><th>Date</th><th>Size</th><th>Revision</th><th>Author</th><th>Remote Address</th><th>Comment</th>")
+      .append("<th>Name</th><th>DateTime</th><th>Size</th><th>Revision</th><th>Author</th><th>Remote Address</th><th>Comment</th>")
       .append("</tr></thead><tbody>")
 
     wikiContext.seqPageByPermission.foreach { page =>
@@ -24,20 +25,20 @@ object MacroPageList extends TraitMacro {
         .append(pageHref.escapeHtmlAttribute())
         .append("\">")
         .append(page.name.escapeHtml())
-        .append("</a></strong></td><td>")
+        .append("""</a></strong></td><td class="dateTime">""")
         .append(page.localDateTime.toIsoLocalDateTimeString.escapeHtml())
-        .append("</td><td class=\"text-right\">")
+        .append("</td><td class=\"size\">")
         .append(page.size)
-        .append("</td><td><a href=\"")
+        .append("</td><td class=\"revision\"><a href=\"")
         .append(diffHref.escapeHtmlAttribute())
         .append("\">")
         .append(page.revision)
         .append("</a></td><td>")
-        .append(page.nickname.map(UserPageLogic.wikiMarkup).getOrElse(""))
+        .append(page.nickname.map(nickname => AhaMarkLink("User:" + nickname).toHtmlString()).getOrElse(""))
         .append("</td><td>")
         .append(IpAddressUtil.mask(page.remoteAddress).escapeHtml())
         .append("</td><td>")
-        .append(page.comment.escapeHtml())
+        .append(InterpreterWiki.inlineToHtmlString(page.comment))
         .append("</td></tr>")
     }
 

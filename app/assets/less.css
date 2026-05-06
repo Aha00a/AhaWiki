@@ -272,6 +272,7 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   align-items: center;
   gap: 3px;
   vertical-align: text-bottom;
+  white-space: nowrap;
 }
 .userInlineProfileImage {
   width: 18px;
@@ -3332,6 +3333,19 @@ kbd:hover > kbd {
 }
 .AhaWiki .Macro.Backlinks {
   margin-left: 0;
+}
+.AhaWiki .Macro.PageList > table {
+  margin-left: 0;
+}
+.AhaWiki .Macro.PageList > table > thead > tr > th {
+  white-space: nowrap;
+}
+.AhaWiki .Macro.PageList > table > tbody > tr > td.dateTime {
+  white-space: nowrap;
+}
+.AhaWiki .Macro.PageList > table > tbody > tr > td.size,
+.AhaWiki .Macro.PageList > table > tbody > tr > td.revision {
+  text-align: right;
 }
 .AhaWiki .Macro.WikiStatistics .statsGrid {
   display: grid;

@@ -210,6 +210,7 @@ nav.topNavbar {
 	align-items: center;
 	gap: 3px;
 	vertical-align: text-bottom;
+	white-space: nowrap;
 }
 
 .userInlineProfileImage {
@@ -1964,6 +1965,23 @@ kbd {
 
 		&.Backlinks {
 			margin-left: 0;
+		}
+
+		&.PageList {
+			> table {
+				margin-left: 0;
+				> thead > tr > th {
+					white-space: nowrap;
+				}
+				> tbody > tr > td{
+					&.dateTime {
+						white-space: nowrap;
+					}
+					&.size, &.revision {
+						text-align: right;
+					}
+				}
+			}
 		}
 		&.WikiStatistics {
 			.statsGrid {
