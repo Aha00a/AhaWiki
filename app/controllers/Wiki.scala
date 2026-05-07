@@ -134,6 +134,17 @@ controllerComponents: ControllerComponents,
     }
   }
 
+  private def resolveAttachmentObjectKey(siteSeq: Long, pageName: String, rawObjectKey: String): String = {
+    val trimmed = Option(rawObjectKey).map(_.trim).getOrElse("")
+    if (trimmed.isEmpty) {
+      ""
+    } else if (trimmed.startsWith("Attachment/")) {
+      trimmed
+    } else {
+      s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/$trimmed"
+    }
+  }
+
   private def listPageAttachmentObjectKeysFromS3(siteSeq: Long, pageName: String): Seq[String] = {
     val bucket = applicationConf.AhaWiki.aws.s3.bucket()
     val prefix = s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/"
@@ -881,7 +892,8 @@ controllerComponents: ControllerComponents,
                 implicit val site: Site = site0
                 implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
                 implicit val provider: RequestWrapper = provider0
-                Attachment.selectByObjectKey(site.seq, pageName, objectKey) match {
+                val resolvedObjectKey = resolveAttachmentObjectKey(site.seq, pageName, objectKey)
+                Attachment.selectByObjectKey(site.seq, pageName, resolvedObjectKey) match {
                   case None =>
                     NotFound("Attachment not found")
                   case Some(_) =>
@@ -889,12 +901,12 @@ controllerComponents: ControllerComponents,
                     val bucket = applicationConf.AhaWiki.aws.s3.bucket()
 
                     try {
-                      amazonS3.deleteObject(bucket, objectKey)
-                      Attachment.markDeleted(objectKey)
-                      Ok(Json.obj("ok" -> true))
+                      amazonS3.deleteObject(bucket, resolvedObjectKey)
+                      Attachment.markDeleted(resolvedObjectKey)
+                      Ok(Json.obj("ok" -> true, "objectKey" -> resolvedObjectKey))
                     } catch {
                       case error: Throwable =>
-                        logger.error(s"deleteAttachment failed. objectKey=$objectKey", error)
+                        logger.error(s"deleteAttachment failed. objectKey=$resolvedObjectKey", error)
                         InternalServerError("Attachment delete failed.")
                     }
                 }

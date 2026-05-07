@@ -258,6 +258,83 @@ document.addEventListener('DOMContentLoaded', function () {
         })).then(function () { return true; });
     };
 
+    var extractAttachmentObjectKeyFromMacro = function (macro) {
+        var raw = String(macro || '').trim();
+        if (!raw) {
+            return '';
+        }
+        var match = raw.match(/^\[\[Attachment\((.+)\)\]\]$/);
+        if (!match || !match[1]) {
+            return '';
+        }
+        return match[1].trim();
+    };
+
+    var extractCardAttachmentObjectKeys = function (card) {
+        if (!card || !card.properties || !Array.isArray(card.properties.Attachment)) {
+            return [];
+        }
+        var objectKeys = card.properties.Attachment
+            .map(extractAttachmentObjectKeyFromMacro)
+            .filter(function (objectKey) { return Boolean(objectKey); });
+        return Array.from(new Set(objectKeys));
+    };
+
+    var requestDeleteAttachmentObject = function (pageName, objectKey) {
+        if (!pageName || !objectKey) {
+            return Promise.resolve(false);
+        }
+        return fetch('/api/csrf', {
+            credentials: 'same-origin'
+        }).then(function (csrfResponse) {
+            return csrfResponse.json().catch(function () {
+                return {};
+            });
+        }).then(function (csrfToken) {
+            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+            var params = new URLSearchParams();
+            params.append('csrfToken', tokenValue);
+            params.append('pageName', pageName);
+            params.append('objectKey', objectKey);
+
+            return fetch('/api/deleteAttachment', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'Csrf-Token': tokenValue,
+                    'X-CSRF-Token': tokenValue
+                },
+                body: params.toString()
+            }).then(function (response) {
+                if (!response.ok) {
+                    return response.text().then(function (bodyText) {
+                        throw new Error(bodyText || ('Failed to delete attachment. status=' + response.status));
+                    });
+                }
+                return true;
+            });
+        });
+    };
+
+    var removeAttachmentFromCardProperty = function (card, attachmentMacro) {
+        if (!card || !card.properties || !Array.isArray(card.properties.Attachment)) {
+            return false;
+        }
+        var nextAttachments = card.properties.Attachment.filter(function (value) {
+            return String(value || '') !== String(attachmentMacro || '');
+        });
+        if (nextAttachments.length === card.properties.Attachment.length) {
+            return false;
+        }
+        if (nextAttachments.length > 0) {
+            card.properties.Attachment = nextAttachments;
+        } else {
+            delete card.properties.Attachment;
+        }
+        return true;
+    };
+
     var createCardsFromFiles = function (pageName, list, files) {
         if (!pageName || !list || !Array.isArray(files) || files.length === 0) {
             return Promise.resolve([]);
@@ -2146,6 +2223,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             row.appendChild(attachmentGrid);
                         }
                         values.forEach(function (value) {
+                            var rawValue = value;
                             var displayValue = value;
                             if (key === 'Creator') {
                                 displayValue = toUserLinkMarkup(value);
@@ -2157,11 +2235,81 @@ document.addEventListener('DOMContentLoaded', function () {
                             valueRow.style.fontSize = '13px';
                             valueRow.style.color = '#172b4d';
                             valueRow.style.paddingLeft = '8px';
+                            var attachmentItem = null;
                             if (attachmentGrid) {
+                                attachmentItem = document.createElement('div');
+                                attachmentItem.style.position = 'relative';
+                                attachmentItem.style.display = 'inline-block';
+                                attachmentItem.style.marginRight = '12px';
+                                attachmentItem.style.marginBottom = '12px';
                                 valueRow.style.paddingLeft = '0';
-                                attachmentGrid.appendChild(valueRow);
+                                attachmentItem.appendChild(valueRow);
+                                attachmentGrid.appendChild(attachmentItem);
                             } else {
                                 row.appendChild(valueRow);
+                            }
+                            if (key === 'Attachment') {
+                                var removeButton = document.createElement('button');
+                                removeButton.type = 'button';
+                                removeButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
+                                removeButton.title = '첨부파일 삭제';
+                                removeButton.setAttribute('aria-label', '첨부파일 삭제');
+                                removeButton.style.marginTop = '0';
+                                removeButton.style.width = '28px';
+                                removeButton.style.height = '28px';
+                                removeButton.style.border = '1px solid #f1c0c0';
+                                removeButton.style.borderRadius = '50%';
+                                removeButton.style.padding = '0';
+                                removeButton.style.background = '#fff';
+                                removeButton.style.color = '#c9372c';
+                                removeButton.style.cursor = 'pointer';
+                                removeButton.style.display = 'inline-flex';
+                                removeButton.style.alignItems = 'center';
+                                removeButton.style.justifyContent = 'center';
+                                removeButton.style.position = 'absolute';
+                                removeButton.style.top = '8px';
+                                removeButton.style.right = '8px';
+                                removeButton.style.zIndex = '2';
+                                removeButton.addEventListener('click', function () {
+                                    if (!window.confirm('이 첨부파일을 삭제할까요?')) {
+                                        return;
+                                    }
+                                    var attachmentObjectKey = extractAttachmentObjectKeyFromMacro(rawValue);
+                                    requestDeleteAttachmentObject(pageName, attachmentObjectKey).then(function () {
+                                        if (removeAttachmentFromCardProperty(card, rawValue)) {
+                                            renderProperties();
+                                            updateCardCommentCount(card);
+                                            renderColumns();
+                                            enqueueMutation(function () {
+                                                return persistColumns('card:property:update', {
+                                                    eventPrefix: 'User:' + getCurrentAuthor(),
+                                                    cardId: card.id || '',
+                                                    cardTitle: card.text || '',
+                                                    property: 'Attachment',
+                                                    value: (card.properties && card.properties.Attachment) || []
+                                                }).catch(function (error) {
+                                                    console.error('[Kanban] failed to persist attachment property after delete', error);
+                                                });
+                                            });
+                                        }
+                                    }).catch(function (error) {
+                                        console.error('[Kanban] failed to delete attachment from detail popup', error);
+                                        alert('Attachment delete failed. ' + (error && error.message ? error.message : ''));
+                                    });
+                                });
+                                if (attachmentItem) {
+                                    attachmentItem.appendChild(removeButton);
+                                } else {
+                                    row.appendChild(removeButton);
+                                }
+                                removeButton.addEventListener('mouseenter', function () {
+                                    removeButton.style.background = '#ffebe9';
+                                    removeButton.style.borderColor = '#e9a9a9';
+                                });
+                                removeButton.addEventListener('mouseleave', function () {
+                                    removeButton.style.background = '#fff';
+                                    removeButton.style.borderColor = '#f1c0c0';
+                                });
                             }
 
                             requestRenderInlineComment(pageName, displayValue).then(function (html) {
@@ -2520,6 +2668,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!shouldDelete) {
                     return;
                 }
+                var cardAttachmentObjectKeys = extractCardAttachmentObjectKeys(card);
 
                 columns.forEach(function (targetColumn) {
                     var cardIndex = (targetColumn.cards || []).indexOf(card);
@@ -2532,7 +2681,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
 
                 enqueueMutation(function () {
-                    return persistColumns('card:delete', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '' }).catch(function (error) {
+                    return Promise.allSettled(cardAttachmentObjectKeys.map(function (objectKey) {
+                        return requestDeleteAttachmentObject(pageName, objectKey);
+                    })).then(function (results) {
+                        results.forEach(function (result, index) {
+                            if (result.status !== 'fulfilled') {
+                                console.error('[Kanban] failed to delete attachment for deleted card', {
+                                    objectKey: cardAttachmentObjectKeys[index],
+                                    error: result.reason
+                                });
+                            }
+                        });
+                    }).then(function () {
+                        return persistColumns('card:delete', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '' });
+                    }).catch(function (error) {
                         console.error('[Kanban] failed to delete card', error);
                     });
                 });
