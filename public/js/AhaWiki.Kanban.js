@@ -636,6 +636,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var openCardDetail = function () {};
     var openCardDetailById = function () {};
+    var isFileDragEvent = function (evt) {
+        if (!evt || !evt.dataTransfer) {
+            return false;
+        }
+        var dt = evt.dataTransfer;
+        if (dt.files && dt.files.length > 0) {
+            return true;
+        }
+        var types = dt.types ? Array.prototype.slice.call(dt.types) : [];
+        return types.indexOf('Files') >= 0;
+    };
     var getOpenedCardOverlay = function () {
         return document.querySelector('.kanban-card-detail-overlay');
     };
@@ -649,6 +660,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
         var columnElement = document.createElement('div');
+        var pageName = root.getAttribute('data-page-name') || '';
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
         columnElement.setAttribute('data-column-line-number', String(column.lineNumber || 1));
@@ -766,12 +778,22 @@ document.addEventListener('DOMContentLoaded', function () {
             cardList.style.removeProperty('background');
             listDropHint.style.display = 'none';
         };
+        var logDragEvent = function (scope, evt, extra) {
+            var payload = Object.assign({
+                scope: scope,
+                type: evt && evt.type ? evt.type : '',
+                hasFiles: Boolean(evt && evt.dataTransfer && evt.dataTransfer.files && evt.dataTransfer.files.length),
+                fileCount: evt && evt.dataTransfer && evt.dataTransfer.files ? evt.dataTransfer.files.length : 0
+            }, extra || {});
+            console.debug('[Kanban][Drag]', payload);
+        };
 
         cardList.addEventListener('dragenter', function (evt) {
-            if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+            logDragEvent('list', evt, { columnIndex: index, overlayOpen: Boolean(getOpenedCardOverlay()) });
+            if (!isFileDragEvent(evt)) {
                 return;
             }
-            if (getCardDetailOverlay()) {
+            if (getOpenedCardOverlay()) {
                 return;
             }
             evt.preventDefault();
@@ -782,10 +804,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         cardList.addEventListener('dragover', function (evt) {
-            if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+            logDragEvent('list', evt, { columnIndex: index, overlayOpen: Boolean(getOpenedCardOverlay()) });
+            if (!isFileDragEvent(evt)) {
                 return;
             }
-            if (getCardDetailOverlay()) {
+            if (getOpenedCardOverlay()) {
                 return;
             }
             evt.preventDefault();
@@ -799,6 +822,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         cardList.addEventListener('dragleave', function (evt) {
+            logDragEvent('list', evt, { columnIndex: index, relatedTargetInList: Boolean(evt && evt.relatedTarget && cardList.contains(evt.relatedTarget)) });
             if (!evt || (evt.relatedTarget && cardList.contains(evt.relatedTarget))) {
                 return;
             }
@@ -806,6 +830,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         cardList.addEventListener('drop', function (evt) {
+            logDragEvent('list', evt, { columnIndex: index, overlayOpen: Boolean(getOpenedCardOverlay()) });
             if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
                 return;
             }
@@ -821,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!cards.length) {
                     return;
                 }
-                renderColumns();
+                rerenderColumns();
                 enqueueMutation(function () {
                     var targetCard = cards[cards.length - 1];
                     return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: targetCard.id || '', cardTitle: targetCard.text || '' }).catch(function (error) {
@@ -1539,6 +1564,48 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.style.padding = '20px';
             modal.style.boxShadow = '0 20px 48px rgba(9, 30, 66, 0.28)';
             modal.style.border = '1px solid rgba(9, 30, 66, 0.12)';
+            modal.style.position = 'relative';
+            var dragDepthInModal = 0;
+            var dragDepthInOverlay = 0;
+            var modalDropHint = document.createElement('div');
+            modalDropHint.textContent = 'Drop files here to attach to this card';
+            modalDropHint.style.display = 'none';
+            modalDropHint.style.position = 'sticky';
+            modalDropHint.style.top = '0';
+            modalDropHint.style.zIndex = '2';
+            modalDropHint.style.margin = '-8px 0 12px';
+            modalDropHint.style.padding = '10px 12px';
+            modalDropHint.style.border = '1px dashed #0c66e4';
+            modalDropHint.style.borderRadius = '8px';
+            modalDropHint.style.background = 'rgba(12, 102, 228, 0.10)';
+            modalDropHint.style.color = '#0c66e4';
+            modalDropHint.style.fontWeight = '700';
+            modalDropHint.style.fontSize = '12px';
+            var setModalDropFeedback = function (active) {
+                if (active) {
+                    modal.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+                    modal.style.setProperty('outline-offset', '2px', 'important');
+                    modal.style.setProperty('background', '#f7fbff', 'important');
+                    modal.style.setProperty('box-shadow', '0 0 0 4px rgba(12,102,228,0.2), 0 20px 48px rgba(9, 30, 66, 0.28)', 'important');
+                    modalDropHint.style.display = '';
+                    return;
+                }
+                modal.style.removeProperty('outline');
+                modal.style.removeProperty('outline-offset');
+                modal.style.setProperty('background', '#fff');
+                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
+                modalDropHint.style.display = 'none';
+            };
+            var logModalDragEvent = function (scope, evt, extra) {
+                var payload = Object.assign({
+                    scope: scope,
+                    type: evt && evt.type ? evt.type : '',
+                    hasFiles: Boolean(evt && evt.dataTransfer && evt.dataTransfer.files && evt.dataTransfer.files.length),
+                    fileCount: evt && evt.dataTransfer && evt.dataTransfer.files ? evt.dataTransfer.files.length : 0,
+                    cardId: card && card.id ? card.id : ''
+                }, extra || {});
+                console.debug('[Kanban][Drag]', payload);
+            };
 
             var header = document.createElement('div');
             header.style.display = 'flex';
@@ -1995,20 +2062,55 @@ document.addEventListener('DOMContentLoaded', function () {
 
             textarea.addEventListener('paste', handleClipboardImagePaste);
 
-            modal.addEventListener('dragenter', function (evt) {
-                if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+            overlay.addEventListener('dragenter', function (evt) {
+                logModalDragEvent('overlay', evt, { cardId: card.id || '' });
+                if (!isFileDragEvent(evt)) {
+                    return;
+                }
+                dragDepthInOverlay += 1;
+                evt.preventDefault();
+                evt.stopPropagation();
+                setModalDropFeedback(true);
+            });
+
+            overlay.addEventListener('dragover', function (evt) {
+                logModalDragEvent('overlay', evt, { cardId: card.id || '' });
+                if (!isFileDragEvent(evt)) {
                     return;
                 }
                 evt.preventDefault();
                 evt.stopPropagation();
-                modal.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-                modal.style.setProperty('outline-offset', '2px', 'important');
-                modal.style.setProperty('background', '#f7fbff', 'important');
-                modal.style.setProperty('box-shadow', '0 0 0 4px rgba(12,102,228,0.2), 0 20px 48px rgba(9, 30, 66, 0.28)', 'important');
+                if (evt.dataTransfer) {
+                    evt.dataTransfer.dropEffect = 'copy';
+                }
+                setModalDropFeedback(true);
+            });
+
+            overlay.addEventListener('dragleave', function (evt) {
+                logModalDragEvent('overlay', evt, { cardId: card.id || '' });
+                if (!evt || (evt.relatedTarget && overlay.contains(evt.relatedTarget))) {
+                    return;
+                }
+                dragDepthInOverlay = 0;
+                if (dragDepthInOverlay === 0 && dragDepthInModal === 0) {
+                    setModalDropFeedback(false);
+                }
+            });
+
+            modal.addEventListener('dragenter', function (evt) {
+                logModalDragEvent('modal', evt, { cardId: card.id || '' });
+                if (!isFileDragEvent(evt)) {
+                    return;
+                }
+                dragDepthInModal += 1;
+                evt.preventDefault();
+                evt.stopPropagation();
+                setModalDropFeedback(true);
             });
 
             modal.addEventListener('dragover', function (evt) {
-                if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+                logModalDragEvent('modal', evt, { cardId: card.id || '' });
+                if (!isFileDragEvent(evt)) {
                     return;
                 }
                 evt.preventDefault();
@@ -2019,16 +2121,18 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             modal.addEventListener('dragleave', function (evt) {
-                if (!evt || !evt.relatedTarget || modal.contains(evt.relatedTarget)) {
+                logModalDragEvent('modal', evt, { cardId: card.id || '' });
+                if (!evt || (evt.relatedTarget && modal.contains(evt.relatedTarget))) {
                     return;
                 }
-                modal.style.removeProperty('outline');
-                modal.style.removeProperty('outline-offset');
-                modal.style.setProperty('background', '#fff');
-                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
+                dragDepthInModal = 0;
+                if (dragDepthInModal === 0 && dragDepthInOverlay === 0) {
+                    setModalDropFeedback(false);
+                }
             });
 
             modal.addEventListener('drop', function (evt) {
+                logModalDragEvent('modal', evt, { cardId: card.id || '' });
                 if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
                     return;
                 }
@@ -2038,10 +2142,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 evt.preventDefault();
                 evt.stopPropagation();
-                modal.style.removeProperty('outline');
-                modal.style.removeProperty('outline-offset');
-                modal.style.setProperty('background', '#fff');
-                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
+                dragDepthInModal = 0;
+                dragDepthInOverlay = 0;
+                setModalDropFeedback(false);
 
                 attachFilesToCard(pageName, card, files).then(function (updated) {
                     if (!updated) {
@@ -2123,6 +2226,7 @@ document.addEventListener('DOMContentLoaded', function () {
             header.appendChild(titleWrap);
             header.appendChild(headerActions);
             modal.appendChild(header);
+            modal.appendChild(modalDropHint);
             titleEditorWrap.appendChild(titleEditor);
             titleEditorWrap.appendChild(titleSaveButton);
             titleWrap.appendChild(titleEditorWrap);
