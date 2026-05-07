@@ -784,14 +784,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         titleRow.appendChild(title);
         titleRow.appendChild(deleteListButton);
-        columnElement.appendChild(titleRow);
-
         var titleEditor = document.createElement('input');
         titleEditor.type = 'text';
         titleEditor.value = column.title || '';
         titleEditor.className = 'kanban-column-title-editor';
         titleEditor.classList.add('kanban-hidden');
-        columnElement.appendChild(titleEditor);
+
+        titleRow.insertBefore(titleEditor, deleteListButton);
+        columnElement.appendChild(titleRow);
 
         var closeTitleEditor = function () {
             titleEditor.classList.add('kanban-hidden');

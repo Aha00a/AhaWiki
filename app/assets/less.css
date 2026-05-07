@@ -3555,6 +3555,8 @@ kbd:hover > kbd {
 .InterpreterKanban .kanban-column-title {
   font-weight: bold;
   cursor: pointer;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .InterpreterKanban .kanban-icon-button {
   border: none;
@@ -3563,12 +3565,13 @@ kbd:hover > kbd {
   font-size: 14px;
 }
 .InterpreterKanban .kanban-column-title-editor {
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   box-sizing: border-box;
-  margin-bottom: 8px;
   border: 1px solid #b6c2cf;
   border-radius: 4px;
   padding: 6px 8px;
+  margin-right: 8px;
 }
 .InterpreterKanban .kanban-card-list {
   min-height: 20px;
