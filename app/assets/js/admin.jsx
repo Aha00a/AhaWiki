@@ -961,6 +961,16 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => sites.find((site) => String(site.seq) === selectedAccessLogSiteSeq) ?? null,
         [sites, selectedAccessLogSiteSeq],
     );
+    const siteDomainBySeq = useMemo(
+        () => new Map(sites.map((site) => [site.seq, (site.domains ?? []).find((domain) => !!domain) ?? ""])),
+        [sites],
+    );
+    const resolveSiteUrl = useCallback((row) => {
+        const domainFromRow = typeof row.siteDomain === "string" ? row.siteDomain.trim() : "";
+        const domainFromSites = (siteDomainBySeq.get(row.siteSeq) ?? "").trim();
+        const domain = domainFromRow || domainFromSites;
+        return domain ? `https://${domain}` : "";
+    }, [siteDomainBySeq]);
     const isSiteConfigPage = page === "site-config";
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
@@ -1664,7 +1674,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
                     recentChanges.map((row) => {
-                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const siteUrl = resolveSiteUrl(row);
                         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                         const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
                         const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
@@ -1882,7 +1892,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 {makeTable(
                     ["Rank", "Site", "Page", "Views", "Last Viewed"],
                     topViewedPages.slice(0, 30).map((row, index) => {
-                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const siteUrl = resolveSiteUrl(row);
                         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
                         return [
                             index + 1,
@@ -1905,7 +1915,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
                     recentChanges.map((row) => {
-                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const siteUrl = resolveSiteUrl(row);
                         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                         const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
                         const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";

@@ -786,6 +786,7 @@ class Api @Inject()(
         case class AdminRecentChange(
           siteSeq: Long,
           siteName: String,
+          siteDomain: Option[String],
           name: String,
           revision: Long,
           dateTime: String,
@@ -804,6 +805,7 @@ class Api @Inject()(
           SELECT
             P.site AS site_seq,
             S.name AS site_name,
+            SD.site_domain,
             P.name,
             P.revision,
             DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
@@ -813,14 +815,20 @@ class Api @Inject()(
             P.isMinorEdit
           FROM Page P
           INNER JOIN Site S ON S.seq = P.site
+          LEFT JOIN (
+            SELECT site, MIN(domain) AS site_domain
+            FROM SiteDomain
+            GROUP BY site
+          ) SD ON SD.site = P.site
           LEFT JOIN User U ON U.seq = P.user
           ORDER BY P.dateTime DESC
           LIMIT $limit
-        """.as((long("site_seq") ~ str("site_name") ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
-          case siteSeq ~ siteName ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
+        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
+          case siteSeq ~ siteName ~ siteDomain ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
             AdminRecentChange(
               siteSeq = siteSeq,
               siteName = siteName,
+              siteDomain = siteDomain,
               name = name,
               revision = revision,
               dateTime = dateTime,

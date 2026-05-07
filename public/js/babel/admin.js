@@ -1086,6 +1086,16 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     () => sites.find((site) => String(site.seq) === selectedAccessLogSiteSeq) ?? null,
     [sites, selectedAccessLogSiteSeq]
   );
+  const siteDomainBySeq = useMemo2(
+    () => new Map(sites.map((site) => [site.seq, (site.domains ?? []).find((domain) => !!domain) ?? ""])),
+    [sites]
+  );
+  const resolveSiteUrl = useCallback((row) => {
+    const domainFromRow = typeof row.siteDomain === "string" ? row.siteDomain.trim() : "";
+    const domainFromSites = (siteDomainBySeq.get(row.siteSeq) ?? "").trim();
+    const domain = domainFromRow || domainFromSites;
+    return domain ? `https://${domain}` : "";
+  }, [siteDomainBySeq]);
   const isSiteConfigPage = page === "site-config";
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
@@ -1517,7 +1527,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     )), makeTable(
       ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
       recentChanges.map((row) => {
-        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+        const siteUrl = resolveSiteUrl(row);
         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
         const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
         const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
@@ -1664,7 +1674,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React5.createElement(Badge4, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 30))), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC5EC\uBD80\uC640 \uC0C1\uAD00\uC5C6\uC774 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C 30\uAC1C\uC785\uB2C8\uB2E4."), makeTable(
     ["Rank", "Site", "Page", "Views", "Last Viewed"],
     topViewedPages.slice(0, 30).map((row, index) => {
-      const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+      const siteUrl = resolveSiteUrl(row);
       const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
       return [
         index + 1,
@@ -1677,7 +1687,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
     recentChanges.map((row) => {
-      const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+      const siteUrl = resolveSiteUrl(row);
       const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
       const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
       const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
