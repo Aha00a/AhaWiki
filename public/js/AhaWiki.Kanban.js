@@ -198,6 +198,97 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
+
+    var requestUploadAttachmentFile = function (pageName, file) {
+        if (!pageName || !file) {
+            return Promise.resolve(null);
+        }
+
+        return fetch('/api/csrf', {
+            credentials: 'same-origin'
+        }).then(function (csrfResponse) {
+            return csrfResponse.json().catch(function () {
+                return {};
+            });
+        }).then(function (csrfToken) {
+            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+            var formData = new FormData();
+            formData.append('csrfToken', tokenValue);
+            formData.append('pageName', pageName);
+            formData.append('file', file, file.name || 'attachment');
+
+            return fetch('/api/uploadAttachment', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Csrf-Token': tokenValue,
+                    'X-CSRF-Token': tokenValue
+                },
+                body: formData
+            }).then(function (response) {
+                return response.json().catch(function () {
+                    return {};
+                }).then(function (payload) {
+                    if (!response.ok) {
+                        throw new Error(payload.error || payload.message || 'Failed to upload attachment.');
+                    }
+                    return payload;
+                });
+            });
+        });
+    };
+
+
+    var attachFilesToCard = function (pageName, card, files) {
+        if (!pageName || !card || !Array.isArray(files) || files.length === 0) {
+            return Promise.resolve(false);
+        }
+        return Promise.all(files.map(function (file) {
+            return requestUploadAttachmentFile(pageName, file).then(function (payload) {
+                var macro = payload && payload.attachmentMacro ? payload.attachmentMacro : '';
+                if (!macro) {
+                    throw new Error('Missing attachment macro.');
+                }
+                card.properties = card.properties || {};
+                card.properties.Attachment = card.properties.Attachment || [];
+                card.properties.Attachment.push(macro);
+                card.comments = card.comments || [];
+                card.comments.unshift(buildCommentEntry([macro]));
+            });
+        })).then(function () { return true; });
+    };
+
+    var createCardsFromFiles = function (pageName, list, files) {
+        if (!pageName || !list || !Array.isArray(files) || files.length === 0) {
+            return Promise.resolve([]);
+        }
+        return Promise.all(files.map(function (file) {
+            return requestUploadAttachmentFile(pageName, file).then(function (payload) {
+                var macro = payload && payload.attachmentMacro ? payload.attachmentMacro : '';
+                if (!macro) {
+                    throw new Error('Missing attachment macro.');
+                }
+                var fileName = (file && file.name ? file.name : '').trim() || 'Untitled';
+                var newCard = {
+                    id: generateCardId(),
+                    text: fileName,
+                    comments: [buildCommentEntry([macro])],
+                    properties: {
+                        Creator: ['[User:' + getCurrentAuthor() + ']'],
+                        dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())],
+                        Attachment: [macro]
+                    }
+                };
+                prependCardActivity(newCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: newCard.id, cardTitle: newCard.text || '' }))]);
+                return newCard;
+            });
+        })).then(function (cards) {
+            list.cards = list.cards || [];
+            cards.forEach(function (newCard) { list.cards.push(newCard); });
+            return cards;
+        });
+    };
+
     var requestRenderInlineComment = function (pageName, comment) {
         if (!pageName) {
             return Promise.resolve('');
@@ -655,7 +746,93 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var cardList = document.createElement('div');
         cardList.className = 'kanban-card-list';
+        cardList.setAttribute('data-column-index', String(index));
 
+        var listDropHint = document.createElement('div');
+        listDropHint.textContent = 'Drop files here to create cards';
+        listDropHint.style.display = 'none';
+        listDropHint.style.padding = '8px 10px';
+        listDropHint.style.marginBottom = '8px';
+        listDropHint.style.border = '1px dashed #0c66e4';
+        listDropHint.style.borderRadius = '6px';
+        listDropHint.style.background = 'rgba(12, 102, 228, 0.08)';
+        listDropHint.style.color = '#0c66e4';
+        listDropHint.style.fontSize = '12px';
+        listDropHint.style.fontWeight = '600';
+        cardList.insertBefore(listDropHint, cardList.firstChild);
+
+        var resetListDropFeedback = function () {
+            cardList.style.removeProperty('outline');
+            cardList.style.removeProperty('background');
+            listDropHint.style.display = 'none';
+        };
+
+        cardList.addEventListener('dragenter', function (evt) {
+            if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+                return;
+            }
+            if (getCardDetailOverlay()) {
+                return;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            cardList.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+            cardList.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+            listDropHint.style.display = '';
+        });
+
+        cardList.addEventListener('dragover', function (evt) {
+            if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+                return;
+            }
+            if (getCardDetailOverlay()) {
+                return;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (evt.dataTransfer) {
+                evt.dataTransfer.dropEffect = 'copy';
+            }
+            cardList.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+            cardList.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+            listDropHint.style.display = '';
+        });
+
+        cardList.addEventListener('dragleave', function (evt) {
+            if (!evt || (evt.relatedTarget && cardList.contains(evt.relatedTarget))) {
+                return;
+            }
+            resetListDropFeedback();
+        });
+
+        cardList.addEventListener('drop', function (evt) {
+            if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
+                return;
+            }
+            var files = Array.prototype.slice.call(evt.dataTransfer.files || []).filter(function (file) { return Boolean(file); });
+            if (!files.length) {
+                return;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            resetListDropFeedback();
+
+            createCardsFromFiles(pageName, column, files).then(function (cards) {
+                if (!cards.length) {
+                    return;
+                }
+                renderColumns();
+                enqueueMutation(function () {
+                    var targetCard = cards[cards.length - 1];
+                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: targetCard.id || '', cardTitle: targetCard.text || '' }).catch(function (error) {
+                        console.error('[Kanban] failed to save dropped file cards', error);
+                    });
+                });
+            }).catch(function (error) {
+                console.error('[Kanban] failed to create dropped file cards', error);
+                alert('File upload failed. ' + (error && error.message ? error.message : ''));
+            });
+        });
 
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
@@ -1817,6 +1994,73 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             textarea.addEventListener('paste', handleClipboardImagePaste);
+
+            modal.addEventListener('dragenter', function (evt) {
+                if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+                    return;
+                }
+                evt.preventDefault();
+                evt.stopPropagation();
+                modal.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+                modal.style.setProperty('outline-offset', '2px', 'important');
+                modal.style.setProperty('background', '#f7fbff', 'important');
+                modal.style.setProperty('box-shadow', '0 0 0 4px rgba(12,102,228,0.2), 0 20px 48px rgba(9, 30, 66, 0.28)', 'important');
+            });
+
+            modal.addEventListener('dragover', function (evt) {
+                if (!evt || !evt.dataTransfer || !evt.dataTransfer.files || !evt.dataTransfer.files.length) {
+                    return;
+                }
+                evt.preventDefault();
+                evt.stopPropagation();
+                if (evt.dataTransfer) {
+                    evt.dataTransfer.dropEffect = 'copy';
+                }
+            });
+
+            modal.addEventListener('dragleave', function (evt) {
+                if (!evt || !evt.relatedTarget || modal.contains(evt.relatedTarget)) {
+                    return;
+                }
+                modal.style.removeProperty('outline');
+                modal.style.removeProperty('outline-offset');
+                modal.style.setProperty('background', '#fff');
+                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
+            });
+
+            modal.addEventListener('drop', function (evt) {
+                if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
+                    return;
+                }
+                var files = Array.prototype.slice.call(evt.dataTransfer.files || []).filter(function (file) { return Boolean(file); });
+                if (!files.length) {
+                    return;
+                }
+                evt.preventDefault();
+                evt.stopPropagation();
+                modal.style.removeProperty('outline');
+                modal.style.removeProperty('outline-offset');
+                modal.style.setProperty('background', '#fff');
+                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
+
+                attachFilesToCard(pageName, card, files).then(function (updated) {
+                    if (!updated) {
+                        return;
+                    }
+                    updateCardCommentCount(card);
+                    renderComments();
+                    renderProperties();
+                    renderColumns();
+                    enqueueMutation(function () {
+                        return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: '[Attachment Drop x' + files.length + ']' }).catch(function (error) {
+                            console.error('[Kanban] failed to save dropped attachments', error);
+                        });
+                    });
+                }).catch(function (error) {
+                    console.error('[Kanban] failed to attach dropped files', error);
+                    alert('File upload failed. ' + (error && error.message ? error.message : ''));
+                });
+            });
 
             submit.addEventListener('click', function () {
                 var body = (textarea.value || '').trim();
