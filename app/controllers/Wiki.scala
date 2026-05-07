@@ -57,6 +57,8 @@ import scala.util.matching.Regex
 import java.util.Base64
 import java.util.UUID
 import scala.collection.concurrent.TrieMap
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
 
 class Wiki @Inject()(implicit val
@@ -157,6 +159,30 @@ controllerComponents: ControllerComponents,
     result.getObjectSummaries.asScala.toSeq
       .map(_.getKey)
       .filter(key => key != null && key.nonEmpty && !key.endsWith("/"))
+  }
+
+  private def deletePageAttachments(siteSeq: Long, pageName: String)
+                                   (implicit connection: Connection): Either[String, Unit] = {
+    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+    val amazonS3 = buildAmazonS3Client()
+    val objectKeysFromDb = Attachment.selectObjectKeysByPage(siteSeq, pageName)
+    val objectKeysFromS3 = listPageAttachmentObjectKeysFromS3(siteSeq, pageName)
+    val objectKeys = (objectKeysFromDb ++ objectKeysFromS3).map(_.trim).filter(_.nonEmpty).distinct
+
+    val failedObjectKeys = objectKeys.flatMap { objectKey =>
+      Try(amazonS3.deleteObject(bucket, objectKey)) match {
+        case Success(_) => None
+        case Failure(error) =>
+          logger.error(s"deletePageAttachments failed. pageName=$pageName objectKey=$objectKey", error)
+          Some(objectKey)
+      }
+    }
+    if (failedObjectKeys.nonEmpty) {
+      Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
+    } else {
+      objectKeys.foreach(Attachment.markDeleted)
+      Right(())
+    }
   }
 
   private def getWritablePageContext(pageName: String)
@@ -621,9 +647,14 @@ controllerComponents: ControllerComponents,
           if (WikiPermission().isWritable(PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
-
-            Page.deleteWithRelatedData(name)
-            Ok("")
+            deletePageAttachments(site.seq, name) match {
+              case Left(error) =>
+                logger.error(error)
+                throw new RuntimeException(error)
+              case Right(_) =>
+                Page.deleteWithRelatedData(name)
+                Ok("")
+            }
           } else {
             Forbidden("")
           }

@@ -142,4 +142,14 @@ object Attachment {
       WHERE objectKey = $objectKey
     """.executeUpdate()
   }
+
+  def selectObjectKeysByPage(siteSeq: Long, pageName: String)(implicit connection: Connection): Seq[String] = {
+    SQL"""
+      SELECT objectKey
+      FROM Attachment
+      WHERE site = $siteSeq
+        AND pageName = $pageName
+        AND dateDeleted IS NULL
+    """.as(str("objectKey").*)
+  }
 }
