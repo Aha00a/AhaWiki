@@ -2131,8 +2131,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            modal.addEventListener('drop', function (evt) {
-                logModalDragEvent('modal', evt, { cardId: card.id || '' });
+            var handleModalFileDrop = function (evt, source) {
+                logModalDragEvent(source, evt, { cardId: card.id || '' });
                 if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
                     return;
                 }
@@ -2163,6 +2163,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('[Kanban] failed to attach dropped files', error);
                     alert('File upload failed. ' + (error && error.message ? error.message : ''));
                 });
+            };
+
+            overlay.addEventListener('drop', function (evt) {
+                handleModalFileDrop(evt, 'overlay');
+            });
+
+            modal.addEventListener('drop', function (evt) {
+                handleModalFileDrop(evt, 'modal');
             });
 
             submit.addEventListener('click', function () {
