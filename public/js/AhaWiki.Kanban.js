@@ -1027,8 +1027,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 rerenderColumns();
                 enqueueMutation(function () {
-                    var targetCard = cards[cards.length - 1];
-                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: targetCard.id || '', cardTitle: targetCard.text || '' }).catch(function (error) {
+                    var firstCard = cards[0] || {};
+                    var revisionCardTitle = cards.length === 1 ? (firstCard.text || '') : ((firstCard.text || '') + ' and ' + String(cards.length - 1) + ' more cards');
+                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: firstCard.id || '', cardTitle: revisionCardTitle }).catch(function (error) {
                         console.error('[Kanban] failed to save dropped file cards', error);
                     });
                 });
@@ -1191,10 +1192,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 var firstCard = createdCards[0] || {};
+                var revisionCardTitle = titles.length === 1 ? (firstCard.text || '') : ((firstCard.text || '') + ' and ' + String(titles.length - 1) + ' more cards');
                 return persistColumns('card:add', {
                     eventPrefix: 'User:' + getCurrentAuthor(),
                     cardId: firstCard.id || '',
-                    cardTitle: titles.length === 1 ? (firstCard.text || '') : ((firstCard.text || '') + ' and ' + String(titles.length - 1) + ' other cards')
+                    cardTitle: revisionCardTitle
                 })
                     .then(function (result) {
                         rerenderColumns();
@@ -1697,8 +1699,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 rerenderColumns();
                 enqueueMutation(function () {
-                    var targetCard = cards[cards.length - 1];
-                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: targetCard.id || '', cardTitle: targetCard.text || '' }).catch(function (error) {
+                    var firstCard = cards[0] || {};
+                    var revisionCardTitle = cards.length === 1 ? (firstCard.text || '') : ((firstCard.text || '') + ' and ' + String(cards.length - 1) + ' more cards');
+                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: firstCard.id || '', cardTitle: revisionCardTitle }).catch(function (error) {
                         console.error('[Kanban] failed to save dropped file cards from board', error);
                     });
                 });
