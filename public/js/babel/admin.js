@@ -533,7 +533,7 @@ function useAdminData(page) {
       fetchJson2("/api/Admin/Schedulers"),
       fetchJson2("/api/Admin/DailyStats"),
       fetchJson2("/api/Admin/RecentChanges?n=30"),
-      fetchJson2("/api/Admin/TopViewedPages?n=20")
+      fetchJson2("/api/Admin/TopViewedPages?n=30")
     ]);
     const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
     setSites(siteData);
@@ -1655,9 +1655,9 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }
       ]
     }
-  )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React5.createElement(Badge4, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 10))), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC0AC\uC6A9\uC790 \uAE30\uC900 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C\uC785\uB2C8\uB2E4. \uD575\uC2EC 10\uAC1C\uB9CC \uD45C\uC2DC\uD569\uB2C8\uB2E4."), makeTable(
+  )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React5.createElement(Badge4, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 30))), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC5EC\uBD80\uC640 \uC0C1\uAD00\uC5C6\uC774 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C 30\uAC1C\uC785\uB2C8\uB2E4."), makeTable(
     ["Rank", "Site", "Page", "Views", "Last Viewed"],
-    topViewedPages.slice(0, 10).map((row, index) => {
+    topViewedPages.slice(0, 30).map((row, index) => {
       const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
       const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
       return [

@@ -382,7 +382,7 @@ function useAdminData(page) {
             fetchJson("/api/Admin/Schedulers"),
             fetchJson("/api/Admin/DailyStats"),
             fetchJson("/api/Admin/RecentChanges?n=30"),
-            fetchJson("/api/Admin/TopViewedPages?n=20"),
+            fetchJson("/api/Admin/TopViewedPages?n=30"),
         ]);
         const allUserRows = Array.isArray(allUserData?.array)
             ? allUserData.array
@@ -1868,14 +1868,14 @@ function AdminContent({page, onNavigate, pathname, search}) {
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
                     <Title order={3}>Most Viewed Pages</Title>
-                    <Badge color="pink" variant="light">{Math.min(topViewedPages.length, 10)}</Badge>
+                    <Badge color="pink" variant="light">{Math.min(topViewedPages.length, 30)}</Badge>
                 </Group>
                 <Text size="sm" c="dimmed" mb="md">
-                    로그인 사용자 기준 페이지 조회 누적 상위 문서입니다. 핵심 10개만 표시합니다.
+                    로그인 여부와 상관없이 페이지 조회 누적 상위 문서 30개입니다.
                 </Text>
                 {makeTable(
                     ["Rank", "Site", "Page", "Views", "Last Viewed"],
-                    topViewedPages.slice(0, 10).map((row, index) => {
+                    topViewedPages.slice(0, 30).map((row, index) => {
                         const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
                         const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
                         return [
