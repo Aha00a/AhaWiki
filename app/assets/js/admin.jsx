@@ -1663,15 +1663,21 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Group>
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
-                    recentChanges.map((row) => [
-                        row.dateTime,
-                        `${row.siteName} (#${row.siteSeq})`,
-                        row.name,
-                        row.revision,
-                        row.nickname ?? "-",
-                        row.comment || "-",
-                        row.remoteAddress,
-                    ]),
+                    recentChanges.map((row) => {
+                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+                        const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+                        const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
+                        return [
+                            row.dateTime,
+                            siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`,
+                            pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name,
+                            revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision,
+                            editorUrl ? <Anchor href={editorUrl}>{row.nickname}</Anchor> : (row.nickname ?? "-"),
+                            row.comment || "-",
+                            row.remoteAddress,
+                        ];
+                    }),
                 )}
             </Card>
         );
@@ -1898,14 +1904,20 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Text>
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-                    recentChanges.map((row) => [
-                        row.dateTime,
-                        `${row.siteName} (#${row.siteSeq})`,
-                        row.name,
-                        row.revision,
-                        row.nickname ?? "-",
-                        row.comment || "-",
-                    ]),
+                    recentChanges.map((row) => {
+                        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+                        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+                        const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+                        const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
+                        return [
+                            row.dateTime,
+                            siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`,
+                            pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name,
+                            revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision,
+                            editorUrl ? <Anchor href={editorUrl}>{row.nickname}</Anchor> : (row.nickname ?? "-"),
+                            row.comment || "-",
+                        ];
+                    }),
                 )}
             </Card>
         </Stack>

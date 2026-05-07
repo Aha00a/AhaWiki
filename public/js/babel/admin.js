@@ -1516,15 +1516,21 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       "\uC870\uD68C"
     )), makeTable(
       ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
-      recentChanges.map((row) => [
-        row.dateTime,
-        `${row.siteName} (#${row.siteSeq})`,
-        row.name,
-        row.revision,
-        row.nickname ?? "-",
-        row.comment || "-",
-        row.remoteAddress
-      ])
+      recentChanges.map((row) => {
+        const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+        const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+        const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
+        return [
+          row.dateTime,
+          siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
+          pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name,
+          revisionUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision,
+          editorUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: editorUrl }, row.nickname) : row.nickname ?? "-",
+          row.comment || "-",
+          row.remoteAddress
+        ];
+      })
     ));
   }
   if (page === "access-logs") {
@@ -1670,14 +1676,20 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     })
   )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-    recentChanges.map((row) => [
-      row.dateTime,
-      `${row.siteName} (#${row.siteSeq})`,
-      row.name,
-      row.revision,
-      row.nickname ?? "-",
-      row.comment || "-"
-    ])
+    recentChanges.map((row) => {
+      const siteUrl = row.siteDomain ? `https://${row.siteDomain}` : "";
+      const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+      const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+      const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
+      return [
+        row.dateTime,
+        siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
+        pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name,
+        revisionUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision,
+        editorUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: editorUrl }, row.nickname) : row.nickname ?? "-",
+        row.comment || "-"
+      ];
+    })
   )));
 }
 function AdminApp({ initialPage }) {
