@@ -64,7 +64,7 @@
                             <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td>@if(history.isMinorEdit){Y}else{N}</td>
-                            <td>@(history.comment)</td>
+                            <td>@Html(logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(history.comment))</td>
                         </tr>
                     }
                 </table>
