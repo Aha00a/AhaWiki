@@ -317,6 +317,108 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     };
 
+
+    var clampRenderedInlineImages = function (container) {
+        if (!container || !container.querySelectorAll) {
+            return;
+        }
+        Array.prototype.forEach.call(container.querySelectorAll('img'), function (img) {
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.maxHeight = '320px';
+            img.style.objectFit = 'contain';
+        });
+    };
+
+    var openKanbanImageLightbox = function (imageUrl, imageAlt) {
+        if (!imageUrl) {
+            return;
+        }
+        var existing = document.querySelector('.kanban-image-lightbox-overlay');
+        if (existing && existing.parentNode) {
+            existing.parentNode.removeChild(existing);
+        }
+        var overlay = document.createElement('div');
+        overlay.className = 'kanban-image-lightbox-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.left = '0';
+        overlay.style.top = '0';
+        overlay.style.right = '0';
+        overlay.style.bottom = '0';
+        overlay.style.background = 'rgba(9, 30, 66, 0.78)';
+        overlay.style.zIndex = '10001';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.padding = '24px';
+        overlay.style.cursor = 'zoom-out';
+
+        var image = document.createElement('img');
+        image.src = imageUrl;
+        image.alt = imageAlt || '';
+        image.style.maxWidth = 'min(92vw, 1400px)';
+        image.style.maxHeight = '92vh';
+        image.style.width = 'auto';
+        image.style.height = 'auto';
+        image.style.objectFit = 'contain';
+        image.style.borderRadius = '8px';
+        image.style.boxShadow = '0 12px 36px rgba(9, 30, 66, 0.45)';
+
+        overlay.appendChild(image);
+        overlay.addEventListener('click', function () {
+            if (overlay.parentNode) {
+                overlay.parentNode.removeChild(overlay);
+            }
+        });
+        document.body.appendChild(overlay);
+    };
+
+    var enableInlineImageLightbox = function (container) {
+        if (!container || !container.querySelectorAll) {
+            return;
+        }
+        Array.prototype.forEach.call(container.querySelectorAll('img'), function (img) {
+            var sourceUrl = img.currentSrc || img.src || '';
+            if (!sourceUrl || img.getAttribute('data-kanban-lightbox-bound') === '1') {
+                return;
+            }
+            img.setAttribute('data-kanban-lightbox-bound', '1');
+            if (!img.style.cursor) {
+                img.style.cursor = 'zoom-in';
+            }
+            img.addEventListener('click', function (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+                openKanbanImageLightbox(sourceUrl, img.alt || 'Attachment');
+            });
+        });
+    };
+
+    var enhanceAttachmentPropertyPreview = function (container) {
+        if (!container || !container.querySelectorAll) {
+            return;
+        }
+        Array.prototype.forEach.call(container.querySelectorAll('img'), function (img) {
+            var sourceUrl = img.currentSrc || img.src || '';
+            img.style.width = '120px';
+            img.style.maxWidth = '100%';
+            img.style.height = '80px';
+            img.style.maxHeight = '80px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            img.style.border = '1px solid #d0d7de';
+            img.style.cursor = sourceUrl ? 'zoom-in' : 'default';
+            img.style.background = '#fff';
+            img.style.padding = '0';
+            img.style.margin = '0';
+        });
+        container.style.display = 'grid';
+        container.style.gridTemplateColumns = 'repeat(auto-fill, minmax(120px, 1fr))';
+        container.style.gap = '8px';
+        container.style.paddingLeft = '8px';
+        enableInlineImageLightbox(container);
+    };
+
     var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta, retryCount) {
         if (!pageName) {
             return Promise.resolve(null);
@@ -2031,6 +2133,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (Array.isArray(values)) {
                         label.style.marginBottom = '4px';
                         row.appendChild(label);
+                        var attachmentGrid = null;
+                        if (key === 'Attachment') {
+                            attachmentGrid = document.createElement('div');
+                            row.appendChild(attachmentGrid);
+                        }
                         values.forEach(function (value) {
                             var displayValue = value;
                             if (key === 'Creator') {
@@ -2043,11 +2150,20 @@ document.addEventListener('DOMContentLoaded', function () {
                             valueRow.style.fontSize = '13px';
                             valueRow.style.color = '#172b4d';
                             valueRow.style.paddingLeft = '8px';
-                            row.appendChild(valueRow);
+                            if (attachmentGrid) {
+                                valueRow.style.paddingLeft = '0';
+                                attachmentGrid.appendChild(valueRow);
+                            } else {
+                                row.appendChild(valueRow);
+                            }
 
                             requestRenderInlineComment(pageName, displayValue).then(function (html) {
                                 if (html) {
                                     valueRow.innerHTML = html;
+                                    clampRenderedInlineImages(valueRow);
+                                    if (key === 'Attachment') {
+                                        enhanceAttachmentPropertyPreview(attachmentGrid || valueRow);
+                                    }
                                 }
                             }).catch(function (error) {
                                 console.error('[Kanban] failed to render property value', error);
@@ -2078,6 +2194,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         requestRenderInlineComment(pageName, displayValue).then(function (html) {
                             if (html) {
                                 valueRow.innerHTML = html;
+                                    clampRenderedInlineImages(valueRow);
+                                if (key === 'Attachment') {
+                                    enhanceAttachmentPropertyPreview(valueRow);
+                                }
                             }
                         }).catch(function (error) {
                             console.error('[Kanban] failed to render property value', error);
@@ -2165,6 +2285,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     requestRenderInlineComment(pageName, displayHeader).then(function (html) {
                         if (html) {
                             header.innerHTML = html;
+                            clampRenderedInlineImages(header);
+                            enableInlineImageLightbox(header);
                         }
                     }).catch(function (error) {
                         console.error('[Kanban] failed to render comment header', error);
@@ -2181,6 +2303,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         requestRenderInlineComment(pageName, detailLine).then(function (html) {
                             if (html) {
                                 detailRow.innerHTML = html;
+                                clampRenderedInlineImages(detailRow);
+                                enableInlineImageLightbox(detailRow);
                             }
                         }).catch(function (error) {
                             console.error('[Kanban] failed to render comment detail', error);
