@@ -112,28 +112,28 @@ document.addEventListener('DOMContentLoaded', function () {
     var buildKanbanSaveComment = function (actionType, actionMeta) {
         var eventPrefix = normalizeEventPrefixForRevisionComment(getActionMetaValue(actionMeta, 'eventPrefix'));
         if (!eventPrefix) {
-            return 'Kanban - ' + (actionType || 'save');
+            return `Kanban - ${actionType || 'Save'}`;
         }
         var pageName = getActionMetaValue(actionMeta, 'pageName');
         var cardId = getActionMetaValue(actionMeta, 'cardId');
         var cardTitle = getActionMetaValue(actionMeta, 'cardTitle');
         switch (actionType) {
-            case 'list:add': return "Kanban - " + eventPrefix + " - List Add - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "'''";
-            case 'list:rename': return "Kanban - " + eventPrefix + " - List Rename - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60) + "''' to '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60) + "'''";
-            case 'list:move': return "Kanban - " + eventPrefix + " - List Move - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "''' Order - " + getActionMetaValue(actionMeta, 'fromOrder') + " -> " + getActionMetaValue(actionMeta, 'toOrder');
-            case 'list:delete': return "Kanban - " + eventPrefix + " - List Delete - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60) + "'''";
-            case 'card:add': return 'Kanban - ' + eventPrefix + ' - Card Add - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60));
-            case 'card:rename': return 'Kanban - ' + eventPrefix + ' - Card Rename - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)) + ' to ' + buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60));
+            case 'list:add': return `Kanban - ${eventPrefix} - List Add - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}'''`;
+            case 'list:rename': return `Kanban - ${eventPrefix} - List Rename - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)}''' to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60)}'''`;
+            case 'list:move': return `Kanban - ${eventPrefix} - List Move - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}''' Order - ${getActionMetaValue(actionMeta, 'fromOrder')} -> ${getActionMetaValue(actionMeta, 'toOrder')}`;
+            case 'list:delete': return `Kanban - ${eventPrefix} - List Delete - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}'''`;
+            case 'card:add': return `Kanban - ${eventPrefix} - Card Add - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))}`;
+            case 'card:rename': return `Kanban - ${eventPrefix} - Card Rename - ${buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60))} to ${buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60))}`;
             case 'card:move':
                 if (truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) !== truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)) {
-                    return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + " - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) + "''' to '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) + "'''";
+                    return `Kanban - ${eventPrefix} - Card Move - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60)}''' to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)}'''`;
                 }
                 return `Kanban - ${eventPrefix} - Card Move - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} Order - '''${getActionMetaValue(actionMeta, 'fromOrder')}''' -> '''${getActionMetaValue(actionMeta, 'toOrder')}'''`;
-            case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60));
-            case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
-            case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40) + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
-            default: return 'Kanban - ' + (actionType || 'save');
+            case 'card:delete': return `Kanban - ${eventPrefix} - Card Delete - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))}`;
+            case 'card:comment:add': return `Kanban - ${eventPrefix} - Card Comment Add - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'))}`;
+            case 'card:property:update': return `Kanban - ${eventPrefix} - Card Property Update - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40)} - ${serializePropertyValueForRevision(actionMeta && actionMeta.value)}`;
         }
+        return `Kanban - ${actionType || 'Save'}`;
     };
     if (typeof window !== 'undefined') {
         window.__AhaWikiKanbanTestHooks = Object.assign({}, window.__AhaWikiKanbanTestHooks || {}, {
