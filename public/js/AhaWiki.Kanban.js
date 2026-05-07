@@ -1517,6 +1517,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             backgroundDragState.active = false;
+            board.classList.remove('kanban-dragging');
             board.classList.add('kanban-draggable');
             board.style.userSelect = '';
             document.body.style.userSelect = '';
