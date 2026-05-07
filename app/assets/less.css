@@ -3131,20 +3131,46 @@ kbd:hover > kbd {
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f8fafc;
+  gap: 12px 20px;
+  padding: 14px 16px;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
   margin-bottom: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
-.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form label {
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-control {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
-  color: #1f2937;
+  padding: 5px;
+}
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-control .label-text {
+  color: #334155;
+  font-weight: 600;
+}
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-control input[type="number"] {
+  width: 86px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 13px;
+}
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-control.is-checkbox {
+  padding-right: 12px;
 }
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form button {
   border: 0;

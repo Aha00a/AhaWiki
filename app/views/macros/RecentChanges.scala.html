@@ -11,15 +11,17 @@
         </div>
     } else {
         <form id="macro-recent-changes-form-@id" class="macro-recent-changes-form">
-            <label>
-                <input type="checkbox" name="includeMinorEdit">
-                Include minor edits
-            </label>
-            <label>
-                Limit
-                <input type="number" name="limit" min="1" max="1000" value="@limit.getOrElse(100)">
-            </label>
-            <button type="submit">Load</button>
+            <div class="macro-recent-changes-form-controls">
+                <label class="macro-recent-changes-form-control">
+                    <span class="label-text">Limit</span>
+                    <input type="number" name="limit" min="1" max="1000" value="@limit.getOrElse(100)">
+                </label>
+                <label class="macro-recent-changes-form-control is-checkbox">
+                    <input type="checkbox" name="includeMinorEdit">
+                    <span>Include minor edits</span>
+                </label>
+                <button type="submit">Load</button>
+            </div>
         </form>
         <div id="macro-recent-changes-@id" class="macro-recent-changes">
             <div class="macro-recent-changes-status">Click Load to fetch recent changes.</div>
