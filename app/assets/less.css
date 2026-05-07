@@ -3171,6 +3171,18 @@ kbd:hover > kbd {
   font-size: 14px;
   background: #f9fafb;
 }
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-status.is-loading::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 8px;
+  border: 2px solid #cbd5e1;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: recentChangesSpin 0.8s linear infinite;
+}
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -3472,6 +3484,14 @@ kbd:hover > kbd {
 }
 .AhaWiki .WikiColumns > :first-child > :first-child > :first-child {
   margin-top: 0;
+}
+@keyframes recentChangesSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .Test.gradient table {
   border-collapse: collapse;

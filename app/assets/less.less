@@ -1948,6 +1948,19 @@ kbd {
 						color: #4b5563;
 						font-size: 14px;
 						background: #f9fafb;
+
+						&.is-loading::before {
+							content: "";
+							display: inline-block;
+							width: 14px;
+							height: 14px;
+							margin-right: 8px;
+							border: 2px solid #cbd5e1;
+							border-top-color: #2563eb;
+							border-radius: 50%;
+							vertical-align: -2px;
+							animation: recentChangesSpin 0.8s linear infinite;
+						}
 					}
 
 					.macro-recent-changes-table-wrap {
@@ -2101,6 +2114,16 @@ kbd {
 		}
 	}
 }
+
+@keyframes recentChangesSpin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
 .Test {
 	&.gradient {
 		table {

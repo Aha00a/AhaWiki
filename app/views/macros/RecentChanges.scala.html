@@ -131,12 +131,17 @@
                     table.style.display = "";
                 }
 
+                function setLoading(status, isLoading) {
+                    status.classList.toggle("is-loading", !!isLoading);
+                }
+
                 function load(container, includeMinorEdit, limit) {
                     var status = container.querySelector('.macro-recent-changes-status');
                     var table = container.querySelector('.macro-recent-changes-table');
                     status.textContent = "Loading recent changes...";
                     status.style.display = "";
                     table.style.display = "none";
+                    setLoading(status, true);
                     fetch("/api/change?name=" + encodeURIComponent("@wikiContext.name") + "&includeMinorEdit=" + includeMinorEdit + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
                             .then(function (res) {
                                 if (!res.ok) throw new Error("HTTP " + res.status);
@@ -144,8 +149,10 @@
                             })
                             .then(function (rows) {
                                 render(container, rows || []);
+                                setLoading(status, false);
                             })
                             .catch(function (e) {
+                                setLoading(status, false);
                                 status.textContent = "Failed to load recent changes. " + e;
                             });
                 }
@@ -159,6 +166,13 @@
                         var rawLimit = form.limit && form.limit.value ? form.limit.value : "100";
                         load(container, includeMinorEdit, rawLimit);
                     });
+                    if (form.includeMinorEdit) {
+                        form.includeMinorEdit.addEventListener("change", function () {
+                            var includeMinorEdit = form.includeMinorEdit.checked ? "1" : "0";
+                            var rawLimit = form.limit && form.limit.value ? form.limit.value : "100";
+                            load(container, includeMinorEdit, rawLimit);
+                        });
+                    }
 
                     var loadButton = form.querySelector('button[type="submit"]');
                     if (loadButton) {
