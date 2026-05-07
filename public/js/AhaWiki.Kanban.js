@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) !== truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)) {
                     return "Kanban - " + eventPrefix + " - Card Move - " + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + " - '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) + "''' to '''" + truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) + "'''";
                 }
-                return 'Kanban - ' + eventPrefix + ' - Card Move - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' Order - ' + getActionMetaValue(actionMeta, 'fromOrder') + ' -> ' + getActionMetaValue(actionMeta, 'toOrder');
+                return `Kanban - ${eventPrefix} - Card Move - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} Order - '''${getActionMetaValue(actionMeta, 'fromOrder')}''' -> '''${getActionMetaValue(actionMeta, 'toOrder')}'''`;
             case 'card:delete': return 'Kanban - ' + eventPrefix + ' - Card Delete - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60));
             case 'card:comment:add': return 'Kanban - ' + eventPrefix + ' - Card Comment Add - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'));
             case 'card:property:update': return 'Kanban - ' + eventPrefix + ' - Card Property Update - ' + buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60)) + ' - ' + truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40) + ' - ' + serializePropertyValueForRevision(actionMeta && actionMeta.value);
@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
         columnElement.setAttribute('data-column-line-number', String(column.lineNumber || 1));
-        
+
 
         var titleRow = document.createElement('div');
         titleRow.className = 'kanban-column-title-row';
@@ -655,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var cardList = document.createElement('div');
         cardList.className = 'kanban-card-list';
-        
+
 
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             cardElement.setAttribute('data-line-number', String(card.lineNumber));
-            
+
 
             var cardText = document.createElement('div');
             cardText.textContent = card.text;
@@ -767,7 +767,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var submitCard = function () {
             var value = (cardTextarea.value || '').trim();
-            if (!value) {
+            var titles = value ? value.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(function (line) { return !!line; }) : [];
+            if (titles.length === 0) {
                 cardTextarea.focus();
                 return;
             }
@@ -775,38 +776,44 @@ document.addEventListener('DOMContentLoaded', function () {
             closeCardEditor();
 
             enqueueMutation(function () {
-                shiftLineNumbersAfterInsert();
-                var cardLineStart = getCardInsertLineStart(index);
-                var newCard = {
-                    text: value,
-                    id: generateCardId(),
-                    classNames: [],
-                    lineNumber: cardLineStart,
-                    comments: [],
-                    properties: {
-                        Creator: [toUserLinkMarkup(getCurrentAuthor())],
-                        dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())]
-                    }
-                };
-
                 column.cards = column.cards || [];
-                column.cards.push(newCard);
-                prependCardActivity(newCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: newCard.id, cardTitle: value }))]);
+
+                var createdCards = titles.map(function (title) {
+                    return {
+                        text: title,
+                        id: generateCardId(),
+                        classNames: [],
+                        comments: [],
+                        properties: {
+                            Creator: [toUserLinkMarkup(getCurrentAuthor())],
+                            dateCreated: [formatKanbanDateTime(getNowIsoWithoutMillis())]
+                        }
+                    };
+                });
+
+                createdCards.forEach(function (newCard) {
+                    column.cards.push(newCard);
+                    prependCardActivity(newCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: newCard.id, cardTitle: newCard.text || '' }))]);
+                });
+
                 shiftLineNumbersAfterInsert();
                 rerenderColumns();
 
-                root.dispatchEvent(new CustomEvent('kanban:cardAdded', {
-                    detail: {
-                        text: value,
-                        columnIndex: index,
-                        cardIndex: column.cards.length - 1
-                    }
-                }));
+                createdCards.forEach(function (newCard, addedIndex) {
+                    root.dispatchEvent(new CustomEvent('kanban:cardAdded', {
+                        detail: {
+                            text: newCard.text || '',
+                            columnIndex: index,
+                            cardIndex: column.cards.length - createdCards.length + addedIndex
+                        }
+                    }));
+                });
 
+                var firstCard = createdCards[0] || {};
                 return persistColumns('card:add', {
                     eventPrefix: 'User:' + getCurrentAuthor(),
-                    cardId: newCard.id,
-                    cardTitle: value
+                    cardId: firstCard.id || '',
+                    cardTitle: titles.length === 1 ? (firstCard.text || '') : ((firstCard.text || '') + ' and ' + String(titles.length - 1) + ' other cards')
                 })
                     .then(function (result) {
                         rerenderColumns();
