@@ -1125,26 +1125,31 @@ kbd {
     }
 	.simpleTable {
 		border-collapse: collapse;
+		border: 1px solid #e5e7eb;
+		border-radius: 10px;
 		.boxShadow;
 
 		th, td {
-			padding: 5px 10px;
-			p:first-of-type {
-				margin-top: 0;
-			}
-			p:last-of-type {
-				margin-bottom: 0;
-			}
+			padding: 10px 12px;
+			border: 1px solid #f1f5f9;
+			p:first-of-type {margin-top: 0;}
+			p:last-of-type {margin-bottom: 0;}
 		}
 		th {
-			border: 1px solid #ccc;
-			background-color: #ddd;
+			background: #f8fafc;
+			white-space: nowrap;
 		}
 		td {
-			border: 1px solid #ccc;
+			> ol {
+				margin: 0;
+			}
+
 		}
-		tr:hover {
-			background-color: #eee;
+		tr:nth-child(even) td {
+			background: #fcfdff;
+		}
+		tr:hover td {
+			background: #f7f8ff;
 		}
 	}
 	.tablesorter {
@@ -2021,9 +2026,6 @@ kbd {
 							padding: 10px 12px;
 							border: 1px solid #f1f5f9;
 							text-align: left;
-							vertical-align: middle;
-							font-size: 14px;
-							color: #111827;
 							word-break: break-word;
 						}
 
