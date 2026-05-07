@@ -1898,7 +1898,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Text>
                 {makeTable(
                     ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-                    recentChanges.slice(0, 10).map((row) => [
+                    recentChanges.map((row) => [
                         row.dateTime,
                         `${row.siteName} (#${row.siteSeq})`,
                         row.name,
