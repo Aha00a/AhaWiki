@@ -1932,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var titleEditorWrap = document.createElement('div');
             titleEditorWrap.classList.add('kanban-hidden');
-            titleEditorWrap.style.display = 'flex';
+            titleEditorWrap.style.display = 'none';
             titleEditorWrap.style.alignItems = 'center';
             titleEditorWrap.style.gap = '8px';
             titleEditorWrap.style.margin = '0';
@@ -1991,15 +1991,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var closeTitleEditor = function () {
                 titleEditorWrap.classList.add('kanban-hidden');
+                titleEditorWrap.style.display = 'none';
                 title.classList.remove('kanban-hidden');
                 cardIdLabel.classList.remove('kanban-hidden');
+                title.style.display = '';
+                cardIdLabel.style.display = '';
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
                 title.classList.add('kanban-hidden');
                 cardIdLabel.classList.add('kanban-hidden');
+                title.style.display = 'none';
+                cardIdLabel.style.display = 'none';
                 titleEditorWrap.classList.remove('kanban-hidden');
+                titleEditorWrap.style.display = 'flex';
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
                 titleEditor.select();
@@ -2547,7 +2553,7 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.appendChild(modalDropHint);
             titleEditorWrap.appendChild(titleEditor);
             titleEditorWrap.appendChild(titleSaveButton);
-            titleWrap.appendChild(titleEditorWrap);
+            titleWrap.insertBefore(titleEditorWrap, cardIdLabel);
             actionBar.appendChild(submit);
             dueDateEditor.appendChild(dueDateInput);
             dueDateEditor.appendChild(dueDateSaveButton);
