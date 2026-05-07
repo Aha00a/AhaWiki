@@ -1949,6 +1949,15 @@ kbd {
 						font-size: 14px;
 						background: #f9fafb;
 
+						@keyframes recentChangesSpin {
+							from {
+								transform: rotate(0deg);
+							}
+							to {
+								transform: rotate(360deg);
+							}
+						}
+
 						&.is-loading::before {
 							content: "";
 							display: inline-block;
@@ -2112,15 +2121,6 @@ kbd {
 				}
 			}
 		}
-	}
-}
-
-@keyframes recentChangesSpin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
 	}
 }
 
