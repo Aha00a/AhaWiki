@@ -105,11 +105,11 @@
                                 "<a href='/w/" + encodeURIComponent("User:" + firstRow.nickname) + "'>" + esc(firstRow.nickname) + "</a>" +
                               "</span>"
                             : esc(firstRow.remoteAddressMasked);
-                        var commentsHtml = group.rows.map(function (row) {
+                        var commentsHtml = "<ol>" + group.rows.map(function (row) {
                             var rowMinorPrefix = row.isMinorEdit ? "[minor] " : "";
                             var commentInlineHtml = row.commentInlineHtml || esc(row.comment || "");
-                            return "<div>" + rowMinorPrefix + commentInlineHtml + "</div>";
-                        }).join("");
+                            return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + commentInlineHtml + "</li>";
+                        }).join("") + "</ol>";
                         var dateTimeText = group.rows.length === 1
                             ? esc(firstRow.dateTime)
                             : esc(group.rows[group.rows.length - 1].dateTime) + " ~ " + esc(firstRow.dateTime);
