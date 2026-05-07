@@ -3188,7 +3188,7 @@ kbd:hover > kbd {
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th,
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border: 1px solid #f1f5f9;
   text-align: left;
   vertical-align: middle;
   font-size: 14px;
