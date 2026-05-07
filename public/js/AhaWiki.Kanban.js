@@ -1074,6 +1074,67 @@ document.addEventListener('DOMContentLoaded', function () {
                 dragCancelled = true;
             };
 
+            var findNearestCardList = function (clientX, clientY) {
+                if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
+                    return null;
+                }
+                var candidates = root.querySelectorAll('.kanban-card-list');
+                var nearest = null;
+                var nearestDistance = Number.POSITIVE_INFINITY;
+                Array.prototype.forEach.call(candidates, function (candidate) {
+                    if (!candidate || !candidate.parentElement || !candidate.parentElement.classList.contains('kanban-column')) {
+                        return;
+                    }
+                    var rect = candidate.getBoundingClientRect();
+                    var centerX = rect.left + (rect.width / 2);
+                    var centerY = rect.top + (rect.height / 2);
+                    var distance = Math.hypot(clientX - centerX, clientY - centerY);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearest = candidate;
+                    }
+                });
+                return nearest;
+            };
+
+            var highlightedDropTarget = null;
+            var clearCardDropTargetHighlight = function () {
+                if (!highlightedDropTarget) {
+                    return;
+                }
+                highlightedDropTarget.style.removeProperty('outline');
+                highlightedDropTarget.style.removeProperty('background');
+                highlightedDropTarget = null;
+            };
+            var setCardDropTargetHighlight = function (targetList) {
+                if (!targetList) {
+                    clearCardDropTargetHighlight();
+                    return;
+                }
+                if (highlightedDropTarget && highlightedDropTarget !== targetList) {
+                    highlightedDropTarget.style.removeProperty('outline');
+                    highlightedDropTarget.style.removeProperty('background');
+                }
+                highlightedDropTarget = targetList;
+                highlightedDropTarget.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+                highlightedDropTarget.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+            };
+
+            var latestPointerForCardDrag = { x: null, y: null };
+            var updateCardDragPointer = function (evt) {
+                if (!draggingCard || !evt) {
+                    return;
+                }
+                if (Number.isFinite(evt.clientX)) {
+                    latestPointerForCardDrag.x = evt.clientX;
+                }
+                if (Number.isFinite(evt.clientY)) {
+                    latestPointerForCardDrag.y = evt.clientY;
+                }
+                var nearestList = findNearestCardList(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                setCardDropTargetHighlight(nearestList);
+            };
+
             cardSortable = Sortable.create(cardList, {
                 group: root.id || 'kanban-default',
                 animation: 120,
@@ -1086,10 +1147,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     draggingOldIndex = evt.oldIndex;
                     window.addEventListener('keydown', handleDragEscape, true);
                     doc.addEventListener('keydown', handleDragEscape, true);
+                    clearCardDropTargetHighlight();
+                    latestPointerForCardDrag.x = null;
+                    latestPointerForCardDrag.y = null;
+                    window.addEventListener('dragover', updateCardDragPointer, true);
+                    doc.addEventListener('dragover', updateCardDragPointer, true);
                 },
-                onMove: function () {
+                onMove: function (evt) {
                     if (dragCancelled) {
+                        clearCardDropTargetHighlight();
                         return false;
+                    }
+                    var pointerEvent = evt && evt.originalEvent ? evt.originalEvent : null;
+                    updateCardDragPointer(pointerEvent);
+                    var currentList = evt && evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list') ? evt.to : null;
+                    if (currentList) {
+                        setCardDropTargetHighlight(currentList);
                     }
                     return true;
                 },
@@ -1098,9 +1171,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     draggingCard = false;
                     window.removeEventListener('keydown', handleDragEscape, true);
                     doc.removeEventListener('keydown', handleDragEscape, true);
+                    window.removeEventListener('dragover', updateCardDragPointer, true);
+                    doc.removeEventListener('dragover', updateCardDragPointer, true);
+                    clearCardDropTargetHighlight();
 
                     var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || !Number.isFinite(evt.newIndex);
                     var droppedOutsideList = !(evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list'));
+                    if (droppedOutsideList && evt.item) {
+                        var pointerEvent = evt.originalEvent || null;
+                        var clientX = pointerEvent && Number.isFinite(pointerEvent.clientX) ? pointerEvent.clientX : latestPointerForCardDrag.x;
+                        var clientY = pointerEvent && Number.isFinite(pointerEvent.clientY) ? pointerEvent.clientY : latestPointerForCardDrag.y;
+                        var nearestList = findNearestCardList(clientX, clientY);
+                        if (nearestList) {
+                            nearestList.appendChild(evt.item);
+                            evt.to = nearestList;
+                            evt.newIndex = nearestList.children.length - 1;
+                            droppedOutsideList = false;
+                        }
+                    }
                     var returnedToSameSpot = evt.from === evt.to && evt.oldIndex === evt.newIndex;
                     if (dragCancelled || droppedOutsideList || hasInvalidIndex || returnedToSameSpot || !evt.to) {
                         restoreDraggedItem(evt.item, evt.from, evt.oldIndex);
@@ -1202,6 +1290,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         var currentKanbanLineCount = getLineCountForText(pre.textContent || '');
         root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
+        var rerenderColumns = function () {};
         var mutationQueue = Promise.resolve();
         var serializeColumns = function () {
             return columns.map(function (column) {
@@ -1285,6 +1374,35 @@ document.addEventListener('DOMContentLoaded', function () {
         pre.classList.add('kanban-hidden');
         board.classList.add('kanban-board-ready');
 
+        var findNearestBoardCardList = function (clientX, clientY) {
+            if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
+                return null;
+            }
+            var candidates = board.querySelectorAll('.kanban-card-list');
+            var nearest = null;
+            var nearestDistance = Number.POSITIVE_INFINITY;
+            Array.prototype.forEach.call(candidates, function (candidate) {
+                var rect = candidate.getBoundingClientRect();
+                var centerX = rect.left + (rect.width / 2);
+                var centerY = rect.top + (rect.height / 2);
+                var distance = Math.hypot(clientX - centerX, clientY - centerY);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearest = candidate;
+                }
+            });
+            return nearest;
+        };
+        var boardFileDragDepth = 0;
+        var setBoardFileDropFeedback = function (active) {
+            if (active) {
+                board.style.setProperty('outline', '2px dashed #0c66e4', 'important');
+                board.style.setProperty('background', 'rgba(12, 102, 228, 0.08)', 'important');
+                return;
+            }
+            board.style.removeProperty('outline');
+            board.style.removeProperty('background');
+        };
 
         var backgroundDragState = {
             active: false,
@@ -1341,6 +1459,73 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             board.classList.add('kanban-draggable');
+        });
+        board.addEventListener('dragenter', function (evt) {
+            if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
+                return;
+            }
+            boardFileDragDepth += 1;
+            evt.preventDefault();
+            evt.stopPropagation();
+            setBoardFileDropFeedback(true);
+        });
+        board.addEventListener('dragover', function (evt) {
+            if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
+                return;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            if (evt.dataTransfer) {
+                evt.dataTransfer.dropEffect = 'copy';
+            }
+            setBoardFileDropFeedback(true);
+        });
+        board.addEventListener('dragleave', function (evt) {
+            if (!isFileDragEvent(evt)) {
+                return;
+            }
+            boardFileDragDepth = Math.max(0, boardFileDragDepth - 1);
+            if (boardFileDragDepth === 0) {
+                setBoardFileDropFeedback(false);
+            }
+        });
+        board.addEventListener('drop', function (evt) {
+            if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
+                return;
+            }
+            var files = Array.prototype.slice.call((evt.dataTransfer && evt.dataTransfer.files) || []).filter(Boolean);
+            if (!files.length) {
+                return;
+            }
+            evt.preventDefault();
+            evt.stopPropagation();
+            boardFileDragDepth = 0;
+            setBoardFileDropFeedback(false);
+
+            var nearestList = findNearestBoardCardList(evt.clientX, evt.clientY);
+            if (!nearestList || !nearestList.parentElement) {
+                return;
+            }
+            var targetColumnIndex = Number(nearestList.parentElement.getAttribute('data-column-index'));
+            var targetColumn = columns[targetColumnIndex];
+            if (!targetColumn) {
+                return;
+            }
+            createCardsFromFiles(pageName, targetColumn, files).then(function (cards) {
+                if (!cards.length) {
+                    return;
+                }
+                rerenderColumns();
+                enqueueMutation(function () {
+                    var targetCard = cards[cards.length - 1];
+                    return persistColumns('card:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: targetCard.id || '', cardTitle: targetCard.text || '' }).catch(function (error) {
+                        console.error('[Kanban] failed to save dropped file cards from board', error);
+                    });
+                });
+            }).catch(function (error) {
+                console.error('[Kanban] failed to create dropped file cards from board', error);
+                alert('File upload failed. ' + (error && error.message ? error.message : ''));
+            });
         });
 
 
@@ -1430,6 +1615,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns), addListWrapper);
             });
         };
+        rerenderColumns = renderColumns;
 
         var scrollToKanbanForHashCard = function () {
             var rawHash = window.location.hash || '';
