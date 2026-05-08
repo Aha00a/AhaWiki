@@ -14,7 +14,7 @@
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <withJansi>true</withJansi>
     <encoder>
-      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS} %-5level %-40((%file:%line\)) %message%n%xException{10}</pattern>
+      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS} %-5level %logger{36}\t%message%n%xException{10}</pattern>
     </encoder>
   </appender>
 
@@ -24,7 +24,6 @@
 
   <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
     <appender-ref ref="STDOUT" />
-    <includeCallerData>true</includeCallerData>
   </appender>
 
   <logger name="play" level="INFO" />
