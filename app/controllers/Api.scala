@@ -1207,7 +1207,7 @@ class Api @Inject()(
 
       val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
         Adjacent.getSeqLinkFiltered(name)
-      }
+      }.filter(_.and(contextSite.pageCanSee))
       Ok(links.asJson)
     }
   }

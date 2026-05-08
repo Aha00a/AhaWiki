@@ -151,6 +151,7 @@ object DefaultPageLogic {
             lazySome(
               if(schema(0).isUpper) {
                 val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereCls(schema)
+                val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
                 s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
                    |[[[#!Markdown
                    |${schemaType.comment.replaceAll("\\\\n", "\n")}
@@ -158,7 +159,7 @@ object DefaultPageLogic {
                    |[https://schema.org/${schemaType.id}]
                    |== Pages
                    |<Columns count="3" gap="16" minWidth="220">
-                   |${listSchemaOrg.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
+                   |${listSchemaOrgWithPermission.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
                    |</Columns>
                    |""".stripMargin
               } else {
