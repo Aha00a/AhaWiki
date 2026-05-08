@@ -1,4 +1,4 @@
 #!/bin/sh
 
-~/sbt/bin/sbt stage
+nice -n 19 ~/sbt/bin/sbt stage
 
