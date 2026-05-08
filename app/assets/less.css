@@ -3160,7 +3160,7 @@ kbd:hover > kbd {
   gap: 12px 20px;
   padding: 14px 16px;
   border: 1px solid #dbe4ef;
-  border-radius: 12px;
+  border-radius: 5px;
   background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
   margin-bottom: 12px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -3189,7 +3189,7 @@ kbd:hover > kbd {
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form .macro-recent-changes-form-control input[type="number"] {
   width: 86px;
   border: 1px solid #d1d5db;
-  border-radius: 7px;
+  border-radius: 5px;
   padding: 5px 8px;
   font-size: 13px;
 }
@@ -3198,7 +3198,7 @@ kbd:hover > kbd {
 }
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes-form button {
   border: 0;
-  border-radius: 8px;
+  border-radius: 5px;
   padding: 8px 14px;
   background: #2563eb;
   color: #fff;
@@ -3211,7 +3211,7 @@ kbd:hover > kbd {
 }
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes {
   border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 5px;
   overflow: hidden;
   background: #ffffff;
 }
