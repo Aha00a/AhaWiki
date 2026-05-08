@@ -1737,6 +1737,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     highlightOnHover
                     minHeight={420}
                     records={Array.isArray(accessLogs) ? accessLogs : []}
+                    idAccessor="seq"
                     columns={[
                         {accessor: "seq", title: "seq", sortable: true},
                         {accessor: "dateInserted", title: "DateInserted", sortable: true},
@@ -1750,7 +1751,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             sortable: true,
                             render: (row) => {
                                 const href = `${row.scheme}://${row.host}${row.uri}`;
-                                return <Anchor href={href} target="_blank" rel="noopener noreferrer">{href}</Anchor>;
+                                return <Anchor href={href} target="_blank" rel="noopener noreferrer">{href}</Anchor>
                             },
                         },
                         {accessor: "status", title: "Status", sortable: true},

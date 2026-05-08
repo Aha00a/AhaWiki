@@ -1582,6 +1582,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         highlightOnHover: true,
         minHeight: 420,
         records: Array.isArray(accessLogs) ? accessLogs : [],
+        idAccessor: "seq",
         columns: [
           { accessor: "seq", title: "seq", sortable: true },
           { accessor: "dateInserted", title: "DateInserted", sortable: true },
