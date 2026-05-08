@@ -90,6 +90,10 @@ class FilterAccessLog @Inject()(
     ).mkString("\t"))
   }
 
+  private def shouldSkipAccessLogUri(uri: String): Boolean = {
+    uri.startsWith("/public/")
+  }
+
   private def shouldInsertAccessLog(status: Int): Boolean = {
     if (300 <= status && status < 400) {
       false
@@ -153,8 +157,9 @@ class FilterAccessLog @Inject()(
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
         logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
-        database.withConnection { implicit connection =>
-          insertAccessLogIfSiteFound(
+        if (!shouldSkipAccessLogUri(uri)) {
+          database.withConnection { implicit connection =>
+            insertAccessLogIfSiteFound(
             site,
             getUserSeq(requestHeader),
             optionIpDeny.map(_.seq),
@@ -166,7 +171,8 @@ class FilterAccessLog @Inject()(
             userAgent,
             Results.Forbidden.header.status,
             duration.toInt
-          )
+            )
+          }
         }
         Future(Results.Forbidden)
       })
@@ -176,8 +182,9 @@ class FilterAccessLog @Inject()(
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
         logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
-        database.withConnection { implicit connection =>
-          val accessLogSeq = insertAccessLogIfSiteFound(
+        if (!shouldSkipAccessLogUri(uri)) {
+          database.withConnection { implicit connection =>
+            val accessLogSeq = insertAccessLogIfSiteFound(
             site,
             getUserSeq(requestHeader),
             None,
@@ -190,7 +197,8 @@ class FilterAccessLog @Inject()(
             Results.Forbidden.header.status,
             duration.toInt
           )
-          models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
+            models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
+          }
         }
         Future(Results.Forbidden)
       })
@@ -199,7 +207,9 @@ class FilterAccessLog @Inject()(
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
         logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
-        if (shouldInsertAccessLog(result.header.status)) {
+        if (shouldSkipAccessLogUri(uri)) {
+          logger.debug(s"Skip AccessLog insert: uri=$uri")
+        } else if (shouldInsertAccessLog(result.header.status)) {
           database.withConnection { implicit connection =>
             insertAccessLogIfSiteFound(
               site,
