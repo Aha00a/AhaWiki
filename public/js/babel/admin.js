@@ -1589,10 +1589,15 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           { accessor: "ipDenySeq", title: "IpDeny", render: (row) => row.ipDenySeq ?? "-" },
           { accessor: "userSeq", title: "User", render: (row) => row.userSeq ?? "-" },
           { accessor: "method", title: "Method", sortable: true },
-          { accessor: "scheme", title: "Scheme" },
-          { accessor: "host", title: "Host" },
-          { accessor: "uri", title: "URI", sortable: true },
-          { accessor: "url", title: "URL" },
+          {
+            accessor: "uri",
+            title: "Request URL",
+            sortable: true,
+            render: (row) => {
+              const href = `${row.scheme}://${row.host}${row.uri}`;
+              return /* @__PURE__ */ React5.createElement(Anchor, { href, target: "_blank", rel: "noopener noreferrer" }, href);
+            }
+          },
           { accessor: "status", title: "Status", sortable: true },
           { accessor: "remoteAddress", title: "IP" },
           { accessor: "durationMilli", title: "Duration(ms)", sortable: true },
