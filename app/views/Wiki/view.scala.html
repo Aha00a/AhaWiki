@@ -128,8 +128,14 @@
                 var wsUrl = wsProtocol + '://' + window.location.host + wsPath;
                 var reconnectDelayMs = 1500;
                 var socket;
+                var mySenderId = null;
                 var lastSentAt = 0;
                 var pointerMap = {};
+                var pointerSeenAt = {};
+                var pointerTarget = {};
+                var pointerRender = {};
+                var staleThresholdMs = 15000;
+                var smoothingAlpha = 0.35;
 
                 function colorFromSenderId(senderId) {
                     var hash = 0;
@@ -142,6 +148,7 @@
                 }
 
                 function upsertCursor(senderId, x, y) {
+                    if (!senderId || senderId === mySenderId) return;
                     var key = 'cursor-' + senderId;
                     var $cursor = pointerMap[key];
                     if (!$cursor) {
@@ -159,7 +166,38 @@
                         }).appendTo('body');
                         pointerMap[key] = $cursor;
                     }
-                    $cursor.css({ left: x + 'px', top: y + 'px' });
+                    var px = Math.max(0, Math.min($(window).width(), x * $(window).width()));
+                    var py = Math.max(0, Math.min($(window).height(), y * $(window).height()));
+                    pointerTarget[key] = { x: px, y: py };
+                    if (!pointerRender[key]) pointerRender[key] = { x: px, y: py };
+                    pointerSeenAt[key] = Date.now();
+                }
+
+                function tickCursorRender() {
+                    Object.keys(pointerMap).forEach(function (key) {
+                        var target = pointerTarget[key];
+                        var current = pointerRender[key];
+                        if (!target || !current) return;
+                        current.x += (target.x - current.x) * smoothingAlpha;
+                        current.y += (target.y - current.y) * smoothingAlpha;
+                        pointerMap[key].css({ left: current.x + 'px', top: current.y + 'px' });
+                    });
+                    requestAnimationFrame(tickCursorRender);
+                }
+
+                function removeStaleCursors() {
+                    var now = Date.now();
+                    Object.keys(pointerSeenAt).forEach(function (key) {
+                        if ((now - pointerSeenAt[key]) > staleThresholdMs) {
+                            if (pointerMap[key]) {
+                                pointerMap[key].remove();
+                                delete pointerMap[key];
+                            }
+                            delete pointerTarget[key];
+                            delete pointerRender[key];
+                            delete pointerSeenAt[key];
+                        }
+                    });
                 }
 
                 function connect() {
@@ -167,7 +205,11 @@
                     socket.onmessage = function (event) {
                         try {
                             var data = JSON.parse(event.data);
-                            if (data.type === 'cursor') {
+                            if (data.type === 'cursor.hello') {
+                                mySenderId = data.senderId || null;
+                                return;
+                            }
+                            if (data.type === 'cursor.move') {
                                 upsertCursor(data.senderId, data.x, data.y);
                             }
                         } catch (e) {
@@ -188,10 +230,16 @@
                     var now = Date.now();
                     if (now - lastSentAt < 50) return;
                     lastSentAt = now;
-                    socket.send(JSON.stringify({ type: 'cursor', x: e.pageX, y: e.pageY }));
+                    var width = Math.max(1, $(window).width());
+                    var height = Math.max(1, $(window).height());
+                    var x = Math.max(0, Math.min(1, e.pageX / width));
+                    var y = Math.max(0, Math.min(1, e.pageY / height));
+                    socket.send(JSON.stringify({ type: 'cursor.move', x: x, y: y }));
                 });
 
                 connect();
+                setInterval(removeStaleCursors, 2000);
+                requestAnimationFrame(tickCursorRender);
             })();
 
             $('a[target=_blank]').hover(function () {

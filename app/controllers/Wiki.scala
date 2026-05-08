@@ -60,6 +60,7 @@ import scala.collection.concurrent.TrieMap
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import redis.clients.jedis.{Jedis, JedisPubSub}
 
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
@@ -73,6 +74,8 @@ controllerComponents: ControllerComponents,
                      executionContext: ExecutionContext,
                      configuration: Configuration
 ) extends BaseController with Logging {
+  private val instanceId: String = configuration.getOptional[String]("play.server.http.port").map(v => s"app-$v").getOrElse(UUID.randomUUID().toString)
+
   private object PageCursorHub {
     private val subscribers = TrieMap.empty[String, TrieMap[String, SourceQueueWithComplete[String]]]
 
@@ -94,6 +97,62 @@ controllerComponents: ControllerComponents,
           if (id != senderId) queue.offer(payload)
         }
       }
+    }
+  }
+
+  private object RedisCursorRelay {
+    private val redisHost: String = configuration.getOptional[String]("play.cache.redis.host").getOrElse("")
+    private val redisPort: Int = configuration.getOptional[Int]("play.cache.redis.port").getOrElse(6379)
+    private val redisPassword: Option[String] = configuration.getOptional[String]("play.cache.redis.password").filter(_.nonEmpty)
+    private val enabledByFlag: Boolean = configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursorSharingViaRedis").getOrElse(false)
+    private val enabled: Boolean = enabledByFlag && redisHost.nonEmpty
+    private val channelPrefix = "ws:wiki:"
+    private val channelSuffix = ":cursor"
+    @volatile private var started = false
+
+    def ensureStarted(): Unit = synchronized {
+      if (!enabled || started) return
+      started = true
+      Future {
+        val jedis = new Jedis(redisHost, redisPort)
+        redisPassword.foreach(jedis.auth)
+        val pubSub = new JedisPubSub {
+          override def onMessage(channel: String, message: String): Unit = {
+            val payload = Try(Json.parse(message).as[play.api.libs.json.JsObject]).getOrElse(Json.obj())
+            val eventId = (payload \ "eventId").asOpt[String].getOrElse("")
+            val pageId = (payload \ "pageId").asOpt[String].getOrElse("")
+            val senderId = (payload \ "senderId").asOpt[String].getOrElse("")
+            val origin = (payload \ "originInstanceId").asOpt[String].getOrElse("")
+            if (pageId.nonEmpty && origin != instanceId) {
+              logger.debug(s"cursor.subscribe eventId=$eventId pageId=$pageId originInstanceId=$origin instanceId=$instanceId senderId=$senderId")
+              PageCursorHub.broadcast(pageId, senderId, message)
+            }
+          }
+        }
+        try {
+          pubSub.psubscribe(s"${channelPrefix}*${channelSuffix}")
+        } catch {
+          case t: Throwable =>
+            started = false
+            logger.error(s"Redis cursor subscriber stopped: instanceId=$instanceId", t)
+        } finally {
+          jedis.close()
+        }
+      }(executionContext)
+    }
+
+    def publish(pageId: String, payload: play.api.libs.json.JsObject): Unit = {
+      if (!enabled) return
+      val channel = s"$channelPrefix$pageId$channelSuffix"
+      Future {
+        val jedis = new Jedis(redisHost, redisPort)
+        try {
+          redisPassword.foreach(jedis.auth)
+          jedis.publish(channel, payload.toString())
+        } finally {
+          jedis.close()
+        }
+      }(executionContext)
     }
   }
 
@@ -329,24 +388,35 @@ controllerComponents: ControllerComponents,
         logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")
         Left(Forbidden("Permission denied."))
       } else {
+        RedisCursorRelay.ensureStarted()
         val connectionId = UUID.randomUUID().toString
+        val userId = SessionLogic.getUser(request).map(_.email).filter(_.nonEmpty).getOrElse("anonymous")
         val source = Source.queue[String](32, OverflowStrategy.dropHead)
         val sink = Sink.foreach[String] { incoming =>
           val payload = Try(Json.parse(incoming).asOpt[play.api.libs.json.JsObject].getOrElse(Json.obj())).getOrElse(Json.obj())
-          if ((payload \ "type").asOpt[String].contains("cursor")) {
-            val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d)
-            val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d)
+          if ((payload \ "type").asOpt[String].contains("cursor.move")) {
+            val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
+            val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
+            val eventId = UUID.randomUUID().toString
             val outgoing = Json.obj(
-              "type" -> "cursor",
+              "eventId" -> eventId,
+              "type" -> "cursor.move",
+              "pageId" -> name,
+              "userId" -> userId,
+              "originInstanceId" -> instanceId,
               "senderId" -> connectionId,
               "x" -> x,
-              "y" -> y
+              "y" -> y,
+              "ts" -> System.currentTimeMillis()
             ).toString()
+            logger.debug(s"cursor.publish eventId=$eventId pageId=$name userId=$userId originInstanceId=$instanceId senderId=$connectionId")
             PageCursorHub.broadcast(name, connectionId, outgoing)
+            RedisCursorRelay.publish(name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
           }
         }
         val flow = Flow.fromSinkAndSourceCoupledMat(sink, source)(Keep.right).mapMaterializedValue { queue =>
           PageCursorHub.subscribe(name, connectionId, queue)
+          queue.offer(Json.obj("type" -> "cursor.hello", "senderId" -> connectionId).toString())
           NotUsed
         }.watchTermination() { (_, done) =>
           done.onComplete(_ => PageCursorHub.unsubscribe(name, connectionId))(executionContext)

@@ -12,20 +12,20 @@
 
 ## 3) 대상 아키텍처(점진 도입)
 - [ ] 소켓 연결 관리는 각 인스턴스 로컬에 유지한다.
-- [ ] 인스턴스 간 이벤트 중계만 Redis Pub/Sub로 처리한다.
-- [ ] 페이지 단위 채널로 fan-out 범위를 제한한다. (예: `ws:wiki:{pageId}:cursor`)
+- [x] 인스턴스 간 이벤트 중계만 Redis Pub/Sub로 처리한다.
+- [x] 페이지 단위 채널로 fan-out 범위를 제한한다. (예: `ws:wiki:{pageId}:cursor`)
 - [ ] 커서 이벤트는 일시적 데이터로 취급하고(Pub/Sub), 내구성 저장은 요구하지 않는다.
 
 ## 4) 이벤트 계약(커서)
-- [ ] 공통 JSON Envelope를 정의하고 서버/클라이언트가 동일 스키마를 사용한다.
+- [x] 공통 JSON Envelope를 정의하고 서버/클라이언트가 동일 스키마를 사용한다.
 - [ ] 필수 필드
-  - [ ] `eventId`: 중복 수신 방지(디듀프)용 고유 ID
-  - [ ] `type`: 이벤트 타입 (`cursor.move`)
-  - [ ] `pageId`: 페이지 식별자
-  - [ ] `userId`: 사용자 식별자
-  - [ ] `x`, `y`: 정규화 좌표(0..1)
-  - [ ] `ts`: 이벤트 발생 시각(Unix ms)
-  - [ ] `originInstanceId`: 이벤트 발행 인스턴스 ID
+  - [x] `eventId`: 중복 수신 방지(디듀프)용 고유 ID
+  - [x] `type`: 이벤트 타입 (`cursor.move`)
+  - [x] `pageId`: 페이지 식별자
+  - [x] `userId`: 사용자 식별자 (항상 포함, 포인터 식별은 `senderId` 기준)
+  - [x] `x`, `y`: 정규화 좌표(0..1)
+  - [x] `ts`: 이벤트 발생 시각(Unix ms)
+  - [x] `originInstanceId`: 이벤트 발행 인스턴스 ID
 - [ ] 예시 페이로드
 
 ```json
@@ -49,11 +49,11 @@
 - [ ] 개인정보/프라이버시 정책 확인: "커서 공유 끄기" 옵션 필요 여부 확정.
 
 ### Phase 1 — 백엔드 Pub/Sub 기반 추가
-- [ ] WebSocket 수신 이벤트를 Redis에 publish하는 경로를 추가한다.
-- [ ] 각 인스턴스에서 Redis subscribe 워커를 기동한다.
-- [ ] subscribe 수신 이벤트를 로컬 페이지 룸 브로드캐스트로 전달한다.
-- [ ] 루프 방지: subscribe로 받은 이벤트는 재-publish하지 않는다.
-- [ ] `originInstanceId`를 로그/디버깅에 포함한다.
+- [x] WebSocket 수신 이벤트를 Redis에 publish하는 경로를 추가한다.
+- [x] 각 인스턴스에서 Redis subscribe 워커를 기동한다.
+- [x] subscribe 수신 이벤트를 로컬 페이지 룸 브로드캐스트로 전달한다.
+- [x] 루프 방지: subscribe로 받은 이벤트는 재-publish하지 않는다.
+- [x] `originInstanceId`를 로그/디버깅에 포함한다.
 
 ### Phase 2 — 페이지 룸 라우팅 정비
 - [ ] 페이지 단위 룸 키 규칙을 표준화한다.
@@ -62,10 +62,10 @@
 - [ ] 재연결 시 기존 페이지 룸 자동 재참여를 보장한다.
 
 ### Phase 3 — 클라이언트 전송 품질
-- [ ] 커서 move 이벤트 전송 주기를 30~60ms로 throttle한다.
-- [ ] 수신 렌더링에 보간(interpolation)/스무딩을 적용한다.
-- [ ] 자기 자신의 이벤트는 렌더링에서 제외한다.
-- [ ] heartbeat 누락 시 stale 커서를 자동 제거한다.
+- [x] 커서 move 이벤트 전송 주기를 30~60ms로 throttle한다.
+- [x] 수신 렌더링에 보간(interpolation)/스무딩을 적용한다.
+- [x] 자기 자신의 이벤트는 렌더링에서 제외한다.
+- [x] heartbeat 누락 시 stale 커서를 자동 제거한다.
 
 ### Phase 4 — Presence/안정성 강화
 - [ ] Redis TTL 기반 presence heartbeat를 추가한다. (예: TTL 10~15초)
@@ -89,7 +89,7 @@
 - [ ] 장애 훈련: 인스턴스 재시작 후 자동 복구 확인.
 
 ### Phase 7 — 배포/롤백
-- [ ] 기능 플래그 `cursor-sharing-via-redis` 추가.
+- [x] 기능 플래그 `cursor-sharing-via-redis` 추가.
 - [ ] 스테이징에서 선적용 후 메트릭/로그 기준 충족 확인.
 - [ ] 프로덕션 점진 오픈(소수 트래픽 → 전체).
 - [ ] 롤백 절차 문서화(플래그 OFF 시 동작 포함).

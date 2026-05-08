@@ -34,6 +34,7 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
 libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
 libraryDependencies += "com.github.karelcemus" %% "play-redis" % "2.7.0"
+libraryDependencies += "redis.clients" % "jedis" % "3.6.3"
 libraryDependencies += "dev.zio" %% "zio-json" % "0.7.3" // DON'T update. Class File version matter
 
 libraryDependencies ++= Seq(
