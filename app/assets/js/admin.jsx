@@ -1747,7 +1747,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         {accessor: "scheme", title: "Scheme"},
                         {accessor: "host", title: "Host"},
                         {accessor: "uri", title: "URI", sortable: true},
-                        {accessor: "url", title: "URL"},
                         {accessor: "status", title: "Status", sortable: true},
                         {accessor: "remoteAddress", title: "IP"},
                         {accessor: "durationMilli", title: "Duration(ms)", sortable: true},

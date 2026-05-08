@@ -28,7 +28,6 @@ object AccessLog extends Logging {
     scheme: String,
     host: String,
     uri: String, // TODO: rename to path
-    url: String, // TODO: remove
     remoteAddress: String,
     userAgent: String,
     status: Int,
@@ -36,9 +35,9 @@ object AccessLog extends Logging {
   )(implicit connection: Connection): Option[Long] = {
     SQL"""
         INSERT INTO AccessLog
-                (site, user, ipDeny, method, scheme, host, uri, url, remoteAddress, userAgent, status, durationMilli)
+                (site, user, ipDeny, method, scheme, host, uri, remoteAddress, userAgent, status, durationMilli)
             VALUES
-                ($site, $user, $ipDeny, $method, $scheme, $host, $uri, $url, $remoteAddress, $userAgent, $status, $durationMilli)
+                ($site, $user, $ipDeny, $method, $scheme, $host, $uri, $remoteAddress, $userAgent, $status, $durationMilli)
     """.executeInsert()
   }
 

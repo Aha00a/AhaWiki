@@ -1,0 +1,7 @@
+# --- !Ups
+
+ALTER TABLE AccessLog MODIFY url VARCHAR(4096) NULL AFTER uri;
+
+# --- !Downs
+
+ALTER TABLE AccessLog MODIFY url VARCHAR(4096) NOT NULL AFTER uri;

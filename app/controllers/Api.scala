@@ -912,7 +912,6 @@ class Api @Inject()(
           scheme: String,
           host: String,
           uri: String,
-          url: String,
           status: Int,
           remoteAddress: String,
           durationMilli: Int,
@@ -979,7 +978,6 @@ class Api @Inject()(
             AL.scheme,
             AL.host,
             AL.uri,
-            AL.url,
             AL.status,
             AL.remoteAddress,
             AL.durationMilli,
@@ -1006,8 +1004,8 @@ class Api @Inject()(
           "searchLike" -> searchLike,
           "pageSize" -> pageSize,
           "offset" -> offset,
-        ).as((long("seq") ~ long("site_seq") ~ str("site_name") ~ long("ip_deny_seq").? ~ long("user_seq").? ~ str("method") ~ str("scheme") ~ str("host") ~ str("uri") ~ str("url") ~ int("status") ~ str("remoteAddress") ~ int("durationMilli") ~ str("userAgent") ~ str("date_inserted")).map {
-          case seq ~ siteSeq ~ siteName ~ ipDenySeq ~ userSeq ~ method ~ scheme ~ host ~ uri ~ url ~ status ~ remoteAddress ~ durationMilli ~ userAgent ~ dateInserted =>
+        ).as((long("seq") ~ long("site_seq") ~ str("site_name") ~ long("ip_deny_seq").? ~ long("user_seq").? ~ str("method") ~ str("scheme") ~ str("host") ~ str("uri") ~ int("status") ~ str("remoteAddress") ~ int("durationMilli") ~ str("userAgent") ~ str("date_inserted")).map {
+          case seq ~ siteSeq ~ siteName ~ ipDenySeq ~ userSeq ~ method ~ scheme ~ host ~ uri ~ status ~ remoteAddress ~ durationMilli ~ userAgent ~ dateInserted =>
             AdminAccessLog(
               seq = seq,
               siteSeq = siteSeq,
@@ -1018,7 +1016,6 @@ class Api @Inject()(
               scheme = scheme,
               host = host,
               uri = uri,
-              url = url,
               status = status,
               remoteAddress = remoteAddress,
               durationMilli = durationMilli,

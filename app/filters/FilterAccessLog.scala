@@ -108,7 +108,6 @@ class FilterAccessLog @Inject()(
     scheme: String,
     host: String,
     uri: String,
-    url: String,
     remoteAddress: String,
     userAgent: String,
     status: Int,
@@ -126,7 +125,6 @@ class FilterAccessLog @Inject()(
         scheme,
         host,
         uri,
-        url,
         remoteAddress,
         userAgent,
         status,
@@ -140,7 +138,7 @@ class FilterAccessLog @Inject()(
     val scheme = requestHeader.scheme
     val host = requestHeader.host
     val uri: String = requestHeader.uri
-    val url = s"$scheme://$host$uri" // TODO: remove
+    val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
     val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
@@ -164,7 +162,6 @@ class FilterAccessLog @Inject()(
             scheme,
             host,
             uri,
-            url,
             remoteAddress,
             userAgent,
             Results.Forbidden.header.status,
@@ -188,7 +185,6 @@ class FilterAccessLog @Inject()(
             scheme,
             host,
             uri,
-            url,
             remoteAddress,
             userAgent,
             Results.Forbidden.header.status,
@@ -213,7 +209,6 @@ class FilterAccessLog @Inject()(
               scheme,
               host,
               uri,
-              url,
               remoteAddress,
               userAgent,
               result.header.status,
