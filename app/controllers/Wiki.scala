@@ -107,7 +107,9 @@ controllerComponents: ControllerComponents,
     private val redisHost: String = configuration.getOptional[String]("play.cache.redis.host").getOrElse("")
     private val redisPort: Int = configuration.getOptional[Int]("play.cache.redis.port").getOrElse(6379)
     private val redisPassword: Option[String] = configuration.getOptional[String]("play.cache.redis.password").filter(_.nonEmpty)
-    private val enabledByFlag: Boolean = configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursorSharingViaRedis").getOrElse(false)
+    private val enabledByFlag: Boolean = configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursorSharingViaRedis")
+      .orElse(configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursor-sharing-via-redis"))
+      .getOrElse(false)
     private val enabled: Boolean = enabledByFlag && redisHost.nonEmpty
     private val channelPrefix = "ws:wiki:"
     private val channelSuffix = ":cursor"
@@ -117,7 +119,12 @@ controllerComponents: ControllerComponents,
     private val presenceTtlSeconds = 15
 
     def ensureStarted(): Unit = synchronized {
-      if (!enabled || started) return
+      if (!enabled) {
+        if (!enabledByFlag) logger.info("Redis cursor relay disabled by feature flag")
+        else logger.warn("Redis cursor relay disabled because play.cache.redis.host is empty")
+        return
+      }
+      if (started) return
       started = true
       Future {
         var attempts = 0
