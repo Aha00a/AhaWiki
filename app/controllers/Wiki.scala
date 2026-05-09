@@ -76,6 +76,8 @@ controllerComponents: ControllerComponents,
 ) extends BaseController with Logging {
   private val instanceId: String = configuration.getOptional[String]("play.server.http.port").map(v => s"app-$v").getOrElse(UUID.randomUUID().toString)
 
+  private def roomKeyForPage(siteId: Long, pageId: String): String = s"wiki:$siteId:$pageId"
+
   private object PageCursorHub {
     private val subscribers = TrieMap.empty[String, TrieMap[String, SourceQueueWithComplete[String]]]
 
@@ -109,41 +111,75 @@ controllerComponents: ControllerComponents,
     private val channelPrefix = "ws:wiki:"
     private val channelSuffix = ":cursor"
     @volatile private var started = false
+    private val reconnectBaseDelayMs = 1000L
+    private val reconnectMaxDelayMs = 30000L
+    private val presenceTtlSeconds = 15
 
     def ensureStarted(): Unit = synchronized {
       if (!enabled || started) return
       started = true
       Future {
-        val jedis = new Jedis(redisHost, redisPort)
-        redisPassword.foreach(jedis.auth)
-        val pubSub = new JedisPubSub {
-          override def onMessage(channel: String, message: String): Unit = {
-            val payload = Try(Json.parse(message).as[play.api.libs.json.JsObject]).getOrElse(Json.obj())
-            val eventId = (payload \ "eventId").asOpt[String].getOrElse("")
-            val pageId = (payload \ "pageId").asOpt[String].getOrElse("")
-            val senderId = (payload \ "senderId").asOpt[String].getOrElse("")
-            val origin = (payload \ "originInstanceId").asOpt[String].getOrElse("")
-            if (pageId.nonEmpty && origin != instanceId) {
-              logger.debug(s"cursor.subscribe eventId=$eventId pageId=$pageId originInstanceId=$origin instanceId=$instanceId senderId=$senderId")
-              PageCursorHub.broadcast(pageId, senderId, message)
+        var attempts = 0
+        while (enabled && started) {
+          val jedis = new Jedis(redisHost, redisPort)
+          redisPassword.foreach(jedis.auth)
+          val pubSub = new JedisPubSub {
+            override def onMessage(channel: String, message: String): Unit = {
+              val payload = Try(Json.parse(message).as[play.api.libs.json.JsObject]).getOrElse(Json.obj())
+              val eventId = (payload \ "eventId").asOpt[String].getOrElse("")
+              val pageId = (payload \ "pageId").asOpt[String].getOrElse("")
+              val siteId = (payload \ "siteId").asOpt[Long].getOrElse(-1L)
+              val senderId = (payload \ "senderId").asOpt[String].getOrElse("")
+              val origin = (payload \ "originInstanceId").asOpt[String].getOrElse("")
+              if (siteId > 0 && pageId.nonEmpty && origin != instanceId) {
+                logger.debug(s"cursor.subscribe eventId=$eventId pageId=$pageId originInstanceId=$origin instanceId=$instanceId senderId=$senderId")
+                PageCursorHub.broadcast(roomKeyForPage(siteId, pageId), senderId, message)
+              }
             }
           }
+          try {
+            logger.info(s"Redis cursor subscriber connecting: instanceId=$instanceId attempt=${attempts + 1}")
+            pubSub.psubscribe(s"${channelPrefix}*${channelSuffix}")
+            attempts = 0
+          } catch {
+            case t: Throwable =>
+              attempts += 1
+              val delay = Math.min(reconnectBaseDelayMs * Math.pow(2d, attempts - 1).toLong, reconnectMaxDelayMs)
+              logger.error(s"Redis cursor subscriber stopped: instanceId=$instanceId attempt=$attempts reconnectInMs=$delay", t)
+              Thread.sleep(delay)
+          } finally {
+            jedis.close()
+          }
         }
+      }(executionContext)
+    }
+
+
+    def touchPresence(siteId: Long, pageId: String, userId: String, senderId: String): Unit = {
+      if (!enabled || siteId <= 0 || pageId.isEmpty || senderId.isEmpty) return
+      val key = s"ws:wiki:presence:$siteId:$pageId:$senderId"
+      val value = Json.obj(
+        "siteId" -> siteId,
+        "pageId" -> pageId,
+        "userId" -> userId,
+        "senderId" -> senderId,
+        "instanceId" -> instanceId,
+        "ts" -> System.currentTimeMillis()
+      ).toString()
+      Future {
+        val jedis = new Jedis(redisHost, redisPort)
         try {
-          pubSub.psubscribe(s"${channelPrefix}*${channelSuffix}")
-        } catch {
-          case t: Throwable =>
-            started = false
-            logger.error(s"Redis cursor subscriber stopped: instanceId=$instanceId", t)
+          redisPassword.foreach(jedis.auth)
+          jedis.setex(key, presenceTtlSeconds.toLong, value)
         } finally {
           jedis.close()
         }
       }(executionContext)
     }
 
-    def publish(pageId: String, payload: play.api.libs.json.JsObject): Unit = {
+    def publish(siteId: Long, pageId: String, payload: play.api.libs.json.JsObject): Unit = {
       if (!enabled) return
-      val channel = s"$channelPrefix$pageId$channelSuffix"
+      val channel = s"$channelPrefix$siteId:$pageId$channelSuffix"
       Future {
         val jedis = new Jedis(redisHost, redisPort)
         try {
@@ -377,9 +413,12 @@ controllerComponents: ControllerComponents,
         }
       }
 
+      val siteForWs = database.withConnection { implicit connection =>
+        SiteLogic.get(request.host)
+      }
       val (_, pageLastRevisionContent) = latestRevisionAndContent()
       val isReadable = database.withConnection { implicit connection =>
-        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val site: Site = siteForWs
         val ctxSite = ContextSite.empty()(database, actorAhaWiki, applicationConf, ahaWikiCache, site)
         val permission = WikiPermission()(provider, connection, ctxSite)
         permission.isReadable(pageLastRevisionContent)
@@ -401,6 +440,7 @@ controllerComponents: ControllerComponents,
             val outgoing = Json.obj(
               "eventId" -> eventId,
               "type" -> "cursor.move",
+              "siteId" -> siteForWs.seq,
               "pageId" -> name,
               "userId" -> userId,
               "originInstanceId" -> instanceId,
@@ -410,16 +450,17 @@ controllerComponents: ControllerComponents,
               "ts" -> System.currentTimeMillis()
             ).toString()
             logger.debug(s"cursor.publish eventId=$eventId pageId=$name userId=$userId originInstanceId=$instanceId senderId=$connectionId")
-            PageCursorHub.broadcast(name, connectionId, outgoing)
-            RedisCursorRelay.publish(name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
+            PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
+            RedisCursorRelay.touchPresence(siteForWs.seq, name, userId, connectionId)
+            RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
           }
         }
         val flow = Flow.fromSinkAndSourceCoupledMat(sink, source)(Keep.right).mapMaterializedValue { queue =>
-          PageCursorHub.subscribe(name, connectionId, queue)
+          PageCursorHub.subscribe(roomKeyForPage(siteForWs.seq, name), connectionId, queue)
           queue.offer(Json.obj("type" -> "cursor.hello", "senderId" -> connectionId).toString())
           NotUsed
         }.watchTermination() { (_, done) =>
-          done.onComplete(_ => PageCursorHub.unsubscribe(name, connectionId))(executionContext)
+          done.onComplete(_ => PageCursorHub.unsubscribe(roomKeyForPage(siteForWs.seq, name), connectionId))(executionContext)
           NotUsed
         }
         Right(flow)

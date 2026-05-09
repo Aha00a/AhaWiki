@@ -56,10 +56,10 @@
 - [x] `originInstanceId`를 로그/디버깅에 포함한다.
 
 ### Phase 2 — 페이지 룸 라우팅 정비
-- [ ] 페이지 단위 룸 키 규칙을 표준화한다.
-- [ ] 룸 join 시 페이지 읽기 권한을 서버에서 검증한다.
-- [ ] 연결 종료 시 leave/정리 로직을 보장한다.
-- [ ] 재연결 시 기존 페이지 룸 자동 재참여를 보장한다.
+- [x] 페이지 단위 룸 키 규칙을 표준화한다.
+- [x] 룸 join 시 페이지 읽기 권한을 서버에서 검증한다.
+- [x] 연결 종료 시 leave/정리 로직을 보장한다.
+- [x] 재연결 시 기존 페이지 룸 자동 재참여를 보장한다.
 
 ### Phase 3 — 클라이언트 전송 품질
 - [x] 커서 move 이벤트 전송 주기를 30~60ms로 throttle한다.
@@ -68,9 +68,9 @@
 - [x] heartbeat 누락 시 stale 커서를 자동 제거한다.
 
 ### Phase 4 — Presence/안정성 강화
-- [ ] Redis TTL 기반 presence heartbeat를 추가한다. (예: TTL 10~15초)
+- [x] Redis TTL 기반 presence heartbeat를 추가한다. (예: TTL 10~15초)
 - [ ] 만료 사용자/고아 커서를 정리한다.
-- [ ] subscriber 재연결(backoff) 로직을 추가한다.
+- [x] subscriber 재연결(backoff) 로직을 추가한다.
 - [ ] 캐시용 Redis 연결과 Pub/Sub 연결 전략을 분리한다.
 
 ### Phase 5 — 관측성(Observability)
