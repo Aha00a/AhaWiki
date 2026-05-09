@@ -27,6 +27,7 @@ import models.tables.CalculatedLink
 import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
+import models.tables.User
 import play.api.Environment
 import play.api.Configuration
 import play.api.Logging
@@ -155,13 +156,14 @@ controllerComponents: ControllerComponents,
     }
 
 
-    def touchPresence(siteId: Long, pageId: String, userId: String, senderId: String): Unit = {
+    def touchPresence(siteId: Long, pageId: String, nickname: String, profileImageUrl: String, senderId: String): Unit = {
       if (!enabled || siteId <= 0 || pageId.isEmpty || senderId.isEmpty) return
       val key = s"ws:wiki:presence:$siteId:$pageId:$senderId"
       val value = Json.obj(
         "siteId" -> siteId,
         "pageId" -> pageId,
-        "userId" -> userId,
+        "nickname" -> nickname,
+        "profileImageUrl" -> profileImageUrl,
         "senderId" -> senderId,
         "instanceId" -> instanceId,
         "ts" -> System.currentTimeMillis()
@@ -429,35 +431,50 @@ controllerComponents: ControllerComponents,
       } else {
         RedisCursorRelay.ensureStarted()
         val connectionId = UUID.randomUUID().toString
-        val userId = SessionLogic.getUser(request).map(_.email).filter(_.nonEmpty).getOrElse("anonymous")
+        val currentUser = SessionLogic.getUser(request)
+        val nickname = currentUser.map(_.nickname).filter(_.nonEmpty).getOrElse("")
+        val profileImageUrl = currentUser.flatMap { user =>
+          database.withConnection { implicit connection =>
+            User.selectBySeq(user.seq).flatMap(_.profileImageUrl).filter(_.nonEmpty)
+          }
+        }.getOrElse("")
         val source = Source.queue[String](32, OverflowStrategy.dropHead)
         val sink = Sink.foreach[String] { incoming =>
           val payload = Try(Json.parse(incoming).asOpt[play.api.libs.json.JsObject].getOrElse(Json.obj())).getOrElse(Json.obj())
-          if ((payload \ "type").asOpt[String].contains("cursor.move")) {
-            val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
-            val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
-            val eventId = UUID.randomUUID().toString
-            val outgoing = Json.obj(
-              "eventId" -> eventId,
-              "type" -> "cursor.move",
-              "siteId" -> siteForWs.seq,
-              "pageId" -> name,
-              "userId" -> userId,
-              "originInstanceId" -> instanceId,
-              "senderId" -> connectionId,
-              "x" -> x,
-              "y" -> y,
-              "ts" -> System.currentTimeMillis()
-            ).toString()
-            logger.debug(s"cursor.publish eventId=$eventId pageId=$name userId=$userId originInstanceId=$instanceId senderId=$connectionId")
-            PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
-            RedisCursorRelay.touchPresence(siteForWs.seq, name, userId, connectionId)
-            RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
+          (payload \ "type").asOpt[String] match {
+            case Some("cursor.move") =>
+              val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
+              val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
+              val eventId = UUID.randomUUID().toString
+              val outgoing = Json.obj(
+                "eventId" -> eventId,
+                "type" -> "cursor.move",
+                "siteId" -> siteForWs.seq,
+                "pageId" -> name,
+                "originInstanceId" -> instanceId,
+                "senderId" -> connectionId,
+                "x" -> x,
+                "y" -> y,
+                "ts" -> System.currentTimeMillis()
+              ).toString()
+              logger.debug(s"cursor.publish eventId=$eventId pageId=$name originInstanceId=$instanceId senderId=$connectionId")
+              PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
+              RedisCursorRelay.touchPresence(siteForWs.seq, name, nickname, profileImageUrl, connectionId)
+              RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
+
+            case Some("cursor.hello") =>
+              val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
+              PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
+              RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(hello).as[play.api.libs.json.JsObject])
+
+            case _ =>
           }
         }
         val flow = Flow.fromSinkAndSourceCoupledMat(sink, source)(Keep.right).mapMaterializedValue { queue =>
           PageCursorHub.subscribe(roomKeyForPage(siteForWs.seq, name), connectionId, queue)
-          queue.offer(Json.obj("type" -> "cursor.hello", "senderId" -> connectionId).toString())
+          val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
+          queue.offer(hello)
+          PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
           NotUsed
         }.watchTermination() { (_, done) =>
           done.onComplete(_ => PageCursorHub.unsubscribe(roomKeyForPage(siteForWs.seq, name), connectionId))(executionContext)

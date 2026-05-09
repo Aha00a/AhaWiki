@@ -22,18 +22,20 @@
   - [x] `eventId`: 중복 수신 방지(디듀프)용 고유 ID
   - [x] `type`: 이벤트 타입 (`cursor.move`)
   - [x] `pageId`: 페이지 식별자
-  - [x] `userId`: 사용자 식별자 (항상 포함, 포인터 식별은 `senderId` 기준)
+  - [x] `nickname`: 사용자 닉네임 (로그인하지 않았을 때는 `""` 또는 생략 가능, 포인터 식별은 `senderId` 기준)
+  - [x] `profileImageUrl`: 사용자 프로필 이미지 URL (없으면 `""` 또는 생략 가능)
   - [x] `x`, `y`: 정규화 좌표(0..1)
   - [x] `ts`: 이벤트 발생 시각(Unix ms)
   - [x] `originInstanceId`: 이벤트 발행 인스턴스 ID
-- [ ] 예시 페이로드
+- [ ] 예시 페이로드 (`cursor.move`는 좌표 중심으로 최소화하고, `nickname`/`profileImageUrl`은 `cursor.hello`에서 주로 전달)
 
 ```json
 {
   "eventId": "6f4f9ec6-1e41-4a88-bec9-987dd8f9c1d1",
   "type": "cursor.move",
   "pageId": "wiki-123",
-  "userId": "u-45",
+  "nickname": "aha_user",
+  "profileImageUrl": "https://cdn.example.com/u/aha_user.png",
   "x": 0.42,
   "y": 0.18,
   "ts": 1770000000000,
@@ -79,7 +81,7 @@
   - [ ] subscribe 수신 TPS
   - [ ] 페이지별 fan-out 수
   - [ ] subscriber 재연결 횟수/실패 수
-- [ ] 구조화 로그 필드 통일 (`eventId`, `pageId`, `instanceId`, `userId`)
+- [ ] 구조화 로그 필드 통일 (`eventId`, `pageId`, `instanceId`, `nickname`)
 - [ ] 이상 징후 알람 기준 정의(구독 끊김, 수신 급감, 지연 급증)
 
 ### Phase 6 — 검증(테스트 시나리오)

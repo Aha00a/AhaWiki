@@ -32,6 +32,18 @@ object User {
       .map(User.tupled)
   }
 
+
+  def selectBySeq(seq: Long)(implicit connection: Connection): Option[User] = {
+    SQL"""
+      SELECT
+          U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
+          FROM User U
+          WHERE U.seq = $seq
+     """
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
+      .map(User.tupled)
+  }
+
   def selectByNickname(nickname: String)(implicit connection: Connection): Option[User] = {
     SQL"""
       SELECT

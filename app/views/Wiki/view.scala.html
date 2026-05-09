@@ -134,6 +134,8 @@
                 var pointerSeenAt = {};
                 var pointerTarget = {};
                 var pointerRender = {};
+                var pointerMeta = {};
+                var helloAckedSender = {};
                 var staleThresholdMs = 15000;
                 var smoothingAlpha = 0.35;
 
@@ -147,25 +149,43 @@
                     return 'hsla(' + hue + ', 85%, 55%, 0.28)';
                 }
 
+                function escapeHtml(text) {
+                    return String(text || '').replace(/[&<>"']/g, function (ch) {
+                        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+                    });
+                }
+
                 function upsertCursor(senderId, x, y) {
                     if (!senderId || senderId === mySenderId) return;
                     var key = 'cursor-' + senderId;
+                    var dotColor = colorFromSenderId(senderId);
                     var $cursor = pointerMap[key];
                     if (!$cursor) {
-                        $cursor = $('<div class="remoteCursor">⬤</div>').css({
+                        $cursor = $('<div class="remoteCursor"></div>').css({
                             position: 'absolute',
-                            width: '12px',
-                            height: '12px',
-                            marginLeft: '-6px',
-                            marginTop: '-6px',
-                            color: colorFromSenderId(senderId),
-                            fontSize: '12px',
-                            lineHeight: '12px',
+                            transform: 'translate(-6px, -6px)',
                             zIndex: 9998,
-                            pointerEvents: 'none'
+                            pointerEvents: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            backgroundColor: dotColor,
+                            borderRadius: '500px',
+                            padding: '2px 5px 2px 2px',
                         }).appendTo('body');
                         pointerMap[key] = $cursor;
                     }
+
+                    var meta = pointerMeta[key] || {};
+                    var safeNickname = escapeHtml(meta.nickname || 'Guest');
+                    var safeProfileImageUrl = escapeHtml(meta.profileImageUrl || '');
+                    var avatarHtml = safeProfileImageUrl
+                        ? '<img src="' + safeProfileImageUrl + '" alt="' + safeNickname + '" style="width:16px;height:16px;border-radius:50%;object-fit:cover;border: 1px solid ' + dotColor + ';"/>'
+                        : '<span style="width:16px;height:16px;border-radius:50%;background:' + dotColor + ';display:inline-block;"></span>';
+                    var labelHtml = '<span style="padding:1px 3px;border-radius:10px;background:rgba(0,0,0,0.05);color: #000;font-size:11px;line-height:16px;white-space:nowrap;">' + safeNickname + '</span>';
+                    var pointerHtml = '<span style="font-size:12px;line-height:12px;color:' + dotColor + ';">⬤</span>';
+                    $cursor.html(avatarHtml + labelHtml);
+
                     var px = Math.max(0, Math.min($(window).width(), x * $(window).width()));
                     var py = Math.max(0, Math.min($(window).height(), y * $(window).height()));
                     pointerTarget[key] = { x: px, y: py };
@@ -196,17 +216,34 @@
                             delete pointerTarget[key];
                             delete pointerRender[key];
                             delete pointerSeenAt[key];
+                            delete pointerMeta[key];
+                            delete helloAckedSender[key.replace("cursor-", "")];
                         }
                     });
                 }
 
                 function connect() {
                     socket = new WebSocket(wsUrl);
+                    socket.onopen = function () {
+                        socket.send(JSON.stringify({ type: 'cursor.hello' }));
+                    };
                     socket.onmessage = function (event) {
                         try {
                             var data = JSON.parse(event.data);
                             if (data.type === 'cursor.hello') {
-                                mySenderId = data.senderId || null;
+                                var helloSenderId = data.senderId || null;
+                                if (!helloSenderId) return;
+                                if (helloSenderId === mySenderId || !mySenderId) {
+                                    mySenderId = helloSenderId;
+                                }
+                                pointerMeta['cursor-' + helloSenderId] = {
+                                    nickname: data.nickname || '',
+                                    profileImageUrl: data.profileImageUrl || ''
+                                };
+                                if (helloSenderId !== mySenderId && !helloAckedSender[helloSenderId] && socket && socket.readyState === WebSocket.OPEN) {
+                                    helloAckedSender[helloSenderId] = true;
+                                    socket.send(JSON.stringify({ type: 'cursor.hello' }));
+                                }
                                 return;
                             }
                             if (data.type === 'cursor.move') {
