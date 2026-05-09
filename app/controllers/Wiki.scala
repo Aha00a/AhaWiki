@@ -130,9 +130,8 @@ controllerComponents: ControllerComponents,
         var attempts = 0
         while (enabled && started) {
           val jedis = new Jedis(redisHost, redisPort)
-          redisPassword.foreach(jedis.auth)
           val pubSub = new JedisPubSub {
-            override def onMessage(channel: String, message: String): Unit = {
+            override def onPMessage(pattern: String, channel: String, message: String): Unit = {
               val payload = Try(Json.parse(message).as[play.api.libs.json.JsObject]).getOrElse(Json.obj())
               val eventId = (payload \ "eventId").asOpt[String].getOrElse("")
               val pageId = (payload \ "pageId").asOpt[String].getOrElse("")
@@ -146,8 +145,9 @@ controllerComponents: ControllerComponents,
             }
           }
           try {
+            redisPassword.foreach(jedis.auth)
             logger.info(s"Redis cursor subscriber connecting: instanceId=$instanceId attempt=${attempts + 1}")
-            pubSub.psubscribe(s"${channelPrefix}*${channelSuffix}")
+            jedis.psubscribe(pubSub, s"${channelPrefix}*${channelSuffix}")
             attempts = 0
           } catch {
             case t: Throwable =>
