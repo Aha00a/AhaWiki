@@ -61,7 +61,6 @@ import scala.collection.concurrent.TrieMap
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import redis.clients.jedis.{Jedis, JedisPubSub}
 
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
@@ -75,8 +74,6 @@ controllerComponents: ControllerComponents,
                      executionContext: ExecutionContext,
                      configuration: Configuration
 ) extends BaseController with Logging {
-  private val instanceId: String = configuration.getOptional[String]("play.server.http.port").map(v => s"app-$v").getOrElse(UUID.randomUUID().toString)
-
   private def roomKeyForPage(siteId: Long, pageId: String): String = s"wiki:$siteId:$pageId"
 
   private object PageCursorHub {
@@ -100,104 +97,6 @@ controllerComponents: ControllerComponents,
           if (id != senderId) queue.offer(payload)
         }
       }
-    }
-  }
-
-  private object RedisCursorRelay {
-    private val redisHost: String = configuration.getOptional[String]("play.cache.redis.host").getOrElse("")
-    private val redisPort: Int = configuration.getOptional[Int]("play.cache.redis.port").getOrElse(6379)
-    private val redisPassword: Option[String] = configuration.getOptional[String]("play.cache.redis.password").filter(_.nonEmpty)
-    private val enabledByFlag: Boolean = configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursorSharingViaRedis")
-      .orElse(configuration.getOptional[Boolean]("AhaWiki.featureFlags.cursor-sharing-via-redis"))
-      .getOrElse(false)
-    private val enabled: Boolean = enabledByFlag && redisHost.nonEmpty
-    private val channelPrefix = "ws:wiki:"
-    private val channelSuffix = ":cursor"
-    @volatile private var started = false
-    private val reconnectBaseDelayMs = 1000L
-    private val reconnectMaxDelayMs = 30000L
-    private val presenceTtlSeconds = 15
-
-    def ensureStarted(): Unit = synchronized {
-      if (!enabled) {
-        if (!enabledByFlag) logger.info("Redis cursor relay disabled by feature flag")
-        else logger.warn("Redis cursor relay disabled because play.cache.redis.host is empty")
-        return
-      }
-      if (started) return
-      started = true
-      Future {
-        var attempts = 0
-        while (enabled && started) {
-          val jedis = new Jedis(redisHost, redisPort)
-          val pubSub = new JedisPubSub {
-            override def onPMessage(pattern: String, channel: String, message: String): Unit = {
-              val payload = Try(Json.parse(message).as[play.api.libs.json.JsObject]).getOrElse(Json.obj())
-              val eventId = (payload \ "eventId").asOpt[String].getOrElse("")
-              val pageId = (payload \ "pageId").asOpt[String].getOrElse("")
-              val siteId = (payload \ "siteId").asOpt[Long].getOrElse(-1L)
-              val senderId = (payload \ "senderId").asOpt[String].getOrElse("")
-              val origin = (payload \ "originInstanceId").asOpt[String].getOrElse("")
-              if (siteId > 0 && pageId.nonEmpty && origin != instanceId) {
-                logger.debug(s"cursor.subscribe eventId=$eventId pageId=$pageId originInstanceId=$origin instanceId=$instanceId senderId=$senderId")
-                PageCursorHub.broadcast(roomKeyForPage(siteId, pageId), senderId, message)
-              }
-            }
-          }
-          try {
-            redisPassword.foreach(jedis.auth)
-            logger.info(s"Redis cursor subscriber connecting: instanceId=$instanceId attempt=${attempts + 1}")
-            jedis.psubscribe(pubSub, s"${channelPrefix}*${channelSuffix}")
-            attempts = 0
-          } catch {
-            case t: Throwable =>
-              attempts += 1
-              val delay = Math.min(reconnectBaseDelayMs * Math.pow(2d, attempts - 1).toLong, reconnectMaxDelayMs)
-              logger.error(s"Redis cursor subscriber stopped: instanceId=$instanceId attempt=$attempts reconnectInMs=$delay", t)
-              Thread.sleep(delay)
-          } finally {
-            jedis.close()
-          }
-        }
-      }(executionContext)
-    }
-
-
-    def touchPresence(siteId: Long, pageId: String, nickname: String, profileImageUrl: String, senderId: String): Unit = {
-      if (!enabled || siteId <= 0 || pageId.isEmpty || senderId.isEmpty) return
-      val key = s"ws:wiki:presence:$siteId:$pageId:$senderId"
-      val value = Json.obj(
-        "siteId" -> siteId,
-        "pageId" -> pageId,
-        "nickname" -> nickname,
-        "profileImageUrl" -> profileImageUrl,
-        "senderId" -> senderId,
-        "instanceId" -> instanceId,
-        "ts" -> System.currentTimeMillis()
-      ).toString()
-      Future {
-        val jedis = new Jedis(redisHost, redisPort)
-        try {
-          redisPassword.foreach(jedis.auth)
-          jedis.setex(key, presenceTtlSeconds.toLong, value)
-        } finally {
-          jedis.close()
-        }
-      }(executionContext)
-    }
-
-    def publish(siteId: Long, pageId: String, payload: play.api.libs.json.JsObject): Unit = {
-      if (!enabled) return
-      val channel = s"$channelPrefix$siteId:$pageId$channelSuffix"
-      Future {
-        val jedis = new Jedis(redisHost, redisPort)
-        try {
-          redisPassword.foreach(jedis.auth)
-          jedis.publish(channel, payload.toString())
-        } finally {
-          jedis.close()
-        }
-      }(executionContext)
     }
   }
 
@@ -436,7 +335,6 @@ controllerComponents: ControllerComponents,
         logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")
         Left(Forbidden("Permission denied."))
       } else {
-        RedisCursorRelay.ensureStarted()
         val connectionId = UUID.randomUUID().toString
         val currentUser = SessionLogic.getUser(request)
         val nickname = currentUser.map(_.nickname).filter(_.nonEmpty).getOrElse("")
@@ -452,27 +350,20 @@ controllerComponents: ControllerComponents,
             case Some("cursor.move") =>
               val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
               val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
-              val eventId = UUID.randomUUID().toString
               val outgoing = Json.obj(
-                "eventId" -> eventId,
                 "type" -> "cursor.move",
                 "siteId" -> siteForWs.seq,
                 "pageId" -> name,
-                "originInstanceId" -> instanceId,
                 "senderId" -> connectionId,
                 "x" -> x,
                 "y" -> y,
                 "ts" -> System.currentTimeMillis()
               ).toString()
-              logger.debug(s"cursor.publish eventId=$eventId pageId=$name originInstanceId=$instanceId senderId=$connectionId")
               PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
-              RedisCursorRelay.touchPresence(siteForWs.seq, name, nickname, profileImageUrl, connectionId)
-              RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(outgoing).as[play.api.libs.json.JsObject])
 
             case Some("cursor.hello") =>
               val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
               PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
-              RedisCursorRelay.publish(siteForWs.seq, name, Json.parse(hello).as[play.api.libs.json.JsObject])
 
             case _ =>
           }
