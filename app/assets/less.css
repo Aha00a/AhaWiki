@@ -3314,6 +3314,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang] {
   border: 2px solid #9999cc;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #9999cc;
 }
 .AhaWiki .Interpreter.Vim[data-lang]:before {
@@ -3323,6 +3324,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=scala] {
   border: 2px solid #DC322F;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #DC322F;
 }
 .AhaWiki .Interpreter.Vim[data-lang=scala]:before {
@@ -3332,6 +3334,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=perl] {
   border: 2px solid #004065;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #004065;
 }
 .AhaWiki .Interpreter.Vim[data-lang=perl]:before {
@@ -3341,6 +3344,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=python] {
   border: 2px solid #75A8D3;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #75A8D3;
 }
 .AhaWiki .Interpreter.Vim[data-lang=python]:before {
@@ -3350,6 +3354,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=javascript] {
   border: 2px solid #F0DB4F;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #F0DB4F;
 }
 .AhaWiki .Interpreter.Vim[data-lang=javascript]:before {
@@ -3359,6 +3364,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=css] {
   border: 2px solid #FF6600;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #FF6600;
 }
 .AhaWiki .Interpreter.Vim[data-lang=css]:before {
@@ -3368,6 +3374,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=html] {
   border: 2px solid #E44D26;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #E44D26;
 }
 .AhaWiki .Interpreter.Vim[data-lang=html]:before {
@@ -3377,6 +3384,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=typescript] {
   border: 2px solid #3178C6;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #3178C6;
 }
 .AhaWiki .Interpreter.Vim[data-lang=typescript]:before {
@@ -3386,6 +3394,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=java] {
   border: 2px solid #007396;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #007396;
 }
 .AhaWiki .Interpreter.Vim[data-lang=java]:before {
@@ -3395,6 +3404,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=c] {
   border: 2px solid #A8B9CC;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #A8B9CC;
 }
 .AhaWiki .Interpreter.Vim[data-lang=c]:before {
@@ -3404,6 +3414,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=cpp] {
   border: 2px solid #00599C;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #00599C;
 }
 .AhaWiki .Interpreter.Vim[data-lang=cpp]:before {
@@ -3413,6 +3424,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=csharp] {
   border: 2px solid #512BD4;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #512BD4;
 }
 .AhaWiki .Interpreter.Vim[data-lang=csharp]:before {
@@ -3422,6 +3434,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=go] {
   border: 2px solid #00ADD8;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #00ADD8;
 }
 .AhaWiki .Interpreter.Vim[data-lang=go]:before {
@@ -3431,6 +3444,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=rust] {
   border: 2px solid #DEA584;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #DEA584;
 }
 .AhaWiki .Interpreter.Vim[data-lang=rust]:before {
@@ -3440,6 +3454,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=php] {
   border: 2px solid #777BB4;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #777BB4;
 }
 .AhaWiki .Interpreter.Vim[data-lang=php]:before {
@@ -3449,6 +3464,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=ruby] {
   border: 2px solid #CC342D;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #CC342D;
 }
 .AhaWiki .Interpreter.Vim[data-lang=ruby]:before {
@@ -3458,6 +3474,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=swift] {
   border: 2px solid #FA7343;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #FA7343;
 }
 .AhaWiki .Interpreter.Vim[data-lang=swift]:before {
@@ -3467,6 +3484,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=kotlin] {
   border: 2px solid #7F52FF;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #7F52FF;
 }
 .AhaWiki .Interpreter.Vim[data-lang=kotlin]:before {
@@ -3476,6 +3494,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=sql] {
   border: 2px solid #336791;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #336791;
 }
 .AhaWiki .Interpreter.Vim[data-lang=sql]:before {
@@ -3485,6 +3504,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=shell] {
   border: 2px solid #89E051;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #89E051;
 }
 .AhaWiki .Interpreter.Vim[data-lang=shell]:before {
@@ -3494,6 +3514,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=bash] {
   border: 2px solid #4EAA25;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #4EAA25;
 }
 .AhaWiki .Interpreter.Vim[data-lang=bash]:before {
@@ -3503,6 +3524,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=lua] {
   border: 2px solid #2C2D72;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #2C2D72;
 }
 .AhaWiki .Interpreter.Vim[data-lang=lua]:before {
@@ -3512,6 +3534,7 @@ kbd:hover > kbd {
 .AhaWiki .Interpreter.Vim[data-lang=r] {
   border: 2px solid #276DC3;
   border-left-width: 15px;
+  border-radius: 5px;
   background-color: #276DC3;
 }
 .AhaWiki .Interpreter.Vim[data-lang=r]:before {
@@ -3526,6 +3549,7 @@ kbd:hover > kbd {
   right: 0;
   padding: 1px 142px 5px 10px;
   overflow: hidden;
+  border-radius: 0 0 0 5px;
 }
 .AhaWiki .WikiColumns {
   padding-top: 15px;
