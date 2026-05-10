@@ -20,6 +20,7 @@ import javax.inject.Singleton
 import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
+import scala.util.control.NonFatal
 
 @Singleton
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
@@ -37,15 +38,22 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
 
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
+      val startNs = System.nanoTime()
+      val thread = Thread.currentThread()
+      val cacheKey = key()
+
       val json: String = try {
-        syncCacheApi.getOrElseUpdate(key(), durationExpire) {
+        syncCacheApi.getOrElseUpdate(cacheKey, durationExpire) {
           wrapOrElse().toJson
         }
       } catch {
         case timeoutException: java.util.concurrent.TimeoutException =>
-          logger.warn(s"Cache\tTimeout\t${key()}\tFalling back to uncached value", timeoutException)
+          logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${(System.nanoTime() - startNs) / 1000000.0}\tFalling back to uncached value", timeoutException)
           wrapOrElse().toJson
       }
+
+      val elapsedMs = (System.nanoTime() - startNs) / 1000000.0
+      logger.info(s"Cache\tGet\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}")
 
       json.fromJson[T] match {
         case Left(e) =>
@@ -74,6 +82,24 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   trait CacheEntityWithDatabase[T] extends CacheEntity[T, Database] {
+    protected def withConnectionTiming[R](cacheKey: String)(f: java.sql.Connection => R)(implicit database: Database): R = {
+      val waitStartNs = System.nanoTime()
+      try {
+        database.withConnection { connection =>
+          val waitedMs = (System.nanoTime() - waitStartNs) / 1000000.0
+          val thread = Thread.currentThread()
+          logger.info(s"Cache\tConnection\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\twaitMs=${waitedMs}")
+          f(connection)
+        }
+      } catch {
+        case NonFatal(e) =>
+          val waitedMs = (System.nanoTime() - waitStartNs) / 1000000.0
+          val thread = Thread.currentThread()
+          logger.warn(s"Cache\tConnection\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\twaitMs=${waitedMs}\terror=${e.getClass.getSimpleName}", e)
+          throw e
+      }
+    }
+
     def orElse()(implicit database: Database): T
   }
 
@@ -95,7 +121,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
     override def key()(implicit i: Database): String = keyDefault
-    override def orElse()(implicit database: Database): Seq[SiteDomain] = database.withConnection { implicit connection =>
+    override def orElse()(implicit database: Database): Seq[SiteDomain] = withConnectionTiming(key()) { implicit connection =>
       models.tables.SiteDomain.select()
     }
 
@@ -109,7 +135,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   object Site extends CacheEntityWithDatabase[Seq[Site]] {
     override def key()(implicit i: Database): String = keyDefault
-    override def orElse()(implicit database: Database): Seq[Site] = database.withConnection { implicit connection =>
+    override def orElse()(implicit database: Database): Seq[Site] = withConnectionTiming(key()) { implicit connection =>
       models.tables.Site.select()
     }
     object Map extends CacheEntityWithDatabase[Map[Long, Site]] {
