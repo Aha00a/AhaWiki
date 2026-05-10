@@ -151,7 +151,7 @@ class Api @Inject()(
   private def resolveAdminTargetSite(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
     siteSeqValue
       .flatMap(parseSiteSeq)
-      .flatMap(seq => SiteLogic.get(seq)(database, ahaWikiCache))
+      .flatMap(seq => SiteLogic.get(seq)(database))
       .toRight(BadRequest(Json.obj("error" -> Json.fromString("Valid siteSeq is required.")).toString()).as(JSON))
   }
 
@@ -1052,7 +1052,7 @@ class Api @Inject()(
     if (!isAdmin) {
       Forbidden("Access denied.")
     } else {
-      SiteLogic.get(seq)(database, ahaWikiCache) match {
+      SiteLogic.get(seq)(database) match {
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
@@ -1070,7 +1070,7 @@ class Api @Inject()(
     if (!isAdmin) {
       Forbidden("Access denied.")
     } else {
-      SiteLogic.get(seq)(database, ahaWikiCache) match {
+      SiteLogic.get(seq)(database) match {
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
