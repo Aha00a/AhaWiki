@@ -56,7 +56,17 @@ object User {
   }
 
   def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
-    val base = email.takeWhile(_ != '@').take(3).toLowerCase
+    val baseNickname = {
+      val localPart = email.takeWhile(_ != '@').toLowerCase
+      val normalized = localPart
+        .map(ch => if (ch.isLetterOrDigit || ch == '_') ch else '_')
+        .mkString
+        .replaceAll("_+", "_")
+        .stripPrefix("_")
+        .stripSuffix("_")
+        .take(255)
+      if (normalized.nonEmpty) normalized else "user"
+    }
 
     def generateSuffix(): String =
       scala.util.Random.alphanumeric
@@ -65,15 +75,21 @@ object User {
         .take(10)
         .mkString
 
-    def generateNickname(): String =
-      s"${base}_${generateSuffix()}"
+    def generateNickname(attempt: Int): String =
+      if (attempt == 0) baseNickname
+      else {
+        val suffix = generateSuffix()
+        val prefixMaxLength = 255 - (suffix.length + 1)
+        val prefix = baseNickname.take(prefixMaxLength.max(1))
+        s"${prefix}_${suffix}"
+      }
 
     @tailrec
     def tryInsert(attempt: Int): Option[(Long, String)] = {
       if (attempt >= 100)
         None
       else {
-        val nickname = generateNickname()
+        val nickname = generateNickname(attempt)
         try {
           SQL"""INSERT INTO User (email, nickname, profileImageUrl) VALUES ($email, $nickname, $profileImageUrl)"""
             .executeInsert(scalar[Long].singleOpt)
