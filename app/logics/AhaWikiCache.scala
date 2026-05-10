@@ -141,7 +141,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
-    AhaWikiCacheDomainSite.invalidate()
+    AhaWikiCacheMemoryDomainSite.invalidate()
     implicit val ds = (database, site)
     Page.SeqPageWithoutContentWithSizeLatest.invalidate()
     Header.invalidate()

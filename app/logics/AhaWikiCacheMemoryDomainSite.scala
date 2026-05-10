@@ -6,7 +6,7 @@ import play.api.Logging
 import play.api.db.Database
 import scala.annotation.unused
 
-object AhaWikiCacheDomainSite extends Logging {
+object AhaWikiCacheMemoryDomainSite extends Logging {
   @volatile private var domainToSite: Map[String, Site] = Map.empty
   @volatile private var siteBySeq: Map[Long, Site] = Map.empty
   @volatile private var loadedAtEpochMs: Long = 0L
