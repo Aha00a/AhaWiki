@@ -16,7 +16,7 @@ import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import play.api.mvc.ControllerComponents
 
-import java.time.Instant
+import java.time.{Duration, Instant, LocalTime, ZoneId, ZonedDateTime}
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject._
 import scala.concurrent.ExecutionContext
@@ -56,7 +56,8 @@ class ApplicationLifecycleHook @Inject()(
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
-  executionContext: ExecutionContext
+  executionContext: ExecutionContext,
+  cacheFileCleanupService: CacheFileCleanupService
 ) extends Logging {
   logger.info("OnApplicationStarting")
 
@@ -145,6 +146,34 @@ class ApplicationLifecycleHook @Inject()(
     scheduleOnce(initialDelay)
   }
 
+
+  private def nextDailyTime(targetTime: LocalTime, zoneId: ZoneId): FiniteDuration = {
+    val now = ZonedDateTime.now(zoneId)
+    val todayTarget = now.withHour(targetTime.getHour).withMinute(targetTime.getMinute).withSecond(0).withNano(0)
+    val nextTarget = if (now.isBefore(todayTarget)) todayTarget else todayTarget.plusDays(1)
+    Duration.between(now, nextTarget).getSeconds.seconds
+  }
+
+  def registerDailyCronLikeScheduler(name: String, targetTime: LocalTime, zoneId: ZoneId, job: () => Unit): Unit = {
+    val dailyInterval = 24.hours
+    val min = dailyInterval.toSeconds.toInt
+    val max = dailyInterval.toSeconds.toInt
+    jobMap.put(name, job)
+    schedulerMap.put(name, SchedulerStatus(name, min, max, running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
+
+    def scheduleNextRun(): Unit = {
+      val delay = nextDailyTime(targetTime, zoneId)
+      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(delay.toSeconds.toInt)))
+      logScheduler(name, "next-run", "strategy" -> "daily-cron-like", "time" -> targetTime.toString, "zone" -> zoneId.toString, "delaySeconds" -> delay.toSeconds)
+      actorSystem.scheduler.scheduleOnce(delay) {
+        runScheduler(name)
+        scheduleNextRun()
+      }
+    }
+
+    scheduleNextRun()
+  }
+
   def getSchedulerStatuses: Seq[SchedulerStatus] = {
     import scala.jdk.CollectionConverters._
     schedulerMap.values().asScala.toSeq.sortBy(_.name)
@@ -187,6 +216,17 @@ class ApplicationLifecycleHook @Inject()(
     val seq = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().shuffle().take(count)
     seq.zipWithIndex.foreach { case (page, i) =>
       actorAhaWiki ! Calculate(site, page.name, i, seq.length)
+    }
+  })
+
+
+  // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매일 새벽 04:00에 만료된 캐시 파일을 정리합니다.
+  registerDailyCronLikeScheduler("CacheFileCleanup", LocalTime.of(4, 0), ZoneId.systemDefault(), () => {
+    StopWatch("CacheFileCleanup") {
+      val results = cacheFileCleanupService.cleanupAllExpiredCaches()
+      results.foreach { result =>
+        logger.info(s"CacheFileCleanup${result.name}deletedCount${result.deletedCount}")
+      }
     }
   })
 
