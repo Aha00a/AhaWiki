@@ -10,7 +10,7 @@ object AhaWikiCacheMemoryDomainSite extends Logging {
   @volatile private var domainToSite: Map[String, Site] = Map.empty
   @volatile private var siteBySeq: Map[Long, Site] = Map.empty
   @volatile private var loadedAtEpochMs: Long = 0L
-  private val durationMs: Long = 5 * 60 * 1000L
+  private val durationMs: Long = 60 * 60 * 1000L
 
   def get(host: String)(implicit database: Database): Option[Site] = {
     val now = System.currentTimeMillis()
