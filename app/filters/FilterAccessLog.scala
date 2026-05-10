@@ -10,6 +10,7 @@ import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
+import logics.security.UriAttackDetector
 import models.tables.IpDeny
 import models.tables.Site
 import play.api.Environment
@@ -40,44 +41,6 @@ class FilterAccessLog @Inject()(
   executionContext: ExecutionContext
 ) extends Filter with Logging {
   private val accessLogSampleRate = applicationConf.AhaWiki.accessLog.sampleRate().max(0.0).min(1.0)
-
-  private val toCheckStartsWith = Seq(
-    "/wp",
-    "/wordpress",
-    "/new",
-    "/old",
-    "/backup",
-    "/blog",
-    "/config",
-    "/.aws",
-    "/.env",
-    "/.git",
-    "/.vscode",
-  )
-
-  //noinspection SpellCheckingInspection
-  private val toCheckContains = Seq(
-    "/wp-admin",
-    "/wp-atom",
-    "/wp-comments-post",
-    "/wp-content",
-    "/wp-cron",
-    "/wp-feed",
-    "/wp-feed-rss",
-    "/wp-includes",
-    "/wp-json",
-    "/wp-login.php",
-    "/wp-rss",
-    "/wp-trackback",
-    "/phpinfo.php",
-    "/php_info.php",
-    "/temp.php",
-    "/xmlrpc.php",
-  )
-
-  private def isUriAttack(uri: String): Boolean = {
-    toCheckStartsWith.exists(uri.startsWith) || toCheckContains.exists(uri.contains)
-  }
 
   private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit = {
     logger.info(Seq(
@@ -176,7 +139,7 @@ class FilterAccessLog @Inject()(
         }
         Future(Results.Forbidden)
       })
-    } else if (isUriAttack(uri)) {
+    } else if (UriAttackDetector.isAttack(uri)) {
       logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
