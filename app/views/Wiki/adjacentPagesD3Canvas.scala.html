@@ -14,7 +14,7 @@
             queueGraph: [],
             fetchedSet: new Set(),
             inFlightSet: new Set(),
-            limit: 300,
+            limit: 500,
             running: false,
             nodeById: new Map(),
             linkKeySet: new Set(),
@@ -42,7 +42,7 @@
             chargeStrength: -120,
         };
 
-        var intervalFetchMs = 500;
+        var intervalFetchMs = 750;
         var maxInFlight = 3;
         var intervalAddMs = 50;
         var graphBatchSize = 5;
@@ -514,7 +514,7 @@
 
         function render() {
             clearIntervals();
-            state.limit = 300;
+            state.limit = 500;
             state.running = false;
             state.queueFetch = [];
             state.queueGraph = [];
