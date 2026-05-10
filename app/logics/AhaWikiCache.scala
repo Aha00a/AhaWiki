@@ -19,7 +19,6 @@ import javax.inject.Singleton
 import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-import scala.util.control.NonFatal
 import java.util.concurrent.ConcurrentHashMap
 
 @Singleton
@@ -51,8 +50,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
 
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
-      val startNs = System.nanoTime()
-      val thread = Thread.currentThread()
       val cacheKey = key()
 
       val json: String = try {
@@ -65,13 +62,12 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         cachedJson
       } catch {
         case timeoutException: java.util.concurrent.TimeoutException =>
-          val elapsedMs = (System.nanoTime() - startNs) / 1000000.0
           Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
             case Some(staleJson) =>
-              logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}\tServing stale cache", timeoutException)
+              logger.warn(s"Cache\tTimeout\t${cacheKey}\tServing stale cache", timeoutException)
               staleJson
             case None =>
-              logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}\tNo stale cache, falling back to uncached value", timeoutException)
+              logger.warn(s"Cache\tTimeout\t${cacheKey}\tNo stale cache, falling back to uncached value", timeoutException)
               val refreshedJson = withSingleFlight(cacheKey) {
                 wrapOrElse().toJson
               }
@@ -80,13 +76,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
           }
       }
 
-      val elapsedMs = (System.nanoTime() - startNs) / 1000000.0
-      logger.info(s"Cache\tGet\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}")
 
       json.fromJson[T] match {
         case Left(e) =>
-          logger.error(s"Cache\tParse\t${key()} = $json, $e")
-          throw new RuntimeException(s"Cache\tParse\t${key()} = $json, $e")
+          logger.error(s"Cache\tParse\t${key()}\terror=$e")
+          throw new RuntimeException(s"Cache\tParse\t${key()}\terror=$e")
         case Right(t) =>
           t
       }
@@ -94,15 +88,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
     private def wrapOrElse()(implicit i: I): T = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
-        val result = orElse()
-        logger.info(s"Cache\tFill\t${key()} = ${result match {
-          case seq: Seq[_] => s"Seq[${seq.take(10).grouped(5).map(_.mkString(",")).mkString(",\n")}].size == ${seq.size}"
-          case set: Set[_] => s"Set[${set.take(10).grouped(5).map(_.mkString(",")).mkString(",\n")}].size == ${set.size}"
-          case map: Map[_, _] => s"Map[${map.take(10).grouped(5).map(_.mkString(",")).mkString(",\n")}].size == ${map.size}"
-          case s: String => s"${s.replaceAll("\n", "|||").take(80)}... size == ${s.size}"
-          case _ => s"${result.toString.replaceAll("\n", "|||").take(80)}... size == ${result.toString.length}"
-        }}")
-        result
+        orElse()
       }
     }
 
@@ -112,28 +98,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
 
     def orElse()(implicit i: I): T
-  }
-
-  trait CacheEntityWithDatabase[T] extends CacheEntity[T, Database] {
-    protected def withConnectionTiming[R](cacheKey: String)(f: java.sql.Connection => R)(implicit database: Database): R = {
-      val waitStartNs = System.nanoTime()
-      try {
-        database.withConnection { connection =>
-          val waitedMs = (System.nanoTime() - waitStartNs) / 1000000.0
-          val thread = Thread.currentThread()
-          logger.info(s"Cache\tConnection\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\twaitMs=${waitedMs}")
-          f(connection)
-        }
-      } catch {
-        case NonFatal(e) =>
-          val waitedMs = (System.nanoTime() - waitStartNs) / 1000000.0
-          val thread = Thread.currentThread()
-          logger.warn(s"Cache\tConnection\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\twaitMs=${waitedMs}\terror=${e.getClass.getSimpleName}", e)
-          throw e
-      }
-    }
-
-    def orElse()(implicit database: Database): T
   }
 
   trait CacheEntityWithContextSite[T] extends CacheEntity[T, ContextSite] {
