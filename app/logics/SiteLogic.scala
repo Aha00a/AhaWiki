@@ -6,13 +6,11 @@ import play.api.db.Database
 
 object SiteLogic {
   def get(host: String)(implicit database: Database, ahaWikiCache: AhaWikiCache): Site = {
-    ahaWikiCache.SiteDomain.Map
-      .get()
+    AhaWikiCacheDomainSite
       .get(host)
-      .flatMap(sd => ahaWikiCache.Site.Map.get().get(sd.site))
       .getOrElse(Site.notFound)
   }
 
-  def get(seq: Long)(implicit database: Database, ahaWikiCache: AhaWikiCache): Option[Site] = ahaWikiCache.Site.get().find(_.seq == seq)
-  def selectRandom()(implicit database: Database, ahaWikiCache: AhaWikiCache): Site = ahaWikiCache.Site.get().random()
+  def get(seq: Long)(implicit database: Database, ahaWikiCache: AhaWikiCache): Option[Site] = AhaWikiCacheDomainSite.getSite(seq)
+  def selectRandom()(implicit database: Database, ahaWikiCache: AhaWikiCache): Site = AhaWikiCacheDomainSite.getSites().random()
 }

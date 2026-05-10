@@ -7,7 +7,6 @@ import models.ContextSite
 import models.ContextWikiPage
 import models.tables.PageWithoutContentWithSize
 import models.tables.Site
-import models.tables.SiteDomain
 import play.api.Environment
 import play.api.Logging
 import play.api.Mode.Dev
@@ -142,45 +141,13 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
+    AhaWikiCacheDomainSite.invalidate()
     implicit val ds = (database, site)
-    SiteDomain.invalidate()
-    SiteDomain.Map.invalidate()
-    Site.invalidate()
-    Site.Map.invalidate()
     Page.SeqPageWithoutContentWithSizeLatest.invalidate()
     Header.invalidate()
     Footer.invalidate()
     Config.invalidate()
   }
-
-  object SiteDomain extends CacheEntityWithDatabase[Seq[SiteDomain]] {
-    override def key()(implicit i: Database): String = keyDefault
-    override def orElse()(implicit database: Database): Seq[SiteDomain] = withConnectionTiming(key()) { implicit connection =>
-      models.tables.SiteDomain.select()
-    }
-
-    object Map extends CacheEntityWithDatabase[Map[String, SiteDomain]] {
-      override def key()(implicit i: Database): String = keyDefault
-      override def orElse()(implicit database: Database): Map[String, SiteDomain] = {
-        SiteDomain.get().map(sd => (sd.domain, sd)).toMap
-      }
-    }
-  }
-
-  object Site extends CacheEntityWithDatabase[Seq[Site]] {
-    override def key()(implicit i: Database): String = keyDefault
-    override def orElse()(implicit database: Database): Seq[Site] = withConnectionTiming(key()) { implicit connection =>
-      models.tables.Site.select()
-    }
-    object Map extends CacheEntityWithDatabase[Map[Long, Site]] {
-      override def key()(implicit i: Database): String = keyDefault
-      override def orElse()(implicit database: Database): Map[Long, Site] = {
-        Site.get().map(sd => (sd.seq, sd)).toMap
-      }
-    }
-  }
-
-
 
   object Header extends CacheEntityWithContextSite[String] {
     override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 1 hour
