@@ -3679,9 +3679,14 @@ kbd:hover > kbd {
   padding: 8px;
   margin-bottom: 8px;
   cursor: pointer;
+  max-width: 250px;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .InterpreterKanban .kanban-card-text {
   margin-bottom: 6px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .InterpreterKanban .kanban-card-meta {
   font-size: 12px;
