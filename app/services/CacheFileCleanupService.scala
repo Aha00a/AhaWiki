@@ -9,11 +9,11 @@ import java.nio.file.attribute.BasicFileAttributes
 case class CacheCleanupResult(name: String, deletedCount: Int)
 
 class CacheFileCleanupService extends Logging {
-  private val threeMonthsMillis: Long = 1000L * 60 * 60 * 24 * 90
+  private val oneYearMillis: Long = 1000L * 60 * 60 * 24 * 365
 
   def cleanupAllExpiredCaches(): Seq[CacheCleanupResult] = {
     Seq(
-      CacheCleanupResult("Vim", cleanupExpiredFiles(new File(new File("cache"), "Vim"), ".html", threeMonthsMillis))
+      CacheCleanupResult("Vim", cleanupExpiredFiles(new File(new File("cache"), "Vim"), ".html", oneYearMillis))
     )
   }
 
