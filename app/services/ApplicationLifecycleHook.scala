@@ -193,7 +193,7 @@ class ApplicationLifecycleHook @Inject()(
 
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
-  registerFixedDelayScheduler("CacheFileCleanup", 10.minutes, 7.days, () => {
+  registerFixedDelayScheduler("CacheFileCleanup", 15 seconds, 7.days, () => {
     StopWatch("CacheFileCleanup") {
       val results = cacheFileCleanupService.cleanupAllExpiredCaches()
       results.foreach { result =>
