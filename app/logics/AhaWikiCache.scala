@@ -37,8 +37,14 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
 
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
-      val json: String = syncCacheApi.getOrElseUpdate(key(), durationExpire) {
-        wrapOrElse().toJson
+      val json: String = try {
+        syncCacheApi.getOrElseUpdate(key(), durationExpire) {
+          wrapOrElse().toJson
+        }
+      } catch {
+        case timeoutException: java.util.concurrent.TimeoutException =>
+          logger.warn(s"Cache\tTimeout\t${key()}\tFalling back to uncached value", timeoutException)
+          wrapOrElse().toJson
       }
 
       json.fromJson[T] match {
