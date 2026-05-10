@@ -21,9 +21,20 @@ import scala.annotation.unused
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import scala.util.control.NonFatal
+import java.util.concurrent.ConcurrentHashMap
 
 @Singleton
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
+  private val cacheKeyLocks = new ConcurrentHashMap[String, AnyRef]()
+
+  private def withSingleFlight[R](cacheKey: String)(f: => R): R = {
+    val lock = cacheKeyLocks.computeIfAbsent(cacheKey, _ => new AnyRef)
+    lock.synchronized {
+      try f
+      finally cacheKeyLocks.remove(cacheKey, lock)
+    }
+  }
+
   trait CacheEntity[T, I] {
     //noinspection ScalaWeakerAccess
     val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 5 minutes
@@ -43,13 +54,17 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       val cacheKey = key()
 
       val json: String = try {
-        syncCacheApi.getOrElseUpdate(cacheKey, durationExpire) {
-          wrapOrElse().toJson
+        withSingleFlight(cacheKey) {
+          syncCacheApi.getOrElseUpdate(cacheKey, durationExpire) {
+            wrapOrElse().toJson
+          }
         }
       } catch {
         case timeoutException: java.util.concurrent.TimeoutException =>
           logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${(System.nanoTime() - startNs) / 1000000.0}\tFalling back to uncached value", timeoutException)
-          wrapOrElse().toJson
+          withSingleFlight(cacheKey) {
+            wrapOrElse().toJson
+          }
       }
 
       val elapsedMs = (System.nanoTime() - startNs) / 1000000.0
