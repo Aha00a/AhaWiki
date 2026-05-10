@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import com.aha00a.commons.Implicits.RichSeq
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
+import logics.AhaWikiCacheMemoryDomainSite
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.tables.Site
@@ -191,6 +192,13 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
+
+  // 사이트 도메인 메모리 캐시 갱신 스케쥴러: 1시간 간격으로 AhaWikiCacheMemoryDomainSite를 미리 갱신합니다.
+  registerFixedDelayScheduler("SiteDomainCacheRefresh", 5.seconds, 1.hour, () => {
+    StopWatch("SiteDomainCacheRefresh") {
+      AhaWikiCacheMemoryDomainSite.refresh()
+    }
+  })
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
   registerFixedDelayScheduler("CacheFileCleanup", 15 seconds, 7.days, () => {
