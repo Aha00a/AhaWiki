@@ -26,6 +26,9 @@ import java.util.concurrent.ConcurrentHashMap
 @Singleton
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
   private val cacheKeyLocks = new ConcurrentHashMap[String, AnyRef]()
+  private val staleEntries = new ConcurrentHashMap[String, CachedJson]()
+
+  private case class CachedJson(value: String, cachedAtEpochMs: Long)
 
   private def withSingleFlight[R](cacheKey: String)(f: => R): R = {
     val lock = cacheKeyLocks.computeIfAbsent(cacheKey, _ => new AnyRef)
@@ -54,16 +57,27 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       val cacheKey = key()
 
       val json: String = try {
-        withSingleFlight(cacheKey) {
+        val cachedJson = withSingleFlight(cacheKey) {
           syncCacheApi.getOrElseUpdate(cacheKey, durationExpire) {
             wrapOrElse().toJson
           }
         }
+        staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
+        cachedJson
       } catch {
         case timeoutException: java.util.concurrent.TimeoutException =>
-          logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${(System.nanoTime() - startNs) / 1000000.0}\tFalling back to uncached value", timeoutException)
-          withSingleFlight(cacheKey) {
-            wrapOrElse().toJson
+          val elapsedMs = (System.nanoTime() - startNs) / 1000000.0
+          Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
+            case Some(staleJson) =>
+              logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}\tServing stale cache", timeoutException)
+              staleJson
+            case None =>
+              logger.warn(s"Cache\tTimeout\t${cacheKey}\tthread=${thread.getName}/${thread.getId}\telapsedMs=${elapsedMs}\tNo stale cache, falling back to uncached value", timeoutException)
+              val refreshedJson = withSingleFlight(cacheKey) {
+                wrapOrElse().toJson
+              }
+              staleEntries.put(cacheKey, CachedJson(refreshedJson, System.currentTimeMillis()))
+              refreshedJson
           }
       }
 
@@ -91,6 +105,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         }}")
         result
       }
+    }
+
+    private def isStaleBackupExpired(entry: CachedJson): Boolean = {
+      val maxStaleMs = math.max(durationExpire.toMillis * 6, 60000L)
+      System.currentTimeMillis() - entry.cachedAtEpochMs > maxStaleMs
     }
 
     def orElse()(implicit i: I): T
