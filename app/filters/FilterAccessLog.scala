@@ -141,7 +141,7 @@ class FilterAccessLog @Inject()(
       })
     } else if (UriAttackDetector.isAttack(uri)) {
       logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
-      after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
+      after((Random.nextInt(10 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
         logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)

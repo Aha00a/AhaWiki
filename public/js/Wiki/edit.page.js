@@ -8,11 +8,11 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             var baseColumnHeight = Math.max(280, windowInnerHeight - headerInnerHeight - flashInnerHeight - 300);
 
             var leftFixedHeight = ($('.left > .toolbar').outerHeight(true) || 0) +
+                ($('.left > .editHelp').outerHeight(true) || 0) +
                 ($('.left > .editorAdditional').outerHeight(true) || 0) +
                 ($('.left > .attachmentList').outerHeight(true) || 0);
             var rightFixedHeight = ($('.right > .toolbar').outerHeight(true) || 0) +
-                ($('.right > .previewAdditional').outerHeight(true) || 0) +
-                ($('.right .editHelp').outerHeight(true) || 0);
+                ($('.right > .previewAdditional').outerHeight(true) || 0);
 
             var editorHeight = Math.max(220, baseColumnHeight - leftFixedHeight - 9);
             var previewHeight = Math.max(220, baseColumnHeight - rightFixedHeight);
@@ -36,6 +36,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     if (window.AhaWikiCodeMirrorEditor) {
                         window.AhaWikiCodeMirrorEditor.setSize(null, nextEditorHeight);
                     }
+                    $('.tableInlineEditorBody').css({ height: Math.max(120, nextEditorHeight) });
                 } else if (rightTotalHeight < leftTotalHeight) {
                     var previewDelta = leftTotalHeight - rightTotalHeight;
                     $('.previewPane').css({ height: previewHeight + previewDelta, overflowY: 'auto'});
