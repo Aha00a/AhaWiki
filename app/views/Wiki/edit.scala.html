@@ -184,7 +184,23 @@
         }
         .tableInlineEditor { display: none; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 8px; }
         .tableInlineEditor.visible { display: block; }
-        .tableInlineEditorHeader { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #fafafa; }
+        .tableInlineEditorHeader { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #fafafa; flex-wrap: wrap; }
+        .tableInlineEditorHeader .tableInlineEditorButton {
+            border: 1px solid #d0d0d0;
+            background: white;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .tableInlineEditorHeader .tableInlineEditorButton:hover {
+            background: #f6f8fb;
+        }
+        .tableInlineEditorCellActive {
+            outline: 2px solid #4f8dfd;
+            outline-offset: -2px;
+            background: #f0f6ff;
+        }
         .tableInlineEditorBody { overflow: auto; padding: 8px; }
         .previewSyncBlink {
             animation: previewSyncBlinkAnimation 900ms ease-in-out 1;
@@ -261,6 +277,7 @@
             const $tableInlineEditorGrid = $('#tableInlineEditorGrid');
             const $tableInlineOption = $('#tableInlineOption');
             let tableInlineAutoApplyTimer = null;
+            let tableInlineCursor = { row: 0, col: 0 };
 
             function detectTableBlock(value) {
                 const lines = value.split('\n');
@@ -329,6 +346,44 @@
                     return `<tr>${tds}</tr>`;
                 }).join('');
                 $grid.html(html || '<tr><td><input type="text" data-r="0" data-c="0" value=""></td></tr>');
+                focusTableCell(tableInlineCursor.row, tableInlineCursor.col, false);
+            }
+            function getGridSize() {
+                const rowCount = $tableInlineEditorGrid.find('tr').length;
+                const colCount = Math.max(1, $tableInlineEditorGrid.find('tr').first().find('input').length || 1);
+                return { rowCount, colCount };
+            }
+            function focusTableCell(row, col, withFocus) {
+                const size = getGridSize();
+                if (!size.rowCount)
+                    return null;
+                const nextRow = Math.max(0, Math.min(row, size.rowCount - 1));
+                const nextCol = Math.max(0, Math.min(col, size.colCount - 1));
+                tableInlineCursor = { row: nextRow, col: nextCol };
+                $tableInlineEditorGrid.find('input').removeClass('tableInlineEditorCellActive');
+                const $target = $tableInlineEditorGrid.find(`input[data-r="${nextRow}"][data-c="${nextCol}"]`);
+                $target.addClass('tableInlineEditorCellActive');
+                if (withFocus && $target.length) {
+                    $target.trigger('focus');
+                    const value = $target.val();
+                    $target[0].setSelectionRange(value.length, value.length);
+                }
+                return $target;
+            }
+            function gridAsMatrix() {
+                const matrix = [];
+                $tableInlineEditorGrid.find('tr').each(function () {
+                    const cols = [];
+                    $(this).find('input').each(function () { cols.push($(this).val()); });
+                    matrix.push(cols);
+                });
+                return matrix.length ? matrix : [['']];
+            }
+            function rerenderWithCursor(rows, row, col, withFocus) {
+                tableInlineCursor = { row, col };
+                renderTableGrid($tableInlineEditorGrid, rows);
+                focusTableCell(row, col, withFocus);
+                scheduleInlineAutoApply();
             }
 
             function openInlineTableEditor() {
@@ -338,6 +393,7 @@
                     return false;
                 $tableInlineOption.val(table.option || 'tsv');
                 renderTableGrid($tableInlineEditorGrid, parseCells(src, table));
+                focusTableCell(0, 0, false);
                 $tableInlineEditor.addClass('visible');
                 hideStandardEditor();
                 $('.toolbarTableOnly').hide();
@@ -403,6 +459,50 @@
                 return false;
             });
             $tableInlineEditor.on('input', 'input', scheduleInlineAutoApply);
+            $tableInlineEditor.on('focus', 'input', function () {
+                tableInlineCursor = {
+                    row: parseInt($(this).attr('data-r'), 10) || 0,
+                    col: parseInt($(this).attr('data-c'), 10) || 0
+                };
+                focusTableCell(tableInlineCursor.row, tableInlineCursor.col, false);
+            });
+            $tableInlineEditor.on('keydown', 'input', function (e) {
+                const row = parseInt($(this).attr('data-r'), 10) || 0;
+                const col = parseInt($(this).attr('data-c'), 10) || 0;
+                if (e.key === 'ArrowUp') { e.preventDefault(); focusTableCell(row - 1, col, true); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); focusTableCell(row + 1, col, true); }
+                else if (e.key === 'ArrowLeft' && this.selectionStart === 0 && this.selectionEnd === 0) { e.preventDefault(); focusTableCell(row, col - 1, true); }
+                else if (e.key === 'ArrowRight' && this.selectionStart === this.value.length && this.selectionEnd === this.value.length) { e.preventDefault(); focusTableCell(row, col + 1, true); }
+            });
+            $('#tableAddRow').on('click', function () {
+                const size = getGridSize();
+                const rows = gridAsMatrix();
+                const newRow = Array.from({ length: size.colCount }, () => '');
+                rows.splice(tableInlineCursor.row + 1, 0, newRow);
+                rerenderWithCursor(rows, tableInlineCursor.row + 1, tableInlineCursor.col, true);
+                return false;
+            });
+            $('#tableDeleteRow').on('click', function () {
+                const rows = gridAsMatrix();
+                if (rows.length <= 1) return false;
+                rows.splice(tableInlineCursor.row, 1);
+                rerenderWithCursor(rows, Math.max(0, tableInlineCursor.row - 1), tableInlineCursor.col, true);
+                return false;
+            });
+            $('#tableAddCol').on('click', function () {
+                const rows = gridAsMatrix();
+                rows.forEach(r => r.splice(tableInlineCursor.col + 1, 0, ''));
+                rerenderWithCursor(rows, tableInlineCursor.row, tableInlineCursor.col + 1, true);
+                return false;
+            });
+            $('#tableDeleteCol').on('click', function () {
+                const rows = gridAsMatrix();
+                const colCount = rows[0] ? rows[0].length : 1;
+                if (colCount <= 1) return false;
+                rows.forEach(r => r.splice(tableInlineCursor.col, 1));
+                rerenderWithCursor(rows, tableInlineCursor.row, Math.max(0, tableInlineCursor.col - 1), true);
+                return false;
+            });
             let globalDragCounter = 0;
             let serverAttachments = [];
             const uploadingMap = new Map();
@@ -1455,6 +1555,10 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                                     <div class="tableInlineEditorHeader">
                                         <strong>Table</strong>
                                         <input type="text" id="tableInlineOption" value="tsv" style="width: 120px;" />
+                                        <button id="tableAddRow" class="tableInlineEditorButton" type="button">+ Row</button>
+                                        <button id="tableDeleteRow" class="tableInlineEditorButton" type="button">- Row</button>
+                                        <button id="tableAddCol" class="tableInlineEditorButton" type="button">+ Col</button>
+                                        <button id="tableDeleteCol" class="tableInlineEditorButton" type="button">- Col</button>
                                     </div>
                                     <div class="tableInlineEditorBody">
                                         <table class="tableBlockEditorGrid"><tbody id="tableInlineEditorGrid"></tbody></table>
