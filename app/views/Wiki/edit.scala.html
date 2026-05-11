@@ -1121,15 +1121,41 @@
             }).trigger('change');
 
             function getOrCreateEditorSenderId() {
-                var storageKey = 'ahaWikiEditorSenderId';
+                var cookieName = 'ahaWikiEditorSenderId';
+                var tabStorageKey = 'ahaWikiEditorTabSenderId';
+                var cookieMaxAgeSeconds = 365 * 24 * 60 * 60;
+
+                function readCookie(name) {
+                    var escaped = String(name || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                    var match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+                    return match ? decodeURIComponent(match[1]) : '';
+                }
+
+                function writeCookie(name, value, maxAgeSeconds) {
+                    document.cookie = name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + String(maxAgeSeconds) + '; SameSite=Lax';
+                }
+
+                function createSenderId() {
+                    return (window.crypto && window.crypto.randomUUID)
+                        ? window.crypto.randomUUID()
+                        : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+                }
+
                 try {
-                    var existing = window.sessionStorage.getItem(storageKey);
-                    if (existing) return existing;
-                    var created = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-                    window.sessionStorage.setItem(storageKey, created);
-                    return created;
+                    var browserId = readCookie(cookieName);
+                    if (!browserId) {
+                        browserId = createSenderId();
+                    }
+                    writeCookie(cookieName, browserId, cookieMaxAgeSeconds);
+
+                    var tabId = window.sessionStorage.getItem(tabStorageKey);
+                    if (!tabId) {
+                        tabId = createSenderId();
+                        window.sessionStorage.setItem(tabStorageKey, tabId);
+                    }
+                    return browserId + ':' + tabId;
                 } catch (e) {
-                    return 'sender-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                    return createSenderId() + ':' + createSenderId();
                 }
             }
 

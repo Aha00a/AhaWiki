@@ -522,6 +522,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.set('recaptcha', '');
                 params.set('lineStart', String(lineStart));
                 params.set('lineEnd', String(lineEnd));
+                params.set('saveSenderId', getOrCreateSaveSenderId());
                 return fetch('/w/' + encodeURIComponent(pageName), {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -533,12 +534,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: params.toString()
                 }).then(function (response) {
                     if (!response.ok) {
-                        if (response.status === 409 && attempt < 1) {
-                            return fetchLatestRevision(pageName).then(function (latestRevision) {
-                                setCurrentRevision(latestRevision);
-                                return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt + 1);
-                            });
+                        if (response.status === 409) {
+                            alert('This page has been modified. Refreshing to the latest version.');
+                            window.location.reload();
+                            throw new Error('Conflict: reloading due to stale revision.');
                         }
+                        alert('Failed to save. (status=' + response.status + ')');
                         throw new Error('Failed to save kanban. status=' + response.status);
                     }
                     setCurrentRevision(getCurrentRevision() + 1);
@@ -583,6 +584,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var getCurrentAuthor = function () {
         return window.AhaWikiCurrentUserNickname || 'Anonymous';
+    };
+
+    var SENDER_ID_COOKIE_NAME = 'ahaWikiEditorSenderId';
+    var SENDER_ID_TAB_STORAGE_KEY = 'ahaWikiEditorTabSenderId';
+    var SENDER_ID_COOKIE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
+
+    var createSenderId = function () {
+        return (window.crypto && window.crypto.randomUUID)
+            ? window.crypto.randomUUID()
+            : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    };
+
+    var readCookie = function (name) {
+        var escaped = String(name || '').replace(/[-/\^$*+?.()|[\]{}]/g, '\\$&');
+        var matched = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+        return matched ? decodeURIComponent(matched[1]) : '';
+    };
+
+    var writeCookie = function (name, value, maxAgeSeconds) {
+        document.cookie = name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + String(maxAgeSeconds) + '; SameSite=Lax';
+    };
+
+    var getOrCreateSaveSenderId = function () {
+        try {
+            var browserId = readCookie(SENDER_ID_COOKIE_NAME);
+            if (!browserId) {
+                browserId = createSenderId();
+            }
+            writeCookie(SENDER_ID_COOKIE_NAME, browserId, SENDER_ID_COOKIE_MAX_AGE_SECONDS);
+
+            var tabId = window.sessionStorage.getItem(SENDER_ID_TAB_STORAGE_KEY);
+            if (!tabId) {
+                tabId = createSenderId();
+                window.sessionStorage.setItem(SENDER_ID_TAB_STORAGE_KEY, tabId);
+            }
+            return browserId + ':' + tabId;
+        } catch (e) {
+            return createSenderId() + ':' + createSenderId();
+        }
     };
     var toUserLinkMarkup = function (author) {
         var safeAuthor = (author || '').trim();

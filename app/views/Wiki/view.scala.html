@@ -138,21 +138,64 @@
                 var helloAckedSender = {};
                 var staleThresholdMs = 15000;
                 var smoothingAlpha = 0.35;
-                var storageSenderIdKey = 'ahaWikiEditorSenderId';
+                var senderIdCookieName = 'ahaWikiEditorSenderId';
+                var senderIdTabStorageKey = 'ahaWikiEditorTabSenderId';
+                var senderIdCookieMaxAgeSeconds = 365 * 24 * 60 * 60;
                 var saveSenderId = null;
                 var lastPageUpdatedRevision = null;
                 var pageUpdateToast = null;
 
+                function readCookie(name) {
+                    var escaped = String(name || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                    var match = document.cookie.match(new RegExp('(?:^|; )' + escaped + '=([^;]*)'));
+                    return match ? decodeURIComponent(match[1]) : '';
+                }
+
+                function writeCookie(name, value, maxAgeSeconds) {
+                    document.cookie = name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + String(maxAgeSeconds) + '; SameSite=Lax';
+                }
+
+                function createSenderId() {
+                    return (window.crypto && window.crypto.randomUUID)
+                        ? window.crypto.randomUUID()
+                        : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+                }
+
                 function getOrCreateClientSenderId() {
                     try {
-                        var existing = window.sessionStorage.getItem(storageSenderIdKey);
-                        if (existing) return existing;
-                        var created = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-                        window.sessionStorage.setItem(storageSenderIdKey, created);
+                        var fromCookie = readCookie(senderIdCookieName);
+                        if (fromCookie) {
+                            writeCookie(senderIdCookieName, fromCookie, senderIdCookieMaxAgeSeconds);
+                            return fromCookie;
+                        }
+
+                        var created = createSenderId();
+                        writeCookie(senderIdCookieName, created, senderIdCookieMaxAgeSeconds);
                         return created;
                     } catch (e) {
-                        return 'sender-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                        var fallback = createSenderId();
+                        try {
+                            writeCookie(senderIdCookieName, fallback, senderIdCookieMaxAgeSeconds);
+                        } catch (ignore) {
+                        }
+                        return fallback;
                     }
+                }
+
+                function getOrCreateTabSenderId() {
+                    try {
+                        var tabId = window.sessionStorage.getItem(senderIdTabStorageKey);
+                        if (tabId) return tabId;
+                        tabId = createSenderId();
+                        window.sessionStorage.setItem(senderIdTabStorageKey, tabId);
+                        return tabId;
+                    } catch (e) {
+                        return createSenderId();
+                    }
+                }
+
+                function getOrCreateSaveSenderId() {
+                    return getOrCreateClientSenderId() + ':' + getOrCreateTabSenderId();
                 }
 
                 function showPageUpdateToast(message) {
@@ -255,7 +298,7 @@
                 function connect() {
                     socket = new WebSocket(wsUrl);
                     socket.onopen = function () {
-                        saveSenderId = getOrCreateClientSenderId();
+                        saveSenderId = getOrCreateSaveSenderId();
                         socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
                     };
                     socket.onmessage = function (event) {
@@ -273,7 +316,7 @@
                                 };
                                 if (helloSenderId !== mySenderId && !helloAckedSender[helloSenderId] && socket && socket.readyState === WebSocket.OPEN) {
                                     helloAckedSender[helloSenderId] = true;
-                                    socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: getOrCreateClientSenderId() }));
+                                    socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: getOrCreateSaveSenderId() }));
                                 }
                                 return;
                             }
