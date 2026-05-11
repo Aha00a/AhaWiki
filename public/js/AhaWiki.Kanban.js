@@ -1470,10 +1470,32 @@ document.addEventListener('DOMContentLoaded', function () {
                         var toColumn = columns[toColumnIndex];
                         var fromTitle = (fromColumn && fromColumn.title) ? fromColumn.title : '';
                         var toTitle = (toColumn && toColumn.title) ? toColumn.title : '';
-                        var movedCard = columns[fromColumnIndex].cards.splice(evt.oldIndex, 1)[0];
+                        var fromCards = fromColumn && Array.isArray(fromColumn.cards) ? fromColumn.cards : [];
+                        var toCards = toColumn && Array.isArray(toColumn.cards) ? toColumn.cards : [];
+                        var movedCard = fromCards.splice(evt.oldIndex, 1)[0];
+                        if (!movedCard && Number.isFinite(movedLine)) {
+                            for (var cardIndex = 0; cardIndex < fromCards.length; cardIndex += 1) {
+                                var candidate = fromCards[cardIndex];
+                                if (candidate && Number(candidate.lineNumber) === movedLine) {
+                                    movedCard = fromCards.splice(cardIndex, 1)[0];
+                                    break;
+                                }
+                            }
+                        }
+                        if (!movedCard) {
+                            console.error('[Kanban] failed to resolve moved card', {
+                                fromColumnIndex: fromColumnIndex,
+                                toColumnIndex: toColumnIndex,
+                                oldIndex: evt.oldIndex,
+                                newIndex: evt.newIndex,
+                                movedLine: movedLine
+                            });
+                            rerenderColumns();
+                            return;
+                        }
                         prependCardActivity(movedCard, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:move', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: movedCard.id || '', cardTitle: movedCard.text || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1), fromList: fromTitle, toList: toTitle }))]);
                         updateCardCommentCount(movedCard);
-                        columns[toColumnIndex].cards.splice(evt.newIndex, 0, movedCard);
+                        toCards.splice(evt.newIndex, 0, movedCard);
                         shiftLineNumbersAfterInsert();
                         rerenderColumns();
                         return persistColumns('card:move', {
