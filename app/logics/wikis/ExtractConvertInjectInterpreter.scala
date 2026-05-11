@@ -7,13 +7,6 @@ import models.tables.Page
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   private case class InterpreterChunk(lineStart: Int, lineEnd: Int)
-  private var extractedLineToOriginalLine: Vector[Int] = Vector(1)
-
-  def originalLineNumber(extractedLineNumber: Int): Int = {
-    if (extractedLineNumber <= 0) 1
-    else extractedLineToOriginalLine.lift(extractedLineNumber - 1).getOrElse(extractedLineToOriginalLine.lastOption.getOrElse(1))
-  }
-
   private val chunkMap = scala.collection.mutable.Map.empty[String, InterpreterChunk]
 
   import models.tables.CalculatedLink
@@ -21,40 +14,20 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
-      extractedLineToOriginalLine = Vector(1)
       s
     } else {
       val open = "[[["
       val close = "]]]"
       val builder = new StringBuilder
-      val lineMap = scala.collection.mutable.ArrayBuffer[Int]()
-      var currentOriginalLine = 1
-
-      def appendText(text: String): Unit = {
-        if (text.nonEmpty) {
-          if (lineMap.isEmpty) lineMap += currentOriginalLine
-          text.foreach { c =>
-            builder.append(c)
-            if (c == '\n') {
-              currentOriginalLine += 1
-              lineMap += currentOriginalLine
-            }
-          }
-        }
-      }
-
       var cursor = 0
       var openIndex = s.indexOf(open, cursor)
 
       while (openIndex >= 0) {
         val closeIndex = s.indexOf(close, openIndex + open.length)
         if (closeIndex < 0) {
-          appendText(s.substring(cursor))
-          extractedLineToOriginalLine = if (lineMap.nonEmpty) lineMap.toVector else Vector(1)
+          builder.append(s.substring(cursor))
           return builder.toString()
         }
-
-        appendText(s.substring(cursor, openIndex))
 
         val uniqueKey = getUniqueKey
         val body = s.substring(openIndex + open.length, closeIndex)
@@ -65,15 +38,14 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
           lineEnd = lineNumber(s, closeIndex + close.length - 1)
         )
 
-        appendText(uniqueKey)
-        currentOriginalLine += body.count(_ == '\n')
-
+        builder.append(s.substring(cursor, openIndex))
+        builder.append(uniqueKey)
+        builder.append("\n" * body.count(_ == '\n'))
         cursor = closeIndex + close.length
         openIndex = s.indexOf(open, cursor)
       }
 
-      appendText(s.substring(cursor))
-      extractedLineToOriginalLine = if (lineMap.nonEmpty) lineMap.toVector else Vector(1)
+      builder.append(s.substring(cursor))
       builder.toString()
     }
   }
