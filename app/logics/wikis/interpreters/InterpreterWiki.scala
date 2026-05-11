@@ -51,7 +51,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def process(): T = {
       for((s, index) <- backQuoteExtracted.split("""(\r\n|\n)""", -1).zipWithIndex) {
-        val lineNumber = index + 1
+        val lineNumber = extractConvertInjectInterpreter.originalLineNumber(index + 1)
         s match {
           case "" => emptyLine()
           case regexHr() => hr(s)
@@ -107,7 +107,7 @@ object InterpreterWiki extends TraitInterpreter {
       var index = 0
       while (index < lines.length) {
         val s = lines(index)
-        val lineNumber = index + 1
+        val lineNumber = extractConvertInjectInterpreter.originalLineNumber(index + 1)
         s match {
           case _ =>
             s match {
@@ -229,6 +229,7 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def others(s: String, lineNumber: Int): Unit = {
       variableHolderState := State.Normal
+
       if (extractConvertInjectInterpreter.contains(s) || extractConvertInjectBackQuote.contains(s)) {
         arrayBuffer += inlineToHtmlString(s)
       } else if (extractConvertInjectMacro.contains(s)) {
