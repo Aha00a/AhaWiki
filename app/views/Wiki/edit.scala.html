@@ -1,6 +1,23 @@
 @(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)])(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
-@kbdHotKeyAlt(key: String) = {<kbd data-hotkey-alt="@key"><kbd>Alt</kbd><kbd>@key</kbd></kbd>}
+@hotKeyDescription(key: String) = @{
+    key.toUpperCase match {
+        case "W" => "Toggle word wrap"
+        case "I" => "Fetch infobox from Wikipedia"
+        case "A" => "Open attachment upload"
+        case "C" => "Focus revision comment input"
+        case "M" => "Toggle minor edit"
+        case "S" => "Save page"
+        case "R" => "Rename page"
+        case "T" => "Delete page"
+        case _ => ""
+    }
+}
+@kbdHotKeyAlt(key: String) = {
+    <span class="hotkeyHint" title="@hotKeyDescription(key)" data-hotkey-tooltip="@hotKeyDescription(key)">
+        <kbd data-hotkey-alt="@key"><kbd>Alt</kbd><kbd>@key</kbd></kbd>
+    </span>
+}
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
@@ -164,7 +181,6 @@
         .macroAutocomplete .macroAutocompleteItem:hover {
             background: #eef4ff;
         }
-
         .tableBlockEditorGrid {
             border-collapse: collapse;
             width: max-content;
@@ -202,6 +218,33 @@
             background: #f0f6ff;
         }
         .tableInlineEditorBody { overflow: auto; padding: 8px; }
+        .editHelp {
+            margin: 10px 0 14px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fafafa;
+            font-size: 12px;
+        }
+        .editHelp summary {
+            cursor: pointer;
+            font-weight: 700;
+            padding: 8px 10px;
+        }
+        .editHelpBody {
+            padding: 0 10px 10px;
+        }
+        .editHelpBody ul {
+            margin: 6px 0;
+            padding-left: 18px;
+        }
+        .editHelpBody li {
+            margin: 3px 0;
+        }
+        .editHelpBody code {
+            background: #eee;
+            border-radius: 3px;
+            padding: 1px 4px;
+        }
         .previewSyncBlink {
             animation: previewSyncBlinkAnimation 900ms ease-in-out 1;
         }
@@ -311,6 +354,27 @@
                                     <label><input type="submit" value="Save"/>@kbdHotKeyAlt("S")</label>
                                 </div>
                             </div>
+                            <details class="editHelp">
+                                <summary>Editing Help</summary>
+                                <div class="editHelpBody">
+                                    <ul>
+                                        <li>The editor is on the left and the live preview is on the right.</li>
+                                        <li><strong>Save</strong>: Use the Save button or <code>Alt + S</code>.</li>
+                                        <li><strong>Word Wrap</strong>: Toggle Word Wrap for better readability.</li>
+                                        <li><strong>Attachments</strong>: Use Attach (<code>Alt + A</code>) or drag and drop files.</li>
+                                        <li><strong>Links</strong>: Use <code>[Page]</code> or <code>["Page Name"]</code> for wiki links.</li>
+                                        <li><strong>Emphasis</strong>: Use <code>'''bold'''</code> and <code>''italic''</code>.</li>
+                                        <li><strong>Headings</strong>: Use <code>= Heading =</code> and <code>== Subheading ==</code>.</li>
+                                    </ul>
+                                    <ul>
+                                        <li><a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a></li>
+                                        <li><a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a></li>
+                                        <li><a href="https://ahawiki.net/w/AhaMark%20Macro" target="_blank" rel="noopener noreferrer">AhaMark Macro</a></li>
+                                        <li><a href="https://ahawiki.net/w/AhaMark%20Interpreter" target="_blank" rel="noopener noreferrer">AhaMark Interpreter</a></li>
+                                        <li><a href="https://ahawiki.net/w/AhaMark%20Interpreter%20Examples" target="_blank" rel="noopener noreferrer">AhaMark Interpreter Examples</a></li>
+                                    </ul>
+                                </div>
+                            </details>
                         </div>
                         <div class="divider"></div>
                         <div class="right">

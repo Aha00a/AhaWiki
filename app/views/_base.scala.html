@@ -1,5 +1,20 @@
 @(title: String, description: String, canonicalUrl: String = "", ogType: String = "website")(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
-@kbdHotKey(key: String) = {<kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>}
+@hotKeyDescription(key: String) = @{
+    key.toUpperCase match {
+        case "S" => "Open search"
+        case "R" => "Open random page"
+        case "W" => "Open write log"
+        case "H" => "Open page history"
+        case "B" => "Open page blame"
+        case "E" => "Open page edit"
+        case _ => ""
+    }
+}
+@kbdHotKey(key: String) = {
+    <span class="hotkeyHint" title="@hotKeyDescription(key)" data-hotkey-tooltip="@hotKeyDescription(key)" data-hotkey-tooltip-position="bottom">
+        <kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>
+    </span>
+}
 @isAdmin = @{ contextSite.requestWrapper.getUser.exists(u => u.email == "aha00a@gmail.com" || u.seq == 1) }
 @canWrite = @{ contextSite.requestWrapper.getUser.isDefined }
 @wikiContextOpt = @{ contextSite match {

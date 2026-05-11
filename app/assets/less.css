@@ -313,6 +313,30 @@ kbd:hover > kbd {
   box-shadow: 0 3px 0 1px #999;
   top: 0;
 }
+.hotkeyHint {
+  position: relative;
+  display: inline-block;
+}
+.hotkeyHint[data-hotkey-tooltip]:hover::after {
+  content: attr(data-hotkey-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: rgba(28, 28, 30, 0.95);
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  z-index: 1300;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+.hotkeyHint[data-hotkey-tooltip-position="bottom"]:hover::after {
+  top: calc(100% + 6px);
+  bottom: auto;
+}
 @media (max-width: 767px) {
   kbd {
     display: none;
