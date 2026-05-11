@@ -229,6 +229,23 @@
             cursor: pointer;
             font-weight: 700;
             padding: 8px 10px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .editHelp summary::-webkit-details-marker {
+            display: none;
+        }
+        .editHelp summary::before {
+            content: "\f054";
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            font-size: 11px;
+            transition: transform 120ms ease;
+        }
+        .editHelp[open] summary::before {
+            transform: rotate(90deg);
         }
         .editHelpBody {
             padding: 0 10px 10px;
@@ -326,6 +343,26 @@
                                 </div>
                             </div>
                             <input type="file" id="attachmentUploadInput" multiple style="display:none;" />
+                            <details class="editHelp">
+                                <summary>Wiki Formatting Help</summary>
+                                <div class="editHelpBody">
+                                    <ul>
+                                        <li><strong>Emphasis</strong>: Use <code>'''bold'''</code> and <code>''italic''</code>.</li>
+                                        <li><strong>Headings</strong>: Use <code>= Heading</code> and <code>== Subheading</code>.</li>
+                                        <li><strong>Links</strong>: Use <code>[Page]</code> and <code>["Page Name"]</code>.</li>
+                                    </ul>
+                                    <ul>
+                                        <li>
+                                            see also
+                                            <a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a>
+                                            <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a>
+                                            <a href="https://ahawiki.net/w/AhaMark%20Macro" target="_blank" rel="noopener noreferrer">AhaMark Macro</a>
+                                            <a href="https://ahawiki.net/w/AhaMark%20Interpreter" target="_blank" rel="noopener noreferrer">AhaMark Interpreter</a>
+                                            <a href="https://ahawiki.net/w/AhaMark%20Interpreter%20Examples" target="_blank" rel="noopener noreferrer">AhaMark Interpreter Examples</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
                             <div class="editorBody">
                                 <div id="tableInlineEditor" class="tableInlineEditor">
                                     <div class="tableInlineEditorHeader">
@@ -354,27 +391,6 @@
                                     <label><input type="submit" value="Save"/>@kbdHotKeyAlt("S")</label>
                                 </div>
                             </div>
-                            <details class="editHelp">
-                                <summary>Editing Help</summary>
-                                <div class="editHelpBody">
-                                    <ul>
-                                        <li>The editor is on the left and the live preview is on the right.</li>
-                                        <li><strong>Save</strong>: Use the Save button or <code>Alt + S</code>.</li>
-                                        <li><strong>Word Wrap</strong>: Toggle Word Wrap for better readability.</li>
-                                        <li><strong>Attachments</strong>: Use Attach (<code>Alt + A</code>) or drag and drop files.</li>
-                                        <li><strong>Links</strong>: Use <code>[Page]</code> or <code>["Page Name"]</code> for wiki links.</li>
-                                        <li><strong>Emphasis</strong>: Use <code>'''bold'''</code> and <code>''italic''</code>.</li>
-                                        <li><strong>Headings</strong>: Use <code>= Heading =</code> and <code>== Subheading ==</code>.</li>
-                                    </ul>
-                                    <ul>
-                                        <li><a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a></li>
-                                        <li><a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a></li>
-                                        <li><a href="https://ahawiki.net/w/AhaMark%20Macro" target="_blank" rel="noopener noreferrer">AhaMark Macro</a></li>
-                                        <li><a href="https://ahawiki.net/w/AhaMark%20Interpreter" target="_blank" rel="noopener noreferrer">AhaMark Interpreter</a></li>
-                                        <li><a href="https://ahawiki.net/w/AhaMark%20Interpreter%20Examples" target="_blank" rel="noopener noreferrer">AhaMark Interpreter Examples</a></li>
-                                    </ul>
-                                </div>
-                            </details>
                         </div>
                         <div class="divider"></div>
                         <div class="right">
