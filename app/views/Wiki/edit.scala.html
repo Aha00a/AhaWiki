@@ -164,6 +164,28 @@
         .macroAutocomplete .macroAutocompleteItem:hover {
             background: #eef4ff;
         }
+
+        .tableBlockEditorGrid {
+            border-collapse: collapse;
+            width: max-content;
+            min-width: 100%;
+        }
+        .tableBlockEditorGrid td, .tableBlockEditorGrid th {
+            border: 1px solid #ddd;
+            min-width: 110px;
+            padding: 0;
+        }
+        .tableBlockEditorGrid input {
+            width: 100%;
+            border: 0;
+            padding: 6px;
+            font: inherit;
+            box-sizing: border-box;
+        }
+        .tableInlineEditor { display: none; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 8px; }
+        .tableInlineEditor.visible { display: block; }
+        .tableInlineEditorHeader { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #eee; background: #fafafa; }
+        .tableInlineEditorBody { overflow: auto; padding: 8px; }
         .previewSyncBlink {
             animation: previewSyncBlinkAnimation 900ms ease-in-out 1;
         }
@@ -197,6 +219,8 @@
                 if (window.AhaWikiCodeMirrorEditor) {
                     window.AhaWikiCodeMirrorEditor.setSize(null, height - 9 - $('.attachmentList').height() - $('.editorAdditional').height());
                 }
+                const tableBodyHeight = height - 9 - $('.attachmentList').height() - $('.editorAdditional').height();
+                $('.tableInlineEditorBody').css({ height: Math.max(120, tableBodyHeight) });
                 if (typeof window.AhaWikiSyncPreviewScrollNow === 'function') {
                     window.AhaWikiSyncPreviewScrollNow();
                 }
@@ -233,6 +257,152 @@
             const $attachmentList = $('#attachmentList');
             const $uploadDragOverlay = $('#uploadDragOverlay');
             const $macroAutocomplete = $('<div id="macroAutocomplete" class="macroAutocomplete"></div>').appendTo('body');
+            const $tableInlineEditor = $('#tableInlineEditor');
+            const $tableInlineEditorGrid = $('#tableInlineEditorGrid');
+            const $tableInlineOption = $('#tableInlineOption');
+            let tableInlineAutoApplyTimer = null;
+
+            function detectTableBlock(value) {
+                const lines = value.split('\n');
+                if (!lines.length)
+                    return null;
+                const firstLine = (lines[0] || '').trim();
+                const inlineWrappedMatch = firstLine.match(/^\[\[\[#!table(?:\s+(.+))?$/i);
+                if (inlineWrappedMatch) {
+                    const optionInline = (inlineWrappedMatch[1] || 'tsv').trim().toLowerCase();
+                    const delimiterInline = optionInline.startsWith('csv') ? ',' : '\t';
+                    const hasClosingWrapperInline = (lines[lines.length - 1] || '').trim() === ']]]';
+                    return {
+                        delimiter: delimiterInline,
+                        option: optionInline,
+                        dataStartLineIndex: 1,
+                        dataEndExclusiveLineIndex: hasClosingWrapperInline ? lines.length - 1 : lines.length
+                    };
+                }
+                const hasBlockWrapper = /^\[\[\[$/.test(firstLine);
+                const shebangLineIndex = hasBlockWrapper ? 1 : 0;
+                const shebang = (lines[shebangLineIndex] || '').trim();
+                const match = shebang.match(/^#!table(?:\s+(.+))?$/i);
+                if (!match)
+                    return null;
+                const option = (match[1] || 'tsv').trim().toLowerCase();
+                const delimiter = option.startsWith('csv') ? ',' : '\t';
+                const hasClosingWrapper = hasBlockWrapper && (lines[lines.length - 1] || '').trim() === ']]]';
+                return {
+                    delimiter,
+                    option,
+                    dataStartLineIndex: shebangLineIndex + 1,
+                    dataEndExclusiveLineIndex: hasClosingWrapper ? lines.length - 1 : lines.length
+                };
+            }
+
+            function parseCells(value, tableInfo) {
+                const lines = value.split('\n');
+                return lines
+                    .slice(tableInfo.dataStartLineIndex, tableInfo.dataEndExclusiveLineIndex)
+                    .map(line => line.split(tableInfo.delimiter));
+            }
+
+            function showStandardEditor() {
+                const cm = window.AhaWikiCodeMirrorEditor;
+                if (cm && cm.getWrapperElement) {
+                    $(cm.getWrapperElement()).show();
+                    $textarea.hide();
+                } else {
+                    $textarea.show();
+                }
+            }
+
+            function hideStandardEditor() {
+                const cm = window.AhaWikiCodeMirrorEditor;
+                if (cm && cm.getWrapperElement) {
+                    $(cm.getWrapperElement()).hide();
+                    $textarea.hide();
+                } else {
+                    $textarea.hide();
+                }
+            }
+            function renderTableGrid($grid, rows) {
+                const maxCol = Math.max(1, ...rows.map(r => r.length));
+                const html = rows.map((row, rIdx) => {
+                    const tds = Array.from({length: maxCol}).map((_, cIdx) => `<td><input type="text" data-r="${rIdx}" data-c="${cIdx}" value="${$('<div>').text(row[cIdx] || '').html()}"></td>`).join('');
+                    return `<tr>${tds}</tr>`;
+                }).join('');
+                $grid.html(html || '<tr><td><input type="text" data-r="0" data-c="0" value=""></td></tr>');
+            }
+
+            function openInlineTableEditor() {
+                const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+                const table = detectTableBlock(src);
+                if (!table)
+                    return false;
+                $tableInlineOption.val(table.option || 'tsv');
+                renderTableGrid($tableInlineEditorGrid, parseCells(src, table));
+                $tableInlineEditor.addClass('visible');
+                hideStandardEditor();
+                $('.toolbarTableOnly').hide();
+                $('.toggleTableEditor').text('Switch to Raw Editor');
+                return true;
+            }
+            function closeInlineTableEditor() {
+                if (tableInlineAutoApplyTimer) {
+                    clearTimeout(tableInlineAutoApplyTimer);
+                    tableInlineAutoApplyTimer = null;
+                }
+                applyTableBlockEditor();
+                syncEditorToTextarea();
+                $tableInlineEditor.removeClass('visible');
+                showStandardEditor();
+                $('.toolbarTableOnly').show();
+                $('.toggleTableEditor').text('Switch to Table Editor');
+            }
+
+            function applyTableBlockEditor() {
+                const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+                const table = detectTableBlock(src);
+                if (!table) {
+                    alert('Partial text가 #!table 블록이 아닙니다.');
+                    return;
+                }
+                const option = ($tableInlineOption.val() || table.option || 'tsv').toString().trim().toLowerCase();
+                const delimiter = option.startsWith('csv') ? ',' : '\t';
+                const lines = src.split('\n');
+                const rows = [];
+                $tableInlineEditorGrid.find('tr').each(function () {
+                    const cols = [];
+                    $(this).find('input').each(function () { cols.push($(this).val()); });
+                    rows.push(cols.join(delimiter));
+                });
+                const before = lines.slice(0, table.dataStartLineIndex);
+                if (table.dataStartLineIndex > 0) {
+                    before[table.dataStartLineIndex - 1] = before[table.dataStartLineIndex - 1].replace(/(#!table)\b.*/i, '$1 ' + option);
+                }
+                const after = lines.slice(table.dataEndExclusiveLineIndex);
+                const next = before.concat(rows, after).join('\n');
+                if (window.AhaWikiCodeMirrorEditor) {
+                    window.AhaWikiCodeMirrorEditor.setValue(next);
+                    window.AhaWikiCodeMirrorEditor.save();
+                } else {
+                    $textarea.val(next);
+                }
+                $textarea.trigger('input').trigger('change');
+            }
+            function scheduleInlineAutoApply() {
+                if (tableInlineAutoApplyTimer) {
+                    clearTimeout(tableInlineAutoApplyTimer);
+                    tableInlineAutoApplyTimer = null;
+                }
+                tableInlineAutoApplyTimer = setTimeout(function () { applyTableBlockEditor(); }, 120);
+            }
+            $('.toggleTableEditor').on('click', function () {
+                if ($tableInlineEditor.hasClass('visible')) {
+                    closeInlineTableEditor();
+                    return false;
+                }
+                openInlineTableEditor();
+                return false;
+            });
+            $tableInlineEditor.on('input', 'input', scheduleInlineAutoApply);
             let globalDragCounter = 0;
             let serverAttachments = [];
             const uploadingMap = new Map();
@@ -1165,6 +1335,8 @@
                 syncEditorToTextarea();
             });
             preview();
+            if ($('input[name=lineStart]').length)
+                openInlineTableEditor();
         });
     </script>
     <script type="text/javascript" src="/public/js/AhaWiki.WikipediaToSchema.js"></script>
@@ -1249,7 +1421,10 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
         <div class="limitWidth">
             <h1>Edit - <a href="?">@page.name</a></h1>
             @partialRange.map { case (lineStart, lineEnd) =>
-                <div class="flashMessage warning">Partial edit mode (L@lineStart-L@lineEnd)</div>
+                <div class="flashMessage warning">
+                    Partial edit mode (L@lineStart-L@lineEnd)
+                    <a href="#" class="toggleTableEditor" style="margin-left: 8px;">Switch to Table Editor</a>
+                </div>
             }
         </div>
         <div class="limitWidth">
@@ -1267,15 +1442,24 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                         <div class="left">
                             <div class="toolbar">
                                 <div class="toolbarLeft">
-                                    <label><input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")</label>
+                                    <label class="toolbarTableOnly"><input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")</label>
                                 </div>
                                 <div class="toolbarRight">
-                                    <a class="fetchInfoBoxFromWikipedia" href="#"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>
-                                    <a class="openAttachmentUpload" href="#"><i class="fas fa-paperclip"></i>Attach@kbdHotKeyAlt("A")</a>
+                                    <a class="fetchInfoBoxFromWikipedia toolbarTableOnly" href="#"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>
+                                    <a class="openAttachmentUpload toolbarTableOnly" href="#"><i class="fas fa-paperclip"></i>Attach@kbdHotKeyAlt("A")</a>
                                 </div>
                             </div>
                             <input type="file" id="attachmentUploadInput" multiple style="display:none;" />
                             <div class="editorBody">
+                                <div id="tableInlineEditor" class="tableInlineEditor">
+                                    <div class="tableInlineEditorHeader">
+                                        <strong>Table</strong>
+                                        <input type="text" id="tableInlineOption" value="tsv" style="width: 120px;" />
+                                    </div>
+                                    <div class="tableInlineEditorBody">
+                                        <table class="tableBlockEditorGrid"><tbody id="tableInlineEditorGrid"></tbody></table>
+                                    </div>
+                                </div>
                                 <textarea name="text" autofocus="autofocus">@initialEditorText</textarea>
                             </div>
                             <div class="attachmentList" id="attachmentList"></div>
