@@ -49,8 +49,6 @@ class Test @Inject()(implicit val
   import testUtil.assertEquals
 
   def unit: Action[AnyContent] = Action { implicit request =>
-    val sessionMaxAge = configuration.getOptional[Long]("play.http.session.maxAge")
-    logger.info(s"[/test/unit] play.http.session.maxAge=$sessionMaxAge")
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
