@@ -77,24 +77,43 @@ controllerComponents: ControllerComponents,
   private def roomKeyForPage(siteId: Long, pageId: String): String = s"wiki:$siteId:$pageId"
 
   private object PageCursorHub {
-    private val subscribers = TrieMap.empty[String, TrieMap[String, SourceQueueWithComplete[String]]]
+    private case class PageSubscriber(
+      queue: SourceQueueWithComplete[String],
+      var saveSenderId: Option[String],
+    )
+    private val subscribers = TrieMap.empty[String, TrieMap[String, PageSubscriber]]
 
     def subscribe(page: String, id: String, queue: SourceQueueWithComplete[String]): Unit = {
-      val pageMap = subscribers.getOrElseUpdate(page, TrieMap.empty[String, SourceQueueWithComplete[String]])
-      pageMap.put(id, queue)
+      val pageMap = subscribers.getOrElseUpdate(page, TrieMap.empty[String, PageSubscriber])
+      pageMap.put(id, PageSubscriber(queue, None))
     }
 
     def unsubscribe(page: String, id: String): Unit = {
       subscribers.get(page).foreach { pageMap =>
-        pageMap.remove(id).foreach(_.complete())
+        pageMap.remove(id).foreach(_.queue.complete())
         if (pageMap.isEmpty) subscribers.remove(page)
       }
     }
 
     def broadcast(page: String, senderId: String, payload: String): Unit = {
       subscribers.get(page).foreach { pageMap =>
-        pageMap.foreach { case (id, queue) =>
-          if (id != senderId) queue.offer(payload)
+        pageMap.foreach { case (id, subscriber) =>
+          if (id != senderId) subscriber.queue.offer(payload)
+        }
+      }
+    }
+
+    def setSaveSenderId(page: String, id: String, saveSenderId: Option[String]): Unit = {
+      subscribers.get(page).flatMap(_.get(id)).foreach { subscriber =>
+        subscriber.saveSenderId = saveSenderId.filter(_.nonEmpty)
+      }
+    }
+
+    def broadcastPageUpdated(page: String, saveSenderId: Option[String], payload: String): Unit = {
+      subscribers.get(page).foreach { pageMap =>
+        pageMap.foreach { case (_, subscriber) =>
+          val shouldExclude = saveSenderId.nonEmpty && subscriber.saveSenderId == saveSenderId
+          if (!shouldExclude) subscriber.queue.offer(payload)
         }
       }
     }
@@ -362,6 +381,8 @@ controllerComponents: ControllerComponents,
               PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
 
             case Some("cursor.hello") =>
+              val saveSenderId = (payload \ "saveSenderId").asOpt[String].map(_.trim).filter(_.nonEmpty)
+              PageCursorHub.setSaveSenderId(roomKeyForPage(siteForWs.seq, name), connectionId, saveSenderId)
               val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
               PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
 
@@ -559,7 +580,7 @@ controllerComponents: ControllerComponents,
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
-    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd) = Form(tuple(
+    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId) = Form(tuple(
       "revision" -> number,
       "text" -> text,
       "comment" -> text,
@@ -567,6 +588,7 @@ controllerComponents: ControllerComponents,
       "recaptcha" -> text,
       "lineStart" -> optional(number),
       "lineEnd" -> optional(number),
+      "saveSenderId" -> optional(text),
     )).bindFromRequest.get
     val isMinorEdit = minorEdit.getOrElse(false)
     val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
@@ -599,7 +621,18 @@ controllerComponents: ControllerComponents,
               BadRequest("body == latestText")
             case Right(mergedBody) =>
               val now = LocalDateTime.now()
-              PageLogic.insert(name, revision + 1, now, comment, isMinorEdit, mergedBody)
+              val nextRevision = revision + 1
+              PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, mergedBody)
+
+              val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
+              val pageUpdatedPayload = Json.obj(
+                "type" -> "page.updated",
+                "pageName" -> name,
+                "revision" -> nextRevision,
+                "editorNickname" -> editorNickname,
+                "dateInserted" -> now.toString
+              ).toString()
+              PageCursorHub.broadcastPageUpdated(roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
 
               name match {
                 case ".header" => ahaWikiCache.Header.invalidate()

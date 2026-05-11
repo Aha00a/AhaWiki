@@ -138,6 +138,36 @@
                 var helloAckedSender = {};
                 var staleThresholdMs = 15000;
                 var smoothingAlpha = 0.35;
+                var storageSenderIdKey = 'ahaWikiEditorSenderId';
+                var saveSenderId = null;
+                var lastPageUpdatedRevision = null;
+                var pageUpdateToast = null;
+
+                function getOrCreateClientSenderId() {
+                    try {
+                        var existing = window.sessionStorage.getItem(storageSenderIdKey);
+                        if (existing) return existing;
+                        var created = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+                        window.sessionStorage.setItem(storageSenderIdKey, created);
+                        return created;
+                    } catch (e) {
+                        return 'sender-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                    }
+                }
+
+                function showPageUpdateToast(message) {
+                    if (!pageUpdateToast) {
+                        pageUpdateToast = $('<div id="pageUpdateToast" style="position:fixed;bottom:20px;right:20px;max-width:340px;padding:12px 14px;background:#1f2937;color:#fff;border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,0.3);z-index:1200;display:flex;gap:10px;align-items:center;"></div>')
+                            .append('<span class="message" style="font-size:14px;line-height:1.4;flex:1;"></span>')
+                            .append('<button type="button" class="refreshButton" style="border:0;background:#fff;color:#1f2937;padding:6px 10px;border-radius:6px;font-weight:600;cursor:pointer;">Refresh</button>')
+                            .appendTo('body');
+                        pageUpdateToast.find('.refreshButton').on('click', function () {
+                            window.location.reload();
+                        });
+                    }
+                    pageUpdateToast.find('.message').text(message);
+                    pageUpdateToast.show();
+                }
 
                 function colorFromSenderId(senderId) {
                     var hash = 0;
@@ -225,7 +255,8 @@
                 function connect() {
                     socket = new WebSocket(wsUrl);
                     socket.onopen = function () {
-                        socket.send(JSON.stringify({ type: 'cursor.hello' }));
+                        saveSenderId = getOrCreateClientSenderId();
+                        socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
                     };
                     socket.onmessage = function (event) {
                         try {
@@ -242,12 +273,24 @@
                                 };
                                 if (helloSenderId !== mySenderId && !helloAckedSender[helloSenderId] && socket && socket.readyState === WebSocket.OPEN) {
                                     helloAckedSender[helloSenderId] = true;
-                                    socket.send(JSON.stringify({ type: 'cursor.hello' }));
+                                    socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: getOrCreateClientSenderId() }));
                                 }
                                 return;
                             }
                             if (data.type === 'cursor.move') {
                                 upsertCursor(data.senderId, data.x, data.y);
+                                return;
+                            }
+                            if (data.type === 'page.updated') {
+                                var revision = Number(data.revision || 0);
+                                if (!revision || revision === lastPageUpdatedRevision) return;
+                                lastPageUpdatedRevision = revision;
+                                var editorNickname = data.editorNickname ? String(data.editorNickname) : 'Someone';
+                                var message = 'This page has been updated. Would you like to refresh?';
+                                if (editorNickname) {
+                                    message = editorNickname + ' updated this page. Would you like to refresh?';
+                                }
+                                showPageUpdateToast(message);
                             }
                         } catch (e) {
                             console.log('websocket parse error', e);

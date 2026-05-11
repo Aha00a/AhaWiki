@@ -1120,6 +1120,21 @@
                 $textarea.css('white-space', $(this).prop('checked') ? 'inherit' : 'pre');
             }).trigger('change');
 
+            function getOrCreateEditorSenderId() {
+                var storageKey = 'ahaWikiEditorSenderId';
+                try {
+                    var existing = window.sessionStorage.getItem(storageKey);
+                    if (existing) return existing;
+                    var created = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : ('sender-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+                    window.sessionStorage.setItem(storageKey, created);
+                    return created;
+                } catch (e) {
+                    return 'sender-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+                }
+            }
+
+            $('[name=saveSenderId]').val(getOrCreateEditorSenderId());
+
             $('.form').on('submit', function () {
                 syncEditorToTextarea();
             });
@@ -1218,6 +1233,7 @@ sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
                         @CSRF.formField
                         <input type="hidden" name="revision" value="@page.revision"/>
                         <input type="hidden" id="recaptcha" name="recaptcha">
+                        <input type="hidden" name="saveSenderId" value=""/>
                         @partialRange.map { case (lineStart, lineEnd) =>
                             <input type="hidden" name="lineStart" value="@lineStart"/>
                             <input type="hidden" name="lineEnd" value="@lineEnd"/>
