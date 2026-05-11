@@ -1,6 +1,52 @@
 const AhaWikiEditConfig = window.AhaWikiEditConfig || {};
 AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
+        function adjustEditorLayoutHeight() {
+            var windowInnerHeight = $(window).innerHeight();
+            var headerInnerHeight = $('.header').innerHeight();
+            var flashInnerHeight = $('.flash').innerHeight();
+            var baseColumnHeight = Math.max(280, windowInnerHeight - headerInnerHeight - flashInnerHeight - 300);
+
+            var leftFixedHeight = ($('.left > .toolbar').outerHeight(true) || 0) +
+                ($('.left > .editorAdditional').outerHeight(true) || 0) +
+                ($('.left > .attachmentList').outerHeight(true) || 0);
+            var rightFixedHeight = ($('.right > .toolbar').outerHeight(true) || 0) +
+                ($('.right > .previewAdditional').outerHeight(true) || 0) +
+                ($('.right .editHelp').outerHeight(true) || 0);
+
+            var editorHeight = Math.max(220, baseColumnHeight - leftFixedHeight - 9);
+            var previewHeight = Math.max(220, baseColumnHeight - rightFixedHeight);
+
+            $('.previewPane').css({ height: previewHeight, overflowY: 'auto'});
+            $("[name=text]").css({ height: editorHeight });
+            if (window.AhaWikiCodeMirrorEditor) {
+                window.AhaWikiCodeMirrorEditor.setSize(null, editorHeight);
+            }
+
+            const tableBodyHeight = editorHeight;
+            $('.tableInlineEditorBody').css({ height: Math.max(120, tableBodyHeight) });
+
+            var leftTotalHeight = $('.left').outerHeight();
+            var rightTotalHeight = $('.right').outerHeight();
+            if (leftTotalHeight && rightTotalHeight) {
+                if (leftTotalHeight < rightTotalHeight) {
+                    var editorDelta = rightTotalHeight - leftTotalHeight;
+                    var nextEditorHeight = editorHeight + editorDelta;
+                    $("[name=text]").css({ height: nextEditorHeight });
+                    if (window.AhaWikiCodeMirrorEditor) {
+                        window.AhaWikiCodeMirrorEditor.setSize(null, nextEditorHeight);
+                    }
+                } else if (rightTotalHeight < leftTotalHeight) {
+                    var previewDelta = leftTotalHeight - rightTotalHeight;
+                    $('.previewPane').css({ height: previewHeight + previewDelta, overflowY: 'auto'});
+                }
+            }
+
+            if (typeof window.AhaWikiSyncPreviewScrollNow === 'function') {
+                window.AhaWikiSyncPreviewScrollNow();
+            }
+        }
+
         function preview() {
             if (window.AhaWikiCodeMirrorEditor)
                 window.AhaWikiCodeMirrorEditor.save();
@@ -14,25 +60,26 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
                 mermaid.init();
-                var windowInnerHeight = $(window).innerHeight();
-                var headerInnerHeight = $('.header').innerHeight();
-                var flashInnerHeight = $('.flash').innerHeight();
-                var height = windowInnerHeight - headerInnerHeight - flashInnerHeight - 300;
-                $previewPane.css({ height: height, overflowY: 'auto'});
-                $("[name=text]").css({ height: height - 9 - $('.attachmentList').height() - $('.editorAdditional').height()});
-                if (window.AhaWikiCodeMirrorEditor) {
-                    window.AhaWikiCodeMirrorEditor.setSize(null, height - 9 - $('.attachmentList').height() - $('.editorAdditional').height());
-                }
-                const tableBodyHeight = height - 9 - $('.attachmentList').height() - $('.editorAdditional').height();
-                $('.tableInlineEditorBody').css({ height: Math.max(120, tableBodyHeight) });
-                if (typeof window.AhaWikiSyncPreviewScrollNow === 'function') {
-                    window.AhaWikiSyncPreviewScrollNow();
-                }
+                adjustEditorLayoutHeight();
             });
         }
 
         var timer;
         $(function(){
+            const $editHelp = $('.editHelp');
+            const editHelpElement = $editHelp.get(0);
+            if (editHelpElement) {
+                editHelpElement.addEventListener('toggle', function () {
+                    setTimeout(adjustEditorLayoutHeight, 0);
+                });
+                const openAttributeObserver = new MutationObserver(function () {
+                    setTimeout(adjustEditorLayoutHeight, 0);
+                });
+                openAttributeObserver.observe(editHelpElement, { attributes: true, attributeFilter: ['open'] });
+            }
+            $(window).on('resize', adjustEditorLayoutHeight);
+            adjustEditorLayoutHeight();
+
             $.fn.insertAtCaret = function(myValue) {
                 return this.each(function() {
                     var me = this;
