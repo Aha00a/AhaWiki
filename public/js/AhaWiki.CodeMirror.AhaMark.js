@@ -13,8 +13,6 @@
                         state.inTripleInterpreter = false;
                         if (stream.match(/\s*={1,6}>?\s.+/))
                             return 'ahamark-header';
-                        if (stream.match(/\s*#.+/))
-                            return 'ahamark-comment';
                         if (stream.match(/\s*\[\[\[#![^\]]*/)) {
                             state.inTripleInterpreter = true;
                             return 'ahamark-interpreter';
