@@ -77,7 +77,14 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       val attrRelMissing = if (isMissing) """ rel="nofollow"""" else ""
       val attrRel = if(noFollow) """ rel="nofollow"""" else ""
       val isUserPage = !external && uriNormalized.startsWith("User:")
-      val rawDisplayText = if (isUserPage && (alias == null || alias.isEmpty)) uriNormalized.stripPrefix("User:").trim else aliasWithDefault
+      val rawDisplayText =
+        if (isUserPage && (alias == null || alias.isEmpty)) {
+          uriNormalized.stripPrefix("User:").trim
+        } else if (isSchema && (alias == null || alias.isEmpty)) {
+          uriNormalized.stripPrefix("schema:").trim
+        } else {
+          aliasWithDefault
+        }
       val displayText = countryFlagEmoji.map(flag => s"$flag ${rawDisplayText.escapeHtml()}").getOrElse(rawDisplayText.escapeHtml())
       val linkHtml = s"""<a href="${href.escapeHtmlAttribute()}"$attrTarget$attrClass$attrRelMissing$attrRel>${displayText}</a>"""
 
