@@ -162,3 +162,46 @@
   - 커서 위치 스트림 특성상 최신 상태 우선 정책으로 해석 가능합니다.
 - 읽기 권한은 소켓 연결 시점에 검사되며, 연결 후 권한 변경에 대한 즉시 강제 종료 로직은 별도로 보이지 않습니다.
 - Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 alert을 표시한 뒤 페이지를 강제 새로고침하고, 그 외 저장 실패(status != 2xx)도 alert으로 즉시 안내합니다.
+
+## 7) 페이지 새로고침 알림 상세 (`page.updated`)
+
+같은 페이지를 여러 사용자가 동시에 보고 있을 때, **다른 사용자의 저장**을 감지해 새로고침을 유도하는 기능입니다.
+
+### 7.1 서버 이벤트 발행
+
+페이지 저장 성공 시점에 해당 페이지 room으로 `page.updated` 이벤트를 broadcast 합니다.
+
+- `type`: `"page.updated"`
+- `pageName`: 페이지 이름
+- `revision`: 최신 revision 번호
+- `editorNickname`: 저장 사용자 닉네임(가능 시)
+- `dateInserted`: 서버 timestamp(ISO8601)
+
+### 7.2 클라이언트 수신/처리
+
+`Wiki/view` 페이지의 WebSocket `onmessage`에서 `page.updated` 이벤트를 처리합니다.
+
+- 토스트 메시지: `${editorNickname} updated this page. Would you like to refresh?`
+- 액션 버튼: `Refresh`
+- 버튼 클릭 시 `window.location.reload()` 실행
+
+### 7.3 중복 알림 방지
+
+- 동일 `revision`에 대해서는 토스트를 1회만 표시
+- 이미 떠 있는 토스트의 중복 표시 방지
+
+### 7.4 동작 시나리오
+
+1. 사용자 A와 B가 같은 페이지를 열어둡니다.
+2. A가 페이지를 저장합니다.
+3. 서버가 `page.updated` 이벤트를 페이지 room에 전송합니다.
+4. B 화면에서 새로고침 안내 토스트가 표시됩니다.
+5. B가 `Refresh`를 누르면 페이지가 새로고침되어 최신 revision을 확인할 수 있습니다.
+
+### 7.5 운영 확인 항목
+
+- 저장 당사자(sender) 제외 전송 보장 확인
+- watch 권한 모델과 이벤트 수신 범위 정합성 확인
+- 토스트 UX(입력 중 방해 최소화, 모바일/데스크톱 가독성) 점검
+- 운영 환경 WebSocket 에러/재연결 로그 모니터링
+
