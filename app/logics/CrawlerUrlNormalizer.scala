@@ -1,8 +1,5 @@
 package logics
 
 object CrawlerUrlNormalizer {
-  def normalize(rawUrl: String): String = {
-    val trimmed = rawUrl.trim
-    trimmed.takeWhile(_ != '#')
-  }
+  def normalize(url: String): String = url.trim.takeWhile(_ != '#')
 }
