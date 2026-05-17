@@ -1,6 +1,5 @@
 package logics
 
-import java.net.InetAddress
 import java.net.URI
 
 object CrawlerUrlSafety {
@@ -15,20 +14,6 @@ object CrawlerUrlSafety {
     val scheme = Option(uri.getScheme).map(_.toLowerCase).getOrElse("")
     if (!(scheme == "http" || scheme == "https"))
       return Left("Only http/https URLs are allowed")
-
-    val host = Option(uri.getHost).map(_.trim).getOrElse("")
-    if (host.isEmpty)
-      return Left("URL host is required")
-
-    val addresses = try {
-      InetAddress.getAllByName(host)
-    } catch {
-      case _: Exception =>
-        return Left("Unable to resolve host")
-    }
-
-    if (addresses.isEmpty)
-      return Left("Unable to resolve host")
 
     Right()
   }
