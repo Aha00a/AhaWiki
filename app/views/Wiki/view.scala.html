@@ -378,9 +378,8 @@
 
                 $(document).data(href, div);
                 $.ajax({
-                    url: "https://crawler.aha00a.com/get",
+                    url: "/api/crawler",
                     data: { q: href },
-                    dataType: "jsonp",
                     success: function(data) {
                         $(document).data(href).html('').append(
                             $('<div></div>')

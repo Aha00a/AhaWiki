@@ -42,8 +42,8 @@ GET           /Admin/SiteUser                        controllers.Admin.index
 GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
 GET           /Admin/Operation                       controllers.Admin.index
-GET           /Admin/AccessLog                      controllers.Admin.index
-GET           /Admin/:seq/AccessLog                 controllers.Admin.site(seq: Long)
+GET           /Admin/AccessLog                       controllers.Admin.index
+GET           /Admin/:seq/AccessLog                  controllers.Admin.site(seq: Long)
 GET           /Admin/RecentChange                    controllers.Admin.index
 GET           /Admin/S3                              controllers.Admin.index
 GET           /Admin/Sites                           controllers.Admin.sites
@@ -93,6 +93,9 @@ POST          /api/uploadAttachment                  controllers.Wiki.uploadAtta
 GET           /api/pageAttachments                   controllers.Wiki.pageAttachments()
 POST          /api/deleteAttachment                  controllers.Wiki.deleteAttachment()
 DELETE        /api/cache/:siteSeq                    controllers.Api.cacheDelete(siteSeq: Long)
+
+GET           /api/crawler                           controllers.ApiCrawler.get(q:String)
+
 
 GET           /feed                                  controllers.Feed.index
 GET           /feed.atom                             controllers.Feed.atom

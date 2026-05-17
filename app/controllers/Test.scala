@@ -8,6 +8,7 @@ import com.aha00a.tests.TestUtil
 import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit}
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.Crawler
 import logics.PermissionLogic
 import logics.SessionLogic
 import logics.SiteLogic
@@ -69,6 +70,7 @@ class Test @Inject()(implicit val
     PageContentUnit.run(testUtil)
     PermissionLogicUnit.run(testUtil)
     InterpreterWikiUnit.run(testUtil)
+    apiCrawlerUnit()
 
     val fileAbsolute = new File(".").getAbsoluteFile
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
@@ -78,6 +80,39 @@ class Test @Inject()(implicit val
     if(percent < 5) InsufficientStorage(message) else Ok(message)
   }
 
+
+  // TODO: extract to CrawlerUnit.run
+  private def apiCrawlerUnit() = {
+    {
+      val crawler = Crawler.fromHtml(
+        """<html>
+          |<head>
+          |  <title>title</title>
+          |</head>
+          |<body>body</body>
+          |</html>
+        """.stripMargin)
+      assertEquals(crawler.title, "title")
+      assertEquals(crawler.description, "body")
+      assertEquals(crawler.image, "")
+    }
+    {
+      val crawler = Crawler.fromHtml(
+        """<html>
+          |<head>
+          |  <title>title</title>
+          |  <meta property="og:title" content="ogTitle">
+          |  <meta property="og:description" content="ogDescription">
+          |  <meta property="og:image" content="ogImage">
+          |</head>
+          |<body>body</body>
+          |</html>
+        """.stripMargin)
+      assertEquals(crawler.title, "ogTitle")
+      assertEquals(crawler.description, "ogDescription")
+      assertEquals(crawler.image, "ogImage")
+    }
+  }
 
 
   case class Dddd()(implicit database2: Database) {
