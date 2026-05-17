@@ -52,6 +52,7 @@ GET           /Admin/AllUsers                        controllers.Admin.index
 GET           /Admin/UserViews                       controllers.Admin.index
 GET           /Admin/Operations                      controllers.Admin.index
 GET           /Admin/RecentChanges                   controllers.Admin.index
+GET           /Admin/CrawlerCache                    controllers.Admin.index
 
 
 GET           /api/csrf                              controllers.Api.csrf

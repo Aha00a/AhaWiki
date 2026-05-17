@@ -64,6 +64,7 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
     { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
     { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" },
+    { href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider" },
     { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
@@ -228,6 +229,15 @@ function formatDateTimeInClientTimezone(value) {
   if (!parsed.isValid()) return value;
   return parsed.format("YYYY-MM-DDTHH:mm:ssZ");
 }
+function formatCrawlerStatus(value) {
+  if (!value) return "-";
+  if (typeof value === "string") return value;
+  if (typeof value === "object") {
+    const keys = Object.keys(value);
+    if (keys.length > 0) return keys.join(", ");
+  }
+  return String(value);
+}
 function routeToPage(pathname) {
   if (/^\/Admin\/\d+\/AccessLog$/.test(pathname)) {
     return "access-logs";
@@ -256,6 +266,9 @@ function routeToPage(pathname) {
   if (pathname === "/Admin/Operation") {
     return "operations";
   }
+  if (pathname === "/Admin/CrawlerCache") {
+    return "crawler-cache";
+  }
   if (pathname === "/Admin/S3") {
     return "s3-browser";
   }
@@ -279,6 +292,9 @@ function routeToPage(pathname) {
   }
   if (pathname === "/Admin/Operations") {
     return "operations";
+  }
+  if (pathname === "/Admin/CrawlerCaches") {
+    return "crawler-cache";
   }
   if (pathname === "/Admin/S3Browser") {
     return "s3-browser";
@@ -337,6 +353,9 @@ function pageTitleByKey(page) {
   }
   if (page === "s3-browser") {
     return "S3 Browser";
+  }
+  if (page === "crawler-cache") {
+    return "Crawler Cache";
   }
   return "Dashboard";
 }
@@ -407,6 +426,11 @@ function useAdminData(page) {
   const [deletingS3, setDeletingS3] = useState2(false);
   const [selectedS3Keys, setSelectedS3Keys] = useState2([]);
   const [expandedS3Nodes, setExpandedS3Nodes] = useState2({});
+  const [crawlerCaches, setCrawlerCaches] = useState2([]);
+  const [crawlerCacheLimit, setCrawlerCacheLimit] = useState2(100);
+  const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState2("");
+  const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState2("");
+  const [crawlerUrlInput, setCrawlerUrlInput] = useState2("");
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
     pageSize = 20,
@@ -509,6 +533,47 @@ function useAdminData(page) {
     setAllUsers(rows);
     setAllUserCount(Number(data?.count ?? rows.length));
   }, []);
+  const loadCrawlerCaches = useCallback(async (limit = crawlerCacheLimit) => {
+    const safeLimit = Math.max(1, Math.min(500, Number.parseInt(String(limit), 10) || 100));
+    const data = await fetchJson2(`/api/Admin/CrawlerCache?limit=${encodeURIComponent(safeLimit)}`);
+    setCrawlerCaches(Array.isArray(data) ? data : []);
+    setCrawlerCacheLimit(safeLimit);
+  }, [crawlerCacheLimit]);
+  const refreshCrawlerCache = useCallback(async (url) => {
+    setRefreshingCrawlerUrl(url);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("url", url);
+      payload.set(csrfToken.name, csrfToken.value);
+      payload.set("csrfToken", csrfToken.value);
+      const response = await fetch("/api/Admin/CrawlerCache/Refresh", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
+        body: payload.toString()
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadCrawlerCaches();
+    } finally {
+      setRefreshingCrawlerUrl("");
+    }
+  }, [loadCrawlerCaches]);
+  const deleteCrawlerCache = useCallback(async (url) => {
+    setDeletingCrawlerUrl(url);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadCrawlerCaches();
+    } finally {
+      setDeletingCrawlerUrl("");
+    }
+  }, [loadCrawlerCaches]);
   const loadRecentChanges = useCallback(async (n = 50) => {
     const data = await fetchJson2(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
     setRecentChanges(data);
@@ -914,6 +979,18 @@ function useAdminData(page) {
           await loadS3Objects();
           return;
         }
+        if (page === "crawler-cache") {
+          if (mounted) {
+            setSites([]);
+            setUsers([]);
+            setAllUsers([]);
+            setSchedulers([]);
+            setDailyStats({ userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: [] });
+            setTopViewedPages([]);
+          }
+          await loadCrawlerCaches();
+          return;
+        }
         if (mounted) {
           await loadDashboard();
           await loadMemoryCacheStats();
@@ -933,7 +1010,7 @@ function useAdminData(page) {
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects]);
+  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects, loadCrawlerCaches]);
   return {
     loading,
     sites,
@@ -985,6 +1062,16 @@ function useAdminData(page) {
     expandedS3Nodes,
     toggleS3Node,
     expandAllS3Nodes,
+    crawlerCaches,
+    crawlerCacheLimit,
+    setCrawlerCacheLimit,
+    loadCrawlerCaches,
+    refreshCrawlerCache,
+    deleteCrawlerCache,
+    refreshingCrawlerUrl,
+    deletingCrawlerUrl,
+    crawlerUrlInput,
+    setCrawlerUrlInput,
     error
   };
 }
@@ -1041,6 +1128,16 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     expandedS3Nodes,
     toggleS3Node,
     expandAllS3Nodes,
+    crawlerCaches,
+    crawlerCacheLimit,
+    setCrawlerCacheLimit,
+    loadCrawlerCaches,
+    refreshCrawlerCache,
+    deleteCrawlerCache,
+    refreshingCrawlerUrl,
+    deletingCrawlerUrl,
+    crawlerUrlInput,
+    setCrawlerUrlInput,
     error
   } = useAdminData(page);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
@@ -1502,6 +1599,9 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         else setSelectedS3Keys((prev) => prev.filter((selectedKey) => selectedKey !== key));
       } })), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React5.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React5.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React5.createElement("span", null, /* @__PURE__ */ React5.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React5.createElement("span", null, node.name))), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React5.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
     }))));
+  }
+  if (page === "crawler-cache") {
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, crawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "limit", value: String(crawlerCacheLimit), onChange: (event) => setCrawlerCacheLimit(Number.parseInt(event.currentTarget.value, 10) || 100) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "url", placeholder: "https://example.com/...", value: crawlerUrlInput, onChange: (event) => setCrawlerUrlInput(event.currentTarget.value), style: { minWidth: 360 } }), /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches(crawlerCacheLimit) }, "\uC870\uD68C"), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", disabled: !crawlerUrlInput.trim(), loading: refreshingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => refreshCrawlerCache(crawlerUrlInput.trim()) }, "\uAC15\uC81C\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { color: "red", variant: "light", disabled: !crawlerUrlInput.trim(), loading: deletingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => deleteCrawlerCache(crawlerUrlInput.trim()) }, "\uC0AD\uC81C")), /* @__PURE__ */ React5.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table4.Thead, null, /* @__PURE__ */ React5.createElement(Table4.Tr, null, /* @__PURE__ */ React5.createElement(Table4.Th, null, "URL"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Status"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Title"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Updated"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Action"))), /* @__PURE__ */ React5.createElement(Table4.Tbody, null, crawlerCaches.map((row) => /* @__PURE__ */ React5.createElement(Table4.Tr, { key: row.url }, /* @__PURE__ */ React5.createElement(Table4.Td, { style: { wordBreak: "break-all" } }, row.url), /* @__PURE__ */ React5.createElement(Table4.Td, null, formatCrawlerStatus(row.status)), /* @__PURE__ */ React5.createElement(Table4.Td, null, row.title || "-"), /* @__PURE__ */ React5.createElement(Table4.Td, null, formatDateTimeInClientTimezone(row.dateUpdated)), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", loading: refreshingCrawlerUrl === row.url, onClick: () => refreshCrawlerCache(row.url) }, "\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { size: "xs", color: "red", variant: "light", loading: deletingCrawlerUrl === row.url, onClick: () => deleteCrawlerCache(row.url) }, "\uC0AD\uC81C"))))))));
   }
   if (page === "recent-changes") {
     return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(

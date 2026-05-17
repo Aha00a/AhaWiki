@@ -41,6 +41,7 @@ export default function Navigation({activePage, onNavigate}) {
         {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history"},
         {href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired"},
         {href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs"},
+        {href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider"},
         {href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open"},
     ], []);
 
