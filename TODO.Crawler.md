@@ -11,18 +11,19 @@
 - 캐시 관리 기능(조회/삭제/강제갱신 등) 제공.
 
 ## 요구사항 명확화 (문제 가능 지점 보완)
-- [ ] URL 정규화 규칙 정의 (host lowercase, trailing slash 정리, fragment 제거 등).
+- [ ] URL 정규화 - # 이후 제거
 - [ ] 캐시 키를 원본 URL이 아닌 **정규화 URL + 해시** 기준으로 통일. 기대효과: 중복 캐시 감소, 동일 문서 캐시 hit rate 상승, URL 표현 차이로 인한 재크롤링 낭비 방지.
 
 ## 내재화 설계 TODO
 - [ ] DB 스키마 설계
   - [ ] 크롤링 결과 캐시 테이블
-  - [ ] `dateInserted`, `dateUpdated`, `dateDone`, `expires_at` 컬럼
+  - [ ] `id` bigint autoincrement, `url`, dateInserted`, `dateUpdated`, `dateDone`, 컬럼
   - [ ] 인덱스(URL 해시, 만료시각, 상태)
+- [ ] 캐시 TTL 180일 정책 적용.
+- [ ] `stale-while-revalidate` - max-age 90일, swr 90일
 - [ ] SSRF 방어(사설 IP, loopback, link-local, metadata endpoint 차단)
 - [ ] 비동기 작업 큐/워커 구현.
 - [ ] 크롤링 결과 캐시 테이블 생성(evolution 포함).
-- [ ] 캐시 TTL 6개월 정책 적용.
 - [ ] 캐시 히트 시 즉시 응답, 만료/미존재 시 정책에 따라 `stale-while-revalidate` 또는 `202 Accepted` 응답.
 - [ ] 관리자 캐시 관리 기능 구현
   - [ ] URL별 캐시 조회
