@@ -96,7 +96,7 @@ POST          /api/deleteAttachment                  controllers.Wiki.deleteAtta
 DELETE        /api/cache/:siteSeq                    controllers.Api.cacheDelete(siteSeq: Long)
 
 GET           /api/crawler                           controllers.ApiCrawler.get(q:String)
-GET           /api/Admin/CrawlerCache                controllers.ApiCrawler.adminList(limit:Int ?= 100)
+GET           /api/Admin/CrawlerCache                controllers.ApiCrawler.adminList(page:Int ?= 1, pageSize:Int ?= 20, search:String ?= "", sortBy:String ?= "id", sortOrder:String ?= "desc")
 DELETE        /api/Admin/CrawlerCache                controllers.ApiCrawler.adminDelete(url:String)
 POST          /api/Admin/CrawlerCache/Refresh        controllers.ApiCrawler.adminRefresh(url:String)
 

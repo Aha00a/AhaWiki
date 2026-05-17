@@ -250,6 +250,7 @@ function SiteListCard({ sites, onNavigate }) {
 
 // app/assets/js/admin.jsx
 var LOG_PREFIX = "[AdminUI]";
+var CRAWLER_CACHE_PAGE_SIZE = 20;
 function logInfo(...args) {
   console.log(LOG_PREFIX, ...args);
 }
@@ -460,6 +461,7 @@ function useAdminData(page) {
   const [selectedS3Keys, setSelectedS3Keys] = useState2([]);
   const [expandedS3Nodes, setExpandedS3Nodes] = useState2({});
   const [crawlerCaches, setCrawlerCaches] = useState2([]);
+  const [crawlerCacheCount, setCrawlerCacheCount] = useState2(0);
   const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState2("");
   const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState2("");
   const [crawlerSearchInput, setCrawlerSearchInput] = useState2("");
@@ -569,9 +571,24 @@ function useAdminData(page) {
     setAllUsers(rows);
     setAllUserCount(Number(data?.count ?? rows.length));
   }, []);
-  const loadCrawlerCaches = useCallback(async () => {
-    const data = await fetchJson2(`/api/Admin/CrawlerCache?limit=500`);
-    setCrawlerCaches(Array.isArray(data) ? data : []);
+  const loadCrawlerCaches = useCallback(async ({
+    page: page2 = 1,
+    pageSize = CRAWLER_CACHE_PAGE_SIZE,
+    search = "",
+    sortBy = "id",
+    sortOrder = "desc"
+  } = {}) => {
+    const params = new URLSearchParams({
+      page: String(page2),
+      pageSize: String(pageSize),
+      search,
+      sortBy,
+      sortOrder
+    });
+    const data = await fetchJson2(`/api/Admin/CrawlerCache?${params.toString()}`);
+    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+    setCrawlerCaches(rows);
+    setCrawlerCacheCount(Number(data?.count ?? rows.length));
   }, []);
   const refreshCrawlerCache = useCallback(async (url) => {
     setRefreshingCrawlerUrl(url);
@@ -1097,6 +1114,7 @@ function useAdminData(page) {
     toggleS3Node,
     expandAllS3Nodes,
     crawlerCaches,
+    crawlerCacheCount,
     loadCrawlerCaches,
     refreshCrawlerCache,
     deleteCrawlerCache,
@@ -1117,7 +1135,6 @@ function useAdminData(page) {
 }
 function AdminContent({ page, onNavigate, pathname, search }) {
   const ACCESS_LOG_PAGE_SIZE = 20;
-  const CRAWLER_CACHE_PAGE_SIZE = 20;
   const {
     loading,
     sites,
@@ -1170,6 +1187,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     toggleS3Node,
     expandAllS3Nodes,
     crawlerCaches,
+    crawlerCacheCount,
     loadCrawlerCaches,
     refreshCrawlerCache,
     deleteCrawlerCache,
@@ -1187,51 +1205,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     setCrawlerSortOrder,
     error
   } = useAdminData(page);
-  const filteredCrawlerCaches = useMemo2(() => {
-    const query = crawlerSearch.trim().toLowerCase();
-    if (!query) return crawlerCaches;
-    return crawlerCaches.filter((row) => {
-      const url = String(row?.url ?? "").toLowerCase();
-      const title = String(row?.title ?? "").toLowerCase();
-      const image = String(row?.image ?? "").toLowerCase();
-      const description = String(row?.description ?? "").toLowerCase();
-      return url.includes(query) || title.includes(query) || image.includes(query) || description.includes(query);
-    });
-  }, [crawlerCaches, crawlerSearch]);
-  const sortedCrawlerCaches = useMemo2(() => {
-    const direction = crawlerSortOrder === "asc" ? 1 : -1;
-    const normalizedText = (value) => String(value ?? "").toLowerCase();
-    const normalizedTime = (value) => {
-      const timestamp = Date.parse(String(value ?? ""));
-      return Number.isFinite(timestamp) ? timestamp : 0;
-    };
-    return [...filteredCrawlerCaches].sort((left, right) => {
-      let leftValue = "";
-      let rightValue = "";
-      if (crawlerSortBy === "status") {
-        leftValue = normalizedText(formatCrawlerStatus(left.status));
-        rightValue = normalizedText(formatCrawlerStatus(right.status));
-      } else if (crawlerSortBy === "dateUpdated") {
-        leftValue = normalizedTime(left.dateUpdated);
-        rightValue = normalizedTime(right.dateUpdated);
-      } else if (crawlerSortBy === "id") {
-        leftValue = Number(left?.id ?? 0);
-        rightValue = Number(right?.id ?? 0);
-      } else {
-        leftValue = normalizedText(left?.[crawlerSortBy]);
-        rightValue = normalizedText(right?.[crawlerSortBy]);
-      }
-      if (leftValue < rightValue) return -1 * direction;
-      if (leftValue > rightValue) return 1 * direction;
-      return normalizedText(left?.url).localeCompare(normalizedText(right?.url));
-    });
-  }, [crawlerSortBy, crawlerSortOrder, filteredCrawlerCaches]);
-  const crawlerTotalPages = Math.max(1, Math.ceil(sortedCrawlerCaches.length / CRAWLER_CACHE_PAGE_SIZE));
+  const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
   const normalizedCrawlerPage = Math.min(crawlerPage, crawlerTotalPages);
-  const pagedCrawlerCaches = useMemo2(() => {
-    const from = (normalizedCrawlerPage - 1) * CRAWLER_CACHE_PAGE_SIZE;
-    return sortedCrawlerCaches.slice(from, from + CRAWLER_CACHE_PAGE_SIZE);
-  }, [normalizedCrawlerPage, sortedCrawlerCaches]);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
   const [accessLogPage, setAccessLogPage] = useState2(1);
   const [accessLogSearchInput, setAccessLogSearchInput] = useState2("");
@@ -1693,9 +1668,10 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }))));
   }
   if (page === "crawler-cache") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, sortedCrawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches() }, "\uC870\uD68C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: () => {
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches({ page: crawlerPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder }) }, "\uC870\uD68C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: () => {
       setCrawlerPage(1);
       setCrawlerSearch(crawlerSearchInput);
+      loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearchInput, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder });
     } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
       DataTable,
       {
@@ -1703,7 +1679,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         withTableBorder: true,
         striped: true,
         highlightOnHover: true,
-        records: pagedCrawlerCaches,
+        records: crawlerCaches,
         columns: [
           { accessor: "id", title: "ID", sortable: true, render: (row) => row.id },
           { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React5.createElement(Text4, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
@@ -1738,11 +1714,21 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           setCrawlerPage(1);
           setCrawlerSortBy(nextSortStatus.columnAccessor);
           setCrawlerSortOrder(nextSortStatus.direction ?? "desc");
+          loadCrawlerCaches({
+            page: 1,
+            pageSize: CRAWLER_CACHE_PAGE_SIZE,
+            search: crawlerSearch,
+            sortBy: nextSortStatus.columnAccessor,
+            sortOrder: nextSortStatus.direction ?? "desc"
+          });
         },
-        totalRecords: sortedCrawlerCaches.length,
+        totalRecords: crawlerCacheCount,
         recordsPerPage: CRAWLER_CACHE_PAGE_SIZE,
         page: normalizedCrawlerPage,
-        onPageChange: (nextPage) => setCrawlerPage(nextPage),
+        onPageChange: (nextPage) => {
+          setCrawlerPage(nextPage);
+          loadCrawlerCaches({ page: nextPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder });
+        },
         paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
         minHeight: 380
       }

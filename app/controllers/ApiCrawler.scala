@@ -100,12 +100,28 @@ class ApiCrawler @Inject()(
     }
   }
 
-  def adminList(limit: Int): Action[AnyContent] = Action { implicit request =>
+  def adminList(
+    page: Int,
+    pageSize: Int,
+    search: String,
+    sortBy: String,
+    sortOrder: String,
+  ): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) Forbidden("Access denied.")
     else {
-      val safeLimit = math.max(1, math.min(limit, 500))
+      val safePage = math.max(1, page)
+      val safePageSize = math.max(1, math.min(pageSize, 100))
       database.withConnection { implicit connection =>
-        Ok(CacheCrawler.selectRecent(safeLimit).asJson)
+        Ok(Json.obj(
+          "array" -> CacheCrawler.selectPaged(
+            page = safePage,
+            pageSize = safePageSize,
+            search = search,
+            sortBy = sortBy,
+            sortOrder = sortOrder,
+          ).asJson,
+          "count" -> Json.fromLong(CacheCrawler.countPaged(search)),
+        ))
       }
     }
   }

@@ -33,6 +33,7 @@ import {SiteListCard} from "./site/siteWidgets";
 
 
 const LOG_PREFIX = "[AdminUI]";
+const CRAWLER_CACHE_PAGE_SIZE = 20;
 
 function logInfo(...args) {
     console.log(LOG_PREFIX, ...args);
@@ -266,6 +267,7 @@ function useAdminData(page) {
     const [selectedS3Keys, setSelectedS3Keys] = useState([]);
     const [expandedS3Nodes, setExpandedS3Nodes] = useState({});
     const [crawlerCaches, setCrawlerCaches] = useState([]);
+    const [crawlerCacheCount, setCrawlerCacheCount] = useState(0);
     const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState("");
     const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState("");
     const [crawlerSearchInput, setCrawlerSearchInput] = useState("");
@@ -383,9 +385,26 @@ function useAdminData(page) {
         setAllUsers(rows);
         setAllUserCount(Number(data?.count ?? rows.length));
     }, []);
-    const loadCrawlerCaches = useCallback(async () => {
-        const data = await fetchJson(`/api/Admin/CrawlerCache?limit=500`);
-        setCrawlerCaches(Array.isArray(data) ? data : []);
+    const loadCrawlerCaches = useCallback(async ({
+        page = 1,
+        pageSize = CRAWLER_CACHE_PAGE_SIZE,
+        search = "",
+        sortBy = "id",
+        sortOrder = "desc",
+    } = {}) => {
+        const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            search,
+            sortBy,
+            sortOrder,
+        });
+        const data = await fetchJson(`/api/Admin/CrawlerCache?${params.toString()}`);
+        const rows = Array.isArray(data?.array)
+            ? data.array
+            : (Array.isArray(data) ? data : []);
+        setCrawlerCaches(rows);
+        setCrawlerCacheCount(Number(data?.count ?? rows.length));
     }, []);
 
     const refreshCrawlerCache = useCallback(async (url) => {
@@ -940,6 +959,7 @@ function useAdminData(page) {
         toggleS3Node,
         expandAllS3Nodes,
         crawlerCaches,
+        crawlerCacheCount,
         loadCrawlerCaches,
         refreshCrawlerCache,
         deleteCrawlerCache,
@@ -962,7 +982,6 @@ function useAdminData(page) {
 
 function AdminContent({page, onNavigate, pathname, search}) {
     const ACCESS_LOG_PAGE_SIZE = 20;
-    const CRAWLER_CACHE_PAGE_SIZE = 20;
     const {
         loading,
         sites,
@@ -1015,6 +1034,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         toggleS3Node,
         expandAllS3Nodes,
         crawlerCaches,
+        crawlerCacheCount,
         loadCrawlerCaches,
         refreshCrawlerCache,
         deleteCrawlerCache,
@@ -1032,51 +1052,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
         setCrawlerSortOrder,
         error,
     } = useAdminData(page);
-    const filteredCrawlerCaches = useMemo(() => {
-        const query = crawlerSearch.trim().toLowerCase();
-        if (!query) return crawlerCaches;
-        return crawlerCaches.filter((row) => {
-            const url = String(row?.url ?? "").toLowerCase();
-            const title = String(row?.title ?? "").toLowerCase();
-            const image = String(row?.image ?? "").toLowerCase();
-            const description = String(row?.description ?? "").toLowerCase();
-            return url.includes(query) || title.includes(query) || image.includes(query) || description.includes(query);
-        });
-    }, [crawlerCaches, crawlerSearch]);
-    const sortedCrawlerCaches = useMemo(() => {
-        const direction = crawlerSortOrder === "asc" ? 1 : -1;
-        const normalizedText = (value) => String(value ?? "").toLowerCase();
-        const normalizedTime = (value) => {
-            const timestamp = Date.parse(String(value ?? ""));
-            return Number.isFinite(timestamp) ? timestamp : 0;
-        };
-        return [...filteredCrawlerCaches].sort((left, right) => {
-            let leftValue = "";
-            let rightValue = "";
-            if (crawlerSortBy === "status") {
-                leftValue = normalizedText(formatCrawlerStatus(left.status));
-                rightValue = normalizedText(formatCrawlerStatus(right.status));
-            } else if (crawlerSortBy === "dateUpdated") {
-                leftValue = normalizedTime(left.dateUpdated);
-                rightValue = normalizedTime(right.dateUpdated);
-            } else if (crawlerSortBy === "id") {
-                leftValue = Number(left?.id ?? 0);
-                rightValue = Number(right?.id ?? 0);
-            } else {
-                leftValue = normalizedText(left?.[crawlerSortBy]);
-                rightValue = normalizedText(right?.[crawlerSortBy]);
-            }
-            if (leftValue < rightValue) return -1 * direction;
-            if (leftValue > rightValue) return 1 * direction;
-            return normalizedText(left?.url).localeCompare(normalizedText(right?.url));
-        });
-    }, [crawlerSortBy, crawlerSortOrder, filteredCrawlerCaches]);
-    const crawlerTotalPages = Math.max(1, Math.ceil(sortedCrawlerCaches.length / CRAWLER_CACHE_PAGE_SIZE));
+    const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
     const normalizedCrawlerPage = Math.min(crawlerPage, crawlerTotalPages);
-    const pagedCrawlerCaches = useMemo(() => {
-        const from = (normalizedCrawlerPage - 1) * CRAWLER_CACHE_PAGE_SIZE;
-        return sortedCrawlerCaches.slice(from, from + CRAWLER_CACHE_PAGE_SIZE);
-    }, [normalizedCrawlerPage, sortedCrawlerCaches]);
     const [recentChangeLimitInput, setRecentChangeLimitInput] = useState("50");
     const [accessLogPage, setAccessLogPage] = useState(1);
     const [accessLogSearchInput, setAccessLogSearchInput] = useState("");
@@ -1804,17 +1781,18 @@ function AdminContent({page, onNavigate, pathname, search}) {
         return <Card withBorder radius="md" padding="lg">
             <Group justify="space-between" mb="md">
                 <Title order={3}>Crawler Cache</Title>
-                <Badge color="lime" variant="light">{sortedCrawlerCaches.length} rows</Badge>
+                <Badge color="lime" variant="light">{crawlerCacheCount} rows</Badge>
             </Group>
             <Text size="sm" c="dimmed" mb="md">URL별 크롤링 캐시 조회/삭제/강제갱신을 수행합니다.</Text>
             <Group align="flex-end" mb="md">
-                <Button variant="filled" onClick={() => loadCrawlerCaches()}>조회</Button>
+                <Button variant="filled" onClick={() => loadCrawlerCaches({page: crawlerPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder})}>조회</Button>
             </Group>
             <Group mb="sm" align="end">
                 <TextInput label="search" value={crawlerSearchInput} onChange={(event) => setCrawlerSearchInput(event.currentTarget.value)} placeholder="url, title, image, description"/>
                 <Button variant="light" onClick={() => {
                     setCrawlerPage(1);
                     setCrawlerSearch(crawlerSearchInput);
+                    loadCrawlerCaches({page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearchInput, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder});
                 }}>검색</Button>
             </Group>
             <DataTable
@@ -1822,7 +1800,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 withTableBorder
                 striped
                 highlightOnHover
-                records={pagedCrawlerCaches}
+                records={crawlerCaches}
                 columns={[
                     {accessor: "id", title: "ID", sortable: true, render: (row) => row.id},
                     {accessor: "url", title: "URL", sortable: true, render: (row) => <Text size="sm" style={{wordBreak: "break-all"}}>{row.url}</Text>},
@@ -1856,11 +1834,21 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     setCrawlerPage(1);
                     setCrawlerSortBy(nextSortStatus.columnAccessor);
                     setCrawlerSortOrder(nextSortStatus.direction ?? "desc");
+                    loadCrawlerCaches({
+                        page: 1,
+                        pageSize: CRAWLER_CACHE_PAGE_SIZE,
+                        search: crawlerSearch,
+                        sortBy: nextSortStatus.columnAccessor,
+                        sortOrder: nextSortStatus.direction ?? "desc",
+                    });
                 }}
-                totalRecords={sortedCrawlerCaches.length}
+                totalRecords={crawlerCacheCount}
                 recordsPerPage={CRAWLER_CACHE_PAGE_SIZE}
                 page={normalizedCrawlerPage}
-                onPageChange={(nextPage) => setCrawlerPage(nextPage)}
+                onPageChange={(nextPage) => {
+                    setCrawlerPage(nextPage);
+                    loadCrawlerCaches({page: nextPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder});
+                }}
                 paginationText={({from, to, totalRecords}) => `${from}-${to} / ${totalRecords}`}
                 minHeight={380}
             />

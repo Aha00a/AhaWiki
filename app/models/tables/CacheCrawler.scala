@@ -84,6 +84,61 @@ object CacheCrawler {
     """.as(parser.*)
   }
 
+  def selectPaged(
+    page: Int = 1,
+    pageSize: Int = 20,
+    search: String = "",
+    sortBy: String = "id",
+    sortOrder: String = "desc",
+  )(implicit connection: Connection): Seq[CacheCrawler] = {
+    val safePage = math.max(1, page)
+    val safePageSize = math.max(1, math.min(pageSize, 100))
+    val offset = (safePage - 1) * safePageSize
+    val normalizedSearch = s"%${search.trim}%"
+    val normalizedSortBy = sortBy match {
+      case "id" => "id"
+      case "url" => "url"
+      case "status" => "status"
+      case "title" => "title"
+      case "image" => "image"
+      case "description" => "description"
+      case "dateInserted" => "dateInserted"
+      case "dateUpdated" => "dateUpdated"
+      case _ => "id"
+    }
+    val normalizedSortOrder = if (sortOrder.equalsIgnoreCase("asc")) "ASC" else "DESC"
+    val orderByClause = s"$normalizedSortBy $normalizedSortOrder, id DESC"
+
+    SQL"""
+      SELECT id, url, dateInserted, dateUpdated, title, image, description, status
+      FROM CacheCrawler
+      WHERE (
+        $search = '' OR
+        url LIKE $normalizedSearch OR
+        title LIKE $normalizedSearch OR
+        image LIKE $normalizedSearch OR
+        description LIKE $normalizedSearch
+      )
+      ORDER BY #$orderByClause
+      LIMIT $safePageSize OFFSET $offset
+    """.as(parser.*)
+  }
+
+  def countPaged(search: String = "")(implicit connection: Connection): Long = {
+    val normalizedSearch = s"%${search.trim}%"
+    SQL"""
+      SELECT COUNT(*)
+      FROM CacheCrawler
+      WHERE (
+        $search = '' OR
+        url LIKE $normalizedSearch OR
+        title LIKE $normalizedSearch OR
+        image LIKE $normalizedSearch OR
+        description LIKE $normalizedSearch
+      )
+    """.as(SqlParser.scalar[Long].single)
+  }
+
   def deleteByUrl(url: String)(implicit connection: Connection): Int = {
     SQL"""DELETE FROM CacheCrawler WHERE url = $url""".executeUpdate()
   }
