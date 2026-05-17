@@ -21,7 +21,7 @@
   - [x] 인덱스(URL 해시, 만료시각, 상태)
 - [x] 캐시 TTL 180일 정책 적용. 180일 넘으면 스케쥴러로 삭제.
 - [x] `stale-while-revalidate` - max-age 90일, swr 90일
-- [ ] SSRF 방어(사설 IP, loopback, link-local, metadata endpoint 차단)
+- [x] SSRF 방어(사설 IP, loopback, link-local, metadata endpoint 차단)
 - [x] 크롤링 결과 캐시 테이블 생성(evolution 포함).
 - [x] stale-while-revalidate 응답 처리
 - [x] 관리자 캐시 관리 기능 구현

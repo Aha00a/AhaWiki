@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.generic.auto._
-import logics.{AhaWikiCache, AhaWikiCacheMemoryApiLinks, ApplicationConf, Crawler, CrawlerUrlNormalizer}
+import logics.{AhaWikiCache, AhaWikiCacheMemoryApiLinks, ApplicationConf, Crawler, CrawlerUrlNormalizer, CrawlerUrlSafety}
 import models.tables.CacheCrawler
 import play.api.Configuration
 import play.api.Logging
@@ -49,8 +49,9 @@ class ApiCrawler @Inject()(
         Forbidden(Json.obj(
           "message" -> Json.fromString(s"URL too long: max ${CacheCrawler.UrlMaxLength} characters")
         ))
-      } else {
-        database.withConnection { implicit connection =>
+      } else CrawlerUrlSafety.validate(normalizedUrl) match {
+        case Left(message) => Forbidden(Json.obj("message" -> Json.fromString(message)))
+        case Right(_) => database.withConnection { implicit connection =>
           CacheCrawler.selectByUrl(normalizedUrl) match {
             case Some(cache) if CacheCrawler.isFresh(cache) =>
               logger.info(s"Cache Hit\tFresh\t${normalizedUrl}")
@@ -123,11 +124,15 @@ class ApiCrawler @Inject()(
     if (!isAdmin) Forbidden("Access denied.")
     else {
       val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
-      val crawler = Crawler.fromUrl(normalizedUrl)(logger)
-      database.withConnection { implicit connection =>
-        CacheCrawler.upsertDone(normalizedUrl, crawler.title, crawler.image, crawler.description)
+      CrawlerUrlSafety.validate(normalizedUrl) match {
+        case Left(message) => Forbidden(Json.obj("message" -> Json.fromString(message)))
+        case Right(_) =>
+          val crawler = Crawler.fromUrl(normalizedUrl)(logger)
+          database.withConnection { implicit connection =>
+            CacheCrawler.upsertDone(normalizedUrl, crawler.title, crawler.image, crawler.description)
+          }
+          Ok(Json.obj("success" -> Json.fromBoolean(true), "url" -> Json.fromString(normalizedUrl)))
       }
-      Ok(Json.obj("success" -> Json.fromBoolean(true), "url" -> Json.fromString(normalizedUrl)))
     }
   }
 }
