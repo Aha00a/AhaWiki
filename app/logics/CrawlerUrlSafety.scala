@@ -15,6 +15,6 @@ object CrawlerUrlSafety {
     if (!(scheme == "http" || scheme == "https"))
       return Left("Only http/https URLs are allowed")
 
-    Right()
+    Right(())
   }
 }
