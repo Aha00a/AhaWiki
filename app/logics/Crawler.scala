@@ -3,6 +3,7 @@ package logics
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import com.aha00a.commons.Implicits._
+import play.api.Logger
 
 class Crawler(document: Document) {
   val title: String = selectOg("title")
@@ -40,7 +41,10 @@ class Crawler(document: Document) {
 }
 
 object Crawler {
-  def fromUrl(url: String) = new Crawler(Jsoup.connect(url).userAgent("crawler.aha00a.com").get())
+  def fromUrl(url: String)(implicit logger: Logger): Crawler = {
+    logger.info(s"Crawler\t$url")
+    new Crawler(Jsoup.connect(url).userAgent("crawler.aha00a.com").get())
+  }
 
   def fromHtml(html: String) = new Crawler(Jsoup.parse(html))
 }
