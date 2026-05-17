@@ -13,6 +13,7 @@ import {
   ColorInput,
   Divider as Divider3,
   Group as Group4,
+  Image,
   Loader,
   Paper as Paper2,
   Pagination,
@@ -64,11 +65,43 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
     { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
     { href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs" },
-    { href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider" },
+    { href: "/Admin/CrawlerCache", label: "Crawler", key: "crawler-cache", iconClassName: "fas fa-spider" },
     { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
     const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
+    if (link.key === "crawler-cache") {
+      return /* @__PURE__ */ React.createElement(
+        NavLink,
+        {
+          key: "cache-group",
+          href: "/Admin/CrawlerCache",
+          label: "Cache",
+          leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }),
+          active: isActive,
+          opened: true,
+          variant: isActive ? "filled" : "light",
+          onClick: (event) => {
+            event.preventDefault();
+            onNavigate("/Admin/CrawlerCache");
+          }
+        },
+        /* @__PURE__ */ React.createElement(
+          NavLink,
+          {
+            href: link.href,
+            label: link.label,
+            leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
+            active: isActive,
+            variant: isActive ? "filled" : "subtle",
+            onClick: (event) => {
+              event.preventDefault();
+              onNavigate(link.href);
+            }
+          }
+        )
+      );
+    }
     return /* @__PURE__ */ React.createElement(
       NavLink,
       {
@@ -431,6 +464,11 @@ function useAdminData(page) {
   const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState2("");
   const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState2("");
   const [crawlerUrlInput, setCrawlerUrlInput] = useState2("");
+  const [crawlerSearchInput, setCrawlerSearchInput] = useState2("");
+  const [crawlerSearch, setCrawlerSearch] = useState2("");
+  const [crawlerPage, setCrawlerPage] = useState2(1);
+  const [crawlerSortBy, setCrawlerSortBy] = useState2("dateUpdated");
+  const [crawlerSortOrder, setCrawlerSortOrder] = useState2("desc");
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
     pageSize = 20,
@@ -1072,11 +1110,22 @@ function useAdminData(page) {
     deletingCrawlerUrl,
     crawlerUrlInput,
     setCrawlerUrlInput,
+    crawlerSearchInput,
+    setCrawlerSearchInput,
+    crawlerSearch,
+    setCrawlerSearch,
+    crawlerPage,
+    setCrawlerPage,
+    crawlerSortBy,
+    setCrawlerSortBy,
+    crawlerSortOrder,
+    setCrawlerSortOrder,
     error
   };
 }
 function AdminContent({ page, onNavigate, pathname, search }) {
   const ACCESS_LOG_PAGE_SIZE = 20;
+  const CRAWLER_CACHE_PAGE_SIZE = 20;
   const {
     loading,
     sites,
@@ -1138,8 +1187,60 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     deletingCrawlerUrl,
     crawlerUrlInput,
     setCrawlerUrlInput,
+    crawlerSearchInput,
+    setCrawlerSearchInput,
+    crawlerSearch,
+    setCrawlerSearch,
+    crawlerPage,
+    setCrawlerPage,
+    crawlerSortBy,
+    setCrawlerSortBy,
+    crawlerSortOrder,
+    setCrawlerSortOrder,
     error
   } = useAdminData(page);
+  const filteredCrawlerCaches = useMemo2(() => {
+    const query = crawlerSearch.trim().toLowerCase();
+    if (!query) return crawlerCaches;
+    return crawlerCaches.filter((row) => {
+      const url = String(row?.url ?? "").toLowerCase();
+      const title = String(row?.title ?? "").toLowerCase();
+      const image = String(row?.image ?? "").toLowerCase();
+      const description = String(row?.description ?? "").toLowerCase();
+      return url.includes(query) || title.includes(query) || image.includes(query) || description.includes(query);
+    });
+  }, [crawlerCaches, crawlerSearch]);
+  const sortedCrawlerCaches = useMemo2(() => {
+    const direction = crawlerSortOrder === "asc" ? 1 : -1;
+    const normalizedText = (value) => String(value ?? "").toLowerCase();
+    const normalizedTime = (value) => {
+      const timestamp = Date.parse(String(value ?? ""));
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    };
+    return [...filteredCrawlerCaches].sort((left, right) => {
+      let leftValue = "";
+      let rightValue = "";
+      if (crawlerSortBy === "status") {
+        leftValue = normalizedText(formatCrawlerStatus(left.status));
+        rightValue = normalizedText(formatCrawlerStatus(right.status));
+      } else if (crawlerSortBy === "dateUpdated") {
+        leftValue = normalizedTime(left.dateUpdated);
+        rightValue = normalizedTime(right.dateUpdated);
+      } else {
+        leftValue = normalizedText(left?.[crawlerSortBy]);
+        rightValue = normalizedText(right?.[crawlerSortBy]);
+      }
+      if (leftValue < rightValue) return -1 * direction;
+      if (leftValue > rightValue) return 1 * direction;
+      return normalizedText(left?.url).localeCompare(normalizedText(right?.url));
+    });
+  }, [crawlerSortBy, crawlerSortOrder, filteredCrawlerCaches]);
+  const crawlerTotalPages = Math.max(1, Math.ceil(sortedCrawlerCaches.length / CRAWLER_CACHE_PAGE_SIZE));
+  const normalizedCrawlerPage = Math.min(crawlerPage, crawlerTotalPages);
+  const pagedCrawlerCaches = useMemo2(() => {
+    const from = (normalizedCrawlerPage - 1) * CRAWLER_CACHE_PAGE_SIZE;
+    return sortedCrawlerCaches.slice(from, from + CRAWLER_CACHE_PAGE_SIZE);
+  }, [normalizedCrawlerPage, sortedCrawlerCaches]);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
   const [accessLogPage, setAccessLogPage] = useState2(1);
   const [accessLogSearchInput, setAccessLogSearchInput] = useState2("");
@@ -1601,7 +1702,59 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }))));
   }
   if (page === "crawler-cache") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, crawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "limit", value: String(crawlerCacheLimit), onChange: (event) => setCrawlerCacheLimit(Number.parseInt(event.currentTarget.value, 10) || 100) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "url", placeholder: "https://example.com/...", value: crawlerUrlInput, onChange: (event) => setCrawlerUrlInput(event.currentTarget.value), style: { minWidth: 360 } }), /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches(crawlerCacheLimit) }, "\uC870\uD68C"), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", disabled: !crawlerUrlInput.trim(), loading: refreshingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => refreshCrawlerCache(crawlerUrlInput.trim()) }, "\uAC15\uC81C\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { color: "red", variant: "light", disabled: !crawlerUrlInput.trim(), loading: deletingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => deleteCrawlerCache(crawlerUrlInput.trim()) }, "\uC0AD\uC81C")), /* @__PURE__ */ React5.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table4.Thead, null, /* @__PURE__ */ React5.createElement(Table4.Tr, null, /* @__PURE__ */ React5.createElement(Table4.Th, null, "URL"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Status"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Title"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Updated"), /* @__PURE__ */ React5.createElement(Table4.Th, null, "Action"))), /* @__PURE__ */ React5.createElement(Table4.Tbody, null, crawlerCaches.map((row) => /* @__PURE__ */ React5.createElement(Table4.Tr, { key: row.url }, /* @__PURE__ */ React5.createElement(Table4.Td, { style: { wordBreak: "break-all" } }, row.url), /* @__PURE__ */ React5.createElement(Table4.Td, null, formatCrawlerStatus(row.status)), /* @__PURE__ */ React5.createElement(Table4.Td, null, row.title || "-"), /* @__PURE__ */ React5.createElement(Table4.Td, null, formatDateTimeInClientTimezone(row.dateUpdated)), /* @__PURE__ */ React5.createElement(Table4.Td, null, /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", loading: refreshingCrawlerUrl === row.url, onClick: () => refreshCrawlerCache(row.url) }, "\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { size: "xs", color: "red", variant: "light", loading: deletingCrawlerUrl === row.url, onClick: () => deleteCrawlerCache(row.url) }, "\uC0AD\uC81C"))))))));
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, sortedCrawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "limit", value: String(crawlerCacheLimit), onChange: (event) => setCrawlerCacheLimit(Number.parseInt(event.currentTarget.value, 10) || 100) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "url", placeholder: "https://example.com/...", value: crawlerUrlInput, onChange: (event) => setCrawlerUrlInput(event.currentTarget.value), style: { minWidth: 360 } }), /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches(crawlerCacheLimit) }, "\uC870\uD68C"), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", disabled: !crawlerUrlInput.trim(), loading: refreshingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => refreshCrawlerCache(crawlerUrlInput.trim()) }, "\uAC15\uC81C\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { color: "red", variant: "light", disabled: !crawlerUrlInput.trim(), loading: deletingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => deleteCrawlerCache(crawlerUrlInput.trim()) }, "\uC0AD\uC81C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: () => {
+      setCrawlerPage(1);
+      setCrawlerSearch(crawlerSearchInput);
+    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
+      DataTable,
+      {
+        sortIcons: { sorted: /* @__PURE__ */ React5.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React5.createElement(IconSelector, { size: 14 }) },
+        withTableBorder: true,
+        striped: true,
+        highlightOnHover: true,
+        records: pagedCrawlerCaches,
+        columns: [
+          { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React5.createElement(Text4, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
+          { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
+          { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },
+          {
+            accessor: "image",
+            title: "Image",
+            sortable: true,
+            render: (row) => {
+              if (!row.image) return "-";
+              return /* @__PURE__ */ React5.createElement(Anchor, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React5.createElement(
+                Image,
+                {
+                  src: row.image,
+                  alt: row.title || row.url || "crawler image",
+                  h: 44,
+                  w: 72,
+                  fit: "cover",
+                  radius: "sm",
+                  fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                }
+              ));
+            }
+          },
+          { accessor: "description", title: "Description", sortable: true, render: (row) => row.description || "-" },
+          { accessor: "dateUpdated", title: "Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
+          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button3, { size: "xs", variant: "light", loading: refreshingCrawlerUrl === row.url, onClick: () => refreshCrawlerCache(row.url) }, "\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { size: "xs", color: "red", variant: "light", loading: deletingCrawlerUrl === row.url, onClick: () => deleteCrawlerCache(row.url) }, "\uC0AD\uC81C")) }
+        ],
+        sortStatus: { columnAccessor: crawlerSortBy, direction: crawlerSortOrder },
+        onSortStatusChange: (nextSortStatus) => {
+          setCrawlerPage(1);
+          setCrawlerSortBy(nextSortStatus.columnAccessor);
+          setCrawlerSortOrder(nextSortStatus.direction ?? "desc");
+        },
+        totalRecords: sortedCrawlerCaches.length,
+        recordsPerPage: CRAWLER_CACHE_PAGE_SIZE,
+        page: normalizedCrawlerPage,
+        onPageChange: (nextPage) => setCrawlerPage(nextPage),
+        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+        minHeight: 380
+      }
+    ));
   }
   if (page === "recent-changes") {
     return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(

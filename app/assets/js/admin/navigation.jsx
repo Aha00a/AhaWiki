@@ -41,7 +41,7 @@ export default function Navigation({activePage, onNavigate}) {
         {href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history"},
         {href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired"},
         {href: "/Admin/Operation", label: "Operation", key: "operations", iconClassName: "fas fa-cogs"},
-        {href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider"},
+        {href: "/Admin/CrawlerCache", label: "Crawler", key: "crawler-cache", iconClassName: "fas fa-spider"},
         {href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open"},
     ], []);
 
@@ -54,6 +54,33 @@ export default function Navigation({activePage, onNavigate}) {
                         || (activePage === "user-views" && link.key === "all-users")
                         || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites")
                         || (activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites");
+                    if (link.key === "crawler-cache") {
+                        return <NavLink
+                            key="cache-group"
+                            href="/Admin/CrawlerCache"
+                            label="Cache"
+                            leftSection={<i className="fas fa-database" aria-hidden="true" />}
+                            active={isActive}
+                            opened
+                            variant={isActive ? "filled" : "light"}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                onNavigate("/Admin/CrawlerCache");
+                            }}
+                        >
+                            <NavLink
+                                href={link.href}
+                                label={link.label}
+                                leftSection={<i className={link.iconClassName} aria-hidden="true" />}
+                                active={isActive}
+                                variant={isActive ? "filled" : "subtle"}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    onNavigate(link.href);
+                                }}
+                            />
+                        </NavLink>;
+                    }
                     return <NavLink
                         key={link.key}
                         href={link.href}
