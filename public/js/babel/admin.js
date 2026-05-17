@@ -460,14 +460,12 @@ function useAdminData(page) {
   const [selectedS3Keys, setSelectedS3Keys] = useState2([]);
   const [expandedS3Nodes, setExpandedS3Nodes] = useState2({});
   const [crawlerCaches, setCrawlerCaches] = useState2([]);
-  const [crawlerCacheLimit, setCrawlerCacheLimit] = useState2(100);
   const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState2("");
   const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState2("");
-  const [crawlerUrlInput, setCrawlerUrlInput] = useState2("");
   const [crawlerSearchInput, setCrawlerSearchInput] = useState2("");
   const [crawlerSearch, setCrawlerSearch] = useState2("");
   const [crawlerPage, setCrawlerPage] = useState2(1);
-  const [crawlerSortBy, setCrawlerSortBy] = useState2("dateUpdated");
+  const [crawlerSortBy, setCrawlerSortBy] = useState2("id");
   const [crawlerSortOrder, setCrawlerSortOrder] = useState2("desc");
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
@@ -571,12 +569,10 @@ function useAdminData(page) {
     setAllUsers(rows);
     setAllUserCount(Number(data?.count ?? rows.length));
   }, []);
-  const loadCrawlerCaches = useCallback(async (limit = crawlerCacheLimit) => {
-    const safeLimit = Math.max(1, Math.min(500, Number.parseInt(String(limit), 10) || 100));
-    const data = await fetchJson2(`/api/Admin/CrawlerCache?limit=${encodeURIComponent(safeLimit)}`);
+  const loadCrawlerCaches = useCallback(async () => {
+    const data = await fetchJson2(`/api/Admin/CrawlerCache?limit=500`);
     setCrawlerCaches(Array.isArray(data) ? data : []);
-    setCrawlerCacheLimit(safeLimit);
-  }, [crawlerCacheLimit]);
+  }, []);
   const refreshCrawlerCache = useCallback(async (url) => {
     setRefreshingCrawlerUrl(url);
     try {
@@ -1101,15 +1097,11 @@ function useAdminData(page) {
     toggleS3Node,
     expandAllS3Nodes,
     crawlerCaches,
-    crawlerCacheLimit,
-    setCrawlerCacheLimit,
     loadCrawlerCaches,
     refreshCrawlerCache,
     deleteCrawlerCache,
     refreshingCrawlerUrl,
     deletingCrawlerUrl,
-    crawlerUrlInput,
-    setCrawlerUrlInput,
     crawlerSearchInput,
     setCrawlerSearchInput,
     crawlerSearch,
@@ -1178,15 +1170,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     toggleS3Node,
     expandAllS3Nodes,
     crawlerCaches,
-    crawlerCacheLimit,
-    setCrawlerCacheLimit,
     loadCrawlerCaches,
     refreshCrawlerCache,
     deleteCrawlerCache,
     refreshingCrawlerUrl,
     deletingCrawlerUrl,
-    crawlerUrlInput,
-    setCrawlerUrlInput,
     crawlerSearchInput,
     setCrawlerSearchInput,
     crawlerSearch,
@@ -1226,6 +1214,9 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       } else if (crawlerSortBy === "dateUpdated") {
         leftValue = normalizedTime(left.dateUpdated);
         rightValue = normalizedTime(right.dateUpdated);
+      } else if (crawlerSortBy === "id") {
+        leftValue = Number(left?.id ?? 0);
+        rightValue = Number(right?.id ?? 0);
       } else {
         leftValue = normalizedText(left?.[crawlerSortBy]);
         rightValue = normalizedText(right?.[crawlerSortBy]);
@@ -1702,7 +1693,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }))));
   }
   if (page === "crawler-cache") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, sortedCrawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "limit", value: String(crawlerCacheLimit), onChange: (event) => setCrawlerCacheLimit(Number.parseInt(event.currentTarget.value, 10) || 100) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "url", placeholder: "https://example.com/...", value: crawlerUrlInput, onChange: (event) => setCrawlerUrlInput(event.currentTarget.value), style: { minWidth: 360 } }), /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches(crawlerCacheLimit) }, "\uC870\uD68C"), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", disabled: !crawlerUrlInput.trim(), loading: refreshingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => refreshCrawlerCache(crawlerUrlInput.trim()) }, "\uAC15\uC81C\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button3, { color: "red", variant: "light", disabled: !crawlerUrlInput.trim(), loading: deletingCrawlerUrl === crawlerUrlInput.trim(), onClick: () => deleteCrawlerCache(crawlerUrlInput.trim()) }, "\uC0AD\uC81C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: () => {
+    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, sortedCrawlerCaches.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button3, { variant: "filled", onClick: () => loadCrawlerCaches() }, "\uC870\uD68C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", onClick: () => {
       setCrawlerPage(1);
       setCrawlerSearch(crawlerSearchInput);
     } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
@@ -1714,6 +1705,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         highlightOnHover: true,
         records: pagedCrawlerCaches,
         columns: [
+          { accessor: "id", title: "ID", sortable: true, render: (row) => row.id },
           { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React5.createElement(Text4, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
           { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
           { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },

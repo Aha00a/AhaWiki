@@ -79,7 +79,7 @@ object CacheCrawler {
     SQL"""
       SELECT id, url, dateInserted, dateUpdated, title, image, description, status
       FROM CacheCrawler
-      ORDER BY dateUpdated DESC
+      ORDER BY id DESC
       LIMIT $limit
     """.as(parser.*)
   }

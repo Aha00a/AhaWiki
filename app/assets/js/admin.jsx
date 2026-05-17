@@ -266,14 +266,12 @@ function useAdminData(page) {
     const [selectedS3Keys, setSelectedS3Keys] = useState([]);
     const [expandedS3Nodes, setExpandedS3Nodes] = useState({});
     const [crawlerCaches, setCrawlerCaches] = useState([]);
-    const [crawlerCacheLimit, setCrawlerCacheLimit] = useState(100);
     const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState("");
     const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState("");
-    const [crawlerUrlInput, setCrawlerUrlInput] = useState("");
     const [crawlerSearchInput, setCrawlerSearchInput] = useState("");
     const [crawlerSearch, setCrawlerSearch] = useState("");
     const [crawlerPage, setCrawlerPage] = useState(1);
-    const [crawlerSortBy, setCrawlerSortBy] = useState("dateUpdated");
+    const [crawlerSortBy, setCrawlerSortBy] = useState("id");
     const [crawlerSortOrder, setCrawlerSortOrder] = useState("desc");
     const loadAccessLogs = useCallback(async ({
         page = 1,
@@ -385,12 +383,10 @@ function useAdminData(page) {
         setAllUsers(rows);
         setAllUserCount(Number(data?.count ?? rows.length));
     }, []);
-    const loadCrawlerCaches = useCallback(async (limit = crawlerCacheLimit) => {
-        const safeLimit = Math.max(1, Math.min(500, Number.parseInt(String(limit), 10) || 100));
-        const data = await fetchJson(`/api/Admin/CrawlerCache?limit=${encodeURIComponent(safeLimit)}`);
+    const loadCrawlerCaches = useCallback(async () => {
+        const data = await fetchJson(`/api/Admin/CrawlerCache?limit=500`);
         setCrawlerCaches(Array.isArray(data) ? data : []);
-        setCrawlerCacheLimit(safeLimit);
-    }, [crawlerCacheLimit]);
+    }, []);
 
     const refreshCrawlerCache = useCallback(async (url) => {
         setRefreshingCrawlerUrl(url);
@@ -944,15 +940,11 @@ function useAdminData(page) {
         toggleS3Node,
         expandAllS3Nodes,
         crawlerCaches,
-        crawlerCacheLimit,
-        setCrawlerCacheLimit,
         loadCrawlerCaches,
         refreshCrawlerCache,
         deleteCrawlerCache,
         refreshingCrawlerUrl,
         deletingCrawlerUrl,
-        crawlerUrlInput,
-        setCrawlerUrlInput,
         crawlerSearchInput,
         setCrawlerSearchInput,
         crawlerSearch,
@@ -1023,15 +1015,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
         toggleS3Node,
         expandAllS3Nodes,
         crawlerCaches,
-        crawlerCacheLimit,
-        setCrawlerCacheLimit,
         loadCrawlerCaches,
         refreshCrawlerCache,
         deleteCrawlerCache,
         refreshingCrawlerUrl,
         deletingCrawlerUrl,
-        crawlerUrlInput,
-        setCrawlerUrlInput,
         crawlerSearchInput,
         setCrawlerSearchInput,
         crawlerSearch,
@@ -1071,6 +1059,9 @@ function AdminContent({page, onNavigate, pathname, search}) {
             } else if (crawlerSortBy === "dateUpdated") {
                 leftValue = normalizedTime(left.dateUpdated);
                 rightValue = normalizedTime(right.dateUpdated);
+            } else if (crawlerSortBy === "id") {
+                leftValue = Number(left?.id ?? 0);
+                rightValue = Number(right?.id ?? 0);
             } else {
                 leftValue = normalizedText(left?.[crawlerSortBy]);
                 rightValue = normalizedText(right?.[crawlerSortBy]);
@@ -1817,11 +1808,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
             </Group>
             <Text size="sm" c="dimmed" mb="md">URL별 크롤링 캐시 조회/삭제/강제갱신을 수행합니다.</Text>
             <Group align="flex-end" mb="md">
-                <TextInput label="limit" value={String(crawlerCacheLimit)} onChange={(event) => setCrawlerCacheLimit(Number.parseInt(event.currentTarget.value, 10) || 100)} />
-                <TextInput label="url" placeholder="https://example.com/..." value={crawlerUrlInput} onChange={(event) => setCrawlerUrlInput(event.currentTarget.value)} style={{minWidth: 360}}/>
-                <Button variant="filled" onClick={() => loadCrawlerCaches(crawlerCacheLimit)}>조회</Button>
-                <Button variant="light" disabled={!crawlerUrlInput.trim()} loading={refreshingCrawlerUrl === crawlerUrlInput.trim()} onClick={() => refreshCrawlerCache(crawlerUrlInput.trim())}>강제갱신</Button>
-                <Button color="red" variant="light" disabled={!crawlerUrlInput.trim()} loading={deletingCrawlerUrl === crawlerUrlInput.trim()} onClick={() => deleteCrawlerCache(crawlerUrlInput.trim())}>삭제</Button>
+                <Button variant="filled" onClick={() => loadCrawlerCaches()}>조회</Button>
             </Group>
             <Group mb="sm" align="end">
                 <TextInput label="search" value={crawlerSearchInput} onChange={(event) => setCrawlerSearchInput(event.currentTarget.value)} placeholder="url, title, image, description"/>
@@ -1837,6 +1824,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 highlightOnHover
                 records={pagedCrawlerCaches}
                 columns={[
+                    {accessor: "id", title: "ID", sortable: true, render: (row) => row.id},
                     {accessor: "url", title: "URL", sortable: true, render: (row) => <Text size="sm" style={{wordBreak: "break-all"}}>{row.url}</Text>},
                     {accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status)},
                     {accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-"},
