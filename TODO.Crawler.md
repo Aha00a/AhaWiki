@@ -19,13 +19,13 @@
   - [x] 크롤링 결과 캐시 테이블
   - [x] `id` bigint autoincrement, `url`, `dateInserted`, `dateUpdated` 컬럼
   - [x] 인덱스(URL 해시, 만료시각, 상태)
-- [ ] 캐시 TTL 180일 정책 적용. 180일 넘으면 스케쥴러로 삭제.
+- [x] 캐시 TTL 180일 정책 적용. 180일 넘으면 스케쥴러로 삭제.
 - [x] `stale-while-revalidate` - max-age 90일, swr 90일
 - [ ] SSRF 방어(사설 IP, loopback, link-local, metadata endpoint 차단)
 - [x] 크롤링 결과 캐시 테이블 생성(evolution 포함).
 - [x] stale-while-revalidate 응답 처리
-- [ ] 관리자 캐시 관리 기능 구현
-  - [ ] URL별 캐시 조회
-  - [ ] 캐시 삭제
-  - [ ] 강제 재크롤링 트리거
+- [x] 관리자 캐시 관리 기능 구현
+  - [x] URL별 캐시 조회
+  - [x] 캐시 삭제
+  - [x] 강제 재크롤링 트리거
 - [ ] 운영 메트릭 추가(성공률, 평균 지연, 큐 적체, 도메인별 실패율).

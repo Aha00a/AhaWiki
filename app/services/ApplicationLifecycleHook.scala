@@ -210,5 +210,15 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
+  // 크롤러 캐시 TTL 정리 스케쥴러: 12시간 간격으로 180일 초과 캐시를 삭제합니다.
+  registerFixedDelayScheduler("CrawlerCacheCleanup", 10.seconds, 12.hours, () => {
+    StopWatch("CrawlerCacheCleanup") {
+      database.withConnection { implicit connection =>
+        val deletedRowCount = models.tables.CacheCrawler.deleteExpired()
+        logger.info(s"""models.tables.CacheCrawler.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
+      }
+    }
+  })
+
   logger.info("OnApplicationStarted")
 }

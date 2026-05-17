@@ -39,6 +39,7 @@ object CacheCrawler {
 
   val MaxAgeDays: Long = 90
   val SwrDays: Long = 90
+  val TtlDays: Long = 180
 
   private val parser = long("id") ~ str("url") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated") ~
     str("title") ~ str("image") ~ str("description") ~ str("status") map {
@@ -72,6 +73,24 @@ object CacheCrawler {
         status = ${Status.Done.value},
         dateUpdated = NOW()
     """.executeUpdate()
+  }
+
+  def selectRecent(limit: Int = 100)(implicit connection: Connection): Seq[CacheCrawler] = {
+    SQL"""
+      SELECT id, url, dateInserted, dateUpdated, title, image, description, status
+      FROM CacheCrawler
+      ORDER BY dateUpdated DESC
+      LIMIT $limit
+    """.as(parser.*)
+  }
+
+  def deleteByUrl(url: String)(implicit connection: Connection): Int = {
+    SQL"""DELETE FROM CacheCrawler WHERE url = $url""".executeUpdate()
+  }
+
+  def deleteExpired(now: LocalDateTime = LocalDateTime.now())(implicit connection: Connection): Int = {
+    val threshold = now.minusDays(TtlDays)
+    SQL"""DELETE FROM CacheCrawler WHERE dateUpdated < $threshold""".executeUpdate()
   }
 
   def isFresh(cache: CacheCrawler, now: LocalDateTime = LocalDateTime.now()): Boolean =

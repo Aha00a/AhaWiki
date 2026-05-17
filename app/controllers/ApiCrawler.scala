@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
+import io.circe.generic.auto._
 import logics.{AhaWikiCache, AhaWikiCacheMemoryApiLinks, ApplicationConf, Crawler, CrawlerUrlNormalizer}
 import models.tables.CacheCrawler
 import play.api.Configuration
@@ -16,6 +17,7 @@ import services.ApplicationLifecycleHook
 
 import javax.inject._
 import scala.concurrent.ExecutionContext
+import io.circe.syntax._
 
 //noinspection TypeAnnotation
 class ApiCrawler @Inject()(
@@ -35,6 +37,9 @@ class ApiCrawler @Inject()(
 ) extends BaseController with Logging {
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
   def Forbidden(json: io.circe.Json): Result = Forbidden(json.toString()).as(JSON)
+  private def isAdmin(implicit request: RequestHeader): Boolean = {
+    logics.SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
+  }
 
   def get(q: String): Action[AnyContent] = Action { implicit request =>
     try {
@@ -91,6 +96,38 @@ class ApiCrawler @Inject()(
         Forbidden(Json.obj(
           "message" -> Json.fromString(e.getMessage)
         ))
+    }
+  }
+
+  def adminList(limit: Int): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) Forbidden("Access denied.")
+    else {
+      val safeLimit = math.max(1, math.min(limit, 500))
+      database.withConnection { implicit connection =>
+        Ok(CacheCrawler.selectRecent(safeLimit).asJson)
+      }
+    }
+  }
+
+  def adminDelete(url: String): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) Forbidden("Access denied.")
+    else {
+      val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
+      database.withConnection { implicit connection =>
+        Ok(Json.obj("deleted" -> Json.fromInt(CacheCrawler.deleteByUrl(normalizedUrl))))
+      }
+    }
+  }
+
+  def adminRefresh(url: String): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) Forbidden("Access denied.")
+    else {
+      val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
+      val crawler = Crawler.fromUrl(normalizedUrl)(logger)
+      database.withConnection { implicit connection =>
+        CacheCrawler.upsertDone(normalizedUrl, crawler.title, crawler.image, crawler.description)
+      }
+      Ok(Json.obj("success" -> Json.fromBoolean(true), "url" -> Json.fromString(normalizedUrl)))
     }
   }
 }
