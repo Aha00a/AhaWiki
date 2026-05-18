@@ -53,6 +53,7 @@
         var initialScale = 0.5;
         var minScale = 0.1;
         var maxScale = 2.5;
+        var maxPreloadImageCount = 120;
         var $wrapper = $('.aspectRatioWrapper.@(id)');
 
         function isFullscreen() {
@@ -206,7 +207,9 @@
         function ensureNodeImage(node) {
             if(!node || !node.imageUrl || !state.showThumbnails) return;
             if(state.imageCache.has(node.imageUrl)) return;
+            if(state.imageCache.size >= maxPreloadImageCount) return;
             var img = new Image();
+            img.loading = 'lazy';
             img.onload = function() { draw(); };
             img.src = node.imageUrl;
             state.imageCache.set(node.imageUrl, img);

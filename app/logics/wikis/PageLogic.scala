@@ -93,7 +93,20 @@ object PageLogic {
     val wikiPermission = WikiPermission()
     val optionEmail = provider.getUser.map(_.email)
 
-    val list: Seq[PageWithoutContentWithSize] = contextSite.ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get()
+    val list: Seq[PageWithoutContentWithSize] = models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
+      PageWithoutContentWithSize(
+        name = p.name,
+        revision = p.revision,
+        dateTime = p.datePageLastChanged,
+        nickname = None,
+        user = None,
+        remoteAddress = "",
+        comment = "",
+        permRead = p.permRead,
+        isMinorEdit = false,
+        size = p.size,
+      )
+    }
     val listFiltered = list.filter(p => {
       wikiPermission.allowed(optionEmail, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })

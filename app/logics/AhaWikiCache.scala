@@ -108,6 +108,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     AhaWikiCacheMemoryDomainSite.invalidate()
     implicit val ds = (database, site)
     Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+    PageMeta.SeqPageName.invalidate()
     Header.invalidate()
     Footer.invalidate()
     Config.invalidate()
@@ -171,6 +172,16 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
         implicit val (_, site: Site) = t2
         models.tables.Page.selectSeqPageWithoutContentWithSizeLatest()
+      }
+    }
+  }
+
+  object PageMeta {
+    object SeqPageName extends CacheEntity[Seq[String], (Database, Site)] {
+      override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
+      override def orElse()(implicit t2: (Database, Site)): Seq[String] = t2._1.withConnection { implicit connection =>
+        implicit val (_, site: Site) = t2
+        models.tables.PageMeta.selectSeqName()
       }
     }
   }

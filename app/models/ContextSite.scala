@@ -49,7 +49,7 @@ class ContextSite()(
   val site: Site,
 ) extends Context {
   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-  lazy val setPageName: Set[String] = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.get().map(_.name).toSet
+  lazy val setPageName: Set[String] = ahaWikiCache.PageMeta.SeqPageName.get().toSet
 
   lazy val seqPageByPermission: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
     PageLogic.getListPageByPermission()(requestWrapper, connection, this)

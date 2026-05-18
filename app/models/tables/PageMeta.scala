@@ -7,6 +7,12 @@ import com.aha00a.play.AnormSqlParser.localDateTime
 import java.sql.Connection
 import java.time.LocalDateTime
 
+case class PageMetaWithoutContentWithSize(name: String, revision: Long, datePageLastChanged: LocalDateTime, permRead: String, size: Long)
+object PageMetaWithoutContentWithSize {
+  //noinspection TypeAnnotation
+  def tupled = (apply _).tupled
+}
+
 case class PageMeta(
   name: String,
   revision: Long,
@@ -20,6 +26,7 @@ case class PageMeta(
 
 object PageMeta {
   private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ localDateTime("datePageLastChanged").? ~ str("image").? ~ str("permRead") ~ long("size")
+  private val rowParserWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("datePageLastChanged") ~ str("permRead") ~ long("size")
 
   def upsert(
     pageName: String,
@@ -64,6 +71,24 @@ object PageMeta {
       ORDER BY p.name ASC
       LIMIT $limit
     """.as(SqlParser.str("name").*)
+  }
+
+
+  def selectSeqName()(implicit connection: Connection, site: Site): Seq[String] = {
+    SQL"""
+      SELECT name
+      FROM PageMeta
+      WHERE site = ${site.seq}
+      ORDER BY name DESC
+    """.as(SqlParser.str("name").*)
+  }
+  def selectSeqWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageMetaWithoutContentWithSize] = {
+    SQL"""
+      SELECT name, revision, datePageLastChanged, IFNULL(permRead, '') permRead, size
+      FROM PageMeta
+      WHERE site = ${site.seq}
+      ORDER BY name DESC
+    """.as(rowParserWithoutContentWithSize.*).map(flatten).map(PageMetaWithoutContentWithSize.tupled)
   }
 
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {
