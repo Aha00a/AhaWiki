@@ -189,10 +189,8 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  // 페이지 계산 스케쥴러: 20~60분 간격으로 랜덤 사이트를 선택합니다.
-  // 우선 PageMeta 누락 페이지를 최대 10개 큐잉하고, 누락이 없으면 랜덤 페이지 10개를 큐잉합니다.
-  registerScheduler("Calculate", 20 minutes, 60 minutes, () => {
-    val site = SiteLogic.selectRandom()
+  registerScheduler("Calculate", 20 seconds, 30 seconds, () => {
+    val site = if(false) SiteLogic.selectRandom() else SiteLogic.get(1L).getOrElse(Site.notFound) // TODO
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 10
 
