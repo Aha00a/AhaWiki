@@ -135,6 +135,20 @@ function Navigation({ activePage, onNavigate }) {
     /* @__PURE__ */ React.createElement(
       NavLink,
       {
+        href: `/Admin/Site/${site.seq}`,
+        label: "Meta\uBAA9\uB85D",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-list", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/Site/${site.seq}`,
+        variant: currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+        }
+      }
+    ),
+    /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
         href: `/Admin/Site/${site.seq}/Config`,
         label: "Config",
         leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }),

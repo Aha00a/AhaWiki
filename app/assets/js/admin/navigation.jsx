@@ -117,6 +117,17 @@ export default function Navigation({activePage, onNavigate}) {
                     }}
                 >
                     <NavLink
+                        href={`/Admin/Site/${site.seq}`}
+                        label="Meta목록"
+                        leftSection={<i className="fas fa-list" aria-hidden="true" />}
+                        active={currentPathname === `/Admin/Site/${site.seq}`}
+                        variant={currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle"}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
+                        }}
+                    />
+                    <NavLink
                         href={`/Admin/Site/${site.seq}/Config`}
                         label="Config"
                         leftSection={<i className="fas fa-sliders-h" aria-hidden="true" />}
