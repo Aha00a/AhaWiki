@@ -129,7 +129,7 @@ object PageLogic {
     requestWrapper: RequestWrapper,
     logger: Logger,
     site: Site,
-  ): Unit = StopWatch(s"calculate\t${site.name}(${site.seq})\t$name\t\t") {
+  ): Unit = {
     val verbose = false;
     val seqStopWord: Seq[String] = """at in on of by to is the gmail com http https""".stripMargin.split("""\s""").toSeq
 
