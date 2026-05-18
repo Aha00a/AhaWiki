@@ -41,6 +41,9 @@
 - [ ] 성능/가독성 검토
   - lazy loading
   - 초기 preload 개수 제한(예: 상위 N개)
+  
+## 5) ContextSite, AhaWikiCache, PageLogic 개선
+- [ ] setPageName, seqPageByPermission 등의 필드를 Page테이블이 아닌 PageMeta 테이블을 이용하도록 개선
 
 ## 6) 운영/관리 기능
 - [ ] Admin Page 목록
