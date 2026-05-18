@@ -42,6 +42,7 @@
             chargeStrength: -120,
             showThumbnails: true,
             imageCache: new Map(),
+            imageRetryCount: new Map(),
         };
 
         var intervalFetchMs = 750;
@@ -207,18 +208,35 @@
 
         function ensureNodeImage(node) {
             if(!node || !node.imageUrl || !state.showThumbnails) return;
-            if(state.imageCache.has(node.imageUrl)) return;
-            if(state.imageCache.size >= maxPreloadImageCount) return;
+            if(state.imageCache.size >= maxPreloadImageCount && !state.imageCache.has(node.imageUrl)) return;
+
+            var cached = state.imageCache.get(node.imageUrl);
+            if(cached && cached.complete && !cached._failed && cached.naturalWidth > 0) return;
+
+            var retryCount = state.imageRetryCount.get(node.imageUrl) || 0;
+            if(retryCount >= 5) return;
+
             var img = new Image();
+            img._failed = false;
             img.onload = function() {
                 img._failed = false;
+                state.imageRetryCount.delete(node.imageUrl);
                 draw();
             };
             img.onerror = function() {
                 img._failed = true;
+                var nextRetryCount = (state.imageRetryCount.get(node.imageUrl) || 0) + 1;
+                state.imageRetryCount.set(node.imageUrl, nextRetryCount);
+                if(nextRetryCount < 5) {
+                    setTimeout(function() {
+                        ensureNodeImage(node);
+                    }, 300 * nextRetryCount);
+                }
             };
-            img.src = node.imageUrl;
+
             state.imageCache.set(node.imageUrl, img);
+            var retrySuffix = retryCount > 0 ? ((node.imageUrl.indexOf('?') >= 0 ? '&' : '?') + '_imgRetry=' + retryCount + '_' + Date.now()) : '';
+            img.src = node.imageUrl + retrySuffix;
         }
 
 
@@ -245,11 +263,17 @@
             ctx.drawImage(img, srcX, srcY, cropW, cropH, dx, dy, dSize, dSize);
         }
 
+        function hasLoadedNodeImage(node) {
+            if(!node || !node.imageUrl || !state.showThumbnails) return false;
+            var cached = state.imageCache.get(node.imageUrl);
+            return !!(cached && cached.complete && !cached._failed && cached.naturalWidth > 0);
+        }
+
         function getNodeRadius(node, isHover) {
             var degree = state.nodeDegree.get(node.id) || 0;
             var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
             if(node.id === state.rootNodeName || isHover) r = Math.max(r, radiusHighlight * state.nodeScale);
-            if(state.showThumbnails && node.imageUrl) r *= imageNodeRadiusMultiplier;
+            if(hasLoadedNodeImage(node)) r *= imageNodeRadiusMultiplier;
             return r;
         }
 
@@ -306,8 +330,8 @@
 
                 if(state.showThumbnails && n.imageUrl) {
                     ensureNodeImage(n);
-                    var cached = state.imageCache.get(n.imageUrl);
-                    if(cached && cached.complete && !cached._failed && cached.naturalWidth > 0) {
+                    if(hasLoadedNodeImage(n)) {
+                        var cached = state.imageCache.get(n.imageUrl);
                         var clipRadius = Math.max(2, rScreen - 1.2);
                         ctx.save();
                         ctx.beginPath();
