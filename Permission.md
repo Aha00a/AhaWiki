@@ -325,7 +325,7 @@ VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 
 ### 데이터 마이그레이션
 
-- [ ] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
+- [x] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
 - [ ] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
 - [ ] 공개 사이트는 `All/All/read` row를 명시적으로 생성한다.
 - [ ] 로그인 편집 허용 정책이 필요한 사이트는 `All/Login/create` 또는 더 제한적인 row를 생성한다.
@@ -352,8 +352,6 @@ VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 
 - [ ] `Permission` row를 조회/추가/수정/삭제하는 admin UI를 만든다.
 - [ ] 특정 page/user 조합에 대해 어떤 row가 매칭되는지 보여주는 진단 화면을 만든다.
-- [ ] page 상단 flash의 permission 상세 정보를 관리자에게만 보여줄지 결정한다.
-- [ ] hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.
 
 ### 테스트
 
@@ -362,3 +360,7 @@ VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 - [ ] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 우선순위 테스트를 추가한다.
 - [ ] `All`, `Login`, `Domain`, `Exact` actorType 우선순위 테스트를 추가한다.
 - [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.
+
+== Future work
+- hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.  
+  - 이 부분은 새로운 문서로 분리하여 진행할 예정이다.
