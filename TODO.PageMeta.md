@@ -24,8 +24,8 @@
 - [ ] 재계산 정책 
   - [x] 일반 Calculate: 대상 페이지의 `PageMeta` upsert
   - [ ] Recalculate(관리자): 강제 재계산 모드 지원
-  - [ ]배치 Recalculate: `PageMeta` 누락 row 조건 실행 옵션
-  - [ ] 주기적으로 스케쥴러로 Page에는 있지만 PageMeta에 없는 페이지 Calculate 호출.
+  - [x] 배치 Recalculate: `PageMeta` 누락 row 조건 실행 옵션
+  - [x] 주기적으로 스케쥴러로 Page에는 있지만 PageMeta에 없는 페이지 Calculate 호출.
   - [x] 페이지 생성, 수정, 업데이트, rename시 Calculate 호출
   - [x] 페이지 삭제시 페이지 메타 삭제
 

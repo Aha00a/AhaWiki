@@ -50,6 +50,22 @@ object PageMeta {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
+
+  def selectMissingPageNames(limit: Int = 1)(implicit connection: Connection, site: Site): List[String] = {
+    SQL"""
+      SELECT p.name
+      FROM (
+        SELECT DISTINCT name
+        FROM Page
+        WHERE site = ${site.seq}
+      ) p
+      LEFT JOIN PageMeta pm ON pm.site = ${site.seq} AND pm.name = p.name
+      WHERE pm.name IS NULL
+      ORDER BY p.name ASC
+      LIMIT $limit
+    """.as(SqlParser.str("name").*)
+  }
+
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {
     SQL"""
       SELECT name, revision, dateInserted, dateUpdated, datePageLastChanged, image, IFNULL(permRead, '') permRead, size

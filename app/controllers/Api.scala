@@ -1079,8 +1079,15 @@ class Api @Inject()(
             .map(_.name)
             .distinct
           val requestedPageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
+          val mode = request.getQueryString("mode").map(_.trim).filter(_.nonEmpty).getOrElse("default")
           val maybePageName = if (requestedPageName.nonEmpty) {
             pageNames.find(_ == requestedPageName)
+          } else if (mode == "missingPageMeta") {
+            database.withConnection { implicit connection =>
+              implicit val implicitSite: Site = site
+              models.tables.PageMeta.selectMissingPageNames(limit = 100)
+                .headOption
+            }
           } else {
             pageNames match {
               case Seq() => None
@@ -1095,7 +1102,8 @@ class Api @Inject()(
                 "status" -> "queued",
                 "siteSeq" -> site.seq.toString,
                 "pageName" -> pageName,
-                "source" -> (if (requestedPageName.nonEmpty) "selected" else "random"),
+                "source" -> (if (requestedPageName.nonEmpty) "selected" else if (mode == "missingPageMeta") "missingPageMeta" else "random"),
+                "mode" -> mode,
               ).asJson)
             case None =>
               if (requestedPageName.nonEmpty) {
