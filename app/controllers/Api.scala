@@ -1199,16 +1199,36 @@ class Api @Inject()(
   }
 
 
+  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, hasFallbackImage: Boolean)
+
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
+      val fallbackImageUrl = s"https://${request.host}/public/img/attachmentFallback.svg"
+      def toAbsoluteImageUrl(raw: String): String = {
+        if (raw.startsWith("http://") || raw.startsWith("https://")) raw
+        else s"https://${request.host}/$raw"
+      }
+
       val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
         Adjacent.getSeqLinkFiltered(name)
       }.filter(_.and(contextSite.pageCanSee))
-      Ok(links.asJson)
+
+      val linksWithImage = links.map { link =>
+        val adjacentName = if (link.src == name) link.dst else link.src
+        val imageUrl = models.tables.PageMeta.select(adjacentName).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl)
+        AdjacentLinkPayload(
+          src = link.src,
+          dst = link.dst,
+          alias = link.alias,
+          imageUrl = imageUrl.getOrElse(fallbackImageUrl),
+          hasFallbackImage = imageUrl.isEmpty,
+        )
+      }
+      Ok(linksWithImage.asJson)
     }
   }
 
