@@ -52,7 +52,7 @@ class ApplicationLifecycleHook @Inject()(
     Future.successful(())
   }
 
-  private def durationToSecondsInt(duration: FiniteDuration): Int = (duration.toMillis / 1000L).toInt
+  private def durationToMillisString(duration: FiniteDuration) = f"${duration.toMillis}%,12dms"
 
   private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
 
@@ -62,7 +62,7 @@ class ApplicationLifecycleHook @Inject()(
       val maxMillis = durationToMillisLong(max)
       val delayMillis = Random.between(minMillis, maxMillis)
       val delay = delayMillis.millis
-      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> durationToSecondsInt(min), "maxSeconds" -> durationToSecondsInt(max), "delaySeconds" -> durationToSecondsInt(delay))
+      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> durationToMillisString(min), "maxSeconds" -> durationToMillisString(max), "delaySeconds" -> durationToMillisString(delay))
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
@@ -82,7 +82,7 @@ class ApplicationLifecycleHook @Inject()(
 
   def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> durationToSecondsInt(delay))
+      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> durationToMillisString(delay))
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
