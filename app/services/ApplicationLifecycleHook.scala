@@ -111,15 +111,23 @@ class ApplicationLifecycleHook @Inject()(
     }
   }
 
-  private def registerScheduler(name: String, min: Int, max: Int, job: () => Unit): Unit = {
+
+  private def durationToSecondsInt(duration: FiniteDuration): Int = (duration.toMillis / 1000L).toInt
+
+  private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
+
+  private def registerScheduler(name: String, min: FiniteDuration, max: FiniteDuration, job: () => Unit): Unit = {
     jobMap.put(name, job)
-    schedulerMap.put(name, SchedulerStatus(name, min, max, running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
+    schedulerMap.put(name, SchedulerStatus(name, durationToSecondsInt(min), durationToSecondsInt(max), running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
 
     def scheduleWithRandomInterval(): Unit = {
-      val delay = Random.between(min, max)
-      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> min, "maxSeconds" -> max, "delaySeconds" -> delay)
-      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(delay)))
-      actorSystem.scheduler.scheduleOnce(delay seconds) {
+      val minMillis = durationToMillisLong(min)
+      val maxMillis = durationToMillisLong(max)
+      val delayMillis = Random.between(minMillis, maxMillis)
+      val delay = delayMillis.millis
+      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> durationToSecondsInt(min), "maxSeconds" -> durationToSecondsInt(max), "delaySeconds" -> durationToSecondsInt(delay))
+      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(durationToSecondsInt(delay))))
+      actorSystem.scheduler.scheduleOnce(delay) {
         runScheduler(name)
         scheduleWithRandomInterval()
       }
@@ -130,14 +138,14 @@ class ApplicationLifecycleHook @Inject()(
 
 
   def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
-    val min = interval.toSeconds.toInt
-    val max = interval.toSeconds.toInt
+    val min = durationToSecondsInt(interval)
+    val max = durationToSecondsInt(interval)
     jobMap.put(name, job)
     schedulerMap.put(name, SchedulerStatus(name, min, max, running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
 
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(delay.toSeconds.toInt)))
-      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> delay.toSeconds)
+      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(durationToSecondsInt(delay))))
+      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> durationToSecondsInt(delay))
       actorSystem.scheduler.scheduleOnce(delay) {
         runScheduler(name)
         scheduleOnce(interval)
@@ -164,7 +172,7 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.
-  registerScheduler("deleteExpired", 60 * 10, 60 * 30, () => {
+  registerScheduler("deleteExpired", 10.minutes, 30.minutes, () => {
     StopWatch("deleteExpired") {
       database.withConnection { implicit connection =>
         val deletedRowCount = models.tables.AccessLog.deleteExpired()
@@ -183,7 +191,7 @@ class ApplicationLifecycleHook @Inject()(
 
   // 페이지 계산 스케쥴러: 20~60분 간격으로 랜덤 사이트를 선택합니다.
   // 우선 PageMeta 누락 페이지를 최대 10개 큐잉하고, 누락이 없으면 랜덤 페이지 10개를 큐잉합니다.
-  registerScheduler("Calculate", 60 * 20, 60 * 60, () => {
+  registerScheduler("Calculate", 20 minutes, 60 minutes, () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 10
