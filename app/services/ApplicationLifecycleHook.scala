@@ -41,18 +41,10 @@ class ApplicationLifecycleHook @Inject()(
 ) extends Logging {
   logger.info("OnApplicationStarting")
 
-
-  private def logScheduler(name: String, event: String, details: (String, Any)*): Unit = {
-    val suffix = if (details.nonEmpty) details.map { case (k, v) => s"$k=$v" }.mkString(" ") else ""
-    logger.info(s"Scheduler\t$name\t$event${if (suffix.nonEmpty) s"\t$suffix" else ""}")
-  }
-
   applicationLifecycle.addStopHook { () =>
     logger.info("OnApplicationStop")
     Future.successful(())
   }
-
-  private def durationToMillisString(duration: FiniteDuration) = f"${duration.toMillis}%,12dms"
 
   private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
 
@@ -62,7 +54,7 @@ class ApplicationLifecycleHook @Inject()(
       val maxMillis = durationToMillisLong(max)
       val delayMillis = Random.between(minMillis, maxMillis)
       val delay = delayMillis.millis
-      logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> durationToMillisString(min), "maxSeconds" -> durationToMillisString(max), "delaySeconds" -> durationToMillisString(delay))
+      logger.info(f"${delay.toMillis}%,12dms\tNext\t${name}")
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
@@ -82,7 +74,7 @@ class ApplicationLifecycleHook @Inject()(
 
   def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> durationToMillisString(delay))
+      logger.info(f"${delay.toMillis}%,12dms\tNext\t${name}")
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
