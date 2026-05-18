@@ -15,8 +15,13 @@ object StopWatch extends Logging {
       operation
     } finally {
       val duration = Duration.between(now, LocalDateTime.now())
-      // TODO duration formatting - left padding with space
-      logger.info(f"\t${duration.toMillis}%,7dms\t$name\tDone")
+      logger.info(Seq(
+        " " * 7,
+        "",
+        f"${duration.toMillis}%,13dms",
+        name,
+        "Done"
+      ).mkString("\t"))
     }
   }
 }
