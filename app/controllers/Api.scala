@@ -1080,6 +1080,7 @@ class Api @Inject()(
             .distinct
           val requestedPageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
           val mode = request.getQueryString("mode").map(_.trim).filter(_.nonEmpty).getOrElse("default")
+          val force = request.getQueryString("force").exists(_.trim.equalsIgnoreCase("true")) || mode == "force"
           val maybePageName = if (requestedPageName.nonEmpty) {
             pageNames.find(_ == requestedPageName)
           } else if (mode == "missingPageMeta") {
@@ -1102,8 +1103,9 @@ class Api @Inject()(
                 "status" -> "queued",
                 "siteSeq" -> site.seq.toString,
                 "pageName" -> pageName,
-                "source" -> (if (requestedPageName.nonEmpty) "selected" else if (mode == "missingPageMeta") "missingPageMeta" else "random"),
+                "source" -> (if (force) "forced" else if (requestedPageName.nonEmpty) "selected" else if (mode == "missingPageMeta") "missingPageMeta" else "random"),
                 "mode" -> mode,
+                "force" -> force.toString,
               ).asJson)
             case None =>
               if (requestedPageName.nonEmpty) {
@@ -1207,7 +1209,7 @@ class Api @Inject()(
   }
 
 
-  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, hasFallbackImage: Boolean)
+  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, hasFallbackImage: Boolean, srcImageUrl: String, dstImageUrl: String)
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
@@ -1234,6 +1236,8 @@ class Api @Inject()(
           alias = link.alias,
           imageUrl = imageUrl.getOrElse(fallbackImageUrl),
           hasFallbackImage = imageUrl.isEmpty,
+          srcImageUrl = models.tables.PageMeta.select(link.src).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(fallbackImageUrl),
+          dstImageUrl = models.tables.PageMeta.select(link.dst).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(fallbackImageUrl),
         )
       }
       Ok(linksWithImage.asJson)

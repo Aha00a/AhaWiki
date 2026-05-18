@@ -40,6 +40,8 @@
             labelScale: 1,
             linkDistance: 80,
             chargeStrength: -120,
+            showThumbnails: true,
+            imageCache: new Map(),
         };
 
         var intervalFetchMs = 750;
@@ -201,6 +203,15 @@
             $('.zoomScaleD3Canvas.@(id)').text(state.scale.toFixed(2) + 'x');
         }
 
+        function ensureNodeImage(node) {
+            if(!node || !node.imageUrl || !state.showThumbnails) return;
+            if(state.imageCache.has(node.imageUrl)) return;
+            var img = new Image();
+            img.onload = function() { draw(); };
+            img.src = node.imageUrl;
+            state.imageCache.set(node.imageUrl, img);
+        }
+
         function draw() {
             var size = syncCanvasSize();
             ctx.clearRect(0, 0, size.width, size.height);
@@ -251,6 +262,19 @@
                 ctx.fillStyle = isRoot ? '#213a9a' : (isHover ? '#2b5fc7' : (isNeighbor ? '#6a8fe0' : (depth <= 1 ? '#3f7bcf' : (depth <= 2 ? '#7ea2df' : '#9099ab'))));
                 ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                 ctx.fill();
+
+                if(state.showThumbnails && n.imageUrl) {
+                    ensureNodeImage(n);
+                    var cached = state.imageCache.get(n.imageUrl);
+                    if(cached && cached.complete && cached.naturalWidth > 0) {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, Math.max(2, rScreen - 1.2), 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.drawImage(cached, p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
+                        ctx.restore();
+                    }
+                }
                 if(isRoot) {
                     ctx.strokeStyle = '#ffb300';
                     ctx.lineWidth = 2.5;
@@ -348,6 +372,10 @@
                     if(!state.fetchedSet.has(v.dst) && !state.inFlightSet.has(v.dst)) state.queueFetch.push(v.dst);
                     changed = true;
                 }
+                var srcNode = ensureNode(v.src);
+                var dstNode = ensureNode(v.dst);
+                if(v.srcImageUrl && !srcNode.imageUrl) srcNode.imageUrl = v.srcImageUrl;
+                if(v.dstImageUrl && !dstNode.imageUrl) dstNode.imageUrl = v.dstImageUrl;
                 changed = addLink(v.src, v.dst) || changed;
                 consumed++;
             }
@@ -603,6 +631,13 @@
             state.chargeStrength = parseInt($(this).val(), 10);
             $('.chargeStrengthValueD3Canvas.@(id)').text(state.chargeStrength);
             restart();
+        });
+
+        controls.bindActionControl('.thumbnailToggleD3Canvas.@(id)', function() {
+            state.showThumbnails = !state.showThumbnails;
+            $('.thumbnailToggleD3Canvas.@(id)').prop('checked', state.showThumbnails);
+            $('.thumbnailToggleValueD3Canvas.@(id)').text(state.showThumbnails ? 'ON' : 'OFF');
+            draw();
         });
 
         $(document).on('adjacent-pages-d3canvas:rerender-@(id)', function() {
