@@ -46,7 +46,7 @@ class FilterAccessLog @Inject()(
     logger.info(Seq(
       method.padRight(7),
       status,
-      s"${duration}ms".padLeft(7),
+      f"${duration}%,8dms",
       remoteAddress.padRight(15),
       url,
       userAgent

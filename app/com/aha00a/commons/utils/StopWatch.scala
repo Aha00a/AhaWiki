@@ -16,7 +16,7 @@ object StopWatch extends Logging {
     } finally {
       val duration = Duration.between(now, LocalDateTime.now())
       // TODO duration formatting - left padding with space
-      logger.info(f"${duration.toMillis}%,8dms\t$name\tDone")
+      logger.info(f"\t${duration.toMillis}%,8dms\t$name\tDone")
     }
   }
 }
