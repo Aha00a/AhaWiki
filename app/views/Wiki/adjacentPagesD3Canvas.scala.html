@@ -50,6 +50,7 @@
         var graphBatchSize = 5;
         var radiusDefault = 7;
         var radiusHighlight = 15;
+        var imageNodeRadiusMultiplier = 4;
         var initialScale = 0.5;
         var minScale = 0.1;
         var maxScale = 2.5;
@@ -209,10 +210,24 @@
             if(state.imageCache.has(node.imageUrl)) return;
             if(state.imageCache.size >= maxPreloadImageCount) return;
             var img = new Image();
-            img.loading = 'lazy';
-            img.onload = function() { draw(); };
+            img.onload = function() {
+                img._failed = false;
+                draw();
+            };
+            img.onerror = function() {
+                img._failed = true;
+            };
             img.src = node.imageUrl;
             state.imageCache.set(node.imageUrl, img);
+        }
+
+
+        function getNodeRadius(node, isHover) {
+            var degree = state.nodeDegree.get(node.id) || 0;
+            var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
+            if(node.id === state.rootNodeName || isHover) r = Math.max(r, radiusHighlight * state.nodeScale);
+            if(state.showThumbnails && node.imageUrl) r *= imageNodeRadiusMultiplier;
+            return r;
         }
 
         function draw() {
@@ -251,13 +266,13 @@
             ctx.globalAlpha = 1;
             state.nodes.forEach(function(n) {
                 if(!isNodeVisible(n)) return;
+                ctx.globalAlpha = 1;
                 var isRoot = n.id === state.rootNodeName;
                 var isHover = n.id === state.hoverNodeId;
                 var isNeighbor = state.hoverNodeId && neighbors.has(n.id);
                 var depth = state.depthFromRoot.has(n.id) ? state.depthFromRoot.get(n.id) : 99;
                 var degree = state.nodeDegree.get(n.id) || 0;
-                var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
-                if(isRoot || isHover) r = Math.max(r, radiusHighlight * state.nodeScale);
+                var r = getNodeRadius(n, isHover);
                 var rScreen = Math.max(2, r * state.scale);
                 var p = worldToScreen(n.x || 0, n.y || 0);
 
@@ -269,11 +284,14 @@
                 if(state.showThumbnails && n.imageUrl) {
                     ensureNodeImage(n);
                     var cached = state.imageCache.get(n.imageUrl);
-                    if(cached && cached.complete && cached.naturalWidth > 0) {
+                    if(cached && cached.complete && !cached._failed && cached.naturalWidth > 0) {
+                        var clipRadius = Math.max(2, rScreen - 1.2);
                         ctx.save();
                         ctx.beginPath();
-                        ctx.arc(p.x, p.y, Math.max(2, rScreen - 1.2), 0, Math.PI * 2);
+                        ctx.arc(p.x, p.y, clipRadius, 0, Math.PI * 2);
                         ctx.clip();
+                        // ctx.fillStyle = '#fff';
+                        // ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
                         ctx.drawImage(cached, p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
                         ctx.restore();
                     }
@@ -422,9 +440,7 @@
             for(var i = state.nodes.length - 1; i >= 0; i--) {
                 var n = state.nodes[i];
                 if(!isNodeVisible(n)) continue;
-                var degree = state.nodeDegree.get(n.id) || 0;
-                var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
-                if(n.id === state.rootNodeName) r = Math.max(r, radiusHighlight * state.nodeScale);
+                var r = getNodeRadius(n, false);
                 var p = worldToScreen(n.x || 0, n.y || 0);
                 var rScreen = Math.max(2, r * state.scale);
                 var dx = p.x - screenX;

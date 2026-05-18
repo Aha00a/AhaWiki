@@ -1239,7 +1239,7 @@ class Api @Inject()(
   }
 
 
-  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, hasFallbackImage: Boolean, srcImageUrl: String, dstImageUrl: String)
+  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, srcImageUrl: String, dstImageUrl: String)
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
@@ -1247,7 +1247,6 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
-      val fallbackImageUrl = s"https://${request.host}/public/img/attachmentFallback.svg"
       def toAbsoluteImageUrl(raw: String): String = {
         if (raw.startsWith("http://") || raw.startsWith("https://")) raw
         else s"https://${request.host}/$raw"
@@ -1264,10 +1263,9 @@ class Api @Inject()(
           src = link.src,
           dst = link.dst,
           alias = link.alias,
-          imageUrl = imageUrl.getOrElse(fallbackImageUrl),
-          hasFallbackImage = imageUrl.isEmpty,
-          srcImageUrl = models.tables.PageMeta.select(link.src).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(fallbackImageUrl),
-          dstImageUrl = models.tables.PageMeta.select(link.dst).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(fallbackImageUrl),
+          imageUrl = imageUrl.getOrElse(""),
+          srcImageUrl = models.tables.PageMeta.select(link.src).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(""),
+          dstImageUrl = models.tables.PageMeta.select(link.dst).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(""),
         )
       }
       Ok(linksWithImage.asJson)
