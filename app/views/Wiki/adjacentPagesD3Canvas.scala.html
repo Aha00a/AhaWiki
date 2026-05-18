@@ -222,6 +222,29 @@
         }
 
 
+
+        function drawImageCover(img, dx, dy, dSize) {
+            var srcW = img.naturalWidth || img.width;
+            var srcH = img.naturalHeight || img.height;
+            if(!srcW || !srcH) {
+                ctx.drawImage(img, dx, dy, dSize, dSize);
+                return;
+            }
+            var srcX = 0;
+            var srcY = 0;
+            var cropW = srcW;
+            var cropH = srcH;
+            var srcRatio = srcW / srcH;
+            if(srcRatio > 1) {
+                cropW = srcH;
+                srcX = (srcW - cropW) / 2;
+            } else if(srcRatio < 1) {
+                cropH = srcW;
+                srcY = (srcH - cropH) / 2;
+            }
+            ctx.drawImage(img, srcX, srcY, cropW, cropH, dx, dy, dSize, dSize);
+        }
+
         function getNodeRadius(node, isHover) {
             var degree = state.nodeDegree.get(node.id) || 0;
             var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
@@ -292,7 +315,7 @@
                         ctx.clip();
                         ctx.fillStyle = '#fff';
                         ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
-                        ctx.drawImage(cached, p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
+                        drawImageCover(cached, p.x - rScreen, p.y - rScreen, rScreen * 2);
                         ctx.restore();
                     }
                 }
