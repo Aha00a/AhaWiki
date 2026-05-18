@@ -1,19 +1,32 @@
 # Permission
 
-이 문서는 현재 코드에 구성되어 있는 사용자 Permission 관련 구조를 정리한다.
+이 문서는 현재 코드에 구성되어 있는 사용자 Permission 구조와 앞으로 정리해야 할 작업을 정리한다.
 
 ## 요약
 
-현재 실제 위키 페이지 접근 제어는 `Permission` 테이블을 우선 사용하고, 매칭되는 row가 없을 때만 페이지 본문 상단의 shebang directive와 세션 로그인 정보로 fallback한다.
+현재 위키 페이지 접근 제어는 `Permission` 테이블만 사용한다.
 
-- 읽기 권한: `#!read ...`
-- 쓰기 권한: `#!write ...`
-- 기본 읽기 권한: `.config`의 `permission.default.read`, 없으면 `all`
-- 기본 쓰기 권한: `.config`의 `permission.default.write`, 없으면 `login`
-- 로그인 사용자 식별: Play session의 `seq`, `email`, `nickname`
-- 관리자 판정: `email == "aha00a@gmail.com"` 또는 `seq == 1`
+- 실제 읽기/쓰기 권한 판정: `logics.wikis.WikiPermission`
+- 권한 데이터 소스: `Permission` 테이블
+- legacy 권한 데이터: `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead`
+- 현재 정책: legacy 권한 데이터는 실제 접근 제어에 사용하지 않는다.
+- 매칭되는 `Permission` row가 없으면 기본적으로 denied 처리된다.
 
-`Permission` 테이블에 매칭 row를 추가하면 해당 row가 `#!read`/`#!write` directive보다 우선 적용된다. 명시적으로 거부하려면 `action = 0` row를 둔다.
+따라서 공개 읽기 같은 기본 정책도 반드시 `Permission` 테이블 row로 표현해야 한다.
+
+예를 들어 사이트 전체를 공개 읽기로 만들려면 다음과 같은 row가 필요하다.
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, '', 'All', '', 'All', 1);
+```
+
+로그인 사용자에게 전체 편집/생성을 허용하려면 다음과 같은 row가 필요하다.
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, '', 'All', '', 'Login', 4);
+```
 
 ## 로그인 사용자
 
@@ -29,185 +42,43 @@
 
 요청 중 현재 사용자는 `RequestWrapper.getUser`를 통해 `SessionLogic.getUser(request)` 결과로 접근한다.
 
-세션에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급된다.
+세션에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급된다. `Permission` 판정에서 비로그인 사용자의 actor 값은 빈 문자열 `""`이다.
 
-## WikiPermission
-
-실제 페이지 읽기/쓰기 권한 판정은 `logics.wikis.WikiPermission`이 담당한다.
-
-판정 순서:
-
-1. 현재 사이트의 `Permission` rows를 조회한다.
-2. 요청 page name과 현재 actor email에 가장 우선순위가 높은 row를 찾는다.
-3. 매칭 row가 있으면 `action >= requiredAction`으로 허용 여부를 결정한다.
-4. 매칭 row가 없으면 legacy directive/default 방식으로 fallback한다.
-
-### Directive 추출
-
-`PageContent`는 페이지 본문 맨 앞에서 `#!`로 시작하는 줄들을 directive로 추출한다.
-
-예:
-
-```wiki
-#!read all
-#!write login
-
-= Page Title
-본문...
-```
-
-`PageContent`가 인식하는 권한 directive는 다음과 같다.
-
-- `#!read <directive>`
-- `#!write <directive>`
-
-본문 첫 줄들이 `#!`로 시작하는 동안만 directive로 취급된다. 권한 directive가 없으면 사이트 설정 기본값을 사용한다.
-
-### 기본값
-
-기본값은 `AhaWikiConfig().permission.default`에서 읽는다. 이 값은 사이트별 `.config` 페이지의 HOCON 설정을 통해 공급된다.
-
-- `permission.default.read`: 없으면 `all`
-- `permission.default.write`: 없으면 `login`
-
-따라서 별도 설정이 없는 페이지는 기본적으로 모두 읽을 수 있고, 로그인 사용자만 쓸 수 있다.
-
-### Directive 문법
-
-directive 값은 comma-separated list다.
-
-```wiki
-#!read all
-#!write login
-```
-
-```wiki
-#!read login
-#!write aha00a@gmail.com,@example.com
-```
-
-각 항목의 의미는 다음과 같다.
-
-- `all`: 비로그인 사용자를 포함한 모든 사용자 허용
-- `login`: 로그인한 모든 사용자 허용
-- `user@example.com`: 해당 이메일 사용자만 허용
-- `@example.com`: 해당 도메인으로 끝나는 이메일 사용자 허용
-
-매칭 로직은 다음과 같다.
-
-- 로그인 사용자는 directive에 `all`, `login`, 본인 이메일, 또는 본인 이메일 suffix와 일치하는 `@domain` 항목이 있으면 허용된다.
-- 비로그인 사용자는 directive에 `all`이 있을 때만 허용된다.
-
-## 읽기 권한 적용 지점
-
-페이지 조회에서 `Wiki.view`는 최신 revision의 본문으로 읽기 권한을 계산한다.
-
-읽기가 허용되면 다음 action을 사용할 수 있다.
-
-- `view`
-- `raw`
-- `history`
-- `blame`
-- `diff`
-
-읽기가 거부되면 `Permission denied.`가 반환된다.
-
-단, signed read URL이 유효하면 `#!read` 권한을 우회해 읽을 수 있다. signed read URL은 `sr_exp`, `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증된다.
-
-## 쓰기 권한 적용 지점
-
-쓰기 권한은 최신 revision의 본문 기준으로 계산된다.
-
-쓰기 권한이 있어야 가능한 동작:
-
-- 없는 페이지의 `edit`
-- 기존 페이지의 `edit`
-- `rename`
-- `delete`
-- save
-- attachment upload/delete 관련 일부 경로
-- diary write
-- Google Spreadsheet sync
-
-저장 시에는 form body의 새 본문이 아니라 DB의 최신 본문(`latestText`)에 대한 `WikiPermission().isWritable(PageContent(latestText))`를 검사한다. 즉, 현재 페이지를 쓸 권한이 있어야 새 revision을 만들 수 있다.
-
-새 revision 저장 시 `PageLogic.insert`는 새 본문에서 `PageContent(body).read`를 읽어 `Page.permRead`에 저장한다. 이후 `PageMeta` 계산 시에도 최신 revision의 `permRead`가 snapshot으로 들어간다.
-
-## 목록/검색/매크로에서의 권한 필터링
-
-페이지 목록 권한 필터링은 `PageLogic.getListPageByPermission`에서 수행된다.
-
-흐름:
-
-1. `PageMeta` 기반 최신 페이지 목록을 가져온다.
-2. 각 row의 `permRead`를 읽는다.
-3. `permRead`가 비어 있으면 `permission.default.read`를 사용한다.
-4. 현재 사용자 이메일 기준으로 `WikiPermission.allowed`를 적용한다.
-
-이 결과는 `ContextSite.seqPageByPermission`, `seqPageNameByPermission`, `setPageNameByPermission`으로 노출된다.
-
-다음 기능들은 이 권한 필터링 결과를 사용한다.
-
-- Home의 랜덤 페이지 선택
-- Feed의 최근 페이지 목록
-- `MacroPageList`
-- `MacroTitleIndex`
-- `MacroPageCount`
-- calendar/navigation/map/schema 관련 일부 interpreter/macro
-- API의 페이지 목록 계열 응답
-
-검색 결과도 `Search.search`에서 각 결과 본문의 `PageContent`를 기준으로 `WikiPermission.isReadable`을 다시 적용한다.
-
-## 관리자 권한
-
-관리자 화면/API의 권한은 별도의 role 테이블이 아니라 하드코딩된 조건으로 판정한다.
+관리자 판정은 아직 별도 role 테이블이 아니라 코드 조건으로 남아 있다.
 
 ```scala
 SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
 ```
 
-이 조건은 `Admin`, `Api`, `ApiCrawler` 컨트롤러의 관리자 기능에서 사용된다.
+## WikiPermission
 
-관리자는 다음과 같은 기능에 접근할 수 있다.
+실제 페이지 읽기/쓰기 권한 판정은 `logics.wikis.WikiPermission`이 담당한다.
 
-- 사이트 목록/사이트 사용자 목록
-- 사용자 목록/사용자 조회 이력
-- 접근 로그
-- 최근 변경 목록
-- PageMeta 목록 및 재계산
-- 사이트 favicon/theme 설정
-- S3 object 관리
-- crawler cache 관리
-- memory cache 상태 조회
+현재 판정 순서:
 
-## UserSite
+1. 현재 사이트의 `Permission` rows를 조회한다.
+2. 요청 page name과 actor email에 매칭되는 row를 찾는다.
+3. 가장 구체적인 row 하나를 선택한다.
+4. `row.action >= requiredAction`이면 허용한다.
+5. 매칭되는 row가 없으면 거부한다.
 
-`UserSite` 테이블은 사용자와 사이트의 연결 정보를 저장한다.
+중요한 점:
 
-스키마:
+- 더 이상 `#!read`, `#!write`, `.config`의 `permission.default.*`로 fallback하지 않는다.
+- 더 이상 `Page.permRead`, `PageMeta.permRead`를 읽기 권한 필터링에 사용하지 않는다.
+- `Permission` row가 없는 page/actor 조합은 denied다.
 
-- `user`
-- `site`
-- `created`
-- primary key: `(user, site)`
-- `User`, `Site` foreign key
+## Required Action
 
-현재 코드 기준으로 `UserSite`는 주로 관리자 화면의 사이트별 사용자 목록과 통계성 조회에 사용된다. 일반 위키 페이지의 읽기/쓰기 권한 판정에는 직접 사용되지 않는다.
+현재 action 값은 bit flag가 아니라 등급처럼 동작한다.
 
-## Permission 테이블
+`Permission.permitted(action)`은 다음처럼 판정한다.
 
-`Permission` 테이블은 evolution 18에서 추가되어 있다.
+```scala
+this.action >= action
+```
 
-스키마:
-
-- `site`
-- `target`
-- `actor`
-- `action`
-- `created`
-- primary key: `(site, target, actor)`
-
-모델 상 action 값은 다음과 같다.
+모델의 action 값:
 
 | 이름 | 값 |
 | --- | ---: |
@@ -219,130 +90,275 @@ SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq
 | `delete` | 16 |
 | `admin` | 255 |
 
-`Permission.permitted(action)`은 `this.action >= action`으로 판정한다. 즉 action 값은 bit flag가 아니라 등급처럼 동작한다.
+현재 주요 사용:
 
-### target 매칭
+- 기존 페이지 읽기: `read`
+- 기존 페이지 편집/저장: `edit`
+- 없는 페이지 생성: `create`
+- signed read URL 생성 등 관리자성 기능: 별도 hard-coded admin 판정도 함께 존재
 
-- `""`: 모든 target
-- `"Private"`: 정확히 `Private`만
-- `"Private?"`: `Private`로 시작하는 모든 target
+## Permission 테이블
 
-`?` suffix는 prefix match 의미다.
+`Permission` 테이블은 evolution 18에서 추가되었고, evolution 50에서 `targetType`, `actorType`, `dateInserted`, `dateUpdated`가 추가되었다.
 
-### actor 매칭
+현재 주요 컬럼:
 
-- `""`: 모든 actor
-- `"login"`: 로그인한 모든 actor
-- `"@gmail.com"`: 이메일이 `@gmail.com`으로 끝나는 actor
-- `"aha00a@gmail.com"`: 정확히 해당 이메일 actor
+- `site`
+- `target`
+- `targetType`
+- `actor`
+- `actorType`
+- `action`
+- `dateInserted`
+- `dateUpdated`
 
-### 우선순위
+현재 primary key:
 
-`PermissionLogic`은 permission 목록을 `priority` 내림차순으로 정렬한 뒤, 처음 매칭되는 row를 사용한다.
+```text
+(site, targetType, target, actorType, actor)
+```
 
-priority는 `targetLevel + actorLevel`이다.
+### Target
+
+`target`은 page name에 매칭된다.
+
+| targetType | target 예 | 의미 |
+| --- | --- | --- |
+| `All` | `''` | 모든 페이지 |
+| `Exact` | `Private` | 정확히 `Private` 페이지 |
+| `StartsWith` | `Private` | `Private`로 시작하는 모든 페이지 |
+| `EndsWith` | `/Secret` | `/Secret`으로 끝나는 모든 페이지 |
+
+legacy helper `Permission(target, actor, action)`은 아직 `target` 문자열에서 타입을 추론한다.
+
+- `""` -> `TargetType.All`
+- `"Private?"` -> `TargetType.StartsWith`, 저장 target은 `"Private"`
+- 그 외 -> `TargetType.Exact`
+
+신규 코드나 SQL에서는 `targetType`을 명시하는 방식이 더 명확하다.
+
+### Actor
+
+`actor`는 현재 사용자 email에 매칭된다.
+
+| actorType | actor 예 | 의미 |
+| --- | --- | --- |
+| `All` | `''` | 비로그인 포함 모든 사용자 |
+| `Login` | `''` | 로그인한 모든 사용자 |
+| `Exact` | `user@example.com` | 해당 email 사용자 |
+| `Domain` | `@example.com` | 해당 domain으로 끝나는 email 사용자 |
+
+legacy helper `Permission(target, actor, action)`은 아직 `actor` 문자열에서 타입을 추론한다.
+
+- `""` -> `ActorType.All`
+- `"login"` -> `ActorType.Login`, 저장 actor는 `""`
+- `"@example.com"` -> `ActorType.Domain`
+- 그 외 -> `ActorType.Exact`
+
+## 우선순위
+
+`PermissionLogic`은 permission 목록을 다음 기준으로 정렬한 뒤 처음 매칭되는 row를 사용한다.
+
+1. `specificity` 내림차순
+2. `target.length` 내림차순
+3. `actor.length` 내림차순
+
+`specificity`는 `targetLevel + actorLevel`이다.
 
 target level:
 
-- 전체 target: 1
-- prefix target(`?`): 2
-- exact target: 3
+- `All`: 1
+- `StartsWith`, `EndsWith`: 2
+- `Exact`: 3
 
 actor level:
 
-- 전체 actor: 1
-- domain actor(`@...`): 2
-- exact actor: 3
+- `All`: 1
+- `Login`, `Domain`: 2
+- `Exact`: 3
 
-따라서 exact target + exact actor가 가장 우선된다.
+따라서 일반적으로 exact target + exact actor가 가장 먼저 적용된다.
 
-## Permission 테이블 적용 상태
+## 읽기 권한 적용 지점
 
-현재 주요 권한 판정 경로는 `PermissionLogic`을 사용한다. 단, 기존 데이터를 즉시 잠그지 않기 위해 매칭되는 `Permission` row가 없으면 legacy directive/default 정책으로 fallback한다.
+읽기 권한은 `WikiPermission.isReadable` / `isReadableByAnonymous`를 통해 판정한다.
 
-현재 확인되는 사용처:
+주요 적용 지점:
 
-- `WikiPermission`: 실제 읽기/쓰기 권한 판정
-- `PermissionUnit`, `PermissionLogicUnit`: 모델/로직 단위 테스트
-- `Test.permission`: dev 환경에서 legacy directive 방식과 `PermissionLogic` 결과를 비교
+- `Wiki.view`
+- `raw`
+- `history`
+- `blame`
+- `diff`
+- 검색 결과 필터링
+- page list 필터링
+- include macro
+- WebSocket watch
+- API 일부 응답 필터링
 
-따라서 실제 운영 정책은 `Permission` 테이블 row로 관리할 수 있다. row가 없는 page/actor 조합은 기존 `#!read`, `#!write`, `.config` 기본값을 따른다.
+읽기가 거부되면 일반적으로 `Permission denied.`가 반환된다.
 
-## PageMeta와 permRead
+signed read URL은 예외적으로 유효한 서명이 있으면 페이지를 읽을 수 있다. signed read URL은 `sr_exp`, `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증된다.
 
-`Page.permRead`는 최신 revision의 읽기 directive snapshot이다.
+## 쓰기 권한 적용 지점
 
-저장 시:
+쓰기 권한은 `WikiPermission.isWritable`로 판정한다.
 
-- `PageLogic.insert`가 새 본문에서 `#!read` 값을 추출해 `Page.permRead`에 저장한다.
+현재 페이지 존재 여부에 따라 required action이 다르다.
 
-계산 시:
+- 기존 페이지: `edit`
+- 없는 페이지: `create`
 
-- `PageLogic.calculate`가 최신 page의 `permRead`를 `PageMeta.permRead`에 upsert한다.
+주요 적용 지점:
 
-목록 필터링 시:
+- 없는 페이지의 `edit`
+- 기존 페이지의 `edit`
+- save
+- `rename`
+- `delete`
+- attachment upload/delete 관련 일부 경로
+- diary write
+- Google Spreadsheet sync
 
-- `PageMeta.permRead`를 사용해 페이지 목록을 사용자별로 필터링한다.
+save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기준으로 현재 page가 존재하는지 판단하고 required action을 계산한다.
 
-즉 전체 본문을 매번 읽지 않고도 목록/매크로/API에서 읽기 권한 필터링을 수행하기 위해 `PageMeta.permRead`가 사용된다.
+## 목록/검색/매크로 권한 필터링
+
+페이지 목록 권한 필터링은 `PageLogic.getListPageByPermission`에서 수행된다.
+
+현재 흐름:
+
+1. `PageMeta` 기반 최신 페이지 목록을 가져온다.
+2. 각 page name에 대해 `WikiPermission.isReadable(pageName)`을 호출한다.
+3. `Permission` 테이블 기준으로 허용된 페이지만 남긴다.
+
+`PageMeta.permRead`는 더 이상 필터링에 사용하지 않는다.
+
+이 결과는 다음 필드로 노출된다.
+
+- `ContextSite.seqPageByPermission`
+- `ContextSite.seqPageNameByPermission`
+- `ContextSite.setPageNameByPermission`
+
+검색 결과도 각 결과의 page name에 대해 `WikiPermission.isReadable`을 다시 적용한다.
+
+## Legacy Permission 데이터
+
+아래 값들은 과거 shebang/default 기반 권한 체계에서 사용되었다.
+
+- `.config`의 `permission.default.read`
+- `.config`의 `permission.default.write`
+- 페이지 상단 `#!read ...`
+- 페이지 상단 `#!write ...`
+- `Page.permRead`
+- `PageMeta.permRead`
+
+현재 실제 권한 판정에서는 사용하지 않는다.
+
+현재 코드 상태:
+
+- `PageContent`는 여전히 `read` / `write` directive를 파싱할 수 있다.
+- `Page` / `PageMeta` schema에는 `permRead`가 남아 있다.
+- `PageLogic.insert`는 새 revision 저장 시 `Page.permRead`를 빈 문자열로 저장한다.
+- `PageLogic.calculate`는 `PageMeta.permRead`를 빈 문자열로 upsert한다.
+
+즉, legacy 데이터는 당장 schema 호환성 때문에 남아 있지만 권한 소스로는 사용하지 않는다.
+
+## Flash 표시
+
+읽기 제한이 있는 페이지에서는 상단 flash에 `Permission` 테이블 기준 상세 정보가 표시된다.
+
+표시 내용:
+
+- 현재 사용자
+- 현재 사용자 read 허용 여부와 매칭 row
+- anonymous read 허용 여부와 매칭 row
+- 현재 사용자 write 허용 여부와 매칭 row
+
+이 flash 역시 shebang/default 기준 설명은 표시하지 않는다.
 
 ## 예시
 
-모두 읽기, 로그인 사용자만 쓰기:
-
-```wiki
-#!read all
-#!write login
-```
-
-로그인 사용자만 읽기/쓰기:
-
-```wiki
-#!read login
-#!write login
-```
-
-특정 사용자만 읽기/쓰기:
-
-```wiki
-#!read aha00a@gmail.com
-#!write aha00a@gmail.com
-```
-
-특정 도메인 사용자에게 쓰기 허용:
-
-```wiki
-#!read all
-#!write @example.com
-```
-
-여러 조건 조합:
-
-```wiki
-#!read login,@example.com
-#!write aha00a@gmail.com,@example.com
-```
-
-비로그인 사용자는 `login`, 이메일, 도메인 조건을 만족할 수 없고 `all`만 만족한다.
-
-Permission table로 같은 정책을 표현하는 예:
+모든 사용자에게 전체 페이지 읽기 허용:
 
 ```sql
--- 모든 사용자 읽기 허용
-INSERT INTO Permission (site, target, actor, action)
-VALUES (1, '', '', 1);
-
--- 로그인 사용자 편집/생성 허용
-INSERT INTO Permission (site, target, actor, action)
-VALUES (1, '', 'login', 4);
-
--- 특정 prefix 페이지는 특정 사용자만 관리
-INSERT INTO Permission (site, target, actor, action)
-VALUES (1, 'Private?', 'aha00a@gmail.com', 255);
-
--- 특정 prefix 페이지를 기본적으로 차단
-INSERT INTO Permission (site, target, actor, action)
-VALUES (1, 'Private?', '', 0);
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, '', 'All', '', 'All', 1);
 ```
 
-`PermissionLogic`은 더 구체적인 target/actor 조합을 우선 적용하므로, 위 예시에서 `Private? + aha00a@gmail.com` row가 `Private? + all` 차단 row보다 먼저 매칭된다.
+로그인 사용자에게 전체 페이지 생성/편집 허용:
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, '', 'All', '', 'Login', 4);
+```
+
+특정 사용자에게 전체 관리자 권한 부여:
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, '', 'All', 'aha00a@gmail.com', 'Exact', 255);
+```
+
+`Private` prefix 페이지를 기본 차단:
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, 'Private', 'StartsWith', '', 'All', 0);
+```
+
+`Private` prefix 페이지를 특정 사용자에게 허용:
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, 'Private', 'StartsWith', 'aha00a@gmail.com', 'Exact', 255);
+```
+
+특정 domain 사용자에게 특정 prefix 읽기 허용:
+
+```sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
+```
+
+## 추후 진행할 사항
+
+### 데이터 마이그레이션
+
+- [ ] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
+- [ ] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
+- [ ] 공개 사이트는 `All/All/read` row를 명시적으로 생성한다.
+- [ ] 로그인 편집 허용 정책이 필요한 사이트는 `All/Login/create` 또는 더 제한적인 row를 생성한다.
+- [ ] `Permission` row가 없어서 의도치 않게 닫히는 페이지가 없는지 확인하는 점검 쿼리나 dev endpoint를 만든다.
+
+### 코드 정리
+
+- [ ] `PageContent.read`, `PageContent.write` 사용처를 확인하고 권한 목적 사용을 완전히 제거한다.
+- [ ] 더 이상 권한에 쓰지 않는 `permission.default.read/write` 설정을 제거하거나 deprecated 문서로 분리한다.
+- [ ] `Page.permRead`, `PageMeta.permRead` 컬럼 제거를 위한 evolution을 준비한다.
+- [ ] `Page`, `PageWithoutContent`, `PageWithoutContentWithSize`, `PageMeta` 모델에서 `permRead` 필드를 제거한다.
+- [ ] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
+- [ ] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
+
+### Permission 모델 개선
+
+- [ ] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
+- [ ] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
+- [ ] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
+- [ ] `Permission.apply(target, actor, action)` legacy 추론 helper를 제거하거나 테스트 전용으로 격리한다.
+- [ ] `targetType`, `actorType`을 문자열 enum 대신 타입 안정적인 값으로 다루는 계층을 추가한다.
+
+### 관리자/운영 도구
+
+- [ ] `Permission` row를 조회/추가/수정/삭제하는 admin UI를 만든다.
+- [ ] 특정 page/user 조합에 대해 어떤 row가 매칭되는지 보여주는 진단 화면을 만든다.
+- [ ] page 상단 flash의 permission 상세 정보를 관리자에게만 보여줄지 결정한다.
+- [ ] hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.
+
+### 테스트
+
+- [ ] `WikiPermission` DB-only 동작 테스트를 추가한다.
+- [ ] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
+- [ ] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 우선순위 테스트를 추가한다.
+- [ ] `All`, `Login`, `Domain`, `Exact` actorType 우선순위 테스트를 추가한다.
+- [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.
