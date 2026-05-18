@@ -79,7 +79,7 @@ object PageMeta {
       ) p
       LEFT JOIN PageMeta pm ON pm.site = ${site.seq} AND pm.name = p.name
       WHERE pm.name IS NULL
-      ORDER BY p.name ASC
+      ORDER BY RAND()
       LIMIT $limit
     """.as(SqlParser.str("name").*)
   }
