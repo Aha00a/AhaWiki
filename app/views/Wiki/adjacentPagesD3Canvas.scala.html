@@ -290,8 +290,8 @@
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, clipRadius, 0, Math.PI * 2);
                         ctx.clip();
-                        // ctx.fillStyle = '#fff';
-                        // ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
                         ctx.drawImage(cached, p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
                         ctx.restore();
                     }
