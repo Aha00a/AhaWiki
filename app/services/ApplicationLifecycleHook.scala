@@ -48,31 +48,14 @@ class ApplicationLifecycleHook @Inject()(
 
   private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
 
-  private def registerScheduler(name: String, min: FiniteDuration, max: FiniteDuration, job: () => Unit): Unit = {
-    def scheduleWithRandomInterval(): Unit = {
-      val minMillis = durationToMillisLong(min)
-      val maxMillis = durationToMillisLong(max)
-      val delayMillis = Random.between(minMillis, maxMillis)
-      val delay = delayMillis.millis
-      logger.info(f"${delay.toMillis}%,12dms\tNext\t${name}")
-      actorSystem.scheduler.scheduleOnce(delay) {
-        StopWatch(s"$name") {
-          try {
-            job.apply()
-          } catch {
-            case t: Throwable =>
-              logger.error(s"ApplicationLifecycleHook.runScheduler\t${name}\tFailed\t${t}")
-          }
-        }
-        scheduleWithRandomInterval()
-      }
-    }
-
-    scheduleWithRandomInterval()
+  private def randomDelay(min: FiniteDuration, max: FiniteDuration): FiniteDuration = {
+    val minMillis = durationToMillisLong(min)
+    val maxMillis = durationToMillisLong(max)
+    val delayMillis = Random.between(minMillis, maxMillis)
+    delayMillis.millis
   }
 
-
-  def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
+  def registerScheduler(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
     def scheduleOnce(delay: FiniteDuration): Unit = {
       logger.info(f"${delay.toMillis}%,12dms\tNext\t${name}")
       actorSystem.scheduler.scheduleOnce(delay) {
@@ -84,7 +67,7 @@ class ApplicationLifecycleHook @Inject()(
               logger.error(s"ApplicationLifecycleHook.runScheduler\t${name}\tFailed\t${t}")
           }
         }
-        scheduleOnce(interval)
+        scheduleOnce(nextDelay())
       }
     }
 
@@ -92,7 +75,7 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.
-  registerScheduler("deleteExpired", 10.minutes, 30.minutes, () => {
+  registerScheduler("deleteExpired", randomDelay(10.minutes, 30.minutes), () => randomDelay(10.minutes, 30.minutes), () => {
     StopWatch("deleteExpired") {
       database.withConnection { implicit connection =>
         val deletedRowCount = models.tables.AccessLog.deleteExpired()
@@ -109,7 +92,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  registerScheduler("Calculate", 20 seconds, 3 minutes, () => {
+  registerScheduler("Calculate", randomDelay(20 seconds, 3 minutes), () => randomDelay(20 seconds, 3 minutes), () => {
     val site = if(false) SiteLogic.selectRandom() else SiteLogic.get(1L).getOrElse(Site.notFound) // TODO
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 10
@@ -133,14 +116,14 @@ class ApplicationLifecycleHook @Inject()(
 
 
   // 사이트 도메인 메모리 캐시 갱신 스케쥴러: 1시간 간격으로 AhaWikiCacheMemoryDomainSite를 미리 갱신합니다.
-  registerFixedDelayScheduler("SiteDomainCacheRefresh", 5.seconds, 1.hour, () => {
+  registerScheduler("SiteDomainCacheRefresh", 5.seconds, () => 1.hour, () => {
     StopWatch("SiteDomainCacheRefresh") {
       AhaWikiCacheMemoryDomainSite.refresh()
     }
   })
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
-  registerFixedDelayScheduler("CacheFileCleanup", 15 seconds, 7.days, () => {
+  registerScheduler("CacheFileCleanup", 15 seconds, () => 7.days, () => {
     StopWatch("CacheFileCleanup") {
       val results = cacheFileCleanupService.cleanupAllExpiredCaches()
       results.foreach { result =>
@@ -150,7 +133,7 @@ class ApplicationLifecycleHook @Inject()(
   })
 
   // 크롤러 캐시 TTL 정리 스케쥴러: 12시간 간격으로 180일 초과 캐시를 삭제합니다.
-  registerFixedDelayScheduler("CrawlerCacheCleanup", 10.seconds, 12.hours, () => {
+  registerScheduler("CrawlerCacheCleanup", 10.seconds, () => 12.hours, () => {
     StopWatch("CrawlerCacheCleanup") {
       database.withConnection { implicit connection =>
         val deletedRowCount = models.tables.CacheCrawler.deleteExpired()

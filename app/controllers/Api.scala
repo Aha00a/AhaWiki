@@ -102,10 +102,10 @@ class Api @Inject()(
     syncCacheApi.set(memoryCacheSnapshotKey, stats.asJson.noSpaces, 10.minutes)
   }
 
-  applicationLifecycleHook.registerFixedDelayScheduler(
+  applicationLifecycleHook.registerScheduler(
     name = "apiMemoryCacheStatsRefresh",
     initialDelay = scala.concurrent.duration.Duration.Zero,
-    interval = 5 minutes,
+    nextDelay = () => 5 minutes,
     job = () => {
       ahaWikiCacheMemoryApiLinks.cleanupExpiredNow()
       val currentSnapshot = ahaWikiCacheMemoryApiLinks.snapshot(instancePort)
