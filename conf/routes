@@ -74,6 +74,7 @@ DELETE        /api/Admin/Favicon                     controllers.Api.adminDelete
 GET           /api/Admin/SiteTheme                   controllers.Api.adminSiteTheme
 PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdateSiteTheme
 GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
+GET           /api/Admin/Site/:seq/PageMetaList      controllers.Api.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
 POST          /api/Admin/Site/:seq/Calculate         controllers.Api.adminSiteCalculate(seq: Long)
 GET           /api/Admin/Schedulers/Run/:name        controllers.Api.adminRunScheduler(name: String)
 GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats

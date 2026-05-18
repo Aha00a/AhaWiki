@@ -43,12 +43,12 @@
   - [x] 초기 preload 개수 제한(예: 상위 N개)
   
 ## 5) ContextSite, AhaWikiCache, PageLogic 개선
-- [ ] setPageName, seqPageByPermission 등의 필드를 Page테이블이 아닌 PageMeta 테이블을 이용하도록 개선
+- [x] setPageName, seqPageByPermission 등의 필드를 Page테이블이 아닌 PageMeta 테이블을 이용하도록 개선
   - [x] setPageName을 PageMeta 기반 캐시(`PageMeta.SeqPageName`)로 전환
   - [x] seqPageByPermission을 PageMeta 기반으로 1차 전환(기본 메타 필드 중심)
 
 ## 6) 운영/관리 기능
-- [ ] Admin Page 목록
+- [x] Admin Page 목록
   - 서버측 페이징, 검색, 정렬
   - 대표 이미지/최종 계산시각 표시
 - [ ] 페이지별 재계산 버튼

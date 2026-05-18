@@ -1034,6 +1034,36 @@ class Api @Inject()(
     }
   }
 
+  def adminPageMetaList(seq: Long, page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            val normalizedPage = page.max(1)
+            val normalizedPageSize = pageSize.max(1).min(200)
+            val rows = models.tables.PageMeta.selectPagedForAdmin(
+              page = normalizedPage,
+              pageSize = normalizedPageSize,
+              search = search,
+              sortBy = sortBy,
+              sortOrder = sortOrder,
+            )
+            val count = models.tables.PageMeta.countPagedForAdmin(search)
+            Ok(Map(
+              "array" -> rows.asJson,
+              "page" -> normalizedPage.asJson,
+              "pageSize" -> normalizedPageSize.asJson,
+              "count" -> count.asJson,
+            ).asJson)
+          }
+      }
+    }
+  }
+
   def adminRunScheduler(name: String): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       Forbidden("Access denied.")

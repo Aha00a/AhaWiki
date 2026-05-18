@@ -34,6 +34,7 @@ import {SiteListCard} from "./site/siteWidgets";
 
 const LOG_PREFIX = "[AdminUI]";
 const CRAWLER_CACHE_PAGE_SIZE = 20;
+const ADMIN_PAGE_META_PAGE_SIZE = 20;
 
 function logInfo(...args) {
     console.log(LOG_PREFIX, ...args);
@@ -275,6 +276,35 @@ function useAdminData(page) {
     const [crawlerPage, setCrawlerPage] = useState(1);
     const [crawlerSortBy, setCrawlerSortBy] = useState("id");
     const [crawlerSortOrder, setCrawlerSortOrder] = useState("desc");
+    const [adminPageMetaRows, setAdminPageMetaRows] = useState([]);
+    const [adminPageMetaCount, setAdminPageMetaCount] = useState(0);
+    const loadAdminPageMetaList = useCallback(async ({
+        siteSeq,
+        page = 1,
+        pageSize = ADMIN_PAGE_META_PAGE_SIZE,
+        search = "",
+        sortBy = "dateUpdated",
+        sortOrder = "desc",
+    } = {}) => {
+        if (!siteSeq) {
+            setAdminPageMetaRows([]);
+            setAdminPageMetaCount(0);
+            return;
+        }
+        const params = new URLSearchParams({
+            page: String(page),
+            pageSize: String(pageSize),
+            search,
+            sortBy,
+            sortOrder,
+        });
+        const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageMetaList?${params.toString()}`);
+        const rows = Array.isArray(data?.array)
+            ? data.array
+            : (Array.isArray(data) ? data : []);
+        setAdminPageMetaRows(rows);
+        setAdminPageMetaCount(Number(data?.count ?? rows.length));
+    }, []);
     const loadAccessLogs = useCallback(async ({
         page = 1,
         pageSize = 20,
@@ -975,6 +1005,9 @@ function useAdminData(page) {
         setCrawlerSortBy,
         crawlerSortOrder,
         setCrawlerSortOrder,
+        adminPageMetaRows,
+        adminPageMetaCount,
+        loadAdminPageMetaList,
         error,
     };
 }
@@ -1050,6 +1083,9 @@ function AdminContent({page, onNavigate, pathname, search}) {
         setCrawlerSortBy,
         crawlerSortOrder,
         setCrawlerSortOrder,
+        adminPageMetaRows,
+        adminPageMetaCount,
+        loadAdminPageMetaList,
         error,
     } = useAdminData(page);
     const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1066,6 +1102,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
     const [sitePageNames, setSitePageNames] = useState([]);
+    const [adminPageMetaPage, setAdminPageMetaPage] = useState(1);
+    const [adminPageMetaSearchInput, setAdminPageMetaSearchInput] = useState("");
+    const [adminPageMetaSearch, setAdminPageMetaSearch] = useState("");
+    const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState("dateUpdated");
+    const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState("desc");
     const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
     const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
     const selectedSite = useMemo(
@@ -1110,6 +1151,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const isSiteConfigPage = page === "site-config";
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
+    const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
 
     useEffect(() => {
         if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
@@ -1134,8 +1176,18 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 .catch((caughtError) => {
                     logError("site:pageNames:error", selectedSiteSeq, caughtError);
                 });
+            loadAdminPageMetaList({
+                siteSeq: selectedSiteSeq,
+                page: 1,
+                pageSize: ADMIN_PAGE_META_PAGE_SIZE,
+                search: "",
+                sortBy: "dateUpdated",
+                sortOrder: "desc",
+            }).catch((caughtError) => {
+                logError("site:pageMetaList:error", selectedSiteSeq, caughtError);
+            });
         }
-    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
+    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList]);
 
     useEffect(() => {
         if (page !== "access-logs") {
@@ -1349,6 +1401,53 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             </Paper>
                         </SimpleGrid>
                     </Stack>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Admin Page 목록 (PageMeta)</Title>
+                        <Badge color="indigo" variant="light">{adminPageMetaCount} rows</Badge>
+                    </Group>
+                    <Group mb="md">
+                        <TextInput label="search" value={adminPageMetaSearchInput} onChange={(event) => setAdminPageMetaSearchInput(event.currentTarget.value)} placeholder="page name, image"/>
+                        <Button mt={22} variant="filled" onClick={() => {
+                            setAdminPageMetaPage(1);
+                            setAdminPageMetaSearch(adminPageMetaSearchInput);
+                            loadAdminPageMetaList({siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearchInput, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder});
+                        }}>검색</Button>
+                    </Group>
+                    <DataTable
+                        withTableBorder
+                        borderRadius="md"
+                        striped
+                        highlightOnHover
+                        records={adminPageMetaRows}
+                        columns={[
+                            {accessor: "name", title: "Page", sortable: true},
+                            {accessor: "revision", title: "Revision", sortable: true},
+                            {accessor: "image", title: "Image", render: (row) => row.image ? <Anchor href={row.image} target="_blank" rel="noopener">{row.image}</Anchor> : "-"},
+                            {accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated)},
+                            {accessor: "datePageLastChanged", title: "Last Changed", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.datePageLastChanged)},
+                            {accessor: "size", title: "Size", sortable: true},
+                        ]}
+                        sortStatus={{columnAccessor: adminPageMetaSortBy, direction: adminPageMetaSortOrder}}
+                        onSortStatusChange={(nextSortStatus) => {
+                            const nextDirection = nextSortStatus.direction ?? "desc";
+                            setAdminPageMetaPage(1);
+                            setAdminPageMetaSortBy(nextSortStatus.columnAccessor);
+                            setAdminPageMetaSortOrder(nextDirection);
+                            loadAdminPageMetaList({siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection});
+                        }}
+                        totalRecords={adminPageMetaCount}
+                        recordsPerPage={ADMIN_PAGE_META_PAGE_SIZE}
+                        page={adminPageMetaPage}
+                        onPageChange={(nextPage) => {
+                            setAdminPageMetaPage(nextPage);
+                            loadAdminPageMetaList({siteSeq: selectedSiteSeq, page: nextPage, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder});
+                        }}
+                        paginationText={({from, to, totalRecords}) => `${from}-${to} / ${totalRecords}`}
+                        minHeight={320}
+                    />
+                    <Text size="xs" c="dimmed" mt="xs">Page {adminPageMetaPage} / {adminPageMetaTotalPages}</Text>
                 </Card>
                 {isSiteConfigPage ? (
                     <>

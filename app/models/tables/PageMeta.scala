@@ -24,6 +24,10 @@ case class PageMeta(
   size: Long,
 )
 
+
+
+case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], permRead: String, size: Long, datePageLastChanged: Option[LocalDateTime])
+
 object PageMeta {
   private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ localDateTime("datePageLastChanged").? ~ str("image").? ~ str("permRead") ~ long("size")
   private val rowParserWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("datePageLastChanged") ~ str("permRead") ~ long("size")
@@ -89,6 +93,50 @@ object PageMeta {
       WHERE site = ${site.seq}
       ORDER BY name DESC
     """.as(rowParserWithoutContentWithSize.*).map(flatten).map(PageMetaWithoutContentWithSize.tupled)
+  }
+
+
+  private val adminPageMetaRowParser = str("name") ~ long("revision") ~ localDateTime("dateUpdated").? ~ str("image").? ~ str("permRead") ~ long("size") ~ localDateTime("datePageLastChanged").? map {
+    case name ~ revision ~ dateUpdated ~ image ~ permRead ~ size ~ datePageLastChanged =>
+      AdminPageMetaRow(name, revision, dateUpdated, image, permRead, size, datePageLastChanged)
+  }
+
+  def selectPagedForAdmin(page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String)(implicit connection: Connection, site: Site): Seq[AdminPageMetaRow] = {
+    val normalizedSortBy = sortBy match {
+      case "name" => "name"
+      case "revision" => "revision"
+      case "dateUpdated" => "dateUpdated"
+      case "datePageLastChanged" => "datePageLastChanged"
+      case "size" => "size"
+      case _ => "dateUpdated"
+    }
+    val normalizedSortOrder = if (sortOrder.equalsIgnoreCase("asc")) "ASC" else "DESC"
+    val offset = (page - 1).max(0) * pageSize
+    val searchLike = s"%${search.trim}%"
+    SQL(s"""
+      SELECT name, revision, dateUpdated, datePageLastChanged, image, IFNULL(permRead, '') permRead, size
+      FROM PageMeta
+      WHERE site = {siteSeq}
+        AND ({search} = '' OR name LIKE {searchLike} OR IFNULL(image, '') LIKE {searchLike})
+      ORDER BY $normalizedSortBy $normalizedSortOrder
+      LIMIT {pageSize} OFFSET {offset}
+    """).on(
+      "siteSeq" -> site.seq,
+      "search" -> search,
+      "searchLike" -> searchLike,
+      "pageSize" -> pageSize,
+      "offset" -> offset,
+    ).as(adminPageMetaRowParser.*)
+  }
+
+  def countPagedForAdmin(search: String)(implicit connection: Connection, site: Site): Long = {
+    val searchLike = s"%${search.trim}%"
+    SQL"""
+      SELECT COUNT(*) count_value
+      FROM PageMeta
+      WHERE site = ${site.seq}
+        AND ($search = '' OR name LIKE $searchLike OR IFNULL(image, '') LIKE $searchLike)
+    """.as(long("count_value").single)
   }
 
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {

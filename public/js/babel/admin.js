@@ -251,6 +251,7 @@ function SiteListCard({ sites, onNavigate }) {
 // app/assets/js/admin.jsx
 var LOG_PREFIX = "[AdminUI]";
 var CRAWLER_CACHE_PAGE_SIZE = 20;
+var ADMIN_PAGE_META_PAGE_SIZE = 20;
 function logInfo(...args) {
   console.log(LOG_PREFIX, ...args);
 }
@@ -469,6 +470,33 @@ function useAdminData(page) {
   const [crawlerPage, setCrawlerPage] = useState2(1);
   const [crawlerSortBy, setCrawlerSortBy] = useState2("id");
   const [crawlerSortOrder, setCrawlerSortOrder] = useState2("desc");
+  const [adminPageMetaRows, setAdminPageMetaRows] = useState2([]);
+  const [adminPageMetaCount, setAdminPageMetaCount] = useState2(0);
+  const loadAdminPageMetaList = useCallback(async ({
+    siteSeq,
+    page: page2 = 1,
+    pageSize = ADMIN_PAGE_META_PAGE_SIZE,
+    search = "",
+    sortBy = "dateUpdated",
+    sortOrder = "desc"
+  } = {}) => {
+    if (!siteSeq) {
+      setAdminPageMetaRows([]);
+      setAdminPageMetaCount(0);
+      return;
+    }
+    const params = new URLSearchParams({
+      page: String(page2),
+      pageSize: String(pageSize),
+      search,
+      sortBy,
+      sortOrder
+    });
+    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageMetaList?${params.toString()}`);
+    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+    setAdminPageMetaRows(rows);
+    setAdminPageMetaCount(Number(data?.count ?? rows.length));
+  }, []);
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
     pageSize = 20,
@@ -1130,6 +1158,9 @@ function useAdminData(page) {
     setCrawlerSortBy,
     crawlerSortOrder,
     setCrawlerSortOrder,
+    adminPageMetaRows,
+    adminPageMetaCount,
+    loadAdminPageMetaList,
     error
   };
 }
@@ -1203,6 +1234,9 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     setCrawlerSortBy,
     crawlerSortOrder,
     setCrawlerSortOrder,
+    adminPageMetaRows,
+    adminPageMetaCount,
+    loadAdminPageMetaList,
     error
   } = useAdminData(page);
   const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1219,6 +1253,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [faviconFile, setFaviconFile] = useState2(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState2("");
   const [sitePageNames, setSitePageNames] = useState2([]);
+  const [adminPageMetaPage, setAdminPageMetaPage] = useState2(1);
+  const [adminPageMetaSearchInput, setAdminPageMetaSearchInput] = useState2("");
+  const [adminPageMetaSearch, setAdminPageMetaSearch] = useState2("");
+  const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState2("dateUpdated");
+  const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState2("desc");
   const [selectedCalculatePageName, setSelectedCalculatePageName] = useState2("");
   const [siteCalculateMessage, setSiteCalculateMessage] = useState2("");
   const selectedSite = useMemo2(
@@ -1263,6 +1302,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const isSiteConfigPage = page === "site-config";
   const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
+  const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
   useEffect2(() => {
     if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
       return;
@@ -1283,8 +1323,18 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       }).catch((caughtError) => {
         logError("site:pageNames:error", selectedSiteSeq, caughtError);
       });
+      loadAdminPageMetaList({
+        siteSeq: selectedSiteSeq,
+        page: 1,
+        pageSize: ADMIN_PAGE_META_PAGE_SIZE,
+        search: "",
+        sortBy: "dateUpdated",
+        sortOrder: "desc"
+      }).catch((caughtError) => {
+        logError("site:pageMetaList:error", selectedSiteSeq, caughtError);
+      });
     }
-  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames]);
+  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList]);
   useEffect2(() => {
     if (page !== "access-logs") {
       return;
@@ -1377,7 +1427,45 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "site-detail" || page === "site-config" || page === "site-cache") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))))), isSiteConfigPage ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Favicon"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 6 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React5.createElement(
+    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button3, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D (PageMeta)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button3, { mt: 22, variant: "filled", onClick: () => {
+      setAdminPageMetaPage(1);
+      setAdminPageMetaSearch(adminPageMetaSearchInput);
+      loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearchInput, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });
+    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
+      DataTable,
+      {
+        withTableBorder: true,
+        borderRadius: "md",
+        striped: true,
+        highlightOnHover: true,
+        records: adminPageMetaRows,
+        columns: [
+          { accessor: "name", title: "Page", sortable: true },
+          { accessor: "revision", title: "Revision", sortable: true },
+          { accessor: "image", title: "Image", render: (row) => row.image ? /* @__PURE__ */ React5.createElement(Anchor, { href: row.image, target: "_blank", rel: "noopener" }, row.image) : "-" },
+          { accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
+          { accessor: "datePageLastChanged", title: "Last Changed", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.datePageLastChanged) },
+          { accessor: "size", title: "Size", sortable: true }
+        ],
+        sortStatus: { columnAccessor: adminPageMetaSortBy, direction: adminPageMetaSortOrder },
+        onSortStatusChange: (nextSortStatus) => {
+          const nextDirection = nextSortStatus.direction ?? "desc";
+          setAdminPageMetaPage(1);
+          setAdminPageMetaSortBy(nextSortStatus.columnAccessor);
+          setAdminPageMetaSortOrder(nextDirection);
+          loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection });
+        },
+        totalRecords: adminPageMetaCount,
+        recordsPerPage: ADMIN_PAGE_META_PAGE_SIZE,
+        page: adminPageMetaPage,
+        onPageChange: (nextPage) => {
+          setAdminPageMetaPage(nextPage);
+          loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: nextPage, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });
+        },
+        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+        minHeight: 320
+      }
+    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)), isSiteConfigPage ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Favicon"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 6 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React5.createElement(
       "img",
       {
         src: siteFaviconUrl,
