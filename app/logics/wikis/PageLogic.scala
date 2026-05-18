@@ -32,19 +32,23 @@ object PageLogic {
 
   private val regexMacroImage = """(?is)\[\[Image\((.*?)\)]]""".r
   private val regexMacroAttachment = """(?is)\[\[Attachment\((.*?)\)]]""".r
+  private val regexSchemaBlock = """(?is)\[\[\[#!\s*Schema[^\n]*\n(.*?)]]]""".r
 
   private def extractSchemaImage(content: String): Option[String] = {
-    val lines = content.splitLinesSeq()
-    val idx = lines.indexWhere(_.trim.startsWith("#!Schema"))
-    if (idx < 0) return None
-    lines.drop(idx + 1)
-      .takeWhile(l => !l.trim.startsWith("#!") && l.trim.nonEmpty)
-      .flatMap { line =>
-        line.splitTabsSeq() match {
-          case Seq(key, values @ _*) if key == "image" || key == "logo" => values.map(_.trim).find(_.nonEmpty)
-          case _ => None
-        }
+    regexSchemaBlock
+      .findAllMatchIn(content)
+      .flatMap { schemaBlock =>
+        schemaBlock.group(1)
+          .splitLinesSeq()
+          .flatMap { line =>
+            line.splitTabsSeq() match {
+              case Seq(key, values @ _*) if key == "image" || key == "logo" => values.map(_.trim).find(_.nonEmpty)
+              case _ => None
+            }
+          }
+          .headOption
       }
+      .toSeq
       .headOption
   }
 
