@@ -16,18 +16,17 @@
 - [x] 인덱스/조회 패턴 확정
   - Admin 목록용 정렬/검색 인덱스
   - `image is NULL`/`dateUpdated` 조건 배치 인덱스
-- [ ] 백필(마이그레이션) 단계 추가
-  - 기존 전체 페이지 대상 1회 백필
-  - 실패 row 재시도 큐/로그
 
 ## 2) Calculate/파서 연동
-- [ ] 본문 파싱 후 대표 이미지 후보 추출기 구현
 - [ ] Calculate 파이프라인에서 `PageMeta` upsert 연동
-- [ ] 파싱 실패/이미지 없음 케이스 테스트 추가
+- [ ] 본문 파싱 후 대표 이미지 후보 추출기 구현
 - [ ] 재계산 정책 
-  - 일반 Calculate: 대상 페이지의 `PageMeta` upsert
-  - Recalculate(관리자): 강제 재계산 모드 지원
-  - 배치 Recalculate: `PageMeta` 누락 row + `image is NULL` 조건 실행 옵션
+  - [ ] 일반 Calculate: 대상 페이지의 `PageMeta` upsert
+  - [ ] Recalculate(관리자): 강제 재계산 모드 지원
+  - [ ]배치 Recalculate: `PageMeta` 누락 row 조건 실행 옵션
+  - [ ] 주기적으로 스케쥴러로 Page에는 있지만 PageMeta에 없는 페이지 Calculate 호출.
+  - [ ] 페이지 생성, 수정, 업데이트, rename시 Calculate 호출
+  - [ ] 페이지 삭제시 페이지 메타 삭제
 
 ## 3) 헤더 메타(SEO/SNS) 정식 연동
 - [ ] `_baseSkeleton`의 `og:image`, `twitter:image` 등 추가
@@ -39,8 +38,8 @@
   - `hasFallbackImage` (기본 이미지 여부)
 - [ ] 노드 렌더러(D3/canvas)에서 썸네일 표시 옵션 추가
 - [ ] 성능/가독성 검토
-  - lazy loading
-  - 초기 preload 개수 제한(예: 상위 N개)
+  - [ ] lazy loading
+  - [ ] 초기 preload 개수 제한(예: 상위 N개)
   
 ## 5) ContextSite, AhaWikiCache, PageLogic 개선
 - [ ] setPageName, seqPageByPermission 등의 필드를 Page테이블이 아닌 PageMeta 테이블을 이용하도록 개선
@@ -51,8 +50,6 @@
   - 대표 이미지/최종 계산시각 표시
 - [ ] 페이지별 재계산 버튼
   - 단건 강제 재계산
-- [ ] 조건부 일괄 재계산
-  - `PageMeta` 누락
 
 ## 7) Page 테이블의 몇몇 필드 삭제
 - [ ] 삭제 대상 필드 목록 확정
