@@ -3,8 +3,7 @@
 @canonicalUrl = @{ s"https://${wikiContext.requestWrapper.host}/w/$encodedTitle" }
 @publishedDateTime = @{ wikiFirst.map(_.dateTime.toString) }
 @modifiedDateTime = @{ wikiLast.map(_.dateTime.toString) }
-@showPermissionFlash = @{ hasReadPermissionRestriction || permissionDetail.exists(_.hasMismatch) }
-@permissionFlashClass = @{ if (permissionDetail.exists(_.hasMismatch)) "error" else "info" }
+@showPermissionFlash = @{ hasReadPermissionRestriction }
 @jsonLdWebPage = @{
     val websiteId = s"https://${wikiContext.requestWrapper.host}/#website"
     val webpageId = s"$canonicalUrl#webpage"
@@ -456,22 +455,14 @@
 } {
     @if(showPermissionFlash) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
-            <div class="@permissionFlashClass">
-                @if(permissionDetail.exists(_.hasMismatch)) {
-                    Permission table and shebang/default rules are different.
-                } else {
-                    This page has permission restrictions applied.
-                }
+            <div class="info">
+                This page has permission restrictions applied.
                 @permissionDetail.map { detail =>
                     <div class="permissionRestrictionDetail">
                         <div><strong>Current user:</strong> @detail.actorLabel</div>
-                        <div><strong>Shebang/default read:</strong> @if(detail.shebangCurrentReadable) { allowed } else { denied } (@detail.shebangReadSource)</div>
-                        <div><strong>Shebang/default anonymous read:</strong> @if(detail.shebangAnonymousReadable) { allowed } else { denied } (@detail.shebangReadSource)</div>
-                        <div><strong>Shebang/default write:</strong> @if(detail.shebangCurrentWritable) { allowed } else { denied } (@detail.shebangWriteSource)</div>
-                        <div><strong>Permission table read:</strong> @detail.tableCurrentReadable.map { allowed => @if(allowed) { allowed } else { denied } }.getOrElse(Html("not matched")) (@detail.tableReadSource)</div>
-                        <div><strong>Permission table anonymous read:</strong> @detail.tableAnonymousReadable.map { allowed => @if(allowed) { allowed } else { denied } }.getOrElse(Html("not matched")) (@detail.tableAnonymousReadSource)</div>
-                        <div><strong>Permission table write:</strong> @detail.tableCurrentWritable.map { allowed => @if(allowed) { allowed } else { denied } }.getOrElse(Html("not matched")) (@detail.tableWriteSource)</div>
-                        <div><strong>Effective access:</strong> read @if(detail.effectiveCurrentReadable) { allowed } else { denied }, anonymous read @if(detail.effectiveAnonymousReadable) { allowed } else { denied }, write @if(detail.effectiveCurrentWritable) { allowed } else { denied }</div>
+                        <div><strong>Permission table read:</strong> @if(detail.currentReadable) { allowed } else { denied } (@detail.tableReadSource)</div>
+                        <div><strong>Permission table anonymous read:</strong> @if(detail.anonymousReadable) { allowed } else { denied } (@detail.tableAnonymousReadSource)</div>
+                        <div><strong>Permission table write:</strong> @if(detail.currentWritable) { allowed } else { denied } (@detail.tableWriteSource)</div>
                     </div>
                 }
             </div>

@@ -288,8 +288,6 @@ controllerComponents: ControllerComponents,
       val isReadable = isReadableByPermission || isReadableBySignedUrl
       val isWritable = wikiPermission.isWritable(name, pageLastRevisionContent)
 
-      logPermissionMismatchInDev(name, isReadable, isWritable)
-
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
@@ -426,22 +424,6 @@ controllerComponents: ControllerComponents,
       .getOrElse(pageContent)
 
     (initialEditorText, partialRangeInBounds)
-  }
-
-  private def logPermissionMismatchInDev(name: String, isReadable: Boolean, isWritable: Boolean)(implicit request: Request[AnyContent]): Unit = {
-    if (environment.mode == Mode.Dev) {
-      import models.tables.Permission
-      //        val permissionLogic = new PermissionLogic(Permission.select()) // TODO:
-      val permissionLogic = new PermissionLogic(Seq())
-      val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
-      val readable = permissionLogic.permitted(name, email, Permission.read)
-      val editable = permissionLogic.permitted(name, email, Permission.edit)
-
-      logger.error("Permission\t" + Seq(isReadable, readable, isWritable, editable).mkString("\t"))
-
-      if (isReadable != readable || isWritable != editable)
-        logger.error(s"readable: $readable editable: $editable")
-    }
   }
 
   private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[Page], pageLastRevision: Option[Page])
@@ -606,7 +588,7 @@ controllerComponents: ControllerComponents,
         val (latestText, latestRevision, latestTime) = latestPage.map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
 
         if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
-          Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
+          Forbidden("Permission denied.")
         } else if (revision != latestRevision) {
           Conflict("revision != latestRevision")
         } else {

@@ -9,13 +9,10 @@ import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.Crawler
-import logics.PermissionLogic
-import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterSchema
 import models._
-import models.tables.Permission
 import models.tables.Site
 import play.api.{Configuration, Environment}
 import play.api.Logging
@@ -161,51 +158,20 @@ class Test @Inject()(implicit val
 
     import models.RequestWrapper
     import models.tables.Site
-    import play.api.Mode
-
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
     val q = "#!read"
     val wikiPermission = WikiPermission()
-    val email = SessionLogic.getUser(request).map(_.email).getOrElse("")
-    val seqPermission = if(environment.mode == Mode.Dev) Permission.select() else Seq() // TODO:
-    val permissionLogic = new PermissionLogic(seqPermission)
 
     val map = q.toOption.map(
       q => {
         import models.tables.SearchResult
         val seqSearchResult: Seq[SearchResult] = models.tables.Page.pageSearch(q)
         Map(
-          "readLegacyOnly" -> seqSearchResult
-            .filter(sr => {
-              val pageContent = PageContent(sr.content)
-              val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-              val readable = permissionLogic.permitted(sr.name, email, Permission.read)
-              isReadableFromLegacy != readable && isReadableFromLegacy
-            }).map(_.name),
-          "readNewOnly" -> seqSearchResult
-            .filter(sr => {
-              val pageContent = PageContent(sr.content)
-              val isReadableFromLegacy = wikiPermission.isReadable(pageContent)
-              val readable = permissionLogic.permitted(sr.name, email, Permission.read)
-              isReadableFromLegacy != readable && readable
-            }).map(_.name),
-          "writeLegacyOnly" -> seqSearchResult
-            .filter(sr => {
-              val pageContent = PageContent(sr.content)
-              val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
-              val editable = permissionLogic.permitted(sr.name, email, Permission.edit)
-              isWritableFromLagacy != editable && isWritableFromLagacy
-            }).map(_.name),
-          "writeNewOnly" -> seqSearchResult
-            .filter(sr => {
-              val pageContent = PageContent(sr.content)
-              val isWritableFromLagacy = wikiPermission.isWritable(pageContent)
-              val editable = permissionLogic.permitted(sr.name, email, Permission.edit)
-              isWritableFromLagacy != editable && editable
-            }).map(_.name),
+          "readable" -> seqSearchResult.filter(sr => wikiPermission.isReadable(sr.name)).map(_.name),
+          "writable" -> seqSearchResult.filter(sr => wikiPermission.isWritable(sr.name, Some(PageContent(sr.content)))).map(_.name),
         )
       }
     ).getOrElse(Map())

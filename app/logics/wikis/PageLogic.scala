@@ -9,7 +9,6 @@ import anorm.SqlStringInterpolation
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
-import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
 import models.HighScoredTerm
@@ -82,8 +81,7 @@ object PageLogic {
     import models.tables.Site
     implicit val site: Site = wikiContext.site
     val user = wikiContext.requestWrapper.getUser
-    val permRead = PageContent(body).read.getOrElse("")
-    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, permRead, isMinorEdit, body)
+    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, "", isMinorEdit, body)
     Page.insert(page)
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
@@ -92,8 +90,6 @@ object PageLogic {
     implicit val site: Site = contextSite.site
     implicit val tupleDatabaseSite: (Database, Site) = (contextSite.database, site)
 
-    val permissionDefaultRead = AhaWikiConfig().permission.default.read()
-    val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
 
     val list: Seq[PageWithoutContentWithSize] = models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
@@ -110,9 +106,7 @@ object PageLogic {
         size = p.size,
       )
     }
-    val listFiltered = list.filter(p => {
-      wikiPermission.isReadable(p.name, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
-    })
+    val listFiltered = list.filter(p => wikiPermission.isReadable(p.name))
     // TODO: caching?
 
     listFiltered
@@ -176,7 +170,7 @@ object PageLogic {
         revision = page.revision,
         datePageLastChanged = page.dateTime,
         image = extractRepresentativeImage(page.content, page.name),
-        permRead = page.permRead,
+        permRead = "",
         size = page.content.length,
       )
     }
