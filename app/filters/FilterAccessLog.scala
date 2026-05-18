@@ -44,9 +44,9 @@ class FilterAccessLog @Inject()(
 
   private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit = {
     logger.info(Seq(
+      f"${duration}%,13dms",
       method.padRight(7),
       status,
-      f"${duration}%,13dms",
       remoteAddress.padRight(15),
       url,
       userAgent
