@@ -10,11 +10,13 @@ object StopWatch extends Logging {
     val now = LocalDateTime.now()
     try {
       if (logWhenStart) {
-        logger.info(s"$name\tStarted")
+        logger.info(s"        \t$name\tStarted")
       }
       operation
     } finally {
-      logger.info(s"$name\tDone - ${Duration.between(now, LocalDateTime.now())}")
+      val duration = Duration.between(now, LocalDateTime.now())
+      // TODO duration formatting - left padding with space
+      logger.info(f"${duration.toMillis}%,8dms\t$name\tDone")
     }
   }
 }
