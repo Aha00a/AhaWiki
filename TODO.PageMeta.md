@@ -2,7 +2,7 @@
 
 
 ## 1) DB 스키마 도입
-- [ ] `PageMeta` 테이블 추가 - evolution
+- [x] `PageMeta` 테이블 추가 - evolution
   - PK: `(site, name)`
   - `dateInserted` - NOW()
   - `dateUpdated` - PageMeta 계산 완료 시점
@@ -13,7 +13,7 @@
     - 이미지 미존재 시 `NULL` 저장, 렌더링에서 기본 이미지 사용
   - `permRead` - Page의 max(revision)의 permRead 스냅샷
   - `size` - Page의 max(revision)의 content length
-- [ ] 인덱스/조회 패턴 확정
+- [x] 인덱스/조회 패턴 확정
   - Admin 목록용 정렬/검색 인덱스
   - `image is NULL`/`dateUpdated` 조건 배치 인덱스
 - [ ] 백필(마이그레이션) 단계 추가
