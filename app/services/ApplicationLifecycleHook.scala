@@ -187,7 +187,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  registerScheduler("Calculate", 20 seconds, 30 seconds, () => {
+  registerScheduler("Calculate", 20 seconds, 3 minutes, () => {
     val site = if(false) SiteLogic.selectRandom() else SiteLogic.get(1L).getOrElse(Site.notFound) // TODO
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 10
