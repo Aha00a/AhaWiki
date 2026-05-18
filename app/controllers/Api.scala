@@ -845,7 +845,7 @@ class Api @Inject()(
           ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, content)
       }.*)
 
-      val readableRows = rows.filter(row => wikiPermission.isReadable(PageContent(row.content))).map { row =>
+      val readableRows = rows.filter(row => wikiPermission.isReadable(row.name, PageContent(row.content))).map { row =>
         ChangeRow(
           name = row.name,
           revision = row.revision,

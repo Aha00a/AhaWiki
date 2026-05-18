@@ -45,7 +45,7 @@ class Diary @Inject()(implicit val
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
-      if (permission.isWritable(PageContent(latestText))) {
+      if (permission.isWritable(name, PageContent(latestText))) {
         val body =
           if (latestText == "")
             s"[[DayHeader]]\n * $q"

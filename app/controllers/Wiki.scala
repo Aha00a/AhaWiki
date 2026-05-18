@@ -212,8 +212,8 @@ controllerComponents: ControllerComponents,
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-    val latestText = Page.selectLastRevision(pageName).map(_.content).getOrElse("")
-    if (!WikiPermission().isWritable(PageContent(latestText))) Left(Forbidden("Permission denied."))
+    val latestContent = Page.selectLastRevision(pageName).map(page => PageContent(page.content))
+    if (!WikiPermission().isWritable(pageName, latestContent)) Left(Forbidden("Permission denied."))
     else Right((site, contextWikiPage, provider))
   }
 
@@ -272,8 +272,8 @@ controllerComponents: ControllerComponents,
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()
-      val hasReadPermissionRestriction = !wikiPermission.getReadDirective(pageLastRevisionContent).contains("all")
-      val isReadableByPermission = wikiPermission.isReadable(pageLastRevisionContent)
+      val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name, pageLastRevisionContent)
+      val isReadableByPermission = wikiPermission.isReadable(name, pageLastRevisionContent)
       val isReadableBySignedUrl = SignedReadUrlLogic.verifyReadRequest(
         host = request.host,
         name = name,
@@ -284,7 +284,7 @@ controllerComponents: ControllerComponents,
         secret = signedReadUrlSecret,
       )
       val isReadable = isReadableByPermission || isReadableBySignedUrl
-      val isWritable = wikiPermission.isWritable(pageLastRevisionContent)
+      val isWritable = wikiPermission.isWritable(name, pageLastRevisionContent)
 
       logPermissionMismatchInDev(name, isReadable, isWritable)
 
@@ -348,7 +348,7 @@ controllerComponents: ControllerComponents,
         implicit val site: Site = siteForWs
         val ctxSite = ContextSite.empty()(database, actorAhaWiki, applicationConf, ahaWikiCache, site)
         val permission = WikiPermission()(provider, connection, ctxSite)
-        permission.isReadable(pageLastRevisionContent)
+        permission.isReadable(name, pageLastRevisionContent)
       }
       if (!isReadable) {
         logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")
@@ -599,9 +599,10 @@ controllerComponents: ControllerComponents,
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-        val (latestText, latestRevision, latestTime) = Page.selectLastRevision(name).map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
+        val latestPage = Page.selectLastRevision(name)
+        val (latestText, latestRevision, latestTime) = latestPage.map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
 
-        if (!WikiPermission().isWritable(PageContent(latestText))) {
+        if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
           Forbidden("!WikiPermission().isWritable(PageContent(latestText))")
         } else if (revision != latestRevision) {
           Conflict("revision != latestRevision")
@@ -703,7 +704,7 @@ controllerComponents: ControllerComponents,
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(page) =>
-          if (WikiPermission().isWritable(PageContent(page.content))) {
+          if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
             deletePageAttachments(site.seq, name) match {
@@ -731,7 +732,7 @@ controllerComponents: ControllerComponents,
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(page) =>
-          if (WikiPermission().isWritable(PageContent(page.content))) {
+          if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
 
@@ -763,7 +764,7 @@ controllerComponents: ControllerComponents,
           implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
           implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
           val pageContent = PageContent(page.content)
-          if (WikiPermission().isWritable(pageContent)) {
+          if (WikiPermission().isWritable(pageName, pageContent)) {
             val extractConvertApplyInterpreterRefresh = new ExtractConvertInjectInterpreterCustom(s => {
               val pageContentChunk = PageContent(s)
               if (url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
@@ -805,7 +806,7 @@ controllerComponents: ControllerComponents,
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(page), None) =>
-          if (WikiPermission().isWritable(PageContent(page.content))) {
+          if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
 

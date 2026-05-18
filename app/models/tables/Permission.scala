@@ -15,6 +15,7 @@ case class Permission(target: String, actor: String, action: Int) {
 
   lazy val actorLevel: Int = actor match {
     case "" => 1
+    case "login" => 2
     case _ if actor.startsWith("@") => 2
     case _ => 3
   }
@@ -33,7 +34,11 @@ case class Permission(target: String, actor: String, action: Int) {
     }
 
     if(this.actor.isNotNullOrEmpty) {
-      if(this.actor.startsWith("@")) {
+      if(this.actor == "login") {
+        if(actor.isNullOrEmpty) {
+          return false
+        }
+      } else if(this.actor.startsWith("@")) {
         if(!actor.endsWith(this.actor)){
           return false
         }
@@ -78,8 +83,8 @@ object Permission {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  def select()(implicit connection: Connection): List[Permission] = {
-    SQL"SELECT target, actor, action FROM Permission"
+  def select()(implicit connection: Connection, site: Site): List[Permission] = {
+    SQL"SELECT target, actor, action FROM Permission WHERE site = ${site.seq}"
       .as(str("target") ~ str("actor") ~ int("action") *).map(flatten)
       .map(Permission.tupled)
   }

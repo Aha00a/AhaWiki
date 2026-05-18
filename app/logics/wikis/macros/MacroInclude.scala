@@ -21,7 +21,7 @@ object MacroInclude extends TraitMacro {
     implicit val provider: RequestWrapper = wikiContext.requestWrapper
     implicit val site: Site = wikiContext.site
     val pageLastRevision = models.tables.Page.selectLastRevision(argument)
-    if (WikiPermission().isReadable(pageLastRevision.map(s => PageContent(s.content)))) {
+    if (WikiPermission().isReadable(argument, pageLastRevision.map(s => PageContent(s.content)))) {
       pageLastRevision.map(w => Interpreters.toHtmlString(preprocessor(w.content))).getOrElse("Error: " + argument)
     } else {
       MacroError.toHtmlString(s"Permission Denied - [[$name($argument)]]")

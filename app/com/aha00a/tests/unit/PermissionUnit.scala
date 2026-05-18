@@ -17,6 +17,14 @@ object PermissionUnit {
       assertEquals(permission.targetLevel, 1)
     }
     {
+      val permission = Permission("", "login", Permission.edit)
+      assert(!permission.matches("", ""))
+      assert(permission.matches("", "aha00a@gmail.com"))
+      assert(permission.matches("asdf", "aha00b@example.com"))
+      assertEquals(permission.actorLevel, 2)
+      assertEquals(permission.targetLevel, 1)
+    }
+    {
       val permission = Permission("", "@gmail.com", Permission.read)
       assert(!permission.matches("", ""))
       assert(permission.matches("", "aha00a@gmail.com"))

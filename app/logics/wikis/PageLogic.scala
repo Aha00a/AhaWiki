@@ -95,7 +95,6 @@ object PageLogic {
     val permissionDefaultRead = AhaWikiConfig().permission.default.read()
     val permissionDefaultReadSplit = permissionDefaultRead.splitCommaIgnoreAroundWhitespace()
     val wikiPermission = WikiPermission()
-    val optionEmail = provider.getUser.map(_.email)
 
     val list: Seq[PageWithoutContentWithSize] = models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
       PageWithoutContentWithSize(
@@ -112,7 +111,7 @@ object PageLogic {
       )
     }
     val listFiltered = list.filter(p => {
-      wikiPermission.allowed(optionEmail, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
+      wikiPermission.isReadable(p.name, p.permRead.toOption.map(_.splitCommaIgnoreAroundWhitespace()).getOrElse(permissionDefaultReadSplit))
     })
     // TODO: caching?
 

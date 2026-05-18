@@ -7,8 +7,12 @@ class PermissionLogic(seqPermission: Seq[Permission]) {
   val seq: Seq[Permission] = seqPermission.sortBy(-_.priority)
 
   def permitted(target: String, actor: String, action: Int): Boolean = {
+    permittedOption(target, actor, action).getOrElse(false)
+  }
+
+  def permittedOption(target: String, actor: String, action: Int): Option[Boolean] = {
     val optionPermission = seq.find(_.matches(target, actor))
-    optionPermission.exists(_.permitted(action))
+    optionPermission.map(_.permitted(action))
   }
 
   def toTsvString: String = seq.map(_.toTsvString).mkString("\n")

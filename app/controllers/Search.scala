@@ -45,7 +45,7 @@ controllerComponents: ControllerComponents,
       models.tables.Page.pageSearch(q)
         .filter(sr => {
           val pageContent = PageContent(sr.content)
-          wikiPermission.isReadable(pageContent)
+          wikiPermission.isReadable(sr.name, pageContent)
         })
         .sortBy(_.dateTime)(Ordering[LocalDateTime].reverse)
         .partition(_.name == q)
