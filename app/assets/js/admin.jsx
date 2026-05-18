@@ -1404,7 +1404,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 </Card>
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
-                        <Title order={3}>Admin Page 목록 (PageMeta)</Title>
+                        <Title order={3}>Admin Page 목록</Title>
                         <Badge color="indigo" variant="light">{adminPageMetaCount} rows</Badge>
                     </Group>
                     <Group mb="md">
@@ -1424,10 +1424,51 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         columns={[
                             {accessor: "name", title: "Page", sortable: true},
                             {accessor: "revision", title: "Revision", sortable: true},
-                            {accessor: "image", title: "Image", render: (row) => row.image ? <Anchor href={row.image} target="_blank" rel="noopener">{row.image}</Anchor> : "-"},
+                            {
+                                accessor: "image",
+                                title: "Image",
+                                render: (row) => row.image ? (
+                                    <Anchor href={row.image} target="_blank" rel="noopener">
+                                        <Image
+                                            src={row.image}
+                                            alt={`${row.name} image`}
+                                            h={44}
+                                            w={72}
+                                            fit="cover"
+                                            radius="sm"
+                                            fallbackSrc="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
+                                        />
+                                    </Anchor>
+                                ) : "-",
+                            },
                             {accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated)},
                             {accessor: "datePageLastChanged", title: "Last Changed", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.datePageLastChanged)},
                             {accessor: "size", title: "Size", sortable: true},
+                            {
+                                accessor: "actions",
+                                title: "Actions",
+                                render: (row) => (
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        color="teal"
+                                        disabled={!selectedSiteSeq}
+                                        loading={selectedSite ? calculatingSiteSeq === selectedSite.seq : false}
+                                        onClick={async () => {
+                                            if (!selectedSiteSeq) {
+                                                return;
+                                            }
+                                            const response = await runSiteCalculate(selectedSiteSeq, row.name);
+                                            if (!response) {
+                                                return;
+                                            }
+                                            setSiteCalculateMessage(`선택 페이지: ${response?.pageName ?? row.name} (queued)`);
+                                        }}
+                                    >
+                                        재계산
+                                    </Button>
+                                ),
+                            },
                         ]}
                         sortStatus={{columnAccessor: adminPageMetaSortBy, direction: adminPageMetaSortOrder}}
                         onSortStatusChange={(nextSortStatus) => {
