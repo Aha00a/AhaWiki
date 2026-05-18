@@ -16,7 +16,7 @@ object StopWatch extends Logging {
     } finally {
       val duration = Duration.between(now, LocalDateTime.now())
       logger.info(Seq(
-        f"${duration.toMillis}%,13dms",
+        f"${duration.toMillis}%,12dms",
         name,
         "Done"
       ).mkString("\t"))
