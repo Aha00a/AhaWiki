@@ -15,8 +15,11 @@ class PermissionLogic(seqPermission: Seq[Permission]) {
   }
 
   def permittedOption(target: String, actor: String, action: Int): Option[Boolean] = {
-    val optionPermission = seq.find(_.matches(target, actor))
-    optionPermission.map(_.permitted(action))
+    matched(target, actor).map(_.permitted(action))
+  }
+
+  def matched(target: String, actor: String): Option[Permission] = {
+    seq.find(_.matches(target, actor))
   }
 
   def toTsvString: String = seq.map(_.toTsvString).mkString("\n")

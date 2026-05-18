@@ -17,6 +17,7 @@ import logics._
 import logics.wikis.ExtractConvertInjectInterpreterCustom
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
+import logics.wikis.WikiPermissionDetail
 import logics.wikis.WikiSnippet
 import logics.wikis.SignedReadUrlLogic
 import logics.wikis.interpreters.Interpreters
@@ -273,6 +274,7 @@ controllerComponents: ControllerComponents,
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()
       val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name, pageLastRevisionContent)
+      val permissionDetail = Some(wikiPermission.detail(name, pageLastRevisionContent))
       val isReadableByPermission = wikiPermission.isReadable(name, pageLastRevisionContent)
       val isReadableBySignedUrl = SignedReadUrlLogic.verifyReadRequest(
         host = request.host,
@@ -304,7 +306,7 @@ controllerComponents: ControllerComponents,
           renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
 
         case (Some(page), "" | "view", true, _) =>
-          renderReadablePage(page, name, isWritable, hasReadPermissionRestriction, pageFirstRevision, pageLastRevision)
+          renderReadablePage(page, name, isWritable, hasReadPermissionRestriction, permissionDetail, pageFirstRevision, pageLastRevision)
         case (Some(page), "diff", true, _) =>
           renderDiffPage(name)
 
@@ -458,6 +460,7 @@ controllerComponents: ControllerComponents,
                                  name: String,
                                  isWritable: Boolean,
                                  hasReadPermissionRestriction: Boolean,
+                                 permissionDetail: Option[WikiPermissionDetail],
                                  pageFirstRevision: Option[Page],
                                  pageLastRevision: Option[Page])
                                 (implicit request: Request[AnyContent], wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
@@ -474,16 +477,16 @@ controllerComponents: ControllerComponents,
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
           Ok(pageContent.interpreter match {
-            case Some("Paper") =>
-              val contentInterpreted = Interpreters.toHtmlString(page.content)
-              views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
-            case None | Some("Wiki") =>
-              val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
-              views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
-            case _ =>
-              val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
-              views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction)
-          })
+              case Some("Paper") =>
+                val contentInterpreted = Interpreters.toHtmlString(page.content)
+                views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
+              case None | Some("Wiki") =>
+                val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
+                views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
+              case _ =>
+                val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
+                views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
+            })
       }
     }
     finally {

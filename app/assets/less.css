@@ -648,6 +648,12 @@ kbd:hover > kbd {
   border: 1px solid #aaaa00;
   padding: 10px;
 }
+.AhaWiki .flash .permissionRestrictionDetail {
+  margin-top: 8px;
+  font-size: 0.9em;
+  line-height: 1.5;
+  word-break: break-word;
+}
 .AhaWiki .flash .warning {
   color: #442200;
   background-color: #ffeedd;
