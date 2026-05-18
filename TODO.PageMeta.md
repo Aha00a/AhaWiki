@@ -8,7 +8,7 @@
   - `dateUpdated` - PageMeta 계산 완료 시점
   - `datePageLastChanged` - Page의 최신 revision 시점
   - `image` - string? - 대표 이미지
-    - 후보 우선순위: `#!Schema.image` → `#!Schema.logo` → `Attachment` → `MacroImage`
+    - 후보 우선순위: `#!Schema(image/logo)` → `Attachment` → `[[Image(...)]]` → `[[Attachment(...)]]`
     - 동순위 선택 규칙: 본문 출현 순서 기준 첫 번째
     - 이미지 미존재 시 `NULL` 저장, 렌더링에서 기본 이미지 사용
   - `permRead` - Page의 max(revision)의 permRead 스냅샷
@@ -18,15 +18,16 @@
   - `image is NULL`/`dateUpdated` 조건 배치 인덱스
 
 ## 2) Calculate/파서 연동
-- [ ] Calculate 파이프라인에서 `PageMeta` upsert 연동
-- [ ] 본문 파싱 후 대표 이미지 후보 추출기 구현
+- [x] Calculate 파이프라인에서 `PageMeta` upsert 연동
+- [x] 본문 파싱 후 대표 이미지 후보 추출기 구현
+  - [x] Macro 문법 기준(`[[Image(...)]]`, `[[Attachment(...)]]`) 파싱 반영
 - [ ] 재계산 정책 
-  - [ ] 일반 Calculate: 대상 페이지의 `PageMeta` upsert
+  - [x] 일반 Calculate: 대상 페이지의 `PageMeta` upsert
   - [ ] Recalculate(관리자): 강제 재계산 모드 지원
   - [ ]배치 Recalculate: `PageMeta` 누락 row 조건 실행 옵션
   - [ ] 주기적으로 스케쥴러로 Page에는 있지만 PageMeta에 없는 페이지 Calculate 호출.
-  - [ ] 페이지 생성, 수정, 업데이트, rename시 Calculate 호출
-  - [ ] 페이지 삭제시 페이지 메타 삭제
+  - [x] 페이지 생성, 수정, 업데이트, rename시 Calculate 호출
+  - [x] 페이지 삭제시 페이지 메타 삭제
 
 ## 3) 헤더 메타(SEO/SNS) 정식 연동
 - [ ] `_baseSkeleton`의 `og:image`, `twitter:image` 등 추가

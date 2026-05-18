@@ -173,7 +173,8 @@ INSERT INTO Page
     val cosineSimilarityCount = CalculatedCosineSimilarity.delete(name)
     val termFrequencyCount = CalculatedTermFrequency.delete(name)
     val schemaOrgCount = CalculatedSchemaOrg.delete(name)
-    linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount
+    val pageMetaCount = PageMeta.delete(name)
+    linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount + pageMetaCount
   }
 
   private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {

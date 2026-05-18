@@ -19,6 +19,8 @@ import models.tables.CalculatedTermFrequency
 import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.CalculatedSchemaOrg
+import models.tables.Attachment
+import models.tables.PageMeta
 import play.api.Logger
 import play.api.db.Database
 
@@ -27,6 +29,45 @@ import java.time.LocalDateTime
 import scala.collection.immutable
 
 object PageLogic {
+
+  private val regexMacroImage = """(?is)\[\[Image\((.*?)\)]]""".r
+  private val regexMacroAttachment = """(?is)\[\[Attachment\((.*?)\)]]""".r
+
+  private def extractSchemaImage(content: String): Option[String] = {
+    val lines = content.splitLinesSeq()
+    val idx = lines.indexWhere(_.trim.startsWith("#!Schema"))
+    if (idx < 0) return None
+    lines.drop(idx + 1)
+      .takeWhile(l => !l.trim.startsWith("#!") && l.trim.nonEmpty)
+      .flatMap { line =>
+        line.splitTabsSeq() match {
+          case Seq(key, values @ _*) if key == "image" || key == "logo" => values.map(_.trim).find(_.nonEmpty)
+          case _ => None
+        }
+      }
+      .headOption
+  }
+
+  private def extractMacroImage(content: String): Option[String] = {
+    regexMacroImage.findAllMatchIn(content).flatMap { m =>
+      m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
+    }.toSeq.headOption
+  }
+
+  private def extractAttachmentImage(pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
+    Attachment.selectUploadedByPage(site.seq, pageName).headOption.map(_.objectKey)
+  }
+
+  private def extractRepresentativeImage(content: String, pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
+    extractSchemaImage(content)
+      .orElse(extractAttachmentImage(pageName))
+      .orElse(extractMacroImage(content))
+      .orElse {
+        regexMacroAttachment.findAllMatchIn(content).flatMap { m =>
+          m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
+        }.toSeq.headOption
+      }
+  }
 
   import models.RequestWrapper
   import models.tables.PageWithoutContentWithSize
@@ -111,10 +152,19 @@ object PageLogic {
       val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
       CalculatedSchemaOrg.delete(name)
       CalculatedSchemaOrg.insert(seqSchemaOrg)
+
+      PageMeta.upsert(
+        pageName = page.name,
+        revision = page.revision,
+        datePageLastChanged = page.dateTime,
+        image = extractRepresentativeImage(page.content, page.name),
+        permRead = page.permRead,
+        size = page.content.length,
+      )
     }
   }
 
-  def selectHighScoredTerm(name: String, similarPageNames: Seq[String])(implicit connection: Connection, site: Site): Seq[HighScoredTerm] = {
+  def selectHighScoredTerm(name: String, similarPageNames: Seq[String])(implicit connection: Connection, site: models.tables.Site): Seq[HighScoredTerm] = {
     if (similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
