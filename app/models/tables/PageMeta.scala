@@ -29,6 +29,12 @@ case class PageMeta(
 case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], permRead: String, size: Long, datePageLastChanged: Option[LocalDateTime])
 
 object PageMeta {
+  private val ImageMaxLength = 512
+
+  private def truncate(value: String, maxLength: Int): String = {
+    if (value.length <= maxLength) value else value.take(maxLength)
+  }
+
   private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ localDateTime("datePageLastChanged").? ~ str("image").? ~ str("permRead") ~ long("size")
   private val rowParserWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("datePageLastChanged") ~ str("permRead") ~ long("size")
 
@@ -41,9 +47,10 @@ object PageMeta {
     size: Long,
     dateUpdated: LocalDateTime = LocalDateTime.now(),
   )(implicit connection: Connection, site: Site): Int = {
+    val savedImage = image.map(img => truncate(img, ImageMaxLength))
     SQL"""
       INSERT INTO PageMeta (site, name, revision, dateUpdated, datePageLastChanged, image, permRead, size)
-      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $datePageLastChanged, $image, $permRead, $size)
+      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $datePageLastChanged, $savedImage, $permRead, $size)
       ON DUPLICATE KEY UPDATE
         revision = VALUES(revision),
         dateUpdated = VALUES(dateUpdated),
