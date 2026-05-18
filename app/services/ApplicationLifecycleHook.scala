@@ -56,8 +56,12 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   def registerScheduler(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
+    def formatDelay(delay: FiniteDuration): String =
+      if (delay >= 10.minutes) f"${java.time.Duration.ofMillis(delay.toMillis).toString}%14s"
+      else f"${delay.toMillis}%,12dms"
+
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      logger.info(f"${delay.toMillis}%,12dms\tNext\t${name}")
+      logger.info(s"${formatDelay(delay)}\tNext\t${name}")
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
@@ -92,8 +96,8 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  registerScheduler("Calculate", randomDelay(20 seconds, 3 minutes), () => randomDelay(20 seconds, 3 minutes), () => {
-    val site = if(false) SiteLogic.selectRandom() else SiteLogic.get(1L).getOrElse(Site.notFound) // TODO
+  registerScheduler("Calculate", randomDelay(20 seconds, 1 minutes), () => randomDelay(1 minute, 30 minutes), () => {
+    val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
     val count = 10
 
