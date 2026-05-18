@@ -18,33 +18,12 @@ import play.api.libs.ws.WSClient
 import play.api.mvc.ControllerComponents
 
 import java.time.{Duration, Instant, LocalTime, ZoneId, ZonedDateTime}
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
-
-case class SchedulerStatus(
-  name: String,
-  minSeconds: Int,
-  maxSeconds: Int,
-  running: Boolean,
-  nextDelaySeconds: Option[Int],
-  lastStartedAt: Option[String],
-  lastFinishedAt: Option[String],
-  lastResult: Option[String],
-  runCount: Long,
-) {
-  def withRunning(nextDelay: Option[Int]): SchedulerStatus = {
-    copy(running = true, nextDelaySeconds = nextDelay, lastStartedAt = Some(Instant.now().toString), runCount = runCount + 1)
-  }
-
-  def withCompleted(result: String): SchedulerStatus = {
-    copy(running = false, lastFinishedAt = Some(Instant.now().toString), lastResult = Some(result))
-  }
-}
 
 class ApplicationLifecycleHook @Inject()(
   implicit
@@ -62,8 +41,6 @@ class ApplicationLifecycleHook @Inject()(
 ) extends Logging {
   logger.info("OnApplicationStarting")
 
-  private val schedulerMap = new ConcurrentHashMap[String, SchedulerStatus]()
-  private val jobMap = new ConcurrentHashMap[String, () => Unit]()
 
   private def logScheduler(name: String, event: String, details: (String, Any)*): Unit = {
     val suffix = if (details.nonEmpty) details.map { case (k, v) => s"$k=$v" }.mkString(" ") else ""
@@ -75,58 +52,26 @@ class ApplicationLifecycleHook @Inject()(
     Future.successful(())
   }
 
-  private def withSchedulerStatus(name: String)(f: SchedulerStatus => SchedulerStatus): Unit = {
-    val current = Option(schedulerMap.get(name)).getOrElse {
-      throw new IllegalStateException(s"Unknown scheduler: $name")
-    }
-    schedulerMap.put(name, f(current))
-  }
-
-  private def runScheduler(name: String): Unit = {
-    StopWatch(s"$name") {
-      val maybeJob = Option(jobMap.get(name))
-      if (maybeJob.isEmpty) {
-        logScheduler(name, "run-skipped", "reason" -> "unknown-scheduler")
-        return
-      }
-
-      val schedulerStatus = Option(schedulerMap.get(name))
-      if (schedulerStatus.exists(_.running)) {
-        logScheduler(name, "run-skipped", "reason" -> "already-running")
-        return
-      }
-
-      withSchedulerStatus(name)(_.withRunning(None))
-      val startedAtNanos = System.nanoTime()
-      try {
-        maybeJob.get.apply()
-        withSchedulerStatus(name)(_.withCompleted("ok"))
-      } catch {
-        case t: Throwable =>
-          logger.error(s"ApplicationLifecycleHook.runScheduler\t$name\tFailed\t$t")
-          withSchedulerStatus(name)(_.withCompleted(s"error: ${t.getClass.getSimpleName}"))
-      }
-    }
-  }
-
-
   private def durationToSecondsInt(duration: FiniteDuration): Int = (duration.toMillis / 1000L).toInt
 
   private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
 
   private def registerScheduler(name: String, min: FiniteDuration, max: FiniteDuration, job: () => Unit): Unit = {
-    jobMap.put(name, job)
-    schedulerMap.put(name, SchedulerStatus(name, durationToSecondsInt(min), durationToSecondsInt(max), running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
-
     def scheduleWithRandomInterval(): Unit = {
       val minMillis = durationToMillisLong(min)
       val maxMillis = durationToMillisLong(max)
       val delayMillis = Random.between(minMillis, maxMillis)
       val delay = delayMillis.millis
       logScheduler(name, "next-run", "strategy" -> "random-interval", "minSeconds" -> durationToSecondsInt(min), "maxSeconds" -> durationToSecondsInt(max), "delaySeconds" -> durationToSecondsInt(delay))
-      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(durationToSecondsInt(delay))))
       actorSystem.scheduler.scheduleOnce(delay) {
-        runScheduler(name)
+        StopWatch(s"$name") {
+          try {
+            job.apply()
+          } catch {
+            case t: Throwable =>
+              logger.error(s"ApplicationLifecycleHook.runScheduler\t${name}\tFailed\t${t}")
+          }
+        }
         scheduleWithRandomInterval()
       }
     }
@@ -136,37 +81,22 @@ class ApplicationLifecycleHook @Inject()(
 
 
   def registerFixedDelayScheduler(name: String, initialDelay: FiniteDuration, interval: FiniteDuration, job: () => Unit): Unit = {
-    val min = durationToSecondsInt(interval)
-    val max = durationToSecondsInt(interval)
-    jobMap.put(name, job)
-    schedulerMap.put(name, SchedulerStatus(name, min, max, running = false, nextDelaySeconds = None, lastStartedAt = None, lastFinishedAt = None, lastResult = None, runCount = 0))
-
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      withSchedulerStatus(name)(_.copy(nextDelaySeconds = Some(durationToSecondsInt(delay))))
       logScheduler(name, "next-run", "strategy" -> "fixed-delay", "delaySeconds" -> durationToSecondsInt(delay))
       actorSystem.scheduler.scheduleOnce(delay) {
-        runScheduler(name)
+        StopWatch(s"$name") {
+          try {
+            job.apply()
+          } catch {
+            case t: Throwable =>
+              logger.error(s"ApplicationLifecycleHook.runScheduler\t${name}\tFailed\t${t}")
+          }
+        }
         scheduleOnce(interval)
       }
     }
 
     scheduleOnce(initialDelay)
-  }
-
-  def getSchedulerStatuses: Seq[SchedulerStatus] = {
-    import scala.jdk.CollectionConverters._
-    schedulerMap.values().asScala.toSeq.sortBy(_.name)
-  }
-
-  def runSchedulerNow(name: String): Boolean = {
-    if (!jobMap.containsKey(name)) {
-      false
-    } else {
-      actorSystem.scheduler.scheduleOnce(0.seconds) {
-        runScheduler(name)
-      }
-      true
-    }
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.

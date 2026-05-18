@@ -1,25 +1,7 @@
 import React from "react";
 import {Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from "recharts";
-import {Badge, Button, Card, Group, Progress, Stack, Table, Text, Title} from "@mantine/core";
+import {Badge, Card, Group, Progress, Stack, Text, Title} from "@mantine/core";
 import {makeTable} from "../component/commonWidgets";
-
-export function SchedulerTable({schedulers, runningSchedulerName, onRun, onRefresh}) {
-    const schedulersWithoutCalculate = schedulers.filter((scheduler) => scheduler.name !== "Calculate");
-    return (
-        <Stack gap="sm">
-            <Group justify="space-between">
-                <Title order={4}>Schedulers</Title>
-                <Button size="xs" variant="light" onClick={onRefresh}>Refresh</Button>
-            </Group>
-            <Text size="xs" c="dimmed">Calculate는 사이트 상세(/Admin/Site/:seq)에서 실행하세요.</Text>
-            <Progress size="sm" value={schedulersWithoutCalculate.length === 0 ? 0 : (schedulersWithoutCalculate.filter((scheduler) => scheduler.running).length / schedulersWithoutCalculate.length) * 100} color="blue" radius="xl"/>
-            <Table striped highlightOnHover withTableBorder withColumnBorders>
-                <Table.Thead><Table.Tr><Table.Th>Name</Table.Th><Table.Th>Interval</Table.Th><Table.Th>Next Delay(s)</Table.Th><Table.Th>Last Started</Table.Th><Table.Th>Last Finished</Table.Th><Table.Th>Result</Table.Th><Table.Th>Run Count</Table.Th><Table.Th>Action</Table.Th></Table.Tr></Table.Thead>
-                <Table.Tbody>{schedulersWithoutCalculate.map((scheduler) => <Table.Tr key={scheduler.name}><Table.Td>{scheduler.name}</Table.Td><Table.Td>{`${scheduler.minSeconds}s ~ ${scheduler.maxSeconds}s`}</Table.Td><Table.Td>{scheduler.nextDelaySeconds ?? "-"}</Table.Td><Table.Td>{scheduler.lastStartedAt ?? "-"}</Table.Td><Table.Td>{scheduler.lastFinishedAt ?? "-"}</Table.Td><Table.Td>{scheduler.lastResult ?? "-"}</Table.Td><Table.Td>{scheduler.runCount ?? 0}</Table.Td><Table.Td><Button size="xs" variant="filled" loading={runningSchedulerName === scheduler.name} disabled={scheduler.running} onClick={() => onRun(scheduler.name)}>{scheduler.running ? "Running..." : "Run now"}</Button></Table.Td></Table.Tr>)}</Table.Tbody>
-            </Table>
-        </Stack>
-    );
-}
 
 export function normalizeDailyRows(rows) { return [...rows].map((row) => ({ymd: row.ymd, count: Number(row.count ?? 0)})).sort((left, right) => (left.ymd > right.ymd ? 1 : -1)); }
 

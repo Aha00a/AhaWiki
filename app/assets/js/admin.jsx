@@ -28,7 +28,7 @@ import {
 import {DataTable} from "mantine-datatable";
 import Navigation from "./admin/navigation";
 import {IconChevronUp, IconSelector, makeTable} from "./component/commonWidgets";
-import {DailyStatTable, MultiTrendChart, SchedulerTable, StatTrendCard} from "./admin/mainWidgets";
+import {DailyStatTable, MultiTrendChart, StatTrendCard} from "./admin/mainWidgets";
 import {SiteListCard} from "./site/siteWidgets";
 
 
@@ -87,9 +87,6 @@ function routeToPage(pathname) {
     if (pathname === "/Admin/User") {
         return "all-users";
     }
-    if (pathname === "/Admin/Operation") {
-        return "operations";
-    }
     if (pathname === "/Admin/CrawlerCache") {
         return "crawler-cache";
     }
@@ -113,9 +110,6 @@ function routeToPage(pathname) {
     }
     if (pathname === "/Admin/UserViews") {
         return "user-views";
-    }
-    if (pathname === "/Admin/Operations") {
-        return "operations";
     }
     if (pathname === "/Admin/CrawlerCaches") {
         return "crawler-cache";
@@ -174,9 +168,6 @@ function pageTitleByKey(page) {
     if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "sites" || page === "users") {
         return "Site";
     }
-    if (page === "operations") {
-        return "Operation";
-    }
     if (page === "access-logs") {
         return "AccessLog";
     }
@@ -231,7 +222,6 @@ function useAdminData(page) {
     const [users, setUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [allUserCount, setAllUserCount] = useState(0);
-    const [schedulers, setSchedulers] = useState([]);
     const [dailyStats, setDailyStats] = useState({
         userCreated: [],
         siteUserCreated: [],
@@ -244,7 +234,6 @@ function useAdminData(page) {
     const [topViewedPages, setTopViewedPages] = useState([]);
     const [userViewHistories, setUserViewHistories] = useState([]);
     const [loadingUserViewHistories, setLoadingUserViewHistories] = useState(false);
-    const [runningSchedulerName, setRunningSchedulerName] = useState("");
     const [clearingSiteSeq, setClearingSiteSeq] = useState(0);
     const [siteFaviconUrl, setSiteFaviconUrl] = useState("/public/favicon.png");
     const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState("");
@@ -493,11 +482,10 @@ function useAdminData(page) {
     }, []);
 
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, allUserData, schedulerData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
+        const [siteData, userData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
             fetchJson("/api/Admin/Sites"),
             fetchJson("/api/Admin/SiteUsers"),
             fetchJson("/api/Admin/Users"),
-            fetchJson("/api/Admin/Schedulers"),
             fetchJson("/api/Admin/DailyStats"),
             fetchJson("/api/Admin/RecentChanges?n=30"),
             fetchJson("/api/Admin/TopViewedPages?n=30"),
@@ -508,7 +496,6 @@ function useAdminData(page) {
         setSites(siteData);
         setUsers(userData);
         setAllUsers(allUserRows);
-        setSchedulers(schedulerData);
         setRecentChanges(recentChangesData);
         setTopViewedPages(topViewedPagesData);
         setDailyStats({
@@ -518,25 +505,6 @@ function useAdminData(page) {
             pageEdited: dailyStatsData?.pageEdited ?? [],
         });
     }, []);
-
-    const reloadSchedulers = useCallback(async () => {
-        const data = await fetchJson("/api/Admin/Schedulers");
-        setSchedulers(data);
-    }, []);
-
-    const runScheduler = useCallback(async (name) => {
-        setRunningSchedulerName(name);
-        setError("");
-        try {
-            await fetchJson(`/api/Admin/Schedulers/Run/${encodeURIComponent(name)}`);
-            await reloadSchedulers();
-        } catch (caughtError) {
-            logError("scheduler:run:error", name, caughtError);
-            setError(caughtError.message || String(caughtError));
-        } finally {
-            setRunningSchedulerName("");
-        }
-    }, [reloadSchedulers]);
 
     const clearSiteCache = useCallback(async (siteSeq) => {
         setClearingSiteSeq(siteSeq);
@@ -787,7 +755,6 @@ function useAdminData(page) {
                     if (mounted) {
                         setSites(data);
                         setUsers([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -805,7 +772,6 @@ function useAdminData(page) {
                         setUsers(data);
                         setSites([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -822,7 +788,6 @@ function useAdminData(page) {
                         await loadAllUsers();
                         setUsers([]);
                         setSites([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -845,7 +810,6 @@ function useAdminData(page) {
                         setUsers([]);
                         setSites([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -863,7 +827,6 @@ function useAdminData(page) {
                         setSites([]);
                         setUsers([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -879,7 +842,6 @@ function useAdminData(page) {
                         setSites([]);
                         setUsers([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({
                             userCreated: [],
                             siteUserCreated: [],
@@ -895,7 +857,6 @@ function useAdminData(page) {
                         setSites([]);
                         setUsers([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: []});
                         setTopViewedPages([]);
                     }
@@ -907,7 +868,6 @@ function useAdminData(page) {
                         setSites([]);
                         setUsers([]);
                         setAllUsers([]);
-                        setSchedulers([]);
                         setDailyStats({userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: []});
                         setTopViewedPages([]);
                     }
@@ -943,7 +903,6 @@ function useAdminData(page) {
         users,
         allUsers,
         allUserCount,
-        schedulers,
         dailyStats,
         recentChanges,
         accessLogs,
@@ -955,9 +914,6 @@ function useAdminData(page) {
         loadRecentChanges,
         loadAccessLogs,
         loadAllUsers,
-        runningSchedulerName,
-        runScheduler,
-        reloadSchedulers,
         clearSiteCache,
         clearingSiteSeq,
         siteFaviconUrl,
@@ -1021,7 +977,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
         users,
         allUsers,
         allUserCount,
-        schedulers,
         dailyStats,
         recentChanges,
         accessLogs,
@@ -1033,9 +988,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
         loadRecentChanges,
         loadAccessLogs,
         loadAllUsers,
-        runningSchedulerName,
-        runScheduler,
-        reloadSchedulers,
         clearSiteCache,
         clearingSiteSeq,
         siteFaviconUrl,
@@ -1831,18 +1783,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
         );
     }
 
-    if (page === "operations") {
-        return (
-            <Card withBorder radius="md" padding="lg">
-                <SchedulerTable
-                    schedulers={schedulers}
-                    runningSchedulerName={runningSchedulerName}
-                    onRun={runScheduler}
-                    onRefresh={reloadSchedulers}
-                />
-            </Card>
-        );
-    }
     if (page === "s3-browser") {
         const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
         const root = {children: {}};
@@ -2176,15 +2116,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <ThemeIcon color="grape" variant="light" radius="xl">E</ThemeIcon>
                     </Group>
                 </Card>
-                <Card withBorder radius="md" padding="md">
-                    <Group justify="space-between" align="flex-start">
-                        <Stack gap={2}>
-                            <Text size="sm" c="dimmed">Running Schedulers</Text>
-                            <Title order={2}>{schedulers.filter((scheduler) => scheduler.running).length}/{schedulers.length}</Title>
-                        </Stack>
-                        <ThemeIcon color="blue" variant="light" radius="xl">R</ThemeIcon>
-                    </Group>
-                </Card>
             </SimpleGrid>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
@@ -2194,7 +2125,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 <SimpleGrid cols={{base: 1, sm: 3}} spacing="sm">
                     <Button variant="light" onClick={() => onNavigate("/Admin/RecentChange")}>최근 변경 보기</Button>
                     <Button variant="light" onClick={() => onNavigate("/Admin/User")}>사용자 목록 보기</Button>
-                    <Button variant="light" onClick={() => onNavigate("/Admin/Operation")}>운영 작업 열기</Button>
                 </SimpleGrid>
             </Card>
             <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">

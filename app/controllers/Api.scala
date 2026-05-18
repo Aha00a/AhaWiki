@@ -624,40 +624,6 @@ class Api @Inject()(
   }
 
 
-  def adminSchedulers: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      case class AdminScheduler(
-        name: String,
-        minSeconds: Int,
-        maxSeconds: Int,
-        running: Boolean,
-        nextDelaySeconds: Option[Int],
-        lastStartedAt: Option[String],
-        lastFinishedAt: Option[String],
-        lastResult: Option[String],
-        runCount: Long,
-      )
-
-      val schedulers = applicationLifecycleHook.getSchedulerStatuses.map { scheduler =>
-        AdminScheduler(
-          scheduler.name,
-          scheduler.minSeconds,
-          scheduler.maxSeconds,
-          scheduler.running,
-          scheduler.nextDelaySeconds,
-          scheduler.lastStartedAt,
-          scheduler.lastFinishedAt,
-          scheduler.lastResult,
-          scheduler.runCount,
-        )
-      }
-
-      Ok(schedulers.asJson)
-    }
-  }
-
   def adminDailyStats: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       Forbidden("Access denied.")
@@ -1060,20 +1026,6 @@ class Api @Inject()(
               "count" -> count.asJson,
             ).asJson)
           }
-      }
-    }
-  }
-
-  def adminRunScheduler(name: String): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      if (name == "Calculate") {
-        BadRequest(Map("error" -> "Use /api/Admin/Site/:seq/Calculate for Calculate operation.").asJson.toString()).as(JSON)
-      } else if (applicationLifecycleHook.runSchedulerNow(name)) {
-        Ok(Map("status" -> "queued", "name" -> name).asJson)
-      } else {
-        NotFound(name)
       }
     }
   }
