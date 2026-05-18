@@ -83,31 +83,29 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   private def runScheduler(name: String): Unit = {
-    val maybeJob = Option(jobMap.get(name))
-    if (maybeJob.isEmpty) {
-      logScheduler(name, "run-skipped", "reason" -> "unknown-scheduler")
-      return
-    }
+    StopWatch(s"$name") {
+      val maybeJob = Option(jobMap.get(name))
+      if (maybeJob.isEmpty) {
+        logScheduler(name, "run-skipped", "reason" -> "unknown-scheduler")
+        return
+      }
 
-    val schedulerStatus = Option(schedulerMap.get(name))
-    if (schedulerStatus.exists(_.running)) {
-      logScheduler(name, "run-skipped", "reason" -> "already-running")
-      return
-    }
+      val schedulerStatus = Option(schedulerMap.get(name))
+      if (schedulerStatus.exists(_.running)) {
+        logScheduler(name, "run-skipped", "reason" -> "already-running")
+        return
+      }
 
-    withSchedulerStatus(name)(_.withRunning(None))
-    logScheduler(name, "run-start")
-    val startedAtNanos = System.nanoTime()
-    try {
-      maybeJob.get.apply()
-      val elapsedMs = (System.nanoTime() - startedAtNanos) / 1000000
-      withSchedulerStatus(name)(_.withCompleted("ok"))
-      logScheduler(name, "run-success", "elapsedMs" -> elapsedMs)
-    } catch {
-      case t: Throwable =>
-        val elapsedMs = (System.nanoTime() - startedAtNanos) / 1000000
-        logger.error(s"[scheduler][$name] run-failed elapsedMs=$elapsedMs", t)
-        withSchedulerStatus(name)(_.withCompleted(s"error: ${t.getClass.getSimpleName}"))
+      withSchedulerStatus(name)(_.withRunning(None))
+      val startedAtNanos = System.nanoTime()
+      try {
+        maybeJob.get.apply()
+        withSchedulerStatus(name)(_.withCompleted("ok"))
+      } catch {
+        case t: Throwable =>
+          logger.error(s"ApplicationLifecycleHook.runScheduler\t$name\tFailed\t$t")
+          withSchedulerStatus(name)(_.withCompleted(s"error: ${t.getClass.getSimpleName}"))
+      }
     }
   }
 
