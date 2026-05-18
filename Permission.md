@@ -321,9 +321,19 @@ INSERT INTO Permission (site, target, targetType, actor, actorType, action)
 VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 ```
 
-## 추후 진행할 사항
+## 완료 기준
 
-### 데이터 마이그레이션
+Permission 정리는 다음 상태가 되면 완료로 본다.
+
+- 실제 접근 제어 경로가 모두 `Permission` 테이블을 기준으로 동작한다.
+- 공개 읽기, 로그인 편집, private prefix 예외 같은 운영 정책이 모두 명시적인 `Permission` row로 표현된다.
+- `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead`는 권한 소스가 아니라 legacy 데이터로만 남거나 제거된다.
+- 운영자가 특정 page/user 조합에 대해 어떤 row가 매칭되는지 확인할 수 있다.
+- 매칭 row 없음, target/actor 우선순위, 목록/검색/include 필터링을 테스트로 보장한다.
+
+## 남은 작업
+
+### 운영 데이터
 
 - [x] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
 - [ ] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
@@ -340,8 +350,11 @@ VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 - [ ] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
 - [ ] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
 
-### Permission 모델 개선
+### 모델 개선
 
+- [x] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 매칭 단위 테스트를 추가한다.
+- [x] `All`, `Login`, `Domain`, `Exact` actorType 매칭 단위 테스트를 추가한다.
+- [x] 기본적인 `PermissionLogic` 우선순위 단위 테스트를 추가한다.
 - [ ] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
 - [ ] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
 - [ ] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
@@ -357,10 +370,11 @@ VALUES (1, 'Team', 'StartsWith', '@example.com', 'Domain', 1);
 
 - [ ] `WikiPermission` DB-only 동작 테스트를 추가한다.
 - [ ] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
-- [ ] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 우선순위 테스트를 추가한다.
-- [ ] `All`, `Login`, `Domain`, `Exact` actorType 우선순위 테스트를 추가한다.
+- [ ] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
 - [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.
 
-== Future work
-- hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.  
-  - 이 부분은 새로운 문서로 분리하여 진행할 예정이다.
+## 별도 문서로 분리할 일
+
+- hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.
+- signed read URL을 일반 permission 모델 안으로 넣을지, 예외 경로로 유지할지 결정한다.
+- 권한 admin UI의 화면 설계와 운영 절차를 별도 문서로 정리한다.
