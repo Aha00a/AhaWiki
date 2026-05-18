@@ -14,14 +14,18 @@
         <meta property="og:title" content="@(title)" />
         <meta name="twitter:title" content="@(title)">
         <meta property="og:type" content="@(ogType)" />
+        @defining(s"https://${contextSite.requestWrapper.host}/public/img/attachmentFallback.svg") { fallbackSocialImageUrl =>
+            <meta property="og:image" content="@(fallbackSocialImageUrl)" />
+            <meta name="twitter:image" content="@(fallbackSocialImageUrl)">
+        }
 
         <meta name="description" content="@(description)" />
         <meta itemprop="description" content="@(description)">
         <meta property="og:description" content="@(description)" />
         <meta name="twitter:description" content="@(description)">
-        @if(canonicalUrl.nonEmpty) {
-            <link rel="canonical" href="@(canonicalUrl)" />
-            <meta property="og:url" content="@(canonicalUrl)" />
+        @defining(if(canonicalUrl.nonEmpty) canonicalUrl else s"https://${contextSite.requestWrapper.host}/") { resolvedCanonicalUrl =>
+            <link rel="canonical" href="@(resolvedCanonicalUrl)" />
+            <meta property="og:url" content="@(resolvedCanonicalUrl)" />
         }
 
         <link rel="shortcut icon" type="image/png" href="@(logics.AhaWikiConfig().site.favicon())">

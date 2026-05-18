@@ -30,13 +30,13 @@
   - [x] 페이지 삭제시 페이지 메타 삭제
 
 ## 3) 헤더 메타(SEO/SNS) 정식 연동
-- [ ] `_baseSkeleton`의 `og:image`, `twitter:image` 등 추가
-- [ ] 메타 URL canonical/fallback 규칙 정리
+- [x] `_baseSkeleton`의 `og:image`, `twitter:image` 등 추가
+- [x] 메타 URL canonical/fallback 규칙 정리
 
 ## 4) Adjacent Pages(그래프) 이미지 확장
-- [ ] `adjacentPages` API 응답에 대표 이미지 필드 포함
-  - `imageUrl`
-  - `hasFallbackImage` (기본 이미지 여부)
+- [x] `adjacentPages` API 응답에 대표 이미지 필드 포함
+  - [x] `imageUrl`
+  - [x] `hasFallbackImage` (기본 이미지 여부)
 - [ ] 노드 렌더러(D3/canvas)에서 썸네일 표시 옵션 추가
 - [ ] 성능/가독성 검토
   - [ ] lazy loading
