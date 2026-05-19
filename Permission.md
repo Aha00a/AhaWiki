@@ -126,6 +126,9 @@ Admin UI에서는 action을 실제 값과 PascalCase 이름으로 표시한다. 
 | `Exact` | `Private` | 정확히 `Private` 페이지 |
 | `StartsWith` | `Private` | `Private`로 시작하는 모든 페이지 |
 | `EndsWith` | `/Secret` | `/Secret`으로 끝나는 모든 페이지 |
+| `RegularExpression` | `Private/(Team\|Project)/.*` | 정규식이 page name 전체와 매칭되는 페이지 |
+
+`RegularExpression`은 항상 exact/full match로 판정한다. 즉 정규식이 page name 일부에만 매칭되면 권한 row는 매칭되지 않는다. `^`와 `$`를 직접 붙일 필요가 없으며, `Private` 패턴은 `Private` 페이지에만 매칭되고 `MyPrivate`나 `PrivatePage`에는 매칭되지 않는다.
 
 신규 코드는 SQL에서도 `targetType`을 명시해야 한다.
 
@@ -153,7 +156,7 @@ Admin UI에서는 action을 실제 값과 PascalCase 이름으로 표시한다. 
 target level:
 
 - `All`: 1
-- `StartsWith`, `EndsWith`: 2
+- `StartsWith`, `EndsWith`, `RegularExpression`: 2
 - `Exact`: 3
 
 actor level:

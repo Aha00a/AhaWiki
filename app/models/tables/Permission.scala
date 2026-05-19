@@ -52,6 +52,7 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
       case Permission.TargetType.EndsWith =>
         if (!target.endsWith(this.target)) return false
       case Permission.TargetType.RegularExpression =>
+        // Matcher.matches enforces a full target match, so Permission regex rows do not need ^...$ anchors.
         if (!targetRegularExpressionPattern.exists(_.matcher(target).matches())) return false
     }
 

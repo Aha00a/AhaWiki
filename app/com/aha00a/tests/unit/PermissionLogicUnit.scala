@@ -43,13 +43,14 @@ object PermissionLogicUnit {
     assertEquals(precedence.matched("Private/Team/Plan", actorAha00a).map(_.action), Some(Permission.Action.Admin.id))
 
     val regularExpression = new PermissionLogic(Seq(
-      Permission("^Private/(Team|Project)/.*$", Permission.TargetType.RegularExpression, "", Permission.ActorType.All, Permission.Action.Read.id),
+      Permission("Private/(Team|Project)/.*", Permission.TargetType.RegularExpression, "", Permission.ActorType.All, Permission.Action.Read.id),
       Permission("Private/Team/Plan", Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.Action.None.id),
       Permission("", Permission.TargetType.All, "", Permission.ActorType.All, Permission.Action.None.id),
     ))
     assertEquals(regularExpression.matched("Private/Team/Page", actorEmpty).map(_.action), Some(Permission.Action.Read.id))
     assertEquals(regularExpression.matched("Private/Project/Page", actorEmpty).map(_.action), Some(Permission.Action.Read.id))
     assertEquals(regularExpression.matched("Private/Personal/Page", actorEmpty).map(_.action), Some(Permission.Action.None.id))
+    assertEquals(regularExpression.matched("Prefix/Private/Team/Page", actorEmpty).map(_.action), Some(Permission.Action.None.id))
     assertEquals(regularExpression.matched("Private/Team/Plan", actorEmpty).map(_.action), Some(Permission.Action.None.id))
 
     val noRows = new PermissionLogic(Seq.empty)

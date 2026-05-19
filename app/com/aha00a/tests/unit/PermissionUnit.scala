@@ -73,13 +73,20 @@ object PermissionUnit {
       assertEquals(permission.targetLevel, 2)
     }
     {
-      val permission = Permission("^Private/(Team|Project)/.*$", TargetType.RegularExpression, "aha00a@gmail.com", ActorType.Exact, Permission.Action.Admin.id)
+      val permission = Permission("Private/(Team|Project)/.*", TargetType.RegularExpression, "aha00a@gmail.com", ActorType.Exact, Permission.Action.Admin.id)
       assert(permission.matches("Private/Team/Page", "aha00a@gmail.com"))
       assert(permission.matches("Private/Project/Page", "aha00a@gmail.com"))
       assert(!permission.matches("Private/Personal/Page", "aha00a@gmail.com"))
       assert(!permission.matches("Public/Team/Page", "aha00a@gmail.com"))
+      assert(!permission.matches("Prefix/Private/Team/Page", "aha00a@gmail.com"))
+      assert(!permission.matches("Private/Team/Page/Suffix", "other@example.com"))
       assertEquals(permission.actorLevel, 3)
       assertEquals(permission.targetLevel, 2)
+
+      val exactFullMatchRegexPermission = Permission("Private", TargetType.RegularExpression, "", ActorType.All, Permission.Action.Read.id)
+      assert(exactFullMatchRegexPermission.matches("Private", ""))
+      assert(!exactFullMatchRegexPermission.matches("MyPrivate", ""))
+      assert(!exactFullMatchRegexPermission.matches("PrivatePage", ""))
 
       val invalidRegexPermission = Permission("[", TargetType.RegularExpression, "", ActorType.All, Permission.Action.Read.id)
       assert(!invalidRegexPermission.matches("AnyPage", ""))
