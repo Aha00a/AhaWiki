@@ -1572,6 +1572,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
           {
             accessor: "image",
             title: "Image",
+            sortable: true,
             render: (row) => row.image ? /* @__PURE__ */ React5.createElement(Anchor, { href: row.image, target: "_blank", rel: "noopener" }, /* @__PURE__ */ React5.createElement(
               Image,
               {

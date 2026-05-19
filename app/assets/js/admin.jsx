@@ -1533,6 +1533,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             {
                                 accessor: "image",
                                 title: "Image",
+                                sortable: true,
                                 render: (row) => row.image ? (
                                     <Anchor href={row.image} target="_blank" rel="noopener">
                                         <Image

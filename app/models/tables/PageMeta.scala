@@ -103,6 +103,7 @@ object PageMeta {
     val normalizedSortBy = sortBy match {
       case "name" => "name"
       case "revision" => "revision"
+      case "image" => "image"
       case "dateUpdated" => "dateUpdated"
       case "size" => "size"
       case _ => "dateUpdated"
