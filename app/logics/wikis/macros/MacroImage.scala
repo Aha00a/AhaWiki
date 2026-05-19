@@ -20,7 +20,7 @@ object MacroImage extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     val (url, widthOption) = argument match {
       case regexWidth(rawUrl, width, null) => (rawUrl.trim, Some(s"${width}px"))
-      case regexWidth(rawUrl, width, unit) => (rawUrl.trim, Some(s"$width$unit"))
+      case regexWidth(rawUrl, width, unit) => (rawUrl.trim, Some(s"$width"))
       case _ => (argument.trim, None)
     }
     val src = if (url.isEmpty) fallbackImagePath else url

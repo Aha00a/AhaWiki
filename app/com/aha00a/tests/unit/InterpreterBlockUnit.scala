@@ -176,7 +176,7 @@ object InterpreterBlockUnit {
              |        </div>
              |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"$currentPageUrl","@id":"$currentPageUrl","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
         val interpretedWithWiki =
-          s"""<div><div class="InterpreterRenderMetaWrapper" style="position: relative;"
+          s"""<div><div class="InterpreterRenderMetaWrapper Schema" style="position: relative;"
              |  data-edit-link="/w/UnitTest?action=edit&revision=0&lineStart=1&lineEnd=6"
              |  data-line-start="1"
              |  data-line-end="6"
