@@ -460,9 +460,9 @@
                 @permissionDetail.map { detail =>
                     <div class="permissionRestrictionDetail">
                         <div><strong>Current user:</strong> @detail.actorLabel</div>
-                        <div><strong>Permission table read:</strong> @if(detail.currentReadable) { allowed } else { denied } (@detail.tableReadSource)</div>
-                        <div><strong>Permission table anonymous read:</strong> @if(detail.anonymousReadable) { allowed } else { denied } (@detail.tableAnonymousReadSource)</div>
-                        <div><strong>Permission table write:</strong> @if(detail.currentWritable) { allowed } else { denied } (@detail.tableWriteSource)</div>
+                        <div><strong>read:</strong> @if(detail.currentReadable) { allowed } else { denied } (@detail.tableReadSource)</div>
+                        <div><strong>write:</strong> @if(detail.currentWritable) { allowed } else { denied } (@detail.tableWriteSource)</div>
+                        <div><strong>anonymous read:</strong> @if(detail.anonymousReadable) { allowed } else { denied } (@detail.tableAnonymousReadSource)</div>
                     </div>
                 }
             </div>
