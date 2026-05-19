@@ -1,5 +1,6 @@
 package services
 
+import com.aha00a.commons.utils.StopWatch
 import play.api.Logging
 
 import java.io.File
@@ -13,28 +14,30 @@ class CacheFileCleanupService extends Logging {
 
   def cleanupAllExpiredCaches(): Seq[CacheCleanupResult] = {
     Seq(
-      CacheCleanupResult("Vim", cleanupExpiredFiles(new File(new File("cache"), "Vim"), ".html", oneYearMillis))
+      CacheCleanupResult("Vim", cleanupExpiredFiles(new File(new File("cache"), "Vim"), oneYearMillis))
     )
   }
 
-  private def cleanupExpiredFiles(cacheDir: File, fileSuffix: String, retentionMillis: Long): Int = {
-    val thresholdMillis = System.currentTimeMillis() - retentionMillis
-    Option(cacheDir.listFiles())
-      .toSeq
-      .flatten
-      .filter(file => file.isFile && file.getName.endsWith(fileSuffix))
-      .flatMap { file =>
-        readAccessedMillis(file).map(accessedMillis => (file, accessedMillis))
-      }
-      .filter { case (_, accessedMillis) => accessedMillis < thresholdMillis }
-      .sortBy(_._2)
-      .count { case (file, _) =>
-        val deleted = file.delete()
-        if (!deleted) {
-          logger.warn(s"Failed to delete expired cache file: ${file.getAbsolutePath}")
+  private def cleanupExpiredFiles(cacheDir: File, retentionMillis: Long): Int = {
+    StopWatch(s"CacheFileCleanupService.cleanupExpiredFiles\t${cacheDir}") {
+      val thresholdMillis = System.currentTimeMillis() - retentionMillis
+      Option(cacheDir.listFiles())
+        .toSeq
+        .flatten
+        .filter(file => file.isFile)
+        .flatMap { file =>
+          readAccessedMillis(file).map(accessedMillis => (file, accessedMillis))
         }
-        deleted
-      }
+        .filter { case (_, accessedMillis) => accessedMillis < thresholdMillis }
+        .sortBy(_._2)
+        .count { case (file, _) =>
+          val deleted = file.delete()
+          if (!deleted) {
+            logger.warn(s"Failed to delete expired cache file: ${file.getAbsolutePath}")
+          }
+          deleted
+        }
+    }
   }
 
   private def readAccessedMillis(file: File): Option[Long] = {

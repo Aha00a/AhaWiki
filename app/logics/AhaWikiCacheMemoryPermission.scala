@@ -1,5 +1,6 @@
 package logics
 
+import com.aha00a.commons.utils.StopWatch
 import models.tables.Permission
 import models.tables.Site
 import org.joda.time.DurationFieldType.hours
@@ -21,10 +22,11 @@ object AhaWikiCacheMemoryPermission extends Logging {
   def get()(implicit connection: Connection, site: Site): Seq[Permission] = {
     val now = System.currentTimeMillis()
     permissionsBySiteSeq.get(site.seq).filterNot(entry => isExpired(entry, now)).map(_.value).getOrElse {
-      val permissions = Permission.select()
-      permissionsBySiteSeq.put(site.seq, CachedPermissions(permissions, now))
-      logger.info(s"Cache\tFill\tAhaWikiCacheMemoryPermission.site=${site.seq}\tpermissions=${permissions.size}")
-      permissions
+      StopWatch("Cache\tMiss\tAhaWikiCacheMemoryPermission") {
+        val permissions = Permission.select()
+        permissionsBySiteSeq.put(site.seq, CachedPermissions(permissions, now))
+        permissions
+      }
     }
   }
 

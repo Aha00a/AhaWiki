@@ -1,9 +1,11 @@
 package logics
 
+import com.aha00a.commons.utils.StopWatch
 import models.tables.Site
 import models.tables.SiteDomain
 import play.api.Logging
 import play.api.db.Database
+
 import scala.annotation.unused
 
 object AhaWikiCacheMemoryDomainSite extends Logging {
@@ -34,14 +36,15 @@ object AhaWikiCacheMemoryDomainSite extends Logging {
   }
 
   def refresh()(implicit database: Database): Unit = synchronized {
-    val (loadedSiteBySeq, mapped) = database.withConnection { implicit connection =>
-      val loadedSiteBySeq = Site.select().map(site => (site.seq, site)).toMap
-      val mapped = SiteDomain.select().flatMap(sd => loadedSiteBySeq.get(sd.site).map(site => (sd.domain, site))).toMap
-      (loadedSiteBySeq, mapped)
+    StopWatch("Cache\tMiss\tAhaWikiCacheDomainSite") {
+      val (loadedSiteBySeq, mapped) = database.withConnection { implicit connection =>
+        val loadedSiteBySeq = Site.select().map(site => (site.seq, site)).toMap
+        val mapped = SiteDomain.select().flatMap(sd => loadedSiteBySeq.get(sd.site).map(site => (sd.domain, site))).toMap
+        (loadedSiteBySeq, mapped)
+      }
+      siteBySeq = loadedSiteBySeq
+      domainToSite = mapped
     }
-    siteBySeq = loadedSiteBySeq
-    domainToSite = mapped
-    logger.info(s"Cache\tFill\tAhaWikiCacheDomainSite.sites=${loadedSiteBySeq.size}\tdomains=${mapped.size}")
   }
 
   private def refreshIfNeeded()(implicit database: Database): (Map[String, Site], Map[Long, Site]) = synchronized {

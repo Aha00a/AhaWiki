@@ -121,28 +121,18 @@ class ApplicationLifecycleHook @Inject()(
 
   // 사이트 도메인 메모리 캐시 갱신 스케쥴러: 1시간 간격으로 AhaWikiCacheMemoryDomainSite를 미리 갱신합니다.
   registerScheduler("SiteDomainCacheRefresh", 5.seconds, () => 1.hour, () => {
-    StopWatch("SiteDomainCacheRefresh") {
-      AhaWikiCacheMemoryDomainSite.refresh()
-    }
+    AhaWikiCacheMemoryDomainSite.refresh()
   })
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
   registerScheduler("CacheFileCleanup", 15 seconds, () => 7.days, () => {
-    StopWatch("CacheFileCleanup") {
-      val results = cacheFileCleanupService.cleanupAllExpiredCaches()
-      results.foreach { result =>
-        logger.info(s"CacheFileCleanup${result.name}deletedCount${result.deletedCount}")
-      }
-    }
+    cacheFileCleanupService.cleanupAllExpiredCaches()
   })
 
   // 크롤러 캐시 TTL 정리 스케쥴러: 12시간 간격으로 180일 초과 캐시를 삭제합니다.
   registerScheduler("CrawlerCacheCleanup", 10.seconds, () => 12.hours, () => {
-    StopWatch("CrawlerCacheCleanup") {
-      database.withConnection { implicit connection =>
-        val deletedRowCount = models.tables.CacheCrawler.deleteExpired()
-        logger.info(s"""models.tables.CacheCrawler.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-      }
+    database.withConnection { implicit connection =>
+      models.tables.CacheCrawler.deleteExpired()
     }
   })
 
