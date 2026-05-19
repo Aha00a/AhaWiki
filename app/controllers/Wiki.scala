@@ -27,6 +27,7 @@ import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedLink
 import models.tables.Attachment
 import models.tables.Page
+import models.tables.Permission
 import models.tables.Site
 import models.tables.User
 import play.api.Environment
@@ -129,6 +130,77 @@ controllerComponents: ControllerComponents,
   private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
+
+  private val pagePermissionModeKeep = "keep"
+  private val pagePermissionModeGeneral = "general"
+  private val pagePermissionModePrivateRead = "privateRead"
+  private val pagePermissionModePrivateWrite = "privateWrite"
+  private val pagePermissionModes = Set(
+    pagePermissionModeKeep,
+    pagePermissionModeGeneral,
+    pagePermissionModePrivateRead,
+    pagePermissionModePrivateWrite,
+  )
+
+  private def isAdmin(implicit request: RequestHeader): Boolean = {
+    SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
+  }
+
+  private def normalizePagePermissionMode(value: Option[String], isNewPage: Boolean): String = {
+    val mode = value.map(_.trim).filter(pagePermissionModes.contains).getOrElse(pagePermissionModeKeep)
+    if (isNewPage && mode == pagePermissionModeKeep) pagePermissionModeGeneral else mode
+  }
+
+  private def pagePermissionSummary(name: String)(implicit request: RequestHeader, connection: Connection, site: Site): Seq[String] = {
+    val permissions = Permission.select()
+    val permissionLogic = new PermissionLogic(permissions)
+    val currentActor = SessionLogic.getUser(request).map(_.email).getOrElse("")
+    val matchingTargetPermissions = permissionLogic.seq.filter(_.targetMatches(name))
+
+    def actionName(action: Int): String =
+      Permission.Action.values.find(_.id == action).map(_.toString).getOrElse(action.toString)
+
+    def permissionLabel(permission: Permission): String = {
+      val target = if (permission.targetType == Permission.TargetType.All) "*" else permission.target
+      val actor = if (permission.actorType == Permission.ActorType.All) "*" else permission.actor
+      s"${permission.targetType}($target), ${permission.actorType}($actor) -> ${actionName(permission.action)}"
+    }
+
+    val currentMatch = permissionLogic.matched(name, currentActor)
+      .map(permission => s"Current user match: ${permissionLabel(permission)}")
+      .getOrElse("Current user match: none")
+    val anonymousMatch = permissionLogic.matched(name, "")
+      .map(permission => s"Anonymous match: ${permissionLabel(permission)}")
+      .getOrElse("Anonymous match: none")
+    val targetMatches = if (matchingTargetPermissions.isEmpty) {
+      Seq("Target-matching permissions: none")
+    } else {
+      matchingTargetPermissions.map(permission => s"Target match: ${permissionLabel(permission)}")
+    }
+
+    currentMatch +: anonymousMatch +: targetMatches
+  }
+
+  private def applyPagePermissionMode(name: String, mode: String, actor: String)
+                                     (implicit connection: Connection, site: Site): Unit = {
+    mode match {
+      case `pagePermissionModeKeep` =>
+      case `pagePermissionModeGeneral` =>
+        Permission.deleteExactTarget(name)
+        AhaWikiCacheMemoryPermission.invalidate(site.seq)
+      case `pagePermissionModePrivateRead` =>
+        Permission.deleteExactTarget(name)
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.none))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.admin))
+        AhaWikiCacheMemoryPermission.invalidate(site.seq)
+      case `pagePermissionModePrivateWrite` =>
+        Permission.deleteExactTarget(name)
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.read))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.admin))
+        AhaWikiCacheMemoryPermission.invalidate(site.seq)
+      case _ =>
+    }
+  }
 
   private def sanitizeAttachmentPathSegment(v: String): String = {
     val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
@@ -294,7 +366,16 @@ controllerComponents: ControllerComponents,
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
           val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", isMinorEdit = false, content)
           val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
-          Ok(views.html.Wiki.edit(page, applicationConf, initialEditorText, partialRange)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
+          Ok(views.html.Wiki.edit(
+            page,
+            applicationConf,
+            initialEditorText,
+            partialRange,
+            canManagePagePermission = isAdmin,
+            pagePermissionDefault = pagePermissionModeGeneral,
+            pagePermissionSummary = pagePermissionSummary(name),
+            isNewPage = true,
+          )).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
           Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -319,7 +400,16 @@ controllerComponents: ControllerComponents,
 
         case (Some(page), "edit", _, true) =>
           val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
-          Ok(views.html.Wiki.edit(page, applicationConf, initialEditorText, partialRange)).withHeaderRobotNoIndexNoFollow
+          Ok(views.html.Wiki.edit(
+            page,
+            applicationConf,
+            initialEditorText,
+            partialRange,
+            canManagePagePermission = isAdmin,
+            pagePermissionDefault = pagePermissionModeKeep,
+            pagePermissionSummary = pagePermissionSummary(name),
+            isNewPage = false,
+          )).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
@@ -565,7 +655,7 @@ controllerComponents: ControllerComponents,
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
-    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId) = Form(tuple(
+    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId, pagePermissionModeRaw) = Form(tuple(
       "revision" -> number,
       "text" -> text,
       "comment" -> text,
@@ -574,6 +664,7 @@ controllerComponents: ControllerComponents,
       "lineStart" -> optional(number),
       "lineEnd" -> optional(number),
       "saveSenderId" -> optional(text),
+      "pagePermissionMode" -> optional(text),
     )).bindFromRequest.get
     val isMinorEdit = minorEdit.getOrElse(false)
     val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
@@ -586,6 +677,13 @@ controllerComponents: ControllerComponents,
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val latestPage = Page.selectLastRevision(name)
         val (latestText, latestRevision, latestTime) = latestPage.map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
+        val canManagePagePermission = isAdmin
+        val pagePermissionMode = if (canManagePagePermission) {
+          normalizePagePermissionMode(pagePermissionModeRaw, latestPage.isEmpty)
+        } else {
+          pagePermissionModeKeep
+        }
+        val willChangePagePermission = pagePermissionMode != pagePermissionModeKeep
 
         if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
           Forbidden("Permission denied.")
@@ -603,12 +701,20 @@ controllerComponents: ControllerComponents,
           mergedBodyEither match {
             case Left(error) =>
               BadRequest(error)
-            case Right(mergedBody) if mergedBody == latestText =>
+            case Right(mergedBody) if mergedBody == latestText && !willChangePagePermission =>
               BadRequest("body == latestText")
             case Right(mergedBody) =>
               val now = LocalDateTime.now()
-              val nextRevision = revision + 1
-              PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, mergedBody)
+              val bodyChanged = mergedBody != latestText
+              val nextRevision = if (bodyChanged) revision + 1 else revision
+              if (bodyChanged) {
+                PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, mergedBody)
+              }
+              if (willChangePagePermission) {
+                provider.getUser.map(_.email).filter(_.nonEmpty).foreach { actor =>
+                  applyPagePermissionMode(name, pagePermissionMode, actor)
+                }
+              }
 
               val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
               val pageUpdatedPayload = Json.obj(

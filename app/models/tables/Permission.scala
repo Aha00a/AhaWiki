@@ -26,6 +26,23 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
   lazy val specificity: Int = targetLevel + actorLevel
 
   def matches(target: String, actor: String): Boolean = {
+    if (!targetMatches(target)) return false
+
+    actorType match {
+      case Permission.ActorType.All =>
+      case Permission.ActorType.Login =>
+        if (actor.isNullOrEmpty) return false
+      case Permission.ActorType.Exact =>
+        if (this.actor != actor) return false
+      case Permission.ActorType.Domain =>
+        if (!actor.endsWith(this.actor)) return false
+    }
+
+    //noinspection RemoveRedundantReturn
+    return true
+  }
+
+  def targetMatches(target: String): Boolean = {
     targetType match {
       case Permission.TargetType.All =>
       case Permission.TargetType.Exact =>
@@ -36,16 +53,6 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
         if (!target.endsWith(this.target)) return false
       case Permission.TargetType.RegularExpression =>
         if (!targetRegularExpressionPattern.exists(_.matcher(target).matches())) return false
-    }
-
-    actorType match {
-      case Permission.ActorType.All =>
-      case Permission.ActorType.Login =>
-        if (actor.isNullOrEmpty) return false
-      case Permission.ActorType.Exact =>
-        if (this.actor != actor) return false
-      case Permission.ActorType.Domain =>
-        if (!actor.endsWith(this.actor)) return false
     }
 
     //noinspection RemoveRedundantReturn
@@ -146,6 +153,15 @@ object Permission {
         AND targetType = ${permission.targetType.toString}
         AND actor = ${permission.actor}
         AND actorType = ${permission.actorType.toString}
+    """.executeUpdate()
+  }
+
+  def deleteExactTarget(target: String)(implicit connection: Connection, site: Site): Int = {
+    SQL"""
+      DELETE FROM Permission
+      WHERE site = ${site.seq}
+        AND target = $target
+        AND targetType = ${TargetType.Exact.toString}
     """.executeUpdate()
   }
 
