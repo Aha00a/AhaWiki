@@ -80,19 +80,10 @@ class ApplicationLifecycleHook @Inject()(
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.
   registerScheduler("deleteExpired", randomDelay(10.minutes, 30.minutes), () => randomDelay(10.minutes, 30.minutes), () => {
-    StopWatch("deleteExpired") {
-      database.withConnection { implicit connection =>
-        val deletedRowCount = models.tables.AccessLog.deleteExpired()
-        logger.info(s"""models.tables.AccessLog.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-      }
-      database.withConnection { implicit connection =>
-        val deletedRowCount = models.tables.IpDeny.deleteExpired()
-        logger.info(s"""models.tables.IpDeny.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-      }
-      database.withConnection { implicit connection =>
-        val deletedRowCount = models.tables.UserViewHistory.deleteExpired()
-        logger.info(s"""models.tables.UserViewHistory.deleteExpired()\tdeletedRowCount\t$deletedRowCount""")
-      }
+    database.withConnection { implicit connection =>
+      models.tables.AccessLog.deleteExpired()
+      models.tables.IpDeny.deleteExpired()
+      models.tables.UserViewHistory.deleteExpired()
     }
   })
 
