@@ -161,8 +161,8 @@ class Test @Inject()(implicit val
     implicit val site: Site = siteSeq.flatMap(SiteLogic.get(_)(database)).getOrElse(SiteLogic.get(request.host))
     val pageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
     val actor = request.getQueryString("actor").map(_.trim).getOrElse("")
-    val action = request.getQueryString("action").map(_.trim).filter(_.nonEmpty).getOrElse("read")
-    val requiredAction = Permission.parseAction(action).getOrElse(Permission.read)
+    val action = request.getQueryString("action").map(_.trim).filter(_.nonEmpty).getOrElse("Read")
+    val requiredAction = Permission.parseAction(action).getOrElse(Permission.Action.Read.id)
     val logic = new PermissionLogic(Permission.select())
     val matched = logic.matched(pageName, actor)
 

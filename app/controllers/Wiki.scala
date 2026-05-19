@@ -190,13 +190,13 @@ controllerComponents: ControllerComponents,
         AhaWikiCacheMemoryPermission.invalidate(site.seq)
       case `pagePermissionModePrivateRead` =>
         Permission.deleteExactTarget(name)
-        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.none))
-        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.admin))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.Action.None.id))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.Action.Admin.id))
         AhaWikiCacheMemoryPermission.invalidate(site.seq)
       case `pagePermissionModePrivateWrite` =>
         Permission.deleteExactTarget(name)
-        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.read))
-        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.admin))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, "", Permission.ActorType.All, Permission.Action.Read.id))
+        Permission.upsert(Permission(name, Permission.TargetType.Exact, actor, Permission.ActorType.Exact, Permission.Action.Admin.id))
         AhaWikiCacheMemoryPermission.invalidate(site.seq)
       case _ =>
     }

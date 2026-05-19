@@ -40,13 +40,13 @@ const ADMIN_PAGE_META_PAGE_SIZE = 20;
 const PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
 const PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
 const PERMISSION_ACTION_DEFINITIONS = [
-    {value: "none", action: 0},
-    {value: "read", action: 1},
-    {value: "edit", action: 2},
-    {value: "create", action: 4},
-    {value: "upload", action: 8},
-    {value: "delete", action: 16},
-    {value: "admin", action: 255},
+    {value: "None", action: 0},
+    {value: "Read", action: 1},
+    {value: "Edit", action: 2},
+    {value: "Create", action: 4},
+    {value: "Upload", action: 8},
+    {value: "Delete", action: 16},
+    {value: "Admin", action: 255},
 ];
 const PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({value, action}) => ({
     value,
@@ -412,7 +412,7 @@ function useAdminData(page) {
         const params = new URLSearchParams({
             pageName: pageName ?? "",
             actor: actor ?? "",
-            action: action || "read",
+            action: action || "Read",
         });
         const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
         setPermissionDiagnose(data);
@@ -1198,8 +1198,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [adminPageMetaSearch, setAdminPageMetaSearch] = useState("");
     const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState("dateUpdated");
     const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState("desc");
-    const [permissionForm, setPermissionForm] = useState({targetType: "All", target: "", actorType: "All", actor: "", action: "read"});
-    const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState({pageName: "", actor: "", action: "read"});
+    const [permissionForm, setPermissionForm] = useState({targetType: "All", target: "", actorType: "All", actor: "", action: "Read"});
+    const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState({pageName: "", actor: "", action: "Read"});
     const [permissionSortBy, setPermissionSortBy] = useState("specificity");
     const [permissionSortOrder, setPermissionSortOrder] = useState("desc");
     const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
@@ -1608,7 +1608,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Autocomplete label="target" data={sitePageNames} value={permissionForm.target} onChange={(value) => setPermissionForm({...permissionForm, target: value})} placeholder="page name or prefix" disabled={permissionForm.targetType === "All"}/>
                         <Select label="actorType" data={PERMISSION_ACTOR_TYPE_OPTIONS} value={permissionForm.actorType} onChange={(value) => setPermissionForm({...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor})}/>
                         <TextInput label="actor" value={permissionForm.actor} onChange={(event) => setPermissionForm({...permissionForm, actor: event.currentTarget.value})} placeholder="email or @domain"/>
-                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionForm.action} onChange={(value) => setPermissionForm({...permissionForm, action: value ?? "read"})}/>
+                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionForm.action} onChange={(value) => setPermissionForm({...permissionForm, action: value ?? "Read"})}/>
                     </SimpleGrid>
                     <Group mb="md">
                         <Button
@@ -1617,7 +1617,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                             onClick={async () => {
                                 const saved = await savePermission(selectedSiteSeq, permissionForm);
                                 if (saved) {
-                                    setPermissionForm({targetType: "All", target: "", actorType: "All", actor: "", action: "read"});
+                                    setPermissionForm({targetType: "All", target: "", actorType: "All", actor: "", action: "Read"});
                                 }
                             }}
                         >
@@ -1627,7 +1627,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     <SimpleGrid cols={{base: 1, md: 4}} spacing="sm" mb="sm">
                         <Autocomplete label="pageName" data={sitePageNames} value={permissionDiagnoseForm.pageName} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, pageName: value})}/>
                         <TextInput label="actor" value={permissionDiagnoseForm.actor} onChange={(event) => setPermissionDiagnoseForm({...permissionDiagnoseForm, actor: event.currentTarget.value})} placeholder="empty means anonymous"/>
-                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionDiagnoseForm.action} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, action: value ?? "read"})}/>
+                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionDiagnoseForm.action} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, action: value ?? "Read"})}/>
                         <Button mt={22} variant="light" onClick={() => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action)}>
                             Diagnose
                         </Button>

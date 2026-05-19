@@ -56,16 +56,8 @@ object WikiPermissionDetail {
     s"${permission.targetType}($target), ${permission.actorType}($actor), ${actionLabel(permission.action)}"
   }
 
-  def actionLabel(action: Int): String = action match {
-    case Permission.none => "None"
-    case Permission.read => "Read"
-    case Permission.edit => "Edit"
-    case Permission.create => "Create"
-    case Permission.upload => "Upload"
-    case Permission.delete => "Delete"
-    case Permission.admin => "Admin"
-    case _ => action.toString
-  }
+  def actionLabel(action: Int): String =
+    Permission.Action.values.find(_.id == action).map(_.toString).getOrElse(action.toString)
 }
 
 class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: () => String) {
@@ -81,7 +73,7 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   }
 
   def isReadable(target: String): Boolean = {
-    permissionLogic.permitted(target, actor, Permission.read)
+    permissionLogic.permitted(target, actor, Permission.Action.Read.id)
   }
 
   def isReadableByAnonymous(target: String, pageContent: Option[PageContent]): Boolean = {
@@ -89,11 +81,11 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   }
 
   def isReadableByAnonymous(target: String): Boolean = {
-    permissionLogic.permitted(target, "", Permission.read)
+    permissionLogic.permitted(target, "", Permission.Action.Read.id)
   }
 
   def isWritable(target: String, pageContent: Option[PageContent]): Boolean = {
-    val action = pageContent.map(_ => Permission.edit).getOrElse(Permission.create)
+    val action = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
     permissionLogic.permitted(target, actor, action)
   }
 
@@ -103,7 +95,7 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
 
   def detail(target: String, pageContent: Option[PageContent]): WikiPermissionDetail = {
     val currentActor = actor
-    val writeAction = pageContent.map(_ => Permission.edit).getOrElse(Permission.create)
+    val writeAction = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
 
     val anonymousReadPermission = permissionLogic.matched(target, "")
     val currentReadPermission = permissionLogic.matched(target, currentActor)
@@ -114,8 +106,8 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
       anonymousReadPermission = anonymousReadPermission,
       currentReadPermission = currentReadPermission,
       currentWritePermission = currentWritePermission,
-      anonymousReadable = anonymousReadPermission.exists(_.permitted(Permission.read)),
-      currentReadable = currentReadPermission.exists(_.permitted(Permission.read)),
+      anonymousReadable = anonymousReadPermission.exists(_.permitted(Permission.Action.Read.id)),
+      currentReadable = currentReadPermission.exists(_.permitted(Permission.Action.Read.id)),
       currentWritable = currentWritePermission.exists(_.permitted(writeAction)),
     )
   }

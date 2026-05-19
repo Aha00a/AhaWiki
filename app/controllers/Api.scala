@@ -189,7 +189,7 @@ class Api @Inject()(
       targetType = targetType,
       actor = if (actorType == Permission.ActorType.All || actorType == Permission.ActorType.Login) "" else field("actor"),
       actorType = actorType,
-      action = Permission.none,
+      action = Permission.Action.None.id,
     )
   }
 

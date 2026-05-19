@@ -77,23 +77,14 @@ object Permission {
 
   object Action extends Enumeration {
     type Action = Value
-    val none: Action = Value(0, "none")
-    val read: Action = Value(1, "read")
-    val edit: Action = Value(2, "edit")
-    val create: Action = Value(4, "create")
-    val upload: Action = Value(8, "upload")
-    val delete: Action = Value(16, "delete")
-    val admin: Action = Value(255, "admin")
+    val None: Action = Value(0, "None")
+    val Read: Action = Value(1, "Read")
+    val Edit: Action = Value(2, "Edit")
+    val Create: Action = Value(4, "Create")
+    val Upload: Action = Value(8, "Upload")
+    val Delete: Action = Value(16, "Delete")
+    val Admin: Action = Value(255, "Admin")
   }
-
-  val none = 0
-  val read = 1
-  val edit = 2
-  val create = 4
-  val upload = 8
-  val delete = 16
-  val admin = 255
-
 
   def fromRow(row: (String, TargetType.Value, String, ActorType.Value, Int)): Permission = {
     Permission(row._1, row._2, row._3, row._4, row._5)
@@ -180,11 +171,11 @@ object Permission {
         S.name AS siteName,
         COUNT(P.site) AS permissionCount,
         COALESCE(SUM(CASE
-          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'All' AND P.actor = '' AND P.action >= $read THEN 1
+          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'All' AND P.actor = '' AND P.action >= ${Action.Read.id} THEN 1
           ELSE 0
         END), 0) AS publicReadRows,
         COALESCE(SUM(CASE
-          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'Login' AND P.actor = '' AND P.action >= $create THEN 1
+          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'Login' AND P.actor = '' AND P.action >= ${Action.Create.id} THEN 1
           ELSE 0
         END), 0) AS loginCreateRows
       FROM Site S

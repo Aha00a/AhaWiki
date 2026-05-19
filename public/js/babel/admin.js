@@ -280,13 +280,13 @@ var ADMIN_PAGE_META_PAGE_SIZE = 20;
 var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
 var PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
 var PERMISSION_ACTION_DEFINITIONS = [
-  { value: "none", action: 0 },
-  { value: "read", action: 1 },
-  { value: "edit", action: 2 },
-  { value: "create", action: 4 },
-  { value: "upload", action: 8 },
-  { value: "delete", action: 16 },
-  { value: "admin", action: 255 }
+  { value: "None", action: 0 },
+  { value: "Read", action: 1 },
+  { value: "Edit", action: 2 },
+  { value: "Create", action: 4 },
+  { value: "Upload", action: 8 },
+  { value: "Delete", action: 16 },
+  { value: "Admin", action: 255 }
 ];
 var PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({ value, action }) => ({
   value,
@@ -624,7 +624,7 @@ function useAdminData(page) {
     const params = new URLSearchParams({
       pageName: pageName ?? "",
       actor: actor ?? "",
-      action: action || "read"
+      action: action || "Read"
     });
     const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
     setPermissionDiagnose(data);
@@ -1371,8 +1371,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [adminPageMetaSearch, setAdminPageMetaSearch] = useState2("");
   const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState2("dateUpdated");
   const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState2("desc");
-  const [permissionForm, setPermissionForm] = useState2({ targetType: "All", target: "", actorType: "All", actor: "", action: "read" });
-  const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState2({ pageName: "", actor: "", action: "read" });
+  const [permissionForm, setPermissionForm] = useState2({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
+  const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState2({ pageName: "", actor: "", action: "Read" });
   const [permissionSortBy, setPermissionSortBy] = useState2("specificity");
   const [permissionSortOrder, setPermissionSortOrder] = useState2("desc");
   const [selectedCalculatePageName, setSelectedCalculatePageName] = useState2("");
@@ -1632,7 +1632,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
         minHeight: 320
       }
-    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)) : null, page === "site-permission" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Permission"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, permissionRows.length, " rows")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: permissionForm.targetType, onChange: (value) => setPermissionForm({ ...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target }) }), /* @__PURE__ */ React5.createElement(Autocomplete, { label: "target", data: sitePageNames, value: permissionForm.target, onChange: (value) => setPermissionForm({ ...permissionForm, target: value }), placeholder: "page name or prefix", disabled: permissionForm.targetType === "All" }), /* @__PURE__ */ React5.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: permissionForm.actorType, onChange: (value) => setPermissionForm({ ...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionForm.actor, onChange: (event) => setPermissionForm({ ...permissionForm, actor: event.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionForm.action, onChange: (value) => setPermissionForm({ ...permissionForm, action: value ?? "read" }) })), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(
+    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)) : null, page === "site-permission" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Permission"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, permissionRows.length, " rows")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: permissionForm.targetType, onChange: (value) => setPermissionForm({ ...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target }) }), /* @__PURE__ */ React5.createElement(Autocomplete, { label: "target", data: sitePageNames, value: permissionForm.target, onChange: (value) => setPermissionForm({ ...permissionForm, target: value }), placeholder: "page name or prefix", disabled: permissionForm.targetType === "All" }), /* @__PURE__ */ React5.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: permissionForm.actorType, onChange: (value) => setPermissionForm({ ...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionForm.actor, onChange: (event) => setPermissionForm({ ...permissionForm, actor: event.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionForm.action, onChange: (value) => setPermissionForm({ ...permissionForm, action: value ?? "Read" }) })), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(
       Button2,
       {
         size: "xs",
@@ -1640,12 +1640,12 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         onClick: async () => {
           const saved = await savePermission(selectedSiteSeq, permissionForm);
           if (saved) {
-            setPermissionForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "read" });
+            setPermissionForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
           }
         }
       },
       "Save"
-    )), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: permissionDiagnoseForm.pageName, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, pageName: value }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionDiagnoseForm.actor, onChange: (event) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, actor: event.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionDiagnoseForm.action, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, action: value ?? "read" }) }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "light", onClick: () => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React5.createElement(Group4, { gap: "xs" }, /* @__PURE__ */ React5.createElement(Badge4, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React5.createElement(
+    )), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: permissionDiagnoseForm.pageName, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, pageName: value }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionDiagnoseForm.actor, onChange: (event) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, actor: event.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionDiagnoseForm.action, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, action: value ?? "Read" }) }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "light", onClick: () => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React5.createElement(Group4, { gap: "xs" }, /* @__PURE__ */ React5.createElement(Badge4, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React5.createElement(
       DataTable,
       {
         withTableBorder: true,
