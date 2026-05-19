@@ -73,6 +73,20 @@ object PermissionUnit {
       assertEquals(permission.targetLevel, 2)
     }
     {
+      val permission = Permission("^Private/(Team|Project)/.*$", TargetType.RegularExpression, "aha00a@gmail.com", ActorType.Exact, Permission.admin)
+      assert(permission.matches("Private/Team/Page", "aha00a@gmail.com"))
+      assert(permission.matches("Private/Project/Page", "aha00a@gmail.com"))
+      assert(!permission.matches("Private/Personal/Page", "aha00a@gmail.com"))
+      assert(!permission.matches("Public/Team/Page", "aha00a@gmail.com"))
+      assertEquals(permission.actorLevel, 3)
+      assertEquals(permission.targetLevel, 2)
+
+      val invalidRegexPermission = Permission("[", TargetType.RegularExpression, "", ActorType.All, Permission.read)
+      assert(!invalidRegexPermission.matches("AnyPage", ""))
+      assert(Permission.validate(permission).isRight)
+      assert(Permission.validate(invalidRegexPermission).isLeft)
+    }
+    {
       assertEquals(Permission.Action.none.id, Permission.none)
       assertEquals(Permission.Action.read.id, Permission.read)
       assertEquals(Permission.Action.edit.id, Permission.edit)
@@ -84,6 +98,7 @@ object PermissionUnit {
       assertEquals(Permission.parseAction("4"), Right(Permission.create))
       assert(Permission.parseAction("3").isLeft)
       assertEquals(Permission.parseTargetType("StartsWith"), Right(TargetType.StartsWith))
+      assertEquals(Permission.parseTargetType("RegularExpression"), Right(TargetType.RegularExpression))
       assertEquals(Permission.parseActorType("Domain"), Right(ActorType.Domain))
       assert(Permission.parseTargetType("Prefix").isLeft)
       assert(Permission.parseActorType("Group").isLeft)

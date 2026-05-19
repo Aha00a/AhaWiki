@@ -277,7 +277,7 @@ function SiteListCard({ sites, onNavigate }) {
 var LOG_PREFIX = "[AdminUI]";
 var CRAWLER_CACHE_PAGE_SIZE = 20;
 var ADMIN_PAGE_META_PAGE_SIZE = 20;
-var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith"];
+var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
 var PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
 var PERMISSION_ACTION_DEFINITIONS = [
   { value: "none", action: 0 },

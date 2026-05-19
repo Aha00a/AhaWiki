@@ -6,10 +6,14 @@ import anorm.SqlParser._
 import anorm._
 import com.aha00a.commons.Implicits._
 
+import scala.util.Try
+
 case class Permission(target: String, targetType: Permission.TargetType.Value, actor: String, actorType: Permission.ActorType.Value, action: Int) {
+  private lazy val targetRegularExpressionPattern = Try(this.target.r.pattern).toOption
+
   lazy val targetLevel: Int = targetType match {
     case Permission.TargetType.All => 1
-    case Permission.TargetType.StartsWith | Permission.TargetType.EndsWith => 2
+    case Permission.TargetType.StartsWith | Permission.TargetType.EndsWith | Permission.TargetType.RegularExpression => 2
     case Permission.TargetType.Exact => 3
   }
 
@@ -30,6 +34,8 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
         if (!target.startsWith(this.target)) return false
       case Permission.TargetType.EndsWith =>
         if (!target.endsWith(this.target)) return false
+      case Permission.TargetType.RegularExpression =>
+        if (!targetRegularExpressionPattern.exists(_.matcher(target).matches())) return false
     }
 
     actorType match {
@@ -55,7 +61,7 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
 
 object Permission {
   object TargetType extends Enumeration {
-    val All, Exact, StartsWith, EndsWith = Value
+    val All, Exact, StartsWith, EndsWith, RegularExpression = Value
   }
 
   object ActorType extends Enumeration {
@@ -95,6 +101,14 @@ object Permission {
 
   def parseTargetType(value: String): Either[String, TargetType.Value] = {
     TargetType.values.find(_.toString == value.trim).toRight(s"targetType must be one of: ${TargetType.values.mkString(", ")}")
+  }
+
+  def validate(permission: Permission): Either[String, Permission] = {
+    if (permission.targetType == TargetType.RegularExpression) {
+      Try(permission.target.r).toEither.left.map(error => s"target regular expression is invalid: ${error.getMessage}").map(_ => permission)
+    } else {
+      Right(permission)
+    }
   }
 
   def parseActorType(value: String): Either[String, ActorType.Value] = {

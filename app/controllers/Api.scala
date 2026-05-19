@@ -168,13 +168,14 @@ class Api @Inject()(
       targetType <- Permission.parseTargetType(field("targetType"))
       actorType <- Permission.parseActorType(field("actorType"))
       action <- Permission.parseAction(field("action"))
-    } yield Permission(
-      target = if (targetType == Permission.TargetType.All) "" else field("target"),
-      targetType = targetType,
-      actor = if (actorType == Permission.ActorType.All || actorType == Permission.ActorType.Login) "" else field("actor"),
-      actorType = actorType,
-      action = action,
-    )
+      permission <- Permission.validate(Permission(
+        target = if (targetType == Permission.TargetType.All) "" else field("target"),
+        targetType = targetType,
+        actor = if (actorType == Permission.ActorType.All || actorType == Permission.ActorType.Login) "" else field("actor"),
+        actorType = actorType,
+        action = action,
+      ))
+    } yield permission
   }
 
   private def parsePermissionKey(query: String => Option[String]): Either[String, Permission] = {

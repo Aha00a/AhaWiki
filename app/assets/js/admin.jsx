@@ -37,7 +37,7 @@ import {SiteListCard} from "./site/siteWidgets";
 const LOG_PREFIX = "[AdminUI]";
 const CRAWLER_CACHE_PAGE_SIZE = 20;
 const ADMIN_PAGE_META_PAGE_SIZE = 20;
-const PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith"];
+const PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
 const PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
 const PERMISSION_ACTION_DEFINITIONS = [
     {value: "none", action: 0},
