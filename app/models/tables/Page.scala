@@ -10,7 +10,6 @@ import com.aha00a.commons.utils.RangeUtil
 import com.aha00a.play.AnormSqlParser._
 import models.WithDateTime
 import models.tables
-import zio.json._
 
 import java.sql.Connection
 import java.sql.Savepoint
@@ -21,15 +20,6 @@ import scala.util.matching.Regex
 
 case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String) extends WithDateTime
 case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean) extends WithDateTime
-case class PageWithoutContentWithSize  (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, size: Long) extends WithDateTime
-object PageWithoutContentWithSize {
-  import models.JsonEncoderDecoderForDate._
-  implicit val jsonDecoder2: JsonDecoder[PageWithoutContentWithSize] = DeriveJsonDecoder.gen[PageWithoutContentWithSize]
-  implicit val jsonEncoder2: JsonEncoder[PageWithoutContentWithSize] = DeriveJsonEncoder.gen[PageWithoutContentWithSize]
-
-  //noinspection TypeAnnotation
-  def tupled = (apply _).tupled
-}
 
 case class SearchResult(name: String, dateTime: LocalDateTime, content: String) {
 

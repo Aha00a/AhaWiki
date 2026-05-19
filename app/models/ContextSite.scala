@@ -6,7 +6,6 @@ import logics.ApplicationConf
 import logics.SiteThemeLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode.RenderingMode
-import models.tables.PageWithoutContentWithSize
 import models.tables.Config
 import models.tables.Site
 import play.api.db.Database
@@ -51,7 +50,7 @@ class ContextSite()(
   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
   lazy val setPageName: Set[String] = ahaWikiCache.PageMeta.SeqPageName.get().toSet
 
-  lazy val seqPageByPermission: Seq[PageWithoutContentWithSize] = database.withConnection { implicit connection =>
+  lazy val seqPageByPermission: Seq[PageLatestSummary] = database.withConnection { implicit connection =>
     PageLogic.getListPageByPermission()(requestWrapper, connection, this)
   }
 

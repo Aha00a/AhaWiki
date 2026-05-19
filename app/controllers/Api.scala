@@ -38,10 +38,10 @@ import models.Adjacent
 import models.ContextSite
 import models.ContextWikiPage
 import models.PageContent
+import models.PageLatestSummary
 import models.RequestWrapper
 import models.tables.CalculatedLink
 import models.tables.Page
-import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import models.tables.UserSite
 import models.tables.Config
@@ -1205,7 +1205,7 @@ class Api @Inject()(
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest
+          val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
             .get()
             .map(_.name)
             .distinct
@@ -1223,7 +1223,7 @@ class Api @Inject()(
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest
+          val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
             .get()
             .map(_.name)
             .distinct
@@ -1523,7 +1523,7 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
 
-      val seqPage: Seq[PageWithoutContentWithSize] = contextWikiPage.seqPageByPermission
+      val seqPage: Seq[PageLatestSummary] = contextWikiPage.seqPageByPermission
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
 
       val totalSize: Long = seqPage.map(_.size).sum

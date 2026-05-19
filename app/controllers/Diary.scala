@@ -54,7 +54,7 @@ class Diary @Inject()(implicit val
 
         PageLogic.insert(name, latestRevision + 1, LocalDateTime.now(), "add item", isMinorEdit = false, body)
         implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-        ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
+        ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")
       } else {
         Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")

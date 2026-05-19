@@ -73,7 +73,6 @@ object PageLogic {
   }
 
   import models.RequestWrapper
-  import models.tables.PageWithoutContentWithSize
   import models.tables.Site
 
   def insert(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, body: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
@@ -86,25 +85,13 @@ object PageLogic {
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
 
-  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): Seq[PageWithoutContentWithSize] = {
+  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): Seq[PageLatestSummary] = {
     implicit val site: Site = contextSite.site
     implicit val tupleDatabaseSite: (Database, Site) = (contextSite.database, site)
 
     val wikiPermission = WikiPermission()
 
-    val list: Seq[PageWithoutContentWithSize] = models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
-      PageWithoutContentWithSize(
-        name = p.name,
-        revision = p.revision,
-        dateTime = p.datePageLastChanged,
-        nickname = None,
-        user = None,
-        remoteAddress = "",
-        comment = "",
-        isMinorEdit = false,
-        size = p.size,
-      )
-    }
+    val list: Seq[PageLatestSummary] = models.tables.PageMeta.selectSeqPageLatestSummary()
     val listFiltered = list.filter(p => wikiPermission.isReadable(p.name))
     // TODO: caching?
 
@@ -167,7 +154,6 @@ object PageLogic {
       PageMeta.upsert(
         pageName = page.name,
         revision = page.revision,
-        datePageLastChanged = page.dateTime,
         image = extractRepresentativeImage(page.content, page.name),
         size = page.content.length,
       )

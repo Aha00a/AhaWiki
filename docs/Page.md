@@ -19,7 +19,6 @@
 - `revision`: 최신 revision
 - `dateInserted`: row 생성 시각
 - `dateUpdated`: 계산 완료 시각
-- `datePageLastChanged`: 최신 revision의 `Page.dateTime`
 - `image`: 대표 이미지
 - `size`: 최신 revision의 content length
 
@@ -43,7 +42,7 @@
 페이지 이름 목록과 최신 페이지 목록/size는 `PageMeta` 기반 캐시를 사용한다.
 
 - `AhaWikiCache.PageMeta.SeqPageName`
-- `AhaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest`
+- `AhaWikiCache.PageMeta.SeqPageLatestSummary`
 - `ContextSite.setPageName`
 - `ContextSite.seqPageByPermission`
 - Admin Page 목록과 재계산 대상 선택

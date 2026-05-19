@@ -5,7 +5,7 @@ import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.ContextSite
-import models.tables.PageWithoutContentWithSize
+import models.PageLatestSummary
 import models.tables.Site
 import play.api.mvc._
 
@@ -61,9 +61,9 @@ class Feed @Inject()(
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextSite: ContextSite = ContextSite()
 
-    val seqListLatest: Seq[PageWithoutContentWithSize] = contextSite.seqPageByPermission.sortBy(_.dateTime).reverse.take(30)
+    val seqListLatest: Seq[PageLatestSummary] = contextSite.seqPageByPermission.sortBy(_.dateTime).reverse.take(30)
     val feed = Feed(site.name, "", s"https://${request.host}", "", "urn:uuid:60a76c80-d399-11d9-b91C-0003939e0af6", seqListLatest.headOption.map(_.localDateTime).getOrElse(LocalDateTime.now())) // TODO: id
-    val entries = seqListLatest.map(p => Entry(s"${p.name} - ${site.name}", s"/w/${p.name}", s"/w/${p.name}", p.name, p.localDateTime, p.name, p.name, p.nickname.getOrElse(""))) // TODO: summary, content
+    val entries = seqListLatest.map(p => Entry(s"${p.name} - ${site.name}", s"/w/${p.name}", s"/w/${p.name}", p.name, p.localDateTime, p.name, p.name, p.user.map(_.toString).getOrElse(""))) // TODO: summary, content
     Ok(
       <feed xmlns="http://www.w3.org/2005/Atom">
         {feed.toXml}

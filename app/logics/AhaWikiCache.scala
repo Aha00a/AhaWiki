@@ -5,7 +5,7 @@ import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
 import models.ContextSite
 import models.ContextWikiPage
-import models.tables.PageWithoutContentWithSize
+import models.PageLatestSummary
 import models.tables.Site
 import play.api.Environment
 import play.api.Logging
@@ -107,7 +107,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
     AhaWikiCacheMemoryDomainSite.invalidate()
     implicit val ds = (database, site)
-    PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
+    PageMeta.SeqPageLatestSummary.invalidate()
     PageMeta.SeqPageName.invalidate()
     Header.invalidate()
     Footer.invalidate()
@@ -167,23 +167,11 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object PageMeta {
-    object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
+    object SeqPageLatestSummary extends CacheEntity[Seq[PageLatestSummary], (Database, Site)] {
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
-      override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
+      override def orElse()(implicit t2: (Database, Site)): Seq[PageLatestSummary] = t2._1.withConnection { implicit connection =>
         implicit val (_, site: Site) = t2
-        models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
-          PageWithoutContentWithSize(
-            name = p.name,
-            revision = p.revision,
-            dateTime = p.datePageLastChanged,
-            nickname = None,
-            user = None,
-            remoteAddress = "",
-            comment = "",
-            isMinorEdit = false,
-            size = p.size,
-          )
-        }
+        models.tables.PageMeta.selectSeqPageLatestSummary()
       }
     }
 
