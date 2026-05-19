@@ -7,11 +7,13 @@ import com.aha00a.commons.utils.Hangul
 import com.aha00a.commons.utils.UriUtil
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
+import logics.wikis.macros.MacroAttachment
 import logics.wikis.macros.MacroPeriod
 import models.ContextWikiPage
 import models.PageContent
 import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
 
+import scala.util.matching.Regex
 import scala.xml.XML
 
 object InterpreterSchema extends TraitInterpreter {
@@ -45,6 +47,7 @@ object InterpreterSchema extends TraitInterpreter {
   private val imageKeys = Set("image", "logo")
   private val urlKeys = Set("url", "codeRepository", "sameAs")
   private val locationKeys = Set("address", "geo", "location", "foundingLocation")
+  private val attachmentMacroRegex: Regex = """^\[\[Attachment\((.*)\)]]$""".r
 
   case class DisplayField(key: String, values: Seq[String], pairKey: Option[String] = None, pairValues: Seq[String] = Seq.empty)
 
@@ -100,6 +103,11 @@ object InterpreterSchema extends TraitInterpreter {
 
   private def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
   private def isLocationKey(key: String): Boolean = locationKeys.contains(key) || key.endsWith("Location")
+  private def attachmentMacroArgument(v: String): Option[String] = v.trim match {
+    case attachmentMacroRegex(argument) => Some(argument)
+    case _ => None
+  }
+  private def isAttachmentMacroValue(v: String): Boolean = attachmentMacroArgument(v).isDefined
   private def normalizeUrlValue(v: String, baseUrl: Option[String]): String = {
     if (v.matches("^[\\w.+-]+://.*")) v
     else if (v.startsWith("//")) s"https:$v"
@@ -109,7 +117,7 @@ object InterpreterSchema extends TraitInterpreter {
 
   private def toJsonFieldValue(key: String, values: Seq[String], baseUrl: Option[String]): JsValue = {
     val normalizedValues =
-      if (urlKeys.contains(key) || imageKeys.contains(key)) values.map(v => normalizeUrlValue(v, baseUrl))
+      if (urlKeys.contains(key) || imageKeys.contains(key)) values.map(v => if (isAttachmentMacroValue(v)) v else normalizeUrlValue(v, baseUrl))
       else values
 
     val normalizedDistinct = normalizedValues.distinct
@@ -186,6 +194,10 @@ object InterpreterSchema extends TraitInterpreter {
   private def mapAndWrapLink(link: AhaMarkLink, pageNameSet: Set[String]): scala.xml.NodeSeq =
     XML.loadString(link.toHtmlString(pageNameSet))
 
+  private def renderAttachmentMacro(v: String)(implicit wikiContext: ContextWikiPage): scala.xml.NodeSeq =
+    attachmentMacroArgument(v)
+      .map(argument => scala.xml.Unparsed(MacroAttachment.toHtmlString(argument)))
+      .getOrElse(scala.xml.NodeSeq.Empty)
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     import models.tables.Site
@@ -243,6 +255,9 @@ object InterpreterSchema extends TraitInterpreter {
                       }
                     case None =>
                       tail.map {
+                        case v if isAttachmentMacroValue(v) =>
+                          val className = if (imageKeys.contains(key)) "schemaFieldValue schemaFieldImage schemaFieldAttachment" else "schemaFieldValue schemaFieldAttachment"
+                          <dd class={className} property={key}>{renderAttachmentMacro(v)}</dd>
                         case v if imageKeys.contains(key) =>
                           <dd class="schemaFieldValue schemaFieldImage" property={key}><img src={normalizeUrlValue(v, baseUrl)} alt={s"${wikiContext.name} $key"}></img></dd>
                         case v if urlKeys.contains(key) =>

@@ -138,6 +138,22 @@ object InterpreterSchemaUnit {
       assertEquals((json \ "foundingLocation" \ "name").as[String], ("Seoul"))
     }
 
+    {
+      val parseResult = ParseResult(
+        "Movie",
+        Seq(
+          Seq("image", "[[Attachment(clipboard/clipboard.2026-05-19T15-06-57.png)]]"),
+        )
+      )
+
+      val json = InterpreterSchema.toJsonLdObject(
+        parseResult = parseResult,
+        baseUrl = Some("https://example.com")
+      ).get
+
+      assertEquals((json \ "image").as[String], ("[[Attachment(clipboard/clipboard.2026-05-19T15-06-57.png)]]"))
+    }
+
     assertEquals(InterpreterSchema.toJsonLdObject(ParseResult("", Seq(Seq("name", "Aha00a")))), None)
   }
 }
