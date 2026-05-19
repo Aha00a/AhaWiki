@@ -8,8 +8,6 @@ case class PageContent(raw: String) {
   val directives: Seq[String] = split.iterator.takeWhile(_.startsWith("#!")).map(_.substring(2)).toSeq
   val content: String = split.iterator.dropWhile(_.startsWith("#!")).mkString("\n")
 
-  val read: Option[String] = extractDirective("read")
-  val write: Option[String] = extractDirective("write")
   val redirect: Option[String] = extractDirective("redirect")
 
   def extractDirective(shebang:String): Option[String] = {

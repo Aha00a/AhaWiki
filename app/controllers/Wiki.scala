@@ -292,7 +292,7 @@ controllerComponents: ControllerComponents,
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
           val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
-          val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", "", isMinorEdit = false, content)
+          val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", isMinorEdit = false, content)
           val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
           Ok(views.html.Wiki.edit(page, applicationConf, initialEditorText, partialRange)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 

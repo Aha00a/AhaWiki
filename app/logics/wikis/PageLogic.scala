@@ -81,7 +81,7 @@ object PageLogic {
     import models.tables.Site
     implicit val site: Site = wikiContext.site
     val user = wikiContext.requestWrapper.getUser
-    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, "", isMinorEdit, body)
+    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body)
     Page.insert(page)
     wikiContext.actorAhaWiki ! Calculate(site, name)
   }
@@ -101,7 +101,6 @@ object PageLogic {
         user = None,
         remoteAddress = "",
         comment = "",
-        permRead = p.permRead,
         isMinorEdit = false,
         size = p.size,
       )
@@ -170,7 +169,6 @@ object PageLogic {
         revision = page.revision,
         datePageLastChanged = page.dateTime,
         image = extractRepresentativeImage(page.content, page.name),
-        permRead = "",
         size = page.content.length,
       )
     }

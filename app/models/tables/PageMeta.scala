@@ -7,7 +7,7 @@ import com.aha00a.play.AnormSqlParser.localDateTime
 import java.sql.Connection
 import java.time.LocalDateTime
 
-case class PageMetaWithoutContentWithSize(name: String, revision: Long, datePageLastChanged: LocalDateTime, permRead: String, size: Long)
+case class PageMetaWithoutContentWithSize(name: String, revision: Long, datePageLastChanged: LocalDateTime, size: Long)
 object PageMetaWithoutContentWithSize {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
@@ -20,13 +20,12 @@ case class PageMeta(
   dateUpdated: Option[LocalDateTime],
   datePageLastChanged: Option[LocalDateTime],
   image: Option[String],
-  permRead: String,
   size: Long,
 )
 
 
 
-case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], permRead: String, size: Long, datePageLastChanged: Option[LocalDateTime])
+case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], size: Long, datePageLastChanged: Option[LocalDateTime])
 
 object PageMeta {
   private val ImageMaxLength = 512
@@ -35,28 +34,26 @@ object PageMeta {
     if (value.length <= maxLength) value else value.take(maxLength)
   }
 
-  private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ localDateTime("datePageLastChanged").? ~ str("image").? ~ str("permRead") ~ long("size")
-  private val rowParserWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("datePageLastChanged") ~ str("permRead") ~ long("size")
+  private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ localDateTime("datePageLastChanged").? ~ str("image").? ~ long("size")
+  private val rowParserWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("datePageLastChanged") ~ long("size")
 
   def upsert(
     pageName: String,
     revision: Long,
     datePageLastChanged: LocalDateTime,
     image: Option[String],
-    permRead: String,
     size: Long,
     dateUpdated: LocalDateTime = LocalDateTime.now(),
   )(implicit connection: Connection, site: Site): Int = {
     val savedImage = image.map(img => truncate(img, ImageMaxLength))
     SQL"""
-      INSERT INTO PageMeta (site, name, revision, dateUpdated, datePageLastChanged, image, permRead, size)
-      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $datePageLastChanged, $savedImage, $permRead, $size)
+      INSERT INTO PageMeta (site, name, revision, dateUpdated, datePageLastChanged, image, size)
+      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $datePageLastChanged, $savedImage, $size)
       ON DUPLICATE KEY UPDATE
         revision = VALUES(revision),
         dateUpdated = VALUES(dateUpdated),
         datePageLastChanged = VALUES(datePageLastChanged),
         image = VALUES(image),
-        permRead = VALUES(permRead),
         size = VALUES(size)
     """.executeUpdate()
   }
@@ -95,7 +92,7 @@ object PageMeta {
   }
   def selectSeqWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageMetaWithoutContentWithSize] = {
     SQL"""
-      SELECT name, revision, datePageLastChanged, IFNULL(permRead, '') permRead, size
+      SELECT name, revision, datePageLastChanged, size
       FROM PageMeta
       WHERE site = ${site.seq}
       ORDER BY name DESC
@@ -103,9 +100,9 @@ object PageMeta {
   }
 
 
-  private val adminPageMetaRowParser = str("name") ~ long("revision") ~ localDateTime("dateUpdated").? ~ str("image").? ~ str("permRead") ~ long("size") ~ localDateTime("datePageLastChanged").? map {
-    case name ~ revision ~ dateUpdated ~ image ~ permRead ~ size ~ datePageLastChanged =>
-      AdminPageMetaRow(name, revision, dateUpdated, image, permRead, size, datePageLastChanged)
+  private val adminPageMetaRowParser = str("name") ~ long("revision") ~ localDateTime("dateUpdated").? ~ str("image").? ~ long("size") ~ localDateTime("datePageLastChanged").? map {
+    case name ~ revision ~ dateUpdated ~ image ~ size ~ datePageLastChanged =>
+      AdminPageMetaRow(name, revision, dateUpdated, image, size, datePageLastChanged)
   }
 
   def selectPagedForAdmin(page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String)(implicit connection: Connection, site: Site): Seq[AdminPageMetaRow] = {
@@ -121,7 +118,7 @@ object PageMeta {
     val offset = (page - 1).max(0) * pageSize
     val searchLike = s"%${search.trim}%"
     SQL(s"""
-      SELECT name, revision, dateUpdated, datePageLastChanged, image, IFNULL(permRead, '') permRead, size
+      SELECT name, revision, dateUpdated, datePageLastChanged, image, size
       FROM PageMeta
       WHERE site = {siteSeq}
         AND ({search} = '' OR name LIKE {searchLike} OR IFNULL(image, '') LIKE {searchLike})
@@ -148,7 +145,7 @@ object PageMeta {
 
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {
     SQL"""
-      SELECT name, revision, dateInserted, dateUpdated, datePageLastChanged, image, IFNULL(permRead, '') permRead, size
+      SELECT name, revision, dateInserted, dateUpdated, datePageLastChanged, image, size
       FROM PageMeta
       WHERE site = ${site.seq} AND name = $name
     """.as(rowParser.singleOpt).map(flatten).map(PageMeta.tupled)

@@ -16,12 +16,18 @@ object PermissionLogicUnit {
     val seqAction = Seq(Permission.read, Permission.edit, Permission.create, Permission.upload, Permission.delete)
     def to01(s: Seq[Boolean]): String = s.map(_.to01).mkString
 
-    val public = new PermissionLogic(Seq(Permission("", actorAha00a, Permission.admin), Permission("", "", Permission.edit)))
+    val public = new PermissionLogic(Seq(
+      Permission("", Permission.TargetType.All, actorAha00a, Permission.ActorType.Exact, Permission.admin),
+      Permission("", Permission.TargetType.All, "", Permission.ActorType.All, Permission.edit),
+    ))
     assertEquals(to01(seqAction.map(a => public.permitted(targetFrontPage, actorEmpty, a))), "11000")
     assertEquals(to01(seqAction.map(a => public.permitted(targetFrontPage, actorSomeone, a))), "11000")
     assertEquals(to01(seqAction.map(a => public.permitted(targetFrontPage, actorAha00a, a))), "11111")
 
-    val privateP = new PermissionLogic(Seq(Permission("", actorAha00a, Permission.admin), Permission("", "", Permission.none)))
+    val privateP = new PermissionLogic(Seq(
+      Permission("", Permission.TargetType.All, actorAha00a, Permission.ActorType.Exact, Permission.admin),
+      Permission("", Permission.TargetType.All, "", Permission.ActorType.All, Permission.none),
+    ))
     assertEquals(to01(seqAction.map(a => privateP.permitted(targetFrontPage, actorEmpty, a))), "00000")
     assertEquals(to01(seqAction.map(a => privateP.permitted(targetFrontPage, actorAha00a, a))), "11111")
 

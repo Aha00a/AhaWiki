@@ -8,9 +8,8 @@ object PageContentUnit {
     import testUtil.assertEquals
 
     val pageContent1 = PageContent("#!read all\n#!write aha00a\n#!redirect FrontPage")
-    assertEquals(pageContent1.read, Some("all"))
-    assertEquals(pageContent1.write, Some("aha00a"))
     assertEquals(pageContent1.redirect, Some("FrontPage"))
+    assertEquals(pageContent1.shebang, List())
 
     val pageContent2 = PageContent("#!Wiki\n#!Html\nsomething")
     assertEquals(pageContent2.shebang, List("Wiki", "Html"))

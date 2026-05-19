@@ -86,43 +86,12 @@ object Permission {
     Permission(row._1, row._2, row._3, row._4, row._5)
   }
 
-  def apply(target: String, actor: String, action: Int): Permission = {
-    Permission(
-      normalizeLegacyTarget(target),
-      inferLegacyTargetType(target),
-      normalizeLegacyActor(actor),
-      inferLegacyActorType(actor),
-      action,
-    )
+  private val targetTypeParser: RowParser[TargetType.Value] = str("targetType").map { value =>
+    parseTargetType(value).fold(message => throw new IllegalArgumentException(message), identity)
   }
-
-  private def normalizeLegacyTarget(target: String): String = {
-    if (target.endsWith("?")) target.substring(0, target.length - 1) else target
+  private val actorTypeParser: RowParser[ActorType.Value] = str("actorType").map { value =>
+    parseActorType(value).fold(message => throw new IllegalArgumentException(message), identity)
   }
-
-  private def inferLegacyTargetType(target: String): TargetType.Value = {
-    target match {
-      case "" => TargetType.All
-      case _ if target.endsWith("?") => TargetType.StartsWith
-      case _ => TargetType.Exact
-    }
-  }
-
-  private def normalizeLegacyActor(actor: String): String = {
-    if (actor == "login") "" else actor
-  }
-
-  private def inferLegacyActorType(actor: String): ActorType.Value = {
-    actor match {
-      case "" => ActorType.All
-      case "login" => ActorType.Login
-      case _ if actor.startsWith("@") => ActorType.Domain
-      case _ => ActorType.Exact
-    }
-  }
-
-  private val targetTypeParser: RowParser[TargetType.Value] = str("targetType").map(TargetType.withName)
-  private val actorTypeParser: RowParser[ActorType.Value] = str("actorType").map(ActorType.withName)
 
   def parseTargetType(value: String): Either[String, TargetType.Value] = {
     TargetType.values.find(_.toString == value.trim).toRight(s"targetType must be one of: ${TargetType.values.mkString(", ")}")

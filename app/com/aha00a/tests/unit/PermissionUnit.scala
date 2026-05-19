@@ -85,6 +85,8 @@ object PermissionUnit {
       assert(Permission.parseAction("3").isLeft)
       assertEquals(Permission.parseTargetType("StartsWith"), Right(TargetType.StartsWith))
       assertEquals(Permission.parseActorType("Domain"), Right(ActorType.Domain))
+      assert(Permission.parseTargetType("Prefix").isLeft)
+      assert(Permission.parseActorType("Group").isLeft)
     }
     {
       val createPermission = Permission("", TargetType.All, "", ActorType.All, Permission.create)

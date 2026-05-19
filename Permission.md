@@ -129,13 +129,7 @@ this.action >= action
 | `StartsWith` | `Private` | `Private`로 시작하는 모든 페이지 |
 | `EndsWith` | `/Secret` | `/Secret`으로 끝나는 모든 페이지 |
 
-legacy helper `Permission(target, actor, action)`은 아직 `target` 문자열에서 타입을 추론한다.
-
-- `""` -> `TargetType.All`
-- `"Private?"` -> `TargetType.StartsWith`, 저장 target은 `"Private"`
-- 그 외 -> `TargetType.Exact`
-
-신규 코드나 SQL에서는 `targetType`을 명시하는 방식이 더 명확하다.
+신규 코드와 SQL에서는 `targetType`을 명시해야 한다.
 
 ### Actor
 
@@ -147,13 +141,6 @@ legacy helper `Permission(target, actor, action)`은 아직 `target` 문자열�
 | `Login` | `''` | 로그인한 모든 사용자 |
 | `Exact` | `user@example.com` | 해당 email 사용자 |
 | `Domain` | `@example.com` | 해당 domain으로 끝나는 email 사용자 |
-
-legacy helper `Permission(target, actor, action)`은 아직 `actor` 문자열에서 타입을 추론한다.
-
-- `""` -> `ActorType.All`
-- `"login"` -> `ActorType.Login`, 저장 actor는 `""`
-- `"@example.com"` -> `ActorType.Domain`
-- 그 외 -> `ActorType.Exact`
 
 ## 우선순위
 
@@ -257,12 +244,12 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 현재 코드 상태:
 
-- `PageContent`는 여전히 `read` / `write` directive를 파싱할 수 있다.
-- `Page` / `PageMeta` schema에는 `permRead`가 남아 있다.
-- `PageLogic.insert`는 새 revision 저장 시 `Page.permRead`를 빈 문자열로 저장한다.
-- `PageLogic.calculate`는 `PageMeta.permRead`를 빈 문자열로 upsert한다.
+- `PageContent`는 `read` / `write` directive를 권한 값으로 노출하지 않는다.
+- `PageContent`는 기존 문서 렌더링 호환성을 위해 `read` / `write` directive를 interpreter shebang에서는 계속 제외한다.
+- `Page` / `PageMeta` 모델에서는 `permRead` 필드가 제거되었다.
+- evolution 51에서 `Page.permRead`, `PageMeta.permRead` 컬럼을 제거한다.
 
-즉, legacy 데이터는 당장 schema 호환성 때문에 남아 있지만 권한 소스로는 사용하지 않는다.
+즉, legacy 데이터는 권한 소스로 사용하지 않으며 schema에서도 제거 대상이다.
 
 ## Flash 표시
 
@@ -343,10 +330,10 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 
 ### 코드 정리
 
-- [ ] `PageContent.read`, `PageContent.write` 사용처를 확인하고 권한 목적 사용을 완전히 제거한다.
-- [ ] 더 이상 권한에 쓰지 않는 `permission.default.read/write` 설정을 제거하거나 deprecated 문서로 분리한다.
-- [ ] `Page.permRead`, `PageMeta.permRead` 컬럼 제거를 위한 evolution을 준비한다.
-- [ ] `Page`, `PageWithoutContent`, `PageWithoutContentWithSize`, `PageMeta` 모델에서 `permRead` 필드를 제거한다.
+- [x] `PageContent.read`, `PageContent.write` 사용처를 확인하고 권한 목적 사용을 완전히 제거한다.
+- [x] 더 이상 권한에 쓰지 않는 `permission.default.read/write` 설정을 제거하거나 deprecated 문서로 분리한다.
+- [x] `Page.permRead`, `PageMeta.permRead` 컬럼 제거를 위한 evolution을 준비한다.
+- [x] `Page`, `PageWithoutContent`, `PageWithoutContentWithSize`, `PageMeta` 모델에서 `permRead` 필드를 제거한다.
 - [x] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
 - [x] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
 
@@ -356,10 +343,10 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 - [x] `All`, `Login`, `Domain`, `Exact` actorType 매칭 단위 테스트를 추가한다.
 - [x] 기본적인 `PermissionLogic` 우선순위 단위 테스트를 추가한다.
 - [x] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
-- [ ] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
+- [x] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
 - [x] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
-- [ ] `Permission.apply(target, actor, action)` legacy 추론 helper를 제거하거나 테스트 전용으로 격리한다.
-- [ ] `targetType`, `actorType`을 문자열 enum 대신 타입 안정적인 값으로 다루는 계층을 추가한다.
+- [x] `Permission.apply(target, actor, action)` legacy 추론 helper를 제거하거나 테스트 전용으로 격리한다.
+- [x] `targetType`, `actorType`을 문자열 enum 대신 타입 안정적인 값으로 다루는 계층을 추가한다.
 
 ### 관리자/운영 도구
 
@@ -368,7 +355,7 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 
 ### 테스트
 
-- [ ] `WikiPermission` DB-only 동작 테스트를 추가한다.
+- [x] `WikiPermission` DB-only 동작 테스트를 추가한다.
 - [x] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
 - [x] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
 - [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.

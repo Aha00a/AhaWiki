@@ -9,7 +9,19 @@ import models.tables.Permission
 import java.sql.Connection
 
 object WikiPermission {
-  def apply()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): WikiPermission = new WikiPermission()
+  def apply()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): WikiPermission = {
+    new WikiPermission(
+      permissionLogic = new PermissionLogic(Permission.select()(connection, contextSite.site)),
+      actorProvider = () => provider.getUser.map(_.email).getOrElse(""),
+    )
+  }
+
+  def fromRows(permissions: Seq[Permission], actor: String = ""): WikiPermission = {
+    new WikiPermission(
+      permissionLogic = new PermissionLogic(permissions),
+      actorProvider = () => actor,
+    )
+  }
 }
 
 case class WikiPermissionDetail(
@@ -55,10 +67,9 @@ object WikiPermissionDetail {
   }
 }
 
-class WikiPermission(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite) {
-  private lazy val permissionLogic = new PermissionLogic(Permission.select()(connection, contextSite.site))
+class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: () => String) {
 
-  private def actor: String = provider.getUser.map(_.email).getOrElse("")
+  private def actor: String = actorProvider()
 
   def isReadable(target: String, pageContent: Option[PageContent]): Boolean = {
     isReadable(target)

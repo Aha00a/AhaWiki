@@ -5,7 +5,7 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
-import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit}
+import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.Crawler
@@ -67,6 +67,7 @@ class Test @Inject()(implicit val
     BlameUnit.run(testUtil)
     PageContentUnit.run(testUtil)
     PermissionLogicUnit.run(testUtil)
+    WikiPermissionUnit.run(testUtil)
     InterpreterWikiUnit.run(testUtil)
     apiCrawlerUnit()
 
