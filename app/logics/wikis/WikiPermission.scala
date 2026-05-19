@@ -1,5 +1,6 @@
 package logics.wikis
 
+import logics.AhaWikiCacheMemoryPermission
 import logics.PermissionLogic
 import models.ContextSite
 import models.PageContent
@@ -11,7 +12,7 @@ import java.sql.Connection
 object WikiPermission {
   def apply()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): WikiPermission = {
     new WikiPermission(
-      permissionLogic = new PermissionLogic(Permission.select()(connection, contextSite.site)),
+      permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, contextSite.site)),
       actorProvider = () => provider.getUser.map(_.email).getOrElse(""),
     )
   }

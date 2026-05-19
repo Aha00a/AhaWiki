@@ -20,6 +20,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryApiLinks
+import logics.AhaWikiCacheMemoryPermission
 import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
 import logics.PermissionLogic
@@ -332,6 +333,7 @@ class Api @Inject()(
               database.withConnection { implicit connection =>
                 implicit val implicitSite: Site = site
                 Permission.upsert(permission)
+                AhaWikiCacheMemoryPermission.invalidate(site.seq)
                 Ok(Json.obj(
                   "ok" -> Json.fromBoolean(true),
                   "siteSeq" -> Json.fromLong(site.seq),
@@ -356,6 +358,7 @@ class Api @Inject()(
               database.withConnection { implicit connection =>
                 implicit val implicitSite: Site = site
                 val deletedCount = Permission.delete(permission)
+                AhaWikiCacheMemoryPermission.invalidate(site.seq)
                 Ok(Json.obj(
                   "ok" -> Json.fromBoolean(true),
                   "siteSeq" -> Json.fromLong(site.seq),
@@ -1538,6 +1541,7 @@ class Api @Inject()(
 
   def cacheDelete(siteSeq: Long): Action[AnyContent] = Action { implicit request =>
     ahaWikiCacheMemoryApiLinks.clear()
+    AhaWikiCacheMemoryPermission.clear()
     SiteLogic.get(siteSeq) foreach { implicit site =>
       implicit val tupleDatabaseSite: (Database, Site) = (database, site)
       implicit val contextSite: ContextSite = ContextSite()

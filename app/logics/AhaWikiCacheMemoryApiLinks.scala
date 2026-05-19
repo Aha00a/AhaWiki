@@ -5,6 +5,7 @@ import models.tables.CalculatedLink
 import java.time.Instant
 import scala.collection.concurrent.TrieMap
 import javax.inject.Singleton
+import scala.concurrent.duration.DurationInt
 
 object AhaWikiCacheMemoryApiLinks {
   case class Snapshot(
@@ -20,7 +21,7 @@ object AhaWikiCacheMemoryApiLinks {
 class AhaWikiCacheMemoryApiLinks {
   private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
   private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
-  private val linksCacheTtlMs: Long = 10 * 60 * 1000
+  private val linksCacheTtlMs: Long = (10 minutes).toMillis
 
   private def isExpired(entry: CachedLinks, now: Long): Boolean = now - entry.cachedAtEpochMs > linksCacheTtlMs
 
