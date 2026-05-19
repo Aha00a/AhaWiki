@@ -53,6 +53,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return Number.isFinite(revision) ? revision : 0;
             });
     };
+    var showAlert = function (message) {
+        if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+            window.alert(message);
+            return;
+        }
+        if (typeof alert === 'function') {
+            alert(message);
+        }
+    };
     var getLineCountForText = function (value) {
         if (!value) {
             return 0;
@@ -539,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             window.location.reload();
                             throw new Error('Conflict: reloading due to stale revision.');
                         }
-                        alert('Failed to save. (status=' + response.status + ')');
+                        showAlert('Failed to save. (status=' + response.status + ')');
                         throw new Error('Failed to save kanban. status=' + response.status);
                     }
                     setCurrentRevision(getCurrentRevision() + 1);

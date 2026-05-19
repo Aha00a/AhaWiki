@@ -36,7 +36,7 @@ object UriAttackDetector {
   )
 
   // Common mass-scan signatures for PHP shell/backdoor probing.
-  private val suspiciousPhpPath = "(?i)^/[a-z0-9._-]{1,64}\\.php(?:$|[/?#]).*".r
+  private val suspiciousPhpPath = "(?i)^/[a-z0-9._=-]{1,64}\\.php(?:$|[/?#]).*".r
 
   def isAttack(uri: String): Boolean = {
     toCheckStartsWith.exists(uri.startsWith) ||
