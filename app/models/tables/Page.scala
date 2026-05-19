@@ -60,7 +60,6 @@ object Page {
 
   private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")
   private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")
-  private val rowParserPageWithoutContentWithSize = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ long("size")
   private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
@@ -229,26 +228,6 @@ INSERT INTO Page
       deleteLinkCosignSimilarityTermFrequency(name)
       SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
     }
-  }
-
-  def selectSeqPageWithoutContentWithSizeLatest()(implicit connection: Connection, site: Site): Seq[PageWithoutContentWithSize] = {
-    //language=sql
-    SQL"""
-SELECT
-    P.name, P.revision, P.dateTime, U.nickname AS nickname, P.user, P.remoteAddress, P.comment, P.isMinorEdit, LENGTH(P.content) size
-    FROM Page P
-    INNER JOIN (
-        SELECT site, name, MAX(revision) AS revision
-        FROM Page
-        WHERE site = ${site.seq} AND isMinorEdit = FALSE
-        GROUP BY site, name
-    ) SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
-    LEFT JOIN User U ON U.seq = P.user
-    WHERE P.site = ${site.seq}
-    ORDER BY P.name;
-    """
-      .as(rowParserPageWithoutContentWithSize *).map(flatten)
-      .map(PageWithoutContentWithSize.tupled)
   }
 
   def selectYmdCountOfFirstRevision()(implicit connection: Connection, site: Site): Seq[(String, Long)] = {

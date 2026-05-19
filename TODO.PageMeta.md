@@ -55,8 +55,13 @@
   - [x] 단건 강제 재계산
 
 ## 7) Page 테이블의 몇몇 필드 삭제
-- [ ] 삭제 대상 필드 목록 확정
-- [ ] 단계적 제거
-  - [ ] `deprecated` 표시
-  - [ ] 읽기 경로 `PageMeta` 전환 완료
-  - [ ] fallback 제거 후 drop migration
+- [x] 삭제 대상 필드 목록 확정
+  - [x] `Page.permRead`
+  - [x] `PageMeta.permRead`
+- [x] 단계적 제거
+  - [x] `deprecated` 표시: `Permission.md`에 legacy 권한 데이터로 정리
+  - [x] 읽기 경로 `PageMeta` 전환 완료
+    - [x] `AhaWikiCache.Page.SeqPageWithoutContentWithSizeLatest` 제거
+    - [x] 최신 페이지 목록/size 조회를 `PageMeta` 기반으로 전환
+  - [x] fallback 제거 후 drop migration
+    - [x] evolution 51에서 `Page.permRead`, `PageMeta.permRead` drop

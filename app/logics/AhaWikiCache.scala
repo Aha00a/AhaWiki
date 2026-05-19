@@ -107,7 +107,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
     AhaWikiCacheMemoryDomainSite.invalidate()
     implicit val ds = (database, site)
-    Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+    PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
     PageMeta.SeqPageName.invalidate()
     Header.invalidate()
     Footer.invalidate()
@@ -166,17 +166,27 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     }
   }
 
-  object Page {
+  object PageMeta {
     object SeqPageWithoutContentWithSizeLatest extends CacheEntity[Seq[PageWithoutContentWithSize], (Database, Site)] {
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
       override def orElse()(implicit t2: (Database, Site)): Seq[PageWithoutContentWithSize] = t2._1.withConnection { implicit connection =>
         implicit val (_, site: Site) = t2
-        models.tables.Page.selectSeqPageWithoutContentWithSizeLatest()
+        models.tables.PageMeta.selectSeqWithoutContentWithSizeLatest().map { p =>
+          PageWithoutContentWithSize(
+            name = p.name,
+            revision = p.revision,
+            dateTime = p.datePageLastChanged,
+            nickname = None,
+            user = None,
+            remoteAddress = "",
+            comment = "",
+            isMinorEdit = false,
+            size = p.size,
+          )
+        }
       }
     }
-  }
 
-  object PageMeta {
     object SeqPageName extends CacheEntity[Seq[String], (Database, Site)] {
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
       override def orElse()(implicit t2: (Database, Site)): Seq[String] = t2._1.withConnection { implicit connection =>

@@ -1205,7 +1205,7 @@ class Api @Inject()(
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest
+          val pageNames = ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest
             .get()
             .map(_.name)
             .distinct
@@ -1223,7 +1223,7 @@ class Api @Inject()(
         case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
         case Some(site) =>
           implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest
+          val pageNames = ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest
             .get()
             .map(_.name)
             .distinct

@@ -734,7 +734,7 @@ controllerComponents: ControllerComponents,
               }
 
               implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-              ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+              ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
 
               Ok("")
           }
@@ -797,7 +797,7 @@ controllerComponents: ControllerComponents,
         case Some(page) =>
           if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+            ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
             deletePageAttachments(site.seq, name) match {
               case Left(error) =>
                 logger.error(error)
@@ -825,7 +825,7 @@ controllerComponents: ControllerComponents,
         case Some(page) =>
           if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+            ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
 
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
             actorAhaWiki ! Calculate(site, name)
@@ -899,7 +899,7 @@ controllerComponents: ControllerComponents,
         case (Some(page), None) =>
           if (WikiPermission().isWritable(name, PageContent(page.content))) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.Page.SeqPageWithoutContentWithSizeLatest.invalidate()
+            ahaWikiCache.PageMeta.SeqPageWithoutContentWithSizeLatest.invalidate()
 
             Page.rename(name, newName)
             PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
