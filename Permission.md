@@ -324,8 +324,6 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 
 - [x] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
 - [x] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
-- [ ] 공개 사이트는 `All/All/read` row를 명시적으로 생성한다.
-- [ ] 로그인 편집 허용 정책이 필요한 사이트는 `All/Login/create` 또는 더 제한적인 row를 생성한다.
 - [x] `Permission` row가 없어서 의도치 않게 닫히는 페이지가 없는지 확인하는 점검 쿼리나 dev endpoint를 만든다.
 
 ### 코드 정리
@@ -358,7 +356,6 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 - [x] `WikiPermission` DB-only 동작 테스트를 추가한다.
 - [x] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
 - [x] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
-- [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.
 
 ## 별도 문서로 분리할 일
 
