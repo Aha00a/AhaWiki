@@ -5,6 +5,7 @@ import {
     MantineProvider,
     Anchor,
     AppShell,
+    Autocomplete,
     Avatar,
     Badge,
     Button,
@@ -38,7 +39,19 @@ const CRAWLER_CACHE_PAGE_SIZE = 20;
 const ADMIN_PAGE_META_PAGE_SIZE = 20;
 const PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith"];
 const PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
-const PERMISSION_ACTION_OPTIONS = ["none", "read", "edit", "create", "upload", "delete", "admin"];
+const PERMISSION_ACTION_DEFINITIONS = [
+    {value: "none", action: 0},
+    {value: "read", action: 1},
+    {value: "edit", action: 2},
+    {value: "create", action: 4},
+    {value: "upload", action: 8},
+    {value: "delete", action: 16},
+    {value: "admin", action: 255},
+];
+const PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({value, action}) => ({
+    value,
+    label: `${action} - ${toPascalCase(value)}`,
+}));
 
 function logInfo(...args) {
     console.log(LOG_PREFIX, ...args);
@@ -46,6 +59,29 @@ function logInfo(...args) {
 
 function logError(...args) {
     console.error(LOG_PREFIX, ...args);
+}
+
+function toPascalCase(value) {
+    if (!value) return "";
+    return String(value).replace(/(^|[-_\s]+)([a-z0-9])/g, (_match, _separator, character) => character.toUpperCase());
+}
+
+function formatPermissionAction(actionName, action) {
+    const definition = PERMISSION_ACTION_DEFINITIONS.find((item) => item.value === actionName || item.action === action);
+    const resolvedActionName = actionName || definition?.value || String(action ?? "");
+    const resolvedAction = action ?? definition?.action;
+    const label = toPascalCase(resolvedActionName);
+    return resolvedAction === undefined || resolvedAction === null || resolvedAction === "" ? label : `${resolvedAction} - ${label}`;
+}
+
+function compareValuesForSort(leftValue, rightValue, direction) {
+    const directionMultiplier = direction === "desc" ? -1 : 1;
+    const normalizedLeft = leftValue ?? "";
+    const normalizedRight = rightValue ?? "";
+    if (typeof normalizedLeft === "number" && typeof normalizedRight === "number") {
+        return (normalizedLeft - normalizedRight) * directionMultiplier;
+    }
+    return String(normalizedLeft).localeCompare(String(normalizedRight), undefined, {numeric: true, sensitivity: "base"}) * directionMultiplier;
 }
 
 
@@ -1164,6 +1200,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState("desc");
     const [permissionForm, setPermissionForm] = useState({targetType: "All", target: "", actorType: "All", actor: "", action: "read"});
     const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState({pageName: "", actor: "", action: "read"});
+    const [permissionSortBy, setPermissionSortBy] = useState("specificity");
+    const [permissionSortOrder, setPermissionSortOrder] = useState("desc");
     const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
     const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
     const selectedSite = useMemo(
@@ -1209,6 +1247,13 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
     const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
     const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
+    const sortedPermissionRows = useMemo(() => {
+        return [...permissionRows].sort((left, right) => {
+            const leftValue = permissionSortBy === "actionLabel" ? formatPermissionAction(left.actionName, left.action) : left[permissionSortBy];
+            const rightValue = permissionSortBy === "actionLabel" ? formatPermissionAction(right.actionName, right.action) : right[permissionSortBy];
+            return compareValuesForSort(leftValue, rightValue, permissionSortOrder);
+        });
+    }, [permissionRows, permissionSortBy, permissionSortOrder]);
 
     useEffect(() => {
         if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission") {
@@ -1560,7 +1605,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     </Group>
                     <SimpleGrid cols={{base: 1, md: 5}} spacing="sm" mb="sm">
                         <Select label="targetType" data={PERMISSION_TARGET_TYPE_OPTIONS} value={permissionForm.targetType} onChange={(value) => setPermissionForm({...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target})}/>
-                        <TextInput label="target" value={permissionForm.target} onChange={(event) => setPermissionForm({...permissionForm, target: event.currentTarget.value})} placeholder="page name or prefix"/>
+                        <Autocomplete label="target" data={sitePageNames} value={permissionForm.target} onChange={(value) => setPermissionForm({...permissionForm, target: value})} placeholder="page name or prefix" disabled={permissionForm.targetType === "All"}/>
                         <Select label="actorType" data={PERMISSION_ACTOR_TYPE_OPTIONS} value={permissionForm.actorType} onChange={(value) => setPermissionForm({...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor})}/>
                         <TextInput label="actor" value={permissionForm.actor} onChange={(event) => setPermissionForm({...permissionForm, actor: event.currentTarget.value})} placeholder="email or @domain"/>
                         <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionForm.action} onChange={(value) => setPermissionForm({...permissionForm, action: value ?? "read"})}/>
@@ -1580,7 +1625,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         </Button>
                     </Group>
                     <SimpleGrid cols={{base: 1, md: 4}} spacing="sm" mb="sm">
-                        <TextInput label="pageName" value={permissionDiagnoseForm.pageName} onChange={(event) => setPermissionDiagnoseForm({...permissionDiagnoseForm, pageName: event.currentTarget.value})}/>
+                        <Autocomplete label="pageName" data={sitePageNames} value={permissionDiagnoseForm.pageName} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, pageName: value})}/>
                         <TextInput label="actor" value={permissionDiagnoseForm.actor} onChange={(event) => setPermissionDiagnoseForm({...permissionDiagnoseForm, actor: event.currentTarget.value})} placeholder="empty means anonymous"/>
                         <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionDiagnoseForm.action} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, action: value ?? "read"})}/>
                         <Button mt={22} variant="light" onClick={() => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action)}>
@@ -1591,7 +1636,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         <Paper withBorder radius="sm" p="sm" mb="md">
                             <Group gap="xs">
                                 <Badge color={permissionDiagnose.permitted ? "green" : "red"} variant="light">{permissionDiagnose.permitted ? "allowed" : "denied"}</Badge>
-                                <Text size="sm">{permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${permissionDiagnose.matchedPermission.actionName}` : "No matching row"}</Text>
+                                <Text size="sm">{permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"}</Text>
                             </Group>
                         </Paper>
                     ) : null}
@@ -1600,14 +1645,14 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         borderRadius="md"
                         striped
                         highlightOnHover
-                        records={permissionRows}
+                        records={sortedPermissionRows}
                         columns={[
-                            {accessor: "targetType", title: "Target Type"},
-                            {accessor: "target", title: "Target", render: (row) => row.target || "*"},
-                            {accessor: "actorType", title: "Actor Type"},
-                            {accessor: "actor", title: "Actor", render: (row) => row.actor || "*"},
-                            {accessor: "actionName", title: "Action", render: (row) => `${row.actionName} (${row.action})`},
-                            {accessor: "specificity", title: "Specificity"},
+                            {accessor: "targetType", title: "Target Type", sortable: true},
+                            {accessor: "target", title: "Target", sortable: true, render: (row) => row.target || "*"},
+                            {accessor: "actorType", title: "Actor Type", sortable: true},
+                            {accessor: "actor", title: "Actor", sortable: true, render: (row) => row.actor || "*"},
+                            {accessor: "action", title: "Action", sortable: true, render: (row) => formatPermissionAction(row.actionName, row.action)},
+                            {accessor: "specificity", title: "Specificity", sortable: true},
                             {
                                 accessor: "actions",
                                 title: "Actions",
@@ -1626,6 +1671,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 },
                             },
                         ]}
+                        sortStatus={{columnAccessor: permissionSortBy, direction: permissionSortOrder}}
+                        onSortStatusChange={(nextSortStatus) => {
+                            setPermissionSortBy(nextSortStatus.columnAccessor);
+                            setPermissionSortOrder(nextSortStatus.direction ?? "asc");
+                        }}
                         minHeight={220}
                     />
                 </Card>

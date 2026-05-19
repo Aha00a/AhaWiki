@@ -1,6 +1,6 @@
 # Permission
 
-이 문서는 현재 코드에 구성되어 있는 사용자 Permission 구조와 앞으로 정리해야 할 작업을 정리한다.
+이 문서는 현재 코드에 구성되어 있는 사용자 Permission 구조와 운영 방법을 정리한다.
 
 ## 요약
 
@@ -14,14 +14,14 @@
 
 따라서 공개 읽기 같은 기본 정책도 반드시 `Permission` 테이블 row로 표현해야 한다.
 
-예를 들어 사이트 전체를 공개 읽기로 만들려면 다음과 같은 row가 필요하다.
+예를 들어 사이트 전체를 공개 읽기로 만들려면 다음 row가 필요하다.
 
 ```sql
 INSERT INTO Permission (site, target, targetType, actor, actorType, action)
 VALUES (1, '', 'All', '', 'All', 1);
 ```
 
-로그인 사용자에게 전체 편집/생성을 허용하려면 다음과 같은 row가 필요하다.
+로그인 사용자에게 전체 편집/생성을 허용하려면 다음 row가 필요하다.
 
 ```sql
 INSERT INTO Permission (site, target, targetType, actor, actorType, action)
@@ -34,11 +34,7 @@ VALUES (1, '', 'All', '', 'Login', 4);
 
 1. `GoogleOAuth.callback`에서 Google profile을 조회한다.
 2. `User.selectOrInsert(email, profileImageUrl)`로 사용자를 찾거나 생성한다.
-3. `SessionLogic.login`이 session에 다음 값을 저장한다.
-   - `seq`
-   - `email`
-   - `nickname`
-   - `profileImageUrl` optional
+3. `SessionLogic.login`은 session에 `seq`, `email`, `nickname`, `profileImageUrl` optional 값을 저장한다.
 
 요청 중 현재 사용자는 `RequestWrapper.getUser`를 통해 `SessionLogic.getUser(request)` 결과로 접근한다.
 
@@ -90,12 +86,14 @@ this.action >= action
 | `delete` | 16 |
 | `admin` | 255 |
 
-현재 주요 사용:
+주요 사용:
 
 - 기존 페이지 읽기: `read`
 - 기존 페이지 편집/저장: `edit`
 - 없는 페이지 생성: `create`
-- signed read URL 생성 등 관리자성 기능: 별도 hard-coded admin 판정도 함께 존재
+- signed read URL 생성 및 관리자 기능: 별도 hard-coded admin 판정 경로가 아직 존재
+
+Admin UI에서는 action을 실제 값과 PascalCase 이름으로 표시한다. 예: `1 - Read`, `4 - Create`, `255 - Admin`.
 
 ## Permission 테이블
 
@@ -120,7 +118,7 @@ this.action >= action
 
 ### Target
 
-`target`은 page name에 매칭된다.
+`target`은 page name을 매칭한다.
 
 | targetType | target 예 | 의미 |
 | --- | --- | --- |
@@ -129,11 +127,11 @@ this.action >= action
 | `StartsWith` | `Private` | `Private`로 시작하는 모든 페이지 |
 | `EndsWith` | `/Secret` | `/Secret`으로 끝나는 모든 페이지 |
 
-신규 코드와 SQL에서는 `targetType`을 명시해야 한다.
+신규 코드는 SQL에서도 `targetType`을 명시해야 한다.
 
 ### Actor
 
-`actor`는 현재 사용자 email에 매칭된다.
+`actor`는 현재 사용자 email을 매칭한다.
 
 | actorType | actor 예 | 의미 |
 | --- | --- | --- |
@@ -173,10 +171,10 @@ actor level:
 주요 적용 지점:
 
 - `Wiki.view`
-- `raw`
-- `history`
-- `blame`
-- `diff`
+- raw
+- history
+- blame
+- diff
 - 검색 결과 필터링
 - page list 필터링
 - include macro
@@ -185,7 +183,7 @@ actor level:
 
 읽기가 거부되면 일반적으로 `Permission denied.`가 반환된다.
 
-signed read URL은 예외적으로 유효한 서명이 있으면 페이지를 읽을 수 있다. signed read URL은 `sr_exp`, `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증된다.
+signed read URL은 예외적으로 유효한 서명이 있으면 페이지를 읽을 수 있다. signed read URL은 `sr_exp`, `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증한다.
 
 ## 쓰기 권한 적용 지점
 
@@ -229,9 +227,23 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 검색 결과도 각 결과의 page name에 대해 `WikiPermission.isReadable`을 다시 적용한다.
 
+## Admin UI
+
+권한 row는 `/Admin/Site/{seq}/Permission`에서 조회, 추가, 수정, 삭제할 수 있다.
+
+현재 UI 기능:
+
+- `targetType`, `target`, `actorType`, `actor`, `action` 입력
+- `target`과 진단용 `pageName`의 page name 자동완성
+- action 선택 및 표시를 `0 - None`, `1 - Read` 같은 실제 값 + PascalCase 이름으로 표시
+- permission 목록 정렬
+- 특정 page/user/action 조합에 대해 어떤 row가 매칭되는지 진단
+
+`targetType`이 `All`이면 `target`은 빈 값으로 저장된다. `actorType`이 `All` 또는 `Login`이면 `actor`는 빈 값으로 저장된다.
+
 ## Legacy Permission 데이터
 
-아래 값들은 과거 shebang/default 기반 권한 체계에서 사용되었다.
+아래 값들은 과거 shebang/default 기반 권한 체계에서 사용했다.
 
 - `.config`의 `permission.default.read`
 - `.config`의 `permission.default.write`
@@ -244,12 +256,12 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 현재 코드 상태:
 
-- `PageContent`는 `read` / `write` directive를 권한 값으로 노출하지 않는다.
-- `PageContent`는 기존 문서 렌더링 호환성을 위해 `read` / `write` directive를 interpreter shebang에서는 계속 제외한다.
+- `PageContent`는 `read` / `write` directive를 권한 값으로 추출하지 않는다.
+- `PageContent`는 기존 문서 렌더링 호환성을 위해 `read` / `write` directive를 interpreter shebang에서 계속 제외한다.
 - `Page` / `PageMeta` 모델에서는 `permRead` 필드가 제거되었다.
 - evolution 51에서 `Page.permRead`, `PageMeta.permRead` 컬럼을 제거한다.
 
-즉, legacy 데이터는 권한 소스로 사용하지 않으며 schema에서도 제거 대상이다.
+즉 legacy 데이터는 권한 소스로 사용하지 않으며 schema에서도 제거 대상이다.
 
 ## Flash 표시
 
@@ -262,7 +274,7 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 - anonymous read 허용 여부와 매칭 row
 - 현재 사용자 write 허용 여부와 매칭 row
 
-이 flash 역시 shebang/default 기준 설명은 표시하지 않는다.
+이 flash 표시도 shebang/default 기준 설명은 표시하지 않는다.
 
 ## 예시
 
@@ -318,46 +330,7 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 - 운영자가 특정 page/user 조합에 대해 어떤 row가 매칭되는지 확인할 수 있다.
 - 매칭 row 없음, target/actor 우선순위, 목록/검색/include 필터링을 테스트로 보장한다.
 
-## 남은 작업
-
-### 운영 데이터
-
-- [x] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
-- [x] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
-- [x] `Permission` row가 없어서 의도치 않게 닫히는 페이지가 없는지 확인하는 점검 쿼리나 dev endpoint를 만든다.
-
-### 코드 정리
-
-- [x] `PageContent.read`, `PageContent.write` 사용처를 확인하고 권한 목적 사용을 완전히 제거한다.
-- [x] 더 이상 권한에 쓰지 않는 `permission.default.read/write` 설정을 제거하거나 deprecated 문서로 분리한다.
-- [x] `Page.permRead`, `PageMeta.permRead` 컬럼 제거를 위한 evolution을 준비한다.
-- [x] `Page`, `PageWithoutContent`, `PageWithoutContentWithSize`, `PageMeta` 모델에서 `permRead` 필드를 제거한다.
-- [x] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
-- [x] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
-
-### 모델 개선
-
-- [x] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 매칭 단위 테스트를 추가한다.
-- [x] `All`, `Login`, `Domain`, `Exact` actorType 매칭 단위 테스트를 추가한다.
-- [x] 기본적인 `PermissionLogic` 우선순위 단위 테스트를 추가한다.
-- [x] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
-- [x] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
-- [x] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
-- [x] `Permission.apply(target, actor, action)` legacy 추론 helper를 제거하거나 테스트 전용으로 격리한다.
-- [x] `targetType`, `actorType`을 문자열 enum 대신 타입 안정적인 값으로 다루는 계층을 추가한다.
-
-### 관리자/운영 도구
-
-- [x] `Permission` row를 조회/추가/수정/삭제하는 admin UI를 만든다.
-- [x] 특정 page/user 조합에 대해 어떤 row가 매칭되는지 보여주는 진단 화면을 만든다.
-
-### 테스트
-
-- [x] `WikiPermission` DB-only 동작 테스트를 추가한다.
-- [x] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
-- [x] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
-
-## 별도 문서로 분리할 일
+## 별도 문서로 분리할 내용
 
 - hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 이관할지 결정한다.
 - signed read URL을 일반 permission 모델 안으로 넣을지, 예외 경로로 유지할지 결정한다.
