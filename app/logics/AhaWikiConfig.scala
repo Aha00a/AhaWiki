@@ -26,13 +26,6 @@ class AhaWikiConfig(implicit contextSite: ContextSite) {
     }
   }
 
-  object permission {
-    object default {
-      def read(): String = hocon().getOrElse(fqn, "all")
-      def write(): String = hocon().getOrElse(fqn, "login")
-    }
-  }
-
   object google {
     object analytics {
       def trackingId(): String = hocon().getOrElse(fqn, "")
