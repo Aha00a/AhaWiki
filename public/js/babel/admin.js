@@ -1586,7 +1586,6 @@ function AdminContent({ page, onNavigate, pathname, search }) {
             )) : "-"
           },
           { accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
-          { accessor: "datePageLastChanged", title: "Last Changed", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.datePageLastChanged) },
           { accessor: "size", title: "Size", sortable: true },
           {
             accessor: "actions",
