@@ -151,7 +151,7 @@ controllerComponents: ControllerComponents,
     if (isNewPage && mode == pagePermissionModeKeep) pagePermissionModeGeneral else mode
   }
 
-  private def pagePermissionSummary(name: String)(implicit request: RequestHeader, connection: Connection, site: Site): Seq[String] = {
+  private def pagePermissionSummary(name: String)(implicit request: RequestHeader, connection: Connection, site: Site): Seq[(String, String)] = {
     val permissions = Permission.select()
     val permissionLogic = new PermissionLogic(permissions)
     val currentActor = SessionLogic.getUser(request).map(_.email).getOrElse("")
@@ -167,15 +167,15 @@ controllerComponents: ControllerComponents,
     }
 
     val currentMatch = permissionLogic.matched(name, currentActor)
-      .map(permission => s"Current user match: ${permissionLabel(permission)}")
-      .getOrElse("Current user match: none")
+      .map(permission => "Current User" -> permissionLabel(permission))
+      .getOrElse("Current User" -> "None")
     val anonymousMatch = permissionLogic.matched(name, "")
-      .map(permission => s"Anonymous match: ${permissionLabel(permission)}")
-      .getOrElse("Anonymous match: none")
+      .map(permission => "Anonymous User" -> permissionLabel(permission))
+      .getOrElse("Anonymous User" -> "None")
     val targetMatches = if (matchingTargetPermissions.isEmpty) {
-      Seq("Target-matching permissions: none")
+      Seq("Page Matching" -> "None")
     } else {
-      matchingTargetPermissions.map(permission => s"Target match: ${permissionLabel(permission)}")
+      matchingTargetPermissions.map(permission => "Page Matching" -> permissionLabel(permission))
     }
 
     currentMatch +: anonymousMatch +: targetMatches

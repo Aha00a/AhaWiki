@@ -6,7 +6,8 @@ version := "1.0-SNAPSHOT"
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.13.2"
-scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:reflectiveCalls", "-language:postfixOps")
+scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:reflectiveCalls", "-language:postfixOps", "-target:jvm-1.8")
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
 
 libraryDependencies += guice
 libraryDependencies += jdbc

@@ -648,11 +648,41 @@ kbd:hover > kbd {
   border: 1px solid #aaaa00;
   padding: 10px;
 }
+.AhaWiki .flash .permissionRestrictionFlash {
+  line-height: 1.45;
+}
+.AhaWiki .flash .permissionRestrictionTitle {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
 .AhaWiki .flash .permissionRestrictionDetail {
-  margin-top: 8px;
   font-size: 0.9em;
-  line-height: 1.5;
   word-break: break-word;
+}
+.AhaWiki .flash .permissionRestrictionDetail dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 10px;
+  margin: 0;
+}
+.AhaWiki .flash .permissionRestrictionDetail dt {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.AhaWiki .flash .permissionRestrictionDetail dd {
+  margin: 0;
+}
+.AhaWiki .flash .permissionRestrictionDetail dd span {
+  color: rgba(0, 0, 0, 0.68);
+}
+@media (max-width: 767px) {
+  .AhaWiki .flash .permissionRestrictionDetail dl {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .AhaWiki .flash .permissionRestrictionDetail dd {
+    margin-bottom: 6px;
+  }
 }
 .AhaWiki .flash .warning {
   color: #442200;

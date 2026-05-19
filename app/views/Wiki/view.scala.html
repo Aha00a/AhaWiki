@@ -455,14 +455,31 @@
 } {
     @if(showPermissionFlash) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
-            <div class="info">
-                This page has permission restrictions applied.
+            <div class="info permissionRestrictionFlash">
+                <div class="permissionRestrictionTitle">This page has permission restrictions applied.</div>
                 @permissionDetail.map { detail =>
                     <div class="permissionRestrictionDetail">
-                        <div><strong>Current user:</strong> @detail.actorLabel</div>
-                        <div><strong>read:</strong> @if(detail.currentReadable) { allowed } else { denied } (@detail.tableReadSource)</div>
-                        <div><strong>write:</strong> @if(detail.currentWritable) { allowed } else { denied } (@detail.tableWriteSource)</div>
-                        <div><strong>anonymous read:</strong> @if(detail.anonymousReadable) { allowed } else { denied } (@detail.tableAnonymousReadSource)</div>
+                        <dl>
+                            <dt>Current User</dt>
+                            <dd>
+                                <strong>@detail.actorLabel</strong>
+                            </dd>
+                            <dt>Read</dt>
+                            <dd>
+                                <strong>@if(detail.currentReadable) { Allowed } else { Denied }</strong>
+                                <span>@detail.tableReadSource</span>
+                            </dd>
+                            <dt>Write</dt>
+                            <dd>
+                                <strong>@if(detail.currentWritable) { Allowed } else { Denied }</strong>
+                                <span>@detail.tableWriteSource</span>
+                            </dd>
+                            <dt>Anonymous Read</dt>
+                            <dd>
+                                <strong>@if(detail.anonymousReadable) { Allowed } else { Denied }</strong>
+                                <span>@detail.tableAnonymousReadSource</span>
+                            </dd>
+                        </dl>
                     </div>
                 }
             </div>

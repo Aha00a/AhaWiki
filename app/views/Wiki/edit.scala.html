@@ -1,4 +1,4 @@
-@(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)], canManagePagePermission: Boolean, pagePermissionDefault: String, pagePermissionSummary: Seq[String], isNewPage: Boolean)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
+@(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)], canManagePagePermission: Boolean, pagePermissionDefault: String, pagePermissionSummary: Seq[(String, String)], isNewPage: Boolean)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
 @permissionSelected(mode: String) = @{ if(pagePermissionDefault == mode) "selected" else "" }
 @hotKeyDescription(key: String) = @{
@@ -267,27 +267,49 @@
         }
         .pagePermissionControl {
             margin: 0 0 8px;
-            padding: 8px 10px;
+            padding: 10px 12px;
             border: 1px solid #ddd;
             border-radius: 6px;
             background: #fafafa;
             font-size: 12px;
             display: flex;
-            gap: 8px;
+            gap: 8px 12px;
             align-items: center;
             flex-wrap: wrap;
         }
+        .pagePermissionControl label {
+            font-weight: 700;
+        }
         .pagePermissionControl select {
             max-width: 180px;
+            margin-left: 4px;
         }
         .pagePermissionSummary {
-            color: #666;
+            color: #444;
             margin: 0;
-            padding-left: 18px;
             flex-basis: 100%;
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            gap: 4px 10px;
         }
-        .pagePermissionSummary li {
-            margin: 2px 0;
+        .pagePermissionSummary dt {
+            color: #555;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .pagePermissionSummary dd {
+            margin: 0;
+            min-width: 0;
+            word-break: break-word;
+        }
+        @@media (max-width: 720px) {
+            .pagePermissionSummary {
+                grid-template-columns: 1fr;
+                gap: 2px;
+            }
+            .pagePermissionSummary dd {
+                margin-bottom: 6px;
+            }
         }
         @@keyframes previewSyncBlinkAnimation {
             0% { background-color: rgba(255, 235, 59, 0); }
@@ -380,11 +402,12 @@
                                             <option value="privateWrite" @permissionSelected("privateWrite")>Only me can edit</option>
                                         </select>
                                     </label>
-                                    <ul class="pagePermissionSummary">
-                                        @pagePermissionSummary.map { summaryLine =>
-                                            <li>@summaryLine</li>
+                                    <dl class="pagePermissionSummary">
+                                        @pagePermissionSummary.map { case (label, value) =>
+                                            <dt>@label</dt>
+                                            <dd>@value</dd>
                                         }
-                                    </ul>
+                                    </dl>
                                 </div>
                             }
                             <details class="editHelp">

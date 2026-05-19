@@ -499,11 +499,49 @@ kbd {
 			padding: 10px;
 		}
 
+		.permissionRestrictionFlash {
+			line-height: 1.45;
+		}
+
+		.permissionRestrictionTitle {
+			font-weight: 700;
+			margin-bottom: 8px;
+		}
+
 		.permissionRestrictionDetail {
-			margin-top: 8px;
 			font-size: 0.9em;
-			line-height: 1.5;
 			word-break: break-word;
+
+			dl {
+				display: grid;
+				grid-template-columns: max-content minmax(0, 1fr);
+				gap: 4px 10px;
+				margin: 0;
+			}
+
+			dt {
+				font-weight: 700;
+				white-space: nowrap;
+			}
+
+			dd {
+				margin: 0;
+
+				span {
+					color: fade(#000, 68%);
+				}
+			}
+
+			@media @widthTablet {
+				dl {
+					grid-template-columns: 1fr;
+					gap: 2px;
+				}
+
+				dd {
+					margin-bottom: 6px;
+				}
+			}
 		}
 
 		.warning {

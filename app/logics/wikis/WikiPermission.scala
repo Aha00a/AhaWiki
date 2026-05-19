@@ -53,17 +53,17 @@ object WikiPermissionDetail {
   def permissionLabel(permission: Permission): String = {
     val target = if (permission.target.isEmpty) "*" else permission.target
     val actor = if (permission.actor.isEmpty) "*" else permission.actor
-    s"Permission table: target=${permission.targetType}($target), actor=${permission.actorType}($actor), action=${actionLabel(permission.action)}"
+    s"${permission.targetType}($target), ${permission.actorType}($actor), ${actionLabel(permission.action)}"
   }
 
   def actionLabel(action: Int): String = action match {
-    case Permission.none => "none"
-    case Permission.read => "read"
-    case Permission.edit => "edit"
-    case Permission.create => "create"
-    case Permission.upload => "upload"
-    case Permission.delete => "delete"
-    case Permission.admin => "admin"
+    case Permission.none => "None"
+    case Permission.read => "Read"
+    case Permission.edit => "Edit"
+    case Permission.create => "Create"
+    case Permission.upload => "Upload"
+    case Permission.delete => "Delete"
+    case Permission.admin => "Admin"
     case _ => action.toString
   }
 }
