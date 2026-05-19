@@ -72,5 +72,5 @@ class ContextSite()(
 
   def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)
 
-  def toWikiContext(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
+  def toContextWikiPage(seqName: Seq[String], renderingMode: RenderingMode) = new ContextWikiPage(seqName, renderingMode)
 }
