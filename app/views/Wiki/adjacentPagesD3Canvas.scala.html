@@ -56,6 +56,13 @@
         var minScale = 0.1;
         var maxScale = 2.5;
         var maxPreloadImageCount = 120;
+        var maxImageRetryCount = 2;
+        var fallbackImagePath = '/assets/img/attachmentFallback.svg';
+        var fallbackImage = new Image();
+        fallbackImage.onload = function() {
+            draw();
+        };
+        fallbackImage.src = fallbackImagePath;
         var $wrapper = $('.aspectRatioWrapper.@(id)');
 
         function isFullscreen() {
@@ -211,26 +218,34 @@
             if(state.imageCache.size >= maxPreloadImageCount && !state.imageCache.has(node.imageUrl)) return;
 
             var cached = state.imageCache.get(node.imageUrl);
-            if(cached && cached.complete && !cached._failed && cached.naturalWidth > 0) return;
+            if(cached && (cached._loading || cached._retryScheduled || cached._failed || (cached.complete && cached.naturalWidth > 0))) return;
 
             var retryCount = state.imageRetryCount.get(node.imageUrl) || 0;
-            if(retryCount >= 5) return;
-
             var img = new Image();
+            img._loading = true;
             img._failed = false;
+            img._retryScheduled = false;
             img.onload = function() {
+                img._loading = false;
                 img._failed = false;
+                img._retryScheduled = false;
                 state.imageRetryCount.delete(node.imageUrl);
                 draw();
             };
             img.onerror = function() {
-                img._failed = true;
+                img._loading = false;
                 var nextRetryCount = (state.imageRetryCount.get(node.imageUrl) || 0) + 1;
                 state.imageRetryCount.set(node.imageUrl, nextRetryCount);
-                if(nextRetryCount < 5) {
+                if(nextRetryCount <= maxImageRetryCount) {
+                    img._retryScheduled = true;
                     setTimeout(function() {
+                        state.imageCache.delete(node.imageUrl);
                         ensureNodeImage(node);
                     }, 300 * nextRetryCount);
+                } else {
+                    img._retryScheduled = false;
+                    img._failed = true;
+                    draw();
                 }
             };
 
@@ -269,11 +284,23 @@
             return !!(cached && cached.complete && !cached._failed && cached.naturalWidth > 0);
         }
 
+        function hasFallbackNodeImage(node) {
+            if(!node || !node.imageUrl || !state.showThumbnails) return false;
+            var cached = state.imageCache.get(node.imageUrl);
+            return !!(cached && cached._failed && fallbackImage.complete && fallbackImage.naturalWidth > 0);
+        }
+
+        function getDrawableNodeImage(node) {
+            if(hasLoadedNodeImage(node)) return state.imageCache.get(node.imageUrl);
+            if(hasFallbackNodeImage(node)) return fallbackImage;
+            return null;
+        }
+
         function getNodeRadius(node, isHover) {
             var degree = state.nodeDegree.get(node.id) || 0;
             var r = (Math.min(18, radiusDefault + Math.log(degree + 1) * 2)) * state.nodeScale;
             if(node.id === state.rootNodeName || isHover) r = Math.max(r, radiusHighlight * state.nodeScale);
-            if(hasLoadedNodeImage(node)) r *= imageNodeRadiusMultiplier;
+            if(getDrawableNodeImage(node)) r *= imageNodeRadiusMultiplier;
             return r;
         }
 
@@ -330,8 +357,8 @@
 
                 if(state.showThumbnails && n.imageUrl) {
                     ensureNodeImage(n);
-                    if(hasLoadedNodeImage(n)) {
-                        var cached = state.imageCache.get(n.imageUrl);
+                    var image = getDrawableNodeImage(n);
+                    if(image) {
                         var clipRadius = Math.max(2, rScreen - 1.2);
                         ctx.save();
                         ctx.beginPath();
@@ -339,7 +366,7 @@
                         ctx.clip();
                         ctx.fillStyle = '#fff';
                         ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
-                        drawImageCover(cached, p.x - rScreen, p.y - rScreen, rScreen * 2);
+                        drawImageCover(image, p.x - rScreen, p.y - rScreen, rScreen * 2);
                         ctx.restore();
                     }
                 }
