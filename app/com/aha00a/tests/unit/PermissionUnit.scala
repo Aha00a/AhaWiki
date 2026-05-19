@@ -72,5 +72,34 @@ object PermissionUnit {
       assertEquals(permission.actorLevel, 3)
       assertEquals(permission.targetLevel, 2)
     }
+    {
+      assertEquals(Permission.Action.none.id, Permission.none)
+      assertEquals(Permission.Action.read.id, Permission.read)
+      assertEquals(Permission.Action.edit.id, Permission.edit)
+      assertEquals(Permission.Action.create.id, Permission.create)
+      assertEquals(Permission.Action.upload.id, Permission.upload)
+      assertEquals(Permission.Action.delete.id, Permission.delete)
+      assertEquals(Permission.Action.admin.id, Permission.admin)
+      assertEquals(Permission.parseAction("read"), Right(Permission.read))
+      assertEquals(Permission.parseAction("4"), Right(Permission.create))
+      assert(Permission.parseAction("3").isLeft)
+      assertEquals(Permission.parseTargetType("StartsWith"), Right(TargetType.StartsWith))
+      assertEquals(Permission.parseActorType("Domain"), Right(ActorType.Domain))
+    }
+    {
+      val createPermission = Permission("", TargetType.All, "", ActorType.All, Permission.create)
+      assert(createPermission.permitted(Permission.read))
+      assert(createPermission.permitted(Permission.edit))
+      assert(createPermission.permitted(Permission.create))
+      assert(!createPermission.permitted(Permission.upload))
+      assert(!createPermission.permitted(Permission.delete))
+
+      val adminPermission = Permission("", TargetType.All, "", ActorType.All, Permission.admin)
+      assert(adminPermission.permitted(Permission.read))
+      assert(adminPermission.permitted(Permission.edit))
+      assert(adminPermission.permitted(Permission.create))
+      assert(adminPermission.permitted(Permission.upload))
+      assert(adminPermission.permitted(Permission.delete))
+    }
   }
 }

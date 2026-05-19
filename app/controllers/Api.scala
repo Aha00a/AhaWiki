@@ -22,6 +22,7 @@ import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryApiLinks
 import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
+import logics.PermissionLogic
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.SiteThemeLogic
@@ -43,6 +44,7 @@ import models.tables.PageWithoutContentWithSize
 import models.tables.Site
 import models.tables.UserSite
 import models.tables.Config
+import models.tables.Permission
 import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -148,6 +150,47 @@ class Api @Inject()(
   private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
   private def parseHexColorValue(v: Option[String]): String = v.flatMap(SiteThemeLogic.normalizeHexColor).getOrElse("")
 
+  private def permissionJson(permission: Permission): Json = Json.obj(
+    "target" -> Json.fromString(permission.target),
+    "targetType" -> Json.fromString(permission.targetType.toString),
+    "actor" -> Json.fromString(permission.actor),
+    "actorType" -> Json.fromString(permission.actorType.toString),
+    "action" -> Json.fromInt(permission.action),
+    "actionName" -> Json.fromString(Permission.Action.values.find(_.id == permission.action).map(_.toString).getOrElse(permission.action.toString)),
+    "specificity" -> Json.fromInt(permission.specificity),
+    "targetLevel" -> Json.fromInt(permission.targetLevel),
+    "actorLevel" -> Json.fromInt(permission.actorLevel),
+  )
+
+  private def parsePermissionPayload(form: Map[String, Seq[String]], query: String => Option[String] = _ => None): Either[String, Permission] = {
+    def field(name: String): String = form.get(name).flatMap(_.headOption).orElse(query(name)).map(_.trim).getOrElse("")
+    for {
+      targetType <- Permission.parseTargetType(field("targetType"))
+      actorType <- Permission.parseActorType(field("actorType"))
+      action <- Permission.parseAction(field("action"))
+    } yield Permission(
+      target = if (targetType == Permission.TargetType.All) "" else field("target"),
+      targetType = targetType,
+      actor = if (actorType == Permission.ActorType.All || actorType == Permission.ActorType.Login) "" else field("actor"),
+      actorType = actorType,
+      action = action,
+    )
+  }
+
+  private def parsePermissionKey(query: String => Option[String]): Either[String, Permission] = {
+    def field(name: String): String = query(name).map(_.trim).getOrElse("")
+    for {
+      targetType <- Permission.parseTargetType(field("targetType"))
+      actorType <- Permission.parseActorType(field("actorType"))
+    } yield Permission(
+      target = if (targetType == Permission.TargetType.All) "" else field("target"),
+      targetType = targetType,
+      actor = if (actorType == Permission.ActorType.All || actorType == Permission.ActorType.Login) "" else field("actor"),
+      actorType = actorType,
+      action = Permission.none,
+    )
+  }
+
   private def resolveAdminTargetSite(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
     siteSeqValue
       .flatMap(parseSiteSeq)
@@ -251,6 +294,126 @@ class Api @Inject()(
           }
 
         Ok(sites.asJson)
+      }
+    }
+  }
+
+  def adminPermissions(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            val permissions = Permission.select()
+            Ok(Json.obj(
+              "siteSeq" -> Json.fromLong(site.seq),
+              "permissions" -> Json.fromValues(permissions.map(permissionJson)),
+            ))
+          }
+      }
+    }
+  }
+
+  def adminUpsertPermission(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+          parsePermissionPayload(form) match {
+            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
+            case Right(permission) =>
+              database.withConnection { implicit connection =>
+                implicit val implicitSite: Site = site
+                Permission.upsert(permission)
+                Ok(Json.obj(
+                  "ok" -> Json.fromBoolean(true),
+                  "siteSeq" -> Json.fromLong(site.seq),
+                  "permission" -> permissionJson(permission),
+                ))
+              }
+          }
+      }
+    }
+  }
+
+  def adminDeletePermission(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          parsePermissionKey(request.getQueryString) match {
+            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
+            case Right(permission) =>
+              database.withConnection { implicit connection =>
+                implicit val implicitSite: Site = site
+                val deletedCount = Permission.delete(permission)
+                Ok(Json.obj(
+                  "ok" -> Json.fromBoolean(true),
+                  "siteSeq" -> Json.fromLong(site.seq),
+                  "deletedCount" -> Json.fromInt(deletedCount),
+                ))
+              }
+          }
+      }
+    }
+  }
+
+  def adminPermissionDiagnose(seq: Long, pageName: String, actor: String, action: String): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          Permission.parseAction(action) match {
+            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
+            case Right(requiredAction) =>
+              database.withConnection { implicit connection =>
+                implicit val implicitSite: Site = site
+                val logic = new PermissionLogic(Permission.select())
+                val matched = logic.matched(pageName, actor)
+                Ok(Json.obj(
+                  "siteSeq" -> Json.fromLong(site.seq),
+                  "pageName" -> Json.fromString(pageName),
+                  "actor" -> Json.fromString(actor),
+                  "requiredAction" -> Json.fromInt(requiredAction),
+                  "permitted" -> Json.fromBoolean(matched.exists(_.permitted(requiredAction))),
+                  "matchedPermission" -> matched.map(permissionJson).getOrElse(Json.Null),
+                ))
+              }
+          }
+      }
+    }
+  }
+
+  def adminPermissionAudit: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        val rows = Permission.auditSites()
+        Ok(Json.obj(
+          "sites" -> Json.fromValues(rows.map { row =>
+            Json.obj(
+              "siteSeq" -> Json.fromLong(row.siteSeq),
+              "siteName" -> Json.fromString(row.siteName),
+              "permissionCount" -> Json.fromLong(row.permissionCount),
+              "hasAnyPermission" -> Json.fromBoolean(row.permissionCount > 0),
+              "hasPublicRead" -> Json.fromBoolean(row.publicReadRows > 0),
+              "hasLoginCreate" -> Json.fromBoolean(row.loginCreateRows > 0),
+              "publicReadRows" -> Json.fromLong(row.publicReadRows),
+              "loginCreateRows" -> Json.fromLong(row.loginCreateRows),
+            )
+          }),
+        ))
       }
     }
   }

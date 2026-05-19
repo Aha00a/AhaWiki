@@ -62,7 +62,17 @@ object Permission {
     val All, Login, Exact, Domain = Value
   }
 
-  // TODO: consider enum
+  object Action extends Enumeration {
+    type Action = Value
+    val none: Action = Value(0, "none")
+    val read: Action = Value(1, "read")
+    val edit: Action = Value(2, "edit")
+    val create: Action = Value(4, "create")
+    val upload: Action = Value(8, "upload")
+    val delete: Action = Value(16, "delete")
+    val admin: Action = Value(255, "admin")
+  }
+
   val none = 0
   val read = 1
   val edit = 2
@@ -70,17 +80,6 @@ object Permission {
   val upload = 8
   val delete = 16
   val admin = 255
-
-//  object Action extends Enumeration {
-//    type Action = Value;
-//    val none: Action = Value(0)
-//    val read: Action = Value(1)
-//    val edit: Action = Value(2)
-//    val create: Action = Value(4)
-//    val upload: Action = Value(8)
-//    val delete: Action = Value(16)
-//    val admin: Action = Value(255)
-//  }
 
 
   def fromRow(row: (String, TargetType.Value, String, ActorType.Value, Int)): Permission = {
@@ -125,9 +124,74 @@ object Permission {
   private val targetTypeParser: RowParser[TargetType.Value] = str("targetType").map(TargetType.withName)
   private val actorTypeParser: RowParser[ActorType.Value] = str("actorType").map(ActorType.withName)
 
+  def parseTargetType(value: String): Either[String, TargetType.Value] = {
+    TargetType.values.find(_.toString == value.trim).toRight(s"targetType must be one of: ${TargetType.values.mkString(", ")}")
+  }
+
+  def parseActorType(value: String): Either[String, ActorType.Value] = {
+    ActorType.values.find(_.toString == value.trim).toRight(s"actorType must be one of: ${ActorType.values.mkString(", ")}")
+  }
+
+  def parseAction(value: String): Either[String, Int] = {
+    val normalized = value.trim
+    Action.values.find(_.toString == normalized).map(_.id)
+      .orElse(scala.util.Try(normalized.toInt).toOption.filter(Action.values.map(_.id).contains))
+      .toRight(s"action must be one of: ${Action.values.map(a => s"${a.toString}(${a.id})").mkString(", ")}")
+  }
+
   def select()(implicit connection: Connection, site: Site): List[Permission] = {
     SQL"SELECT target, targetType, actor, actorType, action FROM Permission WHERE site = ${site.seq}"
       .as(str("target") ~ targetTypeParser ~ str("actor") ~ actorTypeParser ~ int("action") *).map(flatten)
       .map(Permission.fromRow)
+  }
+
+  def upsert(permission: Permission)(implicit connection: Connection, site: Site): Int = {
+    SQL"""
+      INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+      VALUES (${site.seq}, ${permission.target}, ${permission.targetType.toString}, ${permission.actor}, ${permission.actorType.toString}, ${permission.action})
+      ON DUPLICATE KEY UPDATE
+        action = VALUES(action),
+        dateUpdated = CURRENT_TIMESTAMP
+    """.executeUpdate()
+  }
+
+  def delete(permission: Permission)(implicit connection: Connection, site: Site): Int = {
+    SQL"""
+      DELETE FROM Permission
+      WHERE site = ${site.seq}
+        AND target = ${permission.target}
+        AND targetType = ${permission.targetType.toString}
+        AND actor = ${permission.actor}
+        AND actorType = ${permission.actorType.toString}
+    """.executeUpdate()
+  }
+
+  case class SiteAudit(siteSeq: Long, siteName: String, permissionCount: Long, publicReadRows: Long, loginCreateRows: Long)
+
+  private val siteAuditParser =
+    long("siteSeq") ~ str("siteName") ~ long("permissionCount") ~ long("publicReadRows") ~ long("loginCreateRows") map {
+      case siteSeq ~ siteName ~ permissionCount ~ publicReadRows ~ loginCreateRows =>
+        SiteAudit(siteSeq, siteName, permissionCount, publicReadRows, loginCreateRows)
+    }
+
+  def auditSites()(implicit connection: Connection): Seq[SiteAudit] = {
+    SQL"""
+      SELECT
+        S.seq AS siteSeq,
+        S.name AS siteName,
+        COUNT(P.site) AS permissionCount,
+        COALESCE(SUM(CASE
+          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'All' AND P.actor = '' AND P.action >= $read THEN 1
+          ELSE 0
+        END), 0) AS publicReadRows,
+        COALESCE(SUM(CASE
+          WHEN P.targetType = 'All' AND P.target = '' AND P.actorType = 'Login' AND P.actor = '' AND P.action >= $create THEN 1
+          ELSE 0
+        END), 0) AS loginCreateRows
+      FROM Site S
+      LEFT JOIN Permission P ON P.site = S.seq
+      GROUP BY S.seq, S.name
+      ORDER BY S.seq
+    """.as(siteAuditParser.*)
   }
 }

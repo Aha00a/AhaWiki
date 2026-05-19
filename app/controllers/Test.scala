@@ -9,10 +9,11 @@ import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.Crawler
+import logics.PermissionLogic
 import logics.SiteLogic
-import logics.wikis.WikiPermission
 import logics.wikis.interpreters.InterpreterSchema
 import models._
+import models.tables.Permission
 import models.tables.Site
 import play.api.{Configuration, Environment}
 import play.api.Logging
@@ -154,28 +155,34 @@ class Test @Inject()(implicit val
     Ok(views.html.Test.gradient(""))
   }
 
-  def permission: Action[AnyContent] = Action { implicit request =>database.withConnection { implicit connection =>
+  def permission: Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
+    val siteSeq = request.getQueryString("siteSeq").flatMap(v => scala.util.Try(v.trim.toLong).toOption)
+    implicit val site: Site = siteSeq.flatMap(SiteLogic.get(_)(database)).getOrElse(SiteLogic.get(request.host))
+    val pageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
+    val actor = request.getQueryString("actor").map(_.trim).getOrElse("")
+    val action = request.getQueryString("action").map(_.trim).filter(_.nonEmpty).getOrElse("read")
+    val requiredAction = Permission.parseAction(action).getOrElse(Permission.read)
+    val logic = new PermissionLogic(Permission.select())
+    val matched = logic.matched(pageName, actor)
 
-    import models.RequestWrapper
-    import models.tables.Site
-    implicit val site: Site = SiteLogic.get(request.host)
-    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
-    implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-
-    val q = "#!read"
-    val wikiPermission = WikiPermission()
-
-    val map = q.toOption.map(
-      q => {
-        import models.tables.SearchResult
-        val seqSearchResult: Seq[SearchResult] = models.tables.Page.pageSearch(q)
-        Map(
-          "readable" -> seqSearchResult.filter(sr => wikiPermission.isReadable(sr.name)).map(_.name),
-          "writable" -> seqSearchResult.filter(sr => wikiPermission.isWritable(sr.name, Some(PageContent(sr.content)))).map(_.name),
+    val json = io.circe.Json.obj(
+      "siteSeq" -> io.circe.Json.fromLong(site.seq),
+      "pageName" -> io.circe.Json.fromString(pageName),
+      "actor" -> io.circe.Json.fromString(actor),
+      "requiredAction" -> io.circe.Json.fromInt(requiredAction),
+      "permitted" -> io.circe.Json.fromBoolean(matched.exists(_.permitted(requiredAction))),
+      "matchedPermission" -> matched.map { permission =>
+        io.circe.Json.obj(
+          "targetType" -> io.circe.Json.fromString(permission.targetType.toString),
+          "target" -> io.circe.Json.fromString(permission.target),
+          "actorType" -> io.circe.Json.fromString(permission.actorType.toString),
+          "actor" -> io.circe.Json.fromString(permission.actor),
+          "action" -> io.circe.Json.fromInt(permission.action),
         )
-      }
-    ).getOrElse(Map())
+      }.getOrElse(io.circe.Json.Null),
+      "permissionCount" -> io.circe.Json.fromInt(logic.seq.size),
+    )
 
-    Ok(map.asJson)
+    Ok(json)
   }}
 }

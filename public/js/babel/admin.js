@@ -18,6 +18,7 @@ import {
   Paper as Paper2,
   Pagination,
   Progress as Progress2,
+  Select,
   SimpleGrid,
   Stack as Stack3,
   Table as Table3,
@@ -38,7 +39,7 @@ function fetchJson(url) {
   });
 }
 function parseSiteSeqFromPathname(pathname) {
-  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|AccessLog))?$/);
+  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog))?$/);
   if (!matched) return "";
   const siteSeq = Number.parseInt(matched[1], 10);
   return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -68,7 +69,7 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
     if (link.key === "crawler-cache") {
       return /* @__PURE__ */ React.createElement(
         NavLink,
@@ -176,6 +177,20 @@ function Navigation({ activePage, onNavigate }) {
     /* @__PURE__ */ React.createElement(
       NavLink,
       {
+        href: `/Admin/Site/${site.seq}/Permission`,
+        label: "Permission",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-key", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/Site/${site.seq}/Permission`,
+        variant: currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Permission`);
+        }
+      }
+    ),
+    /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
         href: `/Admin/${site.seq}/AccessLog`,
         label: "AccessLog",
         leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }),
@@ -261,6 +276,9 @@ function SiteListCard({ sites, onNavigate }) {
 var LOG_PREFIX = "[AdminUI]";
 var CRAWLER_CACHE_PAGE_SIZE = 20;
 var ADMIN_PAGE_META_PAGE_SIZE = 20;
+var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith"];
+var PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
+var PERMISSION_ACTION_OPTIONS = ["none", "read", "edit", "create", "upload", "delete", "admin"];
 function logInfo(...args) {
   console.log(LOG_PREFIX, ...args);
 }
@@ -291,6 +309,9 @@ function routeToPage(pathname) {
   }
   if (/^\/Admin\/Site\/\d+\/Cache$/.test(pathname)) {
     return "site-cache";
+  }
+  if (/^\/Admin\/Site\/\d+\/Permission$/.test(pathname)) {
+    return "site-permission";
   }
   if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
     return "site-detail";
@@ -358,7 +379,7 @@ function parseUserSeqFromPathname(pathname) {
   return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 function parseSiteSeqFromPathname2(pathname) {
-  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission))?$/);
   if (!matched) {
     return "";
   }
@@ -380,7 +401,7 @@ function pageTitleByKey(page) {
   if (page === "all-users" || page === "user-views") {
     return "User";
   }
-  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "sites" || page === "users") {
+  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites" || page === "users") {
     return "Site";
   }
   if (page === "access-logs") {
@@ -470,6 +491,10 @@ function useAdminData(page) {
   const [crawlerSortOrder, setCrawlerSortOrder] = useState2("desc");
   const [adminPageMetaRows, setAdminPageMetaRows] = useState2([]);
   const [adminPageMetaCount, setAdminPageMetaCount] = useState2(0);
+  const [permissionRows, setPermissionRows] = useState2([]);
+  const [permissionDiagnose, setPermissionDiagnose] = useState2(null);
+  const [savingPermission, setSavingPermission] = useState2(false);
+  const [deletingPermissionKey, setDeletingPermissionKey] = useState2("");
   const loadAdminPageMetaList = useCallback(async ({
     siteSeq,
     page: page2 = 1,
@@ -494,6 +519,82 @@ function useAdminData(page) {
     const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
     setAdminPageMetaRows(rows);
     setAdminPageMetaCount(Number(data?.count ?? rows.length));
+  }, []);
+  const loadPermissions = useCallback(async (siteSeq) => {
+    if (!siteSeq) {
+      setPermissionRows([]);
+      return;
+    }
+    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
+    setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
+  }, []);
+  const savePermission = useCallback(async (siteSeq, permission) => {
+    if (!siteSeq) return false;
+    setSavingPermission(true);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
+      payload.set(csrfToken.name, csrfToken.value);
+      payload.set("csrfToken", csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
+        body: payload.toString()
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      await loadPermissions(siteSeq);
+      return true;
+    } catch (caughtError) {
+      logError("permission:save:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+      return false;
+    } finally {
+      setSavingPermission(false);
+    }
+  }, [loadPermissions]);
+  const deletePermission = useCallback(async (siteSeq, permission) => {
+    if (!siteSeq || !permission) return;
+    const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
+    setDeletingPermissionKey(key);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const params = new URLSearchParams({
+        targetType: permission.targetType ?? "",
+        target: permission.target ?? "",
+        actorType: permission.actorType ?? "",
+        actor: permission.actor ?? ""
+      });
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      await loadPermissions(siteSeq);
+    } catch (caughtError) {
+      logError("permission:delete:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+    } finally {
+      setDeletingPermissionKey("");
+    }
+  }, [loadPermissions]);
+  const diagnosePermission = useCallback(async (siteSeq, pageName, actor, action) => {
+    if (!siteSeq) return;
+    const params = new URLSearchParams({
+      pageName: pageName ?? "",
+      actor: actor ?? "",
+      action: action || "read"
+    });
+    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
+    setPermissionDiagnose(data);
   }, []);
   const loadAccessLogs = useCallback(async ({
     page: page2 = 1,
@@ -1128,6 +1229,14 @@ function useAdminData(page) {
     adminPageMetaRows,
     adminPageMetaCount,
     loadAdminPageMetaList,
+    permissionRows,
+    permissionDiagnose,
+    loadPermissions,
+    savePermission,
+    deletePermission,
+    diagnosePermission,
+    savingPermission,
+    deletingPermissionKey,
     error
   };
 }
@@ -1200,6 +1309,14 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     adminPageMetaRows,
     adminPageMetaCount,
     loadAdminPageMetaList,
+    permissionRows,
+    permissionDiagnose,
+    loadPermissions,
+    savePermission,
+    deletePermission,
+    diagnosePermission,
+    savingPermission,
+    deletingPermissionKey,
     error
   } = useAdminData(page);
   const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1221,6 +1338,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [adminPageMetaSearch, setAdminPageMetaSearch] = useState2("");
   const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState2("dateUpdated");
   const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState2("desc");
+  const [permissionForm, setPermissionForm] = useState2({ targetType: "All", target: "", actorType: "All", actor: "", action: "read" });
+  const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState2({ pageName: "", actor: "", action: "read" });
   const [selectedCalculatePageName, setSelectedCalculatePageName] = useState2("");
   const [siteCalculateMessage, setSiteCalculateMessage] = useState2("");
   const selectedSite = useMemo2(
@@ -1267,7 +1386,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
   const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
   useEffect2(() => {
-    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
+    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission") {
       return;
     }
     const siteSeqByPath = parseSiteSeqFromPathname2(pathname);
@@ -1278,7 +1397,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }
   }, [page, pathname, selectedSiteSeq]);
   useEffect2(() => {
-    if ((page === "site-detail" || page === "site-config" || page === "site-cache") && selectedSiteSeq) {
+    if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") && selectedSiteSeq) {
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
       loadAdminSitePageNames(selectedSiteSeq).then((pageNames) => {
@@ -1296,8 +1415,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       }).catch((caughtError) => {
         logError("site:pageMetaList:error", selectedSiteSeq, caughtError);
       });
+      loadPermissions(selectedSiteSeq).catch((caughtError) => {
+        logError("site:permissions:error", selectedSiteSeq, caughtError);
+      });
     }
-  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList]);
+  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
   useEffect2(() => {
     if (page !== "access-logs") {
       return;
@@ -1389,8 +1511,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
       })
     ));
   }
-  if (page === "site-detail" || page === "site-config" || page === "site-cache") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "filled", onClick: () => {
+  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") {
+    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))))), page === "site-detail" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "filled", onClick: () => {
       setAdminPageMetaPage(1);
       setAdminPageMetaSearch(adminPageMetaSearchInput);
       loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearchInput, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });
@@ -1468,7 +1590,46 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
         minHeight: 320
       }
-    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)), isSiteConfigPage ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Favicon"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 6 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React5.createElement(
+    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)) : null, page === "site-permission" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Permission"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, permissionRows.length, " rows")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: permissionForm.targetType, onChange: (value) => setPermissionForm({ ...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "target", value: permissionForm.target, onChange: (event) => setPermissionForm({ ...permissionForm, target: event.currentTarget.value }), placeholder: "page name or prefix" }), /* @__PURE__ */ React5.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: permissionForm.actorType, onChange: (value) => setPermissionForm({ ...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionForm.actor, onChange: (event) => setPermissionForm({ ...permissionForm, actor: event.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionForm.action, onChange: (value) => setPermissionForm({ ...permissionForm, action: value ?? "read" }) })), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(
+      Button2,
+      {
+        size: "xs",
+        loading: savingPermission,
+        onClick: async () => {
+          const saved = await savePermission(selectedSiteSeq, permissionForm);
+          if (saved) {
+            setPermissionForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "read" });
+          }
+        }
+      },
+      "Save"
+    )), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "pageName", value: permissionDiagnoseForm.pageName, onChange: (event) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, pageName: event.currentTarget.value }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionDiagnoseForm.actor, onChange: (event) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, actor: event.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionDiagnoseForm.action, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, action: value ?? "read" }) }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "light", onClick: () => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React5.createElement(Group4, { gap: "xs" }, /* @__PURE__ */ React5.createElement(Badge4, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${permissionDiagnose.matchedPermission.actionName}` : "No matching row"))) : null, /* @__PURE__ */ React5.createElement(
+      DataTable,
+      {
+        withTableBorder: true,
+        borderRadius: "md",
+        striped: true,
+        highlightOnHover: true,
+        records: permissionRows,
+        columns: [
+          { accessor: "targetType", title: "Target Type" },
+          { accessor: "target", title: "Target", render: (row) => row.target || "*" },
+          { accessor: "actorType", title: "Actor Type" },
+          { accessor: "actor", title: "Actor", render: (row) => row.actor || "*" },
+          { accessor: "actionName", title: "Action", render: (row) => `${row.actionName} (${row.action})` },
+          { accessor: "specificity", title: "Specificity" },
+          {
+            accessor: "actions",
+            title: "Actions",
+            render: (row) => {
+              const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
+              return /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", onClick: () => setPermissionForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", color: "red", loading: deletingPermissionKey === key, onClick: () => deletePermission(selectedSiteSeq, row) }, "Delete"));
+            }
+          }
+        ],
+        minHeight: 220
+      }
+    )) : null, isSiteConfigPage ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Favicon"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 6 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React5.createElement(
       "img",
       {
         src: siteFaviconUrl,

@@ -17,6 +17,7 @@ import {
     Paper,
     Pagination,
     Progress,
+    Select,
     SimpleGrid,
     Stack,
     Table,
@@ -35,6 +36,9 @@ import {SiteListCard} from "./site/siteWidgets";
 const LOG_PREFIX = "[AdminUI]";
 const CRAWLER_CACHE_PAGE_SIZE = 20;
 const ADMIN_PAGE_META_PAGE_SIZE = 20;
+const PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith"];
+const PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
+const PERMISSION_ACTION_OPTIONS = ["none", "read", "edit", "create", "upload", "delete", "admin"];
 
 function logInfo(...args) {
     console.log(LOG_PREFIX, ...args);
@@ -71,6 +75,9 @@ function routeToPage(pathname) {
     }
     if (/^\/Admin\/Site\/\d+\/Cache$/.test(pathname)) {
         return "site-cache";
+    }
+    if (/^\/Admin\/Site\/\d+\/Permission$/.test(pathname)) {
+        return "site-permission";
     }
     if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
         return "site-detail";
@@ -140,7 +147,7 @@ function parseUserSeqFromPathname(pathname) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache))?$/);
+    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission))?$/);
     if (!matched) {
         return "";
     }
@@ -165,7 +172,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "sites" || page === "users") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites" || page === "users") {
         return "Site";
     }
     if (page === "access-logs") {
@@ -267,6 +274,10 @@ function useAdminData(page) {
     const [crawlerSortOrder, setCrawlerSortOrder] = useState("desc");
     const [adminPageMetaRows, setAdminPageMetaRows] = useState([]);
     const [adminPageMetaCount, setAdminPageMetaCount] = useState(0);
+    const [permissionRows, setPermissionRows] = useState([]);
+    const [permissionDiagnose, setPermissionDiagnose] = useState(null);
+    const [savingPermission, setSavingPermission] = useState(false);
+    const [deletingPermissionKey, setDeletingPermissionKey] = useState("");
     const loadAdminPageMetaList = useCallback(async ({
         siteSeq,
         page = 1,
@@ -293,6 +304,82 @@ function useAdminData(page) {
             : (Array.isArray(data) ? data : []);
         setAdminPageMetaRows(rows);
         setAdminPageMetaCount(Number(data?.count ?? rows.length));
+    }, []);
+    const loadPermissions = useCallback(async (siteSeq) => {
+        if (!siteSeq) {
+            setPermissionRows([]);
+            return;
+        }
+        const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
+        setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
+    }, []);
+    const savePermission = useCallback(async (siteSeq, permission) => {
+        if (!siteSeq) return false;
+        setSavingPermission(true);
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const payload = new URLSearchParams();
+            ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
+            payload.set(csrfToken.name, csrfToken.value);
+            payload.set("csrfToken", csrfToken.value);
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
+                body: payload.toString(),
+            });
+            if (!response.ok) {
+                const payloadJson = await response.json().catch(() => null);
+                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+            }
+            await loadPermissions(siteSeq);
+            return true;
+        } catch (caughtError) {
+            logError("permission:save:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+            return false;
+        } finally {
+            setSavingPermission(false);
+        }
+    }, [loadPermissions]);
+    const deletePermission = useCallback(async (siteSeq, permission) => {
+        if (!siteSeq || !permission) return;
+        const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
+        setDeletingPermissionKey(key);
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const params = new URLSearchParams({
+                targetType: permission.targetType ?? "",
+                target: permission.target ?? "",
+                actorType: permission.actorType ?? "",
+                actor: permission.actor ?? "",
+            });
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
+            });
+            if (!response.ok) {
+                const payloadJson = await response.json().catch(() => null);
+                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+            }
+            await loadPermissions(siteSeq);
+        } catch (caughtError) {
+            logError("permission:delete:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setDeletingPermissionKey("");
+        }
+    }, [loadPermissions]);
+    const diagnosePermission = useCallback(async (siteSeq, pageName, actor, action) => {
+        if (!siteSeq) return;
+        const params = new URLSearchParams({
+            pageName: pageName ?? "",
+            actor: actor ?? "",
+            action: action || "read",
+        });
+        const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
+        setPermissionDiagnose(data);
     }, []);
     const loadAccessLogs = useCallback(async ({
         page = 1,
@@ -964,6 +1051,14 @@ function useAdminData(page) {
         adminPageMetaRows,
         adminPageMetaCount,
         loadAdminPageMetaList,
+        permissionRows,
+        permissionDiagnose,
+        loadPermissions,
+        savePermission,
+        deletePermission,
+        diagnosePermission,
+        savingPermission,
+        deletingPermissionKey,
         error,
     };
 }
@@ -1038,6 +1133,14 @@ function AdminContent({page, onNavigate, pathname, search}) {
         adminPageMetaRows,
         adminPageMetaCount,
         loadAdminPageMetaList,
+        permissionRows,
+        permissionDiagnose,
+        loadPermissions,
+        savePermission,
+        deletePermission,
+        diagnosePermission,
+        savingPermission,
+        deletingPermissionKey,
         error,
     } = useAdminData(page);
     const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1059,6 +1162,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [adminPageMetaSearch, setAdminPageMetaSearch] = useState("");
     const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState("dateUpdated");
     const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState("desc");
+    const [permissionForm, setPermissionForm] = useState({targetType: "All", target: "", actorType: "All", actor: "", action: "read"});
+    const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState({pageName: "", actor: "", action: "read"});
     const [selectedCalculatePageName, setSelectedCalculatePageName] = useState("");
     const [siteCalculateMessage, setSiteCalculateMessage] = useState("");
     const selectedSite = useMemo(
@@ -1106,7 +1211,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
 
     useEffect(() => {
-        if (page !== "site-detail" && page !== "site-config" && page !== "site-cache") {
+        if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission") {
             return;
         }
         const siteSeqByPath = parseSiteSeqFromPathname(pathname);
@@ -1118,7 +1223,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     }, [page, pathname, selectedSiteSeq]);
 
     useEffect(() => {
-        if ((page === "site-detail" || page === "site-config" || page === "site-cache") && selectedSiteSeq) {
+        if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") && selectedSiteSeq) {
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
             loadAdminSitePageNames(selectedSiteSeq)
@@ -1138,8 +1243,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
             }).catch((caughtError) => {
                 logError("site:pageMetaList:error", selectedSiteSeq, caughtError);
             });
+            loadPermissions(selectedSiteSeq).catch((caughtError) => {
+                logError("site:permissions:error", selectedSiteSeq, caughtError);
+            });
         }
-    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList]);
+    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
 
     useEffect(() => {
         if (page !== "access-logs") {
@@ -1312,7 +1420,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         );
     }
 
-    if (page === "site-detail" || page === "site-config" || page === "site-cache") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") {
         return (
             <Stack gap="lg">
                 <Card withBorder radius="md" padding="lg">
@@ -1354,6 +1462,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         </SimpleGrid>
                     </Stack>
                 </Card>
+                {page === "site-detail" ? (
                 <Card withBorder radius="md" padding="lg">
                     <Group justify="space-between" mb="md">
                         <Title order={3}>Admin Page 목록</Title>
@@ -1442,6 +1551,85 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     />
                     <Text size="xs" c="dimmed" mt="xs">Page {adminPageMetaPage} / {adminPageMetaTotalPages}</Text>
                 </Card>
+                ) : null}
+                {page === "site-permission" ? (
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Permission</Title>
+                        <Badge color="grape" variant="light">{permissionRows.length} rows</Badge>
+                    </Group>
+                    <SimpleGrid cols={{base: 1, md: 5}} spacing="sm" mb="sm">
+                        <Select label="targetType" data={PERMISSION_TARGET_TYPE_OPTIONS} value={permissionForm.targetType} onChange={(value) => setPermissionForm({...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target})}/>
+                        <TextInput label="target" value={permissionForm.target} onChange={(event) => setPermissionForm({...permissionForm, target: event.currentTarget.value})} placeholder="page name or prefix"/>
+                        <Select label="actorType" data={PERMISSION_ACTOR_TYPE_OPTIONS} value={permissionForm.actorType} onChange={(value) => setPermissionForm({...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor})}/>
+                        <TextInput label="actor" value={permissionForm.actor} onChange={(event) => setPermissionForm({...permissionForm, actor: event.currentTarget.value})} placeholder="email or @domain"/>
+                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionForm.action} onChange={(value) => setPermissionForm({...permissionForm, action: value ?? "read"})}/>
+                    </SimpleGrid>
+                    <Group mb="md">
+                        <Button
+                            size="xs"
+                            loading={savingPermission}
+                            onClick={async () => {
+                                const saved = await savePermission(selectedSiteSeq, permissionForm);
+                                if (saved) {
+                                    setPermissionForm({targetType: "All", target: "", actorType: "All", actor: "", action: "read"});
+                                }
+                            }}
+                        >
+                            Save
+                        </Button>
+                    </Group>
+                    <SimpleGrid cols={{base: 1, md: 4}} spacing="sm" mb="sm">
+                        <TextInput label="pageName" value={permissionDiagnoseForm.pageName} onChange={(event) => setPermissionDiagnoseForm({...permissionDiagnoseForm, pageName: event.currentTarget.value})}/>
+                        <TextInput label="actor" value={permissionDiagnoseForm.actor} onChange={(event) => setPermissionDiagnoseForm({...permissionDiagnoseForm, actor: event.currentTarget.value})} placeholder="empty means anonymous"/>
+                        <Select label="action" data={PERMISSION_ACTION_OPTIONS} value={permissionDiagnoseForm.action} onChange={(value) => setPermissionDiagnoseForm({...permissionDiagnoseForm, action: value ?? "read"})}/>
+                        <Button mt={22} variant="light" onClick={() => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action)}>
+                            Diagnose
+                        </Button>
+                    </SimpleGrid>
+                    {permissionDiagnose ? (
+                        <Paper withBorder radius="sm" p="sm" mb="md">
+                            <Group gap="xs">
+                                <Badge color={permissionDiagnose.permitted ? "green" : "red"} variant="light">{permissionDiagnose.permitted ? "allowed" : "denied"}</Badge>
+                                <Text size="sm">{permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${permissionDiagnose.matchedPermission.actionName}` : "No matching row"}</Text>
+                            </Group>
+                        </Paper>
+                    ) : null}
+                    <DataTable
+                        withTableBorder
+                        borderRadius="md"
+                        striped
+                        highlightOnHover
+                        records={permissionRows}
+                        columns={[
+                            {accessor: "targetType", title: "Target Type"},
+                            {accessor: "target", title: "Target", render: (row) => row.target || "*"},
+                            {accessor: "actorType", title: "Actor Type"},
+                            {accessor: "actor", title: "Actor", render: (row) => row.actor || "*"},
+                            {accessor: "actionName", title: "Action", render: (row) => `${row.actionName} (${row.action})`},
+                            {accessor: "specificity", title: "Specificity"},
+                            {
+                                accessor: "actions",
+                                title: "Actions",
+                                render: (row) => {
+                                    const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
+                                    return (
+                                        <Group gap={6}>
+                                            <Button size="xs" variant="light" onClick={() => setPermissionForm({targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName})}>
+                                                Edit
+                                            </Button>
+                                            <Button size="xs" variant="light" color="red" loading={deletingPermissionKey === key} onClick={() => deletePermission(selectedSiteSeq, row)}>
+                                                Delete
+                                            </Button>
+                                        </Group>
+                                    );
+                                },
+                            },
+                        ]}
+                        minHeight={220}
+                    />
+                </Card>
+                ) : null}
                 {isSiteConfigPage ? (
                     <>
                         <SimpleGrid cols={{base: 1, xl: 2}} spacing="lg">

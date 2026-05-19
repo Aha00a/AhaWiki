@@ -9,7 +9,7 @@ function fetchJson(url) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|AccessLog))?$/);
+    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog))?$/);
     if (!matched) return "";
     const siteSeq = Number.parseInt(matched[1], 10);
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -51,7 +51,7 @@ export default function Navigation({activePage, onNavigate}) {
                 {links.map((link) => {
                     const isActive = activePage === link.key
                         || (activePage === "user-views" && link.key === "all-users")
-                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache") && link.key === "sites")
+                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission") && link.key === "sites")
                         || (activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites");
                     if (link.key === "crawler-cache") {
                         return <NavLink
@@ -146,6 +146,17 @@ export default function Navigation({activePage, onNavigate}) {
                         onClick={(event) => {
                             event.preventDefault();
                             onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
+                        }}
+                    />
+                    <NavLink
+                        href={`/Admin/Site/${site.seq}/Permission`}
+                        label="Permission"
+                        leftSection={<i className="fas fa-key" aria-hidden="true" />}
+                        active={currentPathname === `/Admin/Site/${site.seq}/Permission`}
+                        variant={currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle"}
+                        onClick={(event) => {
+                            event.preventDefault();
+                            onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Permission`);
                         }}
                     />
                     <NavLink

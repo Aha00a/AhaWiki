@@ -38,6 +38,7 @@ GET           /Admin/Site                            controllers.Admin.index
 GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
+GET           /Admin/Site/:seq/Permission            controllers.Admin.site(seq: Long)
 GET           /Admin/SiteUser                        controllers.Admin.index
 GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
@@ -70,8 +71,13 @@ POST          /api/Admin/Favicon                     controllers.Api.adminUpload
 DELETE        /api/Admin/Favicon                     controllers.Api.adminDeleteSiteFavicon
 GET           /api/Admin/SiteTheme                   controllers.Api.adminSiteTheme
 PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdateSiteTheme
+GET           /api/Admin/PermissionAudit             controllers.Api.adminPermissionAudit
 GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
 GET           /api/Admin/Site/:seq/PageMetaList      controllers.Api.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
+GET           /api/Admin/Site/:seq/Permissions       controllers.Api.adminPermissions(seq: Long)
+POST          /api/Admin/Site/:seq/Permissions       controllers.Api.adminUpsertPermission(seq: Long)
+DELETE        /api/Admin/Site/:seq/Permissions       controllers.Api.adminDeletePermission(seq: Long)
+GET           /api/Admin/Site/:seq/PermissionDiagnose controllers.Api.adminPermissionDiagnose(seq: Long, pageName: String ?= "", actor: String ?= "", action: String ?= "read")
 POST          /api/Admin/Site/:seq/Calculate         controllers.Api.adminSiteCalculate(seq: Long)
 GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats
 GET           /api/Admin/S3Objects                   controllers.Api.adminS3Objects(prefix: String ?= "", maxKeys: Int ?= 500, recursive: Boolean ?= false)

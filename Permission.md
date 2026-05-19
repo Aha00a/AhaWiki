@@ -336,10 +336,10 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 ### 운영 데이터
 
 - [x] 운영 DB에서 기존 `.config`, `#!read`, `#!write`, `Page.permRead`, `PageMeta.permRead` 기준 정책을 `Permission` row로 이관한다.
-- [ ] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
+- [x] 모든 사이트에 최소 기본 정책 row가 존재하는지 점검한다.
 - [ ] 공개 사이트는 `All/All/read` row를 명시적으로 생성한다.
 - [ ] 로그인 편집 허용 정책이 필요한 사이트는 `All/Login/create` 또는 더 제한적인 row를 생성한다.
-- [ ] `Permission` row가 없어서 의도치 않게 닫히는 페이지가 없는지 확인하는 점검 쿼리나 dev endpoint를 만든다.
+- [x] `Permission` row가 없어서 의도치 않게 닫히는 페이지가 없는지 확인하는 점검 쿼리나 dev endpoint를 만든다.
 
 ### 코드 정리
 
@@ -347,30 +347,30 @@ Permission 정리는 다음 상태가 되면 완료로 본다.
 - [ ] 더 이상 권한에 쓰지 않는 `permission.default.read/write` 설정을 제거하거나 deprecated 문서로 분리한다.
 - [ ] `Page.permRead`, `PageMeta.permRead` 컬럼 제거를 위한 evolution을 준비한다.
 - [ ] `Page`, `PageWithoutContent`, `PageWithoutContentWithSize`, `PageMeta` 모델에서 `permRead` 필드를 제거한다.
-- [ ] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
-- [ ] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
+- [x] admin PageMeta 화면에서 `permRead` 표시가 있다면 제거하거나 legacy 표시로 명확히 이름을 바꾼다.
+- [x] `Test.permission` endpoint를 DB-only 진단 도구로 다시 설계한다.
 
 ### 모델 개선
 
 - [x] `All`, `Exact`, `StartsWith`, `EndsWith` targetType 매칭 단위 테스트를 추가한다.
 - [x] `All`, `Login`, `Domain`, `Exact` actorType 매칭 단위 테스트를 추가한다.
 - [x] 기본적인 `PermissionLogic` 우선순위 단위 테스트를 추가한다.
-- [ ] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
+- [x] `action`을 Int 상수 대신 enum 또는 ADT로 정리한다.
 - [ ] `action >= requiredAction` 등급 모델이 실제 정책에 충분한지 재검토한다.
-- [ ] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
+- [x] `create`, `edit`, `delete`, `upload`, `admin`의 관계가 등급형으로 맞는지 테스트를 보강한다.
 - [ ] `Permission.apply(target, actor, action)` legacy 추론 helper를 제거하거나 테스트 전용으로 격리한다.
 - [ ] `targetType`, `actorType`을 문자열 enum 대신 타입 안정적인 값으로 다루는 계층을 추가한다.
 
 ### 관리자/운영 도구
 
-- [ ] `Permission` row를 조회/추가/수정/삭제하는 admin UI를 만든다.
-- [ ] 특정 page/user 조합에 대해 어떤 row가 매칭되는지 보여주는 진단 화면을 만든다.
+- [x] `Permission` row를 조회/추가/수정/삭제하는 admin UI를 만든다.
+- [x] 특정 page/user 조합에 대해 어떤 row가 매칭되는지 보여주는 진단 화면을 만든다.
 
 ### 테스트
 
 - [ ] `WikiPermission` DB-only 동작 테스트를 추가한다.
-- [ ] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
-- [ ] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
+- [x] 매칭 row가 없으면 denied 되는 테스트를 추가한다.
+- [x] `PermissionLogic`의 target/actor 우선순위 조합 테스트를 보강한다.
 - [ ] 페이지 목록, 검색, include macro가 `Permission` 테이블만 사용하는 통합 테스트를 추가한다.
 
 ## 별도 문서로 분리할 일
