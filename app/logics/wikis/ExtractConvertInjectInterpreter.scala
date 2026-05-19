@@ -3,6 +3,7 @@ package logics.wikis
 import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
+import models.PageContent
 import models.tables.Page
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
@@ -85,12 +86,14 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     val revision = getRevision
     for ((key, value) <- arrayBuffer) {
       val converted = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(value, "text"))
+      val maybeInterpreter = Interpreters.getInterpreter(PageContent(value))
+
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>
           val lineEndExclusive = chunk.lineEnd + 1
           val editUrl = getEditUrl(revision, chunk.lineStart, lineEndExclusive)
           val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${lineEndExclusive - 1})"
-          s"""<div class="InterpreterRenderMetaWrapper" style="position: relative;"
+          s"""<div class="InterpreterRenderMetaWrapper ${maybeInterpreter.map(_.name).getOrElse("")}" style="position: relative;"
              |  data-edit-link="$editUrl"
              |  data-line-start="${chunk.lineStart}"
              |  data-line-end="$lineEndExclusive"

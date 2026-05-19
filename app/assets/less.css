@@ -85,9 +85,9 @@ nav.topNavbar {
   z-index: 1;
   border-bottom: 1px solid rgba(217, 225, 238, 0.3);
   box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
-  -webkit-backdrop-filter: saturate(180%) blur(5px);
   background-color: rgba(255, 255, 255, 0.25);
   backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
   text-shadow: -1px 1px 10px #fff, 0px 1px 10px #fff, 1px 0px 10px #fff, 0px 1px 10px #fff;
 }
 nav.topNavbar > .wrap {
@@ -1112,12 +1112,14 @@ kbd:hover > kbd {
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax th,
 .AhaWiki .commonAhaWiki .wikiSyntax td {
   padding: 10px 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e5e7eb;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax th p:first-of-type,
 .AhaWiki .commonAhaWiki .wikiSyntax td p:first-of-type {
@@ -1128,17 +1130,17 @@ kbd:hover > kbd {
   margin-bottom: 0;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax th {
-  background: #f8fafc;
+  background: rgba(220, 220, 235, 0.5);
   white-space: nowrap;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax td > ol {
   margin: 0;
 }
 .AhaWiki .commonAhaWiki .wikiSyntax tr:nth-child(even) td {
-  background: #fcfdff;
+  background: rgba(245, 245, 255, 0.5);
 }
 .AhaWiki .commonAhaWiki .wikiSyntax tr:hover td {
-  background: #f7f8ff;
+  background: rgba(235, 235, 245, 0.5);
 }
 .AhaWiki .commonAhaWiki .wikiSyntax > tbody > tr > td {
   width: 50%;
@@ -1631,12 +1633,14 @@ kbd:hover > kbd {
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
 }
 .AhaWiki .wikiContent .wikiSyntax th,
 .AhaWiki .wikiContent .wikiSyntax td {
   padding: 10px 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e5e7eb;
 }
 .AhaWiki .wikiContent .wikiSyntax th p:first-of-type,
 .AhaWiki .wikiContent .wikiSyntax td p:first-of-type {
@@ -1647,17 +1651,17 @@ kbd:hover > kbd {
   margin-bottom: 0;
 }
 .AhaWiki .wikiContent .wikiSyntax th {
-  background: #f8fafc;
+  background: rgba(220, 220, 235, 0.5);
   white-space: nowrap;
 }
 .AhaWiki .wikiContent .wikiSyntax td > ol {
   margin: 0;
 }
 .AhaWiki .wikiContent .wikiSyntax tr:nth-child(even) td {
-  background: #fcfdff;
+  background: rgba(245, 245, 255, 0.5);
 }
 .AhaWiki .wikiContent .wikiSyntax tr:hover td {
-  background: #f7f8ff;
+  background: rgba(235, 235, 245, 0.5);
 }
 .AhaWiki .wikiContent .wikiSyntax > tbody > tr > td {
   width: 50%;
@@ -2327,12 +2331,14 @@ kbd:hover > kbd {
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax th,
 .AhaWiki .paperContent .page .pageContent .wikiSyntax td {
   padding: 10px 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e5e7eb;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax th p:first-of-type,
 .AhaWiki .paperContent .page .pageContent .wikiSyntax td p:first-of-type {
@@ -2343,17 +2349,17 @@ kbd:hover > kbd {
   margin-bottom: 0;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax th {
-  background: #f8fafc;
+  background: rgba(220, 220, 235, 0.5);
   white-space: nowrap;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax td > ol {
   margin: 0;
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax tr:nth-child(even) td {
-  background: #fcfdff;
+  background: rgba(245, 245, 255, 0.5);
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax tr:hover td {
-  background: #f7f8ff;
+  background: rgba(235, 235, 245, 0.5);
 }
 .AhaWiki .paperContent .page .pageContent .wikiSyntax > tbody > tr > td {
   width: 50%;
@@ -2449,11 +2455,13 @@ kbd:hover > kbd {
   -webkit-box-shadow: 0 0 1em #eee;
   -moz-box-shadow: 0 0 1em #eee;
   box-shadow: 0 0 1em #eee;
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
 }
 .AhaWiki .simpleTable th,
 .AhaWiki .simpleTable td {
   padding: 10px 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid #e5e7eb;
 }
 .AhaWiki .simpleTable th p:first-of-type,
 .AhaWiki .simpleTable td p:first-of-type {
@@ -2464,17 +2472,17 @@ kbd:hover > kbd {
   margin-bottom: 0;
 }
 .AhaWiki .simpleTable th {
-  background: #f8fafc;
+  background: rgba(220, 220, 235, 0.5);
   white-space: nowrap;
 }
 .AhaWiki .simpleTable td > ol {
   margin: 0;
 }
 .AhaWiki .simpleTable tr:nth-child(even) td {
-  background: #fcfdff;
+  background: rgba(245, 245, 255, 0.5);
 }
 .AhaWiki .simpleTable tr:hover td {
-  background: #f7f8ff;
+  background: rgba(235, 235, 245, 0.5);
 }
 .AhaWiki .tablesorter .tablesorter-header {
   background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
@@ -3389,6 +3397,18 @@ kbd:hover > kbd {
   margin-top: 2px;
   color: #6b7280;
   font-size: 12px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Table {
+  overflow-x: auto;
+  margin-left: 30px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent {
+  display: inline-block;
+  border: 1px solid #e5e7eb;
+  border-radius: 5px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable {
+  margin-left: 0;
 }
 .AhaWiki .Interpreter.Text,
 .AhaWiki .Interpreter.Vim {
