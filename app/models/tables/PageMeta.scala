@@ -150,4 +150,20 @@ object PageMeta {
       WHERE site = ${site.seq} AND name = $name
     """.as(rowParser.singleOpt).map(flatten).map(PageMeta.tupled)
   }
+
+  def selectImageMap(names: Seq[String])(implicit connection: Connection, site: Site): Map[String, String] = {
+    val distinctNames = names.distinct
+    if (distinctNames.isEmpty) {
+      Map.empty
+    } else {
+      SQL"""
+        SELECT name, image
+        FROM PageMeta
+        WHERE site = ${site.seq}
+          AND name IN ($distinctNames)
+          AND image IS NOT NULL
+          AND image <> ''
+      """.as((str("name") ~ str("image")).map { case name ~ image => name -> image }.*).toMap
+    }
+  }
 }

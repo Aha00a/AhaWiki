@@ -1375,16 +1375,21 @@ class Api @Inject()(
         Adjacent.getSeqLinkFiltered(name)
       }.filter(_.and(contextSite.pageCanSee))
 
+      val pageNamesForImages = links.flatMap(link => Seq(link.src, link.dst)).distinct
+      val imageUrlByPageName = models.tables.PageMeta.selectImageMap(pageNamesForImages)
+        .view
+        .mapValues(toAbsoluteImageUrl)
+        .toMap
+
       val linksWithImage = links.map { link =>
         val adjacentName = if (link.src == name) link.dst else link.src
-        val imageUrl = models.tables.PageMeta.select(adjacentName).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl)
         AdjacentLinkPayload(
           src = link.src,
           dst = link.dst,
           alias = link.alias,
-          imageUrl = imageUrl.getOrElse(""),
-          srcImageUrl = models.tables.PageMeta.select(link.src).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(""),
-          dstImageUrl = models.tables.PageMeta.select(link.dst).flatMap(_.image).filter(_.nonEmpty).map(toAbsoluteImageUrl).getOrElse(""),
+          imageUrl = imageUrlByPageName.getOrElse(adjacentName, ""),
+          srcImageUrl = imageUrlByPageName.getOrElse(link.src, ""),
+          dstImageUrl = imageUrlByPageName.getOrElse(link.dst, ""),
         )
       }
       Ok(linksWithImage.asJson)
