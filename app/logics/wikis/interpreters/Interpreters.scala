@@ -36,6 +36,27 @@ object Interpreters extends TraitInterpreter {
     map.get(pageContent.interpreter.map(_.toLowerCase).getOrElse("wiki"))
   }
 
+  def getInterpreter(content: String): Option[TraitInterpreter] = {
+    map.get(interpreterName(content).getOrElse("wiki").toLowerCase)
+  }
+
+  private def interpreterName(content: String): Option[String] = {
+    if (content == null) {
+      None
+    } else {
+      val normalized = if (content.startsWith("\n#!")) content.substring(1) else content
+      normalized
+        .linesIterator
+        .takeWhile(_.startsWith("#!"))
+        .map(_.substring(2))
+        .filterNot(_.startsWith("read"))
+        .filterNot(_.startsWith("write"))
+        .filterNot(_.startsWith("redirect"))
+        .flatMap(_.split("""\s+"""))
+        .find(_.nonEmpty)
+    }
+  }
+
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
     getInterpreter(pageContent)

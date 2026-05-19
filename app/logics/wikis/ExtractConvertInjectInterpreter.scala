@@ -3,7 +3,6 @@ package logics.wikis
 import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
-import models.PageContent
 import models.tables.Page
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
@@ -86,7 +85,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     val revision = getRevision
     for ((key, value) <- arrayBuffer) {
       val converted = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(value, "text"))
-      val maybeInterpreter = Interpreters.getInterpreter(PageContent(value))
+      val maybeInterpreter = Interpreters.getInterpreter(value)
 
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>

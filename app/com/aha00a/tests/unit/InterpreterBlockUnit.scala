@@ -9,6 +9,11 @@ import play.api.mvc.{AnyContent, Request}
 object InterpreterBlockUnit {
   def run(testUtil: TestUtil)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage): Unit = {
     import testUtil.assertEquals
+
+    assertEquals(Interpreters.getInterpreter("#!Vim scala\nprintln(1)").map(_.name), Some("Vim"))
+    assertEquals(Interpreters.getInterpreter("#!read all\n#!write aha00a\n#!Vim scala\nprintln(1)").map(_.name), Some("Vim"))
+    assertEquals(Interpreters.getInterpreter("plain text").map(_.name), Some("Wiki"))
+
     def testInterpreterTable(): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable simpleTable tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
