@@ -104,6 +104,8 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] 대표 도메인은 twin page와 cross-site similar page 링크 생성에 사용한다.
 - [ ] `SiteDomain`은 domain 목록/host 매핑 용도로 유지한다.
 - [ ] `Site.mainDomain`은 대표 링크 생성을 위한 역정규화 필드로 취급한다.
+- [ ] `Site.mainDomain`은 `SiteDomain`과 자동 동기화하지 않는 독립 필드로 관리한다.
+- [ ] `Site.mainDomain` 변경은 관리자가 수동으로 책임지고 관리한다.
 
 ## 공개 범위 규칙
 
@@ -125,6 +127,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] cross-site 유사 문서도 same-site와 동일한 출력 포맷을 사용한다.
 - [ ] cross-site 유사 문서도 `PercentLinkTitle(similarity, page, alias)`를 사용한다.
 - [ ] cross-site 유사 문서도 `PageLogic.selectHighScoredTerm`에 준하는 term 표시를 제공한다.
+- [ ] cross-site high scored term 조회는 `PageLogic.selectHighScoredTerm`를 site-aware 시그니처로 확장해서 처리한다.
 - [ ] cross-site 유사 문서는 기존 same-site `SimilarPages`와 동일하게 상위 20개를 표시한다.
 - [ ] site 이름을 표시한다.
 - [ ] cross-site page 표기는 `Site.abbr`를 사용해서 `Abbr:PageName`으로 표시한다.
@@ -182,11 +185,6 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] site 링크 생성에는 `Site.mainDomain`을 사용해서 render path에서 `SiteDomain` 조회를 피한다.
 - [ ] 필요해지면 `MacroSimilarPages` 결과에 작은 메모리 캐시를 추가한다.
 
-## 미결정 사항
-
-- [ ] cross-site `PercentLinkTitle`의 page 인자 `Abbr:PageName`을 내부적으로 실제 외부 링크로 해석하는 방식을 결정한다.
-- [ ] cross-site high scored term 조회를 기존 `PageLogic.selectHighScoredTerm` 확장으로 처리할지 별도 helper로 둘지 결정한다.
-
 ## 구현 체크리스트
 
 - [ ] evolution schema 작업을 가장 먼저 수행
@@ -213,6 +211,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] generated `See Also`에 `Twin Pages` 마크업 추가
 - [ ] sister wiki 결과만 있어도 generated `Similar Pages` 섹션이 출력되게 조건 확장
 - [ ] cross-site similar page도 `PercentLinkTitle`과 high scored term을 표시하도록 구현
+- [ ] `PageLogic.selectHighScoredTerm`를 cross-site 조회가 가능하도록 확장
 - [ ] cross-site similar page 표시 개수를 20개로 구현
 - [ ] cross-site 링크 표기를 `Abbr:PageName`으로 구현
 - [ ] 같은 이름 매칭 unit test 추가
