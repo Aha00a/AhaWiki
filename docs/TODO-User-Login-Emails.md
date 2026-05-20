@@ -13,8 +13,6 @@
 
 ## Direction
 
-먼저 `TODO-Remove-UserSite.md`를 완료한다. 현재 `UserSite`는 쓰기 경로가 없고 stale membership처럼 남아 있으므로, 로그인 이메일 병합 전에 제거해 계정 병합 대상을 단순화한다.
-
 `User`는 사람 자체를 나타낸다.
 
 ```sql
@@ -133,7 +131,6 @@ aha00a@aharise.com 은 이미 AhaWiki 계정에 연결되어 있습니다.
 
 병합될 수 있는 항목:
 - 작성 기록
-- 사이트 연결
 - 방문 기록
 - 첨부 파일
 - 프로필 이미지
@@ -152,8 +149,6 @@ aha00a@aharise.com 은 이미 AhaWiki 계정에 연결되어 있습니다.
 - `UserNicknameHistory.user`
 - `UserNicknameHistory.changedBy`
 - 그 외 `User(seq)` FK
-
-`UserSite`는 이 작업 전에 제거되어 있어야 한다.
 
 ## Verification Checklist
 
