@@ -154,24 +154,24 @@ object InterpreterBlockUnit {
         val interpreted =
           s"""<div class="schema InterpreterSchema"><dl vocab="https://schema.org/" typeof="Person">
              |        <h5 class="schemaClassTitle">
-             |          <a class="schema schema-link schema-person" href="/w/schema:Person">Person</a>
+             |          <a href="/w/schema:Person" class="schema schema-link schema-person">Person</a>
              |        </h5>
              |        <div class="schemaFields">
              |          <div class="schemaFieldRow">
              |                <dt class="schemaFieldKey">
              |                  <a href="/w/schema:name" title="The name of the item." class="">Name</a>
              |                </dt>
-             |                <dd class="schemaFieldValue" property="name"><a rel="nofollow" class="missing" href="/w/KIM, Aha">KIM, Aha</a></dd>
+             |                <dd class="schemaFieldValue" property="name"><a href="/w/KIM, Aha" class="missing" rel="nofollow">KIM, Aha</a></dd>
              |              </div><div class="schemaFieldRow">
              |                <dt class="schemaFieldKey">
              |                  <a href="/w/schema:url" title="URL of the item." class="">Url</a>
              |                </dt>
-             |                <dd class="schemaFieldValue" property="url"><a rel="noopener" target="_blank" href="https://aha00a.com">https://aha00a.com</a></dd>
+             |                <dd class="schemaFieldValue" property="url"><a href="https://aha00a.com" target="_blank" rel="noopener">https://aha00a.com</a></dd>
              |              </div><div class="schemaFieldRow">
              |                <dt class="schemaFieldKey">
              |                  <a href="/w/schema:memberOf" title="An Organization (or ProgramMembership) to which this Person or Organization belongs." class="">Member Of</a>
              |                </dt>
-             |                <dd class="schemaFieldValue" property="memberOf"><a rel="nofollow" class="missing" href="/w/AhariseNotExists">AhariseNotExists</a></dd>
+             |                <dd class="schemaFieldValue" property="memberOf"><a href="/w/AhariseNotExists" class="missing" rel="nofollow">AhariseNotExists</a></dd>
              |              </div>
              |        </div>
              |      </dl><script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","mainEntityOfPage":"$currentPageUrl","@id":"$currentPageUrl","inLanguage":"en-US","name":"KIM, Aha","memberOf":"AhariseNotExists","url":"https://aha00a.com"}</script></div>""".stripMargin
