@@ -2,16 +2,17 @@ package models.tables
 
 import anorm.SqlParser.double
 import anorm.SqlParser.flatten
+import anorm.SqlParser.long
 import anorm.SqlParser.str
 import anorm._
 import models.tables
 
 import java.sql.Connection
-import scala.util.Random
 
-case class CalculatedCosineSimilarity(name1: String, name2: String, similarity: Double) {
+case class CalculatedCosineSimilarity(site1: Long, name1: String, site2: Long, name2: String, similarity: Double) {
   def and(a: String => Boolean):Boolean = a(name1) && a(name2)
   def or(a: String => Boolean):Boolean = a(name1) || a(name2)
+  def isSameSite: Boolean = site1 == site2
 }
 
 object CalculatedCosineSimilarity {
@@ -20,14 +21,19 @@ object CalculatedCosineSimilarity {
   def tupled = (apply _).tupled
 
   def recalc(name: String)(implicit connection: Connection, site: Site): Int = {
-    SQL"""DELETE FROM CalculatedCosineSimilarity WHERE site = ${site.seq} AND (name1 = $name OR name2 = $name)""".executeUpdate()
     SQL"""
-REPLACE INTO CalculatedCosineSimilarity (site, name1, name2, similarity)
+      DELETE FROM CalculatedCosineSimilarity
+      WHERE (site1 = ${site.seq} AND name1 = $name)
+         OR (site2 = ${site.seq} AND name2 = $name)
+    """.executeUpdate()
+    SQL"""
+REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT *
     FROM (
         SELECT
             ${site.seq},
             TF3.name name1,
+            ${site.seq},
             $name name2,
             IFNULL(
                 (
@@ -61,38 +67,48 @@ SELECT *
             ) similarity
             FROM (
                 SELECT
-                    DISTINCT name
-                    FROM CalculatedTermFrequency
-                    WHERE site = ${site.seq}
+                    DISTINCT TF.name
+                    FROM CalculatedTermFrequency TF
+                    INNER JOIN PageMeta PM
+                        ON PM.site = TF.site
+                        AND PM.name = TF.name
+                    WHERE TF.site = ${site.seq}
             ) TF3
     ) CS1
     WHERE similarity > 0.3 AND name1 != name2
     """.executeUpdate()
 
     SQL"""
-REPLACE INTO CalculatedCosineSimilarity (site, name1, name2, similarity)
-SELECT site, name2, name1, similarity FROM CalculatedCosineSimilarity
+REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
+SELECT site2, name2, site1, name1, similarity FROM CalculatedCosineSimilarity
     WHERE
-        site = ${site.seq} AND
+        site1 = ${site.seq} AND site2 = ${site.seq} AND
         name2 = $name
       """.executeUpdate()
   }
 
   def select(name: String)(implicit connection: Connection, site: Site): List[CalculatedCosineSimilarity] = {
     SQL"""
-        SELECT name1, name2, similarity
+        SELECT site1, name1, site2, name2, similarity
             FROM CalculatedCosineSimilarity
             WHERE
                 similarity > 0 AND
-                site = ${site.seq} AND name1 = $name AND name1 != name2
+                site1 = ${site.seq} AND
+                site2 = ${site.seq} AND
+                name1 = $name AND
+                name1 != name2
             ORDER BY similarity DESC
       """
-      .as(str("name1") ~ str("name2") ~ double("similarity") *).map(flatten)
+      .as(long("site1") ~ str("name1") ~ long("site2") ~ str("name2") ~ double("similarity") *).map(flatten)
       .map(tables.CalculatedCosineSimilarity.tupled)
   }
 
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
-    SQL"""DELETE FROM CalculatedCosineSimilarity WHERE site = ${site.seq} AND name1 = $name OR name2 = $name""".executeUpdate()
+    SQL"""
+      DELETE FROM CalculatedCosineSimilarity
+      WHERE (site1 = ${site.seq} AND name1 = $name)
+         OR (site2 = ${site.seq} AND name2 = $name)
+    """.executeUpdate()
   }
 }
 

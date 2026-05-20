@@ -35,7 +35,7 @@ trait RealContextWikiPage {
 
       override def getUserProfileImageUrl: Option[String] = None
     }
-    implicit val site: Site = Site(1, "Aha00a")
+    implicit val site: Site = Site(1, "Aha00a", "Aha00a", "")
 
     new ContextWikiPage(Seq(getClass.getName), RenderingMode.Normal)
   }

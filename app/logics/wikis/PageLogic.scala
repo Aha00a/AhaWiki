@@ -115,6 +115,13 @@ object PageLogic {
     Page.selectLastRevision(name) foreach { page =>
       implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
+      PageMeta.upsert(
+        pageName = page.name,
+        revision = page.revision,
+        image = extractRepresentativeImage(page.content, page.name),
+        size = page.content.length,
+      )
+
       val text = Interpreters.toText(page.content)
       if (!text.isNullOrEmpty) {
         val seqWord = text
@@ -150,13 +157,6 @@ object PageLogic {
       val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
       CalculatedSchemaOrg.delete(name)
       CalculatedSchemaOrg.insert(seqSchemaOrg)
-
-      PageMeta.upsert(
-        pageName = page.name,
-        revision = page.revision,
-        image = extractRepresentativeImage(page.content, page.name),
-        size = page.content.length,
-      )
     }
   }
 

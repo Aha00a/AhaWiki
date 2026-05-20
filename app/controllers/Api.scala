@@ -254,13 +254,15 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminSite(seq: Long, name: String, domains: Seq[String], userCount: Long, pageCount: Long)
-        case class AdminSiteRow(seq: Long, name: String, domain: Option[String], userCount: Long, pageCount: Long)
+        case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, domains: Seq[String], userCount: Long, pageCount: Long)
+        case class AdminSiteRow(seq: Long, name: String, abbr: String, mainDomain: String, domain: Option[String], userCount: Long, pageCount: Long)
 
         val rows = SQL"""
           SELECT
             S.seq,
             S.name,
+            S.abbr,
+            S.mainDomain,
             SD.domain,
             COALESCE(US.user_count, 0) AS user_count,
             COALESCE(P.page_count, 0) AS page_count
@@ -277,18 +279,20 @@ class Api @Inject()(
             GROUP BY site
           ) P ON P.site = S.seq
           ORDER BY S.seq, SD.domain
-        """.as((long("seq") ~ str("name") ~ str("domain").? ~ long("user_count") ~ long("page_count")).map {
-          case seq ~ name ~ domain ~ userCount ~ pageCount => AdminSiteRow(seq, name, domain, userCount, pageCount)
+        """.as((long("seq") ~ str("name") ~ str("abbr") ~ str("mainDomain") ~ str("domain").? ~ long("user_count") ~ long("page_count")).map {
+          case seq ~ name ~ abbr ~ mainDomain ~ domain ~ userCount ~ pageCount => AdminSiteRow(seq, name, abbr, mainDomain, domain, userCount, pageCount)
         }.*)
 
         val sites = rows
-          .groupBy(r => (r.seq, r.name, r.userCount, r.pageCount))
+          .groupBy(r => (r.seq, r.name, r.abbr, r.mainDomain, r.userCount, r.pageCount))
           .toSeq
           .sortBy(_._1._1)
-          .map { case ((seq, name, userCount, pageCount), groupedRows) =>
+          .map { case ((seq, name, abbr, mainDomain, userCount, pageCount), groupedRows) =>
             AdminSite(
               seq = seq,
               name = name,
+              abbr = abbr,
+              mainDomain = mainDomain,
               domains = groupedRows.flatMap(_.domain).distinct.sorted,
               userCount = userCount,
               pageCount = pageCount,
