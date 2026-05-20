@@ -39,7 +39,6 @@ GET           /Admin/Site/:seq                       controllers.Admin.site(seq:
 GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Permission            controllers.Admin.site(seq: Long)
-GET           /Admin/SiteUser                        controllers.Admin.index
 GET           /Admin/User                            controllers.Admin.index
 GET           /Admin/User/UserViewHistory            controllers.Admin.index
 GET           /Admin/AccessLog                       controllers.Admin.index
@@ -47,7 +46,6 @@ GET           /Admin/:seq/AccessLog                  controllers.Admin.site(seq:
 GET           /Admin/RecentChange                    controllers.Admin.index
 GET           /Admin/S3                              controllers.Admin.index
 GET           /Admin/Sites                           controllers.Admin.sites
-GET           /Admin/SiteUsers                       controllers.Admin.siteUsers
 GET           /Admin/AllUsers                        controllers.Admin.index
 GET           /Admin/UserViews                       controllers.Admin.index
 GET           /Admin/RecentChanges                   controllers.Admin.index
@@ -59,7 +57,6 @@ GET           /api/pageRevision/:pageName            controllers.Api.pageRevisio
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
 GET           /api/Admin/Sites                       controllers.Api.adminSites
 PUT           /api/Admin/Site/:seq                   controllers.Api.adminUpdateSite(seq: Long)
-GET           /api/Admin/SiteUsers                   controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                       controllers.Api.adminUsers
 GET           /api/Admin/UserViews                   controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
 GET           /api/Admin/DailyStats                  controllers.Api.adminDailyStats

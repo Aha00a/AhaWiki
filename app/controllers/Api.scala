@@ -44,7 +44,6 @@ import models.RequestWrapper
 import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.Site
-import models.tables.UserSite
 import models.tables.Config
 import models.tables.Permission
 import play.api.Configuration
@@ -256,8 +255,8 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, domains: Seq[String], userCount: Long, pageCount: Long)
-        case class AdminSiteRow(seq: Long, name: String, abbr: String, mainDomain: String, domain: Option[String], userCount: Long, pageCount: Long)
+        case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, domains: Seq[String], pageCount: Long)
+        case class AdminSiteRow(seq: Long, name: String, abbr: String, mainDomain: String, domain: Option[String], pageCount: Long)
 
         val rows = SQL"""
           SELECT
@@ -266,37 +265,30 @@ class Api @Inject()(
             S.abbr,
             S.mainDomain,
             SD.domain,
-            COALESCE(US.user_count, 0) AS user_count,
             COALESCE(P.page_count, 0) AS page_count
           FROM Site S
           LEFT JOIN SiteDomain SD ON SD.site = S.seq
-          LEFT JOIN (
-            SELECT site, COUNT(*) AS user_count
-            FROM UserSite
-            GROUP BY site
-          ) US ON US.site = S.seq
           LEFT JOIN (
             SELECT site, COUNT(*) AS page_count
             FROM Page
             GROUP BY site
           ) P ON P.site = S.seq
           ORDER BY S.seq, SD.domain
-        """.as((long("seq") ~ str("name") ~ str("abbr") ~ str("mainDomain") ~ str("domain").? ~ long("user_count") ~ long("page_count")).map {
-          case seq ~ name ~ abbr ~ mainDomain ~ domain ~ userCount ~ pageCount => AdminSiteRow(seq, name, abbr, mainDomain, domain, userCount, pageCount)
+        """.as((long("seq") ~ str("name") ~ str("abbr") ~ str("mainDomain") ~ str("domain").? ~ long("page_count")).map {
+          case seq ~ name ~ abbr ~ mainDomain ~ domain ~ pageCount => AdminSiteRow(seq, name, abbr, mainDomain, domain, pageCount)
         }.*)
 
         val sites = rows
-          .groupBy(r => (r.seq, r.name, r.abbr, r.mainDomain, r.userCount, r.pageCount))
+          .groupBy(r => (r.seq, r.name, r.abbr, r.mainDomain, r.pageCount))
           .toSeq
           .sortBy(_._1._1)
-          .map { case ((seq, name, abbr, mainDomain, userCount, pageCount), groupedRows) =>
+          .map { case ((seq, name, abbr, mainDomain, pageCount), groupedRows) =>
             AdminSite(
               seq = seq,
               name = name,
               abbr = abbr,
               mainDomain = mainDomain,
               domains = groupedRows.flatMap(_.domain).distinct.sorted,
-              userCount = userCount,
               pageCount = pageCount,
             )
           }
@@ -455,19 +447,6 @@ class Api @Inject()(
             )
           }),
         ))
-      }
-    }
-  }
-
-  def adminSiteUsers: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      database.withConnection { implicit connection =>
-        implicit val site: Site = SiteLogic.get(request.host)
-        case class AdminSiteUser(user: Long, site: Long, created: String, email: String, nickname: String, profileImageUrl: Option[String])
-        val users = UserSite.select().map(u => AdminSiteUser(u.user, u.site, u.created.toString, u.email, u.nickname, u.profileImageUrl))
-        Ok(users.asJson)
       }
     }
   }
@@ -665,7 +644,6 @@ class Api @Inject()(
           email: String,
           nickname: String,
           profileImageUrl: Option[String],
-          siteCount: Long,
           visitCount: Long,
           lastViewed: Option[String],
         )
@@ -687,7 +665,6 @@ class Api @Inject()(
           case "updated" => "U.updated"
           case "email" => "U.email"
           case "nickname" => "U.nickname"
-          case "siteCount" => "site_count"
           case "visitCount" => "visit_count"
           case "lastViewed" => "last_viewed_raw"
           case _ => "U.seq"
@@ -716,16 +693,10 @@ class Api @Inject()(
             U.email,
             U.nickname,
             U.profileImageUrl,
-            COALESCE(US.site_count, 0) AS site_count,
             COALESCE(UV.visit_count, 0) AS visit_count,
             UV.last_viewed,
             UV.last_viewed_raw
           FROM User U
-          LEFT JOIN (
-            SELECT user, COUNT(*) AS site_count
-            FROM UserSite
-            GROUP BY user
-          ) US ON US.user = U.seq
           LEFT JOIN (
             SELECT
               user,
@@ -748,8 +719,8 @@ class Api @Inject()(
           "searchLike" -> searchLike,
           "pageSize" -> pageSize,
           "offset" -> offset,
-        ).as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? ~ long("site_count") ~ long("visit_count") ~ str("last_viewed").?).map {
-          case seq ~ created ~ updated ~ email ~ nickname ~ profileImageUrl ~ siteCount ~ visitCount ~ lastViewed =>
+        ).as((long("seq") ~ str("created") ~ str("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? ~ long("visit_count") ~ str("last_viewed").?).map {
+          case seq ~ created ~ updated ~ email ~ nickname ~ profileImageUrl ~ visitCount ~ lastViewed =>
             AdminUser(
               seq = seq,
               created = created,
@@ -757,7 +728,6 @@ class Api @Inject()(
               email = email,
               nickname = nickname,
               profileImageUrl = profileImageUrl,
-              siteCount = siteCount,
               visitCount = visitCount,
               lastViewed = lastViewed,
             )
@@ -836,7 +806,6 @@ class Api @Inject()(
         case class DailyCount(ymd: String, count: Long)
         case class AdminDailyStats(
           userCreated: Seq[DailyCount],
-          siteUserCreated: Seq[DailyCount],
           pageCreated: Seq[DailyCount],
           pageEdited: Seq[DailyCount],
         )
@@ -846,16 +815,6 @@ class Api @Inject()(
           FROM User U
           GROUP BY DATE_FORMAT(U.created, '%Y-%m-%d')
           ORDER BY DATE_FORMAT(U.created, '%Y-%m-%d') DESC
-          LIMIT 30
-        """.as((str("ymd") ~ long("cnt")).map {
-          case ymd ~ cnt => DailyCount(ymd, cnt)
-        }.*)
-
-        val siteUserCreated = SQL"""
-          SELECT DATE_FORMAT(US.created, '%Y-%m-%d') ymd, COUNT(*) cnt
-          FROM UserSite US
-          GROUP BY DATE_FORMAT(US.created, '%Y-%m-%d')
-          ORDER BY DATE_FORMAT(US.created, '%Y-%m-%d') DESC
           LIMIT 30
         """.as((str("ymd") ~ long("cnt")).map {
           case ymd ~ cnt => DailyCount(ymd, cnt)
@@ -885,7 +844,6 @@ class Api @Inject()(
         Ok(
           AdminDailyStats(
             userCreated = userCreated,
-            siteUserCreated = siteUserCreated,
             pageCreated = pageCreated,
             pageEdited = pageEdited,
           ).asJson

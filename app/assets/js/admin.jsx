@@ -124,9 +124,6 @@ function routeToPage(pathname) {
     if (pathname === "/Admin/Site") {
         return "sites";
     }
-    if (pathname === "/Admin/SiteUser") {
-        return "users";
-    }
     if (pathname === "/Admin/User") {
         return "all-users";
     }
@@ -144,9 +141,6 @@ function routeToPage(pathname) {
     }
     if (pathname === "/Admin/Sites") {
         return "sites";
-    }
-    if (pathname === "/Admin/SiteUsers") {
-        return "users";
     }
     if (pathname === "/Admin/AllUsers") {
         return "all-users";
@@ -208,7 +202,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites" || page === "users") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites") {
         return "Site";
     }
     if (page === "access-logs") {
@@ -262,12 +256,10 @@ async function fetchCsrfToken() {
 function useAdminData(page) {
     const [loading, setLoading] = useState(true);
     const [sites, setSites] = useState([]);
-    const [users, setUsers] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
     const [allUserCount, setAllUserCount] = useState(0);
     const [dailyStats, setDailyStats] = useState({
         userCreated: [],
-        siteUserCreated: [],
         pageCreated: [],
         pageEdited: [],
     });
@@ -605,9 +597,8 @@ function useAdminData(page) {
     }, []);
 
     const loadDashboard = useCallback(async () => {
-        const [siteData, userData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
+        const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
             fetchJson("/api/Admin/Sites"),
-            fetchJson("/api/Admin/SiteUsers"),
             fetchJson("/api/Admin/Users"),
             fetchJson("/api/Admin/DailyStats"),
             fetchJson("/api/Admin/RecentChanges?n=30"),
@@ -617,13 +608,11 @@ function useAdminData(page) {
             ? allUserData.array
             : (Array.isArray(allUserData) ? allUserData : []);
         setSites(siteData);
-        setUsers(userData);
         setAllUsers(allUserRows);
         setRecentChanges(recentChangesData);
         setTopViewedPages(topViewedPagesData);
         setDailyStats({
             userCreated: dailyStatsData?.userCreated ?? [],
-            siteUserCreated: dailyStatsData?.siteUserCreated ?? [],
             pageCreated: dailyStatsData?.pageCreated ?? [],
             pageEdited: dailyStatsData?.pageEdited ?? [],
         });
@@ -907,27 +896,8 @@ function useAdminData(page) {
                     const data = await fetchJson("/api/Admin/Sites");
                     if (mounted) {
                         setSites(data);
-                        setUsers([]);
                         setDailyStats({
                             userCreated: [],
-                            siteUserCreated: [],
-                            pageCreated: [],
-                            pageEdited: [],
-                        });
-                        setTopViewedPages([]);
-                    }
-                    return;
-                }
-
-                if (page === "users") {
-                    const data = await fetchJson("/api/Admin/SiteUsers");
-                    if (mounted) {
-                        setUsers(data);
-                        setSites([]);
-                        setAllUsers([]);
-                        setDailyStats({
-                            userCreated: [],
-                            siteUserCreated: [],
                             pageCreated: [],
                             pageEdited: [],
                         });
@@ -939,11 +909,9 @@ function useAdminData(page) {
                 if (page === "all-users") {
                     if (mounted) {
                         await loadAllUsers();
-                        setUsers([]);
                         setSites([]);
                         setDailyStats({
                             userCreated: [],
-                            siteUserCreated: [],
                             pageCreated: [],
                             pageEdited: [],
                         });
@@ -960,12 +928,10 @@ function useAdminData(page) {
                         setUserViewHistories([]);
                     }
                     if (mounted) {
-                        setUsers([]);
                         setSites([]);
                         setAllUsers([]);
                         setDailyStats({
                             userCreated: [],
-                            siteUserCreated: [],
                             pageCreated: [],
                             pageEdited: [],
                         });
@@ -978,11 +944,9 @@ function useAdminData(page) {
                     await loadRecentChanges(50);
                     if (mounted) {
                         setSites([]);
-                        setUsers([]);
                         setAllUsers([]);
                         setDailyStats({
                             userCreated: [],
-                            siteUserCreated: [],
                             pageCreated: [],
                             pageEdited: [],
                         });
@@ -993,11 +957,9 @@ function useAdminData(page) {
                 if (page === "access-logs") {
                     if (mounted) {
                         setSites([]);
-                        setUsers([]);
                         setAllUsers([]);
                         setDailyStats({
                             userCreated: [],
-                            siteUserCreated: [],
                             pageCreated: [],
                             pageEdited: [],
                         });
@@ -1008,9 +970,8 @@ function useAdminData(page) {
                 if (page === "s3-browser") {
                     if (mounted) {
                         setSites([]);
-                        setUsers([]);
                         setAllUsers([]);
-                        setDailyStats({userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: []});
+                        setDailyStats({userCreated: [], pageCreated: [], pageEdited: []});
                         setTopViewedPages([]);
                     }
                     await loadS3Objects();
@@ -1019,9 +980,8 @@ function useAdminData(page) {
                 if (page === "crawler-cache") {
                     if (mounted) {
                         setSites([]);
-                        setUsers([]);
                         setAllUsers([]);
-                        setDailyStats({userCreated: [], siteUserCreated: [], pageCreated: [], pageEdited: []});
+                        setDailyStats({userCreated: [], pageCreated: [], pageEdited: []});
                         setTopViewedPages([]);
                     }
                     await loadCrawlerCaches();
@@ -1053,7 +1013,6 @@ function useAdminData(page) {
     return {
         loading,
         sites,
-        users,
         allUsers,
         allUserCount,
         dailyStats,
@@ -1136,7 +1095,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const {
         loading,
         sites,
-        users,
         allUsers,
         allUserCount,
         dailyStats,
@@ -1378,26 +1336,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
     if (page === "sites") {
         return <SiteListCard sites={sites} onNavigate={onNavigate}/>;
     }
-
-    if (page === "users") {
-        return (
-            <Card withBorder radius="md" padding="lg">
-                <Group justify="space-between" mb="md">
-                    <Title order={3}>Site Users</Title>
-                    <Badge color="teal" variant="light">{users.length} users</Badge>
-                </Group>
-                <Text size="sm" c="dimmed" mb="md">
-                    현재 호스트 기준 사용자 목록입니다.
-                </Text>
-                <Divider mb="md"/>
-                {makeTable(
-                    ["User", "Profile", "Created"],
-                    users.map((user) => [user.user, <UserProfileCell user={user}/>, user.created]),
-                )}
-            </Card>
-        );
-    }
-
     if (page === "all-users") {
         return (
             <Card withBorder radius="md" padding="lg">
@@ -1432,7 +1370,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                         {accessor: "nickname", title: "Nickname", sortable: true},
                         {accessor: "created", title: "Created", sortable: true},
                         {accessor: "updated", title: "Updated", sortable: true},
-                        {accessor: "siteCount", title: "Sites", sortable: true},
                         {accessor: "visitCount", title: "Visits", sortable: true},
                         {accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-"},
                         {accessor: "action", title: "Action", render: (row) => <Button size="xs" variant="light" onClick={() => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`)}>열람 이력</Button>},
@@ -2400,7 +2337,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
 
     return (
         <Stack gap="lg">
-            <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
+            <SimpleGrid cols={{base: 1, sm: 2, lg: 3}} spacing="md">
                 <Card withBorder radius="md" padding="md">
                     <Group justify="space-between" align="flex-start">
                         <Stack gap={2}>
@@ -2439,18 +2376,12 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     <Button variant="light" onClick={() => onNavigate("/Admin/User")}>사용자 목록 보기</Button>
                 </SimpleGrid>
             </Card>
-            <SimpleGrid cols={{base: 1, sm: 2, lg: 4}} spacing="md">
+            <SimpleGrid cols={{base: 1, sm: 2, lg: 3}} spacing="md">
                 <StatTrendCard
                     title="New Users"
                     color="blue"
                     rows={dailyStats.userCreated}
                     total={dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}
-                />
-                <StatTrendCard
-                    title="Site User Joins"
-                    color="teal"
-                    rows={dailyStats.siteUserCreated}
-                    total={dailyStats.siteUserCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)}
                 />
                 <StatTrendCard
                     title="New Pages"
@@ -2476,7 +2407,6 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 <MultiTrendChart
                     series={[
                         {name: "New Users", color: "blue", rows: dailyStats.userCreated},
-                        {name: "Site User Joins", color: "teal", rows: dailyStats.siteUserCreated},
                         {name: "New Pages", color: "indigo", rows: dailyStats.pageCreated},
                         {name: "Page Edits", color: "grape", rows: dailyStats.pageEdited},
                     ]}

@@ -147,7 +147,6 @@ SET dateTime = DATE_SUB(dateTime, INTERVAL 9 HOUR);
 - `PageMeta.dateUpdated`
 - `User.created`
 - `User.updated`
-- `UserSite.created`
 - `SiteDomain.created`
 - `Attachment.dateInserted`
 - `Attachment.dateUpdated`

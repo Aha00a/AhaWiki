@@ -4,8 +4,7 @@ import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import logics.ApplicationConf
 import logics.{AhaWikiCache, SessionLogic}
-import models.ContextSite
-import models.tables.{Site, UserSite}
+import models.tables.Site
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -51,18 +50,6 @@ class Admin @Inject()(
       database.withConnection { implicit connection =>
         val seqSite = Site.select()
         Ok(views.html.Admin.sites(seqSite))
-      }
-    } else {
-      Forbidden("Access denied.")
-    }
-  }
-
-  def siteUsers(): Action[AnyContent] = Action { implicit request =>
-    if (isAdmin) {
-      database.withConnection { implicit connection =>
-        implicit val site: Site = logics.SiteLogic.get(request.host)
-        val seqUserSite = UserSite.select()
-        Ok(views.html.Admin.siteUsers(seqUserSite)(ContextSite()))
       }
     } else {
       Forbidden("Access denied.")
