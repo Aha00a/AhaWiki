@@ -10,3 +10,5 @@ cache
 logs
 node_modules
 target
+/docs/ahawiki.net
+/docs/ahawiki.net2
