@@ -7,20 +7,24 @@
 - [ ] 다른 AhaWiki 사이트의 같은 이름 문서와 유사 문서를 자동으로 보여준다.
 - [ ] private page는 기존 `SimilarPages`처럼 계산은 하되 렌더링에서 제외한다.
 - [ ] sister wiki 유사 문서는 새 매크로를 만들지 않고 기존 `MacroSimilarPages`를 확장해서 보여준다.
+- [ ] 같은 이름 문서는 별도 `MacroSisterPages`로 만들고 `See Also`의 다른 블록으로 보여준다.
 
 ## 표시 위치
 
-- [ ] `See Also` 자동 생성 마크업의 기존 `Similar Pages` 섹션을 확장한다.
-- [ ] 새 `[[SisterPages]]` 매크로는 만들지 않는다.
-- [ ] 기존 `[[SimilarPages]]` 출력 안에 same-site 유사 문서와 sister wiki 유사 문서를 함께 보여준다.
+- [ ] 같은 이름 문서는 `See Also` 자동 생성 마크업에 별도 `Sister Pages` 블록으로 추가한다.
+- [ ] 유사 문서는 기존 `Similar Pages` 섹션과 `[[SimilarPages]]` 매크로를 확장한다.
 
 ```wiki
+=== Sister Pages === #Sister-Pages-Generated.generated
+[[SisterPages]]
+
 === Similar Pages === #Similar-Pages-Generated.generated
 [[SimilarPages]]
 ```
 
-- [ ] 필요하면 `Similar Pages` 내부에 하위 heading을 추가한다.
-- [ ] 예: `Same Site`, `Sister Wikis`
+- [ ] `Similar Pages` 내부에는 하위 heading을 추가하지 않는다.
+- [ ] 동일 site의 비슷한 문서를 먼저 보여준다.
+- [ ] 그 아래에 다른 site의 비슷한 문서를 자연스럽게 이어서 보여준다.
 
 ## 추천 종류
 
@@ -32,7 +36,7 @@
 - [ ] 렌더링 시점에 anonymous user가 읽을 수 있는 페이지만 표시한다.
 - [ ] 같은 이름 문서가 유사 문서 목록에도 나오면 중복 제거하지 않고 그대로 둔다.
 - [ ] 링크 생성에는 대상 site의 대표 도메인을 사용한다.
-- [ ] 같은 이름 문서를 `MacroSimilarPages` 출력에 포함할지, 별도 generated block으로 둘지 결정한다.
+- [ ] 같은 이름 문서는 `MacroSimilarPages`가 아니라 `MacroSisterPages`에서 담당한다.
 
 참고 캐시:
 
@@ -101,14 +105,15 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 ## 매크로
 
-- [ ] 신규 `MacroSisterPages`는 추가하지 않는다.
-- [ ] 기존 `MacroSimilarPages`를 확장한다.
-- [ ] same-site 유사 문서를 기존처럼 렌더링한다.
-- [ ] cross-site 유사 문서를 추가로 렌더링한다.
-- [ ] 같은 이름 문서를 `MacroSimilarPages` 안에 넣을 경우, 유사 문서보다 먼저 렌더링한다.
-- [ ] 후보가 없으면 아무것도 출력하지 않는다.
-- [ ] 같은 이름 문서는 매칭되는 site를 모두 보여준다.
-- [ ] 유사 문서는 상위 5개 정도로 제한한다.
+- [ ] `MacroSisterPages`를 추가한다.
+- [ ] `MacroSisterPages`는 같은 이름 문서만 담당한다.
+- [ ] `MacroSisterPages`는 후보가 없으면 아무것도 출력하지 않는다.
+- [ ] `MacroSisterPages`는 매칭되는 site를 모두 보여준다.
+- [ ] 기존 `MacroSimilarPages`를 확장해서 cross-site 유사 문서를 추가한다.
+- [ ] `MacroSimilarPages`는 same-site 유사 문서를 기존처럼 먼저 렌더링한다.
+- [ ] `MacroSimilarPages`는 cross-site 유사 문서를 그 아래에 이어서 렌더링한다.
+- [ ] `MacroSimilarPages` 내부에는 `Same Site`, `Sister Wikis` 같은 하위 heading을 추가하지 않는다.
+- [ ] cross-site 유사 문서는 상위 20개 정도로 제한한다.
 - [ ] site 이름을 표시한다.
 - [ ] page 제목을 표시한다.
 - [ ] similarity score를 표시한다.
@@ -116,17 +121,15 @@ CREATE TABLE CalculatedCosineSimilarity (
 출력 예시:
 
 ```wiki
-==== Same Site
  1. [[PercentLinkTitle(0.91, SomePage, "")]] [[Trivial(term(3:2))]]
-
-==== Sister Wikis
- * [https://example.org/w/Foo ExampleWiki: Foo]
  * [https://example.org/w/Bar ExampleWiki: Bar] 0.82
 ```
 
 ## See Also 연동
 
-- [ ] `Wiki.getAhaMarkAdditionalInfo`의 generated `See Also` 마크업은 가능하면 기존 `Similar Pages` 섹션을 유지한다.
+- [ ] `Wiki.getAhaMarkAdditionalInfo`의 generated `See Also` 마크업에 `Sister Pages` 블록을 추가한다.
+- [ ] `Sister Pages` 블록은 같은 이름 문서가 있을 때만 출력한다.
+- [ ] 기존 `Similar Pages` 섹션은 유지한다.
 - [ ] `has similar pages` 판단이 same-site 유사 문서뿐 아니라 sister wiki 유사 문서도 고려하도록 확장한다.
 - [ ] sister wiki 결과만 있는 경우에도 `Similar Pages` 섹션이 출력되게 한다.
 - [ ] sister wiki 결과가 없으면 기존 출력과 동일하게 동작한다.
@@ -142,6 +145,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] Schema
 - [ ] Backlinks
+- [ ] Sister Pages
 - [ ] Similar Pages
 - [ ] Adjacent Pages
 
@@ -169,7 +173,6 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] `PageMeta.canReadAnonymous`를 이번 작업에 포함할지, 후속 최적화로 둘지 결정한다.
 - [ ] `canReadAnonymous`를 넣는다면 권한 변경 시 재계산 범위를 어떻게 잡을지 결정한다.
 - [ ] sister wiki 유사 문서 개수를 5개로 고정할지 설정화할지 결정한다.
-- [ ] 같은 이름 문서를 `MacroSimilarPages` 내부에 포함할지 별도 generated block으로 둘지 결정한다.
 
 ## 구현 체크리스트
 
@@ -181,7 +184,10 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] 대표 도메인 조회 helper 추가
 - [ ] cross-site cosine 재계산 로직 추가
 - [ ] page save/delete/rename 계산 흐름에 재계산 연결
+- [ ] `MacroSisterPages` 추가
+- [ ] `ExtractConvertInjectMacro`에 `MacroSisterPages` 등록
 - [ ] `MacroSimilarPages` 확장
+- [ ] generated `See Also`에 `Sister Pages` 마크업 추가
 - [ ] sister wiki 결과만 있어도 generated `Similar Pages` 섹션이 출력되게 조건 확장
 - [ ] 같은 이름 매칭 unit test 추가
 - [ ] 렌더링 시점 public/private filtering unit test 추가
