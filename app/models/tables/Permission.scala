@@ -25,40 +25,27 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
 
   lazy val specificity: Int = targetLevel + actorLevel
 
-  def matches(target: String, actor: String): Boolean = {
-    if (!targetMatches(target)) return false
+  def matches(target: String, actor: String): Boolean =
+    targetMatches(target) && actorMatches(actor)
 
+  private def actorMatches(actor: String): Boolean =
     actorType match {
-      case Permission.ActorType.All =>
-      case Permission.ActorType.Login =>
-        if (actor.isNullOrEmpty) return false
-      case Permission.ActorType.Exact =>
-        if (this.actor != actor) return false
-      case Permission.ActorType.Domain =>
-        if (!actor.endsWith(this.actor)) return false
+      case Permission.ActorType.All => true
+      case Permission.ActorType.Login => actor.isNotNullOrEmpty
+      case Permission.ActorType.Exact => this.actor == actor
+      case Permission.ActorType.Domain => actor.endsWith(this.actor)
     }
 
-    //noinspection RemoveRedundantReturn
-    return true
-  }
-
-  def targetMatches(target: String): Boolean = {
+  def targetMatches(target: String): Boolean =
     targetType match {
-      case Permission.TargetType.All =>
-      case Permission.TargetType.Exact =>
-        if (this.target != target) return false
-      case Permission.TargetType.StartsWith =>
-        if (!target.startsWith(this.target)) return false
-      case Permission.TargetType.EndsWith =>
-        if (!target.endsWith(this.target)) return false
+      case Permission.TargetType.All => true
+      case Permission.TargetType.Exact => this.target == target
+      case Permission.TargetType.StartsWith => target.startsWith(this.target)
+      case Permission.TargetType.EndsWith => target.endsWith(this.target)
       case Permission.TargetType.RegularExpression =>
         // Matcher.matches enforces a full target match, so Permission regex rows do not need ^...$ anchors.
-        if (!targetRegularExpressionPattern.exists(_.matcher(target).matches())) return false
+        targetRegularExpressionPattern.exists(_.matcher(target).matches())
     }
-
-    //noinspection RemoveRedundantReturn
-    return true
-  }
 
   def permitted(action: Int): Boolean = this.action >= action
 
