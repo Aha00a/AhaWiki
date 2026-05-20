@@ -6,17 +6,17 @@
 - [ ] 첫 버전에서는 sister wiki 전용 위키 링크 문법을 추가하지 않는다.
 - [ ] 다른 AhaWiki 사이트의 같은 이름 문서와 유사 문서를 자동으로 보여준다.
 - [ ] private page는 기존 `SimilarPages`처럼 계산은 하되 렌더링에서 제외한다.
+- [ ] 같은 이름 문서는 별도 `MacroTwinPages`로 만들고 `See Also`의 다른 블록으로 보여준다.
 - [ ] sister wiki 유사 문서는 새 매크로를 만들지 않고 기존 `MacroSimilarPages`를 확장해서 보여준다.
-- [ ] 같은 이름 문서는 별도 `MacroSisterPages`로 만들고 `See Also`의 다른 블록으로 보여준다.
 
 ## 표시 위치
 
-- [ ] 같은 이름 문서는 `See Also` 자동 생성 마크업에 별도 `Sister Pages` 블록으로 추가한다.
+- [ ] 같은 이름 문서는 `See Also` 자동 생성 마크업에 별도 `Twin Pages` 블록으로 추가한다.
 - [ ] 유사 문서는 기존 `Similar Pages` 섹션과 `[[SimilarPages]]` 매크로를 확장한다.
 
 ```wiki
-=== Sister Pages === #Sister-Pages-Generated.generated
-[[SisterPages]]
+=== Twin Pages === #Twin-Pages-Generated.generated
+[[TwinPages]]
 
 === Similar Pages === #Similar-Pages-Generated.generated
 [[SimilarPages]]
@@ -36,7 +36,7 @@
 - [ ] 렌더링 시점에 anonymous user가 읽을 수 있는 페이지만 표시한다.
 - [ ] 같은 이름 문서가 유사 문서 목록에도 나오면 중복 제거하지 않고 그대로 둔다.
 - [ ] 링크 생성에는 대상 site의 대표 도메인을 사용한다.
-- [ ] 같은 이름 문서는 `MacroSimilarPages`가 아니라 `MacroSisterPages`에서 담당한다.
+- [ ] 같은 이름 문서는 `MacroSimilarPages`가 아니라 `MacroTwinPages`에서 담당한다.
 
 참고 캐시:
 
@@ -48,6 +48,7 @@
 - [ ] cross-site cosine similarity는 페이지 렌더링 시점에 계산하지 않는다.
 - [ ] cross-site cosine similarity는 미리 계산해서 DB에 저장한다.
 - [ ] score는 현재 `SimilarPages`처럼 사용자에게 보여준다.
+- [ ] cross-site 결과도 same-site와 동일하게 `PercentLinkTitle`과 high scored term들을 보여준다.
 - [ ] 렌더링 시점에 anonymous user가 읽을 수 있는 페이지만 표시한다.
 
 ## 데이터 모델
@@ -94,7 +95,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] `SiteDomain`에 여러 domain이 있으면 `created`가 가장 작은 row를 대표 도메인으로 사용한다.
 - [ ] 보통 domain은 1개라는 전제를 둔다.
-- [ ] 대표 도메인은 sister wiki 링크 생성에 사용한다.
+- [ ] 대표 도메인은 twin page와 cross-site similar page 링크 생성에 사용한다.
 
 ## 공개 범위 규칙
 
@@ -105,15 +106,18 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 ## 매크로
 
-- [ ] `MacroSisterPages`를 추가한다.
-- [ ] `MacroSisterPages`는 같은 이름 문서만 담당한다.
-- [ ] `MacroSisterPages`는 후보가 없으면 아무것도 출력하지 않는다.
-- [ ] `MacroSisterPages`는 매칭되는 site를 모두 보여준다.
+- [ ] `MacroTwinPages`를 추가한다.
+- [ ] `MacroTwinPages`는 같은 이름 문서만 담당한다.
+- [ ] `MacroTwinPages`는 후보가 없으면 아무것도 출력하지 않는다.
+- [ ] `MacroTwinPages`는 매칭되는 site를 모두 보여준다.
 - [ ] 기존 `MacroSimilarPages`를 확장해서 cross-site 유사 문서를 추가한다.
 - [ ] `MacroSimilarPages`는 same-site 유사 문서를 기존처럼 먼저 렌더링한다.
 - [ ] `MacroSimilarPages`는 cross-site 유사 문서를 그 아래에 이어서 렌더링한다.
 - [ ] `MacroSimilarPages` 내부에는 `Same Site`, `Sister Wikis` 같은 하위 heading을 추가하지 않는다.
-- [ ] cross-site 유사 문서는 상위 20개 정도로 제한한다.
+- [ ] cross-site 유사 문서도 same-site와 동일한 출력 포맷을 사용한다.
+- [ ] cross-site 유사 문서도 `PercentLinkTitle(similarity, page, alias)`를 사용한다.
+- [ ] cross-site 유사 문서도 `PageLogic.selectHighScoredTerm`에 준하는 term 표시를 제공한다.
+- [ ] cross-site 유사 문서는 상위 5개 정도로 제한한다.
 - [ ] site 이름을 표시한다.
 - [ ] page 제목을 표시한다.
 - [ ] similarity score를 표시한다.
@@ -122,13 +126,13 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 ```wiki
  1. [[PercentLinkTitle(0.91, SomePage, "")]] [[Trivial(term(3:2))]]
- * [https://example.org/w/Bar ExampleWiki: Bar] 0.82
+ 1. [[PercentLinkTitle(0.82, ExampleWiki:Bar, "")]] [[Trivial(term(2:1))]]
 ```
 
 ## See Also 연동
 
-- [ ] `Wiki.getAhaMarkAdditionalInfo`의 generated `See Also` 마크업에 `Sister Pages` 블록을 추가한다.
-- [ ] `Sister Pages` 블록은 같은 이름 문서가 있을 때만 출력한다.
+- [ ] `Wiki.getAhaMarkAdditionalInfo`의 generated `See Also` 마크업에 `Twin Pages` 블록을 추가한다.
+- [ ] `Twin Pages` 블록은 같은 이름 문서가 있을 때만 출력한다.
 - [ ] 기존 `Similar Pages` 섹션은 유지한다.
 - [ ] `has similar pages` 판단이 same-site 유사 문서뿐 아니라 sister wiki 유사 문서도 고려하도록 확장한다.
 - [ ] sister wiki 결과만 있는 경우에도 `Similar Pages` 섹션이 출력되게 한다.
@@ -145,7 +149,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] Schema
 - [ ] Backlinks
-- [ ] Sister Pages
+- [ ] Twin Pages
 - [ ] Similar Pages
 - [ ] Adjacent Pages
 
@@ -173,6 +177,8 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] `PageMeta.canReadAnonymous`를 이번 작업에 포함할지, 후속 최적화로 둘지 결정한다.
 - [ ] `canReadAnonymous`를 넣는다면 권한 변경 시 재계산 범위를 어떻게 잡을지 결정한다.
 - [ ] sister wiki 유사 문서 개수를 5개로 고정할지 설정화할지 결정한다.
+- [ ] cross-site `PercentLinkTitle`의 page 인자 표현을 `SiteName:PageName`으로 할지 별도 매크로 확장으로 처리할지 결정한다.
+- [ ] cross-site high scored term 조회를 기존 `PageLogic.selectHighScoredTerm` 확장으로 처리할지 별도 helper로 둘지 결정한다.
 
 ## 구현 체크리스트
 
@@ -184,11 +190,12 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] 대표 도메인 조회 helper 추가
 - [ ] cross-site cosine 재계산 로직 추가
 - [ ] page save/delete/rename 계산 흐름에 재계산 연결
-- [ ] `MacroSisterPages` 추가
-- [ ] `ExtractConvertInjectMacro`에 `MacroSisterPages` 등록
+- [ ] `MacroTwinPages` 추가
+- [ ] `ExtractConvertInjectMacro`에 `MacroTwinPages` 등록
 - [ ] `MacroSimilarPages` 확장
-- [ ] generated `See Also`에 `Sister Pages` 마크업 추가
+- [ ] generated `See Also`에 `Twin Pages` 마크업 추가
 - [ ] sister wiki 결과만 있어도 generated `Similar Pages` 섹션이 출력되게 조건 확장
+- [ ] cross-site similar page도 `PercentLinkTitle`과 high scored term을 표시하도록 구현
 - [ ] 같은 이름 매칭 unit test 추가
 - [ ] 렌더링 시점 public/private filtering unit test 추가
 - [ ] 내부 similarity 기존 동작 유지 test 추가
