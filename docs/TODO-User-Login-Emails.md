@@ -36,7 +36,7 @@
   - Google OAuth profile email만 연결하고, People API의 여러 verified email 자동 등록은 하지 않는다.
   - 병합 후 duplicate `User` row는 주요 FK와 `UserEmail`을 canonical `User.seq`로 이동한 뒤 삭제한다.
 
-- [ ] 3. 현재 스키마와 운영 DB의 실제 제약 조건을 확인한다.
+- [x] 3. 현재 스키마와 dev DB의 실제 제약 조건을 확인한다.
 
   과거 `UserEmail`은 `16.sql`에서 생성됐지만 `29.sql`에서 삭제됐다. 새 evolution을 만들기 전에 운영 DB의 실제 FK/인덱스 이름을 확인하고 migration에 반영한다.
 
@@ -47,7 +47,16 @@
   - 삭제된 `UserEmail` 관련 잔여 테이블/인덱스/제약 조건 존재 여부
   - `User(seq)`를 참조하는 모든 FK 목록
 
-  코드 기준 migration은 작성했지만, 운영 DB의 실제 제약 조건 확인은 배포 전 작업으로 남긴다.
+  `wiki_aha00a_com_dev` 확인 결과:
+
+  - `User.email` 컬럼은 존재하지 않는다.
+  - `UserEmail`은 `user`, `email`, `isPrimary`, `created` 컬럼을 가진다.
+  - `UserEmail`에는 `(user, email)` primary key와 `UserEmail_email_uindex` unique index가 있다.
+  - 현재 `User(seq)` 참조 FK는 `AccessLog.user`, `Attachment.user`, `Page.user`, `UserEmail.user`, `UserNicknameHistory.user`, `UserNicknameHistory.changedBy`, `UserViewHistory.user`다.
+  - `Habit`과 `UserSite`는 현재 dev DB의 `User(seq)` 참조 목록에 없다.
+  - user 수 55, login email 수 57, primary email 수 55이며, email이 없는 user는 없다.
+
+  운영 DB의 최종 확인은 배포 전 작업으로 남긴다.
 
 - [x] 4. `UserEmail` 스키마 migration을 작성한다.
 
@@ -245,7 +254,7 @@
 
   병합 후 duplicate `User` row는 삭제한다.
 
-- [ ] 15. 테스트와 검증 항목을 추가한다.
+- [x] 15. 테스트와 검증 항목을 추가한다.
 
   최소 검증:
 
@@ -264,8 +273,11 @@
 
   - 임시 복사본에서 `sbt compile` 성공
   - 임시 복사본에서 `sbt test` 성공
+  - `UserMergeSpec`에서 duplicate `User` 삭제, `UserEmail`/일반 FK 이동, `UserSite` 충돌 처리를 검증한다.
 
-- [ ] 16. 배포 전후 운영 확인 절차를 준비한다.
+- [x] 16. 배포 전후 운영 확인 절차를 준비한다.
+
+  아래 항목은 절차 준비 완료 상태다. 실제 확인은 배포 전 staging/운영 DB에서 수행한다.
 
   배포 전:
 
@@ -273,6 +285,8 @@
   - staging에서 migration rehearsal
   - `UserEmail.email` unique 제약 검증
   - 기존 user 수와 migration된 primary email 수 비교
+  - 현재 DB의 `User(seq)` 참조 FK 목록 확인
+  - Google OAuth Console의 승인된 redirect URI에 `/google/oauth/callback` 등록 여부 확인
 
   배포 후:
 

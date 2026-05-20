@@ -17,7 +17,7 @@ object UserEmail {
 
   def selectByEmail(email: String)(implicit connection: Connection): Option[UserEmail] = {
     SQL"""
-      SELECT user, email, isPrimary, created
+      SELECT `user`, email, isPrimary, created
       FROM UserEmail
       WHERE email = $email
     """.as(rowParser.singleOpt).map(flatten).map(UserEmail.tupled)
@@ -25,9 +25,9 @@ object UserEmail {
 
   def selectByUser(user: Long)(implicit connection: Connection): Seq[UserEmail] = {
     SQL"""
-      SELECT user, email, isPrimary, created
+      SELECT `user`, email, isPrimary, created
       FROM UserEmail
-      WHERE user = $user
+      WHERE `user` = $user
       ORDER BY isPrimary DESC, email
     """.as(rowParser.*).map(flatten).map(UserEmail.tupled)
   }
@@ -40,7 +40,7 @@ object UserEmail {
 
   def insert(user: Long, email: String, isPrimary: Boolean)(implicit connection: Connection): Int = {
     SQL"""
-      INSERT INTO UserEmail (user, email, isPrimary)
+      INSERT INTO UserEmail (`user`, email, isPrimary)
       VALUES ($user, $email, $isPrimary)
     """.executeUpdate()
   }
@@ -48,17 +48,17 @@ object UserEmail {
   def delete(user: Long, email: String)(implicit connection: Connection): Int = {
     SQL"""
       DELETE FROM UserEmail
-      WHERE user = $user
+      WHERE `user` = $user
         AND email = $email
     """.executeUpdate()
   }
 
   def setPrimary(user: Long, email: String)(implicit connection: Connection): Int = {
-    SQL"UPDATE UserEmail SET isPrimary = false WHERE user = $user".executeUpdate()
+    SQL"UPDATE UserEmail SET isPrimary = false WHERE `user` = $user".executeUpdate()
     SQL"""
       UPDATE UserEmail
       SET isPrimary = true
-      WHERE user = $user
+      WHERE `user` = $user
         AND email = $email
     """.executeUpdate()
   }
@@ -67,7 +67,7 @@ object UserEmail {
     SQL"""
       SELECT COUNT(*) AS cnt
       FROM UserEmail
-      WHERE user = $user
+      WHERE `user` = $user
         AND isPrimary = true
     """.as(long("cnt").single) > 0
 }
