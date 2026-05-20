@@ -31,10 +31,10 @@ REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT *
     FROM (
         SELECT
-            TF3.site site1,
-            TF3.name name1,
-            ${site.seq} site2,
-            $name name2,
+            TF3.site AS site1,
+            TF3.name AS name1,
+            CAST(${site.seq} AS SIGNED) AS site2,
+            CAST($name AS CHAR(255)) AS name2,
             IFNULL(
                 (
                     SELECT

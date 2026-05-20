@@ -216,7 +216,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [x] `PageLogic.selectHighScoredTerm`를 cross-site 조회가 가능하도록 확장
 - [x] cross-site similar page 표시 개수를 20개로 구현
 - [x] cross-site 링크 표기를 `Abbr:PageName`으로 구현
-- [ ] 같은 이름 매칭 unit test 추가
-- [ ] 렌더링 시점 public/private filtering unit test 추가
-- [ ] 내부 similarity 기존 동작 유지 test 추가
-- [ ] cross-site cosine row insert/lookup unit test 추가
+- [x] 같은 이름 매칭 unit test 추가
+- [x] 렌더링 시점 public/private filtering unit test 추가
+- [x] 내부 similarity 기존 동작 유지 test 추가
+- [x] cross-site cosine row insert/lookup unit test 추가
