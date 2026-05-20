@@ -476,6 +476,8 @@ controllerComponents: ControllerComponents,
               val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
               PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
 
+            case Some("cursor.ping") => ()
+
             case _ =>
           }
         }

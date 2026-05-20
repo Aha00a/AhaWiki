@@ -129,6 +129,7 @@
                 var wsUrl = wsProtocol + '://' + window.location.host + wsPath;
                 var reconnectDelayMs = 1500;
                 var socket;
+                var heartbeatTimer = null;
                 var mySenderId = null;
                 var lastSentAt = 0;
                 var pointerMap = {};
@@ -301,6 +302,10 @@
                     socket.onopen = function () {
                         saveSenderId = getOrCreateSaveSenderId();
                         socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
+                        heartbeatTimer = setInterval(function () {
+                            if (!socket || socket.readyState !== WebSocket.OPEN) return;
+                            socket.send(JSON.stringify({ type: 'cursor.ping' }));
+                        }, 30000);
                     };
                     socket.onmessage = function (event) {
                         try {
@@ -344,6 +349,10 @@
                         console.warn('websocket error', wsUrl, event);
                     };
                     socket.onclose = function (event) {
+                        if (heartbeatTimer) {
+                            clearInterval(heartbeatTimer);
+                            heartbeatTimer = null;
+                        }
                         console.warn('websocket closed', wsUrl, 'code=' + event.code, 'reason=' + event.reason);
                         setTimeout(connect, reconnectDelayMs);
                     };
