@@ -31,6 +31,7 @@ object ExtractConvertInjectMacro {
 
     MacroAdjacentPages,
     MacroPageMap,
+    MacroTwinPages,
     MacroSimilarPages,
     MacroBacklinks,
     MacroYears,

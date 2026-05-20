@@ -27,6 +27,16 @@ object Site {
       .map(Site.tupled)
   }
 
+  def updateAbbrAndMainDomain(seq: Long, abbr: String, mainDomain: String)(implicit connection: Connection): Int = {
+    SQL"""
+      UPDATE Site
+      SET abbr = $abbr,
+          mainDomain = $mainDomain,
+          updated = NOW()
+      WHERE seq = $seq
+    """.executeUpdate()
+  }
+
 //  def selectWhereDomain(domain: String)(implicit connection: Connection): Option[Site] = {
 //    SQL"""
 //        SELECT

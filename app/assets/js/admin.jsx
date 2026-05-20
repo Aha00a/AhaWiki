@@ -814,6 +814,36 @@ function useAdminData(page) {
         }
     }, []);
 
+    const saveSiteMeta = useCallback(async (siteSeq, nextMeta) => {
+        if (!siteSeq) {
+            return null;
+        }
+        setError("");
+        const csrfToken = await fetchCsrfToken();
+        const payload = new URLSearchParams();
+        payload.set("abbr", nextMeta?.abbr ?? "");
+        payload.set("mainDomain", nextMeta?.mainDomain ?? "");
+        payload.set(csrfToken.name, csrfToken.value);
+        payload.set("csrfToken", csrfToken.value);
+        const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
+            method: "PUT",
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "Csrf-Token": csrfToken.value,
+                "X-CSRF-Token": csrfToken.value,
+            },
+            body: payload.toString(),
+        });
+        if (!response.ok) {
+            const payloadJson = await response.json().catch(() => null);
+            throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+        }
+        const updatedSite = await response.json();
+        setSites((currentSites) => currentSites.map((site) => site.seq === updatedSite.seq ? {...site, ...updatedSite} : site));
+        return updatedSite;
+    }, []);
+
     const loadAdminSitePageNames = useCallback(async (siteSeq) => {
         if (!siteSeq) {
             return [];
@@ -1050,6 +1080,7 @@ function useAdminData(page) {
         setSiteTheme,
         loadSiteTheme,
         saveSiteTheme,
+        saveSiteMeta,
         savingSiteTheme,
         loadAdminSitePageNames,
         runSiteCalculate,
@@ -1132,6 +1163,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         setSiteTheme,
         loadSiteTheme,
         saveSiteTheme,
+        saveSiteMeta,
         savingSiteTheme,
         loadAdminSitePageNames,
         runSiteCalculate,
@@ -1192,6 +1224,8 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [allUserSortOrder, setAllUserSortOrder] = useState("desc");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
+    const [siteMetaForm, setSiteMetaForm] = useState({abbr: "", mainDomain: ""});
+    const [savingSiteMeta, setSavingSiteMeta] = useState(false);
     const [sitePageNames, setSitePageNames] = useState([]);
     const [adminPageMetaPage, setAdminPageMetaPage] = useState(1);
     const [adminPageMetaSearchInput, setAdminPageMetaSearchInput] = useState("");
@@ -1225,6 +1259,12 @@ function AdminContent({page, onNavigate, pathname, search}) {
         () => (selectedSite?.domains ?? []).join(", ") || "-",
         [selectedSite],
     );
+    useEffect(() => {
+        setSiteMetaForm({
+            abbr: selectedSite?.abbr ?? "",
+            mainDomain: selectedSite?.mainDomain ?? "",
+        });
+    }, [selectedSite]);
     const selectedAccessLogSiteSeq = useMemo(
         () => parseSiteSeqForAccessLogPathname(pathname),
         [pathname],
@@ -1505,6 +1545,40 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 <Text fw={700}>{sitePageNames.length.toLocaleString()}</Text>
                             </Paper>
                         </SimpleGrid>
+                        <Group align="end" mt="sm">
+                            <TextInput
+                                label="Abbr"
+                                value={siteMetaForm.abbr}
+                                onChange={(event) => setSiteMetaForm({...siteMetaForm, abbr: event.currentTarget.value})}
+                                disabled={!selectedSite}
+                            />
+                            <TextInput
+                                label="Main Domain"
+                                value={siteMetaForm.mainDomain}
+                                onChange={(event) => setSiteMetaForm({...siteMetaForm, mainDomain: event.currentTarget.value})}
+                                disabled={!selectedSite}
+                            />
+                            <Button
+                                variant="light"
+                                disabled={!selectedSite || !siteMetaForm.abbr.trim()}
+                                loading={savingSiteMeta}
+                                onClick={async () => {
+                                    if (!selectedSite) {
+                                        return;
+                                    }
+                                    setSavingSiteMeta(true);
+                                    try {
+                                        await saveSiteMeta(selectedSite.seq, siteMetaForm);
+                                    } catch (caughtError) {
+                                        logError("site-meta:save:error", caughtError);
+                                    } finally {
+                                        setSavingSiteMeta(false);
+                                    }
+                                }}
+                            >
+                                Save site meta
+                            </Button>
+                        </Group>
                     </Stack>
                 </Card>
                 {page === "site-detail" ? (

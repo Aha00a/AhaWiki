@@ -161,6 +161,15 @@ object PageLogic {
   }
 
   def selectHighScoredTerm(name: String, similarPageNames: Seq[String])(implicit connection: Connection, site: models.tables.Site): Seq[HighScoredTerm] = {
+    selectHighScoredTerm(site, name, site, similarPageNames)
+  }
+
+  def selectHighScoredTerm(
+    sourceSite: models.tables.Site,
+    name: String,
+    targetSite: models.tables.Site,
+    similarPageNames: Seq[String],
+  )(implicit connection: Connection): Seq[HighScoredTerm] = {
     if (similarPageNames.isEmpty) {
       immutable.Seq()
     } else {
@@ -171,8 +180,8 @@ SELECT
     INNER JOIN CalculatedTermFrequency CTF2 ON CTF1.term = CTF2.term
     INNER JOIN CalculatedTerm CT ON CTF1.term = CT.seq
     WHERE
-        CTF1.site = ${site.seq} AND CTF1.name = $name AND
-        CTF2.site = ${site.seq} AND CTF2.name IN ($similarPageNames)
+        CTF1.site = ${sourceSite.seq} AND CTF1.name = $name AND
+        CTF2.site = ${targetSite.seq} AND CTF2.name IN ($similarPageNames)
     ORDER BY frequency1 + frequency2 DESC
       """
         .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)

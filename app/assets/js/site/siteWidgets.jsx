@@ -11,11 +11,11 @@ export function SiteListCard({sites, onNavigate}) {
             <Text size="sm" c="dimmed" mb="md">전체 사이트 목록입니다. 상세 설정은 각 사이트의 관리 버튼으로 이동하세요.</Text>
             <Divider mb="md"/>
             <Table striped highlightOnHover withTableBorder withColumnBorders>
-                <Table.Thead><Table.Tr><Table.Th>Seq</Table.Th><Table.Th>Name</Table.Th><Table.Th>Domains</Table.Th><Table.Th>Users</Table.Th><Table.Th>Pages</Table.Th><Table.Th>Action</Table.Th></Table.Tr></Table.Thead>
+                <Table.Thead><Table.Tr><Table.Th>Seq</Table.Th><Table.Th>Name</Table.Th><Table.Th>Abbr</Table.Th><Table.Th>Main Domain</Table.Th><Table.Th>Domains</Table.Th><Table.Th>Users</Table.Th><Table.Th>Pages</Table.Th><Table.Th>Action</Table.Th></Table.Tr></Table.Thead>
                 <Table.Tbody>
                     {sites.map((site) => (
                         <Table.Tr key={site.seq}>
-                            <Table.Td>{site.seq}</Table.Td><Table.Td>{site.name}</Table.Td><Table.Td>{(site.domains ?? []).join(", ") || "-"}</Table.Td><Table.Td>{site.userCount ?? 0}</Table.Td><Table.Td>{site.pageCount ?? 0}</Table.Td>
+                            <Table.Td>{site.seq}</Table.Td><Table.Td>{site.name}</Table.Td><Table.Td>{site.abbr ?? "-"}</Table.Td><Table.Td>{site.mainDomain ?? "-"}</Table.Td><Table.Td>{(site.domains ?? []).join(", ") || "-"}</Table.Td><Table.Td>{site.userCount ?? 0}</Table.Td><Table.Td>{site.pageCount ?? 0}</Table.Td>
                             <Table.Td><Button size="xs" variant="light" onClick={() => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`)}>관리</Button></Table.Td>
                         </Table.Tr>
                     ))}

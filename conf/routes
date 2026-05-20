@@ -58,6 +58,7 @@ GET           /api/csrf                              controllers.Api.csrf
 GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
 GET           /api/Admin/Sites                       controllers.Api.adminSites
+PUT           /api/Admin/Site/:seq                   controllers.Api.adminUpdateSite(seq: Long)
 GET           /api/Admin/SiteUsers                   controllers.Api.adminSiteUsers
 GET           /api/Admin/Users                       controllers.Api.adminUsers
 GET           /api/Admin/UserViews                   controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)

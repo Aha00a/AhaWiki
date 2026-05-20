@@ -270,7 +270,7 @@ function MultiTrendChart({ series }) {
 import React4 from "react";
 import { Badge as Badge3, Button, Card as Card2, Divider as Divider2, Group as Group3, Table as Table2, Text as Text3, Title as Title2 } from "@mantine/core";
 function SiteListCard({ sites, onNavigate }) {
-  return /* @__PURE__ */ React4.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React4.createElement(Title2, { order: 3 }, "Site List"), /* @__PURE__ */ React4.createElement(Badge3, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React4.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React4.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React4.createElement(Table2.Thead, null, /* @__PURE__ */ React4.createElement(Table2.Tr, null, /* @__PURE__ */ React4.createElement(Table2.Th, null, "Seq"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Name"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Domains"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Users"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Pages"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Action"))), /* @__PURE__ */ React4.createElement(Table2.Tbody, null, sites.map((site) => /* @__PURE__ */ React4.createElement(Table2.Tr, { key: site.seq }, /* @__PURE__ */ React4.createElement(Table2.Td, null, site.seq), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.name), /* @__PURE__ */ React4.createElement(Table2.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.userCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, /* @__PURE__ */ React4.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
+  return /* @__PURE__ */ React4.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React4.createElement(Title2, { order: 3 }, "Site List"), /* @__PURE__ */ React4.createElement(Badge3, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React4.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React4.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React4.createElement(Table2.Thead, null, /* @__PURE__ */ React4.createElement(Table2.Tr, null, /* @__PURE__ */ React4.createElement(Table2.Th, null, "Seq"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Name"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Abbr"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Main Domain"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Domains"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Users"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Pages"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Action"))), /* @__PURE__ */ React4.createElement(Table2.Tbody, null, sites.map((site) => /* @__PURE__ */ React4.createElement(Table2.Tr, { key: site.seq }, /* @__PURE__ */ React4.createElement(Table2.Td, null, site.seq), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.name), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.abbr ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.mainDomain ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.userCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, /* @__PURE__ */ React4.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
 }
 
 // app/assets/js/admin.jsx
@@ -1001,6 +1001,35 @@ function useAdminData(page) {
       setSavingSiteTheme(false);
     }
   }, []);
+  const saveSiteMeta = useCallback(async (siteSeq, nextMeta) => {
+    if (!siteSeq) {
+      return null;
+    }
+    setError("");
+    const csrfToken = await fetchCsrfToken();
+    const payload = new URLSearchParams();
+    payload.set("abbr", nextMeta?.abbr ?? "");
+    payload.set("mainDomain", nextMeta?.mainDomain ?? "");
+    payload.set(csrfToken.name, csrfToken.value);
+    payload.set("csrfToken", csrfToken.value);
+    const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
+      method: "PUT",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Csrf-Token": csrfToken.value,
+        "X-CSRF-Token": csrfToken.value
+      },
+      body: payload.toString()
+    });
+    if (!response.ok) {
+      const payloadJson = await response.json().catch(() => null);
+      throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+    }
+    const updatedSite = await response.json();
+    setSites((currentSites) => currentSites.map((site) => site.seq === updatedSite.seq ? { ...site, ...updatedSite } : site));
+    return updatedSite;
+  }, []);
   const loadAdminSitePageNames = useCallback(async (siteSeq) => {
     if (!siteSeq) {
       return [];
@@ -1225,6 +1254,7 @@ function useAdminData(page) {
     setSiteTheme,
     loadSiteTheme,
     saveSiteTheme,
+    saveSiteMeta,
     savingSiteTheme,
     loadAdminSitePageNames,
     runSiteCalculate,
@@ -1305,6 +1335,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     setSiteTheme,
     loadSiteTheme,
     saveSiteTheme,
+    saveSiteMeta,
     savingSiteTheme,
     loadAdminSitePageNames,
     runSiteCalculate,
@@ -1365,6 +1396,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [allUserSortOrder, setAllUserSortOrder] = useState2("desc");
   const [faviconFile, setFaviconFile] = useState2(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState2("");
+  const [siteMetaForm, setSiteMetaForm] = useState2({ abbr: "", mainDomain: "" });
+  const [savingSiteMeta, setSavingSiteMeta] = useState2(false);
   const [sitePageNames, setSitePageNames] = useState2([]);
   const [adminPageMetaPage, setAdminPageMetaPage] = useState2(1);
   const [adminPageMetaSearchInput, setAdminPageMetaSearchInput] = useState2("");
@@ -1398,6 +1431,12 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     () => (selectedSite?.domains ?? []).join(", ") || "-",
     [selectedSite]
   );
+  useEffect2(() => {
+    setSiteMetaForm({
+      abbr: selectedSite?.abbr ?? "",
+      mainDomain: selectedSite?.mainDomain ?? ""
+    });
+  }, [selectedSite]);
   const selectedAccessLogSiteSeq = useMemo2(
     () => parseSiteSeqForAccessLogPathname(pathname),
     [pathname]
@@ -1554,7 +1593,44 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     ));
   }
   if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))))), page === "site-detail" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "filled", onClick: () => {
+    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))), /* @__PURE__ */ React5.createElement(Group4, { align: "end", mt: "sm" }, /* @__PURE__ */ React5.createElement(
+      TextInput,
+      {
+        label: "Abbr",
+        value: siteMetaForm.abbr,
+        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, abbr: event.currentTarget.value }),
+        disabled: !selectedSite
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      TextInput,
+      {
+        label: "Main Domain",
+        value: siteMetaForm.mainDomain,
+        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, mainDomain: event.currentTarget.value }),
+        disabled: !selectedSite
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      Button2,
+      {
+        variant: "light",
+        disabled: !selectedSite || !siteMetaForm.abbr.trim(),
+        loading: savingSiteMeta,
+        onClick: async () => {
+          if (!selectedSite) {
+            return;
+          }
+          setSavingSiteMeta(true);
+          try {
+            await saveSiteMeta(selectedSite.seq, siteMetaForm);
+          } catch (caughtError) {
+            logError("site-meta:save:error", caughtError);
+          } finally {
+            setSavingSiteMeta(false);
+          }
+        }
+      },
+      "Save site meta"
+    )))), page === "site-detail" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "filled", onClick: () => {
       setAdminPageMetaPage(1);
       setAdminPageMetaSearch(adminPageMetaSearchInput);
       loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearchInput, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });

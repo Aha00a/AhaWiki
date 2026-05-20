@@ -585,20 +585,22 @@ controllerComponents: ControllerComponents,
     Ok(views.html.Wiki.diff(name, before, beforeComment, after, afterComment, unifiedDiff)).withHeaderRobotNoIndexNoFollow
   }
 
-  private case class MarkupContext(schema: String, backlinks: Boolean, similarPages: Boolean, adjacentPages: Int)
+  private case class MarkupContext(schema: String, backlinks: Boolean, twinPages: Boolean, similarPages: Boolean, adjacentPages: Int)
 
   def getAhaMarkAdditionalInfo(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): String = {
     import models.tables.CalculatedLink
 
     val schemaMarkup = getMarkupSchema(name)
     val hasBacklinks = CalculatedLink.selectDstLimit1(name).isDefined
-    val similarPages = CalculatedCosineSimilarity.select(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
+    val sameSiteSimilarPages = CalculatedCosineSimilarity.selectSameSite(name).view.filter(_.and(wikiContext.pageCanSee)).take(1).toSeq
+    val crossSiteSimilarPages = CalculatedCosineSimilarity.selectCrossSite(name).view.filter(c => anonymousCanRead(c.site2, c.name2)).take(1).toSeq
     val adjacentPagesCount = Adjacent.getSeqLinkFiltered(name).length
 
     val context = MarkupContext(
       schema = schemaMarkup.toOption.map(generateSchemaMarkup).getOrElse(""),
       backlinks = hasBacklinks,
-      similarPages = similarPages.nonEmpty,
+      twinPages = hasTwinPages(name),
+      similarPages = sameSiteSimilarPages.nonEmpty || crossSiteSimilarPages.nonEmpty,
       adjacentPages = adjacentPagesCount,
     )
 
@@ -617,11 +619,15 @@ controllerComponents: ControllerComponents,
   private def generateSimilarPagesMarkup: String =
     "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
 
+  private def generateTwinPagesMarkup: String =
+    "=== Twin Pages === #Twin-Pages-Generated.generated\n[[TwinPages]]"
+
   private def isEmptyMarkup(context: MarkupContext): Boolean =
-    context.schema.isEmpty && !context.backlinks && !context.similarPages && context.adjacentPages == 0
+    context.schema.isEmpty && !context.backlinks && !context.twinPages && !context.similarPages && context.adjacentPages == 0
 
   private def generateFullMarkup(context: MarkupContext): String = {
     val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup else ""
+    val twinPagesMarkup = if (context.twinPages) generateTwinPagesMarkup else ""
     val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
 
     s"""
@@ -630,12 +636,32 @@ controllerComponents: ControllerComponents,
        |
        |$backlinksMarkup
        |
+       |$twinPagesMarkup
+       |
        |$similarPagesMarkup
        |
        |[[Html(<div style="clear: both;"></div>)]]
        |=== Adjacent Pages === #Adjacent-Pages-Generated.generated
        |[[AdjacentPages]]
        |""".stripMargin
+  }
+
+  private def hasTwinPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean = {
+    AhaWikiCacheMemoryDomainSite
+      .getSites()(wikiContext.database)
+      .filter(_.seq != wikiContext.site.seq)
+      .exists { targetSite =>
+        implicit val databaseSite: (Database, Site) = (wikiContext.database, targetSite)
+        wikiContext.ahaWikiCache.PageMeta.SeqPageLatestSummary.get().exists(_.name == name) &&
+          anonymousCanRead(targetSite.seq, name)
+      }
+  }
+
+  private def anonymousCanRead(siteSeq: Long, pageName: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean = {
+    AhaWikiCacheMemoryDomainSite.getSite(siteSeq)(wikiContext.database).exists { targetSite =>
+      val permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, targetSite))
+      permissionLogic.permitted(pageName, "", Permission.Action.Read.id)
+    }
   }
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {

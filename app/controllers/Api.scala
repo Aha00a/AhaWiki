@@ -20,6 +20,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryApiLinks
+import logics.AhaWikiCacheMemoryDomainSite
 import logics.AhaWikiCacheMemoryPermission
 import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
@@ -300,6 +301,37 @@ class Api @Inject()(
           }
 
         Ok(sites.asJson)
+      }
+    }
+  }
+
+  def adminUpdateSite(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+      val abbr = form.get("abbr").flatMap(_.headOption).map(_.trim).getOrElse("")
+      val mainDomain = form.get("mainDomain").flatMap(_.headOption).map(_.trim).getOrElse("")
+      if (abbr.isEmpty) {
+        BadRequest(Map("error" -> "abbr is required").asJson.toString()).as(JSON)
+      } else {
+        database.withConnection { implicit connection =>
+          try {
+            val updated = Site.updateAbbrAndMainDomain(seq, abbr, mainDomain)
+            if (updated == 0) {
+              NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+            } else {
+              AhaWikiCacheMemoryDomainSite.invalidate()
+              SiteLogic.get(seq)(database) match {
+                case Some(site) => Ok(site.asJson)
+                case None => NotFound(Map("error" -> s"site not found after update: $seq").asJson.toString()).as(JSON)
+              }
+            }
+          } catch {
+            case e: java.sql.SQLIntegrityConstraintViolationException =>
+              BadRequest(Map("error" -> Option(e.getMessage).getOrElse("site update violates constraints")).asJson.toString()).as(JSON)
+          }
+        }
       }
     }
   }
