@@ -950,6 +950,12 @@ kbd:hover > kbd {
   column-count: 3;
   column-gap: 16px;
 }
+.AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow > dt.schemaFieldKey {
+  -webkit-column-span: all;
+  column-span: all;
+  display: block;
+  margin-bottom: 4px;
+}
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
   break-inside: avoid;
 }
@@ -1470,6 +1476,12 @@ kbd:hover > kbd {
 .AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow {
   column-count: 3;
   column-gap: 16px;
+}
+.AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow > dt.schemaFieldKey {
+  -webkit-column-span: all;
+  column-span: all;
+  display: block;
+  margin-bottom: 4px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
   break-inside: avoid;
@@ -2168,6 +2180,12 @@ kbd:hover > kbd {
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow {
   column-count: 3;
   column-gap: 16px;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow > dt.schemaFieldKey {
+  -webkit-column-span: all;
+  column-span: all;
+  display: block;
+  margin-bottom: 4px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow.actorCharacterPairRow dd.schemaFieldValuePair {
   break-inside: avoid;
