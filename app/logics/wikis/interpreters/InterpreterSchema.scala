@@ -97,6 +97,7 @@ object InterpreterSchema extends TraitInterpreter {
           case None =>
             (acc :+ seqNow, false)
         }
+      case (state, _) => state
     }
     if (skip) seqSeqFieldNew else seqSeqFieldNew :+ seqSeqField.last
   }

@@ -25,7 +25,7 @@ POST          /actions/delete                        controllers.Wiki.delete()
 POST          /actions/deleteLastRevision            controllers.Wiki.deleteLastRevision()
 POST          /actions/rename                        controllers.Wiki.rename()
 POST          /actions/syncGoogleSpreadsheet         controllers.Wiki.syncGoogleSpreadsheet()
-POST          /preview                               controllers.Wiki.preview
+POST          /preview                               controllers.Wiki.preview()
 
 GET           /login                                 controllers.Auth.login
 GET           /logout                                controllers.Auth.logout
@@ -36,24 +36,24 @@ GET           /google/oauth/login                    controllers.GoogleOAuth.log
 GET           /google/oauth/callback                 controllers.GoogleOAuth.callback(code:String)
 GET           /google/oauth/connect                  controllers.GoogleOAuth.connect
 
-GET           /Admin                                 controllers.Admin.index
-GET           /Admin/                                controllers.Admin.index
-GET           /Admin/Site                            controllers.Admin.index
+GET           /Admin                                 controllers.Admin.index()
+GET           /Admin/                                controllers.Admin.index()
+GET           /Admin/Site                            controllers.Admin.index()
 GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Permission            controllers.Admin.site(seq: Long)
-GET           /Admin/User                            controllers.Admin.index
-GET           /Admin/User/UserViewHistory            controllers.Admin.index
-GET           /Admin/AccessLog                       controllers.Admin.index
+GET           /Admin/User                            controllers.Admin.index()
+GET           /Admin/User/UserViewHistory            controllers.Admin.index()
+GET           /Admin/AccessLog                       controllers.Admin.index()
 GET           /Admin/:seq/AccessLog                  controllers.Admin.site(seq: Long)
-GET           /Admin/RecentChange                    controllers.Admin.index
-GET           /Admin/S3                              controllers.Admin.index
-GET           /Admin/Sites                           controllers.Admin.sites
-GET           /Admin/AllUsers                        controllers.Admin.index
-GET           /Admin/UserViews                       controllers.Admin.index
-GET           /Admin/RecentChanges                   controllers.Admin.index
-GET           /Admin/CrawlerCache                    controllers.Admin.index
+GET           /Admin/RecentChange                    controllers.Admin.index()
+GET           /Admin/S3                              controllers.Admin.index()
+GET           /Admin/Sites                           controllers.Admin.sites()
+GET           /Admin/AllUsers                        controllers.Admin.index()
+GET           /Admin/UserViews                       controllers.Admin.index()
+GET           /Admin/RecentChanges                   controllers.Admin.index()
+GET           /Admin/CrawlerCache                    controllers.Admin.index()
 
 
 GET           /api/csrf                              controllers.Api.csrf
@@ -81,7 +81,7 @@ POST          /api/Admin/Site/:seq/Permissions       controllers.Api.adminUpsert
 DELETE        /api/Admin/Site/:seq/Permissions       controllers.Api.adminDeletePermission(seq: Long)
 GET           /api/Admin/Site/:seq/PermissionDiagnose controllers.Api.adminPermissionDiagnose(seq: Long, pageName: String ?= "", actor: String ?= "", action: String ?= "Read")
 POST          /api/Admin/Site/:seq/Calculate         controllers.Api.adminSiteCalculate(seq: Long)
-GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats
+GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats()
 GET           /api/Admin/S3Objects                   controllers.Api.adminS3Objects(prefix: String ?= "", maxKeys: Int ?= 500, recursive: Boolean ?= false)
 DELETE        /api/Admin/S3Objects                   controllers.Api.adminDeleteS3Objects
 GET           /api/Admin/S3DownloadUrl               controllers.Api.adminS3DownloadUrl(key: String)

@@ -87,7 +87,7 @@
                                 </li>
                                 @if(isAdmin) {
                                     <li>
-                                        <a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
+                                        <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
                                     </li>
                                 }
                                 <li>
@@ -114,7 +114,7 @@
                         <li><a href="/w/User:@(user.nickname)">@currentUserProfileImageUrl.map { imageUrl => <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/> }.getOrElse { <i class="fas fa-user-cog"></i> }@(user.nickname)</a></li>
                         <li><a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>Account</a></li>
                         @if(isAdmin) {
-                            <li><a href="@routes.Admin.index" rel="nofollow"><i class="fas fa-tools"></i>Admin</a></li>
+                            <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a></li>
                         }
                         <li><a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
                     }

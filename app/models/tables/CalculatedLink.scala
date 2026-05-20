@@ -84,10 +84,10 @@ object CalculatedLink {
       Array[Int]()
     } else {
       val values = seq.map(s => Seq[NamedParameter](
-        Symbol("site") -> site.seq,
-        Symbol("src") -> s.src,
-        Symbol("dst") -> s.dst,
-        Symbol("alias") -> s.alias
+        "site" -> site.seq,
+        "src" -> s.src,
+        "dst" -> s.dst,
+        "alias" -> s.alias
       ))
       BatchSql(
         "REPLACE INTO CalculatedLink (site, src, dst, alias) values ({site}, {src}, {dst}, {alias})",

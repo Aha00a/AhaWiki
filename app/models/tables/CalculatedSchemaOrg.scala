@@ -31,11 +31,11 @@ object CalculatedSchemaOrg {
       Array[Int]()
     } else {
       val values = seq.map(s => Seq[NamedParameter](
-        Symbol("site") -> site.seq,
-        Symbol("page") -> s.page,
-        Symbol("cls") -> s.cls,
-        Symbol("prop") -> s.prop,
-        Symbol("value") -> s.value
+        "site" -> site.seq,
+        "page" -> s.page,
+        "cls" -> s.cls,
+        "prop" -> s.prop,
+        "value" -> s.value
       ))
       BatchSql(
         "REPLACE INTO CalculatedSchemaOrg (site, page, cls, prop, value) values ({site}, {page}, {cls}, {prop}, {value})",

@@ -698,7 +698,7 @@ controllerComponents: ControllerComponents,
       "lineEnd" -> optional(number),
       "saveSenderId" -> optional(text),
       "pagePermissionMode" -> optional(text),
-    )).bindFromRequest.get
+    )).bindFromRequest().get
     val isMinorEdit = minorEdit.getOrElse(false)
     val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
     val remoteAddress = request.remoteAddressWithXRealIp
@@ -823,7 +823,7 @@ controllerComponents: ControllerComponents,
 
 
   def delete(): Action[AnyContent] = Action { implicit request =>
-    val name = Form("name" -> text).bindFromRequest.get
+    val name = Form("name" -> text).bindFromRequest().get
     database.withTransaction { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
@@ -852,7 +852,7 @@ controllerComponents: ControllerComponents,
 
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request =>
     database.withTransaction { implicit connection =>
-      val name = Form("name" -> text).bindFromRequest.get
+      val name = Form("name" -> text).bindFromRequest().get
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -884,7 +884,7 @@ controllerComponents: ControllerComponents,
   def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest.get
+      val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest().get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
           implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
@@ -927,7 +927,7 @@ controllerComponents: ControllerComponents,
   def rename(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest.get
+      val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest().get
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
@@ -956,7 +956,7 @@ controllerComponents: ControllerComponents,
       "text" -> text,
       "lineStart" -> optional(number),
       "lineEnd" -> optional(number)
-    )).bindFromRequest.get
+    )).bindFromRequest().get
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
@@ -1094,7 +1094,7 @@ controllerComponents: ControllerComponents,
   def deleteAttachment(): Action[AnyContent] = Action { implicit request =>
     import play.api.libs.json.Json
 
-    val form = Form(tuple("pageName" -> text, "objectKey" -> text)).bindFromRequest
+    val form = Form(tuple("pageName" -> text, "objectKey" -> text)).bindFromRequest()
     form.fold(_ => BadRequest("invalid form"), {
       case (pageNameRaw, objectKeyRaw) =>
         val pageName = pageNameRaw.trim
@@ -1138,7 +1138,7 @@ controllerComponents: ControllerComponents,
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
-    val form = Form(tuple("pageName" -> text, "dataUrl" -> text)).bindFromRequest
+    val form = Form(tuple("pageName" -> text, "dataUrl" -> text)).bindFromRequest()
     form.fold(_ => BadRequest("invalid form"), {
       case (pageName, dataUrl) =>
         database.withConnection { implicit connection =>

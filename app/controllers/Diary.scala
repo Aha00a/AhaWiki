@@ -33,7 +33,7 @@ class Diary @Inject()(implicit val
                      ) extends BaseController {
 
   def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
-    val q = Form("q" -> text).bindFromRequest.get
+    val q = Form("q" -> text).bindFromRequest().get
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString
 
