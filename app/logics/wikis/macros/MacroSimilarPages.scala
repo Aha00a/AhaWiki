@@ -7,8 +7,9 @@ import logics.PermissionLogic
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
-import models.tables.Permission
 import models.tables.CalculatedCosineSimilarity
+import models.tables.Permission
+import models.tables.Site
 import play.api.Logging
 
 import scala.collection.immutable
@@ -20,7 +21,6 @@ object MacroSimilarPages extends TraitMacro with Logging {
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
     wikiContext.database.withConnection { implicit connection =>
-      import models.tables.Site
       implicit val site: Site = wikiContext.site
 
       val siteBySeq: Map[Long, Site] = logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.database).map(site => site.seq -> site).toMap
@@ -49,8 +49,6 @@ object MacroSimilarPages extends TraitMacro with Logging {
         ""
       } else {
         import models.HighScoredTerm
-        import models.tables.Site
-        implicit val site: Site = wikiContext.site
 
         def toTermString(seq: Seq[HighScoredTerm]): String =
           seq.take(10).map(h => s"${h.term}(${h.frequency1}:${h.frequency2})").mkString(", ")
@@ -77,16 +75,74 @@ object MacroSimilarPages extends TraitMacro with Logging {
           }
 
         val highScoredTerms = sameSiteHighScoredTerms ++ crossSiteHighScoredTerms
-        cosineSimilarities.map { c =>
-          val link = siteBySeq
-            .get(c.site2)
-            .filter(_.seq != wikiContext.site.seq)
-            .map(targetSite => s"${targetSite.abbr}:${c.name2}")
-            .getOrElse(c.name2)
-          s""" 1. [[PercentLinkTitle(${c.similarity}, $link, "")]] [[Trivial(${{highScoredTerms.getOrElse((c.site2, c.name2), "")}})]]"""
-        }.mkString("\n")
+        formatSimilarPagesMarkup(
+          sameSiteSimilarities = sameSiteSimilarities,
+          crossSiteSimilarities = crossSiteSimilarities,
+          siteBySeq = siteBySeq,
+          currentSiteSeq = wikiContext.site.seq,
+          highScoredTerms = highScoredTerms,
+        )
       }
     }
+  }
+
+  private[macros] def formatSimilarPagesMarkup(
+    sameSiteSimilarities: Seq[CalculatedCosineSimilarity],
+    crossSiteSimilarities: Seq[CalculatedCosineSimilarity],
+    siteBySeq: Map[Long, Site],
+    currentSiteSeq: Long,
+    highScoredTerms: Map[(Long, String), String],
+  ): String = {
+    val hasSameSite = sameSiteSimilarities.nonEmpty
+    val hasCrossSite = crossSiteSimilarities.nonEmpty
+
+    if (hasSameSite && hasCrossSite) {
+      Seq(
+        formatSimilarPagesGroup("Same Wiki", sameSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms),
+        formatSimilarPagesGroup("Sister Wikis", crossSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms),
+      ).flatten.mkString("\n")
+    } else {
+      formatSimilarPagesItems(
+        similarities = sameSiteSimilarities ++ crossSiteSimilarities,
+        siteBySeq = siteBySeq,
+        currentSiteSeq = currentSiteSeq,
+        highScoredTerms = highScoredTerms,
+        indent = " ",
+      )
+    }
+  }
+
+  private def formatSimilarPagesGroup(
+    heading: String,
+    similarities: Seq[CalculatedCosineSimilarity],
+    siteBySeq: Map[Long, Site],
+    currentSiteSeq: Long,
+    highScoredTerms: Map[(Long, String), String],
+  ): Option[String] = {
+    if (similarities.isEmpty) {
+      None
+    } else {
+      val links = formatSimilarPagesItems(similarities, siteBySeq, currentSiteSeq, highScoredTerms, indent = "  ")
+
+      Some(s" * $heading\n$links")
+    }
+  }
+
+  private def formatSimilarPagesItems(
+    similarities: Seq[CalculatedCosineSimilarity],
+    siteBySeq: Map[Long, Site],
+    currentSiteSeq: Long,
+    highScoredTerms: Map[(Long, String), String],
+    indent: String,
+  ): String = {
+    similarities.map { c =>
+      val link = siteBySeq
+        .get(c.site2)
+        .filter(_.seq != currentSiteSeq)
+        .map(targetSite => s"${targetSite.abbr}:${c.name2}")
+        .getOrElse(c.name2)
+      s"""${indent}1. [[PercentLinkTitle(${c.similarity}, $link, "")]] [[Trivial(${{highScoredTerms.getOrElse((c.site2, c.name2), "")}})]]"""
+    }.mkString("\n")
   }
 
 }
