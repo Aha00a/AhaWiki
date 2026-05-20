@@ -66,6 +66,7 @@ import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.Random
+import scala.util.Try
 
 
 class Api @Inject()(
@@ -1391,6 +1392,69 @@ class Api @Inject()(
     }
 
     Ok(properties.asJson)
+  }
+
+
+  private def compactPreviewText(raw: String, maxLength: Int = 400): String = {
+    val normalized = Option(raw).getOrElse("").replaceAll("""[\s\xA0]+""", " ").trim
+    if (normalized.length <= maxLength) normalized else normalized.take(maxLength).trim + "..."
+  }
+
+  private def previewImageUrl(raw: String)(implicit request: RequestHeader): String = {
+    val trimmed = Option(raw).map(_.trim).getOrElse("")
+    if (trimmed.isEmpty) {
+      ""
+    } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      trimmed
+    } else if (trimmed.startsWith("//")) {
+      s"${request.scheme}:$trimmed"
+    } else if (trimmed.startsWith("Attachment/")) {
+      S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, trimmed).toOption.getOrElse("")
+    } else if (trimmed.startsWith("/")) {
+      s"${request.scheme}://${request.host}$trimmed"
+    } else {
+      s"${request.scheme}://${request.host}/$trimmed"
+    }
+  }
+
+  def pagePreview(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
+    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    database.withConnection { implicit connection =>
+      implicit val site: Site = SiteLogic.get(request.host)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+      Page.selectLastRevision(name) match {
+        case None =>
+          NotFound(Json.obj(
+            "success" -> Json.fromBoolean(false),
+            "message" -> Json.fromString("Page not found"),
+          ).toString()).as(JSON)
+
+        case Some(page) =>
+          val pageContent = PageContent(page.content)
+          if (!WikiPermission().isReadable(name, Some(pageContent))) {
+            Forbidden(Json.obj(
+              "success" -> Json.fromBoolean(false),
+              "message" -> Json.fromString("Permission denied"),
+            ).toString()).as(JSON)
+          } else {
+            val renderedText = Try(Interpreters.toText(page.content)).getOrElse(pageContent.content)
+            val description = pageContent.redirect
+              .map(target => s"Redirect: $target")
+              .getOrElse(compactPreviewText(renderedText))
+            val image = models.tables.PageMeta.select(name).flatMap(_.image).map(image => previewImageUrl(image)).getOrElse("")
+
+            Ok(Json.obj(
+              "success" -> Json.fromBoolean(true),
+              "title" -> Json.fromString(name),
+              "image" -> Json.fromString(image),
+              "description" -> Json.fromString(description),
+              "revision" -> Json.fromLong(page.revision),
+            ))
+          }
+      }
+    }
   }
 
 

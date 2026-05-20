@@ -375,38 +375,124 @@
                 requestAnimationFrame(tickCursorRender);
             })();
 
-            $('a[target=_blank]').hover(function () {
-                var href = $(this).attr('href');
-                var div = $('<div class="crawlerPreview"><div class="circle"/></div>')
-                    .attr('data-href', href)
-                    .css({
-                        position: 'absolute',
-                        top: $(this).offset().top + $(this).height() + 5,
-                        left: $(this).offset().left
-                    })
-                    .appendTo($("body"));
+            (function () {
+                var previewCache = {};
+                var fallbackImageUrl = "/public/img/attachmentFallback.svg";
 
-                $(document).data(href, div);
-                $.ajax({
-                    url: "/api/crawler",
-                    data: { q: href },
-                    success: function(data) {
-                        $(document).data(href).html('').append(
-                            $('<div></div>')
-                                .append($('<img class="preview"/>').attr('src', data.image))
-                                .append($('<h5/>').text(data.title))
-                                .append($('<p/>').text(data.description))
-                        );
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.log(jqXHR, textStatus, errorThrown);
-                        $(document).data(href).remove();
+                function createPreview($link, key) {
+                    var div = $('<div class="crawlerPreview"><div class="circle"/></div>')
+                        .attr('data-preview-key', key)
+                        .css({
+                            position: 'absolute',
+                            top: $link.offset().top + $link.height() + 5,
+                            left: $link.offset().left
+                        })
+                        .appendTo($("body"));
+
+                    $(document).data(key, div);
+                    return div;
+                }
+
+                function renderPreview(div, data) {
+                    data = data || {};
+                    div.html('').append(
+                        $('<div></div>')
+                            .append($('<img class="preview"/>').attr('src', data.image || fallbackImageUrl))
+                            .append($('<h5/>').text(data.title || ""))
+                            .append($('<p/>').text(data.description || ""))
+                    );
+                }
+
+                function removePreview(key) {
+                    var div = $(document).data(key);
+                    if (div) {
+                        div.remove();
+                        $(document).removeData(key);
+                    }
+                }
+
+                function showPreview($link, key, ajaxOptions) {
+                    var div = createPreview($link, key);
+                    if (previewCache[key]) {
+                        renderPreview(div, previewCache[key]);
+                        return;
+                    }
+
+                    $.ajax($.extend({}, ajaxOptions, {
+                        success: function(data) {
+                            previewCache[key] = data;
+                            var currentDiv = $(document).data(key);
+                            if (currentDiv) {
+                                renderPreview(currentDiv, data);
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.log(jqXHR, textStatus, errorThrown);
+                            removePreview(key);
+                        }
+                    }));
+                }
+
+                function pageNameFromWikiHref(href) {
+                    if (!href || href.charAt(0) === "#" || href.charAt(0) === "?") {
+                        return null;
+                    }
+                    if (href.indexOf("javascript:") === 0 || href.indexOf("mailto:") === 0) {
+                        return null;
+                    }
+
+                    try {
+                        var url = new URL(href, window.location.origin);
+                        if (url.origin !== window.location.origin || url.pathname.indexOf("/w/") !== 0) {
+                            return null;
+                        }
+
+                        var nameEncoded = url.pathname.substring(3);
+                        if (!nameEncoded) {
+                            return null;
+                        }
+                        return decodeURIComponent(nameEncoded);
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
+                $('a[target=_blank]').hover(function () {
+                    var href = $(this).attr('href');
+                    showPreview($(this), "external:" + href, {
+                        url: "/api/crawler",
+                        data: { q: href }
+                    });
+                }, function () {
+                    var href = $(this).attr('href');
+                    removePreview("external:" + href);
+                });
+
+                $('.wikiContent').on('mouseenter', 'a[href]:not([target=_blank])', function () {
+                    var link = $(this);
+                    if (link.hasClass('missing')) {
+                        return;
+                    }
+
+                    var pageName = pageNameFromWikiHref(link.attr('href'));
+                    if (!pageName) {
+                        return;
+                    }
+
+                    var key = "internal:" + pageName;
+                    link.data('previewKey', key);
+                    showPreview(link, key, {
+                        url: "/api/pagePreview/" + encodeURIComponent(pageName)
+                    });
+                }).on('mouseleave', 'a[href]:not([target=_blank])', function () {
+                    var link = $(this);
+                    var key = link.data('previewKey');
+                    if (key) {
+                        removePreview(key);
+                        link.removeData('previewKey');
                     }
                 });
-            }, function () {
-                var href = $(this).attr('href');
-                $(document).data(href).remove();
-            });
+            })();
 
             $('.tablesorter').tablesorter();
 
