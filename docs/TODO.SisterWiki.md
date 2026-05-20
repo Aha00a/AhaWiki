@@ -10,6 +10,10 @@
 - [ ] sister wiki 유사 문서는 새 매크로를 만들지 않고 기존 `MacroSimilarPages`를 확장해서 보여준다.
 - [ ] site 약어는 `Site.abbr` 필드를 사용한다.
 - [ ] cross-site 링크 표기는 `Abbr:PageName` 형식을 사용한다.
+- [ ] `Site.abbr`는 unique 해야 한다.
+- [ ] `Abbr:PageName`과 같은 이름의 페이지가 현재 site에 존재하면 현재 site 페이지를 우선한다.
+- [ ] 현재 site에 해당 이름의 페이지가 없을 때만 twin page 링크로 해석한다.
+- [ ] evolution schema 작업을 가장 먼저 수행한다.
 
 ## 표시 위치
 
@@ -57,6 +61,7 @@
 
 - [ ] `Site`에 `abbr` 필드를 추가한다.
 - [ ] migration 시 기존 row의 `abbr` 값은 `name`과 동일하게 채운다.
+- [ ] `Site.abbr`에는 unique 제약을 건다.
 - [ ] 새 site 생성/관리 UI에서도 `abbr`를 다룰 수 있게 한다.
 - [ ] 별도 `CalculatedSisterCosineSimilarity` 테이블을 만들지 않는다.
 - [ ] 기존 `CalculatedCosineSimilarity`를 site-aware pair 구조로 확장한다.
@@ -182,15 +187,15 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] `PageMeta.canReadAnonymous`를 이번 작업에 포함할지, 후속 최적화로 둘지 결정한다.
 - [ ] `canReadAnonymous`를 넣는다면 권한 변경 시 재계산 범위를 어떻게 잡을지 결정한다.
-- [ ] `Site.abbr`의 unique 제약을 둘지 결정한다.
-- [ ] `Abbr:PageName`이 기존 콜론 포함 page name과 충돌할 때 처리 규칙을 결정한다.
 - [ ] cross-site `PercentLinkTitle`의 page 인자 `Abbr:PageName`을 내부적으로 실제 외부 링크로 해석하는 방식을 결정한다.
 - [ ] cross-site high scored term 조회를 기존 `PageLogic.selectHighScoredTerm` 확장으로 처리할지 별도 helper로 둘지 결정한다.
 
 ## 구현 체크리스트
 
+- [ ] evolution schema 작업을 가장 먼저 수행
 - [ ] `Site.abbr` schema migration 추가
 - [ ] 기존 `Site.abbr` 값을 `Site.name`과 동일하게 backfill
+- [ ] `Site.abbr` unique index 추가
 - [ ] `Site` model에 `abbr` 필드 추가
 - [ ] Admin site API/UI에 `abbr` 반영
 - [ ] `CalculatedCosineSimilarity` schema migration 추가
