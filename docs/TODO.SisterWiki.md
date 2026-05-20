@@ -150,13 +150,6 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [x] sister wiki 결과만 있는 경우에도 `Similar Pages` 섹션이 출력되게 한다.
 - [x] sister wiki 결과가 없으면 기존 출력과 동일하게 동작한다.
 
-현재 generated subsection:
-
-- [ ] Schema
-- [ ] Backlinks
-- [ ] Similar Pages
-- [ ] Adjacent Pages
-
 제안 순서:
 
 - [x] Schema
@@ -176,7 +169,6 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [x] reverse row도 함께 저장한다.
 - [x] `CalculatedTermFrequency`를 term vector source로 사용한다.
 - [x] 초기 threshold는 기존 내부 cosine과 같은 `similarity > 0.3`으로 시작한다.
-- [ ] 실제 결과 품질을 보고 threshold를 조정한다.
 
 ## 캐싱
 
