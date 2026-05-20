@@ -28,6 +28,9 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
   def matches(target: String, actor: String): Boolean =
     targetMatches(target) && actorMatches(actor)
 
+  def matches(target: String, actors: Seq[String]): Boolean =
+    targetMatches(target) && actorMatches(actors)
+
   private def actorMatches(actor: String): Boolean =
     actorType match {
       case Permission.ActorType.All => true
@@ -35,6 +38,16 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
       case Permission.ActorType.Exact => this.actor == actor
       case Permission.ActorType.Domain => actor.endsWith(this.actor)
     }
+
+  private def actorMatches(actors: Seq[String]): Boolean = {
+    val normalizedActors = actors.filter(_.isNotNullOrEmpty)
+    actorType match {
+      case Permission.ActorType.All => true
+      case Permission.ActorType.Login => normalizedActors.nonEmpty
+      case Permission.ActorType.Exact => normalizedActors.contains(this.actor)
+      case Permission.ActorType.Domain => normalizedActors.exists(_.endsWith(this.actor))
+    }
+  }
 
   def targetMatches(target: String): Boolean =
     targetType match {

@@ -25,9 +25,8 @@ class Admin @Inject()(
   executionContext: ExecutionContext
 ) extends BaseController {
 
-  private def isAdmin(implicit request: RequestHeader): Boolean = {
-    SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
-  }
+  private def isAdmin(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isAdmin(request)
 
   def index(): Action[AnyContent] = Action { implicit request =>
     if (isAdmin) {

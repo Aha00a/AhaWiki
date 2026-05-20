@@ -30,6 +30,7 @@ import models.tables.Page
 import models.tables.Permission
 import models.tables.Site
 import models.tables.User
+import models.tables.UserEmail
 import play.api.Environment
 import play.api.Configuration
 import play.api.Logging
@@ -142,9 +143,8 @@ controllerComponents: ControllerComponents,
     pagePermissionModePrivateWrite,
   )
 
-  private def isAdmin(implicit request: RequestHeader): Boolean = {
-    SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
-  }
+  private def isAdmin(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isAdmin(request)
 
   private def normalizePagePermissionMode(value: Option[String], isNewPage: Boolean): String = {
     val mode = value.map(_.trim).filter(pagePermissionModes.contains).getOrElse(pagePermissionModeKeep)
@@ -154,7 +154,12 @@ controllerComponents: ControllerComponents,
   private def pagePermissionSummary(name: String)(implicit request: RequestHeader, connection: Connection, site: Site): Seq[(String, String)] = {
     val permissions = Permission.select()
     val permissionLogic = new PermissionLogic(permissions)
-    val currentActor = SessionLogic.getUser(request).map(_.email).getOrElse("")
+    val currentActors = SessionLogic.getUser(request)
+      .map { user =>
+        val emails = UserEmail.selectEmailsByUser(user.seq)
+        if (emails.nonEmpty) emails else user.loginEmail.toSeq
+      }
+      .getOrElse(Seq.empty)
     val matchingTargetPermissions = permissionLogic.seq.filter(_.targetMatches(name))
 
     def actionName(action: Int): String =
@@ -166,7 +171,7 @@ controllerComponents: ControllerComponents,
       s"${permission.targetType}($target), ${permission.actorType}($actor) -> ${actionName(permission.action)}"
     }
 
-    val currentMatch = permissionLogic.matched(name, currentActor)
+    val currentMatch = permissionLogic.matched(name, currentActors)
       .map(permission => "Current User" -> permissionLabel(permission))
       .getOrElse("Current User" -> "None")
     val anonymousMatch = permissionLogic.matched(name, "")
@@ -320,7 +325,7 @@ controllerComponents: ControllerComponents,
       site = siteSeq,
       pageName = pageName,
       user = currentUser.map(_.seq),
-      uploaderEmail = currentUser.map(_.email),
+      uploaderEmail = currentUser.flatMap(_.loginEmail),
       originalFilename = originalFilename,
       storedFilename = storedFilename,
       bucket = bucket,
@@ -739,7 +744,9 @@ controllerComponents: ControllerComponents,
                 PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, mergedBody)
               }
               if (willChangePagePermission) {
-                provider.getUser.map(_.email).filter(_.nonEmpty).foreach { actor =>
+                provider.getUser.flatMap { user =>
+                  UserEmail.selectPrimaryEmailByUser(user.seq).orElse(user.loginEmail)
+                }.filter(_.nonEmpty).foreach { actor =>
                   applyPagePermissionMode(name, pagePermissionMode, actor)
                 }
               }

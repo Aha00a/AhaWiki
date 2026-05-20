@@ -6,21 +6,32 @@ import models.ContextSite
 import models.PageContent
 import models.RequestWrapper
 import models.tables.Permission
+import models.tables.UserEmail
 
 import java.sql.Connection
 
 object WikiPermission {
   def apply()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): WikiPermission = {
+    val actors = provider.getUser
+      .map { user =>
+        val emails = UserEmail.selectEmailsByUser(user.seq)
+        if (emails.nonEmpty) emails else user.loginEmail.toSeq
+      }
+      .getOrElse(Seq.empty)
     new WikiPermission(
       permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, contextSite.site)),
-      actorProvider = () => provider.getUser.map(_.email).getOrElse(""),
+      actorProvider = () => actors,
     )
   }
 
   def fromRows(permissions: Seq[Permission], actor: String = ""): WikiPermission = {
+    fromRows(permissions, if (actor.isEmpty) Seq.empty else Seq(actor))
+  }
+
+  def fromRows(permissions: Seq[Permission], actors: Seq[String]): WikiPermission = {
     new WikiPermission(
       permissionLogic = new PermissionLogic(permissions),
-      actorProvider = () => actor,
+      actorProvider = () => actors,
     )
   }
 }
@@ -60,9 +71,10 @@ object WikiPermissionDetail {
     Permission.Action.values.find(_.id == action).map(_.toString).getOrElse(action.toString)
 }
 
-class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: () => String) {
+class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: () => Seq[String]) {
 
-  private def actor: String = actorProvider()
+  private def actors: Seq[String] = actorProvider()
+  private def actorLabel: String = actors.mkString(", ")
 
   def isReadable(target: String, pageContent: Option[PageContent]): Boolean = {
     isReadable(target)
@@ -73,7 +85,7 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   }
 
   def isReadable(target: String): Boolean = {
-    permissionLogic.permitted(target, actor, Permission.Action.Read.id)
+    permissionLogic.permitted(target, actors, Permission.Action.Read.id)
   }
 
   def isReadableByAnonymous(target: String, pageContent: Option[PageContent]): Boolean = {
@@ -86,7 +98,7 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
 
   def isWritable(target: String, pageContent: Option[PageContent]): Boolean = {
     val action = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
-    permissionLogic.permitted(target, actor, action)
+    permissionLogic.permitted(target, actors, action)
   }
 
   def isWritable(target: String, pageContent: PageContent): Boolean = {
@@ -94,15 +106,15 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   }
 
   def detail(target: String, pageContent: Option[PageContent]): WikiPermissionDetail = {
-    val currentActor = actor
+    val currentActors = actors
     val writeAction = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
 
     val anonymousReadPermission = permissionLogic.matched(target, "")
-    val currentReadPermission = permissionLogic.matched(target, currentActor)
-    val currentWritePermission = permissionLogic.matched(target, currentActor)
+    val currentReadPermission = permissionLogic.matched(target, currentActors)
+    val currentWritePermission = permissionLogic.matched(target, currentActors)
 
     WikiPermissionDetail(
-      actor = currentActor,
+      actor = actorLabel,
       anonymousReadPermission = anonymousReadPermission,
       currentReadPermission = currentReadPermission,
       currentWritePermission = currentWritePermission,

@@ -37,9 +37,8 @@ class ApiCrawler @Inject()(
 ) extends BaseController with Logging {
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
   def Forbidden(json: io.circe.Json): Result = Forbidden(json.toString()).as(JSON)
-  private def isAdmin(implicit request: RequestHeader): Boolean = {
-    logics.SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
-  }
+  private def isAdmin(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isAdmin(request)
 
   def get(q: String): Action[AnyContent] = Action { implicit request =>
     try {

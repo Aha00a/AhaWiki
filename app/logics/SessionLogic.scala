@@ -7,30 +7,40 @@ import play.api.mvc.Session
 
 object SessionLogic {
   val sessionKeySeq = "seq"
-  val sessionKeyEmail = "email"
+  val sessionKeyLoginEmail = "loginEmail"
+  val sessionKeyLegacyEmail = "email"
   val sessionKeyNickname = "nickname"
   val sessionKeyProfileImageUrl = "profileImageUrl"
+  val sessionKeyPendingMergeEmail = "pendingMergeEmail"
 
-  def getUser(request: RequestHeader): Option[User.IdEmailNickname] = {
+  def getUser(request: RequestHeader): Option[User.SessionUser] = {
     for {
       seq <- request.session.get(sessionKeySeq).flatMap(_.toLongOption)
-      email <- request.session.get(sessionKeyEmail)
       nickname <- request.session.get(sessionKeyNickname)
-    } yield User.IdEmailNickname(seq, email, nickname)
+    } yield User.SessionUser(
+      seq = seq,
+      nickname = nickname,
+      loginEmail = request.session.get(sessionKeyLoginEmail).orElse(request.session.get(sessionKeyLegacyEmail)).filter(_.nonEmpty),
+    )
   }
 
   def getUserProfileImageUrl(request: RequestHeader): Option[String] =
     request.session.get(sessionKeyProfileImageUrl).filter(_.nonEmpty)
 
-  def login(request: Request[Any], user: User.IdEmailNickname, profileImageUrl: Option[String] = None): Session = {
+  def login(request: Request[Any], user: User.SessionUser, profileImageUrl: Option[String] = None): Session = {
     val baseSession = request.session +
       (sessionKeySeq -> user.seq.toString) +
-      (sessionKeyEmail -> user.email) +
-      (sessionKeyNickname -> user.nickname)
+      (sessionKeyNickname -> user.nickname) -
+      sessionKeyLegacyEmail
+
+    val sessionWithLoginEmail = user.loginEmail.filter(_.nonEmpty) match {
+      case Some(email) => baseSession + (sessionKeyLoginEmail -> email)
+      case None => baseSession - sessionKeyLoginEmail
+    }
 
     profileImageUrl.filter(_.nonEmpty) match {
-      case Some(url) => baseSession + (sessionKeyProfileImageUrl -> url)
-      case None => baseSession - sessionKeyProfileImageUrl
+      case Some(url) => sessionWithLoginEmail + (sessionKeyProfileImageUrl -> url)
+      case None => sessionWithLoginEmail - sessionKeyProfileImageUrl
     }
   }
 }

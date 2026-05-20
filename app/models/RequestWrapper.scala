@@ -8,7 +8,7 @@ import play.api.mvc.RequestHeader
 import java.util.Locale
 
 trait RequestWrapper {
-  def getUser: Option[User.IdEmailNickname]
+  def getUser: Option[User.SessionUser]
   def getUserProfileImageUrl: Option[String]
   def locale: Locale
   def getQueryString(key: String): Option[String]
@@ -19,7 +19,7 @@ trait RequestWrapper {
 
 object RequestWrapper {
   def apply()(implicit requestHeader: RequestHeader): RequestWrapper = new RequestWrapper {
-    override def getUser: Option[User.IdEmailNickname] = SessionLogic.getUser(requestHeader)
+    override def getUser: Option[User.SessionUser] = SessionLogic.getUser(requestHeader)
     override def getUserProfileImageUrl: Option[String] = SessionLogic.getUserProfileImageUrl(requestHeader)
     override def locale: Locale = requestHeader.locale
     override def getQueryString(key: String): Option[String] = requestHeader.getQueryString(key)
@@ -29,7 +29,7 @@ object RequestWrapper {
   }
 
   def empty: RequestWrapper = new RequestWrapper {
-    override def getUser: Option[User.IdEmailNickname] = None
+    override def getUser: Option[User.SessionUser] = None
     override def getUserProfileImageUrl: Option[String] = None
     override def locale: Locale = Locale.KOREA
     override def getQueryString(key: String): Option[String] = None

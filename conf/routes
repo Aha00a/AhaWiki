@@ -29,8 +29,12 @@ POST          /preview                               controllers.Wiki.preview
 
 GET           /login                                 controllers.Auth.login
 GET           /logout                                controllers.Auth.logout
+GET           /account                               controllers.Account.settings()
+GET           /account/email/merge                   controllers.Account.mergeEmail(email:String)
+POST          /account/email/merge                   controllers.Account.confirmMergeEmail()
 GET           /google/oauth/login                    controllers.GoogleOAuth.login
 GET           /google/oauth/callback                 controllers.GoogleOAuth.callback(code:String)
+GET           /google/oauth/connect                  controllers.GoogleOAuth.connect
 
 GET           /Admin                                 controllers.Admin.index
 GET           /Admin/                                controllers.Admin.index

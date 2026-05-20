@@ -1,0 +1,25 @@
+@(email: String, existingUser: Option[models.tables.User])(implicit contextSite: models.ContextSite, request: play.api.mvc.Request[Any])
+@import helper._
+@_base("Merge Account", "Confirm account merge") {
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Already Connected Email</h1>
+
+            <p><code>@email</code> is already connected to another AhaWiki account.</p>
+            @existingUser.map { user =>
+                <p>Connected account: <strong>@user.nickname</strong></p>
+            }
+            <p>Merge that account into the current account?</p>
+
+            <p>Merged items can include page history, visit history, attachments, profile data, and nickname history.</p>
+
+            @form(routes.Account.confirmMergeEmail(), Symbol("class") -> "form") {
+                @CSRF.formField
+                <input type="hidden" name="email" value="@email"/>
+                <input type="submit" value="Merge"/>
+                <a href="@routes.Account.settings()" rel="nofollow">Cancel</a>
+            }
+        </div>
+    </div>
+}

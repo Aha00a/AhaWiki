@@ -11,48 +11,59 @@ import java.sql.Connection
 import java.time.LocalDateTime
 import scala.annotation.tailrec
 
-case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, email: String, nickname: String, profileImageUrl: Option[String]) {
-  def toIdEmailNickname: User.IdEmailNickname = User.IdEmailNickname(seq, email, nickname)
+case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, nickname: String, profileImageUrl: Option[String]) {
+  def toSessionUser(loginEmail: Option[String]): User.SessionUser = User.SessionUser(seq, nickname, loginEmail)
 }
 
 object User {
-  case class IdEmailNickname(seq: Long, email: String, nickname: String)
+  case class SessionUser(seq: Long, nickname: String, loginEmail: Option[String])
 
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
   def selectWhereEmail(email: String)(implicit connection: Connection): Option[User] = {
-      SQL"""
-        SELECT
-            U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
-            FROM User U
-            WHERE U.email = $email
-         """
-      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
-      .map(User.tupled)
+    UserEmail.selectByEmail(email).flatMap(userEmail => selectBySeq(userEmail.user))
   }
-
 
   def selectBySeq(seq: Long)(implicit connection: Connection): Option[User] = {
     SQL"""
       SELECT
-          U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
+          U.seq, U.created, U.updated, U.nickname, U.profileImageUrl
           FROM User U
           WHERE U.seq = $seq
      """
-      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
       .map(User.tupled)
   }
 
   def selectByNickname(nickname: String)(implicit connection: Connection): Option[User] = {
     SQL"""
       SELECT
-          U.seq, U.created, U.updated, U.email, U.nickname, U.profileImageUrl
+          U.seq, U.created, U.updated, U.nickname, U.profileImageUrl
           FROM User U
           WHERE U.nickname = $nickname
      """
-      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("email") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
+      .as(long("seq") ~ localDateTime("created") ~ localDateTime("updated") ~ str("nickname") ~ str("profileImageUrl").? singleOpt).map(flatten)
       .map(User.tupled)
+  }
+
+  private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {
+    if (connection.getAutoCommit) {
+      connection.setAutoCommit(false)
+      try {
+        val result = f
+        connection.commit()
+        result
+      } catch {
+        case e: Throwable =>
+          connection.rollback()
+          throw e
+      } finally {
+        connection.setAutoCommit(true)
+      }
+    } else {
+      f
+    }
   }
 
   def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
@@ -91,7 +102,7 @@ object User {
       else {
         val nickname = generateNickname(attempt)
         try {
-          SQL"""INSERT INTO User (email, nickname, profileImageUrl) VALUES ($email, $nickname, $profileImageUrl)"""
+          SQL"""INSERT INTO User (nickname, profileImageUrl) VALUES ($nickname, $profileImageUrl)"""
             .executeInsert(scalar[Long].singleOpt)
             .map(id => (id, nickname))
         } catch {
@@ -104,16 +115,27 @@ object User {
     tryInsert(0)
   }
 
-  def selectOrInsert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[IdEmailNickname] = {
+  def selectOrInsert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[SessionUser] = {
     selectWhereEmail(email)
       .map { user =>
         if (profileImageUrl.isDefined && user.profileImageUrl != profileImageUrl) {
           SQL"""UPDATE User SET profileImageUrl = $profileImageUrl WHERE seq = ${user.seq}""".executeUpdate()
         }
-        user.toIdEmailNickname
+        user.toSessionUser(Some(email))
       }
-      .orElse(insert(email, profileImageUrl).map {
-        case (id, nickname) => IdEmailNickname(id, email, nickname)
-      })
+      .orElse {
+        try {
+          withLocalTransaction {
+            insert(email, profileImageUrl).map {
+              case (id, nickname) =>
+                UserEmail.insert(id, email, isPrimary = true)
+                SessionUser(id, nickname, Some(email))
+            }
+          }
+        } catch {
+          case _: java.sql.SQLIntegrityConstraintViolationException =>
+            selectWhereEmail(email).map(_.toSessionUser(Some(email)))
+        }
+      }
   }
 }

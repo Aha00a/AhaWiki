@@ -1,5 +1,5 @@
 @(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page, hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
-@isAdmin = @{ wikiContext.requestWrapper.getUser.exists(u => u.email == "aha00a@gmail.com" || u.seq == 1) }
+@isAdmin = @{ wikiContext.requestWrapper.getUser.exists(_.seq == 1) }
 @currentAction = @{ wikiContext.requestWrapper.getQueryString("action").getOrElse("") }
 @currentRevision = @{
     val queryRevision = wikiContext.requestWrapper.getQueryString("revision").flatMap(r => scala.util.Try(r.toInt).toOption).getOrElse(0)

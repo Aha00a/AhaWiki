@@ -20,8 +20,8 @@ trait RealContextWikiPage {
     implicit val applicationConf: ApplicationConf = app.injector.instanceOf[ApplicationConf]
     implicit val cache: AhaWikiCache = app.injector.instanceOf[AhaWikiCache]
     implicit val requestWrapper: RequestWrapper = new RequestWrapper {
-      override def getUser: Option[User.IdEmailNickname] =
-        Some(User.IdEmailNickname(1L, "aha00a@gmail.com", "aha00a"))
+      override def getUser: Option[User.SessionUser] =
+        Some(User.SessionUser(1L, "aha00a", Some("aha00a@gmail.com")))
 
       override def locale: Locale = Locale.US
 

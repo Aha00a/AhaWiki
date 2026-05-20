@@ -85,9 +85,8 @@ class Api @Inject()(
 ) extends BaseController with Logging {
   private case class MemoryCacheStatsPayload(instancePort: String, stats: Snapshot)
 
-  private def isAdmin(implicit request: RequestHeader): Boolean = {
-    SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
-  }
+  private def isAdmin(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isAdmin(request)
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
@@ -663,7 +662,7 @@ class Api @Inject()(
         val sortBy = sortByRaw match {
           case "created" => "U.created"
           case "updated" => "U.updated"
-          case "email" => "U.email"
+          case "email" => "email"
           case "nickname" => "U.nickname"
           case "visitCount" => "visit_count"
           case "lastViewed" => "last_viewed_raw"
@@ -676,9 +675,16 @@ class Api @Inject()(
         val count = SQL"""
           SELECT COUNT(*) AS count_value
           FROM User U
+          LEFT JOIN (
+            SELECT
+              user,
+              GROUP_CONCAT(email ORDER BY isPrimary DESC, email SEPARATOR ', ') AS emails
+            FROM UserEmail
+            GROUP BY user
+          ) UE ON UE.user = U.seq
           WHERE (
             ${search.isEmpty} = TRUE OR
-            U.email LIKE $searchLike OR
+            UE.emails LIKE $searchLike OR
             U.nickname LIKE $searchLike OR
             CAST(U.seq AS CHAR) LIKE $searchLike
           )
@@ -690,7 +696,7 @@ class Api @Inject()(
             U.seq,
             DATE_FORMAT(U.created, '%Y-%m-%d %H:%i:%s') AS created,
             DATE_FORMAT(U.updated, '%Y-%m-%d %H:%i:%s') AS updated,
-            U.email,
+            COALESCE(UE.primary_email, UE.fallback_email, '') AS email,
             U.nickname,
             U.profileImageUrl,
             COALESCE(UV.visit_count, 0) AS visit_count,
@@ -706,9 +712,18 @@ class Api @Inject()(
             FROM UserViewHistory
             GROUP BY user
           ) UV ON UV.user = U.seq
+          LEFT JOIN (
+            SELECT
+              user,
+              MIN(CASE WHEN isPrimary THEN email ELSE NULL END) AS primary_email,
+              MIN(email) AS fallback_email,
+              GROUP_CONCAT(email ORDER BY isPrimary DESC, email SEPARATOR ', ') AS emails
+            FROM UserEmail
+            GROUP BY user
+          ) UE ON UE.user = U.seq
           WHERE (
             {searchIsEmpty} = TRUE OR
-            U.email LIKE {searchLike} OR
+            UE.emails LIKE {searchLike} OR
             U.nickname LIKE {searchLike} OR
             CAST(U.seq AS CHAR) LIKE {searchLike}
           )

@@ -1,0 +1,38 @@
+@(user: models.tables.User.SessionUser, emails: Seq[models.tables.UserEmail])(implicit contextSite: models.ContextSite)
+@_base("Account Settings", "Manage account login emails") {
+} {
+    <div class="wikiContent">
+        <div class="limitWidth">
+            <h1>Account Settings</h1>
+
+            <section>
+                <h2>Profile</h2>
+                <p>Nickname: <strong>@user.nickname</strong></p>
+            </section>
+
+            <section>
+                <h2>Login Emails</h2>
+                @if(emails.nonEmpty) {
+                    <ul>
+                    @emails.map { email =>
+                        <li>
+                            <code>@email.email</code>
+                            @if(email.isPrimary) {
+                                <strong>Primary</strong>
+                            }
+                        </li>
+                    }
+                    </ul>
+                } else {
+                    <p>No login email is connected.</p>
+                }
+                <p>
+                    <a href="@routes.GoogleOAuth.connect" rel="nofollow">
+                        <i class="fab fa-google"></i>
+                        Connect Google Account
+                    </a>
+                </p>
+            </section>
+        </div>
+    </div>
+}
