@@ -46,7 +46,7 @@ object InterpreterSchema extends TraitInterpreter {
   ).toMap
   private val imageKeys = Set("image", "logo")
   private val urlKeys = Set("url", "codeRepository", "sameAs")
-  private val locationKeys = Set("address", "geo", "location", "foundingLocation")
+  private val locationKeys = Set("address", "geo", "location", "foundingLocation", "birthPlace")
   private val attachmentMacroRegex: Regex = """^\[\[Attachment\((.*)\)]]$""".r
 
   case class DisplayField(key: String, values: Seq[String], pairKey: Option[String] = None, pairValues: Seq[String] = Seq.empty)
