@@ -8,6 +8,8 @@
 - [ ] private page는 기존 `SimilarPages`처럼 계산은 하되 렌더링에서 제외한다.
 - [ ] 같은 이름 문서는 별도 `MacroTwinPages`로 만들고 `See Also`의 다른 블록으로 보여준다.
 - [ ] sister wiki 유사 문서는 새 매크로를 만들지 않고 기존 `MacroSimilarPages`를 확장해서 보여준다.
+- [ ] site 약어는 `Site.abbr` 필드를 사용한다.
+- [ ] cross-site 링크 표기는 `Abbr:PageName` 형식을 사용한다.
 
 ## 표시 위치
 
@@ -53,6 +55,9 @@
 
 ## 데이터 모델
 
+- [ ] `Site`에 `abbr` 필드를 추가한다.
+- [ ] migration 시 기존 row의 `abbr` 값은 `name`과 동일하게 채운다.
+- [ ] 새 site 생성/관리 UI에서도 `abbr`를 다룰 수 있게 한다.
 - [ ] 별도 `CalculatedSisterCosineSimilarity` 테이블을 만들지 않는다.
 - [ ] 기존 `CalculatedCosineSimilarity`를 site-aware pair 구조로 확장한다.
 - [ ] `site1`, `name1`, `site2`, `name2`, `similarity` 구조로 변경한다.
@@ -117,8 +122,9 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] cross-site 유사 문서도 same-site와 동일한 출력 포맷을 사용한다.
 - [ ] cross-site 유사 문서도 `PercentLinkTitle(similarity, page, alias)`를 사용한다.
 - [ ] cross-site 유사 문서도 `PageLogic.selectHighScoredTerm`에 준하는 term 표시를 제공한다.
-- [ ] cross-site 유사 문서는 상위 5개 정도로 제한한다.
+- [ ] cross-site 유사 문서는 기존 same-site `SimilarPages`와 동일하게 상위 20개를 표시한다.
 - [ ] site 이름을 표시한다.
+- [ ] cross-site page 표기는 `Site.abbr`를 사용해서 `Abbr:PageName`으로 표시한다.
 - [ ] page 제목을 표시한다.
 - [ ] similarity score를 표시한다.
 
@@ -126,7 +132,7 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 ```wiki
  1. [[PercentLinkTitle(0.91, SomePage, "")]] [[Trivial(term(3:2))]]
- 1. [[PercentLinkTitle(0.82, ExampleWiki:Bar, "")]] [[Trivial(term(2:1))]]
+ 1. [[PercentLinkTitle(0.82, Example:Bar, "")]] [[Trivial(term(2:1))]]
 ```
 
 ## See Also 연동
@@ -176,12 +182,17 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] `PageMeta.canReadAnonymous`를 이번 작업에 포함할지, 후속 최적화로 둘지 결정한다.
 - [ ] `canReadAnonymous`를 넣는다면 권한 변경 시 재계산 범위를 어떻게 잡을지 결정한다.
-- [ ] sister wiki 유사 문서 개수를 5개로 고정할지 설정화할지 결정한다.
-- [ ] cross-site `PercentLinkTitle`의 page 인자 표현을 `SiteName:PageName`으로 할지 별도 매크로 확장으로 처리할지 결정한다.
+- [ ] `Site.abbr`의 unique 제약을 둘지 결정한다.
+- [ ] `Abbr:PageName`이 기존 콜론 포함 page name과 충돌할 때 처리 규칙을 결정한다.
+- [ ] cross-site `PercentLinkTitle`의 page 인자 `Abbr:PageName`을 내부적으로 실제 외부 링크로 해석하는 방식을 결정한다.
 - [ ] cross-site high scored term 조회를 기존 `PageLogic.selectHighScoredTerm` 확장으로 처리할지 별도 helper로 둘지 결정한다.
 
 ## 구현 체크리스트
 
+- [ ] `Site.abbr` schema migration 추가
+- [ ] 기존 `Site.abbr` 값을 `Site.name`과 동일하게 backfill
+- [ ] `Site` model에 `abbr` 필드 추가
+- [ ] Admin site API/UI에 `abbr` 반영
 - [ ] `CalculatedCosineSimilarity` schema migration 추가
 - [ ] `CalculatedCosineSimilarity` model을 `site1/name1/site2/name2` 구조로 변경
 - [ ] `CalculatedCosineSimilarity` FK를 `PageMeta(site, name)`로 연결
@@ -196,6 +207,8 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] generated `See Also`에 `Twin Pages` 마크업 추가
 - [ ] sister wiki 결과만 있어도 generated `Similar Pages` 섹션이 출력되게 조건 확장
 - [ ] cross-site similar page도 `PercentLinkTitle`과 high scored term을 표시하도록 구현
+- [ ] cross-site similar page 표시 개수를 20개로 구현
+- [ ] cross-site 링크 표기를 `Abbr:PageName`으로 구현
 - [ ] 같은 이름 매칭 unit test 추가
 - [ ] 렌더링 시점 public/private filtering unit test 추가
 - [ ] 내부 similarity 기존 동작 유지 test 추가
