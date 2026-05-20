@@ -24,6 +24,10 @@
 제거 전 정리해야 하는 사용처:
 
 - `app/models/tables/UserSite.scala`
+- `conf/routes`
+  - `GET /Admin/SiteUser`
+  - `GET /Admin/SiteUsers`
+  - `GET /api/Admin/SiteUsers`
 - `app/controllers/Admin.scala`
   - `siteUsers` action
 - `app/views/Admin/siteUsers.scala.html`
@@ -36,6 +40,12 @@
   - `/Admin/SiteUsers`
   - `/Admin/SiteUser`
   - 관련 navigation/view/table
+- `app/assets/js/site/siteWidgets.jsx`
+  - site list의 `userCount` 컬럼
+- `public/js/babel/admin.js`
+  - admin build 결과물. 직접 수정하지 말고 `npm run build:admin`으로 갱신한다.
+- `docs/TODO-Timezone-KST-To-UTC.md`
+  - `UserSite.created` 항목 제거
 
 ## Direction
 
@@ -55,6 +65,7 @@
 필수 변경:
 
 - `UserSite.scala` 삭제
+- `conf/routes`에서 `/Admin/SiteUser`, `/Admin/SiteUsers`, `/api/Admin/SiteUsers` route 제거
 - `Admin.siteUsers` action 삭제 또는 안전한 redirect/404 처리
 - `siteUsers.scala.html` 삭제
 - `Api.adminSiteUsers` 삭제 또는 사용하지 않게 정리
@@ -62,6 +73,9 @@
 - `Api.adminUsers.site_count` 제거 또는 실제 활동 기반 count로 대체
 - admin dashboard의 `siteUserCreated` 제거
 - admin frontend에서 `/Admin/SiteUsers`, `/Admin/SiteUser` 관련 UI 제거
+- `siteWidgets.jsx`가 `userCount`를 더 이상 기대하지 않게 정리
+- admin bundle을 다시 빌드해 `public/js/babel/admin.js` 갱신
+- timezone TODO에서 `UserSite.created` 제거
 
 ## Migration
 
@@ -88,12 +102,16 @@ CREATE TABLE UserSite (
 
 - [ ] `UserSite` 런타임 코드 참조가 사라진다.
 - [ ] `UserSite.scala`가 삭제된다.
+- [ ] `conf/routes`에서 `SiteUser`, `SiteUsers`, `adminSiteUsers` route가 제거된다.
 - [ ] admin frontend에서 `/Admin/SiteUsers`, `/Admin/SiteUser` 경로가 제거된다.
+- [ ] `public/js/babel/admin.js`가 admin build 결과로 갱신된다.
 - [ ] admin build가 통과한다.
 - [ ] Scala compile/test가 통과한다.
 - [ ] admin sites 화면이 `UserSite.userCount`에 의존하지 않는다.
 - [ ] admin users 화면이 `UserSite.site_count`에 의존하지 않는다.
+- [ ] `docs/TODO-Timezone-KST-To-UTC.md`에서 `UserSite.created` 항목이 제거된다.
 - [ ] `TODO-User-Login-Emails.md`의 계정 병합 절차에서 `UserSite`를 고려하지 않는다.
+- [ ] `rg -n "UserSite|SiteUsers|SiteUser|siteUserCreated|site_count" app conf public docs` 결과가 migration history와 의도적으로 남긴 문서 참조만 포함한다.
 
 ## Follow-Up
 
