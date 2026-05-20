@@ -1,6 +1,6 @@
 package controllers
 
-import akka.actor.{ActorRef, ActorSystem}
+import org.apache.pekko.actor.{ActorRef, ActorSystem}
 import com.aha00a.play.Implicits._
 import javax.inject.Inject
 import logics.wikis.interpreters.InterpreterVim

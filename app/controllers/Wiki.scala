@@ -1,12 +1,12 @@
 package controllers
 
 import actors.ActorAhaWiki.Calculate
-import akka.actor._
-import akka.{NotUsed}
-import akka.stream.scaladsl.{Flow, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy}
-import akka.stream.scaladsl.SourceQueueWithComplete
-import akka.stream.scaladsl.Keep
+import org.apache.pekko.actor._
+import org.apache.pekko.{NotUsed}
+import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
+import org.apache.pekko.stream.{Materializer, OverflowStrategy}
+import org.apache.pekko.stream.scaladsl.SourceQueueWithComplete
+import org.apache.pekko.stream.scaladsl.Keep
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi

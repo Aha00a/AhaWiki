@@ -1,7 +1,7 @@
 package controllers
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import logics.ApplicationConf
 import logics.{AhaWikiCache, SessionLogic}
 import models.ContextSite

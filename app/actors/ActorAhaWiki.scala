@@ -1,7 +1,7 @@
 package actors
 
 import actors.ActorAhaWiki._
-import akka.actor._
+import org.apache.pekko.actor._
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache

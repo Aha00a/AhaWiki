@@ -1,6 +1,6 @@
 package controllers
 
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic

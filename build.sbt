@@ -5,9 +5,9 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.13.2"
-scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:reflectiveCalls", "-language:postfixOps", "-target:jvm-1.8")
-javacOptions ++= Seq("-source", "1.8", "-target", "1.8")
+scalaVersion := "2.13.16"
+scalacOptions ++= Seq("-feature", "-language:implicitConversions", "-language:reflectiveCalls", "-language:postfixOps", "-release:11")
+javacOptions ++= Seq("--release", "11")
 
 libraryDependencies += guice
 libraryDependencies += jdbc
@@ -17,7 +17,7 @@ libraryDependencies += ws
 libraryDependencies += specs2 % Test
 libraryDependencies += filters
 libraryDependencies += evolutions
-libraryDependencies += "org.playframework.anorm" %% "anorm" % "2.6.7"
+libraryDependencies += "org.playframework.anorm" %% "anorm" % "2.7.0"
 libraryDependencies += "com.h2database" % "h2" % "2.3.232"
 libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.33"
 libraryDependencies += "net.sf.supercsv" % "super-csv" % "2.3.1"
@@ -30,12 +30,11 @@ libraryDependencies += "org.jsoup" % "jsoup" % "1.19.1"
 libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
-libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % Test
+libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
 libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
-libraryDependencies += "com.github.karelcemus" %% "play-redis" % "2.7.0"
-libraryDependencies += "redis.clients" % "jedis" % "3.6.3"
+libraryDependencies += "com.github.karelcemus" %% "play-redis" % "5.4.0"
 libraryDependencies += "dev.zio" %% "zio-json" % "0.7.3" // DON'T update. Class File version matter
 
 libraryDependencies ++= Seq(

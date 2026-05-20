@@ -1,9 +1,9 @@
 package filters
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
-import akka.pattern.after
-import akka.stream.Materializer
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.after
+import org.apache.pekko.stream.Materializer
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.AhaWikiCache

@@ -1,7 +1,7 @@
 package logics.wikis
 
 import actors.ActorAhaWiki.Calculate
-import akka.actor.ActorRef
+import org.apache.pekko.actor.ActorRef
 import anorm.SqlParser.flatten
 import anorm.SqlParser.int
 import anorm.SqlParser.str

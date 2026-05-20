@@ -1,8 +1,8 @@
 package services
 
 import actors.ActorAhaWiki.Calculate
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits.RichSeq
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache

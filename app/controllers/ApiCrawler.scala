@@ -1,7 +1,7 @@
 package controllers
 
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
 import io.circe.generic.auto._
