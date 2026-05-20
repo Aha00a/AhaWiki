@@ -13,6 +13,7 @@
 - [ ] `Site.abbr`는 unique 해야 한다.
 - [ ] `Abbr:PageName`과 같은 이름의 페이지가 현재 site에 존재하면 현재 site 페이지를 우선한다.
 - [ ] 현재 site에 해당 이름의 페이지가 없을 때만 twin page 링크로 해석한다.
+- [ ] site 대표 도메인은 `Site.mainDomain` 필드로 역정규화한다.
 - [ ] evolution schema 작업을 가장 먼저 수행한다.
 
 ## 표시 위치
@@ -41,7 +42,7 @@
 - [ ] 현재 site는 결과에서 제외한다.
 - [ ] 렌더링 시점에 anonymous user가 읽을 수 있는 페이지만 표시한다.
 - [ ] 같은 이름 문서가 유사 문서 목록에도 나오면 중복 제거하지 않고 그대로 둔다.
-- [ ] 링크 생성에는 대상 site의 대표 도메인을 사용한다.
+- [ ] 링크 생성에는 대상 site의 `mainDomain`을 사용한다.
 - [ ] 같은 이름 문서는 `MacroSimilarPages`가 아니라 `MacroTwinPages`에서 담당한다.
 
 참고 캐시:
@@ -62,7 +63,9 @@
 - [ ] `Site`에 `abbr` 필드를 추가한다.
 - [ ] migration 시 기존 row의 `abbr` 값은 `name`과 동일하게 채운다.
 - [ ] `Site.abbr`에는 unique 제약을 건다.
-- [ ] 새 site 생성/관리 UI에서도 `abbr`를 다룰 수 있게 한다.
+- [ ] `Site`에 `mainDomain` 필드를 추가한다.
+- [ ] migration 시 기존 row의 `mainDomain` 값은 `SiteDomain`에서 `created`가 가장 작은 domain으로 채운다.
+- [ ] 새 site 생성/관리 UI에서도 `abbr`와 `mainDomain`을 다룰 수 있게 한다.
 - [ ] 별도 `CalculatedSisterCosineSimilarity` 테이블을 만들지 않는다.
 - [ ] 기존 `CalculatedCosineSimilarity`를 site-aware pair 구조로 확장한다.
 - [ ] `site1`, `name1`, `site2`, `name2`, `similarity` 구조로 변경한다.
@@ -91,21 +94,16 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] `CalculatedCosineSimilarity`의 FK는 `Page`가 아니라 `PageMeta(site, name)`에 건다.
 - [ ] `PageMeta`는 최신 페이지 단위 row이므로 similarity 대상 FK로 더 자연스럽다.
-- [ ] `PageMeta`에 `canReadAnonymous` 같은 denormalized 필드를 추가할지 검토한다.
-- [ ] 단, 초기 구현은 기존 권한 로직과 동일하게 렌더링 시점 필터링을 우선한다.
-
-`canReadAnonymous`를 추가할 경우:
-
-- [ ] `PageMeta` 계산 시 anonymous read 가능 여부를 함께 저장한다.
-- [ ] 권한 변경 시 관련 `PageMeta.canReadAnonymous`를 갱신하거나 재계산한다.
-- [ ] 렌더링 필터를 빠르게 만들 수 있는지 검증한다.
-- [ ] 권한 규칙 변경과 캐시 무효화 비용이 과한지 확인한다.
+- [ ] 권한 필터링은 기존 방식과 동일하게 렌더링 시점에 수행한다.
 
 ## 대표 도메인
 
-- [ ] `SiteDomain`에 여러 domain이 있으면 `created`가 가장 작은 row를 대표 도메인으로 사용한다.
-- [ ] 보통 domain은 1개라는 전제를 둔다.
+- [ ] 대표 도메인은 `Site.mainDomain`에 저장한다.
+- [ ] `Site.mainDomain`은 link render path에서 바로 사용한다.
+- [ ] `SiteDomain`에 여러 domain이 있으면 `created`가 가장 작은 row를 초기 `mainDomain`으로 사용한다.
 - [ ] 대표 도메인은 twin page와 cross-site similar page 링크 생성에 사용한다.
+- [ ] `SiteDomain`은 domain 목록/host 매핑 용도로 유지한다.
+- [ ] `Site.mainDomain`은 대표 링크 생성을 위한 역정규화 필드로 취급한다.
 
 ## 공개 범위 규칙
 
@@ -181,12 +179,11 @@ CREATE TABLE CalculatedCosineSimilarity (
 
 - [ ] 같은 이름 문서는 기존 `PageLatestSummary` 메모리 캐시를 사용한다.
 - [ ] 유사 문서는 precomputed `CalculatedCosineSimilarity` row를 조회한다.
+- [ ] site 링크 생성에는 `Site.mainDomain`을 사용해서 render path에서 `SiteDomain` 조회를 피한다.
 - [ ] 필요해지면 `MacroSimilarPages` 결과에 작은 메모리 캐시를 추가한다.
 
 ## 미결정 사항
 
-- [ ] `PageMeta.canReadAnonymous`를 이번 작업에 포함할지, 후속 최적화로 둘지 결정한다.
-- [ ] `canReadAnonymous`를 넣는다면 권한 변경 시 재계산 범위를 어떻게 잡을지 결정한다.
 - [ ] cross-site `PercentLinkTitle`의 page 인자 `Abbr:PageName`을 내부적으로 실제 외부 링크로 해석하는 방식을 결정한다.
 - [ ] cross-site high scored term 조회를 기존 `PageLogic.selectHighScoredTerm` 확장으로 처리할지 별도 helper로 둘지 결정한다.
 
@@ -196,14 +193,18 @@ CREATE TABLE CalculatedCosineSimilarity (
 - [ ] `Site.abbr` schema migration 추가
 - [ ] 기존 `Site.abbr` 값을 `Site.name`과 동일하게 backfill
 - [ ] `Site.abbr` unique index 추가
+- [ ] `Site.mainDomain` schema migration 추가
+- [ ] 기존 `Site.mainDomain` 값을 `SiteDomain.created`가 가장 작은 domain으로 backfill
 - [ ] `Site` model에 `abbr` 필드 추가
+- [ ] `Site` model에 `mainDomain` 필드 추가
 - [ ] Admin site API/UI에 `abbr` 반영
+- [ ] Admin site API/UI에 `mainDomain` 반영
 - [ ] `CalculatedCosineSimilarity` schema migration 추가
 - [ ] `CalculatedCosineSimilarity` model을 `site1/name1/site2/name2` 구조로 변경
 - [ ] `CalculatedCosineSimilarity` FK를 `PageMeta(site, name)`로 연결
 - [ ] 기존 site 내부 similarity 조회가 깨지지 않게 `site1 == currentSite AND site2 == currentSite` 조건 반영
 - [ ] sister wiki similarity 조회 helper 추가
-- [ ] 대표 도메인 조회 helper 추가
+- [ ] cross-site 링크 생성 시 `Site.mainDomain` 사용
 - [ ] cross-site cosine 재계산 로직 추가
 - [ ] page save/delete/rename 계산 흐름에 재계산 연결
 - [ ] `MacroTwinPages` 추가
