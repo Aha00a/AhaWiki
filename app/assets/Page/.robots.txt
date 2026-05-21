@@ -1,3 +1,30 @@
 #!Text
 User-agent: *
+Disallow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Adsense
+User-agent: Mediapartners-Google
 Disallow:
+
+User-agent: Linguee
+Disallow: /
+
+##########################
+#User-agent: *
+#Disallow:
+#
+#User-agent: SemrushBot
+#Disallow: /
+#
+#User-agent: SemrushBot-SA
+#Disallow: /
+#
+#User-agent: Bingbot
+#Disallow: /
+#
