@@ -9,7 +9,6 @@ const baseUrl = "https://ahawiki.net";
 const pageListUrl = `${baseUrl}/w/PageList`;
 const outputDir = path.join(rootDir, "docs", "ahawiki.net");
 const concurrency = Number.parseInt(process.env.AHAWIKI_DOWNLOAD_CONCURRENCY ?? "6", 10);
-const cleanOutputDir = process.argv.includes("--clean");
 
 function decodeHtml(text) {
   return text
@@ -123,11 +122,7 @@ async function main() {
   const pageListHtml = await fetchText(pageListUrl, { allowNotOk: true });
   const pages = extractPages(pageListHtml);
 
-  if (cleanOutputDir) {
-    await cleanDirectory(outputDir);
-  } else {
-    await mkdir(outputDir, { recursive: true });
-  }
+  await cleanDirectory(outputDir);
 
   console.log(`Found ${pages.length} pages from ${pageListUrl}`);
   console.log(`Writing raw text files to ${path.relative(rootDir, outputDir)}`);
