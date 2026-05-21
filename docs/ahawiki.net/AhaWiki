@@ -1,0 +1,61 @@
+= AhaWiki
+
+[[[#!Schema WebApplication
+url	https://ahawiki.net
+featureList	Features
+applicationCategory	Wiki
+dateCreated	2015-09-18
+datePublished	2015-10-21
+isAccessibleForFree	true
+creator	Aha00a
+]]]
+
+[[[#!Schema SoftwareSourceCode
+codeRepository	https://github.com/Aha00a/AhaWiki
+programmingLanguage	Scala
+isAccessibleForFree	true
+author	Aha00a
+]]]
+
+[AhaWiki] is knowledge management system based on [https://aha00a.com/w/Wiki Wiki].
+
+AhaWiki는 개인과 팀이 지식을 꾸준히 기록하고 연결하기 위한 위키 시스템입니다.
+문서를 빠르게 만들고, 링크로 연결하고, 매크로와 인터프리터를 이용해 표, 코드, 첨부파일, 스키마 정보를 함께 관리할 수 있습니다.
+
+총 [[PageCount]]개의 문서가 있습니다.
+
+== 처음 시작하기
+처음 사용하는 사람은 아래 순서로 읽어보세요.
+ 1. [AhaWikiGettingStarted]
+ 1. [HotKey]
+ 1. [AhaMark]
+ * [AhaMark]
+ * ["AhaMark Basic"]
+ * ["AhaMark Macro"]
+ * ["AhaMark Interpreter"]
+ * ["AhaMark Interpreter Examples"]
+
+
+== 관리
+How to manage
+ * [AccessControl]
+ * [Customizing]
+
+
+== 개설 신청 받습니다.
+ * 이름 - 사이트 이름입니다.
+ * 도메인 - `something`을 말씀해 주시면 `something.ahawiki.net` 으로 개설해 드립니다.
+ * 이메일 - 관리자 gmail adress를 알려주세요.
+
+
+== 관련 정보
+ * [Features]
+ * [ChangeLog]
+ * [Setup]
+ * [ToDo]
+
+
+
+== [RecentChanges]
+최근 변경된 문서입니다. 모든 변경 사항은 [RecentChanges]에서 볼 수 있습니다.
+[[RecentChanges(20)]]
