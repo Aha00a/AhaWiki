@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-21T08:37:55.826Z",
-  "count": 56,
+  "downloadedAt": "2026-05-21T09:26:29.117Z",
+  "count": 69,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -37,13 +37,13 @@
       "name": "MacroTrivial",
       "rawUrl": "https://ahawiki.net/w/MacroTrivial?action=raw",
       "fileName": "MacroTrivial",
-      "bytes": 144
+      "bytes": 314
     },
     {
       "name": "MacroSuccessMacroErrorMacroInfo",
       "rawUrl": "https://ahawiki.net/w/MacroSuccessMacroErrorMacroInfo?action=raw",
       "fileName": "MacroSuccessMacroErrorMacroInfo",
-      "bytes": 157
+      "bytes": 473
     },
     {
       "name": "MacroSuccess",
@@ -61,19 +61,19 @@
       "name": "MacroRuby",
       "rawUrl": "https://ahawiki.net/w/MacroRuby?action=raw",
       "fileName": "MacroRuby",
-      "bytes": 193
+      "bytes": 352
     },
     {
       "name": "MacroPeriod",
       "rawUrl": "https://ahawiki.net/w/MacroPeriod?action=raw",
       "fileName": "MacroPeriod",
-      "bytes": 342
+      "bytes": 547
     },
     {
       "name": "MacroKbd",
       "rawUrl": "https://ahawiki.net/w/MacroKbd?action=raw",
       "fileName": "MacroKbd",
-      "bytes": 254
+      "bytes": 391
     },
     {
       "name": "MacroInfo",
@@ -85,25 +85,25 @@
       "name": "MacroInclude",
       "rawUrl": "https://ahawiki.net/w/MacroInclude?action=raw",
       "fileName": "MacroInclude",
-      "bytes": 276
+      "bytes": 482
     },
     {
       "name": "MacroImage",
       "rawUrl": "https://ahawiki.net/w/MacroImage?action=raw",
       "fileName": "MacroImage",
-      "bytes": 127
+      "bytes": 314
     },
     {
       "name": "MacroHtml",
       "rawUrl": "https://ahawiki.net/w/MacroHtml?action=raw",
       "fileName": "MacroHtml",
-      "bytes": 104
+      "bytes": 269
     },
     {
       "name": "MacroGetMacroSet",
       "rawUrl": "https://ahawiki.net/w/MacroGetMacroSet?action=raw",
       "fileName": "MacroGetMacroSet",
-      "bytes": 217
+      "bytes": 411
     },
     {
       "name": "MacroGet",
@@ -121,43 +121,121 @@
       "name": "MacroEmbed",
       "rawUrl": "https://ahawiki.net/w/MacroEmbed?action=raw",
       "fileName": "MacroEmbed",
-      "bytes": 338
+      "bytes": 428
     },
     {
       "name": "MacroCopyable",
       "rawUrl": "https://ahawiki.net/w/MacroCopyable?action=raw",
       "fileName": "MacroCopyable",
-      "bytes": 83
+      "bytes": 288
     },
     {
       "name": "MacroColorCode",
       "rawUrl": "https://ahawiki.net/w/MacroColorCode?action=raw",
       "fileName": "MacroColorCode",
-      "bytes": 121
+      "bytes": 313
     },
     {
       "name": "MacroBr",
       "rawUrl": "https://ahawiki.net/w/MacroBr?action=raw",
       "fileName": "MacroBr",
-      "bytes": 212
+      "bytes": 246
     },
     {
       "name": "Macro",
       "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
       "fileName": "Macro",
-      "bytes": 458
+      "bytes": 1199
+    },
+    {
+      "name": "InterpreterVim",
+      "rawUrl": "https://ahawiki.net/w/InterpreterVim?action=raw",
+      "fileName": "InterpreterVim",
+      "bytes": 343
+    },
+    {
+      "name": "InterpreterText",
+      "rawUrl": "https://ahawiki.net/w/InterpreterText?action=raw",
+      "fileName": "InterpreterText",
+      "bytes": 279
+    },
+    {
+      "name": "InterpreterTable",
+      "rawUrl": "https://ahawiki.net/w/InterpreterTable?action=raw",
+      "fileName": "InterpreterTable",
+      "bytes": 815
+    },
+    {
+      "name": "InterpreterSchema",
+      "rawUrl": "https://ahawiki.net/w/InterpreterSchema?action=raw",
+      "fileName": "InterpreterSchema",
+      "bytes": 379
+    },
+    {
+      "name": "InterpreterQuote",
+      "rawUrl": "https://ahawiki.net/w/InterpreterQuote?action=raw",
+      "fileName": "InterpreterQuote",
+      "bytes": 472
+    },
+    {
+      "name": "InterpreterMermaid",
+      "rawUrl": "https://ahawiki.net/w/InterpreterMermaid?action=raw",
+      "fileName": "InterpreterMermaid",
+      "bytes": 1606
+    },
+    {
+      "name": "InterpreterMath",
+      "rawUrl": "https://ahawiki.net/w/InterpreterMath?action=raw",
+      "fileName": "InterpreterMath",
+      "bytes": 414
+    },
+    {
+      "name": "InterpreterMarkdown",
+      "rawUrl": "https://ahawiki.net/w/InterpreterMarkdown?action=raw",
+      "fileName": "InterpreterMarkdown",
+      "bytes": 341
+    },
+    {
+      "name": "InterpreterMap",
+      "rawUrl": "https://ahawiki.net/w/InterpreterMap?action=raw",
+      "fileName": "InterpreterMap",
+      "bytes": 551
+    },
+    {
+      "name": "InterpreterHtml",
+      "rawUrl": "https://ahawiki.net/w/InterpreterHtml?action=raw",
+      "fileName": "InterpreterHtml",
+      "bytes": 246
+    },
+    {
+      "name": "InterpreterGraph",
+      "rawUrl": "https://ahawiki.net/w/InterpreterGraph?action=raw",
+      "fileName": "InterpreterGraph",
+      "bytes": 286
+    },
+    {
+      "name": "InterpreterFold",
+      "rawUrl": "https://ahawiki.net/w/InterpreterFold?action=raw",
+      "fileName": "InterpreterFold",
+      "bytes": 383
+    },
+    {
+      "name": "InterpreterComment",
+      "rawUrl": "https://ahawiki.net/w/InterpreterComment?action=raw",
+      "fileName": "InterpreterComment",
+      "bytes": 334
     },
     {
       "name": "Interpreter Examples",
       "rawUrl": "https://ahawiki.net/w/Interpreter%20Examples?action=raw",
       "fileName": "Interpreter Examples",
-      "bytes": 80
+      "bytes": 157
     },
     {
       "name": "Interpreter",
       "rawUrl": "https://ahawiki.net/w/Interpreter?action=raw",
       "fileName": "Interpreter",
-      "bytes": 4559
+      "bytes": 1090
     },
     {
       "name": "HotKey",
@@ -325,7 +403,7 @@
       "name": "AhaMark",
       "rawUrl": "https://ahawiki.net/w/AhaMark?action=raw",
       "fileName": "AhaMark",
-      "bytes": 96
+      "bytes": 59
     },
     {
       "name": "Aha00a",
