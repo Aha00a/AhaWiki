@@ -46,13 +46,8 @@ class ApplicationLifecycleHook @Inject()(
     Future.successful(())
   }
 
-  private def durationToMillisLong(duration: FiniteDuration): Long = duration.toMillis
-
-  private def randomDelay(min: FiniteDuration, max: FiniteDuration): FiniteDuration = {
-    val minMillis = durationToMillisLong(min)
-    val maxMillis = durationToMillisLong(max)
-    val delayMillis = Random.between(minMillis, maxMillis)
-    delayMillis.millis
+  private def random(durationMinimum: FiniteDuration, durationMaximum: FiniteDuration): FiniteDuration = {
+    Random.between(durationMinimum.toMillis, durationMaximum.toMillis).millis
   }
 
   def registerScheduler(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
@@ -79,7 +74,7 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.
-  registerScheduler("deleteExpired", randomDelay(10.minutes, 30.minutes), () => randomDelay(10.minutes, 30.minutes), () => {
+  registerScheduler("deleteExpired", random(10.minutes, 30.minutes), () => random(10.minutes, 30.minutes), () => {
     database.withConnection { implicit connection =>
       models.tables.AccessLog.deleteExpired()
       models.tables.IpDeny.deleteExpired()
@@ -87,7 +82,7 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  registerScheduler("Calculate", randomDelay(20 seconds, 1 minutes), () => randomDelay(1 minute, 1 hour), () => {
+  registerScheduler("Calculate", random(20 seconds, 1 minutes), () => random(1 minute, 1 hour), () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
 
