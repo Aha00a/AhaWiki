@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-21T07:50:56.527Z",
-  "count": 41,
+  "downloadedAt": "2026-05-21T08:23:34.091Z",
+  "count": 54,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -34,6 +34,84 @@
       "bytes": 434
     },
     {
+      "name": "MacroTrivial",
+      "rawUrl": "https://ahawiki.net/w/MacroTrivial?action=raw",
+      "fileName": "MacroTrivial",
+      "bytes": 144
+    },
+    {
+      "name": "MacroSuccess",
+      "rawUrl": "https://ahawiki.net/w/MacroSuccess?action=raw",
+      "fileName": "MacroSuccess",
+      "bytes": 157
+    },
+    {
+      "name": "MacroSet",
+      "rawUrl": "https://ahawiki.net/w/MacroSet?action=raw",
+      "fileName": "MacroSet",
+      "bytes": 20
+    },
+    {
+      "name": "MacroRuby",
+      "rawUrl": "https://ahawiki.net/w/MacroRuby?action=raw",
+      "fileName": "MacroRuby",
+      "bytes": 193
+    },
+    {
+      "name": "MacroPeriod",
+      "rawUrl": "https://ahawiki.net/w/MacroPeriod?action=raw",
+      "fileName": "MacroPeriod",
+      "bytes": 342
+    },
+    {
+      "name": "MacroInfo",
+      "rawUrl": "https://ahawiki.net/w/MacroInfo?action=raw",
+      "fileName": "MacroInfo",
+      "bytes": 24
+    },
+    {
+      "name": "MacroInclude",
+      "rawUrl": "https://ahawiki.net/w/MacroInclude?action=raw",
+      "fileName": "MacroInclude",
+      "bytes": 276
+    },
+    {
+      "name": "MacroImage",
+      "rawUrl": "https://ahawiki.net/w/MacroImage?action=raw",
+      "fileName": "MacroImage",
+      "bytes": 127
+    },
+    {
+      "name": "MacroHtml",
+      "rawUrl": "https://ahawiki.net/w/MacroHtml?action=raw",
+      "fileName": "MacroHtml",
+      "bytes": 104
+    },
+    {
+      "name": "MacroGet",
+      "rawUrl": "https://ahawiki.net/w/MacroGet?action=raw",
+      "fileName": "MacroGet",
+      "bytes": 217
+    },
+    {
+      "name": "MacroError",
+      "rawUrl": "https://ahawiki.net/w/MacroError?action=raw",
+      "fileName": "MacroError",
+      "bytes": 24
+    },
+    {
+      "name": "MacroEmbed",
+      "rawUrl": "https://ahawiki.net/w/MacroEmbed?action=raw",
+      "fileName": "MacroEmbed",
+      "bytes": 338
+    },
+    {
+      "name": "MacroCopyable",
+      "rawUrl": "https://ahawiki.net/w/MacroCopyable?action=raw",
+      "fileName": "MacroCopyable",
+      "bytes": 83
+    },
+    {
       "name": "MacroColorCode",
       "rawUrl": "https://ahawiki.net/w/MacroColorCode?action=raw",
       "fileName": "MacroColorCode",
@@ -49,7 +127,7 @@
       "name": "Macro",
       "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
       "fileName": "Macro",
-      "bytes": 2262
+      "bytes": 377
     },
     {
       "name": "HotKey",
@@ -235,7 +313,7 @@
       "name": "AhaMark",
       "rawUrl": "https://ahawiki.net/w/AhaMark?action=raw",
       "fileName": "AhaMark",
-      "bytes": 178
+      "bytes": 106
     },
     {
       "name": "Aha00a",
