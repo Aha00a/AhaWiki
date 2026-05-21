@@ -1,15 +1,17 @@
 package services
 
 import actors.ActorPageCalculator.Calculate
-import org.apache.pekko.actor.ActorRef
-import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits.RichSeq
+import com.aha00a.commons.utils.FiniteDurationUtil.random
+import com.aha00a.commons.utils.FiniteDurationUtil.formatComma12dms
 import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryDomainSite
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.tables.Site
+import org.apache.pekko.actor.ActorRef
+import org.apache.pekko.actor.ActorSystem
 import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
@@ -17,15 +19,11 @@ import play.api.inject.ApplicationLifecycle
 import play.api.libs.ws.WSClient
 import play.api.mvc.ControllerComponents
 
-import java.time.{Duration, Instant, LocalTime, ZoneId, ZonedDateTime}
 import javax.inject._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
-import scala.util.Random
-
-import com.aha00a.commons.utils.DurationUtil.random
+import scala.concurrent.duration._
 
 class ApplicationLifecycleHook @Inject()(
   implicit
@@ -49,12 +47,8 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   def registerScheduler(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
-    def formatDelay(delay: FiniteDuration): String =
-      if (delay >= 10.minutes) f"${java.time.Duration.ofMillis(delay.toMillis).toString}%14s"
-      else f"${delay.toMillis}%,12dms"
-
     def scheduleOnce(delay: FiniteDuration): Unit = {
-      logger.info(s"${formatDelay(delay)}\tNext\t${name}")
+      logger.info(s"${formatComma12dms(delay)}\tNext\t${name}")
       actorSystem.scheduler.scheduleOnce(delay) {
         StopWatch(s"$name") {
           try {
