@@ -1,0 +1,12 @@
+= [Macro]Kbd
+Render keyboard keys and shortcuts with the HTML `<kbd>` tag.
+
+Separate keys with spaces. Repeated spaces are collapsed.
+
+[[[#!WikiSyntaxPreview
+ * [[Kbd(Esc)]]
+ * [[Kbd(Ctrl Shift P)]]
+ * [[Kbd(Alt W)]]
+ * [[Kbd(Ctrl +)]]
+ * [[Kbd(,)]]
+]]]

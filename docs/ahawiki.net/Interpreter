@@ -1,4 +1,5 @@
-= [AhaMark] Interpreter
+= Interpreter
+[AhaMark]
 
 모든 페이지의 최상단에 [https://en.wikipedia.org/wiki/Shebang_(Unix) Shebang](`#!`)을 이용하여 Interpreter를 지정할 수 있습니다. `Wiki`가 default입니다.
 

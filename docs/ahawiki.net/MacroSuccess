@@ -1,6 +1,1 @@
-= [Macro]Success / [Macro]Error / [Macro]Info
-[[[#!WikiSyntaxPreview
-[[Success(Success Message)]]
-[[Error(Error Message)]]
-[[Info(information Message)]]
-]]]
+#!redirect MacroSuccessMacroErrorMacroInfo
