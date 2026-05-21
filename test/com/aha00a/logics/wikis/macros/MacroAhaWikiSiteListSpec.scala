@@ -28,15 +28,15 @@ class MacroAhaWikiSiteListSpec extends AnyFreeSpec {
       assert(html.contains("""href="https://ahawiki.net""""))
       assert(html.contains("""src="https://ahawiki.net/favicon.ico""""))
       assert(html.contains("""onerror="this.onerror=null;this.src='/public/favicon.png';""""))
-      assert(html.contains(">ahawiki.net</a>"))
+      assert(html.contains(">AhaWiki</a>"))
     }
 
-    "escapes site domains in text and attributes" in {
-      val html = MacroAhaWikiSiteList.render(Seq(Site(1, "Unsafe", "UN", """evil.example" onclick="alert(1)""", Some(BigDecimal("100.00")))))
+    "escapes domains in attributes and names in text" in {
+      val html = MacroAhaWikiSiteList.render(Seq(Site(1, """Unsafe <Site>""", "UN", """evil.example" onclick="alert(1)""", Some(BigDecimal("100.00")))))
 
       assert(html.contains("""href="https://evil.example&quot; onclick=&quot;alert(1)""""))
       assert(html.contains("""src="https://evil.example&quot; onclick=&quot;alert(1)/favicon.ico""""))
-      assert(html.contains("""evil.example" onclick="alert(1)</a>"""))
+      assert(html.contains("""Unsafe &lt;Site&gt;</a>"""))
     }
   }
 

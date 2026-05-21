@@ -22,10 +22,10 @@ object MacroAhaWikiSiteList extends TraitMacro {
     val items = sites.map { site =>
       val url = siteUrl(site)
       val href = url.escapeHtmlAttribute()
-      val domain = site.mainDomain.escapeHtml()
+      val displayName = site.name.escapeHtml()
       val faviconUrl = faviconUrlFor(site).escapeHtmlAttribute()
 
-      s"""<li><a href="$href" target="_blank" rel="noopener"><img src="$faviconUrl" alt="" loading="lazy" onerror="this.onerror=null;this.src='$fallbackFavicon';"/>$domain</a></li>"""
+      s"""<li><a href="$href" target="_blank" rel="noopener"><img src="$faviconUrl" alt="" loading="lazy" onerror="this.onerror=null;this.src='$fallbackFavicon';"/>$displayName</a></li>"""
     }.mkString
 
     s"""<ul class="MacroAhaWikiSiteList">$items</ul>"""

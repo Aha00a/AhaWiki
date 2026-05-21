@@ -60,7 +60,7 @@
 - [x] 출력 HTML은 목록만 포함한다.
   - wrapper: `<ul class="MacroAhaWikiSiteList">`
   - item: favicon 이미지 + 외부 링크
-  - 링크 텍스트는 `mainDomain`을 기본으로 한다.
+  - 링크 텍스트는 `name`을 기본으로 한다.
 
 - [x] 링크와 이미지 URL은 HTML attribute escape를 적용한다.
   - `href`
