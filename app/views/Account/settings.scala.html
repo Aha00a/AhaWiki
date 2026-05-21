@@ -1,38 +1,263 @@
 @(user: models.tables.User.SessionUser, emails: Seq[models.tables.UserEmail])(implicit contextSite: models.ContextSite)
+@import com.aha00a.commons.Implicits._
+@profileImageUrl = @{ contextSite.requestWrapper.getUserProfileImageUrl }
+@primaryEmail = @{ emails.find(_.isPrimary).orElse(user.loginEmail.flatMap(loginEmail => emails.find(_.email == loginEmail))).orElse(emails.headOption) }
+@globalHotkeys = @{
+    Seq(
+        ("F", "Front page"),
+        ("A", "AhaWiki page"),
+        ("C", "RecentChanges"),
+        ("T", "TitleIndex"),
+        ("L", "PageList"),
+        ("M", "PageMap"),
+        ("R", "Random page"),
+        ("S, G, /", "Search"),
+        ("W", "Write log"),
+        ("?", "Hotkey help")
+    )
+}
 @_base("Account Settings", "Manage account login emails") {
+    @views.html.Wiki.hotkey(enablePageActions = false)
+    <style>
+        .accountSettings .accountHero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 20px;
+            align-items: center;
+            margin: 18px 0 24px;
+            padding: 18px;
+            border: 1px solid #d9dde7;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .accountSettings .accountIdentity {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            min-width: 0;
+        }
+        .accountSettings .accountAvatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            background: #e7ecf4;
+            color: #586174;
+            font-size: 24px;
+        }
+        .accountSettings .accountIdentity h1 {
+            margin: 0 0 6px;
+            padding: 0;
+            border: 0;
+            font-size: 1.8em;
+            text-shadow: none;
+        }
+        .accountSettings .accountMeta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            color: #546071;
+            font-size: 0.95em;
+        }
+        .accountSettings .accountMetrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .accountSettings .accountMetric {
+            min-width: 120px;
+            padding: 10px 12px;
+            border: 1px solid #e1e5ed;
+            border-radius: 6px;
+            background: #fff;
+        }
+        .accountSettings .accountMetricLabel {
+            display: block;
+            color: #6a7280;
+            font-size: 0.82em;
+        }
+        .accountSettings .accountMetricValue {
+            display: block;
+            margin-top: 4px;
+            color: #1f2937;
+            font-size: 1.25em;
+            font-weight: 700;
+        }
+        .accountSettings .accountGrid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .accountSettings .accountPanel {
+            border: 1px solid #d9dde7;
+            border-radius: 8px;
+            background: #fff;
+            padding: 16px;
+        }
+        .accountSettings .accountPanel h2 {
+            margin-top: 0;
+            margin-left: 0;
+            padding-left: 0;
+            text-shadow: none;
+        }
+        .accountSettings .accountEmailList {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .accountSettings .accountEmailList li {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px 14px;
+            padding: 12px 0;
+            border-bottom: 1px solid #edf0f4;
+        }
+        .accountSettings .accountEmailList li:last-child {
+            border-bottom: 0;
+        }
+        .accountSettings .accountEmailAddress {
+            overflow-wrap: anywhere;
+        }
+        .accountSettings .accountBadge {
+            display: inline-flex;
+            align-items: center;
+            height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: #e8f1ff;
+            color: #174a91;
+            font-size: 0.82em;
+            font-weight: 700;
+        }
+        .accountSettings .accountEmailDate {
+            grid-column: 1 / -1;
+            color: #6a7280;
+            font-size: 0.9em;
+        }
+        .accountSettings .accountActionRow {
+            margin-top: 14px;
+        }
+        .accountSettings .accountActionPrimary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border: 1px solid #c8d2e2;
+            border-radius: 6px;
+            background: #f6f8fc;
+            text-decoration: none;
+        }
+        .accountSettings .accountHotkeyGrid {
+            display: grid;
+            grid-template-columns: max-content minmax(0, 1fr);
+            gap: 8px 12px;
+            margin: 0;
+        }
+        .accountSettings .accountHotkeyGrid dt,
+        .accountSettings .accountHotkeyGrid dd {
+            margin: 0;
+        }
+        .accountSettings .accountHotkeyKey {
+            display: inline-flex;
+            min-width: 28px;
+            min-height: 24px;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 7px;
+            border: 1px solid #d0d5dd;
+            border-radius: 5px;
+            background: #f4f4f5;
+            color: #344054;
+            font-family: 'Ubuntu Mono', 'Consolas', monospace;
+            font-weight: 700;
+        }
+        @@media (max-width: 767px) {
+            .accountSettings .accountHero,
+            .accountSettings .accountGrid,
+            .accountSettings .accountMetrics {
+                grid-template-columns: 1fr;
+            }
+            .accountSettings .accountEmailList li {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 } {
-    <div class="wikiContent">
+    <div class="wikiContent accountSettings">
         <div class="limitWidth">
-            <h1>Account Settings</h1>
-
-            <section>
-                <h2>Profile</h2>
-                <p>Nickname: <strong>@user.nickname</strong></p>
-            </section>
-
-            <section>
-                <h2>Login Emails</h2>
-                @if(emails.nonEmpty) {
-                    <ul>
-                    @emails.map { email =>
-                        <li>
-                            <code>@email.email</code>
-                            @if(email.isPrimary) {
-                                <strong>Primary</strong>
-                            }
-                        </li>
+            <div class="accountHero">
+                <div class="accountIdentity">
+                    @profileImageUrl.map { imageUrl =>
+                        <img src="@imageUrl" alt="@user.nickname" class="accountAvatar"/>
+                    }.getOrElse {
+                        <span class="accountAvatar"><i class="fas fa-user-cog"></i></span>
                     }
-                    </ul>
-                } else {
-                    <p>No login email is connected.</p>
-                }
-                <p>
-                    <a href="@routes.GoogleOAuth.connect" rel="nofollow">
-                        <i class="fab fa-google"></i>
-                        Connect Google Account
-                    </a>
-                </p>
-            </section>
+                    <div>
+                        <h1>Account Settings</h1>
+                        <div class="accountMeta">
+                            <span>Nickname: <strong>@user.nickname</strong></span>
+                            <span>User #@user.seq</span>
+                            <span>Primary email: <strong>@primaryEmail.map(_.email).orElse(user.loginEmail).getOrElse("None")</strong></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="accountMetrics">
+                    <div class="accountMetric">
+                        <span class="accountMetricLabel">Login emails</span>
+                        <span class="accountMetricValue">@emails.size</span>
+                    </div>
+                    <div class="accountMetric">
+                        <span class="accountMetricLabel">Primary</span>
+                        <span class="accountMetricValue">@primaryEmail.map(_ => "Set").getOrElse("None")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accountGrid">
+                <section class="accountPanel">
+                    <h2>Login Emails</h2>
+                    @if(emails.nonEmpty) {
+                        <ul class="accountEmailList">
+                        @emails.map { email =>
+                            <li>
+                                <div class="accountEmailAddress">
+                                    <code>@email.email</code>
+                                </div>
+                                @if(email.isPrimary) {
+                                    <span class="accountBadge">Primary</span>
+                                }
+                                <div class="accountEmailDate">
+                                    Connected @email.created.toIsoLocalDateString
+                                </div>
+                            </li>
+                        }
+                        </ul>
+                    } else {
+                        <p>No login email is connected.</p>
+                    }
+                    <p class="accountActionRow">
+                        <a class="accountActionPrimary" href="@routes.GoogleOAuth.connect" rel="nofollow">
+                            <i class="fab fa-google"></i>
+                            Connect Google Account
+                        </a>
+                    </p>
+                </section>
+
+                <section class="accountPanel">
+                    <h2>Global Hotkeys</h2>
+                    <dl class="accountHotkeyGrid">
+                    @globalHotkeys.map { case (key, description) =>
+                        <dt><span class="accountHotkeyKey">@key</span></dt>
+                        <dd>@description</dd>
+                    }
+                    </dl>
+                </section>
+            </div>
         </div>
     </div>
 }

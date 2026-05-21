@@ -1,4 +1,4 @@
-@()
+@(enablePageActions: Boolean = true)
 @import helper._
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
@@ -67,9 +67,11 @@
             ['L', 'PageList'],
             ['M', 'PageMap'],
             ['R', 'Random page'],
+@if(enablePageActions) {
             ['E', 'Edit action toggle'],
             ['H', 'History action toggle'],
             ['B', 'Blame action toggle'],
+}
             ['S,G,/', 'Open search'],
             ['W', 'Open diary write'],
             ['?', 'Open hotkey help']
@@ -163,9 +165,11 @@
 
         $(document).bind('keydown', 'r', function () { return go('/r'); });
 
+@if(enablePageActions) {
         $(document).bind('keydown', 'e', function () { return toggleAction('edit'); });
         $(document).bind('keydown', 'h', function () { return toggleAction('history'); });
         $(document).bind('keydown', 'b', function () { return toggleAction('blame'); });
+}
 
         $(document).bind('keydown', 's', function () { return showSearch(); });
         $(document).bind('keydown', 'g', function () { return showSearch(); });
