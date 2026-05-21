@@ -583,7 +583,7 @@
         <div class="limitWidth">
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull, hasReadPermissionRestriction)
         </div>
-        <div class="wikiContent Page@title">
+        <div class="wikiContent Page@title" data-wiki-writable="@isWritable">
             <div class="limitWidth">
                 @Html(contentInterpreted)
             </div>

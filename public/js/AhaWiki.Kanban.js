@@ -29,6 +29,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         window.location.hash = '';
     };
+    var parseBooleanDataAttribute = function (value, fallback) {
+        if (value === 'true') {
+            return true;
+        }
+        if (value === 'false') {
+            return false;
+        }
+        return fallback;
+    };
+    var isKanbanRootWritable = function (root) {
+        if (!root) {
+            return true;
+        }
+        var rootValue = root.getAttribute('data-wiki-writable');
+        if (rootValue === 'true' || rootValue === 'false') {
+            return parseBooleanDataAttribute(rootValue, true);
+        }
+        var wikiContent = root.closest ? root.closest('.wikiContent') : null;
+        return parseBooleanDataAttribute(wikiContent ? wikiContent.getAttribute('data-wiki-writable') : null, true);
+    };
 
     var generateCardId = function () {
         return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -154,6 +174,7 @@ document.addEventListener('DOMContentLoaded', function () {
             getHashCardId: getHashCardId,
             setHashCardId: setHashCardId,
             clearHashCardId: clearHashCardId,
+            isKanbanRootWritable: isKanbanRootWritable,
             requestSaveKanban: requestSaveKanban
         });
     }
@@ -886,7 +907,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return false;
     };
-    var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns) {
+    var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns, isWritable) {
         var columnElement = document.createElement('div');
         var pageName = root.getAttribute('data-page-name') || '';
         columnElement.className = 'kanban-column';
@@ -900,7 +921,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var title = document.createElement('div');
         title.textContent = column.title;
         title.className = 'kanban-column-title';
-        title.title = 'Click to edit list name';
+        title.title = isWritable ? 'Click to edit list name' : '';
 
         var deleteListButton = document.createElement('button');
         deleteListButton.type = 'button';
@@ -909,14 +930,18 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteListButton.className = 'kanban-icon-button';
 
         titleRow.appendChild(title);
-        titleRow.appendChild(deleteListButton);
+        if (isWritable) {
+            titleRow.appendChild(deleteListButton);
+        }
         var titleEditor = document.createElement('input');
         titleEditor.type = 'text';
         titleEditor.value = column.title || '';
         titleEditor.className = 'kanban-column-title-editor';
         titleEditor.classList.add('kanban-hidden');
 
-        titleRow.insertBefore(titleEditor, deleteListButton);
+        if (isWritable) {
+            titleRow.insertBefore(titleEditor, deleteListButton);
+        }
         columnElement.appendChild(titleRow);
 
         var closeTitleEditor = function () {
@@ -952,37 +977,39 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
 
-        title.addEventListener('click', openTitleEditor);
-        titleEditor.addEventListener('blur', submitTitleEditor);
-        titleEditor.addEventListener('keydown', function (evt) {
-            if (evt.key === 'Enter') {
-                evt.preventDefault();
-                submitTitleEditor();
-                return;
-            }
-            if (evt.key === 'Escape') {
-                evt.preventDefault();
-                closeTitleEditor();
-            }
-        });
+        if (isWritable) {
+            title.addEventListener('click', openTitleEditor);
+            titleEditor.addEventListener('blur', submitTitleEditor);
+            titleEditor.addEventListener('keydown', function (evt) {
+                if (evt.key === 'Enter') {
+                    evt.preventDefault();
+                    submitTitleEditor();
+                    return;
+                }
+                if (evt.key === 'Escape') {
+                    evt.preventDefault();
+                    closeTitleEditor();
+                }
+            });
 
-        deleteListButton.addEventListener('click', function () {
-            var shouldDelete = window.confirm('Delete list "' + (column.title || '') + '" and all cards?');
-            if (!shouldDelete) {
-                return;
-            }
+            deleteListButton.addEventListener('click', function () {
+                var shouldDelete = window.confirm('Delete list "' + (column.title || '') + '" and all cards?');
+                if (!shouldDelete) {
+                    return;
+                }
 
-            var removedTitle = column.title || '';
-            columns.splice(index, 1);
-            shiftLineNumbersAfterInsert();
-            rerenderColumns();
+                var removedTitle = column.title || '';
+                columns.splice(index, 1);
+                shiftLineNumbersAfterInsert();
+                rerenderColumns();
 
-            enqueueMutation(function () {
-                return persistColumns('list:delete', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: removedTitle }).catch(function (error) {
-                    console.error('[Kanban] failed to delete list', error);
+                enqueueMutation(function () {
+                    return persistColumns('list:delete', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: removedTitle }).catch(function (error) {
+                        console.error('[Kanban] failed to delete list', error);
+                    });
                 });
             });
-        });
+        }
 
         var cardList = document.createElement('div');
         cardList.className = 'kanban-card-list';
@@ -1016,6 +1043,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.debug('[Kanban][Drag]', payload);
         };
 
+        if (isWritable) {
         cardList.addEventListener('dragenter', function (evt) {
             logDragEvent('list', evt, { columnIndex: index, overlayOpen: Boolean(getOpenedCardOverlay()) });
             if (!isFileDragEvent(evt)) {
@@ -1087,6 +1115,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('File upload failed. ' + (error && error.message ? error.message : ''));
             });
         });
+        }
 
         (column.cards || []).forEach(function (card) {
             var cardElement = document.createElement('div');
@@ -1178,7 +1207,9 @@ document.addEventListener('DOMContentLoaded', function () {
         cardEditor.appendChild(cardActions);
         cardComposer.appendChild(addCardButton);
         cardComposer.appendChild(cardEditor);
-        columnElement.appendChild(cardComposer);
+        if (isWritable) {
+            columnElement.appendChild(cardComposer);
+        }
 
         var closeCardEditor = function () {
             cardEditor.className = 'kanban-card-editor kanban-hidden';
@@ -1186,6 +1217,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cardTextarea.value = '';
         };
 
+        if (isWritable) {
         addCardButton.addEventListener('click', function () {
             addCardButton.classList.add('kanban-hidden');
             cardEditor.classList.remove('kanban-hidden');
@@ -1268,8 +1300,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitCard();
             }
         });
+        }
 
-        if (window.Sortable) {
+        if (isWritable && window.Sortable) {
             var dragCancelled = false;
             var draggingCard = false;
             var draggingItem = null;
@@ -1534,6 +1567,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var pageName = root.getAttribute('data-page-name') || '';
+        var isWritable = isKanbanRootWritable(root);
         var metaWrapper = root.closest('.InterpreterRenderMetaWrapper');
         var metaLineStart = Number(metaWrapper ? metaWrapper.getAttribute('data-line-start') : 1) || 1;
         var hasShebang = Boolean(pre.getAttribute('data-shebang'));
@@ -1542,6 +1576,10 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         var currentKanbanLineCount = getLineCountForText(pre.textContent || '');
         root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
+        root.setAttribute('data-kanban-read-only', isWritable ? 'false' : 'true');
+        if (!isWritable) {
+            root.classList.add('kanban-read-only');
+        }
         var rerenderColumns = function () {};
         var mutationQueue = Promise.resolve();
         var serializeColumns = function () {
@@ -1590,6 +1628,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }).join('\n');
         };
         var persistColumns = function (actionType, actionMeta) {
+            if (!isWritable) {
+                return Promise.reject(new Error('Kanban is read-only.'));
+            }
             var content = serializeColumns();
             var replacementLineCount = getLineCountForText(content);
             var requestLineEnd = interpreterStartLine + Math.max(0, currentKanbanLineCount);
@@ -1610,6 +1651,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
         };
         var enqueueMutation = function (executor) {
+            if (!isWritable) {
+                return Promise.reject(new Error('Kanban is read-only.'));
+            }
             mutationQueue = mutationQueue
                 .then(function () {
                     return executor();
@@ -1625,6 +1669,12 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         pre.classList.add('kanban-hidden');
         board.classList.add('kanban-board-ready');
+        if (!isWritable) {
+            var readOnlyNotice = document.createElement('div');
+            readOnlyNotice.className = 'kanban-read-only-notice';
+            readOnlyNotice.textContent = 'Read only';
+            board.appendChild(readOnlyNotice);
+        }
 
         var findNearestBoardCardList = function (clientX, clientY) {
             if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
@@ -1714,6 +1764,9 @@ document.addEventListener('DOMContentLoaded', function () {
             board.classList.add('kanban-draggable');
         });
         board.addEventListener('dragenter', function (evt) {
+            if (!isWritable) {
+                return;
+            }
             if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
                 return;
             }
@@ -1723,6 +1776,9 @@ document.addEventListener('DOMContentLoaded', function () {
             setBoardFileDropFeedback(true);
         });
         board.addEventListener('dragover', function (evt) {
+            if (!isWritable) {
+                return;
+            }
             if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
                 return;
             }
@@ -1734,6 +1790,9 @@ document.addEventListener('DOMContentLoaded', function () {
             setBoardFileDropFeedback(true);
         });
         board.addEventListener('dragleave', function (evt) {
+            if (!isWritable) {
+                return;
+            }
             if (!isFileDragEvent(evt)) {
                 return;
             }
@@ -1743,6 +1802,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         board.addEventListener('drop', function (evt) {
+            if (!isWritable) {
+                return;
+            }
             if (!isFileDragEvent(evt) || getOpenedCardOverlay()) {
                 return;
             }
@@ -1866,7 +1928,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns), addListWrapper);
+                board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns, isWritable), isWritable ? addListWrapper : null);
             });
         };
         rerenderColumns = renderColumns;
@@ -1973,7 +2035,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        board.appendChild(addListWrapper);
+        if (isWritable) {
+            board.appendChild(addListWrapper);
+        }
         renderColumns();
         window.requestAnimationFrame(scrollToKanbanForHashCard);
 
@@ -2055,8 +2119,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var title = document.createElement('h3');
             title.textContent = card.text || '';
-            title.style.cursor = 'pointer';
-            title.title = 'Click to edit title';
+            title.style.cursor = isWritable ? 'pointer' : 'default';
+            title.title = isWritable ? 'Click to edit title' : '';
             title.style.margin = '0';
             title.style.fontSize = '22px';
             title.style.lineHeight = '1.35';
@@ -2185,19 +2249,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             };
 
-            title.addEventListener('click', openTitleEditor);
-            titleSaveButton.addEventListener('click', submitTitleEditor);
-            titleEditor.addEventListener('keydown', function (evt) {
-                if (evt.key === 'Enter') {
-                    evt.preventDefault();
-                    submitTitleEditor();
-                    return;
-                }
-                if (evt.key === 'Escape') {
-                    evt.preventDefault();
-                    closeTitleEditor();
-                }
-            });
+            if (isWritable) {
+                title.addEventListener('click', openTitleEditor);
+                titleSaveButton.addEventListener('click', submitTitleEditor);
+                titleEditor.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter') {
+                        evt.preventDefault();
+                        submitTitleEditor();
+                        return;
+                    }
+                    if (evt.key === 'Escape') {
+                        evt.preventDefault();
+                        closeTitleEditor();
+                    }
+                });
+            }
 
             var textarea = document.createElement('textarea');
             textarea.placeholder = 'Write a comment...';
@@ -2322,7 +2388,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             } else {
                                 row.appendChild(valueRow);
                             }
-                            if (key === 'Attachment') {
+                            if (isWritable && key === 'Attachment') {
                                 var removeButton = document.createElement('button');
                                 removeButton.type = 'button';
                                 removeButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
@@ -2599,9 +2665,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.readAsDataURL(file);
             };
 
-            textarea.addEventListener('paste', handleClipboardImagePaste);
+            if (isWritable) {
+                textarea.addEventListener('paste', handleClipboardImagePaste);
+            }
 
             overlay.addEventListener('dragenter', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('overlay', evt, { cardId: card.id || '' });
                 if (!isFileDragEvent(evt)) {
                     return;
@@ -2613,6 +2684,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             overlay.addEventListener('dragover', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('overlay', evt, { cardId: card.id || '' });
                 if (!isFileDragEvent(evt)) {
                     return;
@@ -2626,6 +2700,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             overlay.addEventListener('dragleave', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('overlay', evt, { cardId: card.id || '' });
                 if (!evt || (evt.relatedTarget && overlay.contains(evt.relatedTarget))) {
                     return;
@@ -2637,6 +2714,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             modal.addEventListener('dragenter', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('modal', evt, { cardId: card.id || '' });
                 if (!isFileDragEvent(evt)) {
                     return;
@@ -2648,6 +2728,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             modal.addEventListener('dragover', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('modal', evt, { cardId: card.id || '' });
                 if (!isFileDragEvent(evt)) {
                     return;
@@ -2660,6 +2743,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             modal.addEventListener('dragleave', function (evt) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent('modal', evt, { cardId: card.id || '' });
                 if (!evt || (evt.relatedTarget && modal.contains(evt.relatedTarget))) {
                     return;
@@ -2671,6 +2757,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             var handleModalFileDrop = function (evt, source) {
+                if (!isWritable) {
+                    return;
+                }
                 logModalDragEvent(source, evt, { cardId: card.id || '' });
                 if (!evt || !evt.dataTransfer || !evt.dataTransfer.files) {
                     return;
@@ -2712,31 +2801,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 handleModalFileDrop(evt, 'modal');
             });
 
-            submit.addEventListener('click', function () {
-                var body = (textarea.value || '').trim();
-                if (!body) {
-                    return;
-                }
-                var commentEntry = buildCommentEntry([body]);
-                card.comments = card.comments || [];
-                card.comments.unshift(commentEntry);
-                updateCardCommentCount(card);
-                textarea.value = '';
-                renderComments();
-                enqueueMutation(function () {
-                    return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: body }).catch(function (error) {
-                        console.error('[Kanban] failed to save comments', error);
+            if (isWritable) {
+                submit.addEventListener('click', function () {
+                    var body = (textarea.value || '').trim();
+                    if (!body) {
+                        return;
+                    }
+                    var commentEntry = buildCommentEntry([body]);
+                    card.comments = card.comments || [];
+                    card.comments.unshift(commentEntry);
+                    updateCardCommentCount(card);
+                    textarea.value = '';
+                    renderComments();
+                    enqueueMutation(function () {
+                        return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: body }).catch(function (error) {
+                            console.error('[Kanban] failed to save comments', error);
+                        });
                     });
                 });
-            });
-            dueDateSaveButton.addEventListener('click', submitDueDate);
-            dueDateInput.addEventListener('keydown', function (evt) {
-                if (evt.key === 'Enter') {
-                    evt.preventDefault();
-                    submitDueDate();
-                }
-            });
+                dueDateSaveButton.addEventListener('click', submitDueDate);
+                dueDateInput.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter') {
+                        evt.preventDefault();
+                        submitDueDate();
+                    }
+                });
+            }
 
+            if (isWritable) {
             deleteCardButton.addEventListener('click', function () {
                 var shouldDelete = window.confirm('Delete card "' + (card.text || '') + '"?');
                 if (!shouldDelete) {
@@ -2773,6 +2865,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 });
             });
+            }
             overlay.addEventListener('click', function () {
                 closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
@@ -2782,24 +2875,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 clearHashCardId(card.id || '');
             });
             modal.addEventListener('click', function (evt) { evt.stopPropagation(); });
-            headerActions.appendChild(deleteCardButton);
+            if (isWritable) {
+                headerActions.appendChild(deleteCardButton);
+            }
             headerActions.appendChild(closeButton);
             header.appendChild(titleWrap);
             header.appendChild(headerActions);
             modal.appendChild(header);
-            modal.appendChild(modalDropHint);
-            titleEditorWrap.appendChild(titleEditor);
-            titleEditorWrap.appendChild(titleSaveButton);
-            titleWrap.insertBefore(titleEditorWrap, cardIdLabel);
-            actionBar.appendChild(submit);
-            dueDateEditor.appendChild(dueDateInput);
-            dueDateEditor.appendChild(dueDateSaveButton);
+            if (isWritable) {
+                modal.appendChild(modalDropHint);
+                titleEditorWrap.appendChild(titleEditor);
+                titleEditorWrap.appendChild(titleSaveButton);
+                titleWrap.insertBefore(titleEditorWrap, cardIdLabel);
+                actionBar.appendChild(submit);
+                dueDateEditor.appendChild(dueDateInput);
+                dueDateEditor.appendChild(dueDateSaveButton);
+            }
             modal.appendChild(propertyTitle);
             modal.appendChild(propertyList);
-            modal.appendChild(dueDateEditor);
+            if (isWritable) {
+                modal.appendChild(dueDateEditor);
+            }
             modal.appendChild(commentsTitle);
-            modal.appendChild(textarea);
-            modal.appendChild(actionBar);
+            if (isWritable) {
+                modal.appendChild(textarea);
+                modal.appendChild(actionBar);
+            }
             modal.appendChild(comments);
             overlay.appendChild(modal);
             document.body.appendChild(overlay);
@@ -2847,7 +2948,7 @@ document.addEventListener('DOMContentLoaded', function () {
             openCardDetailById(hashCardId);
         });
 
-        if (window.Sortable) {
+        if (isWritable && window.Sortable) {
             Sortable.create(board, {
                 draggable: '.kanban-column',
                 animation: 120,
