@@ -12,6 +12,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
  1. [InterpreterFold] - 접고 펼칠 수 있는 영역
  1. [InterpreterGraph] - 간단한 방향 그래프
  1. [InterpreterHtml] - HTML 조각
+ 1. [InterpreterKanban]
  1. [InterpreterMap] - 위치 목록 지도
  1. [InterpreterMarkdown] - Markdown 문법
  1. [InterpreterMath] - MathJax 수식
