@@ -6,6 +6,12 @@
  * 한 이메일은 하나의 user에만 연결된다. 이미 다른 user에 연결된 이메일을 현재 계정에 연결하려면, Google OAuth로 소유권을 확인한 뒤 사용자가 명시적으로 병합을 승인해야 한다.
  * 권한 평가는 단일 로그인 이메일이 아니라 현재 user에 연결된 모든 로그인 이메일 기준으로 수행한다. 따라서 기존 이메일 기반 permission은 여러 이메일을 가진 사용자에게도 자연스럽게 적용된다.
 
+== 정책
+ * 초기 UI에서는 로그인 이메일 삭제를 제공하지 않는다. 최소 하나의 로그인 이메일은 migration, login, 계정 연결 flow에서 유지한다.
+ * Google OAuth profile email만 로그인 이메일로 연결한다. Google People API의 여러 verified email을 자동 등록하지 않는다.
+ * 대표 이메일은 `UserEmail.isPrimary = true`로 표현한다.
+ * 병합 후 duplicate `User` row는 주요 FK와 `UserEmail`을 canonical `User.seq`로 이동한 뒤 삭제한다.
+
 == 구현 결과
  * `User` 모델은 이메일을 직접 갖지 않고, `UserEmail` 모델이 이메일 조회, 추가, primary 설정, 중복 확인을 담당한다. 로그인은 `UserEmail.email`로 user를 찾고, 없으면 새 `User`와 첫 `UserEmail`을 만든다.
  * 세션은 `seq`, `nickname`, `loginEmail` 중심으로 정리했다. identity 판단은 `seq`로 하고, `loginEmail`은 표시나 감사 목적의 보조 정보로만 둔다.
@@ -13,3 +19,8 @@
  * 병합 로직은 DB 메타데이터에서 `User(seq)` 참조 FK를 읽어 duplicate user의 참조를 canonical user로 옮긴다. `UserEmail`도 canonical user로 이동하고, 이동이 끝나면 duplicate `User` row를 삭제한다.
  * `Permission`은 현재 user의 모든 로그인 이메일을 actor 후보로 사용하도록 변경했다. `Exact`, `Domain`, `Login` 권한이 여러 로그인 이메일 기준으로 동작한다.
  * `UserMergeSpec`를 추가해 FK 이동, `UserEmail` 이동, `UserSite` 충돌 처리, duplicate `User` 삭제를 검증했다.
+
+== 운영 확인
+배포 전에는 DB를 백업하고 staging에서 migration rehearsal을 수행한다. `UserEmail.email` unique 제약, 기존 user 수와 migration된 primary email 수, 현재 DB의 `User(seq)` 참조 FK 목록, Google OAuth Console의 `/google/oauth/callback` redirect URI 등록 여부를 확인한다.
+
+배포 후에는 대표 계정의 여러 이메일로 각각 로그인하고, 관리자 권한, 이메일 기반 page permission, 계정 설정의 로그인 이메일 목록, 병합 flow를 확인한다.
