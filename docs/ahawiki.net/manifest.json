@@ -1,6 +1,6 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-21T07:48:27.373Z",
+  "downloadedAt": "2026-05-21T07:50:56.527Z",
   "count": 41,
   "pages": [
     {
@@ -49,7 +49,7 @@
       "name": "Macro",
       "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
       "fileName": "Macro",
-      "bytes": 8
+      "bytes": 2262
     },
     {
       "name": "HotKey",
@@ -211,7 +211,7 @@
       "name": "AhaMark Macro",
       "rawUrl": "https://ahawiki.net/w/AhaMark%20Macro?action=raw",
       "fileName": "AhaMark Macro",
-      "bytes": 2261
+      "bytes": 16
     },
     {
       "name": "AhaMark Interpreter Examples",

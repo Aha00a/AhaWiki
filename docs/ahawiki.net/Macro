@@ -1,1 +1,262 @@
 = Macro
+[AhaMark]
+
+매크로는 `[[` + `MacroName` + `(Parameter)` + `]]` 형태로 함수호출과 비슷합니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----
+
+
+
+
+
+== `Image`
+[[[#!WikiSyntaxPreview
+[[Image(/public/favicon.png)]] 
+Image with width: [[Image(/public/favicon.png,20px)]]
+]]]
+
+
+
+
+
+
+== `Trivial`
+[[[#!WikiSyntaxPreview
+ * [[Trivial(trivial)]]
+ * abcdefg[[Trivial(hijklmn)]]opqrstu
+ * ABCDEFG[[Trivial(HIJKLMN)]]OPQRSTU
+]]]
+
+
+
+
+
+
+
+
+
+== `Ruby`
+[[[#!WikiSyntaxPreview
+[[Ruby(漢字,かんじ)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Ruby(original text is here,ruby is here)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Ruby(MBC,마봉춘)]]
+]]]
+
+
+
+
+
+
+
+
+
+
+
+== Copyable
+[[[#!WikiSyntaxPreview
+ * ``abc123``
+ * [[Copyable(abc123)]]
+]]]
+
+
+
+
+
+
+
+
+
+
+
+
+== `Html`
+[[[#!WikiSyntaxPreview
+[[Html(<div style="border: 1px solid #f00">red border</div>)]]
+]]]
+
+
+
+
+
+
+
+== `Success`, `Error`, `Info`
+[[[#!WikiSyntaxPreview
+[[Success(Success Message)]]
+[[Error(Error Message)]]
+[[Info(information Message)]]
+]]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== `Embed`
+현재는 [YouTube]만 지원합니다.. 추후에는 더 지원할 생각인데.. 어째 해당되는게 안보이네요.
+
+[[[#!WikiSyntaxPreview
+[[Embed(https://www.youtube.com/watch?v=2wKqfk8pESE&feature=youtu.be)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Embed(http://www.youtube.com/embed/2wKqfk8pESE)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Embed(https://youtu.be/2wKqfk8pESE)]]
+]]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== `Get`, `Set`
+문서 내부에서 여러번 사용되고, 빈번하게 수정되는 항목에 대해 변수를 사용할 수 있습니다.
+[[[#!WikiSyntaxPreview
+[[Set(A,VAR_A)]]
+[[Get(A)]] [[Get(A)]]
+]]]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+== `Period`
+기간을 계산해 줍니다.
+[[[#!WikiSyntaxPreview
+ * [[Period(2015-10-17)]]
+ * [[Period(2000-01-01)]]
+ * [[Period(2100-01-01)]]
+ * [[Period(2000-01-01, 2001-01-01)]]
+ * [[Period(2001-01-01, 2000-01-01)]]
+ * [[Period(2000-01-01, 2001-01-05)]]
+ * [[Period(2000-01-01, 2001-05-01)]]
+ * [[Period(2000-01-01, 2001-05-05)]]
+]]]
+
+
+
+
+
+
+
+
+== `Include`
+다른 문서를 포함시킬 수 있습니다.
+[[[#!WikiSyntaxPreview
+[[Include(ExampleText)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(ExampleHtml)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(ExampleMarkdown)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(AhaWiki)]]
+]]]
+
+
