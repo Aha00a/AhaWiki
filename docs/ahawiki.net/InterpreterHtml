@@ -1,5 +1,9 @@
 = [Interpreter]Html
+HTML을 escape하지 않고 그대로 출력합니다.
+간단한 HTML 조각을 문서 안에 직접 넣어야 할 때 사용합니다.
+
 [[[#!WikiSyntaxPreview Html
 <h1>h1</h1>
 <p>paragraph</p>
+<ul><li>html list</li></ul>
 ]]]

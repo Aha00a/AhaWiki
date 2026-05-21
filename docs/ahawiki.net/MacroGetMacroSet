@@ -1,6 +1,10 @@
 = [Macro]Get / [Macro]Set
 문서 내부에서 여러번 사용되고, 빈번하게 수정되는 항목에 대해 변수를 사용할 수 있습니다.
+`Set`은 값을 저장하고 화면에는 출력하지 않습니다.
+`Get`은 같은 문서 렌더링 중 저장된 값을 꺼내 출력합니다.
+
 [[[#!WikiSyntaxPreview
-[[Set(A,VAR_A)]]
-[[Get(A)]] [[Get(A)]]
+[[Set(Product,AhaWiki)]]
+제품명: [[Get(Product)]]
+다시 사용: [[Get(Product)]]
 ]]]

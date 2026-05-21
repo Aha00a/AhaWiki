@@ -1,6 +1,8 @@
 = [Interpreter]Map
 아직 개선중이며 정식으로 확정한 기능이 아니라서 하위호환을 포기하고 갈아엎을 수도 있습니다.
 [Restaurant] 참고.
+탭으로 구분한 장소 목록을 지도와 표 형태로 표시합니다.
+첫 줄은 `Name`, `Address`, `Category`, `Comment`, `Score` 같은 열 이름으로 사용합니다.
 
 [[[#!WikiSyntaxPreview Map
 Name	Address	Category	Comment	Score

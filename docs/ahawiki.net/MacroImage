@@ -1,5 +1,9 @@
 = [Macro]Image
+이미지를 삽입합니다.
+두 번째 인자로 너비를 지정할 수 있고, 숫자만 쓰면 `px`로 처리됩니다.
+
 [[[#!WikiSyntaxPreview
 [[Image(/public/favicon.png)]]
 Image with width: [[Image(/public/favicon.png,20px)]]
+Image with percent width: [[Image(/public/favicon.png,10%)]]
 ]]]

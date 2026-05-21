@@ -1,5 +1,7 @@
 = [Interpreter]Mermaid
 https://mermaid-js.github.io/mermaid/#/
+Mermaid 문법으로 flowchart, sequence diagram, gantt, class diagram 등을 렌더링합니다.
+다이어그램 종류는 Mermaid 코드의 첫 줄에서 정합니다.
 
 [[[#!WikiSyntaxPreview Mermaid
 graph TD;

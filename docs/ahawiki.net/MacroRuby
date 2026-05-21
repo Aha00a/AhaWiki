@@ -1,4 +1,7 @@
 = [Macro]Ruby
+본문 위에 작은 발음/설명 텍스트를 붙이는 ruby 표기를 만듭니다.
+인자는 `본문,ruby` 형식으로 쉼표 하나로 구분합니다.
+
 [[[#!WikiSyntaxPreview
 [[Ruby(漢字,かんじ)]]
 ]]]

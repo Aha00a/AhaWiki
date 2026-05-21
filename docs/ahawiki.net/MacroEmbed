@@ -1,5 +1,6 @@
 = [Macro]Embed
-현재는 [YouTube]만 지원합니다.. 추후에는 더 지원할 생각
+외부 미디어를 문서 안에 삽입합니다.
+현재는 [YouTube] URL을 지원하며, 일반 watch URL, embed URL, youtu.be URL을 사용할 수 있습니다.
 
 [[[#!WikiSyntaxPreview
 [[Embed(https://www.youtube.com/watch?v=2wKqfk8pESE&feature=youtu.be)]]

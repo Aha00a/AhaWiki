@@ -1,10 +1,8 @@
 = [Macro]Br
-Same as HTML `<br/>` tag.
-`<br/>` 태그와 같습니다.
-강제 개행을 할 때 사용합니다.
+HTML `<br/>` 태그와 같은 줄바꿈 매크로입니다.
+문장이나 목록 안에서 줄을 강제로 나눌 때 사용합니다.
 
 [[[#!WikiSyntaxPreview
  * aaa[[Br]]bbb[[Br]]ccc
  * same[[Br]]as[[Br]]Html[[Br]]<br/>[[Br]]tag
 ]]]
-

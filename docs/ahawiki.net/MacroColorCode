@@ -1,6 +1,11 @@
 = [Macro]ColorCode
+색상 코드를 작은 미리보기와 함께 표시합니다.
+`#rgb`, `#rgba`, `#rrggbb`, `rrggbbaa` 형식을 사용할 수 있습니다.
+
 [[[#!WikiSyntaxPreview
  * [[ColorCode(#f00)]]
+ * [[ColorCode(#fff)]]
  * [[ColorCode(#00ff00)]]
  * [[ColorCode(#0000ff)]]
+ * [[ColorCode(000000ff)]]
 ]]]

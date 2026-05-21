@@ -1,5 +1,10 @@
 = [Interpreter]Schema
-[[[#!WikiSyntaxPreview Schema HowTo
-name	Schema
-url	schema.org
+schema.org 구조화 데이터를 문서에 표시하고 JSON-LD로도 제공합니다.
+`Schema` 뒤의 첫 인자는 schema.org class 이름입니다.
+본문은 탭으로 구분한 `property	value` 형식으로 작성합니다.
+
+[[[#!WikiSyntaxPreview Schema Person
+name	Ada Lovelace
+birthDate	1815-12-10
+url	https://en.wikipedia.org/wiki/Ada_Lovelace
 ]]]

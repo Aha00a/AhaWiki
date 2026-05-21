@@ -1,7 +1,8 @@
 = [Macro]Kbd
-Render keyboard keys and shortcuts with the HTML `<kbd>` tag.
+키보드 키와 단축키를 HTML `<kbd>` 태그 형태로 표시합니다.
+공백으로 키를 구분하며, 여러 개의 공백은 하나의 구분자로 처리됩니다.
 
-Separate keys with spaces. Repeated spaces are collapsed.
+키 이름은 그대로 표시되며 HTML 문자는 안전하게 escape됩니다.
 
 [[[#!WikiSyntaxPreview
  * [[Kbd(Esc)]]

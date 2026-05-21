@@ -1,5 +1,7 @@
 = [Interpreter]Graph
-Directed graph
+간단한 방향 그래프를 그립니다.
+각 줄에 `a->b` 형태의 간선을 적고, `a->b->c`처럼 연속 간선도 쓸 수 있습니다.
+
 [[[#!WikiSyntaxPreview Graph
 a
 b->c

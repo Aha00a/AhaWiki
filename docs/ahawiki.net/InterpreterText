@@ -1,4 +1,9 @@
 = [Interpreter]Text
+입력한 내용을 `<pre>` 형태의 일반 텍스트로 표시합니다.
+HTML 태그는 escape되고, 위키 링크나 매크로는 실행하지 않습니다.
+
 [[[#!WikiSyntaxPreview Text
 some text
+[[Kbd(Esc)]] is shown as text.
+<b>HTML is escaped.</b>
 ]]]

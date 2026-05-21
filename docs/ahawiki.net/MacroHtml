@@ -1,4 +1,7 @@
 = [Macro]Html
+인자로 받은 HTML을 그대로 출력합니다.
+작은 스타일 조각이나 위키 문법으로 표현하기 어려운 HTML이 필요할 때 사용합니다.
+
 [[[#!WikiSyntaxPreview
 [[Html(<div style="border: 1px solid #f00">red border</div>)]]
 ]]]

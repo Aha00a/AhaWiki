@@ -1,6 +1,9 @@
 = [Macro]Success / [Macro]Error / [Macro]Info
+성공, 오류, 안내 메시지를 눈에 띄는 상자로 표시합니다.
+짧은 상태 알림이나 주의 문구를 문서 중간에 넣을 때 사용합니다.
+
 [[[#!WikiSyntaxPreview
-[[Success(Success Message)]]
-[[Error(Error Message)]]
-[[Info(information Message)]]
+[[Success(저장이 완료되었습니다.)]]
+[[Error(필수 값이 없습니다.)]]
+[[Info(이 기능은 미리보기에서만 확인하세요.)]]
 ]]]

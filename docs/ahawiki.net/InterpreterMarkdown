@@ -1,4 +1,7 @@
 = [Interpreter]Markdown
+Markdown 문법으로 작성한 내용을 HTML로 렌더링합니다.
+제목, 목록, 링크 같은 Markdown 기본 문법을 사용할 수 있습니다.
+
 [[[#!WikiSyntaxPreview Markdown
 This is an H1
 =============
@@ -7,4 +10,7 @@ This is an H2
 -------------
 
 Hello, AhaWiki!
+
+ * [AhaWiki](https://ahawiki.net)
+ * `inline code`
 ]]]

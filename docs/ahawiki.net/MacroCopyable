@@ -1,5 +1,9 @@
 = [Macro]Copyable
+값을 읽기 전용 입력칸과 복사 버튼으로 보여줍니다.
+토큰, URL, 명령어처럼 자주 복사하는 짧은 문자열에 사용합니다.
+
 [[[#!WikiSyntaxPreview
  * ``abc123``
  * [[Copyable(abc123)]]
+ * [[Copyable(https://ahawiki.net/w/AhaWiki)]]
 ]]]

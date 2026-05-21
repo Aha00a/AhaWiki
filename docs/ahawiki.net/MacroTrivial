@@ -1,4 +1,7 @@
 = [Macro]Trivial
+덜 중요한 텍스트를 작게 또는 흐리게 보이도록 표시합니다.
+본문 흐름은 유지하되 시각적 강조를 낮추고 싶을 때 사용합니다.
+
 [[[#!WikiSyntaxPreview
  * [[Trivial(trivial)]]
  * abcdefg[[Trivial(hijklmn)]]opqrstu
