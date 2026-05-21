@@ -25,6 +25,8 @@ import scala.concurrent.duration._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Random
 
+import com.aha00a.commons.utils.DurationUtil.random
+
 class ApplicationLifecycleHook @Inject()(
   implicit
   applicationLifecycle: ApplicationLifecycle,
@@ -44,10 +46,6 @@ class ApplicationLifecycleHook @Inject()(
   applicationLifecycle.addStopHook { () =>
     logger.info("OnApplicationStop")
     Future.successful(())
-  }
-
-  private def random(durationMinimum: FiniteDuration, durationMaximum: FiniteDuration): FiniteDuration = {
-    Random.between(durationMinimum.toMillis, durationMaximum.toMillis).millis
   }
 
   def registerScheduler(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
