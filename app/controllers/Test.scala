@@ -1,5 +1,4 @@
 package controllers
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.long
@@ -24,7 +23,6 @@ import play.api.mvc._
 import java.io.File
 import java.util.Date
 import javax.inject.Inject
-import javax.inject.Named
 import scala.concurrent.ExecutionContext
 
 class Test @Inject()(implicit val
@@ -32,7 +30,7 @@ class Test @Inject()(implicit val
                      actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,
-                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     wikiActors: WikiActors,
                      applicationConf: ApplicationConf,
                      configuration: Configuration,
                      ahaWikiCache: AhaWikiCache,

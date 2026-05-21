@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
@@ -11,6 +10,7 @@ import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
 import models.PageContent
+import models.WikiActors
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
@@ -25,13 +25,12 @@ class Diary @Inject()(implicit val
                       controllerComponents: ControllerComponents,
                       actorSystem: ActorSystem,
                       database: Database,
-                      @Named("db-actor") actorAhaWiki: ActorRef,
+                       wikiActors: WikiActors,
                       applicationConf: ApplicationConf,
                       ahaWikiCache: AhaWikiCache,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
                      ) extends BaseController {
-
   def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
     val q = Form("q" -> text).bindFromRequest().get
     val now: LocalDateTime = LocalDateTime.now

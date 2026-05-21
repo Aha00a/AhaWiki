@@ -1,6 +1,5 @@
 package models
 
-import org.apache.pekko.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.RenderingMode
@@ -16,7 +15,7 @@ object ContextWikiPage {
     implicit
     request: Request[Any],
     database: Database,
-    actorAhaWiki: ActorRef,
+    wikiActors: WikiActors,
     applicationConf: ApplicationConf,
     ahaWikiCache: AhaWikiCache,
     site: Site
@@ -29,7 +28,7 @@ object ContextWikiPage {
     implicit
     request: Request[Any],
     database: Database,
-    actorAhaWiki: ActorRef,
+    wikiActors: WikiActors,
     applicationConf: ApplicationConf,
     ahaWikiCache: AhaWikiCache,
     site: Site
@@ -42,7 +41,7 @@ object ContextWikiPage {
 class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode)(
   implicit
   database: Database,
-  actorAhaWiki: ActorRef,
+  wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   requestWrapper: RequestWrapper,
@@ -55,6 +54,6 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   def push(name: String) = new ContextWikiPage(name +: seqName, renderingMode)
 
   def at(localDateNow: LocalDate): ContextWikiPage = {
-    new ContextWikiPage(seqName, renderingMode)(database, actorAhaWiki, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow)
+    new ContextWikiPage(seqName, renderingMode)(database, wikiActors, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow)
   }
 }

@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCache
@@ -9,6 +8,7 @@ import logics.SiteLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
 import models.PageContent
+import models.WikiActors
 import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
@@ -24,13 +24,12 @@ controllerComponents: ControllerComponents,
                        actorSystem: ActorSystem,
                        database: Database,
                        environment: Environment,
-                       @Named("db-actor") actorAhaWiki: ActorRef,
+                        wikiActors: WikiActors,
                        applicationConf: ApplicationConf,
                        ahaWikiCache: AhaWikiCache,
                        wsClient: WSClient,
                        executionContext: ExecutionContext
-                      ) extends BaseController with Logging {
-
+                       ) extends BaseController with Logging {
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
     import models.RequestWrapper

@@ -1,12 +1,12 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
 import models.ContextSite
+import models.WikiActors
 import models.tables.Site
 import models.tables.User
 import models.tables.UserEmail
@@ -16,7 +16,6 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import javax.inject.Inject
-import javax.inject.Named
 import scala.concurrent.ExecutionContext
 
 class Account @Inject()(
@@ -24,13 +23,12 @@ class Account @Inject()(
   controllerComponents: ControllerComponents,
   actorSystem: ActorSystem,
   database: Database,
-  @Named("db-actor") actorAhaWiki: ActorRef,
+  wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
   executionContext: ExecutionContext,
 ) extends BaseController {
-
   def settings(): Action[AnyContent] = Action { implicit request =>
     SessionLogic.getUser(request) match {
       case None =>

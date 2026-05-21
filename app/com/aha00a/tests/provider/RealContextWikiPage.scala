@@ -1,11 +1,11 @@
 package com.aha00a.tests.provider
 
-import org.apache.pekko.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.RenderingMode
 import models.ContextWikiPage
 import models.RequestWrapper
+import models.WikiActors
 import models.tables.Site
 import models.tables.User
 import play.api.Application
@@ -16,7 +16,7 @@ import java.util.Locale
 trait RealContextWikiPage {
   def createContextWikiPage()(implicit app: Application): ContextWikiPage = {
     implicit val database: Database = app.injector.instanceOf[Database]
-    implicit val actorRef: ActorRef = null
+    implicit val wikiActors: WikiActors = WikiActors(null, null)
     implicit val applicationConf: ApplicationConf = app.injector.instanceOf[ApplicationConf]
     implicit val cache: AhaWikiCache = app.injector.instanceOf[AhaWikiCache]
     implicit val requestWrapper: RequestWrapper = new RequestWrapper {

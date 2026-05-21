@@ -1,7 +1,6 @@
 package logics.wikis
 
-import actors.ActorAhaWiki.Calculate
-import org.apache.pekko.actor.ActorRef
+import actors.ActorPageCalculator.Calculate
 import anorm.SqlParser.flatten
 import anorm.SqlParser.int
 import anorm.SqlParser.str
@@ -83,7 +82,7 @@ object PageLogic {
     val user = wikiContext.requestWrapper.getUser
     val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body)
     Page.insert(page)
-    wikiContext.actorAhaWiki ! Calculate(site, name)
+    wikiContext.pageCalculationActor ! Calculate(site, name)
   }
 
   def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): Seq[PageLatestSummary] = {
@@ -105,7 +104,7 @@ object PageLogic {
     connection: Connection,
     applicationConf: ApplicationConf,
     ahaWikiCache: AhaWikiCache,
-    actorAhaWiki: ActorRef,
+    wikiActors: WikiActors,
     requestWrapper: RequestWrapper,
     logger: Logger,
     site: Site,

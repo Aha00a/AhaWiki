@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.play.Implicits.RichRequest
 import io.circe.Json
@@ -25,7 +24,6 @@ class ApiCrawler @Inject()(
   controllerComponents: ControllerComponents,
   actorSystem: ActorSystem,
   database: Database,
-  @Named("db-actor") actorAhaWiki: ActorRef,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,

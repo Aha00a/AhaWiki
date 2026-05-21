@@ -1,17 +1,16 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.ContextSite
 import models.PageLatestSummary
+import models.WikiActors
 import models.tables.Site
 import play.api.mvc._
 
 import java.time.LocalDateTime
 import javax.inject.Inject
-import javax.inject.Named
 import scala.xml.Elem
 import scala.xml.NodeBuffer
 
@@ -19,7 +18,7 @@ class Feed @Inject()(
                       implicit val
                       controllerComponents: ControllerComponents,
                       database:play.api.db.Database,
-                      @Named("db-actor") actorAhaWiki: ActorRef,
+                      wikiActors: WikiActors,
                       applicationConf: ApplicationConf,
                       ahaWikiCache: AhaWikiCache,
                     ) extends BaseController {

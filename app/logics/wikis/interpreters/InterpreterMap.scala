@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import actors.ActorAhaWiki.Geocode
+import actors.ActorGeocode.Geocode
 import com.aha00a.colors.Color
 import com.aha00a.colors.GradientPreset
 import com.aha00a.commons.Implicits._
@@ -87,7 +87,7 @@ object InterpreterMap extends TraitInterpreter {
           case Some(latLng) => latLng
           case _ =>
             if (location.address.isNotNullOrEmpty)
-              wikiContext.actorAhaWiki ! Geocode(location.address)
+              wikiContext.geocodeActor ! Geocode(location.address)
 
             LatLng.Empty
         }

@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.UriUtil
@@ -9,6 +8,7 @@ import logics.ApplicationConf
 import logics.SiteLogic
 import models.ContextSite
 import models.PageContent
+import models.WikiActors
 import models.tables.Site
 import play.api.Environment
 import play.api.db.Database
@@ -24,12 +24,12 @@ class Home @Inject() (
                        actorSystem: ActorSystem,
                        database: Database,
                        environment: Environment,
-                       @Named("db-actor") actorAhaWiki: ActorRef,
+                        wikiActors: WikiActors,
                        applicationConf: ApplicationConf,
                        ahaWikiCache: AhaWikiCache,
                        wsClient: WSClient,
                        executionContext: ExecutionContext
-                     ) extends BaseController {
+                      ) extends BaseController {
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }

@@ -1,6 +1,5 @@
 package logics.wikis.macros
 
-import actors.ActorAhaWiki.Calculate
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCacheMemoryPermission
 import logics.PermissionLogic

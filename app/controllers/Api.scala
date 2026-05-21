@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import anorm.SqlParser.{bool, long, str, int}
 import anorm._
@@ -41,6 +40,7 @@ import models.ContextWikiPage
 import models.PageContent
 import models.PageLatestSummary
 import models.RequestWrapper
+import models.WikiActors
 import models.tables.CalculatedLink
 import models.tables.Page
 import models.tables.Site
@@ -73,7 +73,7 @@ class Api @Inject()(
   controllerComponents: ControllerComponents,
   actorSystem: ActorSystem,
   database: Database,
-  @Named("db-actor") actorAhaWiki: ActorRef,
+  wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
@@ -1257,7 +1257,7 @@ class Api @Inject()(
 
           maybePageName match {
             case Some(pageName) =>
-              actorAhaWiki ! actors.ActorAhaWiki.Calculate(site, pageName)
+              wikiActors.pageCalculation ! actors.ActorPageCalculator.Calculate(site, pageName)
               Ok(Map(
                 "status" -> "queued",
                 "siteSeq" -> site.seq.toString,

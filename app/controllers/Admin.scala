@@ -1,6 +1,5 @@
 package controllers
 
-import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import logics.ApplicationConf
 import logics.{AhaWikiCache, SessionLogic}
@@ -10,7 +9,6 @@ import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import javax.inject.Inject
-import javax.inject.Named
 import scala.concurrent.ExecutionContext
 
 class Admin @Inject()(
@@ -18,7 +16,6 @@ class Admin @Inject()(
   controllerComponents: ControllerComponents,
   actorSystem: ActorSystem,
   database: Database,
-  @Named("db-actor") actorAhaWiki: ActorRef,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
   applicationConf: ApplicationConf,

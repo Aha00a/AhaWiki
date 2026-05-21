@@ -1,6 +1,6 @@
 package services
 
-import actors.ActorAhaWiki.Calculate
+import actors.ActorPageCalculator.Calculate
 import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits.RichSeq
@@ -32,7 +32,7 @@ class ApplicationLifecycleHook @Inject()(
   actorSystem: ActorSystem,
   database: Database,
   environment: Environment,
-  @Named("db-actor") actorAhaWiki: ActorRef,
+  @Named("actor-page-calculator") actorPageCalculator: ActorRef,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
@@ -96,13 +96,13 @@ class ApplicationLifecycleHook @Inject()(
       val missingPageNames = models.tables.PageMeta.selectMissingPageNames(limit = 10)
       if (missingPageNames.nonEmpty) {
         missingPageNames.zipWithIndex.foreach { case (pageName, i) =>
-          actorAhaWiki ! Calculate(site, pageName, i, missingPageNames.length)
+          actorPageCalculator ! Calculate(site, pageName, i, missingPageNames.length)
         }
       } else {
         logger.info(s"Calculate: no missing page names")
         val seq = ahaWikiCache.PageMeta.SeqPageLatestSummary.get().shuffle().take(2)
         seq.zipWithIndex.foreach { case (page, i) =>
-          actorAhaWiki ! Calculate(site, page.name, i, seq.length)
+          actorPageCalculator ! Calculate(site, page.name, i, seq.length)
         }
       }
     }

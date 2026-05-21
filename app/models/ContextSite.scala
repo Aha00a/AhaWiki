@@ -1,6 +1,5 @@
 package models
 
-import org.apache.pekko.actor.ActorRef
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteThemeLogic
@@ -15,7 +14,7 @@ object ContextSite {
   def apply()(
     implicit
     database: Database,
-    actorAhaWiki: ActorRef,
+    wikiActors: WikiActors,
     applicationConf: ApplicationConf,
     ahaWikiCache: AhaWikiCache,
     request: Request[Any],
@@ -28,7 +27,7 @@ object ContextSite {
   def empty()(
     implicit
     database: Database,
-    actorAhaWiki: ActorRef,
+    wikiActors: WikiActors,
     applicationConf: ApplicationConf,
     ahaWikiCache: AhaWikiCache,
     site: Site,
@@ -41,7 +40,7 @@ object ContextSite {
 class ContextSite()(
   implicit
   database: Database,
-  actorAhaWiki: ActorRef,
+  wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   val requestWrapper: RequestWrapper,

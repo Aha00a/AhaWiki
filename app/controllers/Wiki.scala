@@ -1,6 +1,6 @@
 package controllers
 
-import actors.ActorAhaWiki.Calculate
+import actors.ActorPageCalculator.Calculate
 import org.apache.pekko.actor._
 import org.apache.pekko.{NotUsed}
 import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
@@ -70,7 +70,7 @@ controllerComponents: ControllerComponents,
                      actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,
-                     @Named("db-actor") actorAhaWiki: ActorRef,
+                     wikiActors: WikiActors,
                      applicationConf: ApplicationConf,
                      ahaWikiCache: AhaWikiCache,
                      wsClient: WSClient,
@@ -441,7 +441,7 @@ controllerComponents: ControllerComponents,
       val (_, pageLastRevisionContent) = latestRevisionAndContent()
       val isReadable = database.withConnection { implicit connection =>
         implicit val site: Site = siteForWs
-        val ctxSite = ContextSite.empty()(database, actorAhaWiki, applicationConf, ahaWikiCache, site)
+        val ctxSite = ContextSite.empty()(database, wikiActors, applicationConf, ahaWikiCache, site)
         val permission = WikiPermission()(provider, connection, ctxSite)
         permission.isReadable(name, pageLastRevisionContent)
       }
@@ -571,7 +571,7 @@ controllerComponents: ControllerComponents,
     finally {
       //noinspection SimplifyBoolean
       if (true || environment.mode == Mode.Dev && request.isLocalhost)
-        actorAhaWiki ! Calculate(site, name)
+        wikiActors.pageCalculation ! Calculate(site, name)
     }
   }
   private def renderDiffPage(name: String)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
@@ -863,7 +863,7 @@ controllerComponents: ControllerComponents,
             ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
 
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
-            actorAhaWiki ! Calculate(site, name)
+            wikiActors.pageCalculation ! Calculate(site, name)
             Ok("")
           } else {
             Forbidden("")
@@ -938,7 +938,7 @@ controllerComponents: ControllerComponents,
 
             Page.rename(name, newName)
             PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
-            actorAhaWiki ! Calculate(site, newName)
+            wikiActors.pageCalculation ! Calculate(site, newName)
             Ok("")
           } else {
             Forbidden("")
