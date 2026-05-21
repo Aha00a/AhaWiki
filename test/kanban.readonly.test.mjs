@@ -208,6 +208,7 @@ test('read-only Kanban hides mutation controls and does not create Sortable inst
   assert.equal(board.querySelectorAll('.kanban-add-list-button').length, 0);
   assert.equal(board.querySelectorAll('.kanban-add-card-button').length, 0);
   assert.equal(board.querySelectorAll('.kanban-icon-button').length, 0);
+  assert.equal(board.classList.contains('kanban-draggable'), true);
   assert.equal(sortableCreateCount, 0);
 });
 
@@ -219,5 +220,6 @@ test('writable Kanban keeps mutation controls and Sortable instances', () => {
   assert.equal(board.querySelectorAll('.kanban-add-list-button').length, 1);
   assert.equal(board.querySelectorAll('.kanban-add-card-button').length, 1);
   assert.equal(board.querySelectorAll('.kanban-icon-button').length, 1);
+  assert.equal(board.classList.contains('kanban-draggable'), true);
   assert.equal(sortableCreateCount, 2);
 });
