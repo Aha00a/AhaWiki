@@ -1,0 +1,28 @@
+= HotKey
+[AhaWiki] supports some hot keys.
+
+[AhaWiki]에서 지원하는 단축키 목록입니다.
+
+== Navigation
+해당 키를 누르면 바로 지정 페이지로 이동합니다.
+
+ * `f` - Navigate to [FrontPage]
+ * `a` - Navigate to [AhaWiki]
+ * `c` - Navigate to [RecentChanges]
+ * `t` - Navigate to [TitleIndex]
+ * `l` - Navigate to [PageList]
+ * `m` - Navigate to [PageMap]
+ * `r` - Navigate to random page
+
+== Search
+검색 기능입니다.
+ * `s`, `g`, `/` - Search(Go)
+
+== Page Action
+명령을 수행합니다.
+ * `e` - Edit - 페이지를 편집합니다.
+ * `h` - History - 페이지의 역사를 볼 수 있습니다.
+ * `b` - Blame - 페이지의 내용이 언제, 누구에 의해 편집되었는지 확인할 수 있습니다.
+
+== Etc
+ * `w` - Write log - 기록을 작성합니다.
