@@ -1,0 +1,56 @@
+= [Macro]AhaWikiSiteList
+[AhaMark]
+
+AhaWiki 공개 사이트 목록을 출력합니다.
+위키 문법에서는 인자 없이 `[[AhaWikiSiteList]]`로 사용합니다.
+
+[[[#!WikiSyntaxPreview
+[[AhaWikiSiteList]]
+]]]
+
+== Decisions
+ 1. `AhaWikiSiteList`는 block macro입니다.
+ 1. 출력은 제목 없이 사이트 목록만 렌더링합니다.
+ 1. 공개 목록 노출 여부와 정렬값은 `Site.publicListedOrder` 하나로 관리합니다.
+ 1. `publicListedOrder`가 `NULL`이거나 `0`이면 공개 목록에 노출하지 않습니다.
+ 1. `publicListedOrder`가 `0`보다 큰 사이트만 공개 목록에 노출합니다.
+ 1. 정렬은 `publicListedOrder DESC, seq ASC`입니다.
+ 1. 같은 order 값에서는 오래된 사이트가 먼저 나오도록 `seq ASC`를 보조 정렬로 사용합니다.
+ 1. `mainDomain`이 비어 있는 사이트는 공개 목록에서 제외합니다.
+
+== Data
+`Site` 테이블은 공개 목록 관리를 위해 다음 컬럼을 가집니다.
+
+[[[#!text
+publicListedOrder DECIMAL(10,2) NULL
+]]]
+
+관리자 화면의 사이트 설정에서 `publicListedOrder`를 수정합니다.
+빈 값은 `NULL`로 저장하고, `0`은 저장할 수 있지만 목록에서는 숨김으로 처리합니다.
+
+== Render
+HTML wrapper는 다음 class를 사용합니다.
+
+[[[#!html
+<ul class="MacroAhaWikiSiteList">
+]]]
+
+각 항목은 favicon 이미지와 사이트 이름 링크로 렌더링합니다.
+링크 URL은 `https://{mainDomain}` 형식입니다.
+`href`, `src`, 사이트 이름에는 HTML escaping을 적용합니다.
+
+`extractLink`는 공개 사이트의 URL 목록을 반환합니다.
+
+== Favicon
+사이트별 favicon은 다음 순서로 결정합니다.
+
+ 1. 해당 사이트의 `site.favicon.objectKey` 설정
+ 1. 설정값이 object key이면 S3 presigned URL
+ 1. 설정값이 `/`, `http://`, `https://`로 시작하면 그대로 사용
+ 1. 설정값이 없으면 `https://{mainDomain}/favicon.ico`
+ 1. 이미지 로딩 실패 시 `/public/favicon.png`
+
+== Style
+목록은 데스크톱에서 3단으로 표시합니다.
+모바일에서는 1단으로 표시합니다.
+favicon 크기는 `16px`로 고정합니다.
