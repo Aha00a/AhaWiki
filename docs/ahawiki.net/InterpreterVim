@@ -1,0 +1,11 @@
+= [Interpreter]Vim
+[Vim]을 이용하여 syntax highlight를 합니다.
+[[[#!WikiSyntaxPreview Vim java
+class C {
+    private String s = "Hello, java!";
+}
+]]]
+
+[[[#!WikiSyntaxPreview Vim sql
+SELECT 'Hello, sql!' FROM table
+]]]

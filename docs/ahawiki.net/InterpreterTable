@@ -1,0 +1,44 @@
+= [Interpreter]Table
+ * Arguments
+  1. format - required. `tsv` or `csv`.
+  1. row header count - optional.
+  1. column header count - optional.
+
+Most of spreadsheet applications use `tsv` format for clipboard.
+
+[[[#!WikiSyntaxPreview Table tsv
+a	b	c	d
+e	f	g	h
+i	j	k	l
+m	n	o	p
+]]]
+
+[[[
+#!WikiSyntaxPreview Table tsv 1
+a	b	c	d
+e	f	g	h
+i	j	k	l
+m	n	o	p
+]]]
+
+[[[#!WikiSyntaxPreview Table tsv 1 2
+a	b	c	d
+e	f	g	h
+i	j	k	l
+m	n	o	p
+]]]
+
+[[[
+#!WikiSyntaxPreview Table csv 1 1
+a,b,c,d
+e,f,g,h
+h,i,j,k
+l,m,n,p
+]]]
+
+[[[#!WikiSyntaxPreview Table csv 1 1
+a,b,c,d
+e,f,g,h
+h,i,j,k
+l,m,n,p
+]]]

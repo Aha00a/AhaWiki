@@ -1,0 +1,9 @@
+= [Interpreter]Map
+아직 개선중이며 정식으로 확정한 기능이 아니라서 하위호환을 포기하고 갈아엎을 수도 있습니다.
+[Restaurant] 참고.
+
+[[[#!WikiSyntaxPreview Map
+Name	Address	Category	Comment	Score
+Aharise	서울 마포구 서교동 394-79	Company		10
+Hapjeong Station	서울 마포구 합정동 420	Subway Station	the Nearest	7
+]]]

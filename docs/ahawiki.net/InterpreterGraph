@@ -1,0 +1,11 @@
+= [Interpreter]Graph
+Directed graph
+[[[#!WikiSyntaxPreview Graph
+a
+b->c
+d->e->f->d
+g->h->i->j->g
+k->l->m->n->o->k
+p->q->r->s->t->u->p
+z->b->d->g->k->p
+]]]

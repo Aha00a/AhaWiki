@@ -1,0 +1,9 @@
+= [Interpreter]Math
+[AhaWiki] uses [https://www.mathjax.org/ mathjax].
+[[[
+#!WikiSyntaxPreview Math
+\text{cosine similarity}
+= \cos(\theta)
+= {A \cdot B \over \|A\| \|B\|}
+= \frac{ \sum\limits_{i=1}^{n}{A_i\times B_i} }{ \sqrt{\sum\limits_{i=1}^{n}{(A_i)^2}} \times \sqrt{\sum\limits_{i=1}^{n}{(B_i)^2}} }
+]]]
