@@ -31,6 +31,19 @@ class MacroAhaWikiSiteListSpec extends AnyFreeSpec {
       assert(html.contains(">AhaWiki</a>"))
     }
 
+    "uses configured favicon urls before domain favicon fallback" in {
+      val html = MacroAhaWikiSiteList.render(
+        Seq(
+          Site(1, "Configured", "CF", "configured.example", Some(BigDecimal("100.00"))),
+          Site(2, "Fallback", "FB", "fallback.example", Some(BigDecimal("90.00"))),
+        ),
+        Map(1L -> "https://cdn.example/favicon.png?signature=1"),
+      )
+
+      assert(html.contains("""src="https://cdn.example/favicon.png?signature=1""""))
+      assert(html.contains("""src="https://fallback.example/favicon.ico""""))
+    }
+
     "escapes domains in attributes and names in text" in {
       val html = MacroAhaWikiSiteList.render(Seq(Site(1, """Unsafe <Site>""", "UN", """evil.example" onclick="alert(1)""", Some(BigDecimal("100.00")))))
 
