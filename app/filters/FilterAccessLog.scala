@@ -1,5 +1,6 @@
 package filters
 
+import actors.ActorAccessLog
 import org.apache.pekko.actor.ActorRef
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
@@ -19,7 +20,6 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.sql.Connection
 import javax.inject.Inject
 import javax.inject.Named
 import scala.concurrent.ExecutionContext
@@ -34,7 +34,7 @@ class FilterAccessLog @Inject()(
   actorSystem: ActorSystem,
   database: Database,
   environment: Environment,
-  @Named("db-actor") actorAhaWiki: ActorRef,
+  @Named("access-log-actor") actorAccessLog: ActorRef,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
@@ -67,7 +67,7 @@ class FilterAccessLog @Inject()(
     }
   }
 
-  private def insertAccessLogIfSiteFound(
+  private def enqueueAccessLog(
     site: Site,
     user: Option[Long],
     ipDeny: Option[Long],
@@ -79,25 +79,24 @@ class FilterAccessLog @Inject()(
     userAgent: String,
     status: Int,
     duration: Int,
-  )(implicit connection: Connection): Option[Long] = {
-    if (site.isNotFound) {
-      logger.warn(s"Skip AccessLog insert: site not found for host=$host, uri=$uri, remoteAddress=$remoteAddress")
-      None
-    } else {
-      models.tables.AccessLog.insert(
-        site.seq,
-        user,
-        ipDeny,
-        method,
-        scheme,
-        host,
-        uri,
-        remoteAddress,
-        userAgent,
-        status,
-        duration
-      )
-    }
+  ): Unit = {
+    actorAccessLog ! ActorAccessLog.Insert(
+      site,
+      user,
+      ipDeny,
+      method,
+      scheme,
+      host,
+      uri,
+      remoteAddress,
+      userAgent,
+      status,
+      duration,
+    )
+  }
+
+  private def enqueueAccessLogAndDeny(insert: ActorAccessLog.Insert, reason: String): Unit = {
+    actorAccessLog ! ActorAccessLog.InsertAndDeny(insert, reason)
   }
 
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
@@ -121,8 +120,7 @@ class FilterAccessLog @Inject()(
         val duration = endTime - startTime
         logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
         if (!shouldSkipAccessLogUri(uri)) {
-          database.withConnection { implicit connection =>
-            insertAccessLogIfSiteFound(
+          enqueueAccessLog(
             site,
             getUserSeq(requestHeader),
             optionIpDeny.map(_.seq),
@@ -134,8 +132,7 @@ class FilterAccessLog @Inject()(
             userAgent,
             Results.Forbidden.header.status,
             duration.toInt
-            )
-          }
+          )
         }
         Future(Results.Forbidden)
       })
@@ -146,22 +143,22 @@ class FilterAccessLog @Inject()(
         val duration = endTime - startTime
         logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
         if (!shouldSkipAccessLogUri(uri)) {
-          database.withConnection { implicit connection =>
-            val accessLogSeq = insertAccessLogIfSiteFound(
-            site,
-            getUserSeq(requestHeader),
-            None,
-            requestHeader.method,
-            scheme,
-            host,
-            uri,
-            remoteAddress,
-            userAgent,
-            Results.Forbidden.header.status,
-            duration.toInt
+          enqueueAccessLogAndDeny(
+            ActorAccessLog.Insert(
+              site,
+              getUserSeq(requestHeader),
+              None,
+              requestHeader.method,
+              scheme,
+              host,
+              uri,
+              remoteAddress,
+              userAgent,
+              Results.Forbidden.header.status,
+              duration.toInt
+            ),
+            s"$scheme://$host$uri",
           )
-            models.tables.IpDeny.insert(remoteAddress, accessLogSeq, s"$scheme://$host$uri")
-          }
         }
         Future(Results.Forbidden)
       })
@@ -173,21 +170,19 @@ class FilterAccessLog @Inject()(
         if (shouldSkipAccessLogUri(uri)) {
           logger.debug(s"Skip AccessLog insert: uri=$uri")
         } else if (shouldInsertAccessLog(result.header.status)) {
-          database.withConnection { implicit connection =>
-            insertAccessLogIfSiteFound(
-              site,
-              getUserSeq(requestHeader),
-              None,
-              requestHeader.method,
-              scheme,
-              host,
-              uri,
-              remoteAddress,
-              userAgent,
-              result.header.status,
-              duration.toInt
-            )
-          }
+          enqueueAccessLog(
+            site,
+            getUserSeq(requestHeader),
+            None,
+            requestHeader.method,
+            scheme,
+            host,
+            uri,
+            remoteAddress,
+            userAgent,
+            result.header.status,
+            duration.toInt,
+          )
         } else {
           logger.debug(s"Skip AccessLog insert by policy: status=${result.header.status}")
         }

@@ -3,6 +3,7 @@
 /.idea_modules
 /.project
 /.settings
+/.bsp
 /RUNNING_PID
 /conf/application.local.dev.conf
 /conf/wiki.aha00a.com.conf

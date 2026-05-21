@@ -1,3 +1,4 @@
+import actors.ActorAccessLog
 import actors.ActorAhaWiki
 import com.google.inject.AbstractModule
 import play.api.libs.concurrent.PekkoGuiceSupport
@@ -8,5 +9,6 @@ class Module extends AbstractModule with PekkoGuiceSupport {
   override def configure(): Unit = {
      bind(classOf[ApplicationLifecycleHook]).asEagerSingleton()
      bindActor[ActorAhaWiki]("db-actor")
+     bindActor[ActorAccessLog]("access-log-actor")
   }
 }
