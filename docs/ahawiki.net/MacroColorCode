@@ -1,0 +1,6 @@
+= [Macro]ColorCode
+[[[#!WikiSyntaxPreview
+ * [[ColorCode(#f00)]]
+ * [[ColorCode(#00ff00)]]
+ * [[ColorCode(#0000ff)]]
+]]]

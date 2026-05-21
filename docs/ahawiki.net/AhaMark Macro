@@ -20,53 +20,6 @@
 ----
 
 
-== `Br`
-Same as HTML `<br/>` tag.
-`<br/>` 태그와 같습니다.
-
-[[[#!WikiSyntaxPreview
- * aaa[[Br]]bbb[[Br]]ccc
- * same[[Br]]as[[Br]]Html[[Br]]<br/>[[Br]]tag
-]]]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-== `ColorCode`
-[[[#!WikiSyntaxPreview
- * [[ColorCode(#f00)]]
- * [[ColorCode(#00ff00)]]
- * [[ColorCode(#0000ff)]]
-]]]
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

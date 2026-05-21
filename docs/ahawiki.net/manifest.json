@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-21T07:33:48.111Z",
-  "count": 38,
+  "downloadedAt": "2026-05-21T07:48:27.373Z",
+  "count": 41,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -32,6 +32,24 @@
       "rawUrl": "https://ahawiki.net/w/Setup?action=raw",
       "fileName": "Setup",
       "bytes": 434
+    },
+    {
+      "name": "MacroColorCode",
+      "rawUrl": "https://ahawiki.net/w/MacroColorCode?action=raw",
+      "fileName": "MacroColorCode",
+      "bytes": 121
+    },
+    {
+      "name": "MacroBr",
+      "rawUrl": "https://ahawiki.net/w/MacroBr?action=raw",
+      "fileName": "MacroBr",
+      "bytes": 212
+    },
+    {
+      "name": "Macro",
+      "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
+      "fileName": "Macro",
+      "bytes": 8
     },
     {
       "name": "HotKey",
@@ -187,13 +205,13 @@
       "name": "AhaWiki",
       "rawUrl": "https://ahawiki.net/w/AhaWiki?action=raw",
       "fileName": "AhaWiki",
-      "bytes": 1538
+      "bytes": 1524
     },
     {
       "name": "AhaMark Macro",
       "rawUrl": "https://ahawiki.net/w/AhaMark%20Macro?action=raw",
       "fileName": "AhaMark Macro",
-      "bytes": 2576
+      "bytes": 2261
     },
     {
       "name": "AhaMark Interpreter Examples",
@@ -217,7 +235,7 @@
       "name": "AhaMark",
       "rawUrl": "https://ahawiki.net/w/AhaMark?action=raw",
       "fileName": "AhaMark",
-      "bytes": 140
+      "bytes": 178
     },
     {
       "name": "Aha00a",
