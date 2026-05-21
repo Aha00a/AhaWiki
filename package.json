@@ -4,6 +4,7 @@
   "scripts": {
     "build:admin": "node scripts/build-admin.mjs",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
+    "test": "node --test test/kanban*.test.mjs",
     "watch:admin": "node scripts/watch-admin.mjs"
   },
   "devDependencies": {
