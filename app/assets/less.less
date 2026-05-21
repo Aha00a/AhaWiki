@@ -275,6 +275,9 @@ kbd {
 		top: 0;
 	}
 }
+kbd.MacroKbd {
+	cursor: default;
+}
 
 .hotkeyHint {
 	position: relative;
@@ -308,6 +311,10 @@ kbd {
 @media @widthTablet {
 	kbd {
 		display: none;
+	}
+	kbd.MacroKbd,
+	kbd.MacroKbd > kbd {
+		display: inline-block;
 	}
 }
 

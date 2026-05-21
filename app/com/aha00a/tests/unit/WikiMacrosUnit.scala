@@ -1,7 +1,7 @@
 package com.aha00a.tests.unit
 
 import com.aha00a.tests.TestUtil
-import logics.wikis.macros.{MacroBr, MacroCalendar, MacroColorCode, MacroImage, MacroUptime, MacroWeekdayName}
+import logics.wikis.macros.{MacroBr, MacroCalendar, MacroColorCode, MacroImage, MacroKbd, MacroUptime, MacroWeekdayName}
 import models.ContextWikiPage
 
 object WikiMacrosUnit {
@@ -19,6 +19,10 @@ object WikiMacrosUnit {
     assertEquals(MacroColorCode.toHtmlString(empty), "")
     assertEquals(MacroColorCode.toHtmlString("#fff"), """<span class="MacroColorCode"><spen class="preview" style="background-color: #fff"></spen> #fff</span>""")
     assertEquals(MacroColorCode.toHtmlString("#zzz"), """<div class="error">Argument Error - [[ColorCode(#zzz)]]</div>""")
+    assertEquals(MacroKbd.name, "Kbd")
+    assertEquals(MacroKbd.toHtmlString("Alt W"), """<kbd class="MacroKbd"><kbd>Alt</kbd><kbd>W</kbd></kbd>""")
+    assertEquals(MacroKbd.toHtmlString(","), """<kbd class="MacroKbd"><kbd>,</kbd></kbd>""")
+    assertEquals(MacroKbd.toHtmlString("<script>"), """<kbd class="MacroKbd"><kbd>&lt;script&gt;</kbd></kbd>""")
     assertEquals(MacroImage.toHtmlString(empty), """<img src="/assets/img/attachmentFallback.svg" alt="/assets/img/attachmentFallback.svg" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';"/>""")
     assertEquals(MacroImage.toHtmlString("https://example.com/a.png"), """<img src="https://example.com/a.png" alt="https://example.com/a.png" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';"/>""")
     assertEquals(MacroImage.toHtmlString("https://example.com/a.png, 120"), """<img src="https://example.com/a.png" alt="https://example.com/a.png" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';" style="width: 120px"/>""")

@@ -9,39 +9,39 @@
 === Navigation
 해당 키를 누르면 바로 지정 페이지로 이동합니다.
 
- * `f` - Navigate to [FrontPage]
- * `a` - Navigate to [AhaWiki]
- * `c` - Navigate to [RecentChanges]
- * `t` - Navigate to [TitleIndex]
- * `l` - Navigate to [PageList]
- * `m` - Navigate to [PageMap]
- * `r` - Navigate to random page
+ * [[Kbd(f)]] - Navigate to [FrontPage]
+ * [[Kbd(a)]] - Navigate to [AhaWiki]
+ * [[Kbd(c)]] - Navigate to [RecentChanges]
+ * [[Kbd(t)]] - Navigate to [TitleIndex]
+ * [[Kbd(l)]] - Navigate to [PageList]
+ * [[Kbd(m)]] - Navigate to [PageMap]
+ * [[Kbd(r)]] - Navigate to random page
 
 === Search
 검색 기능입니다.
- * `s`, `g`, `/` - Search(Go)
+ * [[Kbd(s)]], [[Kbd(g)]], [[Kbd(/)]] - Search(Go)
 
 === Page Action
 명령을 수행합니다.
- * `e` - Edit - 페이지를 편집합니다.
- * `h` - History - 페이지의 역사를 볼 수 있습니다.
- * `b` - Blame - 페이지의 내용이 언제, 누구에 의해 편집되었는지 확인할 수 있습니다.
+ * [[Kbd(e)]] - Edit - 페이지를 편집합니다.
+ * [[Kbd(h)]] - History - 페이지의 역사를 볼 수 있습니다.
+ * [[Kbd(b)]] - Blame - 페이지의 내용이 언제, 누구에 의해 편집되었는지 확인할 수 있습니다.
 
 === Help
 단축키 도움말을 표시합니다.
- * `?`, `Shift` + `/` - Hotkey help
+ * [[Kbd(?)]], [[Kbd(Shift /)]] - Hotkey help
 
 === Etc
- * `w` - Write log - 기록을 작성합니다.
+ * [[Kbd(w)]] - Write log - 기록을 작성합니다.
 
 == Edit Page Hotkeys
 편집 화면에서는 `Alt`와 함께 아래 키를 누르면 편집 도구를 바로 실행할 수 있습니다.
 
- * `Alt` + `w` - Word Wrap - 줄바꿈 표시를 전환합니다.
- * `Alt` + `i` - InfoBox - Wikipedia에서 InfoBox를 가져옵니다.
- * `Alt` + `a` - Attach - 첨부 파일 업로드를 엽니다.
- * `Alt` + `c` - Comment - 수정 코멘트 입력칸으로 이동합니다.
- * `Alt` + `m` - Minor edit - 사소한 편집 여부를 전환합니다.
- * `Alt` + `s` - Save - 페이지를 저장합니다.
- * `Alt` + `r` - Rename - 페이지 이름을 변경합니다.
- * `Alt` + `t` - Delete - 페이지를 삭제합니다.
+ * [[Kbd(Alt w)]] - Word Wrap - 줄바꿈 표시를 전환합니다.
+ * [[Kbd(Alt i)]] - InfoBox - Wikipedia에서 InfoBox를 가져옵니다.
+ * [[Kbd(Alt a)]] - Attach - 첨부 파일 업로드를 엽니다.
+ * [[Kbd(Alt c)]] - Comment - 수정 코멘트 입력칸으로 이동합니다.
+ * [[Kbd(Alt m)]] - Minor edit - 사소한 편집 여부를 전환합니다.
+ * [[Kbd(Alt s)]] - Save - 페이지를 저장합니다.
+ * [[Kbd(Alt r)]] - Rename - 페이지 이름을 변경합니다.
+ * [[Kbd(Alt t)]] - Delete - 페이지를 삭제합니다.
