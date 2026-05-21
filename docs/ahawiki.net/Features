@@ -1,0 +1,31 @@
+= Features
+
+== Page Actions
+ * View
+ * Edit
+ * Raw
+ * History
+ * Diff
+ * Blame --[2019-12-28]
+ * Rename
+ * Delete
+
+== Markup
+ * Automatic TOC
+ * Inline HTML
+  * MacroHtml
+  * InterpreterHtml
+
+== Interpreters - Selectable wiki syntax
+ * InterpreterWiki
+ * InterpreterPage
+ * InterpreterText
+ * InterpreterHtml
+ * InterpreterMarkdown
+
+== Administration
+ * User-customizable interface - by edit [.header], [.footer]
+
+
+== Feed
+ * Atom - `/feed.atom`

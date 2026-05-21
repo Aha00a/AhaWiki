@@ -1,0 +1,17 @@
+= Setup
+== 신청받기
+ * domain을 받음
+
+== 서버 설정하기
+ 1. DNS 설정
+ 1. `Site` 추가
+ * `SiteDomain` 추가
+ * nginx 설정 및 letsencrypt 적용
+  * reload 하기
+ * https://console.cloud.google.com/apis/credentials
+  * OAuth 2.0 Client 설정
+  * Maps JavaScript API 설정
+ * reCAPTCHA 설정 - https://www.google.com/recaptcha/admin/
+
+== 사용자가 설정
+ * [.config]를 수정 - [AhaWikiAccessControl] 참고

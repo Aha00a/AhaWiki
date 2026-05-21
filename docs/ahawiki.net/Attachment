@@ -1,0 +1,31 @@
+= Attachment
+현재는 Image만 본문에 붙여넣기시 base64로 embedding 가능. --[2020-01-08]
+
+== 결정사항
+ * [S3]
+ * namespace
+  * `file:`
+
+== 고려사항
+ * 전역/종속
+  * 전역에 위치할 것인가?
+  * 페이지 내부에 종속될 것인가?
+  * 비교[[[#!Table tsv 1 1
+	전역	종속
+[MediaWiki]	O	X
+[NamuWiki]	O	X
+페이지 view시	-	-
+페이지 edit시	목록 표시 불가	목록 표시 가능
+페이지 rename시	신경쓸 일이 없음	추가 구현 필요 혹은 사용자가 수동으로 해야함
+페이지 delete시	신경쓸 일이 없음	추가 구현 필요 혹은 사용자가 수동으로 해야함
+파일 rename시	-	-
+파일 update시(history)	-	-
+파일 delete시	-	-
+]]]
+ * 최근변경에 표시
+ * permalink
+  * [MediaWiki] - permalink
+  * [NamuWiki] - dynamically generated.
+ * S3에서 referer 체크? signed url로 expire?
+  * https://docs.aws.amazon.com/ko_kr/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-use-case-4
+ * 사용량 계산

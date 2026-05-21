@@ -1,0 +1,179 @@
+= [ToDo]
+[[[#!Kanban
+=== ToDo (Low)
+==== Admin - Export / Import ==== #cmpebhmf4hubz1f
+===== Property
+ * Creator: [User:Aha00a]
+ * dateCreated: [2026-05-20]T17:09:52Z
+===== Activity
+ * [User:Aha00a] [2026-05-20]T17:09:52Z
+  * Card Add - ["#cmpebhmf4hubz1f" #Admin - Export / Import]
+=== ToDo
+==== 삭제 권한 도입 ==== #cmpebn29sgylr3q
+===== Property
+ * Creator: [User:Aha00a]
+ * dateCreated: [2026-05-20]T17:14:06Z
+===== Activity
+ * [User:Aha00a] [2026-05-20]T17:14:06Z
+  * Card Add - ["#cmpebn29sgylr3q" #삭제 권한 도입]
+=== Done
+]]]
+
+[Done]
+
+
+ * [AhaWikiSchema]
+ * [Attachment]
+
+
+== [ToDo]
+
+=== CloudFront 적용
+원래... [AhaMark]를 rendering한 결과물을 손수 caching하려 했는데, 뭐 그럴 필요 있을까 하는 생각이 문득 들어 끄적여본다.
+
+CloudFront 뒤에 숨어서 옵션 잘 적용하고, Cache Invalidation만 제대로 해주면 되는 문제라는 생각이 드네..
+--[2021-09-28]
+
+
+
+=== Bot
+Bot을 만들어볼까 싶다. 문법 변화나 기타 노가다로 고쳐야 하는 것들을 자동으로 수정하고, minor edit으로 남긴다. 그 외 rename같은 action에는 rename하기 전의 문서로 연결된 문서들이 있는데 이를 고쳐주는 등의 자동화. 
+문법을 바꾸었을 경우 예전 페이지들에 대한 migration이 고민됐었는데, 나무위키의 경우 쿨하게 history는 건드리지 않는다. 나도 이쪽으로 마음이 살짝 기울었다.
+--[2020-01-06]
+
+아직도 결정을 못하겠다. 문법이 변화되었는데, history의 내용을 건드리지 않는다면 세월이 흐른 뒤 새 엔진에서 history를 통해 그 페이지를 본다면? 개판일텐데?
+그럼 두가지 해결책이 있는데 
+ 1. 문법이 변하면 history를 포함하여 migration을 하는 방안과
+ 1. 렌더러를 버전관리를 해서 datetime을 통해서 그 시점으로 interpreting하는 방법이 있겠다.
+진짜 쓸데없는거로 고민하는 거 같긴 한데.. 뭐 이런게 내 취미라고 해두자. --[2020-01-08]
+
+
+=== Feed
+[schema:Article]의 하위항목이 많다. [schema:BlogPosting]도 있고.. 지금 rss feed가 별 의미가 없는데, 적용해 봐도 괜찮을듯. 또한 [MacroSchema]로 하위분류에 대한 목록 표시 또한 구현해야 한다. --[2019-01-05]
+
+
+
+=== InterpreterMap
+현재 `InterpreterMap`에 너무 많은 기능이 들어있다.
+ 1. 데이터를 보관
+ 1. 데이터를 GoogleSpreadsheet로부터 읽어와서 갱신
+ 1. 데이터를 표시
+  * GoogleMaps
+  * Table
+  * List
+
+이를 분리할까 하고 고민해본다.
+또 다양한 옵션을 지원하기 위해서 Interpreter의 Argument로 [JSON]을 받아들일까 싶기도..
+[[[
+
+일반 맵
+
+일반 테이블
+#!Table tsv
+Name Address
+some addr
+
+#!Map tsv
+Name Address
+some addr
+
+
+새로운 InterpreterFetcher? InterpreterDataSource
+
+#!DataSource { id: "dataSource1", "url": "https://spreadsheet" option:  }
+Column1 Column2
+Data1 Data2 
+
+
+#!Table { "DataSource": "dataSource1" }
+
+#!Map { "DataSource": "dataSource1" }
+
+#!Map { "DataSource": "dataSource1", "option": { "hideMap": false, "hideTable": false, showList: true } }
+
+인자의 경우 default를 false로 고정하는게 나을지, show/hide중 하나만 쓰는게 나을지 모르겠다.
+JSON을 직접 쓰게 되면 "key": "value"와 같이 따옴표가 귀찮다..
+]]]
+--[2019-12-23]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=== Table과 Map에 filter 적용
+https://mottie.github.io/tablesorter/docs/example-widget-filter.html --[2019-12-27]
+
+
+
+
+
+
+
+=== Comparison of wiki software
+위키엔진 비교표
+
+https://en.wikipedia.org/wiki/Comparison_of_wiki_software
+
+항목들은 다음과 같다.
+ * File uploading, attachments
+ * ~~Spam prevention~~ 지원함
+ * ~~Page access control~~ 지원함
+ * ~~Inline HTML~~ 지원함
+ * ~~User-customizable interface~~ 지원함
+ * ~~Document renaming~~ 지원함
+ * WYSIWYG editing
+ * ~~Web feeds~~ 지원함
+ * Export, import
+ * Extensibility
+ * ~~Selectable wiki syntax~~ 지원함
+ * ~~Wiki farms~~ 지원함
+ * Outliner mechanism
+ * ~~Automatic TOC~~ 지원함
+ * Other features
+
+이정도가 기본 기능이라는 거겠지.. --[2019-12-27]
+
+
+https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-11-26]
+
+
+
+
+
+
+
+=== InterpreterSlide
+슬라이드로 보여준다.
+--[2020-01-20]
+
+=== 기타
+ * 마크업 규칙 추가
+  * from [[[
+	a
+		a1
+		a2
+	b
+	c
+		c1
+		c2
+]]]
+  * to [[[
+ * a
+  * a1
+ * b
+ * c
+  * c1
+  * c2
+]]]
+

@@ -1,4 +1,4 @@
-= Sister Wiki
+= SisterWiki
  * Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유사 문서를 `See Also` 영역에 함께 노출한다.
  * 별도의 sister wiki 전용 위키 링크 문법은 추가하지 않고, cross-site 문서 표기는 `Site.abbr` 기반의 `Abbr:PageName` 형식을 사용한다.
  * 실제 cross-site 링크 URL은 대상 site의 `Site.mainDomain`을 사용해 `https://{mainDomain}/w/{encodedPageName}` 형식으로 생성한다.
@@ -15,8 +15,7 @@
 
 == Twin Pages
  * 같은 이름 문서는 `MacroTwinPages`가 담당한다.
- * `[[TwinPages]]`는 현재 문서 이름을 기준으로 다른 site에 같은 이름의 문서가 있는지 찾는다.
- * `[[TwinPages(SomePage)]]`처럼 인자를 주면 지정한 문서 이름을 기준으로 찾는다.
+ * 현재 문서 이름을 기준으로 다른 site에 같은 이름의 문서가 있는지 찾는다.
  * 현재 site는 후보에서 제외한다.
  * 대상 site에 같은 이름의 최신 문서가 있어야 한다.
  * 대상 문서는 anonymous user가 읽을 수 있는 경우에만 표시한다.
