@@ -1,0 +1,14 @@
+= [Macro]Embed
+현재는 [YouTube]만 지원합니다.. 추후에는 더 지원할 생각인데.. 어째 해당되는게 안보이네요.
+
+[[[#!WikiSyntaxPreview
+[[Embed(https://www.youtube.com/watch?v=2wKqfk8pESE&feature=youtu.be)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Embed(http://www.youtube.com/embed/2wKqfk8pESE)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Embed(https://youtu.be/2wKqfk8pESE)]]
+]]]

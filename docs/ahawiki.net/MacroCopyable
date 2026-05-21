@@ -1,0 +1,5 @@
+= [Macro]Copyable
+[[[#!WikiSyntaxPreview
+ * ``abc123``
+ * [[Copyable(abc123)]]
+]]]

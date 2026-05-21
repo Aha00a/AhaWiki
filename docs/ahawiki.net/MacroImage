@@ -1,0 +1,5 @@
+= [Macro]Image
+[[[#!WikiSyntaxPreview
+[[Image(/public/favicon.png)]]
+Image with width: [[Image(/public/favicon.png,20px)]]
+]]]

@@ -1,0 +1,6 @@
+= [Macro]Trivial
+[[[#!WikiSyntaxPreview
+ * [[Trivial(trivial)]]
+ * abcdefg[[Trivial(hijklmn)]]opqrstu
+ * ABCDEFG[[Trivial(HIJKLMN)]]OPQRSTU
+]]]

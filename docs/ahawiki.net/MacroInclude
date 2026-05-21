@@ -1,0 +1,17 @@
+= [Macro]Include
+다른 문서를 포함시킬 수 있습니다.
+[[[#!WikiSyntaxPreview
+[[Include(ExampleText)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(ExampleHtml)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(ExampleMarkdown)]]
+]]]
+
+[[[#!WikiSyntaxPreview
+[[Include(AhaWiki)]]
+]]]
