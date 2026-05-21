@@ -1,0 +1,70 @@
+= InterpreterKanban Read Only ToDo
+
+InterpreterKanban은 페이지 본문을 Kanban 보드 UI로 보여주고, 변경 사항을 다시 위키 텍스트로 저장한다.
+현재 저장 요청은 서버에서 쓰기 권한을 다시 검사하므로 보안상 쓰기 권한 없는 사용자의 저장은 차단된다.
+하지만 보기 화면의 Kanban UI는 쓰기 권한 여부를 알지 못해, 읽기 권한만 있는 사용자에게도 편집 가능한 조작을 노출한다.
+
+== 현재 상태
+
+ * `Wiki.view` 렌더링 시점에 `isWritable`은 계산된다.
+ * 일반 편집 화면(`action=edit`)은 `isWritable=false`일 때 접근이 거부된다.
+ * Kanban 저장은 `/w/{page}` POST를 사용하며, 서버 저장 로직에서 `WikiPermission.isWritable`을 다시 확인한다.
+ * `InterpreterKanban` DOM에는 현재 `data-page-name`만 있고, writable/read-only 상태는 내려가지 않는다.
+ * `AhaWiki.Kanban.js`는 권한 상태와 무관하게 list/card 추가, rename, delete, drag sort, 댓글, 속성 수정 UI를 만든다.
+ * 읽기 전용 사용자가 조작하면 마지막 저장 단계에서 `403 Permission denied`로 실패한다.
+
+== 목표
+
+읽기 권한만 있는 사용자는 Kanban 보드를 자연스럽게 조회할 수 있어야 한다.
+쓰기 권한이 없는 상태에서는 변경 가능한 UI가 노출되지 않아야 하며, 혹시 클라이언트에서 저장 요청이 발생해도 서버 차단은 유지되어야 한다.
+
+== 기대 동작
+
+ * 보드, 컬럼, 카드, 속성, Activity, 첨부 이미지는 조회 가능하다.
+ * 카드 상세 모달과 이미지 라이트박스는 열 수 있다.
+ * `#<cardId>` hash navigation은 동작한다.
+ * list/card 추가 버튼은 보이지 않는다.
+ * list/card rename, delete 버튼은 보이지 않거나 비활성화된다.
+ * list/card drag sort는 비활성화된다.
+ * 댓글 입력, DueDate 수정, 첨부 삭제, 파일 drop 업로드는 비활성화된다.
+ * 읽기 전용 상태임을 보드 어딘가에 과하지 않게 표시한다.
+ * 서버의 `/w/{page}` POST 쓰기 권한 검사는 그대로 유지한다.
+
+== 구현 ToDo
+
+=== 권한 상태 전달
+
+ * `Wiki.view` 또는 `InterpreterKanban` 렌더링 경로에서 `isWritable`을 Kanban DOM으로 전달한다.
+ * 예: `.InterpreterKanban`에 `data-wiki-writable="true|false"` 추가.
+ * `InterpreterKanban.toHtmlString` 시그니처를 바꿀지, 상위 `.wikiContent` 또는 body-level data attribute를 사용할지 결정한다.
+
+=== 클라이언트 read-only 모드
+
+ * `AhaWiki.Kanban.js`에서 root별 writable 상태를 읽는다.
+ * writable이 false면 add list/add card composer를 렌더링하지 않는다.
+ * writable이 false면 list/card title editor를 열지 않는다.
+ * writable이 false면 delete 버튼, due date save 버튼, comment submit 버튼, attachment remove 버튼을 만들지 않는다.
+ * writable이 false면 board/list/card Sortable 생성과 file drop handler를 등록하지 않는다.
+ * writable이 false인 상태에서 `enqueueMutation` 또는 `persistColumns`가 호출되면 즉시 거부하거나 no-op 처리한다.
+
+=== UI 표시
+
+ * 보드 상단 또는 액션 영역에 작고 명확한 read-only 표시를 추가한다.
+ * 일반 조회 동작과 겹치지 않도록 한다.
+ * 기존 Kanban 스타일과 맞는 CSS를 추가한다.
+
+=== 테스트
+
+ * read-only root에서 add list/add card 버튼이 렌더링되지 않는지 테스트한다.
+ * read-only root에서 Sortable이 생성되지 않는지 테스트한다.
+ * read-only root에서 저장 요청 함수가 호출되지 않는지 테스트한다.
+ * writable root에서는 기존 동작이 유지되는지 회귀 테스트한다.
+ * 서버 저장 권한 차단(`403`)은 기존 테스트 또는 컨트롤러 테스트로 유지한다.
+
+== 검토 포인트
+
+ * 한 페이지 안에 Kanban interpreter가 여러 개 있을 수 있으므로 writable 상태는 root별로 다룬다.
+ * signed read URL로 읽는 경우에도 writable은 false여야 한다.
+ * DOM을 숨기는 것은 UX 개선이고, 실제 보안 경계는 서버 저장 권한 검사다.
+ * 첨부 업로드/삭제 API도 별도 권한 검사를 갖고 있는지 확인한다.
+
