@@ -14,6 +14,7 @@ import logics.wikis.interpreters.Interpreters
 import models.HighScoredTerm
 import models._
 import models.tables.CalculatedCosineSimilarity
+import models.tables.CalculatedTerm
 import models.tables.CalculatedTermFrequency
 import models.tables.CalculatedLink
 import models.tables.Page
@@ -123,6 +124,7 @@ object PageLogic {
       )
 
       val text = Interpreters.toText(page.content)
+      CalculatedTermFrequency.delete(name)
       if (!text.isNullOrEmpty) {
         val seqWord = text
           .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
@@ -140,14 +142,16 @@ object PageLogic {
         val wordCount = seqWordFiltered.groupByCount()
         val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
 
-        CalculatedTermFrequency.delete(name)
-        for ((term, frequency) <- seqWordCountSorted) {
-          CalculatedTermFrequency.insert(name, term, frequency)
-        }
+        val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
+        val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
+        CalculatedTermFrequency.insert(name, seqTermFrequency)
+
         if(verbose)
           logger.info(seqWordCountSorted.take(10).mkString(" "))
 
         CalculatedCosineSimilarity.recalc(name)
+      } else {
+        CalculatedCosineSimilarity.delete(name)
       }
 
       val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))

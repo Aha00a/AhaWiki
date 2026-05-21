@@ -20,6 +20,8 @@ object CalculatedCosineSimilarity {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
+  private val MinimumSimilarity = 0.3
+
   def recalc(name: String)(implicit connection: Connection, site: Site): Int = {
     SQL"""
       DELETE FROM CalculatedCosineSimilarity
@@ -28,60 +30,55 @@ object CalculatedCosineSimilarity {
     """.executeUpdate()
     SQL"""
 REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
-SELECT *
-    FROM (
-        SELECT
-            TF3.site AS site1,
-            TF3.name AS name1,
-            CAST(${site.seq} AS SIGNED) AS site2,
-            CAST($name AS CHAR(255)) AS name2,
-            IFNULL(
-                (
-                    SELECT
-                        SUM(TF1.frequency * TF2.frequency) product
-                        FROM CalculatedTermFrequency TF1
-                        INNER JOIN CalculatedTermFrequency TF2 ON TF1.term = TF2.term
-                        WHERE
-                            TF1.site = TF3.site AND TF1.name = TF3.name AND
-                            TF2.site = ${site.seq} AND TF2.name = $name
-                )
-                /
-                (
-                    (
-                        SELECT
-                            SQRT(SUM(frequency * frequency))
-                            FROM CalculatedTermFrequency
-                            WHERE
-                                site = TF3.site AND name = TF3.name
-                    )
-                    *
-                    (
-                        SELECT
-                            SQRT(SUM(frequency * frequency))
-                            FROM CalculatedTermFrequency
-                            WHERE
-                                site = ${site.seq} AND name = $name
-                    )
-                ),
-                0
-            ) similarity
-            FROM (
-                SELECT
-                    DISTINCT TF.site, TF.name
-                    FROM CalculatedTermFrequency TF
-                    INNER JOIN PageMeta PM
-                        ON PM.site = TF.site
-                        AND PM.name = TF.name
-            ) TF3
-    ) CS1
-    WHERE similarity > 0.3 AND NOT (site1 = site2 AND name1 = name2)
+SELECT
+    CAST(${site.seq} AS SIGNED) AS site1,
+    CAST($name AS CHAR(255)) AS name1,
+    CandidateDot.site AS site2,
+    CandidateDot.name AS name2,
+    CandidateDot.dotProduct / (SourceNorm.norm * CandidateNorm.norm) AS similarity
+FROM (
+    SELECT
+        TF1.site,
+        TF1.name,
+        SUM(TF1.frequency * TF2.frequency) AS dotProduct
+    FROM CalculatedTermFrequency TF2
+    INNER JOIN CalculatedTermFrequency TF1
+        ON TF1.term = TF2.term
+    INNER JOIN PageMeta PM
+        ON PM.site = TF1.site
+        AND PM.name = TF1.name
+    WHERE
+        TF2.site = ${site.seq}
+        AND TF2.name = $name
+    GROUP BY TF1.site, TF1.name
+) CandidateDot
+INNER JOIN (
+    SELECT
+        site,
+        name,
+        SQRT(SUM(frequency * frequency)) AS norm
+    FROM CalculatedTermFrequency
+    GROUP BY site, name
+) CandidateNorm
+    ON CandidateNorm.site = CandidateDot.site
+    AND CandidateNorm.name = CandidateDot.name
+CROSS JOIN (
+    SELECT SQRT(SUM(frequency * frequency)) AS norm
+    FROM CalculatedTermFrequency
+    WHERE site = ${site.seq} AND name = $name
+) SourceNorm
+WHERE
+    SourceNorm.norm > 0
+    AND CandidateNorm.norm > 0
+    AND CandidateDot.dotProduct / (SourceNorm.norm * CandidateNorm.norm) > $MinimumSimilarity
+    AND NOT (CandidateDot.site = ${site.seq} AND CandidateDot.name = $name)
     """.executeUpdate()
 
     SQL"""
 REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT site2, name2, site1, name1, similarity FROM CalculatedCosineSimilarity
     WHERE
-        site2 = ${site.seq} AND name2 = $name
+        site1 = ${site.seq} AND name1 = $name
       """.executeUpdate()
   }
 

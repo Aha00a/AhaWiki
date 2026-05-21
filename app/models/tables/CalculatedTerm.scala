@@ -27,6 +27,17 @@ object CalculatedTerm {
       .map(tupled)
   }
 
+  def select(terms: Seq[String])(implicit connection: Connection): Seq[CalculatedTerm] = {
+    val distinctTerms = terms.distinct
+    if (distinctTerms.isEmpty) {
+      Seq.empty
+    } else {
+      SQL"""SELECT seq, dateInserted, term FROM CalculatedTerm WHERE term IN ($distinctTerms)"""
+        .as(long("seq") ~ localDateTime("dateInserted") ~ str("term") *).map(flatten)
+        .map(tupled)
+    }
+  }
+
   def select(seq: Long)(implicit connection: Connection): Option[CalculatedTerm] = {
     SQL"""SELECT seq, dateInserted, term FROM CalculatedTerm WHERE seq = $seq"""
       .as(long("seq") ~ localDateTime("dateInserted") ~ str("term") singleOpt).map(flatten)
@@ -44,6 +55,17 @@ object CalculatedTerm {
       case None =>
         insert(term)
         ensureSeq(term)
+    }
+  }
+
+  def ensureSeqByTerm(terms: Seq[String])(implicit connection: Connection): Map[String, Long] = {
+    val distinctTerms = terms.distinct
+    if (distinctTerms.isEmpty) {
+      Map.empty
+    } else {
+      val existing = select(distinctTerms).map(term => term.term -> term.seq).toMap
+      distinctTerms.filterNot(existing.contains).foreach(insert)
+      select(distinctTerms).map(term => term.term -> term.seq).toMap
     }
   }
 }
