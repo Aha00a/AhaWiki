@@ -1,7 +1,6 @@
 @(email: String, existingUser: Option[models.tables.User])(implicit contextSite: models.ContextSite, request: play.api.mvc.Request[Any])
 @import helper._
 @_base("Merge Account", "Confirm account merge") {
-    @views.html.Wiki.hotkey(enablePageActions = false)
 } {
     <div class="wikiContent">
         <div class="limitWidth">

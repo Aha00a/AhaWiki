@@ -2,22 +2,7 @@
 @import com.aha00a.commons.Implicits._
 @profileImageUrl = @{ contextSite.requestWrapper.getUserProfileImageUrl }
 @primaryEmail = @{ emails.find(_.isPrimary).orElse(user.loginEmail.flatMap(loginEmail => emails.find(_.email == loginEmail))).orElse(emails.headOption) }
-@globalHotkeys = @{
-    Seq(
-        ("F", "Front page"),
-        ("A", "AhaWiki page"),
-        ("C", "RecentChanges"),
-        ("T", "TitleIndex"),
-        ("L", "PageList"),
-        ("M", "PageMap"),
-        ("R", "Random page"),
-        ("S, G, /", "Search"),
-        ("W", "Write log"),
-        ("?", "Hotkey help")
-    )
-}
 @_base("Account Settings", "Manage account login emails") {
-    @views.html.Wiki.hotkey(enablePageActions = false)
     <style>
         .accountSettings .accountHero {
             display: grid;
@@ -89,7 +74,7 @@
         }
         .accountSettings .accountGrid {
             display: grid;
-            grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+            grid-template-columns: minmax(0, 1fr);
             gap: 18px;
             align-items: start;
         }
@@ -151,30 +136,6 @@
             border-radius: 6px;
             background: #f6f8fc;
             text-decoration: none;
-        }
-        .accountSettings .accountHotkeyGrid {
-            display: grid;
-            grid-template-columns: max-content minmax(0, 1fr);
-            gap: 8px 12px;
-            margin: 0;
-        }
-        .accountSettings .accountHotkeyGrid dt,
-        .accountSettings .accountHotkeyGrid dd {
-            margin: 0;
-        }
-        .accountSettings .accountHotkeyKey {
-            display: inline-flex;
-            min-width: 28px;
-            min-height: 24px;
-            align-items: center;
-            justify-content: center;
-            padding: 2px 7px;
-            border: 1px solid #d0d5dd;
-            border-radius: 5px;
-            background: #f4f4f5;
-            color: #344054;
-            font-family: 'Ubuntu Mono', 'Consolas', monospace;
-            font-weight: 700;
         }
         @@media (max-width: 767px) {
             .accountSettings .accountHero,
@@ -246,16 +207,6 @@
                             Connect Google Account
                         </a>
                     </p>
-                </section>
-
-                <section class="accountPanel">
-                    <h2>Global Hotkeys</h2>
-                    <dl class="accountHotkeyGrid">
-                    @globalHotkeys.map { case (key, description) =>
-                        <dt><span class="accountHotkeyKey">@key</span></dt>
-                        <dd>@description</dd>
-                    }
-                    </dl>
                 </section>
             </div>
         </div>

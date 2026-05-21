@@ -24,6 +24,7 @@
 @currentUserOpt = @{ contextSite.requestWrapper.getUser }
 @currentUserProfileImageUrl = @{ contextSite.requestWrapper.getUserProfileImageUrl }
 @_baseSkeleton(title, description, canonicalUrl, ogType){
+    @views.html.Wiki.hotkey(enablePageActions = wikiContextOpt.isDefined)
     @head
 } {
     <nav class="topNavbar">
@@ -39,7 +40,7 @@
                     <li>
                         <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
                     </li>
-                    @if(wikiContextOpt.isDefined && canWrite) {
+                    @if(canWrite) {
                         <li>
                             <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log@kbdHotKey("W")</a>
                         </li>
@@ -105,7 +106,7 @@
             <ul class="mobileFlatMenu">
                 <li><a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search</a></li>
                 <li><a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random</a></li>
-                @if(wikiContextOpt.isDefined && canWrite) {
+                @if(canWrite) {
                     <li><a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Write Log</a></li>
                 }
                 <li class="menuSplitter" aria-hidden="true"></li>
