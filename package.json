@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build:admin": "node scripts/build-admin.mjs",
-    "download:ahawiki.net": "node scripts/download-ahawiki-net.mjs",
+    "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "watch:admin": "node scripts/watch-admin.mjs"
   },
   "devDependencies": {
