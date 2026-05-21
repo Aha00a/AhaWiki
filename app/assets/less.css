@@ -766,6 +766,8 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .Vim,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .Vim {
   margin-left: var(--wiki-indent-body, 30px);
+  box-sizing: border-box;
+  max-width: calc(100% - var(--wiki-indent-body, 30px));
 }
 .AhaWiki .commonAhaWiki > .limitWidth > div > ul,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > ul,
@@ -1297,6 +1299,8 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent > .limitWidth > div > div > div > .Vim,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div > .Vim {
   margin-left: var(--wiki-indent-body, 30px);
+  box-sizing: border-box;
+  max-width: calc(100% - var(--wiki-indent-body, 30px));
 }
 .AhaWiki .wikiContent > .limitWidth > div > ul,
 .AhaWiki .wikiContent > .limitWidth > div > div > ul,
@@ -2005,6 +2009,8 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .Vim,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .Vim {
   margin-left: var(--wiki-indent-body, 30px);
+  box-sizing: border-box;
+  max-width: calc(100% - var(--wiki-indent-body, 30px));
 }
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > ul,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > ul,
