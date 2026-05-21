@@ -10,8 +10,8 @@ object InterpreterWikiUnit {
     import testUtil.assertEquals
 
     val html = InterpreterWiki.toHtmlString("= Title = #custom-id .hero .compact")
-    assert(html.contains("""<div class="custom-id">"""))
-    assert(html.contains("""<h1 id="custom-id" class="hero compact">"""))
+    assert(html.contains("""<div class="HeadingWrappercustom-id">"""))
+    assert(html.contains("""<h1 id="custom-id" class="Headinghero Headingcompact">"""))
 
     val htmlColumns = InterpreterWiki.toHtmlString("""<Columns count=\"3\" gap=\"16\" minWidth=\"220\">\n 1. a\n 1. b\n 1. c\n</Columns>""")
 
