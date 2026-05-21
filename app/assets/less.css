@@ -340,6 +340,30 @@ kbd.MacroKbd {
   top: calc(100% + 6px);
   bottom: auto;
 }
+.MacroAhaWikiSiteList {
+  column-count: 3;
+  column-gap: 16px;
+}
+@media (max-width: 767px) {
+  .MacroAhaWikiSiteList {
+    column-count: 1;
+  }
+}
+.MacroAhaWikiSiteList li {
+  break-inside: avoid;
+  margin-bottom: 6px;
+}
+.MacroAhaWikiSiteList a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.MacroAhaWikiSiteList img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  object-fit: contain;
+}
 @media (max-width: 767px) {
   kbd {
     display: none;

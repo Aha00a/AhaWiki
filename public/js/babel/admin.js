@@ -269,8 +269,11 @@ function MultiTrendChart({ series }) {
 // app/assets/js/site/siteWidgets.jsx
 import React4 from "react";
 import { Badge as Badge3, Button, Card as Card2, Divider as Divider2, Group as Group3, Table as Table2, Text as Text3, Title as Title2 } from "@mantine/core";
+function formatPublicListedOrder(value) {
+  return value === null || value === void 0 || value === "" ? "-" : String(value);
+}
 function SiteListCard({ sites, onNavigate }) {
-  return /* @__PURE__ */ React4.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React4.createElement(Title2, { order: 3 }, "Site List"), /* @__PURE__ */ React4.createElement(Badge3, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React4.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React4.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React4.createElement(Table2.Thead, null, /* @__PURE__ */ React4.createElement(Table2.Tr, null, /* @__PURE__ */ React4.createElement(Table2.Th, null, "Seq"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Name"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Abbr"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Main Domain"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Domains"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Pages"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Action"))), /* @__PURE__ */ React4.createElement(Table2.Tbody, null, sites.map((site) => /* @__PURE__ */ React4.createElement(Table2.Tr, { key: site.seq }, /* @__PURE__ */ React4.createElement(Table2.Td, null, site.seq), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.name), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.abbr ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.mainDomain ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, /* @__PURE__ */ React4.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
+  return /* @__PURE__ */ React4.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React4.createElement(Title2, { order: 3 }, "Site List"), /* @__PURE__ */ React4.createElement(Badge3, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React4.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React4.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React4.createElement(Table2.Thead, null, /* @__PURE__ */ React4.createElement(Table2.Tr, null, /* @__PURE__ */ React4.createElement(Table2.Th, null, "Seq"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Name"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Abbr"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Main Domain"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Public Listed Order"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Domains"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Pages"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Action"))), /* @__PURE__ */ React4.createElement(Table2.Tbody, null, sites.map((site) => /* @__PURE__ */ React4.createElement(Table2.Tr, { key: site.seq }, /* @__PURE__ */ React4.createElement(Table2.Td, null, site.seq), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.name), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.abbr ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.mainDomain ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, formatPublicListedOrder(site.publicListedOrder)), /* @__PURE__ */ React4.createElement(Table2.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, /* @__PURE__ */ React4.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
 }
 
 // app/assets/js/admin.jsx
@@ -999,6 +1002,7 @@ function useAdminData(page) {
     const payload = new URLSearchParams();
     payload.set("abbr", nextMeta?.abbr ?? "");
     payload.set("mainDomain", nextMeta?.mainDomain ?? "");
+    payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
     payload.set(csrfToken.name, csrfToken.value);
     payload.set("csrfToken", csrfToken.value);
     const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
@@ -1355,7 +1359,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   const [allUserSortOrder, setAllUserSortOrder] = useState2("desc");
   const [faviconFile, setFaviconFile] = useState2(null);
   const [selectedSiteSeq, setSelectedSiteSeq] = useState2("");
-  const [siteMetaForm, setSiteMetaForm] = useState2({ abbr: "", mainDomain: "" });
+  const [siteMetaForm, setSiteMetaForm] = useState2({ abbr: "", mainDomain: "", publicListedOrder: "" });
   const [savingSiteMeta, setSavingSiteMeta] = useState2(false);
   const [sitePageNames, setSitePageNames] = useState2([]);
   const [adminPageMetaPage, setAdminPageMetaPage] = useState2(1);
@@ -1393,7 +1397,8 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   useEffect2(() => {
     setSiteMetaForm({
       abbr: selectedSite?.abbr ?? "",
-      mainDomain: selectedSite?.mainDomain ?? ""
+      mainDomain: selectedSite?.mainDomain ?? "",
+      publicListedOrder: selectedSite?.publicListedOrder == null ? "" : String(selectedSite.publicListedOrder)
     });
   }, [selectedSite]);
   const selectedAccessLogSiteSeq = useMemo2(
@@ -1559,6 +1564,18 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         label: "Main Domain",
         value: siteMetaForm.mainDomain,
         onChange: (event) => setSiteMetaForm({ ...siteMetaForm, mainDomain: event.currentTarget.value }),
+        disabled: !selectedSite
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      TextInput,
+      {
+        label: "Public Listed Order",
+        type: "number",
+        min: "0",
+        step: "0.01",
+        placeholder: "empty means hidden",
+        value: siteMetaForm.publicListedOrder,
+        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: event.currentTarget.value }),
         disabled: !selectedSite
       }
     ), /* @__PURE__ */ React5.createElement(

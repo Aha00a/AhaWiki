@@ -1,7 +1,7 @@
 package controllers
 
 import org.apache.pekko.actor.ActorSystem
-import anorm.SqlParser.{bool, long, str, int}
+import anorm.SqlParser.{bool, get, int, long, str}
 import anorm._
 import com.amazonaws.auth.AWSStaticCredentialsProvider
 import com.amazonaws.auth.BasicAWSCredentials
@@ -151,6 +151,18 @@ class Api @Inject()(
   private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
   private def parseHexColorValue(v: Option[String]): String = v.flatMap(SiteThemeLogic.normalizeHexColor).getOrElse("")
 
+  private def parsePublicListedOrder(v: Option[String]): Either[String, Option[BigDecimal]] = {
+    val raw = v.map(_.trim).getOrElse("")
+    if (raw.isEmpty) {
+      Right(None)
+    } else {
+      scala.util.Try(BigDecimal(raw)).toOption
+        .filter(_ >= 0)
+        .map(value => Right(Some(value)))
+        .getOrElse(Left("publicListedOrder must be empty or a non-negative number."))
+    }
+  }
+
   private def permissionJson(permission: Permission): Json = Json.obj(
     "target" -> Json.fromString(permission.target),
     "targetType" -> Json.fromString(permission.targetType.toString),
@@ -254,8 +266,8 @@ class Api @Inject()(
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
-        case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, domains: Seq[String], pageCount: Long)
-        case class AdminSiteRow(seq: Long, name: String, abbr: String, mainDomain: String, domain: Option[String], pageCount: Long)
+        case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, publicListedOrder: Option[BigDecimal], domains: Seq[String], pageCount: Long)
+        case class AdminSiteRow(seq: Long, name: String, abbr: String, mainDomain: String, publicListedOrder: Option[BigDecimal], domain: Option[String], pageCount: Long)
 
         val rows = SQL"""
           SELECT
@@ -263,6 +275,7 @@ class Api @Inject()(
             S.name,
             S.abbr,
             S.mainDomain,
+            S.publicListedOrder,
             SD.domain,
             COALESCE(P.page_count, 0) AS page_count
           FROM Site S
@@ -273,20 +286,22 @@ class Api @Inject()(
             GROUP BY site
           ) P ON P.site = S.seq
           ORDER BY S.seq, SD.domain
-        """.as((long("seq") ~ str("name") ~ str("abbr") ~ str("mainDomain") ~ str("domain").? ~ long("page_count")).map {
-          case seq ~ name ~ abbr ~ mainDomain ~ domain ~ pageCount => AdminSiteRow(seq, name, abbr, mainDomain, domain, pageCount)
+        """.as((long("seq") ~ str("name") ~ str("abbr") ~ str("mainDomain") ~ get[Option[BigDecimal]]("publicListedOrder") ~ str("domain").? ~ long("page_count")).map {
+          case seq ~ name ~ abbr ~ mainDomain ~ publicListedOrder ~ domain ~ pageCount =>
+            AdminSiteRow(seq, name, abbr, mainDomain, publicListedOrder, domain, pageCount)
         }.*)
 
         val sites = rows
-          .groupBy(r => (r.seq, r.name, r.abbr, r.mainDomain, r.pageCount))
+          .groupBy(r => (r.seq, r.name, r.abbr, r.mainDomain, r.publicListedOrder, r.pageCount))
           .toSeq
           .sortBy(_._1._1)
-          .map { case ((seq, name, abbr, mainDomain, pageCount), groupedRows) =>
+          .map { case ((seq, name, abbr, mainDomain, publicListedOrder, pageCount), groupedRows) =>
             AdminSite(
               seq = seq,
               name = name,
               abbr = abbr,
               mainDomain = mainDomain,
+              publicListedOrder = publicListedOrder,
               domains = groupedRows.flatMap(_.domain).distinct.sorted,
               pageCount = pageCount,
             )
@@ -307,22 +322,27 @@ class Api @Inject()(
       if (abbr.isEmpty) {
         BadRequest(Map("error" -> "abbr is required").asJson.toString()).as(JSON)
       } else {
-        database.withConnection { implicit connection =>
-          try {
-            val updated = Site.updateAbbrAndMainDomain(seq, abbr, mainDomain)
-            if (updated == 0) {
-              NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-            } else {
-              AhaWikiCacheMemoryDomainSite.invalidate()
-              SiteLogic.get(seq)(database) match {
-                case Some(site) => Ok(site.asJson)
-                case None => NotFound(Map("error" -> s"site not found after update: $seq").asJson.toString()).as(JSON)
+        parsePublicListedOrder(form.get("publicListedOrder").flatMap(_.headOption)) match {
+          case Left(errorMessage) =>
+            BadRequest(Map("error" -> errorMessage).asJson.toString()).as(JSON)
+          case Right(publicListedOrder) =>
+            database.withConnection { implicit connection =>
+              try {
+                val updated = Site.updateAbbrAndMainDomain(seq, abbr, mainDomain, publicListedOrder)
+                if (updated == 0) {
+                  NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+                } else {
+                  AhaWikiCacheMemoryDomainSite.invalidate()
+                  SiteLogic.get(seq)(database) match {
+                    case Some(site) => Ok(site.asJson)
+                    case None => NotFound(Map("error" -> s"site not found after update: $seq").asJson.toString()).as(JSON)
+                  }
+                }
+              } catch {
+                case e: java.sql.SQLIntegrityConstraintViolationException =>
+                  BadRequest(Map("error" -> Option(e.getMessage).getOrElse("site update violates constraints")).asJson.toString()).as(JSON)
               }
             }
-          } catch {
-            case e: java.sql.SQLIntegrityConstraintViolationException =>
-              BadRequest(Map("error" -> Option(e.getMessage).getOrElse("site update violates constraints")).asJson.toString()).as(JSON)
-          }
         }
       }
     }

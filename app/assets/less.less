@@ -308,6 +308,33 @@ kbd.MacroKbd {
 @widthTablet: ~"(max-width: 767px)";
 @widthMobile: ~"(max-width: 319px)";
 
+.MacroAhaWikiSiteList {
+	column-count: 3;
+	column-gap: 16px;
+
+	@media @widthTablet {
+		column-count: 1;
+	}
+
+	li {
+		break-inside: avoid;
+		margin-bottom: 6px;
+	}
+
+	a {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	img {
+		width: 16px;
+		height: 16px;
+		flex: 0 0 16px;
+		object-fit: contain;
+	}
+}
+
 @media @widthTablet {
 	kbd {
 		display: none;

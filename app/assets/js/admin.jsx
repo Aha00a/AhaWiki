@@ -812,6 +812,7 @@ function useAdminData(page) {
         const payload = new URLSearchParams();
         payload.set("abbr", nextMeta?.abbr ?? "");
         payload.set("mainDomain", nextMeta?.mainDomain ?? "");
+        payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
         payload.set(csrfToken.name, csrfToken.value);
         payload.set("csrfToken", csrfToken.value);
         const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
@@ -1182,7 +1183,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     const [allUserSortOrder, setAllUserSortOrder] = useState("desc");
     const [faviconFile, setFaviconFile] = useState(null);
     const [selectedSiteSeq, setSelectedSiteSeq] = useState("");
-    const [siteMetaForm, setSiteMetaForm] = useState({abbr: "", mainDomain: ""});
+    const [siteMetaForm, setSiteMetaForm] = useState({abbr: "", mainDomain: "", publicListedOrder: ""});
     const [savingSiteMeta, setSavingSiteMeta] = useState(false);
     const [sitePageNames, setSitePageNames] = useState([]);
     const [adminPageMetaPage, setAdminPageMetaPage] = useState(1);
@@ -1221,6 +1222,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
         setSiteMetaForm({
             abbr: selectedSite?.abbr ?? "",
             mainDomain: selectedSite?.mainDomain ?? "",
+            publicListedOrder: selectedSite?.publicListedOrder == null ? "" : String(selectedSite.publicListedOrder),
         });
     }, [selectedSite]);
     const selectedAccessLogSiteSeq = useMemo(
@@ -1493,6 +1495,16 @@ function AdminContent({page, onNavigate, pathname, search}) {
                                 label="Main Domain"
                                 value={siteMetaForm.mainDomain}
                                 onChange={(event) => setSiteMetaForm({...siteMetaForm, mainDomain: event.currentTarget.value})}
+                                disabled={!selectedSite}
+                            />
+                            <TextInput
+                                label="Public Listed Order"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="empty means hidden"
+                                value={siteMetaForm.publicListedOrder}
+                                onChange={(event) => setSiteMetaForm({...siteMetaForm, publicListedOrder: event.currentTarget.value})}
                                 disabled={!selectedSite}
                             />
                             <Button

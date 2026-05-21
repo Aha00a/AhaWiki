@@ -32,42 +32,42 @@
 
 ## Data Model
 
-- [ ] `Site` 테이블에 컬럼을 추가한다.
+- [x] `Site` 테이블에 컬럼을 추가한다.
   - `publicListedOrder DECIMAL(10,2) NULL`
 
-- [ ] evolution SQL을 추가한다.
+- [x] evolution SQL을 추가한다.
   - `ALTER TABLE Site ADD COLUMN publicListedOrder DECIMAL(10,2) NULL;`
   - rollback SQL에서는 컬럼을 제거한다.
 
-- [ ] `models.tables.Site` case class에 필드를 추가한다.
+- [x] `models.tables.Site` case class에 필드를 추가한다.
   - `publicListedOrder: Option[BigDecimal]`
   - 기존 `select()` parser와 tuple mapping을 같이 수정한다.
 
-- [ ] `Site.updateAbbrAndMainDomain` 또는 별도 update API에 `publicListedOrder` 갱신을 포함할지 결정한다.
+- [x] `Site.updateAbbrAndMainDomain` 또는 별도 update API에 `publicListedOrder` 갱신을 포함할지 결정한다.
   - 기존 사이트 기본 정보 수정 API에 포함하면 관리자 UI가 단순해진다.
   - 별도 API로 두면 변경 범위가 작아진다.
 
 ## Macro
 
-- [ ] `MacroAhaWikiSiteList`는 DB에서 공개 사이트만 조회한다.
+- [x] `MacroAhaWikiSiteList`는 DB에서 공개 사이트만 조회한다.
   - 조건: `publicListedOrder IS NOT NULL AND publicListedOrder > 0`
   - 정렬: `publicListedOrder DESC, seq ASC`
 
-- [ ] 매크로는 block macro로 등록한다.
+- [x] 매크로는 block macro로 등록한다.
   - `override def isBlock: Boolean = true`
   - `ExtractConvertInjectMacro`의 매크로 목록에 추가한다.
 
-- [ ] 출력 HTML은 목록만 포함한다.
+- [x] 출력 HTML은 목록만 포함한다.
   - wrapper: `<ul class="MacroAhaWikiSiteList">`
   - item: favicon 이미지 + 외부 링크
   - 링크 텍스트는 `mainDomain`을 기본으로 한다.
 
-- [ ] 링크와 이미지 URL은 HTML attribute escape를 적용한다.
+- [x] 링크와 이미지 URL은 HTML attribute escape를 적용한다.
   - `href`
   - `src`
   - fallback favicon 경로
 
-- [ ] `extractLink`에서 공개 사이트 URL 목록을 반환한다.
+- [x] `extractLink`에서 공개 사이트 URL 목록을 반환한다.
   - 계산 링크에 외부 사이트 URL이 잡히도록 한다.
 
 ## Favicon
@@ -76,46 +76,46 @@
   - 현재 `AhaWikiConfig().site.favicon()`은 현재 context site 기준이다.
   - 공개 목록은 여러 사이트의 favicon이 필요하다.
 
-- [ ] 1차 구현은 `https://{mainDomain}/favicon.ico` fallback을 허용한다.
+- [x] 1차 구현은 `https://{mainDomain}/favicon.ico` fallback을 허용한다.
   - 사이트별 설정 favicon 지원은 후속 개선으로 분리할 수 있다.
   - 브라우저에서 직접 favicon을 가져오므로 서버 프록시나 S3 presigned URL 갱신 문제를 피할 수 있다.
 
-- [ ] 이미지 실패 fallback을 둔다.
+- [x] 이미지 실패 fallback을 둔다.
   - `onerror="this.onerror=null;this.src='/public/favicon.png';"`
 
 ## CSS
 
-- [ ] `.MacroAhaWikiSiteList` 스타일을 추가한다.
+- [x] `.MacroAhaWikiSiteList` 스타일을 추가한다.
   - `column-count: 3`
   - `column-gap: 16px`
   - `break-inside: avoid`
 
-- [ ] 모바일에서는 1단으로 보여준다.
+- [x] 모바일에서는 1단으로 보여준다.
   - `@media @widthTablet { column-count: 1; }`
 
-- [ ] favicon 크기를 고정한다.
+- [x] favicon 크기를 고정한다.
   - `width: 16px`
   - `height: 16px`
   - `object-fit: contain`
 
 ## Admin UI
 
-- [ ] Admin Sites 화면에서 `publicListedOrder`를 관리할 수 있게 한다.
+- [x] Admin Sites 화면에서 `publicListedOrder`를 관리할 수 있게 한다.
   - 빈 값은 `NULL`로 저장한다.
   - `0`은 저장 가능하지만 목록에서는 숨긴다.
   - 양수 값은 목록에 노출한다.
 
-- [ ] 입력 UI는 숫자 input으로 둔다.
+- [x] 입력 UI는 숫자 input으로 둔다.
   - step: `0.01`
   - min: `0`
   - placeholder: empty means hidden
 
-- [ ] 사이트 목록 테이블에 현재 공개 정렬값을 보여준다.
+- [x] 사이트 목록 테이블에 현재 공개 정렬값을 보여준다.
   - 공개 목록 노출 여부를 빠르게 확인할 수 있게 한다.
 
 ## Initial Data
 
-- [ ] 운영 DB에서 공개할 사이트에 order 값을 넣는다.
+- [x] 운영 DB에서 공개할 사이트에 order 값을 넣는다.
   - `ahawiki.net`
   - `aha00a.com`
   - `wiki.aharise.com`
@@ -124,25 +124,25 @@
   - `oc.ahawiki.net`
   - `hwan.ahawiki.net`
 
-- [ ] 초기 order 정책을 정한다.
+- [x] 초기 order 정책을 정한다.
   - 예: `100.00`, `90.00`, `80.00` 순서
   - 중간 삽입을 위해 10 단위 간격을 둔다.
 
 ## Tests
 
-- [ ] `Site.publicListedOrder` parser 테스트를 추가한다.
+- [x] `Site.publicListedOrder` parser 테스트를 추가한다.
   - `NULL`
   - `0`
   - 양수
   - 소수점 값
 
-- [ ] 공개 사이트 조회 로직 테스트를 추가한다.
+- [x] 공개 사이트 조회 로직 테스트를 추가한다.
   - `NULL` 제외
   - `0` 제외
   - 양수 포함
   - `publicListedOrder DESC, seq ASC` 정렬 확인
 
-- [ ] `MacroAhaWikiSiteList` 렌더링 테스트를 추가한다.
+- [x] `MacroAhaWikiSiteList` 렌더링 테스트를 추가한다.
   - block macro 등록 확인
   - `<ul class="MacroAhaWikiSiteList">` 출력 확인
   - favicon 이미지 출력 확인

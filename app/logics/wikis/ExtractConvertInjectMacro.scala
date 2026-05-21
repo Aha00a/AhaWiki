@@ -29,6 +29,7 @@ object ExtractConvertInjectMacro {
     MacroRecentChanges,
     MacroRecentChangesList,
     MacroWikiStatistics,
+    MacroAhaWikiSiteList,
 
     MacroAdjacentPages,
     MacroPageMap,
