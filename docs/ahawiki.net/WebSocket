@@ -1,4 +1,4 @@
-﻿= WebSocket 구현 정리
+= WebSocket 구현 정리
 
 이 문서는 현재 AhaWiki에 구현된 WebSocket 기능(페이지 뷰 화면의 실시간 커서 공유 + 페이지 갱신 알림)을 코드 기준으로 정리합니다.
 
