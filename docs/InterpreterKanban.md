@@ -91,3 +91,9 @@ UI에서는 보드 형태로 편집하고, 저장 시 다시 위키 텍스트로
 - `test/kanban.retry-409.test.mjs`
 - `test/kanban.hash-navigation.test.mjs`
 
+검증 결과: **완료 판정 가능**
+
+- 검증일: 2026-05-22
+- 명령: `node --test test\kanban*.test.mjs`
+- 결과: 25개 테스트 통과
+
