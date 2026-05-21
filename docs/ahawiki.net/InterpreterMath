@@ -3,8 +3,7 @@
 MathJax 수식을 블록으로 표시합니다.
 여러 줄 수식을 그대로 적을 수 있습니다.
 
-[[[
-#!WikiSyntaxPreview Math
+[[[#!WikiSyntaxPreview Math
 \text{cosine similarity}
 = \cos(\theta)
 = {A \cdot B \over \|A\| \|B\|}
