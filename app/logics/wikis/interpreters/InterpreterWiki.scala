@@ -172,7 +172,7 @@ object InterpreterWiki extends TraitInterpreter {
         """([#.])([^#.\s]+)""".r.findAllMatchIn(raw).toSeq
       }.getOrElse(Seq.empty)
       val headingId = headingAttributes.collectFirst { case m if m.group(1) == "#" => m.group(2) }
-      val headingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
+      val headingClasses = headingAttributes.collect { case m if m.group(1) == "." => "Heading" + m.group(2) }
       val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
       val wrapperClass = Seq(idNotEmpty, if (isInitiallyCollapsed) "sectionCollapsed" else "").filter(_.nonEmpty).mkString(" ")
       val isGeneratedHeading = headingClasses.contains("generated")
