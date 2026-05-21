@@ -87,21 +87,20 @@ class ApplicationLifecycleHook @Inject()(
     }
   })
 
-  registerScheduler("Calculate", randomDelay(20 seconds, 1 minutes), () => randomDelay(1 minute, 30 minutes), () => {
+  registerScheduler("Calculate", randomDelay(20 seconds, 1 minutes), () => randomDelay(1 minute, 1 hour), () => {
     val site = SiteLogic.selectRandom()
     implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-    val count = 10
 
     database.withConnection { implicit connection =>
       implicit val implicitSite: Site = site
-      val missingPageNames = models.tables.PageMeta.selectMissingPageNames(limit = count)
+      val missingPageNames = models.tables.PageMeta.selectMissingPageNames(limit = 10)
       if (missingPageNames.nonEmpty) {
         missingPageNames.zipWithIndex.foreach { case (pageName, i) =>
           actorAhaWiki ! Calculate(site, pageName, i, missingPageNames.length)
         }
       } else {
         logger.info(s"Calculate: no missing page names")
-        val seq = ahaWikiCache.PageMeta.SeqPageLatestSummary.get().shuffle().take(count)
+        val seq = ahaWikiCache.PageMeta.SeqPageLatestSummary.get().shuffle().take(2)
         seq.zipWithIndex.foreach { case (page, i) =>
           actorAhaWiki ! Calculate(site, page.name, i, seq.length)
         }

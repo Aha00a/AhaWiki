@@ -45,7 +45,6 @@ object MacroSimilarPages extends TraitMacro with Logging {
 
       val cosineSimilarities = sameSiteSimilarities ++ crossSiteSimilarities
       if (cosineSimilarities.isEmpty) {
-        wikiContext.actorAhaWiki ! Calculate(wikiContext.site, name)
         ""
       } else {
         import models.HighScoredTerm
