@@ -105,7 +105,7 @@ class Api @Inject()(
     syncCacheApi.set(memoryCacheSnapshotKey, stats.asJson.noSpaces, 10.minutes)
   }
 
-  applicationLifecycleHook.registerScheduler(
+  applicationLifecycleHook.scheduleWithDynamicDelay(
     name = "apiMemoryCacheStatsRefresh",
     initialDelay = scala.concurrent.duration.Duration.Zero,
     nextDelay = () => 5 minutes,
