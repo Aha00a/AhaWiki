@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-21T08:32:16.454Z",
-  "count": 57,
+  "downloadedAt": "2026-05-21T08:35:53.629Z",
+  "count": 55,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -184,12 +184,6 @@
       "bytes": 22
     },
     {
-      "name": "ExamplePaper",
-      "rawUrl": "https://ahawiki.net/w/ExamplePaper?action=raw",
-      "fileName": "ExamplePaper",
-      "bytes": 2976
-    },
-    {
       "name": "ExampleMarkdown",
       "rawUrl": "https://ahawiki.net/w/ExampleMarkdown?action=raw",
       "fileName": "ExampleMarkdown",
@@ -307,19 +301,13 @@
       "name": "AhaWiki",
       "rawUrl": "https://ahawiki.net/w/AhaWiki?action=raw",
       "fileName": "AhaWiki",
-      "bytes": 1524
+      "bytes": 1420
     },
     {
       "name": "AhaMark Macro",
       "rawUrl": "https://ahawiki.net/w/AhaMark%20Macro?action=raw",
       "fileName": "AhaMark Macro",
       "bytes": 16
-    },
-    {
-      "name": "AhaMark Interpreter Examples",
-      "rawUrl": "https://ahawiki.net/w/AhaMark%20Interpreter%20Examples?action=raw",
-      "fileName": "AhaMark Interpreter Examples",
-      "bytes": 108
     },
     {
       "name": "AhaMark Basic",
@@ -331,7 +319,7 @@
       "name": "AhaMark",
       "rawUrl": "https://ahawiki.net/w/AhaMark?action=raw",
       "fileName": "AhaMark",
-      "bytes": 106
+      "bytes": 96
     },
     {
       "name": "Aha00a",

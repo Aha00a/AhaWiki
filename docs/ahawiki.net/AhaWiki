@@ -28,11 +28,7 @@ AhaWiki는 개인과 팀이 지식을 꾸준히 기록하고 연결하기 위한
 처음 사용하는 사람은 아래 순서로 읽어보세요.
  1. [GettingStarted]
  1. [HotKey]
- * [AhaMark]
- * ["AhaMark Basic"]
- * ["AhaMark Macro"]
- * ["AhaMark Interpreter"]
- * ["AhaMark Interpreter Examples"]
+ 1. [AhaMark]
 
 
 == 관리
