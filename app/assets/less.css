@@ -722,6 +722,10 @@ kbd.MacroKbd {
   padding: 10px;
 }
 .AhaWiki .commonAhaWiki {
+  --wiki-indent-body: 30px;
+  --wiki-indent-list: 40px;
+  --wiki-contained-indent-body: 0px;
+  --wiki-contained-indent-list: 10px;
   padding: 0 0 25px 0;
   word-break: break-all;
 }
@@ -761,7 +765,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > .Vim,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .Vim,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .Vim {
-  margin-left: 30px;
+  margin-left: var(--wiki-indent-body, 30px);
 }
 .AhaWiki .commonAhaWiki > .limitWidth > div > ul,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > ul,
@@ -771,7 +775,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div ol,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div ol,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div ol {
-  margin-left: 40px;
+  margin-left: var(--wiki-indent-list, 40px);
 }
 .AhaWiki .commonAhaWiki > .limitWidth > div > .tocBody > div > ul,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > .tocBody > div > ul,
@@ -1249,6 +1253,10 @@ kbd.MacroKbd {
   }
 }
 .AhaWiki .wikiContent {
+  --wiki-indent-body: 30px;
+  --wiki-indent-list: 40px;
+  --wiki-contained-indent-body: 0px;
+  --wiki-contained-indent-list: 10px;
   padding: 0 0 25px 0;
   word-break: break-all;
 }
@@ -1288,7 +1296,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent > .limitWidth > div > div > .Vim,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > .Vim,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div > .Vim {
-  margin-left: 30px;
+  margin-left: var(--wiki-indent-body, 30px);
 }
 .AhaWiki .wikiContent > .limitWidth > div > ul,
 .AhaWiki .wikiContent > .limitWidth > div > div > ul,
@@ -1298,7 +1306,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent > .limitWidth > div > div ol,
 .AhaWiki .wikiContent > .limitWidth > div > div > div ol,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div ol {
-  margin-left: 40px;
+  margin-left: var(--wiki-indent-list, 40px);
 }
 .AhaWiki .wikiContent > .limitWidth > div > .tocBody > div > ul,
 .AhaWiki .wikiContent > .limitWidth > div > div > .tocBody > div > ul,
@@ -1952,6 +1960,10 @@ kbd.MacroKbd {
   float: right;
 }
 .AhaWiki .paperContent .page .pageContent {
+  --wiki-indent-body: 30px;
+  --wiki-indent-list: 40px;
+  --wiki-contained-indent-body: 0px;
+  --wiki-contained-indent-list: 10px;
   padding: 0 0 25px 0;
   word-break: break-all;
   text-align: justify;
@@ -1992,7 +2004,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .Vim,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .Vim,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .Vim {
-  margin-left: 30px;
+  margin-left: var(--wiki-indent-body, 30px);
 }
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > ul,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > ul,
@@ -2002,7 +2014,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div ol,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div ol,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div ol {
-  margin-left: 40px;
+  margin-left: var(--wiki-indent-list, 40px);
 }
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > .tocBody > div > ul,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .tocBody > div > ul,
@@ -3286,10 +3298,11 @@ kbd.MacroKbd {
   opacity: 0.6;
 }
 .AhaWiki .Macro.BlockMacro {
-  margin-left: 30px;
+  margin-left: var(--wiki-indent-body, 30px);
 }
-.AhaWiki .Macro.Backlinks {
-  margin-left: 0;
+.AhaWiki .Macro.BlockMacro > * {
+  --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+  --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 }
 .AhaWiki .Macro.PageList > table {
   margin-left: 0;
@@ -3456,15 +3469,22 @@ kbd.MacroKbd {
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table {
   overflow-x: auto;
-  margin-left: 30px;
+  margin-left: var(--wiki-indent-body, 30px);
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent {
+  --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+  --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
   display: inline-block;
   border: 1px solid #e5e7eb;
   border-radius: 5px;
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable {
   margin-left: 0;
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Text > .InterpreterRenderContent,
+.AhaWiki .InterpreterRenderMetaWrapper.Vim > .InterpreterRenderContent {
+  --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+  --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 }
 .AhaWiki .Interpreter.Text,
 .AhaWiki .Interpreter.Vim {

@@ -588,15 +588,20 @@ kbd.MacroKbd {
 	}
 
 	.commonAhaWiki {
+		--wiki-indent-body: 30px;
+		--wiki-indent-list: 40px;
+		--wiki-contained-indent-body: 0px;
+		--wiki-contained-indent-list: 10px;
+
 		padding: 0 0 25px 0;
 		word-break: break-all;
 		>.limitWidth>div {
 			&>, >div, >div>div, >div>div>div{
 				>p, >blockquote, >table, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {
-					margin-left: 30px;
+					margin-left: var(--wiki-indent-body, 30px);
 				}
 				>ul, ol {
-					margin-left: 40px;
+					margin-left: var(--wiki-indent-list, 40px);
 				}
 				>.tocBody>div {
 					>ul {
@@ -2034,11 +2039,11 @@ kbd.MacroKbd {
 .AhaWiki {
 	.Macro {
 		&.BlockMacro {
-			margin-left: 30px;
-		}
-
-		&.Backlinks {
-			margin-left: 0;
+			margin-left: var(--wiki-indent-body, 30px);
+			> * {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
+			}
 		}
 
 		&.PageList {
@@ -2241,14 +2246,23 @@ kbd.MacroKbd {
 	.InterpreterRenderMetaWrapper {
 		&.Table {
 			overflow-x: auto;
-			margin-left: 30px;
+			margin-left: var(--wiki-indent-body, 30px);
 			.InterpreterRenderContent {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 				display: inline-block;
 				border: 1px solid #e5e7eb;
 				border-radius: 5px;
 				.InterpreterTable {
 					margin-left: 0;
 				}
+			}
+		}
+
+		&.Text, &.Vim {
+			> .InterpreterRenderContent {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 			}
 		}
 	}
