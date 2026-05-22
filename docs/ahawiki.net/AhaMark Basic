@@ -13,6 +13,7 @@ Left sides represent markup, right sides are rendered.
 
 
 == Formatting
+Supports various formatting.
 포매팅을 지원합니다.
 [[[#!WikiSyntaxPreview
 italic - ''italic''
@@ -38,7 +39,9 @@ copiable - ``copiable``
 
 
 == 가로선
-hr
+Horizontal line is created by 4 or more dashes.
+가로선은 4개 이상의 대시로 만들어집니다.
+
 [[[#!WikiSyntaxPreview
 page1
 ----
@@ -50,10 +53,8 @@ page3
 
 
 == List
-
 Leading space is important.
 맨 앞에 띄어쓰기 한칸을 꼭 넣어주세요.
-
 
 === Unordered
 순서 없는 리스트
@@ -76,21 +77,8 @@ Leading space is important.
 ]]]
 
 
-
-
-
-
-
-
-
-
-
-
-
 === Ordered
 순서 있는 리스트
-
-
 
 [[[#!WikiSyntaxPreview
  1. decimal
@@ -112,17 +100,6 @@ Leading space is important.
        ㄱ. ㄱㄴㄷ
        ㄱ. ㄱㄴㄷ
 ]]]
-
-
-
-
-
-
-
-
-
-
-
 
 
 === Mixed
@@ -135,11 +112,6 @@ Leading space is important.
     A. Alpha
     A. Alpha
 ]]]
-
-
-
-
-
 
 
 
@@ -188,16 +160,6 @@ use `\` for escaping
   1. \[?q=10]
   1. \[?q=10 q10 Alias]
 ]]]
-
-
-
-
-
-
-
-
-
-
 
 
 
