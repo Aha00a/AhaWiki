@@ -3492,6 +3492,11 @@ kbd.MacroKbd {
   --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
   --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 }
+.AhaWiki .InterpreterRenderMetaWrapper.Text > .InterpreterRenderContent > .Interpreter,
+.AhaWiki .InterpreterRenderMetaWrapper.Vim > .InterpreterRenderContent > .Interpreter {
+  margin-left: 0;
+  max-width: 100%;
+}
 .AhaWiki .Interpreter.Text,
 .AhaWiki .Interpreter.Vim {
   margin-top: 3px;
