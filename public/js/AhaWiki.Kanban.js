@@ -703,12 +703,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return matched[1] + toClientKanbanDateTime('[' + matched[2] + ']T' + matched[3] + matched[4]);
     };
 
+    // Escape newlines in comment details for safe storage
+    var escapeCommentNewlines = function (text) {
+        return String(text || '').replace(/\r?\n/g, '[[Br]]');
+    };
+    // Restore newlines from escaped comment details in UI/rendering
+    var restoreCommentNewlines = function (text) {
+        return String(text || '').replace(/\[\[Br\]\]/g, '\n');
+    };
+
     var buildCommentEntry = function (details) {
         var nowIso = getNowIsoWithoutMillis();
         var author = getCurrentAuthor();
+        var escapedDetails = (details || [])
+            .map(function (item) { return escapeCommentNewlines(item); })
+            .filter(function (item) { return Boolean((item || '').trim()); });
         return {
             header: '[User:' + author + '] ' + formatKanbanDateTime(nowIso),
-            details: (details || []).filter(function (item) { return Boolean((item || '').trim()); })
+            details: escapedDetails
         };
     };
     var buildCardLinkText = function (pageName, cardId, cardName) {
@@ -2589,22 +2601,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     (entry.details || []).forEach(function (detailLine) {
-                        var detailRow = document.createElement('div');
-                        detailRow.style.paddingLeft = '12px';
-                        detailRow.style.marginTop = '4px';
-                        detailRow.textContent = detailLine;
-                        row.appendChild(detailRow);
+                         var detailRow = document.createElement('div');
+                         detailRow.style.paddingLeft = '12px';
+                         detailRow.style.marginTop = '4px';
+                         var restoredDetailLine = restoreCommentNewlines(detailLine);
+                         detailRow.textContent = restoredDetailLine;
+                         row.appendChild(detailRow);
 
-                        requestRenderInlineComment(pageName, detailLine).then(function (html) {
-                            if (html) {
-                                detailRow.innerHTML = html;
-                                clampRenderedInlineImages(detailRow);
-                                enableInlineImageLightbox(detailRow);
-                            }
-                        }).catch(function (error) {
-                            console.error('[Kanban] failed to render comment detail', error);
-                        });
-                    });
+                         requestRenderInlineComment(pageName, restoredDetailLine).then(function (html) {
+                             if (html) {
+                                 detailRow.innerHTML = html;
+                                 clampRenderedInlineImages(detailRow);
+                                 enableInlineImageLightbox(detailRow);
+                             }
+                         }).catch(function (error) {
+                             console.error('[Kanban] failed to render comment detail', error);
+                         });
+                     });
 
                     comments.appendChild(row);
                 });
