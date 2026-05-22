@@ -34,7 +34,7 @@ nav.topNavbar {
 	background-color: rgba(255, 255, 255, 0.25);
 	backdrop-filter: saturate(180%) blur(5px);
 	-webkit-backdrop-filter: saturate(180%) blur(5px);
-	text-shadow: -1px 1px 10px #fff, 0px 1px 10px #fff, 1px 0px 10px #fff, 0px 1px 10px #fff;
+	text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
 
 	> .wrap {
 		display: flex;
@@ -54,7 +54,7 @@ nav.topNavbar {
 		color: #000;
 		background-color: transparent;
 		transition: all 160ms ease;
-		text-shadow: -1px 1px 10px #fff, 0px 1px 10px #fff, 1px 0px 10px #fff, 0px 1px 10px #fff;
+		text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
 
 		&:hover {
 			background-color: #eaf2ff;
@@ -235,7 +235,6 @@ nav.topNavbar {
 
 .boxShadow(@s : 0 0 1em #eee) {
 	-webkit-box-shadow: @s;
-	-moz-box-shadow: @s;
 	box-shadow: @s;
 }
 
@@ -261,7 +260,7 @@ kbd {
 	margin-right: 3px;
 	top: -2px;
 	& > kbd {
-		box-shadow: 0 4px 0px 2px #aaa;
+		box-shadow: 0 4px 0 2px #aaa;
 		border: 1px solid #ddd;
 		border-radius: 0.25rem;
 		background-color: #f0f0f0;
