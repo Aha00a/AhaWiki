@@ -12,90 +12,40 @@ Left sides represent markup, right sides are rendered.
 
 
 
-
-
-
-
-== Headings
-Headings start with `=`. You can add trailing `=` if you want to. You can assign anchor name manually, use `#`.
-제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
-제목이 10개가 넘어가면 자동으로 목차가 생성됩니다.
-Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
-
+== Formatting
+포매팅을 지원합니다.
 [[[#!WikiSyntaxPreview
-= Title
-== Section 1
-== Section 2
-== Section 3
-=== Subsection 1
-content
-]]]
-[[[#!WikiSyntaxPreview
-= h1
-== h2 with closing ==
-=== h3 with closing and id === #h3
-==== h4
-===== h5
-====== h6
-== h2 - 7
-=== h3 - 8
-== h2 - 9
-== h2 - 10
-=== h3 - 11
-TOC is automatically generated when heading appears 5 or more.
-제목이 10개가 넘어가면 자동으로 목차가 나타납니다.
+italic - ''italic''
+bold - '''bold'''
+bold italic - '''''bold italic'''''
+underline - __underline__
+strikeout - ~~strikeout~~
+code - `code`
+copiable - ``copiable``
+
+----
+
+기울임 - ''기울임''
+굵게 - '''굵게'''
+굵은기울임 - '''''굵은기울임'''''
+밑줄 - __밑줄__
+취소선 - ~~취소선~~
+코드 - `코드`
+복사 - ``복사``
+
 ]]]
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+== 가로선
+hr
+[[[#!WikiSyntaxPreview
+page1
+----
+page2
+------------------------------------
+page3
+]]]
 
 
 
@@ -193,42 +143,6 @@ Leading space is important.
 
 
 
-
-
-
-
-== Formatting ==
-[[[#!WikiSyntaxPreview
-italic - ''italic''
-bold - '''bold'''
-bold italic - '''''bold italic'''''
-underline - __underline__
-strikeout - ~~strikeout~~
-code - `code`
-copiable - ``copiable``
-
-----
-
-기울임 - ''기울임''
-굵게 - '''굵게'''
-굵은기울임 - '''''굵은기울임'''''
-밑줄 - __밑줄__
-취소선 - ~~취소선~~
-코드 - `코드`
-복사 - ``복사``
-
-]]]
-
-
-
-
-
-
-
-
-
-
-
 == Link
 The link notation uses `[]` or `[""]`.
 
@@ -289,24 +203,50 @@ use `\` for escaping
 
 
 
+== Headings
+Headings start with `=`. You can add trailing `=` if you want to. You can assign anchor name manually, use `#`.
+제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
+제목이 10개가 넘어가면 자동으로 목차가 생성됩니다.
 
-
-
-
-
-
-
-
-
-
-
-
-
-== hr
+=== 기본
 [[[#!WikiSyntaxPreview
-page1
-----
-page2
-------------------------------------
-page3
+= Title
+== Section 1
+== Section 2
+== Section 3
+=== Subsection 1
+content
 ]]]
+
+=== 고급
+Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
+
+[[[#!WikiSyntaxPreview
+= h1
+== h2 with closing ==
+=== h3 with closing and id === #h3
+==== h4
+===== h5
+====== h6
+== h2 - 7
+=== h3 - 8
+== h2 - 9
+== h2 - 10
+=== h3 - 11
+TOC is automatically generated when heading appears 5 or more.
+제목이 10개가 넘어가면 자동으로 목차가 나타납니다.
+]]]
+
+=== 접혀있는 헤딩
+[[[#!WikiSyntaxPreview
+== h2
+=== h3
+내용
+===> 스포일러
+기본으로 접혀서 나옵니다.
+=== 기본
+여긴 그냥 보이죠.
+]]]
+
+
+
