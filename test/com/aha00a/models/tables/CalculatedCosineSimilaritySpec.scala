@@ -67,6 +67,15 @@ class CalculatedCosineSimilaritySpec extends AnyFreeSpec {
         )
       """,
       """
+        CREATE TABLE CalculatedTermFrequencyNorm (
+          site INT NOT NULL,
+          name VARCHAR(255) NOT NULL,
+          norm DOUBLE NOT NULL,
+          PRIMARY KEY (site, name),
+          FOREIGN KEY (site, name) REFERENCES PageMeta (site, name)
+        )
+      """,
+      """
         CREATE TABLE CalculatedCosineSimilarity (
           site1 INT NOT NULL,
           name1 VARCHAR(255) NOT NULL,
@@ -92,6 +101,12 @@ class CalculatedCosineSimilaritySpec extends AnyFreeSpec {
       "INSERT INTO CalculatedTermFrequency (site, name, term, frequency) VALUES (1, 'Foo', 2, 1)",
       "INSERT INTO CalculatedTermFrequency (site, name, term, frequency) VALUES (1, 'Bar', 1, 9)",
       "INSERT INTO CalculatedTermFrequency (site, name, term, frequency) VALUES (2, 'Baz', 1, 8)",
+      """
+        INSERT INTO CalculatedTermFrequencyNorm (site, name, norm)
+        SELECT site, name, SQRT(SUM(frequency * frequency))
+        FROM CalculatedTermFrequency
+        GROUP BY site, name
+      """,
     ).foreach(sql => SQL(sql).execute()(connection))
   }
 }

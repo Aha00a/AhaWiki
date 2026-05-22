@@ -144,6 +144,7 @@ object PageLogic {
         val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
         val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
         CalculatedTermFrequency.insert(name, seqTermFrequency)
+        CalculatedTermFrequency.replaceNorm(name)
 
         if(verbose)
           logger.info(seqWordCountSorted.take(10).mkString(" "))

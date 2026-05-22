@@ -42,7 +42,19 @@ object CalculatedTermFrequency {
     }
   }
 
+  def replaceNorm(name: String)(implicit connection: Connection, site: Site): Int = {
+    SQL"""
+      REPLACE INTO CalculatedTermFrequencyNorm (site, name, norm)
+      SELECT site, name, SQRT(SUM(frequency * frequency)) AS norm
+      FROM CalculatedTermFrequency
+      WHERE site = ${site.seq} AND name = $name
+      GROUP BY site, name
+    """.executeUpdate()
+  }
+
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
-    SQL"DELETE FROM CalculatedTermFrequency WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    val count = SQL"DELETE FROM CalculatedTermFrequency WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    SQL"DELETE FROM CalculatedTermFrequencyNorm WHERE site = ${site.seq} AND name = $name".executeUpdate()
+    count
   }
 }

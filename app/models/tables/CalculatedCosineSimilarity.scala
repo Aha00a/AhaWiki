@@ -52,14 +52,7 @@ FROM (
         AND TF2.name = $name
     GROUP BY TF1.site, TF1.name
 ) CandidateDot
-INNER JOIN (
-    SELECT
-        site,
-        name,
-        SQRT(SUM(frequency * frequency)) AS norm
-    FROM CalculatedTermFrequency
-    GROUP BY site, name
-) CandidateNorm
+INNER JOIN CalculatedTermFrequencyNorm CandidateNorm
     ON CandidateNorm.site = CandidateDot.site
     AND CandidateNorm.name = CandidateDot.name
 CROSS JOIN (
