@@ -469,6 +469,7 @@ class Api @Inject()(
             case Some(userSeq) =>
               database.withConnection { implicit connection =>
                 SiteAdmin.insert(seq, userSeq)
+                logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
                 Ok(Json.obj("ok" -> Json.fromBoolean(true), "site" -> Json.fromLong(seq), "user" -> Json.fromLong(userSeq)))
               }
           }
@@ -485,6 +486,7 @@ class Api @Inject()(
         case Some(_) =>
           database.withConnection { implicit connection =>
             val deletedCount = SiteAdmin.delete(seq, userSeq)
+            logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
             Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(deletedCount)))
           }
       }

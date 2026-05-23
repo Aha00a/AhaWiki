@@ -1,6 +1,5 @@
 package logics
 
-import models.tables.SiteAdmin
 import play.api.db.Database
 import play.api.mvc.RequestHeader
 
@@ -12,9 +11,13 @@ object AdminLogic {
     requestWrapper.getUser.exists(_.seq == 1)
 
   def isSiteAdminBySeq(siteSeq: Long, userSeq: Long)(implicit db: Database): Boolean =
-    userSeq == 1 || db.withConnection(implicit c => SiteAdmin.exists(siteSeq, userSeq))
+    userSeq == 1 || db.withConnection(implicit c => AhaWikiCacheMemorySiteAdmin.getUserSeqs(siteSeq).contains(userSeq))
 
   def isSiteAdmin(siteSeq: Long, request: RequestHeader)(implicit db: Database): Boolean =
     isAdmin(request) ||
       SessionLogic.getUser(request).exists(u => isSiteAdminBySeq(siteSeq, u.seq))
+
+  def isSiteAdmin(siteSeq: Long, requestWrapper: models.RequestWrapper)(implicit db: Database): Boolean =
+    isAdmin(requestWrapper) ||
+      requestWrapper.getUser.exists(u => isSiteAdminBySeq(siteSeq, u.seq))
 }
