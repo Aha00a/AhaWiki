@@ -216,6 +216,13 @@ class Api @Inject()(
       .toRight(BadRequest(Json.obj("error" -> Json.fromString("Valid siteSeq is required.")).toString()).as(JSON))
   }
 
+  private def resolveAdminTargetSiteWithAuth(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
+    resolveAdminTargetSite(siteSeqValue).flatMap { site =>
+      if (isSiteAdmin(site.seq)) Right(site)
+      else Left(Forbidden("Access denied."))
+    }
+  }
+
 
   def adminGenerateSignedReadUrl: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
@@ -546,41 +553,34 @@ class Api @Inject()(
   }
 
   def adminSiteFavicon: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      database.withConnection { implicit connection =>
-        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
-          case Left(errorResult) => errorResult
-          case Right(siteValue) =>
-            implicit val site: Site = siteValue
-            val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
-            val faviconUrlOption = objectKeyOption.flatMap(objectKey => S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption)
-            Ok(Json.obj(
-              "siteSeq" -> Json.fromLong(site.seq),
-              "objectKey" -> Json.fromString(objectKeyOption.getOrElse("")),
-              "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse("/public/favicon.png")),
-            ))
-        }
+    database.withConnection { implicit connection =>
+      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
+        case Left(errorResult) => errorResult
+        case Right(siteValue) =>
+          implicit val site: Site = siteValue
+          val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
+          val faviconUrlOption = objectKeyOption.flatMap(objectKey => S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption)
+          Ok(Json.obj(
+            "siteSeq" -> Json.fromLong(site.seq),
+            "objectKey" -> Json.fromString(objectKeyOption.getOrElse("")),
+            "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse("/public/favicon.png")),
+          ))
       }
     }
   }
 
   def adminUploadSiteFavicon: Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      request.body.file("file") match {
-        case None =>
-          BadRequest(Json.obj("error" -> Json.fromString("file is required")).toString()).as(JSON)
-        case Some(filePart) =>
-          val contentType = filePart.contentType.getOrElse("application/octet-stream")
-          if (!contentType.startsWith("image/")) {
-            BadRequest(Json.obj("error" -> Json.fromString("Only image files are allowed.")).toString()).as(JSON)
-          } else {
-            database.withConnection { implicit connection =>
-              val siteSeqValue = request.body.dataParts.get("siteSeq").flatMap(_.headOption)
-              resolveAdminTargetSite(siteSeqValue) match {
+    request.body.file("file") match {
+      case None =>
+        BadRequest(Json.obj("error" -> Json.fromString("file is required")).toString()).as(JSON)
+      case Some(filePart) =>
+        val contentType = filePart.contentType.getOrElse("application/octet-stream")
+        if (!contentType.startsWith("image/")) {
+          BadRequest(Json.obj("error" -> Json.fromString("Only image files are allowed.")).toString()).as(JSON)
+        } else {
+          database.withConnection { implicit connection =>
+            val siteSeqValue = request.body.dataParts.get("siteSeq").flatMap(_.headOption)
+            resolveAdminTargetSiteWithAuth(siteSeqValue) match {
                 case Left(errorResult) => errorResult
                 case Right(siteValue) =>
                   implicit val site: Site = siteValue
@@ -611,19 +611,15 @@ class Api @Inject()(
                       logger.error(s"adminUploadSiteFavicon failed. objectKey=$objectKey", error)
                       InternalServerError(Json.obj("error" -> Json.fromString("Favicon upload failed.")).toString()).as(JSON)
                   }
-              }
             }
           }
-      }
+        }
     }
   }
 
   def adminDeleteSiteFavicon: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      database.withConnection { implicit connection =>
-        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
+    database.withConnection { implicit connection =>
+      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
@@ -644,17 +640,13 @@ class Api @Inject()(
               "siteSeq" -> Json.fromLong(site.seq),
               "faviconUrl" -> Json.fromString("/public/favicon.png"),
             ))
-        }
       }
     }
   }
 
   def adminSiteTheme: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      database.withConnection { implicit connection =>
-        resolveAdminTargetSite(request.getQueryString("siteSeq")) match {
+    database.withConnection { implicit connection =>
+      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
@@ -673,19 +665,15 @@ class Api @Inject()(
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
             ))
-        }
       }
     }
   }
 
   def adminUpdateSiteTheme: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      database.withConnection { implicit connection =>
-        val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-        val siteSeqValue = body.get("siteSeq").flatMap(_.headOption).orElse(request.getQueryString("siteSeq"))
-        resolveAdminTargetSite(siteSeqValue) match {
+    database.withConnection { implicit connection =>
+      val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+      val siteSeqValue = body.get("siteSeq").flatMap(_.headOption).orElse(request.getQueryString("siteSeq"))
+      resolveAdminTargetSiteWithAuth(siteSeqValue) match {
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
@@ -721,7 +709,6 @@ class Api @Inject()(
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
             ))
-        }
       }
     }
   }
@@ -1136,7 +1123,11 @@ class Api @Inject()(
   }
 
   def adminAccessLogs: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    val requestedSiteSeq = request.getQueryString("siteSeq")
+      .flatMap(raw => scala.util.Try(raw.toLong).toOption)
+      .filter(_ > 0)
+    val permitted = isAdmin || requestedSiteSeq.exists(seq => isSiteAdmin(seq))
+    if (!permitted) {
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
@@ -1166,9 +1157,14 @@ class Api @Inject()(
           .map(_.max(1).min(1000))
           .getOrElse(20)
         val search = request.getQueryString("search").map(_.trim).getOrElse("")
-        val siteSeq = request.getQueryString("siteSeq")
-          .flatMap(raw => scala.util.Try(raw.toLong).toOption)
-          .filter(_ > 0)
+        // SiteAdmin은 자신의 사이트로 siteSeq 강제 적용
+        val siteSeq = if (isAdmin) {
+          request.getQueryString("siteSeq")
+            .flatMap(raw => scala.util.Try(raw.toLong).toOption)
+            .filter(_ > 0)
+        } else {
+          requestedSiteSeq
+        }
         val sortByRaw = request.getQueryString("sortBy").map(_.trim).getOrElse("seq")
         val sortOrderRaw = request.getQueryString("sortOrder").map(_.trim.toLowerCase).getOrElse("desc")
 

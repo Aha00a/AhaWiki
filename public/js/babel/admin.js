@@ -474,7 +474,7 @@ async function fetchCsrfToken() {
     value: token?.value ?? ""
   };
 }
-function useAdminData(page) {
+function useAdminData(page, me) {
   const [loading, setLoading] = useState2(true);
   const [sites, setSites] = useState2([]);
   const [allUsers, setAllUsers] = useState2([]);
@@ -1234,8 +1234,13 @@ function useAdminData(page) {
           return;
         }
         if (mounted) {
-          await loadDashboard();
-          await loadMemoryCacheStats();
+          if (me?.isAdmin) {
+            await loadDashboard();
+            await loadMemoryCacheStats();
+          } else {
+            const siteData = await fetchJson2("/api/Admin/Sites");
+            setSites(Array.isArray(siteData) ? siteData : []);
+          }
         }
       } catch (caughtError) {
         logError("data:load:error", caughtError);
@@ -1248,11 +1253,12 @@ function useAdminData(page) {
         }
       }
     };
+    if (me === null) return;
     load();
     return () => {
       mounted = false;
     };
-  }, [page, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects, loadCrawlerCaches]);
+  }, [page, me, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects, loadCrawlerCaches]);
   return {
     loading,
     sites,
@@ -1426,7 +1432,7 @@ function AdminContent({ page, onNavigate, pathname, search, me }) {
     addingSiteAdmin,
     deletingSiteAdminUserSeq,
     error
-  } = useAdminData(page);
+  } = useAdminData(page, me);
   const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
   const normalizedCrawlerPage = Math.min(crawlerPage, crawlerTotalPages);
   const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
@@ -1524,9 +1530,11 @@ function AdminContent({ page, onNavigate, pathname, search, me }) {
   }, [page, pathname, selectedSiteSeq]);
   useEffect2(() => {
     if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins") && selectedSiteSeq) {
-      loadSiteAdmins(selectedSiteSeq).catch((caughtError) => {
-        logError("site:admins:error", selectedSiteSeq, caughtError);
-      });
+      if (me?.isAdmin) {
+        loadSiteAdmins(selectedSiteSeq).catch((caughtError) => {
+          logError("site:admins:error", selectedSiteSeq, caughtError);
+        });
+      }
       if (page === "site-admins") return;
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
@@ -1549,7 +1557,7 @@ function AdminContent({ page, onNavigate, pathname, search, me }) {
         logError("site:permissions:error", selectedSiteSeq, caughtError);
       });
     }
-  }, [page, selectedSiteSeq, loadSiteAdmins, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
+  }, [page, me, selectedSiteSeq, loadSiteAdmins, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
   useEffect2(() => {
     if (page !== "access-logs") {
       return;
