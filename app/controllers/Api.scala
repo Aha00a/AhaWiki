@@ -114,7 +114,6 @@ class Api @Inject()(
     initialDelay = scala.concurrent.duration.Duration.Zero,
     nextDelay = () => 5 minutes,
     job = () => {
-      ahaWikiCacheMemoryApiLinks.cleanupExpiredNow()
       val currentSnapshot = ahaWikiCacheMemoryApiLinks.snapshot(instancePort)
       val merged = readMemoryCacheSnapshots() + (instancePort -> currentSnapshot)
       writeMemoryCacheSnapshots(merged)

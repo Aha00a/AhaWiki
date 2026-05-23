@@ -5,7 +5,10 @@ import com.aha00a.commons.Implicits.RichSeq
 import com.aha00a.commons.utils.FiniteDurationUtil.random
 import com.aha00a.commons.utils.SchedulerUtil
 import logics.AhaWikiCache
+import logics.AhaWikiCacheMemoryApiLinks
 import logics.AhaWikiCacheMemoryDomainSite
+import logics.AhaWikiCacheMemoryPermission
+import logics.AhaWikiCacheMemorySiteAdmin
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.tables.Site
@@ -34,6 +37,7 @@ class ApplicationLifecycleHook @Inject()(
   @Named("actor-page-calculator") actorPageCalculator: ActorRef,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
+  ahaWikiCacheMemoryApiLinks: AhaWikiCacheMemoryApiLinks,
   wsClient: WSClient,
   executionContext: ExecutionContext,
   cacheFileCleanupService: CacheFileCleanupService
@@ -83,6 +87,21 @@ class ApplicationLifecycleHook @Inject()(
   // 사이트 도메인 메모리 캐시 갱신 스케쥴러: 1시간 간격으로 AhaWikiCacheMemoryDomainSite를 미리 갱신합니다.
   scheduleWithDynamicDelay("SiteDomainCacheRefresh", 5.seconds, () => 1.hour, () => {
     AhaWikiCacheMemoryDomainSite.refresh()
+  })
+
+  // API 링크 캐시 정리 스케쥴러: 10분 간격으로 AhaWikiCacheMemoryApiLinks를 초기화합니다.
+  scheduleWithDynamicDelay("ApiLinksCacheClear", 10.minutes, () => 10.minutes, () => {
+    ahaWikiCacheMemoryApiLinks.clear()
+  })
+
+  // Permission 캐시 정리 스케쥴러: 6시간 간격으로 AhaWikiCacheMemoryPermission을 초기화합니다.
+  scheduleWithDynamicDelay("PermissionCacheClear", 6.hours, () => 6.hours, () => {
+    AhaWikiCacheMemoryPermission.clear()
+  })
+
+  // SiteAdmin 캐시 정리 스케쥴러: 6시간 간격으로 AhaWikiCacheMemorySiteAdmin을 초기화합니다.
+  scheduleWithDynamicDelay("SiteAdminCacheClear", 6.hours, () => 6.hours, () => {
+    AhaWikiCacheMemorySiteAdmin.clear()
   })
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.

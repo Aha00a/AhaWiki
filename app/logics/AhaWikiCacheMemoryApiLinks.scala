@@ -3,9 +3,7 @@ package logics
 import models.tables.CalculatedLink
 
 import java.time.Instant
-import scala.collection.concurrent.TrieMap
 import javax.inject.Singleton
-import scala.concurrent.duration.DurationInt
 
 object AhaWikiCacheMemoryApiLinks {
   case class Snapshot(
@@ -19,46 +17,21 @@ object AhaWikiCacheMemoryApiLinks {
 
 @Singleton
 class AhaWikiCacheMemoryApiLinks {
-  private case class CachedLinks(value: Seq[CalculatedLink], cachedAtEpochMs: Long)
-  private val linksCache = TrieMap.empty[(Long, String), CachedLinks]
-  private val linksCacheTtlMs: Long = (10 minutes).toMillis
+  private val cache = new AhaWikiCacheMemoryTrieMap[(Long, String), Seq[CalculatedLink]]
 
-  private def isExpired(entry: CachedLinks, now: Long): Boolean = now - entry.cachedAtEpochMs > linksCacheTtlMs
+  def getOrElseUpdate(siteSeq: Long, pageName: String)(orElse: => Seq[CalculatedLink]): Seq[CalculatedLink] =
+    cache.getOrElseUpdate((siteSeq, pageName))(orElse)
 
-  private def cleanupExpired(now: Long): Unit = {
-    linksCache.foreach { case (key, entry) =>
-      if (isExpired(entry, now)) {
-        linksCache.remove(key, entry)
-      }
-    }
-  }
+  def clear(): Unit = cache.clear()
 
-  def cleanupExpiredNow(): Unit = cleanupExpired(System.currentTimeMillis())
+  def invalidate(siteSeq: Long, pageName: String): Unit = cache.invalidate((siteSeq, pageName))
 
-  def getOrElseUpdate(siteSeq: Long, pageName: String)(orElse: => Seq[CalculatedLink]): Seq[CalculatedLink] = {
-    val cacheKey = (siteSeq, pageName)
-    val now = System.currentTimeMillis()
-    val cached = linksCache.get(cacheKey).filterNot(entry => isExpired(entry, now))
-    cached.map(_.value).getOrElse {
-      val fetched = orElse
-      linksCache.put(cacheKey, CachedLinks(fetched, now))
-      fetched
-    }
-  }
-
-  def clear(): Unit = linksCache.clear()
-
-  def invalidate(siteSeq: Long, pageName: String): Unit = {
-    linksCache.remove((siteSeq, pageName))
-  }
-
-  def snapshot(instancePort: String): AhaWikiCacheMemoryApiLinks.Snapshot = {
+  def snapshot(instancePort: String): AhaWikiCacheMemoryApiLinks.Snapshot =
     AhaWikiCacheMemoryApiLinks.Snapshot(
       instancePort = instancePort,
       capturedAtEpochMs = System.currentTimeMillis(),
       capturedAtIso8601 = Instant.now().toString,
-      linksCacheKeyCount = linksCache.size,
-      linksCacheValueCount = linksCache.values.map(_.value.size.toLong).sum,
+      linksCacheKeyCount = cache.size,
+      linksCacheValueCount = cache.values.map(_.size.toLong).sum,
     )
-  }
 }
