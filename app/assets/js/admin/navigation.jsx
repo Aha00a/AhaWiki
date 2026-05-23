@@ -77,17 +77,19 @@ function SiteNavItem({site, currentPathname, currentSiteSeq, isAdmin, onNavigate
                     onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Permission`);
                 }}
             />
-            <NavLink
-                href={`/Admin/${site.seq}/AccessLog`}
-                label="AccessLog"
-                leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>}
-                active={currentPathname === `/Admin/${site.seq}/AccessLog`}
-                variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"}
-                onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
-                }}
-            />
+            {isAdmin && (
+                <NavLink
+                    href={`/Admin/${site.seq}/AccessLog`}
+                    label="AccessLog"
+                    leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>}
+                    active={currentPathname === `/Admin/${site.seq}/AccessLog`}
+                    variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"}
+                    onClick={(event) => {
+                        event.preventDefault();
+                        onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
+                    }}
+                />
+            )}
             {isAdmin && (
                 <NavLink
                     href={`/Admin/Site/${site.seq}/Admins`}

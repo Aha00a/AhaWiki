@@ -119,7 +119,7 @@ function SiteNavItem({ site, currentPathname, currentSiteSeq, isAdmin, onNavigat
         }
       }
     ),
-    /* @__PURE__ */ React.createElement(
+    isAdmin && /* @__PURE__ */ React.createElement(
       NavLink,
       {
         href: `/Admin/${site.seq}/AccessLog`,
