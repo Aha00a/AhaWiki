@@ -1,165 +1,71 @@
 // app/assets/js/admin.jsx
-import React5, { useCallback, useEffect as useEffect2, useMemo as useMemo2, useState as useState2 } from "react";
+import React22 from "react";
 import { createRoot } from "react-dom/client";
-import dayjs from "https://cdn.jsdelivr.net/npm/dayjs@1.11.13/+esm";
-import {
-  MantineProvider,
-  Anchor,
-  AppShell,
-  Autocomplete,
-  Avatar,
-  Badge as Badge4,
-  Button as Button2,
-  Card as Card3,
-  ColorInput,
-  Divider as Divider3,
-  Group as Group4,
-  Image,
-  Loader,
-  Paper as Paper2,
-  Pagination,
-  Progress as Progress2,
-  Select,
-  SimpleGrid,
-  Stack as Stack3,
-  Table as Table3,
-  Text as Text4,
-  TextInput,
-  ThemeIcon,
-  Title as Title3
-} from "@mantine/core";
-import { DataTable } from "mantine-datatable";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { MantineProvider } from "@mantine/core";
+
+// app/assets/js/admin/layout/AdminLayout.jsx
+import React3, { useEffect as useEffect2, useState as useState2 } from "react";
+import { Outlet, useNavigate as useNavigate2 } from "react-router-dom";
+import { AppShell, Badge as Badge2, Group as Group2, Stack as Stack2, Text as Text2, Title } from "@mantine/core";
 
 // app/assets/js/admin/navigation.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Badge, Divider, Group, NavLink, Paper, Skeleton, Stack, Text } from "@mantine/core";
-function fetchJson(url) {
-  return fetch(url, { credentials: "same-origin" }).then((response) => {
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  });
+
+// app/assets/js/admin/api.js
+var LOG_PREFIX = "[AdminUI]";
+function logInfo(...args) {
+  console.log(LOG_PREFIX, ...args);
 }
+function logError(...args) {
+  console.error(LOG_PREFIX, ...args);
+}
+async function fetchJson(url) {
+  logInfo("fetch:start", url);
+  const response = await fetch(url, { credentials: "same-origin" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const data = await response.json();
+  logInfo("fetch:success", url, { count: Array.isArray(data) ? data.length : void 0 });
+  return data;
+}
+async function fetchCsrfToken() {
+  const response = await fetch("/api/csrf", { credentials: "same-origin" });
+  if (!response.ok) throw new Error(`CSRF HTTP ${response.status}`);
+  const token = await response.json();
+  return { name: token?.name ?? "csrfToken", value: token?.value ?? "" };
+}
+
+// app/assets/js/admin/navigation.jsx
 function parseSiteSeqFromPathname(pathname) {
   const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog|Admins))?$/);
   if (!matched) return "";
   const siteSeq = Number.parseInt(matched[1], 10);
   return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
 }
-function SiteNavItem({ site, currentPathname, currentSiteSeq, isAdmin, onNavigate }) {
+function SiteNavItem({ site, currentPathname, currentSiteSeq, isAdmin }) {
+  const navigate = useNavigate();
   const siteSeq = String(site.seq);
   const isCurrentSite = siteSeq === String(currentSiteSeq);
   const isActiveSite = parseSiteSeqFromPathname(currentPathname) === siteSeq;
-  return /* @__PURE__ */ React.createElement(
-    NavLink,
-    {
-      href: `/Admin/Site/${site.seq}`,
-      label: `${site.name} (#${site.seq})`,
-      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
-      active: isActiveSite,
-      opened: isCurrentSite || isActiveSite,
-      variant: isActiveSite ? "filled" : "light",
-      onClick: (event) => {
-        event.preventDefault();
-        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-      }
-    },
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}`,
-        label: "Meta\uBAA9\uB85D",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-list", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/Site/${site.seq}`,
-        variant: currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-        }
-      }
-    ),
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Config`,
-        label: "Config",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/Site/${site.seq}/Config`,
-        variant: currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
-        }
-      }
-    ),
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Cache`,
-        label: "Cache",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/Site/${site.seq}/Cache`,
-        variant: currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
-        }
-      }
-    ),
-    /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Permission`,
-        label: "Permission",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-key", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/Site/${site.seq}/Permission`,
-        variant: currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Permission`);
-        }
-      }
-    ),
-    isAdmin && /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/${site.seq}/AccessLog`,
-        label: "AccessLog",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/${site.seq}/AccessLog`,
-        variant: currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
-        }
-      }
-    ),
-    isAdmin && /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        href: `/Admin/Site/${site.seq}/Admins`,
-        label: "SiteAdmins",
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-user-shield", "aria-hidden": "true" }),
-        active: currentPathname === `/Admin/Site/${site.seq}/Admins`,
-        variant: currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Admins`);
-        }
-      }
-    )
-  );
+  const navTo = (href) => (event) => {
+    event.preventDefault();
+    navigate(href);
+  };
+  return /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}`, label: `${site.name} (#${site.seq})`, leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }), active: isActiveSite, opened: isCurrentSite || isActiveSite, variant: isActiveSite ? "filled" : "light", onClick: navTo(`/Admin/Site/${site.seq}`) }, /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}`, label: "Meta\uBAA9\uB85D", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-list", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}`, variant: currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Config`, label: "Config", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Config`, variant: currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Config`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Cache`, label: "Cache", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Cache`, variant: currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Cache`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Permission`, label: "Permission", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-key", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Permission`, variant: currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Permission`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/${site.seq}/AccessLog`, label: "AccessLog", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }), active: currentPathname === `/Admin/${site.seq}/AccessLog`, variant: currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle", onClick: navTo(`/Admin/${site.seq}/AccessLog`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Admins`, label: "SiteAdmins", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-user-shield", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Admins`, variant: currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Admins`) }));
 }
-function Navigation({ activePage, onNavigate, me }) {
+function Navigation({ me, onNavigate }) {
   const [siteLinks, setSiteLinks] = useState([]);
-  const currentPathname = window.location.pathname;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentPathname = location.pathname;
   useEffect(() => {
     if (!me?.loggedIn) return;
     let mounted = true;
-    fetchJson("/api/Admin/Sites").then((siteData) => {
-      if (mounted) setSiteLinks(Array.isArray(siteData) ? siteData : []);
-    }).catch((err) => {
-      console.error("[AdminUI] navigation:sites:error", err);
-    });
+    fetchJson("/api/Admin/Sites").then((data) => {
+      if (mounted) setSiteLinks(Array.isArray(data) ? data : []);
+    }).catch((err) => console.error("[AdminUI] navigation:sites:error", err));
     return () => {
       mounted = false;
     };
@@ -177,83 +83,235 @@ function Navigation({ activePage, onNavigate, me }) {
   }
   const isAdmin = me?.isAdmin ?? false;
   const currentSiteSeq = me?.currentSiteSeq ?? "";
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), isAdmin && /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
-    SiteNavItem,
-    {
-      key: `site-${site.seq}`,
-      site,
-      currentPathname,
-      currentSiteSeq,
-      isAdmin,
-      onNavigate
-    }
-  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), isAdmin && /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "\uC804\uCCB4 \uAD00\uB9AC"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, globalLinks.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users";
-    return /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        key: link.key,
-        href: link.href,
-        label: link.label,
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
-        active: isActive,
-        variant: isActive ? "filled" : "light",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(link.href);
-        }
-      }
-    );
-  }))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
-    NavLink,
-    {
-      href: "/",
-      label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30",
-      description: "\uAD00\uB9AC\uC790 \uC601\uC5ED\uC744 \uB098\uAC00 \uBA54\uC778 \uC704\uD0A4\uB85C \uC774\uB3D9",
-      leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-arrow-left", "aria-hidden": "true" }),
-      rightSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-external-link-alt", "aria-hidden": "true" }),
-      color: "gray",
-      variant: "subtle"
-    }
-  )));
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, isAdmin && /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "\uC804\uCCB4 \uAD00\uB9AC"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, globalLinks.map((link) => {
+    const isActive = currentPathname === link.href || link.key === "all-users" && currentPathname.startsWith("/Admin/User");
+    return /* @__PURE__ */ React.createElement(NavLink, { key: link.key, href: link.href, label: link.label, leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }), active: isActive, variant: isActive ? "filled" : "light", onClick: (e) => {
+      e.preventDefault();
+      navigate(link.href);
+    } });
+  }))), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), isAdmin && /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(SiteNavItem, { key: `site-${site.seq}`, site, currentPathname, currentSiteSeq, isAdmin })), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(NavLink, { href: "/", label: "\uC704\uD0A4\uB85C \uB3CC\uC544\uAC00\uAE30", description: "\uAD00\uB9AC\uC790 \uC601\uC5ED\uC744 \uB098\uAC00 \uBA54\uC778 \uC704\uD0A4\uB85C \uC774\uB3D9", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-arrow-left", "aria-hidden": "true" }), rightSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-external-link-alt", "aria-hidden": "true" }), color: "gray", variant: "subtle" })));
 }
 
-// app/assets/js/component/commonWidgets.jsx
-import React2 from "react";
-import { Table } from "@mantine/core";
-function IconChevronUp({ size = 14 }) {
-  return /* @__PURE__ */ React2.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React2.createElement("path", { d: "M18 15l-6-6-6 6" }));
+// app/assets/js/admin/context/AdminContext.jsx
+import React2, { createContext, useContext } from "react";
+var AdminContext = createContext(null);
+function useAdminContext() {
+  return useContext(AdminContext);
 }
-function IconSelector({ size = 14 }) {
-  return /* @__PURE__ */ React2.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React2.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React2.createElement("path", { d: "M16 15l-4 4-4-4" }));
+
+// app/assets/js/admin/layout/AdminLayout.jsx
+function pageTitleFromPath(pathname) {
+  if (/^\/Admin\/Site\/\d+\/Permission/.test(pathname)) return "Permission";
+  if (/^\/Admin\/Site\/\d+\/Config/.test(pathname)) return "Config";
+  if (/^\/Admin\/Site\/\d+\/Cache/.test(pathname)) return "Cache";
+  if (/^\/Admin\/Site\/\d+\/Admins/.test(pathname)) return "SiteAdmins";
+  if (/^\/Admin\/Site\/\d+/.test(pathname)) return "Site";
+  if (/^\/Admin\/Site/.test(pathname)) return "Sites";
+  if (/\/UserViewHistory/.test(pathname) || /\/UserViews/.test(pathname)) return "User";
+  if (/\/User/.test(pathname) || /\/AllUsers/.test(pathname)) return "User";
+  if (/\/AccessLog/.test(pathname)) return "AccessLog";
+  if (/\/RecentChange/.test(pathname)) return "RecentChanges";
+  if (/\/S3/.test(pathname)) return "S3 Browser";
+  if (/\/CrawlerCache/.test(pathname)) return "Crawler Cache";
+  return "Dashboard";
 }
-function makeTable(headers, rows) {
-  return /* @__PURE__ */ React2.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React2.createElement(Table.Thead, null, /* @__PURE__ */ React2.createElement(Table.Tr, null, headers.map((header) => /* @__PURE__ */ React2.createElement(Table.Th, { key: header }, header)))), /* @__PURE__ */ React2.createElement(Table.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React2.createElement(Table.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React2.createElement(Table.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
+function AdminLayout() {
+  const [me, setMe] = useState2(null);
+  const navigate = useNavigate2();
+  const pathname = window.location.pathname;
+  const pageTitle = pageTitleFromPath(pathname);
+  useEffect2(() => {
+    fetchJson("/api/me").then(setMe).catch((err) => {
+      logError("app:me:error", err);
+      setMe({ loggedIn: false });
+    });
+  }, []);
+  return /* @__PURE__ */ React3.createElement(AdminContext.Provider, { value: { me } }, /* @__PURE__ */ React3.createElement(AppShell, { padding: "md", navbar: { width: 240, breakpoint: "sm" } }, /* @__PURE__ */ React3.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React3.createElement(Stack2, { mb: "md", gap: 4 }, /* @__PURE__ */ React3.createElement(Text2, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React3.createElement(Navigation, { me, onNavigate: (href) => navigate(href) })), /* @__PURE__ */ React3.createElement(AppShell.Main, null, /* @__PURE__ */ React3.createElement(Stack2, { gap: "md" }, /* @__PURE__ */ React3.createElement(Group2, { justify: "space-between", align: "center" }, /* @__PURE__ */ React3.createElement(Title, { order: 2 }, pageTitle), /* @__PURE__ */ React3.createElement(Badge2, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React3.createElement(Outlet, null)))));
+}
+
+// app/assets/js/admin/layout/SiteLayout.jsx
+import React4, { useEffect as useEffect4, useState as useState4 } from "react";
+import { Outlet as Outlet2, useNavigate as useNavigate3, useParams } from "react-router-dom";
+import { Badge as Badge3, Button, Card, Group as Group3, Stack as Stack3, Text as Text3, TextInput, Title as Title2 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useSiteData.js
+import { useCallback, useEffect as useEffect3, useState as useState3 } from "react";
+function useSiteData(siteSeq) {
+  const [sites, setSites] = useState3([]);
+  const [sitePageNames, setSitePageNames] = useState3([]);
+  const [savingSiteMeta, setSavingSiteMeta] = useState3(false);
+  const [error, setError] = useState3("");
+  useEffect3(() => {
+    fetchJson("/api/Admin/Sites").then(setSites).catch((err) => logError("site-data:sites:error", err));
+  }, []);
+  useEffect3(() => {
+    if (!siteSeq) return;
+    fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`).then((data) => setSitePageNames(Array.isArray(data) ? data : [])).catch((err) => logError("site-data:page-names:error", err));
+  }, [siteSeq]);
+  const site = sites.find((s) => String(s.seq) === String(siteSeq)) ?? null;
+  const saveSiteMeta = useCallback(async (nextMeta) => {
+    if (!siteSeq) return null;
+    setSavingSiteMeta(true);
+    setError("");
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("abbr", nextMeta?.abbr ?? "");
+      payload.set("mainDomain", nextMeta?.mainDomain ?? "");
+      payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
+      payload.set(csrfToken.name, csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
+        body: payload.toString()
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      const updated = await response.json();
+      setSites((prev) => prev.map((s) => s.seq === updated.seq ? { ...s, ...updated } : s));
+      return updated;
+    } catch (err) {
+      logError("site-meta:save:error", err);
+      setError(err.message || String(err));
+      return null;
+    } finally {
+      setSavingSiteMeta(false);
+    }
+  }, [siteSeq]);
+  const refreshPageNames = useCallback(async () => {
+    if (!siteSeq) return [];
+    const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
+    const names = Array.isArray(data) ? data : [];
+    setSitePageNames(names);
+    return names;
+  }, [siteSeq]);
+  return { site, sites, sitePageNames, saveSiteMeta, savingSiteMeta, refreshPageNames, error };
+}
+
+// app/assets/js/admin/layout/SiteLayout.jsx
+function SiteLayout() {
+  const { siteSeq } = useParams();
+  const { me } = useAdminContext();
+  const navigate = useNavigate3();
+  const { site, sitePageNames, saveSiteMeta, savingSiteMeta, refreshPageNames, error } = useSiteData(siteSeq);
+  const [siteMetaForm, setSiteMetaForm] = useState4({ abbr: "", mainDomain: "", publicListedOrder: "" });
+  useEffect4(() => {
+    setSiteMetaForm({
+      abbr: site?.abbr ?? "",
+      mainDomain: site?.mainDomain ?? "",
+      publicListedOrder: site?.publicListedOrder == null ? "" : String(site.publicListedOrder)
+    });
+  }, [site]);
+  const selectedSiteDomainsText = (site?.domains ?? []).join(", ") || "-";
+  return /* @__PURE__ */ React4.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React4.createElement(Card, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React4.createElement(Title2, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React4.createElement(Badge3, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React4.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React4.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React4.createElement(Text3, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React4.createElement(Text3, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React4.createElement(Button, { variant: "light", size: "xs", onClick: () => navigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React4.createElement(Group3, { align: "end", mt: "sm" }, /* @__PURE__ */ React4.createElement(TextInput, { label: "Abbr", value: siteMetaForm.abbr, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, abbr: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React4.createElement(TextInput, { label: "Main Domain", value: siteMetaForm.mainDomain, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, mainDomain: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React4.createElement(TextInput, { label: "Public Listed Order", type: "number", min: "0", step: "0.01", placeholder: "empty means hidden", value: siteMetaForm.publicListedOrder, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React4.createElement(Button, { variant: "light", disabled: !site || !siteMetaForm.abbr.trim(), loading: savingSiteMeta, onClick: () => saveSiteMeta(siteMetaForm) }, "Save site meta")), error ? /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "red" }, error) : null)), /* @__PURE__ */ React4.createElement(Outlet2, { context: { site, siteSeq, sitePageNames, me, refreshPageNames } }));
+}
+
+// app/assets/js/admin/pages/DashboardPage.jsx
+import React8, { useEffect as useEffect5, useMemo as useMemo2 } from "react";
+import { useNavigate as useNavigate4 } from "react-router-dom";
+import { Anchor, Badge as Badge6, Button as Button3, Card as Card4, Group as Group6, SimpleGrid, Stack as Stack5, Text as Text6, ThemeIcon, Title as Title5 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useDashboardData.js
+import { useCallback as useCallback2, useState as useState5 } from "react";
+function useDashboardData() {
+  const [loading, setLoading] = useState5(true);
+  const [error, setError] = useState5("");
+  const [sites, setSites] = useState5([]);
+  const [allUsers, setAllUsers] = useState5([]);
+  const [dailyStats, setDailyStats] = useState5({ userCreated: [], pageCreated: [], pageEdited: [] });
+  const [recentChanges, setRecentChanges] = useState5([]);
+  const [topViewedPages, setTopViewedPages] = useState5([]);
+  const [memoryCacheStats, setMemoryCacheStats] = useState5([]);
+  const load = useCallback2(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
+        fetchJson("/api/Admin/Sites"),
+        fetchJson("/api/Admin/Users"),
+        fetchJson("/api/Admin/DailyStats"),
+        fetchJson("/api/Admin/RecentChanges?n=30"),
+        fetchJson("/api/Admin/TopViewedPages?n=30")
+      ]);
+      const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
+      setSites(siteData);
+      setAllUsers(allUserRows);
+      setRecentChanges(recentChangesData);
+      setTopViewedPages(topViewedPagesData);
+      setDailyStats({
+        userCreated: dailyStatsData?.userCreated ?? [],
+        pageCreated: dailyStatsData?.pageCreated ?? [],
+        pageEdited: dailyStatsData?.pageEdited ?? []
+      });
+    } catch (err) {
+      logError("dashboard:load:error", err);
+      setError(err.message || String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const loadMemoryCacheStats = useCallback2(async () => {
+    try {
+      const data = await fetchJson("/api/Admin/MemoryCacheStats");
+      setMemoryCacheStats(Array.isArray(data) ? data : []);
+    } catch (err) {
+      logError("memory-cache:load:error", err);
+    }
+  }, []);
+  return { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats };
+}
+
+// app/assets/js/site/siteWidgets.jsx
+import React5 from "react";
+import { Badge as Badge4, Button as Button2, Card as Card2, Divider as Divider2, Group as Group4, Table, Text as Text4, Title as Title3 } from "@mantine/core";
+function formatPublicListedOrder(value) {
+  return value === null || value === void 0 || value === "" ? "-" : String(value);
+}
+function SiteListCard({ sites, onNavigate }) {
+  return /* @__PURE__ */ React5.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Site List"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React5.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React5.createElement(Table, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table.Thead, null, /* @__PURE__ */ React5.createElement(Table.Tr, null, /* @__PURE__ */ React5.createElement(Table.Th, null, "Seq"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Name"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Abbr"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Main Domain"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Public Listed Order"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Domains"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Pages"), /* @__PURE__ */ React5.createElement(Table.Th, null, "Action"))), /* @__PURE__ */ React5.createElement(Table.Tbody, null, sites.map((site) => /* @__PURE__ */ React5.createElement(Table.Tr, { key: site.seq }, /* @__PURE__ */ React5.createElement(Table.Td, null, site.seq), /* @__PURE__ */ React5.createElement(Table.Td, null, site.name), /* @__PURE__ */ React5.createElement(Table.Td, null, site.abbr ?? "-"), /* @__PURE__ */ React5.createElement(Table.Td, null, site.mainDomain ?? "-"), /* @__PURE__ */ React5.createElement(Table.Td, null, formatPublicListedOrder(site.publicListedOrder)), /* @__PURE__ */ React5.createElement(Table.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React5.createElement(Table.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React5.createElement(Table.Td, null, /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
 }
 
 // app/assets/js/admin/mainWidgets.jsx
-import React3 from "react";
+import React7 from "react";
 import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Badge as Badge2, Card, Group as Group2, Progress, Stack as Stack2, Text as Text2, Title } from "@mantine/core";
+import { Badge as Badge5, Card as Card3, Group as Group5, Progress, Stack as Stack4, Text as Text5, Title as Title4 } from "@mantine/core";
+
+// app/assets/js/component/commonWidgets.jsx
+import React6 from "react";
+import { Table as Table2 } from "@mantine/core";
+function IconChevronUp({ size = 14 }) {
+  return /* @__PURE__ */ React6.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React6.createElement("path", { d: "M18 15l-6-6-6 6" }));
+}
+function IconSelector({ size = 14 }) {
+  return /* @__PURE__ */ React6.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React6.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React6.createElement("path", { d: "M16 15l-4 4-4-4" }));
+}
+function makeTable(headers, rows) {
+  return /* @__PURE__ */ React6.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React6.createElement(Table2.Thead, null, /* @__PURE__ */ React6.createElement(Table2.Tr, null, headers.map((header) => /* @__PURE__ */ React6.createElement(Table2.Th, { key: header }, header)))), /* @__PURE__ */ React6.createElement(Table2.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React6.createElement(Table2.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React6.createElement(Table2.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
+}
+
+// app/assets/js/admin/mainWidgets.jsx
 function normalizeDailyRows(rows) {
   return [...rows].map((row) => ({ ymd: row.ymd, count: Number(row.count ?? 0) })).sort((left, right) => left.ymd > right.ymd ? 1 : -1);
 }
 function Sparkline({ rows, color }) {
   const data = normalizeDailyRows(rows).slice(-30);
-  if (data.length === 0) return /* @__PURE__ */ React3.createElement(Text2, { size: "xs", c: "dimmed" }, "No data");
+  if (data.length === 0) return /* @__PURE__ */ React7.createElement(Text5, { size: "xs", c: "dimmed" }, "No data");
   const latest = data[data.length - 1]?.count ?? 0;
   const previous = data[data.length - 2]?.count ?? latest;
   const delta = latest - previous;
-  return /* @__PURE__ */ React3.createElement(Stack2, { gap: 4 }, /* @__PURE__ */ React3.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React3.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React3.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React3.createElement("defs", null, /* @__PURE__ */ React3.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React3.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React3.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React3.createElement(Tooltip, { cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React3.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React3.createElement(Group2, { justify: "space-between" }, /* @__PURE__ */ React3.createElement(Text2, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React3.createElement(Badge2, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
+  return /* @__PURE__ */ React7.createElement(Stack4, { gap: 4 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React7.createElement("defs", null, /* @__PURE__ */ React7.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React7.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React7.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React7.createElement(Tooltip, { cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React7.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React7.createElement(Group5, { justify: "space-between" }, /* @__PURE__ */ React7.createElement(Text5, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React7.createElement(Badge5, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
 }
 function StatTrendCard({ title, total, rows, color }) {
-  return /* @__PURE__ */ React3.createElement(Card, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React3.createElement(Stack2, { gap: 8 }, /* @__PURE__ */ React3.createElement(Group2, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React3.createElement(Text2, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React3.createElement(Badge2, { color, variant: "light" }, "30d")), /* @__PURE__ */ React3.createElement(Title, { order: 3 }, total), /* @__PURE__ */ React3.createElement(Sparkline, { rows, color })));
+  return /* @__PURE__ */ React7.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React7.createElement(Stack4, { gap: 8 }, /* @__PURE__ */ React7.createElement(Group5, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React7.createElement(Text5, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React7.createElement(Badge5, { color, variant: "light" }, "30d")), /* @__PURE__ */ React7.createElement(Title4, { order: 3 }, total), /* @__PURE__ */ React7.createElement(Sparkline, { rows, color })));
 }
 function MultiTrendChart({ series }) {
   const dateSet = /* @__PURE__ */ new Set();
   series.forEach((line) => normalizeDailyRows(line.rows).forEach((row) => dateSet.add(row.ymd)));
   const dates = [...dateSet].sort().slice(-30);
-  if (dates.length === 0) return /* @__PURE__ */ React3.createElement(Text2, { c: "dimmed", size: "sm" }, "\uCC28\uD2B8 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
+  if (dates.length === 0) return /* @__PURE__ */ React7.createElement(Text5, { c: "dimmed", size: "sm" }, "\uCC28\uD2B8 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.");
   const colorByName = {};
   const chartDataByDate = new Map(dates.map((date) => [date, { date }]));
   series.forEach((line) => {
@@ -264,23 +322,16 @@ function MultiTrendChart({ series }) {
     });
   });
   const chartData = dates.map((date) => chartDataByDate.get(date));
-  return /* @__PURE__ */ React3.createElement(Stack2, { gap: 8 }, /* @__PURE__ */ React3.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React3.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React3.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React3.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React3.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: { fontSize: 12 } }), /* @__PURE__ */ React3.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React3.createElement(Tooltip, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React3.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React3.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React3.createElement(Group2, { gap: 8 }, series.map((line) => /* @__PURE__ */ React3.createElement(Badge2, { key: line.name, color: line.color, variant: "light" }, line.name))));
+  return /* @__PURE__ */ React7.createElement(Stack4, { gap: 8 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React7.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React7.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(Tooltip, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React7.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React7.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React7.createElement(Group5, { gap: 8 }, series.map((line) => /* @__PURE__ */ React7.createElement(Badge5, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 
-// app/assets/js/site/siteWidgets.jsx
-import React4 from "react";
-import { Badge as Badge3, Button, Card as Card2, Divider as Divider2, Group as Group3, Table as Table2, Text as Text3, Title as Title2 } from "@mantine/core";
-function formatPublicListedOrder(value) {
-  return value === null || value === void 0 || value === "" ? "-" : String(value);
-}
-function SiteListCard({ sites, onNavigate }) {
-  return /* @__PURE__ */ React4.createElement(Card2, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React4.createElement(Group3, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React4.createElement(Title2, { order: 3 }, "Site List"), /* @__PURE__ */ React4.createElement(Badge3, { color: "indigo", variant: "light" }, sites.length, " sites")), /* @__PURE__ */ React4.createElement(Text3, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4. \uC0C1\uC138 \uC124\uC815\uC740 \uAC01 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC \uBC84\uD2BC\uC73C\uB85C \uC774\uB3D9\uD558\uC138\uC694."), /* @__PURE__ */ React4.createElement(Divider2, { mb: "md" }), /* @__PURE__ */ React4.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React4.createElement(Table2.Thead, null, /* @__PURE__ */ React4.createElement(Table2.Tr, null, /* @__PURE__ */ React4.createElement(Table2.Th, null, "Seq"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Name"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Abbr"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Main Domain"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Public Listed Order"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Domains"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Pages"), /* @__PURE__ */ React4.createElement(Table2.Th, null, "Action"))), /* @__PURE__ */ React4.createElement(Table2.Tbody, null, sites.map((site) => /* @__PURE__ */ React4.createElement(Table2.Tr, { key: site.seq }, /* @__PURE__ */ React4.createElement(Table2.Td, null, site.seq), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.name), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.abbr ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.mainDomain ?? "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, formatPublicListedOrder(site.publicListedOrder)), /* @__PURE__ */ React4.createElement(Table2.Td, null, (site.domains ?? []).join(", ") || "-"), /* @__PURE__ */ React4.createElement(Table2.Td, null, site.pageCount ?? 0), /* @__PURE__ */ React4.createElement(Table2.Td, null, /* @__PURE__ */ React4.createElement(Button, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`) }, "\uAD00\uB9AC")))))));
-}
+// app/assets/js/admin/utils.js
+import dayjs from "dayjs";
 
-// app/assets/js/admin.jsx
-var LOG_PREFIX = "[AdminUI]";
+// app/assets/js/admin/constants.js
 var CRAWLER_CACHE_PAGE_SIZE = 20;
 var ADMIN_PAGE_META_PAGE_SIZE = 20;
+var ACCESS_LOG_PAGE_SIZE = 20;
 var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
 var PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
 var PERMISSION_ACTION_DEFINITIONS = [
@@ -292,20 +343,16 @@ var PERMISSION_ACTION_DEFINITIONS = [
   { value: "Delete", action: 16 },
   { value: "Admin", action: 255 }
 ];
-var PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({ value, action }) => ({
-  value,
-  label: `${action} - ${toPascalCase(value)}`
-}));
-function logInfo(...args) {
-  console.log(LOG_PREFIX, ...args);
-}
-function logError(...args) {
-  console.error(LOG_PREFIX, ...args);
-}
+
+// app/assets/js/admin/utils.js
 function toPascalCase(value) {
   if (!value) return "";
   return String(value).replace(/(^|[-_\s]+)([a-z0-9])/g, (_match, _separator, character) => character.toUpperCase());
 }
+var PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({ value, action }) => ({
+  value,
+  label: `${action} - ${toPascalCase(value)}`
+}));
 function formatPermissionAction(actionName, action) {
   const definition = PERMISSION_ACTION_DEFINITIONS.find((item) => item.value === actionName || item.action === action);
   const resolvedActionName = actionName || definition?.value || String(action ?? "");
@@ -337,590 +384,351 @@ function formatCrawlerStatus(value) {
   }
   return String(value);
 }
-function routeToPage(pathname) {
-  if (/^\/Admin\/\d+\/AccessLog$/.test(pathname)) {
-    return "access-logs";
-  }
-  if (/^\/Admin\/Site\/\d+\/Config$/.test(pathname)) {
-    return "site-config";
-  }
-  if (/^\/Admin\/Site\/\d+\/Cache$/.test(pathname)) {
-    return "site-cache";
-  }
-  if (/^\/Admin\/Site\/\d+\/Permission$/.test(pathname)) {
-    return "site-permission";
-  }
-  if (/^\/Admin\/Site\/\d+\/Admins$/.test(pathname)) {
-    return "site-admins";
-  }
-  if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
-    return "site-detail";
-  }
-  if (pathname === "/Admin/User/UserViewHistory") {
-    return "user-views";
-  }
-  if (pathname === "/Admin/Site") {
-    return "sites";
-  }
-  if (pathname === "/Admin/User") {
-    return "all-users";
-  }
-  if (pathname === "/Admin/CrawlerCache") {
-    return "crawler-cache";
-  }
-  if (pathname === "/Admin/S3") {
-    return "s3-browser";
-  }
-  if (pathname === "/Admin/AccessLog") {
-    return "access-logs";
-  }
-  if (pathname === "/Admin/RecentChange") {
-    return "recent-changes";
-  }
-  if (pathname === "/Admin/Sites") {
-    return "sites";
-  }
-  if (pathname === "/Admin/AllUsers") {
-    return "all-users";
-  }
-  if (pathname === "/Admin/UserViews") {
-    return "user-views";
-  }
-  if (pathname === "/Admin/CrawlerCaches") {
-    return "crawler-cache";
-  }
-  if (pathname === "/Admin/S3Browser") {
-    return "s3-browser";
-  }
-  if (pathname === "/Admin/AccessLogs") {
-    return "access-logs";
-  }
-  if (pathname === "/Admin/RecentChanges") {
-    return "recent-changes";
-  }
-  return "dashboard";
+function resolveSiteUrl(row, siteDomainBySeq) {
+  const domainFromRow = typeof row.siteDomain === "string" ? row.siteDomain.trim() : "";
+  const domainFromSites = (siteDomainBySeq?.get(row.siteSeq) ?? "").trim();
+  const domain = domainFromRow || domainFromSites;
+  return domain ? `https://${domain}` : "";
 }
-function parseUserSeqFromPathname(pathname) {
-  if (pathname !== "/Admin/User/UserViewHistory") {
-    return 0;
+
+// app/assets/js/admin/pages/DashboardPage.jsx
+function DashboardPage() {
+  const { me } = useAdminContext();
+  const navigate = useNavigate4();
+  const { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats } = useDashboardData();
+  useEffect5(() => {
+    if (me === null) return;
+    if (me?.isAdmin) {
+      load();
+      loadMemoryCacheStats();
+    } else {
+      load();
+    }
+  }, [me]);
+  const siteDomainBySeq = useMemo2(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
+  if (loading) return null;
+  if (!me?.isAdmin) {
+    return /* @__PURE__ */ React8.createElement(Stack5, { gap: "md" }, /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Title5, { order: 3, mb: "xs" }, "\uB0B4 \uB2F4\uB2F9 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React8.createElement(Text6, { size: "sm", c: "dimmed", mb: "md" }, "SiteAdmin\uC73C\uB85C \uB4F1\uB85D\uB41C \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, sites.map((site) => /* @__PURE__ */ React8.createElement(SiteListCard, { key: site.seq, sites: [site], onNavigate: (href) => navigate(href) }))), sites.length === 0 && /* @__PURE__ */ React8.createElement(Text6, { c: "dimmed", size: "sm" }, "\uB2F4\uB2F9 \uC0AC\uC774\uD2B8\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.")));
   }
-  const params = new URLSearchParams(window.location.search);
-  const userSeqBySeq = Number.parseInt(params.get("seq") ?? "", 10);
-  if (Number.isFinite(userSeqBySeq) && userSeqBySeq > 0) {
-    return userSeqBySeq;
-  }
-  const userSeqByLegacyQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
-  return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
+  return /* @__PURE__ */ React8.createElement(Stack5, { gap: "lg" }, /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack5, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text6, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React8.createElement(Title5, { order: 2 }, sites.length)), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack5, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text6, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React8.createElement(Title5, { order: 2 }, allUsers.length)), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack5, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text6, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React8.createElement(Title5, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E")))), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title5, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React8.createElement(Badge6, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React8.createElement(Button3, { variant: "light", onClick: () => navigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React8.createElement(Button3, { variant: "light", onClick: () => navigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"))), /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "New Users", color: "blue", rows: dailyStats.userCreated, total: dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0) }), /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "New Pages", color: "indigo", rows: dailyStats.pageCreated, total: dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0) }), /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "Page Edits", color: "grape", rows: dailyStats.pageEdited, total: dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0) })), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title5, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React8.createElement(Badge6, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React8.createElement(MultiTrendChart, { series: [{ name: "New Users", color: "blue", rows: dailyStats.userCreated }, { name: "New Pages", color: "indigo", rows: dailyStats.pageCreated }, { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }] })), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title5, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React8.createElement(Badge6, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 30))), makeTable(["Rank", "Site", "Page", "Views", "Last Viewed"], topViewedPages.slice(0, 30).map((row, index) => {
+    const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
+    const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
+    return [index + 1, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName, row.viewCount, row.lastViewedAt];
+  }))), /* @__PURE__ */ React8.createElement(Card4, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group6, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title5, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React8.createElement(Badge6, { color: "violet", variant: "light" }, recentChanges.length)), makeTable(["When", "Site", "Page", "Revision", "Editor", "Comment"], recentChanges.map((row) => {
+    const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
+    const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+    const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", row.comment || "-"];
+  }))));
 }
-function parseSiteSeqFromPathname2(pathname) {
-  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission|Admins))?$/);
-  if (!matched) {
-    return "";
-  }
-  const siteSeq = Number.parseInt(matched[1], 10);
-  return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
+
+// app/assets/js/admin/pages/SitesPage.jsx
+import React9, { useEffect as useEffect6, useState as useState6 } from "react";
+import { useNavigate as useNavigate5 } from "react-router-dom";
+function SitesPage() {
+  const navigate = useNavigate5();
+  const [sites, setSites] = useState6([]);
+  useEffect6(() => {
+    fetchJson("/api/Admin/Sites").then(setSites).catch((err) => logError("sites:load:error", err));
+  }, []);
+  return /* @__PURE__ */ React9.createElement(SiteListCard, { sites, onNavigate: (href) => navigate(href) });
 }
-function parseSiteSeqForAccessLogPathname(pathname) {
-  const matched = pathname.match(/^\/Admin\/(\d+)\/AccessLog$/);
-  if (!matched) {
-    return "";
-  }
-  const siteSeq = Number.parseInt(matched[1], 10);
-  return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
-}
-function pageTitleByKey(page) {
-  if (page === "recent-changes") {
-    return "RecentChanges";
-  }
-  if (page === "all-users" || page === "user-views") {
-    return "User";
-  }
-  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins" || page === "sites") {
-    return "Site";
-  }
-  if (page === "access-logs") {
-    return "AccessLog";
-  }
-  if (page === "s3-browser") {
-    return "S3 Browser";
-  }
-  if (page === "crawler-cache") {
-    return "Crawler Cache";
-  }
-  return "Dashboard";
-}
-function UserProfileCell({ user }) {
-  const fallbackText = user?.nickname?.[0] || user?.email?.[0] || "?";
-  return /* @__PURE__ */ React5.createElement(Group4, { gap: 8, wrap: "nowrap" }, /* @__PURE__ */ React5.createElement(Avatar, { src: user?.profileImageUrl || null, radius: "xl", size: "sm" }, fallbackText), /* @__PURE__ */ React5.createElement(Stack3, { gap: 0 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, user?.nickname || "-"), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, user?.email || "-")));
-}
-async function fetchJson2(url) {
-  logInfo("fetch:start", url);
-  const response = await fetch(url, { credentials: "same-origin" });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-  const data = await response.json();
-  logInfo("fetch:success", url, { count: Array.isArray(data) ? data.length : void 0 });
-  return data;
-}
-async function fetchCsrfToken() {
-  const response = await fetch("/api/csrf", { credentials: "same-origin" });
-  if (!response.ok) {
-    throw new Error(`CSRF HTTP ${response.status}`);
-  }
-  const token = await response.json();
-  return {
-    name: token?.name ?? "csrfToken",
-    value: token?.value ?? ""
-  };
-}
-function useAdminData(page, me) {
-  const [loading, setLoading] = useState2(true);
-  const [sites, setSites] = useState2([]);
-  const [allUsers, setAllUsers] = useState2([]);
-  const [allUserCount, setAllUserCount] = useState2(0);
-  const [dailyStats, setDailyStats] = useState2({
-    userCreated: [],
-    pageCreated: [],
-    pageEdited: []
-  });
-  const [recentChanges, setRecentChanges] = useState2([]);
-  const [accessLogs, setAccessLogs] = useState2([]);
-  const [accessLogCount, setAccessLogCount] = useState2(0);
-  const [topViewedPages, setTopViewedPages] = useState2([]);
-  const [userViewHistories, setUserViewHistories] = useState2([]);
-  const [loadingUserViewHistories, setLoadingUserViewHistories] = useState2(false);
-  const [clearingSiteSeq, setClearingSiteSeq] = useState2(0);
-  const [siteFaviconUrl, setSiteFaviconUrl] = useState2("/public/favicon.png");
-  const [siteFaviconObjectKey, setSiteFaviconObjectKey] = useState2("");
-  const [uploadingFavicon, setUploadingFavicon] = useState2(false);
-  const [deletingFavicon, setDeletingFavicon] = useState2(false);
-  const [siteTheme, setSiteTheme] = useState2({
-    headerBackgroundColor: "",
-    headerForegroundColor: "",
-    bodyBackgroundColor: "",
-    bodyForegroundColor: "",
-    footerBackgroundColor: "",
-    footerForegroundColor: ""
-  });
-  const [savingSiteTheme, setSavingSiteTheme] = useState2(false);
-  const [calculatingSiteSeq, setCalculatingSiteSeq] = useState2(0);
-  const [memoryCacheStats, setMemoryCacheStats] = useState2([]);
-  const [error, setError] = useState2("");
-  const [s3Items, setS3Items] = useState2([]);
-  const [loadingS3, setLoadingS3] = useState2(false);
-  const [deletingS3, setDeletingS3] = useState2(false);
-  const [selectedS3Keys, setSelectedS3Keys] = useState2([]);
-  const [expandedS3Nodes, setExpandedS3Nodes] = useState2({});
-  const [crawlerCaches, setCrawlerCaches] = useState2([]);
-  const [crawlerCacheCount, setCrawlerCacheCount] = useState2(0);
-  const [refreshingCrawlerUrl, setRefreshingCrawlerUrl] = useState2("");
-  const [deletingCrawlerUrl, setDeletingCrawlerUrl] = useState2("");
-  const [crawlerSearchInput, setCrawlerSearchInput] = useState2("");
-  const [crawlerSearch, setCrawlerSearch] = useState2("");
-  const [crawlerPage, setCrawlerPage] = useState2(1);
-  const [crawlerSortBy, setCrawlerSortBy] = useState2("id");
-  const [crawlerSortOrder, setCrawlerSortOrder] = useState2("desc");
-  const [adminPageMetaRows, setAdminPageMetaRows] = useState2([]);
-  const [adminPageMetaCount, setAdminPageMetaCount] = useState2(0);
-  const [permissionRows, setPermissionRows] = useState2([]);
-  const [permissionDiagnose, setPermissionDiagnose] = useState2(null);
-  const [savingPermission, setSavingPermission] = useState2(false);
-  const [deletingPermissionKey, setDeletingPermissionKey] = useState2("");
-  const [siteAdmins, setSiteAdmins] = useState2([]);
-  const [siteAdminUserSeqInput, setSiteAdminUserSeqInput] = useState2("");
-  const [addingSiteAdmin, setAddingSiteAdmin] = useState2(false);
-  const [deletingSiteAdminUserSeq, setDeletingSiteAdminUserSeq] = useState2(0);
-  const loadAdminPageMetaList = useCallback(async ({
-    siteSeq,
-    page: page2 = 1,
-    pageSize = ADMIN_PAGE_META_PAGE_SIZE,
-    search = "",
-    sortBy = "dateUpdated",
-    sortOrder = "desc"
-  } = {}) => {
-    if (!siteSeq) {
-      setAdminPageMetaRows([]);
-      setAdminPageMetaCount(0);
-      return;
-    }
-    const params = new URLSearchParams({
-      page: String(page2),
-      pageSize: String(pageSize),
-      search,
-      sortBy,
-      sortOrder
-    });
-    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageMetaList?${params.toString()}`);
-    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-    setAdminPageMetaRows(rows);
-    setAdminPageMetaCount(Number(data?.count ?? rows.length));
-  }, []);
-  const loadPermissions = useCallback(async (siteSeq) => {
-    if (!siteSeq) {
-      setPermissionRows([]);
-      return;
-    }
-    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
-    setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
-  }, []);
-  const savePermission = useCallback(async (siteSeq, permission) => {
-    if (!siteSeq) return false;
-    setSavingPermission(true);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
-      payload.set(csrfToken.name, csrfToken.value);
-      payload.set("csrfToken", csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
-        body: payload.toString()
-      });
-      if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-      }
-      await loadPermissions(siteSeq);
-      return true;
-    } catch (caughtError) {
-      logError("permission:save:error", caughtError);
-      setError(caughtError.message || String(caughtError));
-      return false;
-    } finally {
-      setSavingPermission(false);
-    }
-  }, [loadPermissions]);
-  const deletePermission = useCallback(async (siteSeq, permission) => {
-    if (!siteSeq || !permission) return;
-    const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
-    setDeletingPermissionKey(key);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const params = new URLSearchParams({
-        targetType: permission.targetType ?? "",
-        target: permission.target ?? "",
-        actorType: permission.actorType ?? "",
-        actor: permission.actor ?? ""
-      });
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
-      });
-      if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-      }
-      await loadPermissions(siteSeq);
-    } catch (caughtError) {
-      logError("permission:delete:error", caughtError);
-      setError(caughtError.message || String(caughtError));
-    } finally {
-      setDeletingPermissionKey("");
-    }
-  }, [loadPermissions]);
-  const loadSiteAdmins = useCallback(async (siteSeq) => {
-    if (!siteSeq) {
-      setSiteAdmins([]);
-      return;
-    }
-    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`);
-    setSiteAdmins(Array.isArray(data) ? data : []);
-  }, []);
-  const insertSiteAdmin = useCallback(async (siteSeq, userSeq) => {
-    if (!siteSeq || !userSeq) return false;
-    setAddingSiteAdmin(true);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("user", String(userSeq));
-      payload.set(csrfToken.name, csrfToken.value);
-      payload.set("csrfToken", csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
-        body: payload.toString()
-      });
-      if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-      }
-      await loadSiteAdmins(siteSeq);
-      return true;
-    } catch (caughtError) {
-      logError("site-admin:insert:error", caughtError);
-      setError(caughtError.message || String(caughtError));
-      return false;
-    } finally {
-      setAddingSiteAdmin(false);
-    }
-  }, [loadSiteAdmins]);
-  const deleteSiteAdmin = useCallback(async (siteSeq, userSeq) => {
-    if (!siteSeq || !userSeq) return;
-    setDeletingSiteAdminUserSeq(userSeq);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await loadSiteAdmins(siteSeq);
-    } catch (caughtError) {
-      logError("site-admin:delete:error", caughtError);
-      setError(caughtError.message || String(caughtError));
-    } finally {
-      setDeletingSiteAdminUserSeq(0);
-    }
-  }, [loadSiteAdmins]);
-  const diagnosePermission = useCallback(async (siteSeq, pageName, actor, action) => {
-    if (!siteSeq) return;
-    const params = new URLSearchParams({
-      pageName: pageName ?? "",
-      actor: actor ?? "",
-      action: action || "Read"
-    });
-    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
-    setPermissionDiagnose(data);
-  }, []);
-  const loadAccessLogs = useCallback(async ({
-    page: page2 = 1,
-    pageSize = 20,
-    search = "",
-    sortBy = "seq",
-    sortOrder = "desc",
-    siteSeq = ""
-  } = {}) => {
-    const params = new URLSearchParams({
-      page: String(page2),
-      pageSize: String(pageSize),
-      search,
-      sortBy,
-      sortOrder
-    });
-    if (siteSeq) {
-      params.set("siteSeq", String(siteSeq));
-    }
-    const data = await fetchJson2(`/api/Admin/AccessLogs?${params.toString()}`);
-    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-    setAccessLogs(rows);
-    setAccessLogCount(Number(data?.count ?? rows.length));
-  }, []);
-  const loadS3Objects = useCallback(async () => {
-    setLoadingS3(true);
-    try {
-      const params = new URLSearchParams({ prefix: "", maxKeys: "5000", recursive: "true" });
-      const data = await fetchJson2(`/api/Admin/S3Objects?${params.toString()}`);
-      setS3Items(Array.isArray(data?.items) ? data.items : []);
-      setSelectedS3Keys([]);
-      setExpandedS3Nodes({ "__root__": true });
-    } catch (caughtError) {
-      logError("s3:load:error", caughtError);
-      setError(`S3 \uC870\uD68C \uC2E4\uD328: ${caughtError.message}`);
-    } finally {
-      setLoadingS3(false);
-    }
-  }, []);
-  const toggleS3Node = useCallback((key) => {
-    setExpandedS3Nodes((prev) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
-  const expandAllS3Nodes = useCallback(() => {
-    const next = { "__root__": true };
-    (Array.isArray(s3Items) ? s3Items : []).filter((item) => !item.isDirectory).forEach((item) => {
-      const parts = String(item.key || "").split("/").filter(Boolean);
-      for (let i = 1; i < parts.length; i += 1) {
-        next[parts.slice(0, i).join("/")] = true;
-      }
-    });
-    setExpandedS3Nodes(next);
-  }, [s3Items]);
-  const deleteS3Selected = useCallback(async () => {
-    if (selectedS3Keys.length === 0) return;
-    setDeletingS3(true);
-    try {
-      const csrf = await fetchCsrfToken();
-      const response = await fetch("/api/Admin/S3Objects", {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value },
-        body: JSON.stringify({ keys: selectedS3Keys })
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await loadS3Objects();
-    } catch (caughtError) {
-      logError("s3:delete:error", caughtError);
-      setError(`S3 \uC0AD\uC81C \uC2E4\uD328: ${caughtError.message}`);
-    } finally {
-      setDeletingS3(false);
-    }
-  }, [loadS3Objects, selectedS3Keys]);
-  const downloadS3Object = useCallback(async (key) => {
-    try {
-      const params = new URLSearchParams({ key });
-      const data = await fetchJson2(`/api/Admin/S3DownloadUrl?${params.toString()}`);
-      if (data?.url) {
-        window.open(data.url, "_blank", "noopener,noreferrer");
-      }
-    } catch (caughtError) {
-      logError("s3:download:error", caughtError);
-      setError(`\uB2E4\uC6B4\uB85C\uB4DC URL \uC0DD\uC131 \uC2E4\uD328: ${caughtError.message}`);
-    }
-  }, []);
-  const loadAllUsers = useCallback(async ({
-    page: page2 = 1,
-    pageSize = 20,
-    search = "",
-    sortBy = "seq",
-    sortOrder = "desc"
-  } = {}) => {
-    const params = new URLSearchParams({
-      page: String(page2),
-      pageSize: String(pageSize),
-      search,
-      sortBy,
-      sortOrder
-    });
-    const data = await fetchJson2(`/api/Admin/Users?${params.toString()}`);
-    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-    setAllUsers(rows);
-    setAllUserCount(Number(data?.count ?? rows.length));
-  }, []);
-  const loadCrawlerCaches = useCallback(async ({
-    page: page2 = 1,
-    pageSize = CRAWLER_CACHE_PAGE_SIZE,
-    search = "",
-    sortBy = "id",
-    sortOrder = "desc"
-  } = {}) => {
-    const params = new URLSearchParams({
-      page: String(page2),
-      pageSize: String(pageSize),
-      search,
-      sortBy,
-      sortOrder
-    });
-    const data = await fetchJson2(`/api/Admin/CrawlerCache?${params.toString()}`);
-    const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-    setCrawlerCaches(rows);
-    setCrawlerCacheCount(Number(data?.count ?? rows.length));
-  }, []);
-  const refreshCrawlerCache = useCallback(async (url) => {
-    setRefreshingCrawlerUrl(url);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("url", url);
-      payload.set(csrfToken.name, csrfToken.value);
-      payload.set("csrfToken", csrfToken.value);
-      const response = await fetch("/api/Admin/CrawlerCache/Refresh", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
-        body: payload.toString()
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await loadCrawlerCaches();
-    } finally {
-      setRefreshingCrawlerUrl("");
-    }
-  }, [loadCrawlerCaches]);
-  const deleteCrawlerCache = useCallback(async (url) => {
-    setDeletingCrawlerUrl(url);
-    try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      await loadCrawlerCaches();
-    } finally {
-      setDeletingCrawlerUrl("");
-    }
-  }, [loadCrawlerCaches]);
-  const loadRecentChanges = useCallback(async (n = 50) => {
-    const data = await fetchJson2(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
-    setRecentChanges(data);
-  }, []);
-  const loadUserViewHistories = useCallback(async (userSeq, n = 200) => {
-    setLoadingUserViewHistories(true);
-    try {
-      const clampedN = Math.min(1e3, Math.max(1, Number.parseInt(String(n), 10) || 200));
-      const data = await fetchJson2(
-        `/api/Admin/UserViews?userSeq=${encodeURIComponent(userSeq)}&n=${encodeURIComponent(clampedN)}`
-      );
-      setUserViewHistories(data);
-    } finally {
-      setLoadingUserViewHistories(false);
-    }
-  }, []);
-  const loadDashboard = useCallback(async () => {
-    const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
-      fetchJson2("/api/Admin/Sites"),
-      fetchJson2("/api/Admin/Users"),
-      fetchJson2("/api/Admin/DailyStats"),
-      fetchJson2("/api/Admin/RecentChanges?n=30"),
-      fetchJson2("/api/Admin/TopViewedPages?n=30")
-    ]);
-    const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
-    setSites(siteData);
-    setAllUsers(allUserRows);
-    setRecentChanges(recentChangesData);
-    setTopViewedPages(topViewedPagesData);
-    setDailyStats({
-      userCreated: dailyStatsData?.userCreated ?? [],
-      pageCreated: dailyStatsData?.pageCreated ?? [],
-      pageEdited: dailyStatsData?.pageEdited ?? []
-    });
-  }, []);
-  const clearSiteCache = useCallback(async (siteSeq) => {
-    setClearingSiteSeq(siteSeq);
+
+// app/assets/js/admin/pages/AllUsersPage.jsx
+import React11, { useEffect as useEffect7, useState as useState8 } from "react";
+import { useNavigate as useNavigate6 } from "react-router-dom";
+import { Badge as Badge7, Button as Button4, Card as Card5, Divider as Divider3, Group as Group8, Text as Text8, TextInput as TextInput2, Title as Title6 } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/useAllUsersData.js
+import { useCallback as useCallback3, useState as useState7 } from "react";
+function useAllUsersData() {
+  const [loading, setLoading] = useState7(true);
+  const [error, setError] = useState7("");
+  const [allUsers, setAllUsers] = useState7([]);
+  const [allUserCount, setAllUserCount] = useState7(0);
+  const loadAllUsers = useCallback3(async ({ page = 1, pageSize = ACCESS_LOG_PAGE_SIZE, search = "", sortBy = "seq", sortOrder = "desc" } = {}) => {
+    setLoading(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/cache/${siteSeq}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: {
-          "Csrf-Token": csrfToken.value,
-          "X-CSRF-Token": csrfToken.value
-        }
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-    } catch (caughtError) {
-      logError("cache:clear:error", siteSeq, caughtError);
-      setError(caughtError.message || String(caughtError));
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
+      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      setAllUsers(rows);
+      setAllUserCount(Number(data?.count ?? rows.length));
+    } catch (err) {
+      logError("all-users:load:error", err);
+      setError(err.message || String(err));
     } finally {
-      setClearingSiteSeq(0);
+      setLoading(false);
     }
   }, []);
-  const loadSiteFavicon = useCallback(async (siteSeq) => {
+  return { loading, error, allUsers, allUserCount, loadAllUsers };
+}
+
+// app/assets/js/admin/components/UserProfileCell.jsx
+import React10 from "react";
+import { Avatar, Group as Group7, Stack as Stack6, Text as Text7 } from "@mantine/core";
+function UserProfileCell({ user }) {
+  const fallbackText = user?.nickname?.[0] || user?.email?.[0] || "?";
+  return /* @__PURE__ */ React10.createElement(Group7, { gap: 8, wrap: "nowrap" }, /* @__PURE__ */ React10.createElement(Avatar, { src: user?.profileImageUrl || null, radius: "xl", size: "sm" }, fallbackText), /* @__PURE__ */ React10.createElement(Stack6, { gap: 0 }, /* @__PURE__ */ React10.createElement(Text7, { size: "sm", fw: 600 }, user?.nickname || "-"), /* @__PURE__ */ React10.createElement(Text7, { size: "xs", c: "dimmed" }, user?.email || "-")));
+}
+
+// app/assets/js/admin/pages/AllUsersPage.jsx
+function AllUsersPage() {
+  const navigate = useNavigate6();
+  const { loading, allUsers, allUserCount, loadAllUsers } = useAllUsersData();
+  const [page, setPage] = useState8(1);
+  const [searchInput, setSearchInput] = useState8("");
+  const [sortBy, setSortBy] = useState8("seq");
+  const [sortOrder, setSortOrder] = useState8("desc");
+  const totalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
+  useEffect7(() => {
+    loadAllUsers();
+  }, []);
+  return /* @__PURE__ */ React11.createElement(Card5, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React11.createElement(Group8, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React11.createElement(Title6, { order: 3 }, "All Users"), /* @__PURE__ */ React11.createElement(Badge7, { color: "blue", variant: "light" }, allUserCount, " users")), /* @__PURE__ */ React11.createElement(Text8, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React11.createElement(Divider3, { mb: "md" }), /* @__PURE__ */ React11.createElement(Group8, { mb: "sm", align: "end" }, /* @__PURE__ */ React11.createElement(TextInput2, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "email, nickname, seq" }), /* @__PURE__ */ React11.createElement(Button4, { variant: "light", onClick: () => {
+    setPage(1);
+    loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React11.createElement(
+    DataTable,
+    {
+      sortIcons: { sorted: /* @__PURE__ */ React11.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React11.createElement(IconSelector, { size: 14 }) },
+      withTableBorder: true,
+      striped: true,
+      highlightOnHover: true,
+      records: allUsers,
+      columns: [
+        { accessor: "seq", title: "Seq", sortable: true },
+        { accessor: "profile", title: "Profile", render: (row) => /* @__PURE__ */ React11.createElement(UserProfileCell, { user: row }) },
+        { accessor: "email", title: "Email", sortable: true },
+        { accessor: "nickname", title: "Nickname", sortable: true },
+        { accessor: "created", title: "Created", sortable: true },
+        { accessor: "updated", title: "Updated", sortable: true },
+        { accessor: "visitCount", title: "Visits", sortable: true },
+        { accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-" },
+        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React11.createElement(Button4, { size: "xs", variant: "light", onClick: () => navigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`) }, "\uC5F4\uB78C \uC774\uB825") }
+      ],
+      sortStatus: { columnAccessor: sortBy, direction: sortOrder },
+      onSortStatusChange: (next) => {
+        const dir = next.direction ?? "desc";
+        setPage(1);
+        setSortBy(next.columnAccessor);
+        setSortOrder(dir);
+        loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy: next.columnAccessor, sortOrder: dir });
+      },
+      totalRecords: allUserCount,
+      recordsPerPage: ACCESS_LOG_PAGE_SIZE,
+      page,
+      onPageChange: (nextPage) => {
+        setPage(nextPage);
+        loadAllUsers({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
+      },
+      paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+      minHeight: 380
+    }
+  ), /* @__PURE__ */ React11.createElement(Text8, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", page, " / ", totalPages));
+}
+
+// app/assets/js/admin/pages/UserViewsPage.jsx
+import React12, { useEffect as useEffect8, useMemo as useMemo3 } from "react";
+import { useNavigate as useNavigate7, useSearchParams } from "react-router-dom";
+import { Anchor as Anchor2, Badge as Badge8, Button as Button5, Card as Card6, Group as Group9, Loader, Text as Text9, Title as Title7 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useUserViewsData.js
+import { useCallback as useCallback4, useState as useState9 } from "react";
+function useUserViewsData() {
+  const [loading, setLoading] = useState9(false);
+  const [userViewHistories, setUserViewHistories] = useState9([]);
+  const loadUserViewHistories = useCallback4(async (userSeq, n = 200) => {
+    setLoading(true);
+    try {
+      const clampedN = Math.min(1e3, Math.max(1, Number.parseInt(String(n), 10) || 200));
+      const data = await fetchJson(`/api/Admin/UserViews?userSeq=${encodeURIComponent(userSeq)}&n=${encodeURIComponent(clampedN)}`);
+      setUserViewHistories(data);
+    } catch (err) {
+      logError("user-views:load:error", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  return { loading, userViewHistories, loadUserViewHistories };
+}
+
+// app/assets/js/admin/pages/UserViewsPage.jsx
+import { useState as useState10 } from "react";
+function UserViewsPage() {
+  const navigate = useNavigate7();
+  const [searchParams] = useSearchParams();
+  const { loading, userViewHistories, loadUserViewHistories } = useUserViewsData();
+  const [allUsers, setAllUsers] = useState10([]);
+  const userSeq = useMemo3(() => {
+    const bySeq = Number.parseInt(searchParams.get("seq") ?? "", 10);
+    if (Number.isFinite(bySeq) && bySeq > 0) return bySeq;
+    const byLegacy = Number.parseInt(searchParams.get("userSeq") ?? "", 10);
+    return Number.isFinite(byLegacy) && byLegacy > 0 ? byLegacy : 0;
+  }, [searchParams]);
+  const selectedUser = useMemo3(() => allUsers.find((u) => u.seq === userSeq) ?? null, [allUsers, userSeq]);
+  useEffect8(() => {
+    fetchJson("/api/Admin/Users").then((data) => {
+      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      setAllUsers(rows);
+    }).catch((err) => logError("user-views:users:error", err));
+  }, []);
+  useEffect8(() => {
+    if (userSeq > 0) loadUserViewHistories(userSeq, 200);
+  }, [userSeq]);
+  return /* @__PURE__ */ React12.createElement(Card6, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React12.createElement(Group9, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React12.createElement(Title7, { order: 3 }, "User View Histories"), /* @__PURE__ */ React12.createElement(Badge8, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React12.createElement(Text9, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React12.createElement(Group9, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React12.createElement(Button5, { variant: "light", size: "xs", onClick: () => navigate("/Admin/User") }, "\u2190 User"), selectedUser ? /* @__PURE__ */ React12.createElement(Group9, { gap: 8 }, /* @__PURE__ */ React12.createElement(Text9, { size: "sm" }, "\uC0AC\uC6A9\uC790:"), /* @__PURE__ */ React12.createElement(UserProfileCell, { user: selectedUser })) : /* @__PURE__ */ React12.createElement(Text9, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loading ? /* @__PURE__ */ React12.createElement(Group9, null, /* @__PURE__ */ React12.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React12.createElement(Text9, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
+    ["When", "Site", "Page", "History Seq"],
+    userViewHistories.map((history) => {
+      const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";
+      const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(history.pageName)}` : "";
+      return [history.viewedAt, siteUrl ? /* @__PURE__ */ React12.createElement(Anchor2, { href: siteUrl, target: "_blank" }, history.siteName, " (#", history.site, ")") : `${history.siteName} (#${history.site})`, pageUrl ? /* @__PURE__ */ React12.createElement(Anchor2, { href: pageUrl, target: "_blank" }, history.pageName) : history.pageName, history.seq];
+    })
+  ));
+}
+
+// app/assets/js/admin/pages/SiteDetailPage.jsx
+import React13, { useEffect as useEffect9, useState as useState12 } from "react";
+import { useOutletContext } from "react-router-dom";
+import { Badge as Badge9, Button as Button6, Card as Card7, Group as Group10, Text as Text10, Title as Title8 } from "@mantine/core";
+import { DataTable as DataTable2 } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/useAdminPageMetaData.js
+import { useCallback as useCallback5, useState as useState11 } from "react";
+function useAdminPageMetaData(siteSeq) {
+  const [rows, setRows] = useState11([]);
+  const [count, setCount] = useState11(0);
+  const load = useCallback5(async ({ page = 1, pageSize = ADMIN_PAGE_META_PAGE_SIZE, search = "", sortBy = "dateUpdated", sortOrder = "desc" } = {}) => {
     if (!siteSeq) {
-      setSiteFaviconUrl("/public/favicon.png");
-      setSiteFaviconObjectKey("");
+      setRows([]);
+      setCount(0);
       return;
     }
     try {
-      const data = await fetchJson2(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`);
-      setSiteFaviconUrl(data?.faviconUrl || "/public/favicon.png");
-      setSiteFaviconObjectKey(data?.objectKey || "");
-    } catch (caughtError) {
-      logError("favicon:load:error", caughtError);
-      setError(caughtError.message || String(caughtError));
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageMetaList?${params.toString()}`);
+      const result = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      setRows(result);
+      setCount(Number(data?.count ?? result.length));
+    } catch (err) {
+      logError("page-meta:load:error", err);
     }
-  }, []);
-  const uploadSiteFavicon = useCallback(async (file, siteSeq) => {
-    if (!file || !siteSeq) {
+  }, [siteSeq]);
+  return { rows, count, load };
+}
+
+// app/assets/js/admin/pages/SiteDetailPage.jsx
+import { Anchor as Anchor3, Image } from "@mantine/core";
+function SiteDetailPage() {
+  const { site, siteSeq, sitePageNames, refreshPageNames } = useOutletContext();
+  const { rows, count, load } = useAdminPageMetaData(siteSeq);
+  const [metaPage, setMetaPage] = useState12(1);
+  const [searchInput, setSearchInput] = useState12("");
+  const [search, setSearch] = useState12("");
+  const [sortBy, setSortBy] = useState12("dateUpdated");
+  const [sortOrder, setSortOrder] = useState12("desc");
+  const [calculating, setCalculating] = useState12(false);
+  const [calculateMessage, setCalculateMessage] = useState12("");
+  const totalPages = Math.max(1, Math.ceil(count / ADMIN_PAGE_META_PAGE_SIZE));
+  useEffect9(() => {
+    if (siteSeq) load({ siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: "", sortBy: "dateUpdated", sortOrder: "desc" });
+  }, [siteSeq]);
+  const runCalculate = async (pageName) => {
+    if (!siteSeq) return;
+    setCalculating(true);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const suffix = pageName?.trim() ? `?pageName=${encodeURIComponent(pageName.trim())}` : "";
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, { method: "POST", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }, body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}` });
+      if (!response.ok) {
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
+      }
+      return await response.json();
+    } catch (err) {
+      logError("site:calculate:error", err);
+      return null;
+    } finally {
+      setCalculating(false);
+    }
+  };
+  return /* @__PURE__ */ React13.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React13.createElement(Group10, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React13.createElement(Title8, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React13.createElement(Badge9, { color: "indigo", variant: "light" }, count, " rows")), /* @__PURE__ */ React13.createElement(Group10, { mb: "md" }, /* @__PURE__ */ React13.createElement("input", { type: "text", value: searchInput, onChange: (e) => setSearchInput(e.target.value), placeholder: "page name, image", style: { border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px" } }), /* @__PURE__ */ React13.createElement(Button6, { mt: 22, variant: "filled", onClick: () => {
+    setMetaPage(1);
+    setSearch(searchInput);
+    load({ siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React13.createElement(
+    DataTable2,
+    {
+      withTableBorder: true,
+      borderRadius: "md",
+      striped: true,
+      highlightOnHover: true,
+      records: rows,
+      columns: [
+        { accessor: "name", title: "Page", sortable: true },
+        { accessor: "revision", title: "Revision", sortable: true },
+        { accessor: "image", title: "Image", sortable: true, render: (row) => row.image ? /* @__PURE__ */ React13.createElement(Anchor3, { href: row.image, target: "_blank", rel: "noopener" }, /* @__PURE__ */ React13.createElement(Image, { src: row.image, alt: `${row.name} image`, h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" })) : "-" },
+        { accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
+        { accessor: "size", title: "Size", sortable: true },
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React13.createElement(Button6, { size: "xs", variant: "light", color: "teal", disabled: !siteSeq, loading: calculating, onClick: async () => {
+          const res = await runCalculate(row.name);
+          if (res) setCalculateMessage(`\uC120\uD0DD \uD398\uC774\uC9C0: ${res?.pageName ?? row.name} (queued)`);
+        } }, "\uC7AC\uACC4\uC0B0") }
+      ],
+      sortStatus: { columnAccessor: sortBy, direction: sortOrder },
+      onSortStatusChange: (next) => {
+        const dir = next.direction ?? "desc";
+        setMetaPage(1);
+        setSortBy(next.columnAccessor);
+        setSortOrder(dir);
+        load({ siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search, sortBy: next.columnAccessor, sortOrder: dir });
+      },
+      totalRecords: count,
+      recordsPerPage: ADMIN_PAGE_META_PAGE_SIZE,
+      page: metaPage,
+      onPageChange: (nextPage) => {
+        setMetaPage(nextPage);
+        load({ siteSeq, page: nextPage, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search, sortBy, sortOrder });
+      },
+      paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+      minHeight: 320
+    }
+  ), calculateMessage ? /* @__PURE__ */ React13.createElement(Text10, { size: "sm", c: "teal", mt: "xs" }, calculateMessage) : null, /* @__PURE__ */ React13.createElement(Text10, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", metaPage, " / ", totalPages));
+}
+
+// app/assets/js/admin/pages/SiteConfigPage.jsx
+import React14, { useEffect as useEffect10, useState as useState14 } from "react";
+import { useOutletContext as useOutletContext2 } from "react-router-dom";
+import { Anchor as Anchor4, Badge as Badge10, Button as Button7, Card as Card8, ColorInput, Group as Group11, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack7, Text as Text11, Title as Title9 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useSiteConfigData.js
+import { useCallback as useCallback6, useState as useState13 } from "react";
+var DEFAULT_THEME = { headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "" };
+function useSiteConfigData(siteSeq) {
+  const [faviconUrl, setFaviconUrl] = useState13("/public/favicon.png");
+  const [faviconObjectKey, setFaviconObjectKey] = useState13("");
+  const [uploadingFavicon, setUploadingFavicon] = useState13(false);
+  const [deletingFavicon, setDeletingFavicon] = useState13(false);
+  const [siteTheme, setSiteTheme] = useState13(DEFAULT_THEME);
+  const [savingTheme, setSavingTheme] = useState13(false);
+  const [error, setError] = useState13("");
+  const loadFavicon = useCallback6(async () => {
+    if (!siteSeq) {
+      setFaviconUrl("/public/favicon.png");
+      setFaviconObjectKey("");
       return;
     }
+    try {
+      const data = await fetchJson(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`);
+      setFaviconUrl(data?.faviconUrl || "/public/favicon.png");
+      setFaviconObjectKey(data?.objectKey || "");
+    } catch (err) {
+      logError("favicon:load:error", err);
+      setError(err.message);
+    }
+  }, [siteSeq]);
+  const uploadFavicon = useCallback6(async (file) => {
+    if (!file || !siteSeq) return;
     setUploadingFavicon(true);
     setError("");
     try {
@@ -929,1572 +737,834 @@ function useAdminData(page, me) {
       formData.append("file", file);
       formData.append("siteSeq", String(siteSeq));
       formData.append(csrfToken.name, csrfToken.value);
-      formData.append("csrfToken", csrfToken.value);
-      const response = await fetch("/api/Admin/Favicon", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Csrf-Token": csrfToken.value,
-          "X-CSRF-Token": csrfToken.value
-        },
-        body: formData
-      });
+      const response = await fetch("/api/Admin/Favicon", { method: "POST", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: formData });
       if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || `HTTP ${response.status}`);
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
       }
       const data = await response.json();
-      setSiteFaviconUrl(data?.faviconUrl || "/public/favicon.png");
-      setSiteFaviconObjectKey(data?.objectKey || "");
-    } catch (caughtError) {
-      logError("favicon:upload:error", caughtError);
-      setError(caughtError.message || String(caughtError));
+      setFaviconUrl(data?.faviconUrl || "/public/favicon.png");
+      setFaviconObjectKey(data?.objectKey || "");
+    } catch (err) {
+      logError("favicon:upload:error", err);
+      setError(err.message);
     } finally {
       setUploadingFavicon(false);
     }
-  }, []);
-  const resetSiteFavicon = useCallback(async (siteSeq) => {
-    if (!siteSeq) {
-      return;
-    }
+  }, [siteSeq]);
+  const resetFavicon = useCallback6(async () => {
+    if (!siteSeq) return;
     setDeletingFavicon(true);
     setError("");
     try {
       const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: {
-          "Csrf-Token": csrfToken.value,
-          "X-CSRF-Token": csrfToken.value
-        }
-      });
+      const response = await fetch(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
       if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(payload?.error || `HTTP ${response.status}`);
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
       }
-      setSiteFaviconUrl("/public/favicon.png");
-      setSiteFaviconObjectKey("");
-    } catch (caughtError) {
-      logError("favicon:delete:error", caughtError);
-      setError(caughtError.message || String(caughtError));
+      setFaviconUrl("/public/favicon.png");
+      setFaviconObjectKey("");
+    } catch (err) {
+      logError("favicon:delete:error", err);
+      setError(err.message);
     } finally {
       setDeletingFavicon(false);
     }
-  }, []);
-  const loadSiteTheme = useCallback(async (siteSeq) => {
+  }, [siteSeq]);
+  const loadTheme = useCallback6(async () => {
     if (!siteSeq) {
-      setSiteTheme({
-        headerBackgroundColor: "",
-        headerForegroundColor: "",
-        bodyBackgroundColor: "",
-        bodyForegroundColor: "",
-        footerBackgroundColor: "",
-        footerForegroundColor: ""
-      });
+      setSiteTheme(DEFAULT_THEME);
       return;
     }
     try {
-      const data = await fetchJson2(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
-      setSiteTheme({
-        headerBackgroundColor: data?.headerBackgroundColor ?? "",
-        headerForegroundColor: data?.headerForegroundColor ?? "",
-        bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
-        bodyForegroundColor: data?.bodyForegroundColor ?? "",
-        footerBackgroundColor: data?.footerBackgroundColor ?? "",
-        footerForegroundColor: data?.footerForegroundColor ?? ""
-      });
-    } catch (caughtError) {
-      logError("site-theme:load:error", caughtError);
-      setError(caughtError.message || String(caughtError));
+      const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
+      setSiteTheme({ headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "" });
+    } catch (err) {
+      logError("site-theme:load:error", err);
+      setError(err.message);
     }
-  }, []);
-  const saveSiteTheme = useCallback(async (siteSeq, nextTheme) => {
-    if (!siteSeq) {
-      return;
-    }
-    setSavingSiteTheme(true);
+  }, [siteSeq]);
+  const saveTheme = useCallback6(async (theme) => {
+    if (!siteSeq) return;
+    setSavingTheme(true);
     setError("");
     try {
       const csrfToken = await fetchCsrfToken();
       const payload = new URLSearchParams();
       payload.set("siteSeq", String(siteSeq));
-      payload.set("headerBackgroundColor", nextTheme?.headerBackgroundColor ?? "");
-      payload.set("headerForegroundColor", nextTheme?.headerForegroundColor ?? "");
-      payload.set("bodyBackgroundColor", nextTheme?.bodyBackgroundColor ?? "");
-      payload.set("bodyForegroundColor", nextTheme?.bodyForegroundColor ?? "");
-      payload.set("footerBackgroundColor", nextTheme?.footerBackgroundColor ?? "");
-      payload.set("footerForegroundColor", nextTheme?.footerForegroundColor ?? "");
+      Object.entries(theme).forEach(([k, v]) => payload.set(k, v ?? ""));
       payload.set(csrfToken.name, csrfToken.value);
-      payload.set("csrfToken", csrfToken.value);
-      const response = await fetch("/api/Admin/SiteTheme", {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "Csrf-Token": csrfToken.value,
-          "X-CSRF-Token": csrfToken.value
-        },
-        body: payload.toString()
-      });
+      const response = await fetch("/api/Admin/SiteTheme", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
       if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
       }
       const data = await response.json();
-      setSiteTheme({
-        headerBackgroundColor: data?.headerBackgroundColor ?? "",
-        headerForegroundColor: data?.headerForegroundColor ?? "",
-        bodyBackgroundColor: data?.bodyBackgroundColor ?? "",
-        bodyForegroundColor: data?.bodyForegroundColor ?? "",
-        footerBackgroundColor: data?.footerBackgroundColor ?? "",
-        footerForegroundColor: data?.footerForegroundColor ?? ""
-      });
-    } catch (caughtError) {
-      logError("site-theme:save:error", caughtError);
-      setError(caughtError.message || String(caughtError));
+      setSiteTheme({ headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "" });
+    } catch (err) {
+      logError("site-theme:save:error", err);
+      setError(err.message);
     } finally {
-      setSavingSiteTheme(false);
+      setSavingTheme(false);
     }
-  }, []);
-  const saveSiteMeta = useCallback(async (siteSeq, nextMeta) => {
-    if (!siteSeq) {
-      return null;
-    }
-    setError("");
-    const csrfToken = await fetchCsrfToken();
-    const payload = new URLSearchParams();
-    payload.set("abbr", nextMeta?.abbr ?? "");
-    payload.set("mainDomain", nextMeta?.mainDomain ?? "");
-    payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
-    payload.set(csrfToken.name, csrfToken.value);
-    payload.set("csrfToken", csrfToken.value);
-    const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Csrf-Token": csrfToken.value,
-        "X-CSRF-Token": csrfToken.value
-      },
-      body: payload.toString()
-    });
-    if (!response.ok) {
-      const payloadJson = await response.json().catch(() => null);
-      throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-    }
-    const updatedSite = await response.json();
-    setSites((currentSites) => currentSites.map((site) => site.seq === updatedSite.seq ? { ...site, ...updatedSite } : site));
-    return updatedSite;
-  }, []);
-  const loadAdminSitePageNames = useCallback(async (siteSeq) => {
-    if (!siteSeq) {
-      return [];
-    }
-    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageNames`);
-    return Array.isArray(data) ? data : [];
-  }, []);
-  const runSiteCalculate = useCallback(async (siteSeq, pageName = "") => {
-    if (!siteSeq) {
-      return null;
-    }
-    setCalculatingSiteSeq(Number.parseInt(String(siteSeq), 10) || 0);
+  }, [siteSeq]);
+  return { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme };
+}
+
+// app/assets/js/admin/pages/SiteConfigPage.jsx
+function SiteConfigPage() {
+  const { site, siteSeq } = useOutletContext2();
+  const { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme } = useSiteConfigData(siteSeq);
+  const [faviconFile, setFaviconFile] = useState14(null);
+  useEffect10(() => {
+    if (!siteSeq) return;
+    loadFavicon();
+    loadTheme();
+  }, [siteSeq]);
+  return /* @__PURE__ */ React14.createElement(React14.Fragment, null, /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React14.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React14.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React14.createElement(Title9, { order: 3 }, "Favicon"), /* @__PURE__ */ React14.createElement(Badge10, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React14.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React14.createElement(Text11, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React14.createElement(Group11, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React14.createElement(Stack7, { gap: 6 }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React14.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React14.createElement(Text11, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React14.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React14.createElement(Stack7, { gap: 8 }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React14.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React14.createElement(Group11, null, /* @__PURE__ */ React14.createElement(Button7, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
+    await uploadFavicon(faviconFile);
+    await loadFavicon();
+  } }, "Upload favicon"), /* @__PURE__ */ React14.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadFavicon() }, "Refresh"), /* @__PURE__ */ React14.createElement(Button7, { color: "red", variant: "light", loading: deletingFavicon, disabled: !siteSeq, onClick: async () => {
+    await resetFavicon();
+    await loadFavicon();
+    setFaviconFile(null);
+  } }, "Reset to default")), /* @__PURE__ */ React14.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React14.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React14.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React14.createElement(Title9, { order: 3 }, "Theme"), /* @__PURE__ */ React14.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React14.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md" }, [
+    { key: "headerBackgroundColor", label: "Header \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"] },
+    { key: "headerForegroundColor", label: "Header \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"] },
+    { key: "bodyBackgroundColor", label: "Body \uBC30\uACBD\uC0C9", placeholder: "#FFFFFF", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"] },
+    { key: "bodyForegroundColor", label: "Body \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"] },
+    { key: "footerBackgroundColor", label: "Footer \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"] },
+    { key: "footerForegroundColor", label: "Footer \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"] }
+  ].map(({ key, label, placeholder, swatches }) => /* @__PURE__ */ React14.createElement(ColorInput, { key, label, placeholder, format: "hexa", value: siteTheme[key], onChange: (value) => setSiteTheme((prev) => ({ ...prev, [key]: value })), swatches, withEyeDropper: false, clearable: true }))), /* @__PURE__ */ React14.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React14.createElement(Stack7, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React14.createElement("div", { style: { backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE", color: siteTheme.headerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Header Preview"), /* @__PURE__ */ React14.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React14.createElement("div", { style: { backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE", color: siteTheme.footerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Footer Preview")))), /* @__PURE__ */ React14.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React14.createElement(Button7, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
+    await saveTheme(siteTheme);
+    await loadTheme();
+  } }, "Save theme"), /* @__PURE__ */ React14.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React14.createElement(Button7, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
+    const empty = { headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "" };
+    setSiteTheme(empty);
+    await saveTheme(empty);
+    await loadTheme();
+  } }, "Reset"))));
+}
+
+// app/assets/js/admin/pages/SiteCachePage.jsx
+import React15, { useEffect as useEffect11 } from "react";
+import { useOutletContext as useOutletContext3 } from "react-router-dom";
+import { Badge as Badge11, Button as Button8, Card as Card9, Group as Group12, Stack as Stack8, Table as Table3, Text as Text12, Title as Title10 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useSiteCacheData.js
+import { useCallback as useCallback7, useState as useState15 } from "react";
+function useSiteCacheData(siteSeq) {
+  const [clearing, setClearing] = useState15(false);
+  const [memoryCacheStats, setMemoryCacheStats] = useState15([]);
+  const [error, setError] = useState15("");
+  const clearSiteCache = useCallback7(async () => {
+    if (!siteSeq) return;
+    setClearing(true);
     setError("");
     try {
       const csrfToken = await fetchCsrfToken();
-      const suffix = pageName?.trim() ? `?pageName=${encodeURIComponent(pageName.trim())}` : "";
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, {
+      const response = await fetch(`/api/cache/${siteSeq}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    } catch (err) {
+      logError("cache:clear:error", siteSeq, err);
+      setError(err.message || String(err));
+    } finally {
+      setClearing(false);
+    }
+  }, [siteSeq]);
+  const loadMemoryCacheStats = useCallback7(async () => {
+    try {
+      const data = await fetchJson("/api/Admin/MemoryCacheStats");
+      setMemoryCacheStats(Array.isArray(data) ? data : []);
+    } catch (err) {
+      logError("memory-cache:load:error", err);
+    }
+  }, []);
+  return { clearing, memoryCacheStats, error, clearSiteCache, loadMemoryCacheStats };
+}
+
+// app/assets/js/admin/pages/SiteCachePage.jsx
+function SiteCachePage() {
+  const { site, siteSeq } = useOutletContext3();
+  const { clearing, memoryCacheStats, error, clearSiteCache, loadMemoryCacheStats } = useSiteCacheData(siteSeq);
+  useEffect11(() => {
+    loadMemoryCacheStats();
+  }, [siteSeq]);
+  return /* @__PURE__ */ React15.createElement(React15.Fragment, null, /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React15.createElement(Badge11, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React15.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React15.createElement(Text12, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", align: "center" }, /* @__PURE__ */ React15.createElement(Stack8, { gap: 2 }, /* @__PURE__ */ React15.createElement(Text12, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React15.createElement(Text12, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React15.createElement(Button8, { color: "orange", variant: "filled", disabled: !site, loading: clearing, onClick: () => clearSiteCache() }, "Clear current site cache"))), /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React15.createElement(Button8, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React15.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React15.createElement(Table3.Thead, null, /* @__PURE__ */ React15.createElement(Table3.Tr, null, /* @__PURE__ */ React15.createElement(Table3.Th, null, "Port"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Key Count"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Value Count"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Captured At"))), /* @__PURE__ */ React15.createElement(Table3.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React15.createElement(Table3.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React15.createElement(Table3.Td, null, row.instancePort), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
+}
+
+// app/assets/js/admin/pages/SitePermissionPage.jsx
+import React16, { useEffect as useEffect12, useMemo as useMemo4, useState as useState17 } from "react";
+import { useOutletContext as useOutletContext4 } from "react-router-dom";
+import { Autocomplete, Badge as Badge12, Button as Button9, Card as Card10, Group as Group13, Paper as Paper3, Select, SimpleGrid as SimpleGrid3, Text as Text13, TextInput as TextInput3, Title as Title11 } from "@mantine/core";
+import { DataTable as DataTable3 } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/usePermissionData.js
+import { useCallback as useCallback8, useState as useState16 } from "react";
+function usePermissionData(siteSeq) {
+  const [permissionRows, setPermissionRows] = useState16([]);
+  const [permissionDiagnose, setPermissionDiagnose] = useState16(null);
+  const [saving, setSaving] = useState16(false);
+  const [deletingKey, setDeletingKey] = useState16("");
+  const [error, setError] = useState16("");
+  const loadPermissions = useCallback8(async () => {
+    if (!siteSeq) {
+      setPermissionRows([]);
+      return;
+    }
+    try {
+      const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
+      setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
+    } catch (err) {
+      logError("permission:load:error", err);
+    }
+  }, [siteSeq]);
+  const savePermission = useCallback8(async (permission) => {
+    if (!siteSeq) return false;
+    setSaving(true);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
+      payload.set(csrfToken.name, csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
+      if (!response.ok) {
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
+      }
+      await loadPermissions();
+      return true;
+    } catch (err) {
+      logError("permission:save:error", err);
+      setError(err.message);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, [siteSeq, loadPermissions]);
+  const deletePermission = useCallback8(async (permission) => {
+    if (!siteSeq || !permission) return;
+    const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
+    setDeletingKey(key);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const params = new URLSearchParams({ targetType: permission.targetType ?? "", target: permission.target ?? "", actorType: permission.actorType ?? "", actor: permission.actor ?? "" });
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
+      if (!response.ok) {
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
+      }
+      await loadPermissions();
+    } catch (err) {
+      logError("permission:delete:error", err);
+      setError(err.message);
+    } finally {
+      setDeletingKey("");
+    }
+  }, [siteSeq, loadPermissions]);
+  const diagnosePermission = useCallback8(async (pageName, actor, action) => {
+    if (!siteSeq) return;
+    const params = new URLSearchParams({ pageName: pageName ?? "", actor: actor ?? "", action: action || "Read" });
+    const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
+    setPermissionDiagnose(data);
+  }, [siteSeq]);
+  return { permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission };
+}
+
+// app/assets/js/admin/pages/SitePermissionPage.jsx
+function SitePermissionPage() {
+  const { siteSeq, sitePageNames } = useOutletContext4();
+  const { permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission } = usePermissionData(siteSeq);
+  const [form, setForm] = useState17({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
+  const [diagnoseForm, setDiagnoseForm] = useState17({ pageName: "", actor: "", action: "Read" });
+  const [sortBy, setSortBy] = useState17("specificity");
+  const [sortOrder, setSortOrder] = useState17("desc");
+  useEffect12(() => {
+    if (siteSeq) loadPermissions();
+  }, [siteSeq]);
+  const sortedRows = useMemo4(() => [...permissionRows].sort((a, b) => {
+    const leftValue = sortBy === "actionLabel" ? formatPermissionAction(a.actionName, a.action) : a[sortBy];
+    const rightValue = sortBy === "actionLabel" ? formatPermissionAction(b.actionName, b.action) : b[sortBy];
+    return compareValuesForSort(leftValue, rightValue, sortOrder);
+  }), [permissionRows, sortBy, sortOrder]);
+  return /* @__PURE__ */ React16.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title11, { order: 3 }, "Permission"), /* @__PURE__ */ React16.createElement(Badge12, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React16.createElement(Text13, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React16.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React16.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React16.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React16.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React16.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React16.createElement(Group13, { mb: "md" }, /* @__PURE__ */ React16.createElement(Button9, { size: "xs", loading: saving, onClick: async () => {
+    const saved = await savePermission(form);
+    if (saved) setForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
+  } }, "Save")), /* @__PURE__ */ React16.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React16.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React16.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React16.createElement(Button9, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React16.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React16.createElement(Group13, { gap: "xs" }, /* @__PURE__ */ React16.createElement(Badge12, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React16.createElement(Text13, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React16.createElement(
+    DataTable3,
+    {
+      withTableBorder: true,
+      borderRadius: "md",
+      striped: true,
+      highlightOnHover: true,
+      records: sortedRows,
+      columns: [
+        { accessor: "targetType", title: "Target Type", sortable: true },
+        { accessor: "target", title: "Target", sortable: true, render: (row) => row.target || "*" },
+        { accessor: "actorType", title: "Actor Type", sortable: true },
+        { accessor: "actor", title: "Actor", sortable: true, render: (row) => row.actor || "*" },
+        { accessor: "action", title: "Action", sortable: true, render: (row) => formatPermissionAction(row.actionName, row.action) },
+        { accessor: "specificity", title: "Specificity", sortable: true },
+        { accessor: "actions", title: "Actions", render: (row) => {
+          const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
+          return /* @__PURE__ */ React16.createElement(Group13, { gap: 6 }, /* @__PURE__ */ React16.createElement(Button9, { size: "xs", variant: "light", onClick: () => setForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React16.createElement(Button9, { size: "xs", variant: "light", color: "red", loading: deletingKey === key, onClick: () => deletePermission(row) }, "Delete"));
+        } }
+      ],
+      sortStatus: { columnAccessor: sortBy, direction: sortOrder },
+      onSortStatusChange: (next) => {
+        setSortBy(next.columnAccessor);
+        setSortOrder(next.direction ?? "asc");
+      },
+      minHeight: 220
+    }
+  ));
+}
+
+// app/assets/js/admin/pages/SiteAdminsPage.jsx
+import React17, { useEffect as useEffect13, useState as useState19 } from "react";
+import { useOutletContext as useOutletContext5, useNavigate as useNavigate8 } from "react-router-dom";
+import { Badge as Badge13, Button as Button10, Card as Card11, Group as Group14, Stack as Stack9, Text as Text14, TextInput as TextInput4, Title as Title12 } from "@mantine/core";
+import { DataTable as DataTable4 } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/useSiteAdminsData.js
+import { useCallback as useCallback9, useState as useState18 } from "react";
+function useSiteAdminsData(siteSeq) {
+  const [siteAdmins, setSiteAdmins] = useState18([]);
+  const [adding, setAdding] = useState18(false);
+  const [deletingUserSeq, setDeletingUserSeq] = useState18(0);
+  const [error, setError] = useState18("");
+  const loadSiteAdmins = useCallback9(async () => {
+    if (!siteSeq) {
+      setSiteAdmins([]);
+      return;
+    }
+    try {
+      const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`);
+      setSiteAdmins(Array.isArray(data) ? data : []);
+    } catch (err) {
+      logError("site-admins:load:error", err);
+    }
+  }, [siteSeq]);
+  const insertSiteAdmin = useCallback9(async (userSeq) => {
+    if (!siteSeq || !userSeq) return false;
+    setAdding(true);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("user", String(userSeq));
+      payload.set(csrfToken.name, csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
+      if (!response.ok) {
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
+      }
+      await loadSiteAdmins();
+      return true;
+    } catch (err) {
+      logError("site-admin:insert:error", err);
+      setError(err.message);
+      return false;
+    } finally {
+      setAdding(false);
+    }
+  }, [siteSeq, loadSiteAdmins]);
+  const deleteSiteAdmin = useCallback9(async (userSeq) => {
+    if (!siteSeq || !userSeq) return;
+    setDeletingUserSeq(userSeq);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadSiteAdmins();
+    } catch (err) {
+      logError("site-admin:delete:error", err);
+      setError(err.message);
+    } finally {
+      setDeletingUserSeq(0);
+    }
+  }, [siteSeq, loadSiteAdmins]);
+  return { siteAdmins, adding, deletingUserSeq, error, loadSiteAdmins, insertSiteAdmin, deleteSiteAdmin };
+}
+
+// app/assets/js/admin/pages/SiteAdminsPage.jsx
+function SiteAdminsPage() {
+  const { site, siteSeq } = useOutletContext5();
+  const navigate = useNavigate8();
+  const { siteAdmins, adding, deletingUserSeq, error, loadSiteAdmins, insertSiteAdmin, deleteSiteAdmin } = useSiteAdminsData(siteSeq);
+  const [userSeqInput, setUserSeqInput] = useState19("");
+  useEffect13(() => {
+    if (siteSeq) loadSiteAdmins();
+  }, [siteSeq]);
+  return /* @__PURE__ */ React17.createElement(Card11, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React17.createElement(Group14, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React17.createElement(Title12, { order: 3 }, "Site Admins"), /* @__PURE__ */ React17.createElement(Badge13, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React17.createElement(Text14, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React17.createElement(Text14, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(Group14, { mb: "md", align: "end" }, /* @__PURE__ */ React17.createElement(TextInput4, { label: "User Seq", placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)", value: userSeqInput, onChange: (e) => setUserSeqInput(e.currentTarget.value), type: "number", min: "1" }), /* @__PURE__ */ React17.createElement(Button10, { variant: "filled", loading: adding, disabled: !siteSeq || !userSeqInput.trim(), onClick: async () => {
+    const userSeq = Number.parseInt(userSeqInput, 10);
+    if (!Number.isFinite(userSeq) || userSeq <= 0) return;
+    const ok = await insertSiteAdmin(userSeq);
+    if (ok) setUserSeqInput("");
+  } }, "\uCD94\uAC00")), /* @__PURE__ */ React17.createElement(
+    DataTable4,
+    {
+      withTableBorder: true,
+      borderRadius: "md",
+      striped: true,
+      highlightOnHover: true,
+      records: siteAdmins,
+      columns: [
+        { accessor: "user", title: "User Seq" },
+        { accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React17.createElement(Button10, { size: "xs", variant: "light", color: "red", loading: deletingUserSeq === row.user, onClick: () => deleteSiteAdmin(row.user) }, "\uC0AD\uC81C") }
+      ],
+      minHeight: 160
+    }
+  ));
+}
+
+// app/assets/js/admin/pages/RecentChangesPage.jsx
+import React18, { useEffect as useEffect14, useMemo as useMemo5, useState as useState21 } from "react";
+import { Anchor as Anchor5, Badge as Badge14, Button as Button11, Card as Card12, Group as Group15, Text as Text15, TextInput as TextInput5, Title as Title13 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useRecentChangesData.js
+import { useCallback as useCallback10, useState as useState20 } from "react";
+function useRecentChangesData() {
+  const [loading, setLoading] = useState20(true);
+  const [recentChanges, setRecentChanges] = useState20([]);
+  const [sites, setSites] = useState20([]);
+  const loadRecentChanges = useCallback10(async (n = 50) => {
+    setLoading(true);
+    try {
+      const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
+      setRecentChanges(data);
+    } catch (err) {
+      logError("recent-changes:load:error", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const loadSites = useCallback10(async () => {
+    try {
+      const data = await fetchJson("/api/Admin/Sites");
+      setSites(Array.isArray(data) ? data : []);
+    } catch (err) {
+      logError("recent-changes:sites:load:error", err);
+    }
+  }, []);
+  return { loading, recentChanges, sites, loadRecentChanges, loadSites };
+}
+
+// app/assets/js/admin/pages/RecentChangesPage.jsx
+function RecentChangesPage() {
+  const { loading, recentChanges, sites, loadRecentChanges, loadSites } = useRecentChangesData();
+  const [limitInput, setLimitInput] = useState21("50");
+  useEffect14(() => {
+    loadSites();
+    loadRecentChanges(50);
+  }, []);
+  const siteDomainBySeq = useMemo5(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
+  return /* @__PURE__ */ React18.createElement(Card12, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React18.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React18.createElement(Title13, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React18.createElement(Badge14, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React18.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React18.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React18.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React18.createElement(Button11, { variant: "filled", onClick: () => {
+    const parsed = Number.parseInt(limitInput, 10);
+    const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
+    setLimitInput(String(n));
+    loadRecentChanges(n);
+  } }, "\uC870\uD68C")), makeTable(["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"], recentChanges.map((row) => {
+    const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
+    const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
+    const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
+    const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.comment || "-", row.remoteAddress];
+  })));
+}
+
+// app/assets/js/admin/pages/AccessLogsPage.jsx
+import React19, { useEffect as useEffect15, useMemo as useMemo6, useState as useState23 } from "react";
+import { useParams as useParams2 } from "react-router-dom";
+import { Anchor as Anchor6, Badge as Badge15, Button as Button12, Card as Card13, Group as Group16, Pagination, Text as Text16, TextInput as TextInput6, Title as Title14 } from "@mantine/core";
+import { DataTable as DataTable5 } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/useAccessLogData.js
+import { useCallback as useCallback11, useState as useState22 } from "react";
+function useAccessLogData() {
+  const [loading, setLoading] = useState22(true);
+  const [error, setError] = useState22("");
+  const [accessLogs, setAccessLogs] = useState22([]);
+  const [accessLogCount, setAccessLogCount] = useState22(0);
+  const [sites, setSites] = useState22([]);
+  const loadAccessLogs = useCallback11(async ({ page = 1, pageSize = ACCESS_LOG_PAGE_SIZE, search = "", sortBy = "seq", sortOrder = "desc", siteSeq = "" } = {}) => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      if (siteSeq) params.set("siteSeq", String(siteSeq));
+      const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
+      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      setAccessLogs(rows);
+      setAccessLogCount(Number(data?.count ?? rows.length));
+    } catch (err) {
+      logError("access-logs:load:error", err);
+      setError(err.message || String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const loadSites = useCallback11(async () => {
+    try {
+      const data = await fetchJson("/api/Admin/Sites");
+      setSites(Array.isArray(data) ? data : []);
+    } catch (err) {
+      logError("access-logs:sites:load:error", err);
+    }
+  }, []);
+  return { loading, error, accessLogs, accessLogCount, sites, loadAccessLogs, loadSites };
+}
+
+// app/assets/js/admin/pages/AccessLogsPage.jsx
+function AccessLogsPage() {
+  const params = useParams2();
+  const siteSeq = params.siteSeq ?? "";
+  const { loading, accessLogs, accessLogCount, sites, loadAccessLogs, loadSites } = useAccessLogData();
+  const [page, setPage] = useState23(1);
+  const [searchInput, setSearchInput] = useState23("");
+  const [sortBy, setSortBy] = useState23("seq");
+  const [sortOrder, setSortOrder] = useState23("desc");
+  const totalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
+  const selectedSite = useMemo6(() => sites.find((s) => String(s.seq) === siteSeq) ?? null, [sites, siteSeq]);
+  useEffect15(() => {
+    loadSites();
+    loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: "", sortBy: "seq", sortOrder: "desc", siteSeq });
+  }, [siteSeq]);
+  return /* @__PURE__ */ React19.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group16, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title14, { order: 3 }, selectedSite ? `Access Logs (${selectedSite.name} #${selectedSite.seq})` : "Access Logs (All Sites)"), /* @__PURE__ */ React19.createElement(Badge15, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React19.createElement(Text16, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group16, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput6, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "site/method/uri/ip/user-agent" }), /* @__PURE__ */ React19.createElement(Button12, { variant: "filled", onClick: () => {
+    setPage(1);
+    loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
+  } }, "\uC870\uD68C")), /* @__PURE__ */ React19.createElement(
+    DataTable5,
+    {
+      sortIcons: { sorted: /* @__PURE__ */ React19.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React19.createElement(IconSelector, { size: 14 }) },
+      withTableBorder: true,
+      borderRadius: "sm",
+      striped: true,
+      highlightOnHover: true,
+      minHeight: 420,
+      records: Array.isArray(accessLogs) ? accessLogs : [],
+      idAccessor: "seq",
+      columns: [
+        { accessor: "seq", title: "seq", sortable: true },
+        { accessor: "dateInserted", title: "DateInserted", sortable: true },
+        { accessor: "siteName", title: "Site", render: (row) => `${row.siteName} (#${row.siteSeq})` },
+        { accessor: "ipDenySeq", title: "IpDeny", render: (row) => row.ipDenySeq ?? "-" },
+        { accessor: "userSeq", title: "User", render: (row) => row.userSeq ?? "-" },
+        { accessor: "method", title: "Method", sortable: true },
+        { accessor: "uri", title: "Request URL", sortable: true, render: (row) => {
+          const href = `${row.scheme}://${row.host}${row.uri}`;
+          return /* @__PURE__ */ React19.createElement(Anchor6, { href, target: "_blank", rel: "noopener noreferrer" }, href);
+        } },
+        { accessor: "status", title: "Status", sortable: true },
+        { accessor: "remoteAddress", title: "IP" },
+        { accessor: "durationMilli", title: "Duration(ms)", sortable: true },
+        { accessor: "userAgent", title: "User-Agent" }
+      ],
+      sortStatus: { columnAccessor: sortBy, direction: sortOrder },
+      onSortStatusChange: (next) => {
+        const dir = next.direction ?? "desc";
+        setPage(1);
+        setSortBy(next.columnAccessor);
+        setSortOrder(dir);
+        loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy: next.columnAccessor, sortOrder: dir, siteSeq });
+      }
+    }
+  ), /* @__PURE__ */ React19.createElement(Group16, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React19.createElement(Text16, { size: "sm", c: "dimmed" }, "Page ", page, " / ", totalPages), /* @__PURE__ */ React19.createElement(Pagination, { value: page, onChange: (nextPage) => {
+    setPage(nextPage);
+    loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
+  }, total: totalPages, siblings: 1, boundaries: 1, size: "sm" })));
+}
+
+// app/assets/js/admin/pages/S3BrowserPage.jsx
+import React20, { useEffect as useEffect16 } from "react";
+import { Badge as Badge16, Button as Button13, Card as Card14, Group as Group17, Table as Table4, Text as Text17, Title as Title15 } from "@mantine/core";
+
+// app/assets/js/admin/hooks/useS3Data.js
+import { useCallback as useCallback12, useState as useState24 } from "react";
+function useS3Data() {
+  const [loading, setLoading] = useState24(false);
+  const [error, setError] = useState24("");
+  const [s3Items, setS3Items] = useState24([]);
+  const [selectedS3Keys, setSelectedS3Keys] = useState24([]);
+  const [deletingS3, setDeletingS3] = useState24(false);
+  const [expandedS3Nodes, setExpandedS3Nodes] = useState24({});
+  const loadS3Objects = useCallback12(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({ prefix: "", maxKeys: "5000", recursive: "true" });
+      const data = await fetchJson(`/api/Admin/S3Objects?${params.toString()}`);
+      setS3Items(Array.isArray(data?.items) ? data.items : []);
+      setSelectedS3Keys([]);
+      setExpandedS3Nodes({ "__root__": true });
+    } catch (err) {
+      logError("s3:load:error", err);
+      setError(`S3 \uC870\uD68C \uC2E4\uD328: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const toggleS3Node = useCallback12((key) => {
+    setExpandedS3Nodes((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+  const expandAllS3Nodes = useCallback12((items) => {
+    const next = { "__root__": true };
+    (Array.isArray(items) ? items : []).filter((item) => !item.isDirectory).forEach((item) => {
+      const parts = String(item.key || "").split("/").filter(Boolean);
+      for (let i = 1; i < parts.length; i += 1) {
+        next[parts.slice(0, i).join("/")] = true;
+      }
+    });
+    setExpandedS3Nodes(next);
+  }, []);
+  const deleteS3Selected = useCallback12(async (keys) => {
+    if (keys.length === 0) return;
+    setDeletingS3(true);
+    try {
+      const csrf = await fetchCsrfToken();
+      const response = await fetch("/api/Admin/S3Objects", {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value },
+        body: JSON.stringify({ keys })
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadS3Objects();
+    } catch (err) {
+      logError("s3:delete:error", err);
+      setError(`S3 \uC0AD\uC81C \uC2E4\uD328: ${err.message}`);
+    } finally {
+      setDeletingS3(false);
+    }
+  }, [loadS3Objects]);
+  const downloadS3Object = useCallback12(async (key) => {
+    try {
+      const params = new URLSearchParams({ key });
+      const data = await fetchJson(`/api/Admin/S3DownloadUrl?${params.toString()}`);
+      if (data?.url) window.open(data.url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      logError("s3:download:error", err);
+      setError(`\uB2E4\uC6B4\uB85C\uB4DC URL \uC0DD\uC131 \uC2E4\uD328: ${err.message}`);
+    }
+  }, []);
+  return { loading, error, s3Items, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object };
+}
+
+// app/assets/js/admin/pages/S3BrowserPage.jsx
+function S3BrowserPage() {
+  const { loading, error, s3Items, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object } = useS3Data();
+  useEffect16(() => {
+    loadS3Objects();
+  }, []);
+  const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
+  const root = { children: {} };
+  fileRows.forEach((item) => {
+    const parts = String(item.key || "").split("/").filter(Boolean);
+    if (parts.length === 0) return;
+    let node = root;
+    parts.forEach((part, index) => {
+      const currentPath = parts.slice(0, index + 1).join("/");
+      if (!node.children[part]) node.children[part] = { name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null };
+      if (index === parts.length - 1) {
+        node.children[part].isFile = true;
+        node.children[part].meta = item;
+      }
+      node = node.children[part];
+    });
+  });
+  const rows = [];
+  const visit = (node, depth = 0) => {
+    Object.values(node.children).sort((a, b) => {
+      if (a.isFile === b.isFile) return a.name.localeCompare(b.name);
+      return a.isFile ? 1 : -1;
+    }).forEach((child) => {
+      rows.push({ depth, node: child });
+      if (!child.isFile && expandedS3Nodes[child.path]) visit(child, depth + 1);
+    });
+  };
+  visit(root, 0);
+  return /* @__PURE__ */ React20.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React20.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React20.createElement(Title15, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React20.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React20.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React20.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React20.createElement(Button13, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React20.createElement(Button13, { variant: "light", onClick: () => expandAllS3Nodes(s3Items), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React20.createElement(Button13, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React20.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React20.createElement(Table4.Thead, null, /* @__PURE__ */ React20.createElement(Table4.Tr, null, /* @__PURE__ */ React20.createElement(Table4.Th, null, /* @__PURE__ */ React20.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (e) => {
+    setSelectedS3Keys(e.currentTarget.checked ? fileRows.map((item) => item.key) : []);
+  } })), /* @__PURE__ */ React20.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React20.createElement(Table4.Tbody, null, rows.map(({ depth, node }) => {
+    const key = node.path;
+    const checked = selectedS3Keys.includes(key);
+    return /* @__PURE__ */ React20.createElement(Table4.Tr, { key }, /* @__PURE__ */ React20.createElement(Table4.Td, null, /* @__PURE__ */ React20.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (e) => {
+      if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
+      else setSelectedS3Keys((prev) => prev.filter((k) => k !== key));
+    } })), /* @__PURE__ */ React20.createElement(Table4.Td, null, /* @__PURE__ */ React20.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React20.createElement(Button13, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React20.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React20.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React20.createElement("span", null, /* @__PURE__ */ React20.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React20.createElement("span", null, node.name))), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React20.createElement(Button13, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+  }))));
+}
+
+// app/assets/js/admin/pages/CrawlerCachePage.jsx
+import React21, { useEffect as useEffect17, useState as useState26 } from "react";
+import { Anchor as Anchor7, Badge as Badge17, Button as Button14, Card as Card15, Group as Group18, Image as Image2, Text as Text18, TextInput as TextInput7, Title as Title16 } from "@mantine/core";
+import { DataTable as DataTable6 } from "mantine-datatable";
+
+// app/assets/js/admin/hooks/useCrawlerCacheData.js
+import { useCallback as useCallback13, useState as useState25 } from "react";
+function useCrawlerCacheData() {
+  const [loading, setLoading] = useState25(true);
+  const [crawlerCaches, setCrawlerCaches] = useState25([]);
+  const [crawlerCacheCount, setCrawlerCacheCount] = useState25(0);
+  const [refreshingUrl, setRefreshingUrl] = useState25("");
+  const [deletingUrl, setDeletingUrl] = useState25("");
+  const loadCrawlerCaches = useCallback13(async ({ page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc" } = {}) => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const data = await fetchJson(`/api/Admin/CrawlerCache?${params.toString()}`);
+      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      setCrawlerCaches(rows);
+      setCrawlerCacheCount(Number(data?.count ?? rows.length));
+    } catch (err) {
+      logError("crawler-cache:load:error", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  const refreshCrawlerCache = useCallback13(async (url, currentParams) => {
+    setRefreshingUrl(url);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("url", url);
+      payload.set(csrfToken.name, csrfToken.value);
+      const response = await fetch("/api/Admin/CrawlerCache/Refresh", {
         method: "POST",
         credentials: "same-origin",
-        headers: {
-          "Csrf-Token": csrfToken.value,
-          "X-CSRF-Token": csrfToken.value,
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-        },
-        body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}&csrfToken=${encodeURIComponent(csrfToken.value)}`
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
+        body: payload.toString()
       });
-      if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-      }
-      return await response.json();
-    } catch (caughtError) {
-      logError("site:calculate:error", siteSeq, pageName, caughtError);
-      setError(caughtError.message || String(caughtError));
-      return null;
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadCrawlerCaches(currentParams);
     } finally {
-      setCalculatingSiteSeq(0);
+      setRefreshingUrl("");
     }
-  }, []);
-  const loadMemoryCacheStats = useCallback(async () => {
+  }, [loadCrawlerCaches]);
+  const deleteCrawlerCache = useCallback13(async (url, currentParams) => {
+    setDeletingUrl(url);
     try {
-      const data = await fetchJson2("/api/Admin/MemoryCacheStats");
-      setMemoryCacheStats(Array.isArray(data) ? data : []);
-    } catch (caughtError) {
-      logError("memory-cache:load:error", caughtError);
-      setMemoryCacheStats([]);
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadCrawlerCaches(currentParams);
+    } finally {
+      setDeletingUrl("");
     }
-  }, []);
-  useEffect2(() => {
-    let mounted = true;
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        if (page === "sites") {
-          const data = await fetchJson2("/api/Admin/Sites");
-          if (mounted) {
-            setSites(data);
-            setDailyStats({
-              userCreated: [],
-              pageCreated: [],
-              pageEdited: []
-            });
-            setTopViewedPages([]);
-          }
-          return;
-        }
-        if (page === "all-users") {
-          if (mounted) {
-            await loadAllUsers();
-            setSites([]);
-            setDailyStats({
-              userCreated: [],
-              pageCreated: [],
-              pageEdited: []
-            });
-            setTopViewedPages([]);
-          }
-          return;
-        }
-        if (page === "user-views") {
-          const userSeq = parseUserSeqFromPathname(window.location.pathname);
-          if (Number.isFinite(userSeq) && userSeq > 0) {
-            await loadUserViewHistories(userSeq, 200);
-          } else {
-            setUserViewHistories([]);
-          }
-          if (mounted) {
-            setSites([]);
-            setAllUsers([]);
-            setDailyStats({
-              userCreated: [],
-              pageCreated: [],
-              pageEdited: []
-            });
-            setTopViewedPages([]);
-          }
-          return;
-        }
-        if (page === "recent-changes") {
-          await loadRecentChanges(50);
-          if (mounted) {
-            setSites([]);
-            setAllUsers([]);
-            setDailyStats({
-              userCreated: [],
-              pageCreated: [],
-              pageEdited: []
-            });
-            setTopViewedPages([]);
-          }
-          return;
-        }
-        if (page === "access-logs") {
-          if (mounted) {
-            setSites([]);
-            setAllUsers([]);
-            setDailyStats({
-              userCreated: [],
-              pageCreated: [],
-              pageEdited: []
-            });
-            setTopViewedPages([]);
-          }
-          return;
-        }
-        if (page === "s3-browser") {
-          if (mounted) {
-            setSites([]);
-            setAllUsers([]);
-            setDailyStats({ userCreated: [], pageCreated: [], pageEdited: [] });
-            setTopViewedPages([]);
-          }
-          await loadS3Objects();
-          return;
-        }
-        if (page === "crawler-cache") {
-          if (mounted) {
-            setSites([]);
-            setAllUsers([]);
-            setDailyStats({ userCreated: [], pageCreated: [], pageEdited: [] });
-            setTopViewedPages([]);
-          }
-          await loadCrawlerCaches();
-          return;
-        }
-        if (mounted) {
-          if (me?.isAdmin) {
-            await loadDashboard();
-            await loadMemoryCacheStats();
-          } else {
-            const siteData = await fetchJson2("/api/Admin/Sites");
-            setSites(Array.isArray(siteData) ? siteData : []);
-          }
-        }
-      } catch (caughtError) {
-        logError("data:load:error", caughtError);
-        if (mounted) {
-          setError(caughtError.message || String(caughtError));
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-    if (me === null) return;
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [page, me, loadDashboard, loadRecentChanges, loadUserViewHistories, loadMemoryCacheStats, loadAccessLogs, loadAllUsers, loadS3Objects, loadCrawlerCaches]);
-  return {
-    loading,
-    sites,
-    allUsers,
-    allUserCount,
-    dailyStats,
-    recentChanges,
-    accessLogs,
-    accessLogCount,
-    topViewedPages,
-    userViewHistories,
-    loadingUserViewHistories,
-    loadUserViewHistories,
-    loadRecentChanges,
-    loadAccessLogs,
-    loadAllUsers,
-    clearSiteCache,
-    clearingSiteSeq,
-    siteFaviconUrl,
-    siteFaviconObjectKey,
-    loadSiteFavicon,
-    uploadSiteFavicon,
-    uploadingFavicon,
-    resetSiteFavicon,
-    deletingFavicon,
-    siteTheme,
-    setSiteTheme,
-    loadSiteTheme,
-    saveSiteTheme,
-    saveSiteMeta,
-    savingSiteTheme,
-    loadAdminSitePageNames,
-    runSiteCalculate,
-    calculatingSiteSeq,
-    memoryCacheStats,
-    loadMemoryCacheStats,
-    s3Items,
-    loadS3Objects,
-    selectedS3Keys,
-    setSelectedS3Keys,
-    deleteS3Selected,
-    downloadS3Object,
-    loadingS3,
-    deletingS3,
-    expandedS3Nodes,
-    toggleS3Node,
-    expandAllS3Nodes,
-    crawlerCaches,
-    crawlerCacheCount,
-    loadCrawlerCaches,
-    refreshCrawlerCache,
-    deleteCrawlerCache,
-    refreshingCrawlerUrl,
-    deletingCrawlerUrl,
-    crawlerSearchInput,
-    setCrawlerSearchInput,
-    crawlerSearch,
-    setCrawlerSearch,
-    crawlerPage,
-    setCrawlerPage,
-    crawlerSortBy,
-    setCrawlerSortBy,
-    crawlerSortOrder,
-    setCrawlerSortOrder,
-    adminPageMetaRows,
-    adminPageMetaCount,
-    loadAdminPageMetaList,
-    permissionRows,
-    permissionDiagnose,
-    loadPermissions,
-    savePermission,
-    deletePermission,
-    diagnosePermission,
-    savingPermission,
-    deletingPermissionKey,
-    siteAdmins,
-    siteAdminUserSeqInput,
-    setSiteAdminUserSeqInput,
-    loadSiteAdmins,
-    insertSiteAdmin,
-    deleteSiteAdmin,
-    addingSiteAdmin,
-    deletingSiteAdminUserSeq,
-    error
-  };
+  }, [loadCrawlerCaches]);
+  return { loading, crawlerCaches, crawlerCacheCount, refreshingUrl, deletingUrl, loadCrawlerCaches, refreshCrawlerCache, deleteCrawlerCache };
 }
-var ADMIN_ONLY_PAGES = /* @__PURE__ */ new Set(["all-users", "user-views", "s3-browser", "crawler-cache", "recent-changes", "access-logs", "sites"]);
-function AdminContent({ page, onNavigate, pathname, search, me }) {
-  const ACCESS_LOG_PAGE_SIZE = 20;
-  const {
-    loading,
-    sites,
-    allUsers,
-    allUserCount,
-    dailyStats,
-    recentChanges,
-    accessLogs,
-    accessLogCount,
-    topViewedPages,
-    userViewHistories,
-    loadingUserViewHistories,
-    loadUserViewHistories,
-    loadRecentChanges,
-    loadAccessLogs,
-    loadAllUsers,
-    clearSiteCache,
-    clearingSiteSeq,
-    siteFaviconUrl,
-    siteFaviconObjectKey,
-    loadSiteFavicon,
-    uploadSiteFavicon,
-    uploadingFavicon,
-    resetSiteFavicon,
-    deletingFavicon,
-    siteTheme,
-    setSiteTheme,
-    loadSiteTheme,
-    saveSiteTheme,
-    saveSiteMeta,
-    savingSiteTheme,
-    loadAdminSitePageNames,
-    runSiteCalculate,
-    calculatingSiteSeq,
-    memoryCacheStats,
-    loadMemoryCacheStats,
-    s3Items,
-    loadS3Objects,
-    selectedS3Keys,
-    setSelectedS3Keys,
-    deleteS3Selected,
-    downloadS3Object,
-    loadingS3,
-    deletingS3,
-    expandedS3Nodes,
-    toggleS3Node,
-    expandAllS3Nodes,
-    crawlerCaches,
-    crawlerCacheCount,
-    loadCrawlerCaches,
-    refreshCrawlerCache,
-    deleteCrawlerCache,
-    refreshingCrawlerUrl,
-    deletingCrawlerUrl,
-    crawlerSearchInput,
-    setCrawlerSearchInput,
-    crawlerSearch,
-    setCrawlerSearch,
-    crawlerPage,
-    setCrawlerPage,
-    crawlerSortBy,
-    setCrawlerSortBy,
-    crawlerSortOrder,
-    setCrawlerSortOrder,
-    adminPageMetaRows,
-    adminPageMetaCount,
-    loadAdminPageMetaList,
-    permissionRows,
-    permissionDiagnose,
-    loadPermissions,
-    savePermission,
-    deletePermission,
-    diagnosePermission,
-    savingPermission,
-    deletingPermissionKey,
-    siteAdmins,
-    siteAdminUserSeqInput,
-    setSiteAdminUserSeqInput,
-    loadSiteAdmins,
-    insertSiteAdmin,
-    deleteSiteAdmin,
-    addingSiteAdmin,
-    deletingSiteAdminUserSeq,
-    error
-  } = useAdminData(page, me);
-  const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
-  const normalizedCrawlerPage = Math.min(crawlerPage, crawlerTotalPages);
-  const [recentChangeLimitInput, setRecentChangeLimitInput] = useState2("50");
-  const [accessLogPage, setAccessLogPage] = useState2(1);
-  const [accessLogSearchInput, setAccessLogSearchInput] = useState2("");
-  const [accessLogSortBy, setAccessLogSortBy] = useState2("seq");
-  const [accessLogSortOrder, setAccessLogSortOrder] = useState2("desc");
-  const [allUserPage, setAllUserPage] = useState2(1);
-  const [allUserSearchInput, setAllUserSearchInput] = useState2("");
-  const [allUserSortBy, setAllUserSortBy] = useState2("seq");
-  const [allUserSortOrder, setAllUserSortOrder] = useState2("desc");
-  const [faviconFile, setFaviconFile] = useState2(null);
-  const [selectedSiteSeq, setSelectedSiteSeq] = useState2("");
-  const [siteMetaForm, setSiteMetaForm] = useState2({ abbr: "", mainDomain: "", publicListedOrder: "" });
-  const [savingSiteMeta, setSavingSiteMeta] = useState2(false);
-  const [sitePageNames, setSitePageNames] = useState2([]);
-  const [adminPageMetaPage, setAdminPageMetaPage] = useState2(1);
-  const [adminPageMetaSearchInput, setAdminPageMetaSearchInput] = useState2("");
-  const [adminPageMetaSearch, setAdminPageMetaSearch] = useState2("");
-  const [adminPageMetaSortBy, setAdminPageMetaSortBy] = useState2("dateUpdated");
-  const [adminPageMetaSortOrder, setAdminPageMetaSortOrder] = useState2("desc");
-  const [permissionForm, setPermissionForm] = useState2({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-  const [permissionDiagnoseForm, setPermissionDiagnoseForm] = useState2({ pageName: "", actor: "", action: "Read" });
-  const [permissionSortBy, setPermissionSortBy] = useState2("specificity");
-  const [permissionSortOrder, setPermissionSortOrder] = useState2("desc");
-  const [selectedCalculatePageName, setSelectedCalculatePageName] = useState2("");
-  const [siteCalculateMessage, setSiteCalculateMessage] = useState2("");
-  const selectedSite = useMemo2(
-    () => sites.find((site) => String(site.seq) === selectedSiteSeq) ?? null,
-    [sites, selectedSiteSeq]
-  );
-  const selectedUserSeq = useMemo2(() => {
-    const userSeqByPath = parseUserSeqFromPathname(pathname);
-    if (userSeqByPath > 0) {
-      return userSeqByPath;
-    }
-    const params = new URLSearchParams(search);
-    const userSeqByQuery = Number.parseInt(params.get("userSeq") ?? "", 10);
-    return Number.isFinite(userSeqByQuery) && userSeqByQuery > 0 ? userSeqByQuery : 0;
-  }, [page, pathname, search]);
-  const selectedAllUser = useMemo2(
-    () => allUsers.find((user) => user.seq === selectedUserSeq) ?? null,
-    [allUsers, selectedUserSeq]
-  );
-  const selectedSiteDomainsText = useMemo2(
-    () => (selectedSite?.domains ?? []).join(", ") || "-",
-    [selectedSite]
-  );
-  useEffect2(() => {
-    setSiteMetaForm({
-      abbr: selectedSite?.abbr ?? "",
-      mainDomain: selectedSite?.mainDomain ?? "",
-      publicListedOrder: selectedSite?.publicListedOrder == null ? "" : String(selectedSite.publicListedOrder)
-    });
-  }, [selectedSite]);
-  const selectedAccessLogSiteSeq = useMemo2(
-    () => parseSiteSeqForAccessLogPathname(pathname),
-    [pathname]
-  );
-  const selectedAccessLogSite = useMemo2(
-    () => sites.find((site) => String(site.seq) === selectedAccessLogSiteSeq) ?? null,
-    [sites, selectedAccessLogSiteSeq]
-  );
-  const siteDomainBySeq = useMemo2(
-    () => new Map(sites.map((site) => [site.seq, (site.domains ?? []).find((domain) => !!domain) ?? ""])),
-    [sites]
-  );
-  const resolveSiteUrl = useCallback((row) => {
-    const domainFromRow = typeof row.siteDomain === "string" ? row.siteDomain.trim() : "";
-    const domainFromSites = (siteDomainBySeq.get(row.siteSeq) ?? "").trim();
-    const domain = domainFromRow || domainFromSites;
-    return domain ? `https://${domain}` : "";
-  }, [siteDomainBySeq]);
-  const isSiteConfigPage = page === "site-config";
-  const accessLogTotalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
-  const allUserTotalPages = Math.max(1, Math.ceil(allUserCount / ACCESS_LOG_PAGE_SIZE));
-  const adminPageMetaTotalPages = Math.max(1, Math.ceil(adminPageMetaCount / ADMIN_PAGE_META_PAGE_SIZE));
-  const sortedPermissionRows = useMemo2(() => {
-    return [...permissionRows].sort((left, right) => {
-      const leftValue = permissionSortBy === "actionLabel" ? formatPermissionAction(left.actionName, left.action) : left[permissionSortBy];
-      const rightValue = permissionSortBy === "actionLabel" ? formatPermissionAction(right.actionName, right.action) : right[permissionSortBy];
-      return compareValuesForSort(leftValue, rightValue, permissionSortOrder);
-    });
-  }, [permissionRows, permissionSortBy, permissionSortOrder]);
-  useEffect2(() => {
-    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission" && page !== "site-admins") {
-      return;
-    }
-    const siteSeqByPath = parseSiteSeqFromPathname2(pathname);
-    if (siteSeqByPath && selectedSiteSeq !== siteSeqByPath) {
-      setSelectedSiteSeq(siteSeqByPath);
-      setSelectedCalculatePageName("");
-      setSiteCalculateMessage("");
-    }
-  }, [page, pathname, selectedSiteSeq]);
-  useEffect2(() => {
-    if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins") && selectedSiteSeq) {
-      if (me?.isAdmin) {
-        loadSiteAdmins(selectedSiteSeq).catch((caughtError) => {
-          logError("site:admins:error", selectedSiteSeq, caughtError);
-        });
-      }
-      if (page === "site-admins") return;
-      loadSiteFavicon(selectedSiteSeq);
-      loadSiteTheme(selectedSiteSeq);
-      loadAdminSitePageNames(selectedSiteSeq).then((pageNames) => {
-        setSitePageNames(pageNames);
-      }).catch((caughtError) => {
-        logError("site:pageNames:error", selectedSiteSeq, caughtError);
-      });
-      loadAdminPageMetaList({
-        siteSeq: selectedSiteSeq,
-        page: 1,
-        pageSize: ADMIN_PAGE_META_PAGE_SIZE,
-        search: "",
-        sortBy: "dateUpdated",
-        sortOrder: "desc"
-      }).catch((caughtError) => {
-        logError("site:pageMetaList:error", selectedSiteSeq, caughtError);
-      });
-      loadPermissions(selectedSiteSeq).catch((caughtError) => {
-        logError("site:permissions:error", selectedSiteSeq, caughtError);
-      });
-    }
-  }, [page, me, selectedSiteSeq, loadSiteAdmins, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
-  useEffect2(() => {
-    if (page !== "access-logs") {
-      return;
-    }
-    setAccessLogPage(1);
-    loadAccessLogs({
-      page: 1,
-      pageSize: ACCESS_LOG_PAGE_SIZE,
-      search: accessLogSearchInput,
-      sortBy: accessLogSortBy,
-      sortOrder: accessLogSortOrder,
-      siteSeq: selectedAccessLogSiteSeq
-    });
-  }, [page, selectedAccessLogSiteSeq]);
-  if (loading) {
-    return /* @__PURE__ */ React5.createElement(Paper2, { p: "xl", withBorder: true, radius: "md", shadow: "xs" }, /* @__PURE__ */ React5.createElement(Stack3, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React5.createElement(Loader, { size: "lg", color: "blue", type: "dots" }), /* @__PURE__ */ React5.createElement(Title3, { order: 4, c: "dark" }, "Admin \uB370\uC774\uD130\uB97C \uC900\uBE44\uD558\uACE0 \uC788\uC5B4\uC694"), /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uD398\uC774\uC9C0\uAC00 \uACE7 \uD45C\uC2DC\uB429\uB2C8\uB2E4. \uC7A0\uC2DC\uB9CC \uAE30\uB2E4\uB824 \uC8FC\uC138\uC694.")));
-  }
-  if (error) {
-    return /* @__PURE__ */ React5.createElement(Paper2, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React5.createElement(Text4, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
-  }
-  const isAdmin = me?.isAdmin ?? false;
-  if (!isAdmin && ADMIN_ONLY_PAGES.has(page)) {
-    return /* @__PURE__ */ React5.createElement(Paper2, { p: "xl", withBorder: true, radius: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xl" }, "\u{1F512}"), /* @__PURE__ */ React5.createElement(Title3, { order: 4, c: "dark" }, "\uC811\uADFC \uAD8C\uD55C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4"), /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uC774 \uD398\uC774\uC9C0\uB294 \uC804\uCCB4 \uAD00\uB9AC\uC790\uB9CC \uC811\uADFC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.")));
-  }
-  if (!isAdmin && page === "dashboard") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3, mb: "xs" }, "\uB0B4 \uB2F4\uB2F9 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "SiteAdmin\uC73C\uB85C \uB4F1\uB85D\uB41C \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, sites.map((site) => /* @__PURE__ */ React5.createElement(SiteListCard, { key: site.seq, sites: [site], onNavigate }))), sites.length === 0 && /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uB2F4\uB2F9 \uC0AC\uC774\uD2B8\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.")));
-  }
-  if (page === "sites") {
-    return /* @__PURE__ */ React5.createElement(SiteListCard, { sites, onNavigate });
-  }
-  if (page === "all-users") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "All Users"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, allUserCount, " users")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uC0AC\uC6A9\uC790 \uBAA9\uB85D\uC774\uBA70, \uCD5C\uADFC \uBC29\uBB38\uC21C\uC73C\uB85C \uC815\uB82C\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Divider3, { mb: "md" }), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: allUserSearchInput, onChange: (event) => setAllUserSearchInput(event.currentTarget.value), placeholder: "email, nickname, seq" }), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: () => {
-      setAllUserPage(1);
-      loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder });
-    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        sortIcons: {
-          sorted: /* @__PURE__ */ React5.createElement(IconChevronUp, { size: 14 }),
-          unsorted: /* @__PURE__ */ React5.createElement(IconSelector, { size: 14 })
-        },
-        withTableBorder: true,
-        striped: true,
-        highlightOnHover: true,
-        records: allUsers,
-        columns: [
-          { accessor: "seq", title: "Seq", sortable: true },
-          { accessor: "profile", title: "Profile", render: (row) => /* @__PURE__ */ React5.createElement(UserProfileCell, { user: row }) },
-          { accessor: "email", title: "Email", sortable: true },
-          { accessor: "nickname", title: "Nickname", sortable: true },
-          { accessor: "created", title: "Created", sortable: true },
-          { accessor: "updated", title: "Updated", sortable: true },
-          { accessor: "visitCount", title: "Visits", sortable: true },
-          { accessor: "lastViewed", title: "Last Viewed", sortable: true, render: (row) => row.lastViewed ?? "-" },
-          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", onClick: () => onNavigate(`/Admin/User/UserViewHistory?seq=${encodeURIComponent(row.seq)}`) }, "\uC5F4\uB78C \uC774\uB825") }
-        ],
-        sortStatus: { columnAccessor: allUserSortBy, direction: allUserSortOrder },
-        onSortStatusChange: (nextSortStatus) => {
-          const nextDirection = nextSortStatus.direction ?? "desc";
-          setAllUserPage(1);
-          setAllUserSortBy(nextSortStatus.columnAccessor);
-          setAllUserSortOrder(nextDirection);
-          loadAllUsers({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection });
-        },
-        totalRecords: allUserCount,
-        recordsPerPage: ACCESS_LOG_PAGE_SIZE,
-        page: allUserPage,
-        onPageChange: (nextPage) => {
-          setAllUserPage(nextPage);
-          loadAllUsers({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: allUserSearchInput, sortBy: allUserSortBy, sortOrder: allUserSortOrder });
-        },
-        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
-        minHeight: 380
-      }
-    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", allUserPage, " / ", allUserTotalPages));
-  }
-  if (page === "user-views") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "User View Histories"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, userViewHistories.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC6A9\uC790\uC758 \uD398\uC774\uC9C0 \uC5F4\uB78C \uC774\uB825\uC785\uB2C8\uB2E4. Site \uBC0F Page \uB9C1\uD06C\uB85C \uC9C1\uC811 \uC774\uB3D9\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { mb: "md", justify: "space-between" }, /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/User") }, "\u2190 User"), selectedAllUser ? /* @__PURE__ */ React5.createElement(Group4, { gap: 8 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, "\uC0AC\uC6A9\uC790:"), /* @__PURE__ */ React5.createElement(UserProfileCell, { user: selectedAllUser })) : /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "seq\uB97C \uC9C0\uC815\uD574 \uC8FC\uC138\uC694. (/Admin/User/UserViewHistory?seq=\uC22B\uC790)")), loadingUserViewHistories ? /* @__PURE__ */ React5.createElement(Group4, null, /* @__PURE__ */ React5.createElement(Loader, { size: "sm" }), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uC5F4\uB78C \uC774\uB825\uC744 \uBD88\uB7EC\uC624\uB294 \uC911\uC785\uB2C8\uB2E4...")) : makeTable(
-      ["When", "Site", "Page", "History Seq"],
-      userViewHistories.map((history) => {
-        const siteUrl = history.siteDomain ? `https://${history.siteDomain}` : "";
-        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(history.pageName)}` : "";
-        return [
-          history.viewedAt,
-          siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, history.siteName, " (#", history.site, ")") : `${history.siteName} (#${history.site})`,
-          pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, history.pageName) : history.pageName,
-          history.seq
-        ];
-      })
-    ));
-  }
-  if (page === "site-admins") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Site Admins"), /* @__PURE__ */ React5.createElement(Badge4, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { mb: "md", align: "end" }, /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "User Seq",
-        placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)",
-        value: siteAdminUserSeqInput,
-        onChange: (event) => setSiteAdminUserSeqInput(event.currentTarget.value),
-        type: "number",
-        min: "1"
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        loading: addingSiteAdmin,
-        disabled: !selectedSiteSeq || !siteAdminUserSeqInput.trim(),
-        onClick: async () => {
-          const userSeq = Number.parseInt(siteAdminUserSeqInput, 10);
-          if (!Number.isFinite(userSeq) || userSeq <= 0) return;
-          const ok = await insertSiteAdmin(selectedSiteSeq, userSeq);
-          if (ok) setSiteAdminUserSeqInput("");
-        }
-      },
-      "\uCD94\uAC00"
-    )), /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        withTableBorder: true,
-        borderRadius: "md",
-        striped: true,
-        highlightOnHover: true,
-        records: siteAdmins,
-        columns: [
-          { accessor: "user", title: "User Seq" },
-          { accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
-          {
-            accessor: "actions",
-            title: "Actions",
-            render: (row) => /* @__PURE__ */ React5.createElement(
-              Button2,
-              {
-                size: "xs",
-                variant: "light",
-                color: "red",
-                loading: deletingSiteAdminUserSeq === row.user,
-                onClick: () => deleteSiteAdmin(selectedSiteSeq, row.user)
-              },
-              "\uC0AD\uC81C"
-            )
-          }
-        ],
-        minHeight: 160
-      }
-    )));
-  }
-  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") {
-    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))), /* @__PURE__ */ React5.createElement(Group4, { align: "end", mt: "sm" }, /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "Abbr",
-        value: siteMetaForm.abbr,
-        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, abbr: event.currentTarget.value }),
-        disabled: !selectedSite
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "Main Domain",
-        value: siteMetaForm.mainDomain,
-        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, mainDomain: event.currentTarget.value }),
-        disabled: !selectedSite
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "Public Listed Order",
-        type: "number",
-        min: "0",
-        step: "0.01",
-        placeholder: "empty means hidden",
-        value: siteMetaForm.publicListedOrder,
-        onChange: (event) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: event.currentTarget.value }),
-        disabled: !selectedSite
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "light",
-        disabled: !selectedSite || !siteMetaForm.abbr.trim(),
-        loading: savingSiteMeta,
-        onClick: async () => {
-          if (!selectedSite) {
-            return;
-          }
-          setSavingSiteMeta(true);
-          try {
-            await saveSiteMeta(selectedSite.seq, siteMetaForm);
-          } catch (caughtError) {
-            logError("site-meta:save:error", caughtError);
-          } finally {
-            setSavingSiteMeta(false);
-          }
-        }
-      },
-      "Save site meta"
-    )))), page === "site-detail" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, adminPageMetaCount, " rows")), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: adminPageMetaSearchInput, onChange: (event) => setAdminPageMetaSearchInput(event.currentTarget.value), placeholder: "page name, image" }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "filled", onClick: () => {
-      setAdminPageMetaPage(1);
-      setAdminPageMetaSearch(adminPageMetaSearchInput);
-      loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearchInput, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });
-    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        withTableBorder: true,
-        borderRadius: "md",
-        striped: true,
-        highlightOnHover: true,
-        records: adminPageMetaRows,
-        columns: [
-          { accessor: "name", title: "Page", sortable: true },
-          { accessor: "revision", title: "Revision", sortable: true },
-          {
-            accessor: "image",
-            title: "Image",
-            sortable: true,
-            render: (row) => row.image ? /* @__PURE__ */ React5.createElement(Anchor, { href: row.image, target: "_blank", rel: "noopener" }, /* @__PURE__ */ React5.createElement(
-              Image,
-              {
-                src: row.image,
-                alt: `${row.name} image`,
-                h: 44,
-                w: 72,
-                fit: "cover",
-                radius: "sm",
-                fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-              }
-            )) : "-"
-          },
-          { accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
-          { accessor: "size", title: "Size", sortable: true },
-          {
-            accessor: "actions",
-            title: "Actions",
-            render: (row) => /* @__PURE__ */ React5.createElement(
-              Button2,
-              {
-                size: "xs",
-                variant: "light",
-                color: "teal",
-                disabled: !selectedSiteSeq,
-                loading: selectedSite ? calculatingSiteSeq === selectedSite.seq : false,
-                onClick: async () => {
-                  if (!selectedSiteSeq) {
-                    return;
-                  }
-                  const response = await runSiteCalculate(selectedSiteSeq, row.name);
-                  if (!response) {
-                    return;
-                  }
-                  setSiteCalculateMessage(`\uC120\uD0DD \uD398\uC774\uC9C0: ${response?.pageName ?? row.name} (queued)`);
-                }
-              },
-              "\uC7AC\uACC4\uC0B0"
-            )
-          }
-        ],
-        sortStatus: { columnAccessor: adminPageMetaSortBy, direction: adminPageMetaSortOrder },
-        onSortStatusChange: (nextSortStatus) => {
-          const nextDirection = nextSortStatus.direction ?? "desc";
-          setAdminPageMetaPage(1);
-          setAdminPageMetaSortBy(nextSortStatus.columnAccessor);
-          setAdminPageMetaSortOrder(nextDirection);
-          loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: nextSortStatus.columnAccessor, sortOrder: nextDirection });
-        },
-        totalRecords: adminPageMetaCount,
-        recordsPerPage: ADMIN_PAGE_META_PAGE_SIZE,
-        page: adminPageMetaPage,
-        onPageChange: (nextPage) => {
-          setAdminPageMetaPage(nextPage);
-          loadAdminPageMetaList({ siteSeq: selectedSiteSeq, page: nextPage, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: adminPageMetaSearch, sortBy: adminPageMetaSortBy, sortOrder: adminPageMetaSortOrder });
-        },
-        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
-        minHeight: 320
-      }
-    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", adminPageMetaPage, " / ", adminPageMetaTotalPages)) : null, page === "site-permission" ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Permission"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, permissionRows.length, " rows")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: permissionForm.targetType, onChange: (value) => setPermissionForm({ ...permissionForm, targetType: value ?? "All", target: value === "All" ? "" : permissionForm.target }) }), /* @__PURE__ */ React5.createElement(Autocomplete, { label: "target", data: sitePageNames, value: permissionForm.target, onChange: (value) => setPermissionForm({ ...permissionForm, target: value }), placeholder: "page name or prefix", disabled: permissionForm.targetType === "All" }), /* @__PURE__ */ React5.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: permissionForm.actorType, onChange: (value) => setPermissionForm({ ...permissionForm, actorType: value ?? "All", actor: value === "All" || value === "Login" ? "" : permissionForm.actor }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionForm.actor, onChange: (event) => setPermissionForm({ ...permissionForm, actor: event.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionForm.action, onChange: (value) => setPermissionForm({ ...permissionForm, action: value ?? "Read" }) })), /* @__PURE__ */ React5.createElement(Group4, { mb: "md" }, /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        size: "xs",
-        loading: savingPermission,
-        onClick: async () => {
-          const saved = await savePermission(selectedSiteSeq, permissionForm);
-          if (saved) {
-            setPermissionForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-          }
-        }
-      },
-      "Save"
-    )), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React5.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: permissionDiagnoseForm.pageName, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, pageName: value }) }), /* @__PURE__ */ React5.createElement(TextInput, { label: "actor", value: permissionDiagnoseForm.actor, onChange: (event) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, actor: event.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React5.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: permissionDiagnoseForm.action, onChange: (value) => setPermissionDiagnoseForm({ ...permissionDiagnoseForm, action: value ?? "Read" }) }), /* @__PURE__ */ React5.createElement(Button2, { mt: 22, variant: "light", onClick: () => diagnosePermission(selectedSiteSeq, permissionDiagnoseForm.pageName, permissionDiagnoseForm.actor, permissionDiagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React5.createElement(Group4, { gap: "xs" }, /* @__PURE__ */ React5.createElement(Badge4, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        withTableBorder: true,
-        borderRadius: "md",
-        striped: true,
-        highlightOnHover: true,
-        records: sortedPermissionRows,
-        columns: [
-          { accessor: "targetType", title: "Target Type", sortable: true },
-          { accessor: "target", title: "Target", sortable: true, render: (row) => row.target || "*" },
-          { accessor: "actorType", title: "Actor Type", sortable: true },
-          { accessor: "actor", title: "Actor", sortable: true, render: (row) => row.actor || "*" },
-          { accessor: "action", title: "Action", sortable: true, render: (row) => formatPermissionAction(row.actionName, row.action) },
-          { accessor: "specificity", title: "Specificity", sortable: true },
-          {
-            accessor: "actions",
-            title: "Actions",
-            render: (row) => {
-              const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
-              return /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", onClick: () => setPermissionForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", color: "red", loading: deletingPermissionKey === key, onClick: () => deletePermission(selectedSiteSeq, row) }, "Delete"));
-            }
-          }
-        ],
-        sortStatus: { columnAccessor: permissionSortBy, direction: permissionSortOrder },
-        onSortStatusChange: (nextSortStatus) => {
-          setPermissionSortBy(nextSortStatus.columnAccessor);
-          setPermissionSortOrder(nextSortStatus.direction ?? "asc");
-        },
-        minHeight: 220
-      }
-    )) : null, isSiteConfigPage ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Favicon"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4. \uC5C5\uB85C\uB4DC \uD6C4 \uBC14\uB85C \uBC18\uC601\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 6 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React5.createElement(
-      "img",
-      {
-        src: siteFaviconUrl,
-        alt: "Current favicon",
-        style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" }
-      }
-    ), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, siteFaviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React5.createElement(Anchor, { size: "xs", href: siteFaviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React5.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React5.createElement(
-      "input",
-      {
-        type: "file",
-        accept: "image/*,.ico",
-        onChange: (event) => {
-          const selected = event.currentTarget.files?.[0] ?? null;
-          setFaviconFile(selected);
-        }
-      }
-    ), /* @__PURE__ */ React5.createElement(Group4, null, /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        loading: uploadingFavicon,
-        disabled: !faviconFile || !selectedSiteSeq,
-        onClick: async () => {
-          await uploadSiteFavicon(faviconFile, selectedSiteSeq);
-          await loadSiteFavicon(selectedSiteSeq);
-        }
-      },
-      "Upload favicon"
-    ), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteFavicon(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        color: "red",
-        variant: "light",
-        loading: deletingFavicon,
-        disabled: !selectedSiteSeq,
-        onClick: async () => {
-          await resetSiteFavicon(selectedSiteSeq);
-          await loadSiteFavicon(selectedSiteSeq);
-          setFaviconFile(null);
-        }
-      },
-      "Reset to default"
-    )), /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO")))), !isSiteConfigPage ? /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Operation \xB7 Site Calculate Operation"), /* @__PURE__ */ React5.createElement(Badge4, { color: "teal", variant: "light" }, "\uC6B4\uC601 \uC791\uC5C5")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uC0AC\uC774\uD2B8\uC5D0\uC11C 1\uAC1C \uD398\uC774\uC9C0\uB9CC Calculate \uD050\uC5D0 \uB123\uC2B5\uB2C8\uB2E4. \uD398\uC774\uC9C0\uB97C \uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C, \uC785\uB825\uD558\uBA74 \uD574\uB2F9 \uD398\uC774\uC9C0\uB97C Calculate\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "Calculate\uD560 \uD398\uC774\uC9C0 (\uC790\uB3D9\uC644\uC131)",
-        placeholder: "\uBE44\uC6CC\uB450\uBA74 \uB79C\uB364 1\uAC1C",
-        value: selectedCalculatePageName,
-        onChange: (event) => setSelectedCalculatePageName(event.currentTarget.value),
-        list: "site-calculate-page-name-list",
-        disabled: !selectedSiteSeq
-      }
-    ), /* @__PURE__ */ React5.createElement("datalist", { id: "site-calculate-page-name-list" }, sitePageNames.map((pageName) => /* @__PURE__ */ React5.createElement("option", { key: `calculate-page-${pageName}`, value: pageName }))), /* @__PURE__ */ React5.createElement(Group4, null, /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        color: "teal",
-        disabled: !selectedSiteSeq,
-        loading: selectedSite ? calculatingSiteSeq === selectedSite.seq : false,
-        onClick: async () => {
-          if (!selectedSiteSeq) {
-            return;
-          }
-          const response = await runSiteCalculate(selectedSiteSeq, selectedCalculatePageName);
-          if (!response) {
-            return;
-          }
-          const modeLabel = response?.source === "selected" ? "\uC120\uD0DD \uD398\uC774\uC9C0" : "\uB79C\uB364 \uD398\uC774\uC9C0";
-          setSiteCalculateMessage(`${modeLabel}: ${response?.pageName ?? "-"} (queued)`);
-        }
-      },
-      "Calculate 1 page"
-    ), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "light",
-        disabled: !selectedSiteSeq,
-        onClick: async () => {
-          if (!selectedSiteSeq) {
-            return;
-          }
-          const pageNames = await loadAdminSitePageNames(selectedSiteSeq);
-          setSitePageNames(pageNames);
-        }
-      },
-      "\uD398\uC774\uC9C0 \uBAA9\uB85D \uC0C8\uB85C\uACE0\uCE68"
-    )), siteCalculateMessage ? /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "teal" }, siteCalculateMessage) : null, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uC774\uB984 \uBAA9\uB85D\uC740 \uC0AC\uC774\uD2B8 \uCE90\uC2DC\uB97C \uC0AC\uC6A9\uD569\uB2C8\uB2E4. (count: ", sitePageNames.length, ")"))) : null), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Theme"), /* @__PURE__ */ React5.createElement(Badge4, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uBE44\uC6CC\uB450\uBA74 Header/Footer \uAE30\uBCF8\uAC12(\uBC30\uACBD #EEEEEE, \uC804\uACBD #000000), Body \uAE30\uBCF8\uAC12(\uBC30\uACBD #FFFFFF, \uC804\uACBD #000000)\uC744 \uC0AC\uC6A9\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Header \uBC30\uACBD\uC0C9",
-        placeholder: "#EEEEEE",
-        format: "hexa",
-        value: siteTheme.headerBackgroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, headerBackgroundColor: value })),
-        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Header \uC804\uACBD\uC0C9",
-        placeholder: "#000000",
-        format: "hexa",
-        value: siteTheme.headerForegroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, headerForegroundColor: value })),
-        swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Body \uBC30\uACBD\uC0C9",
-        placeholder: "#FFFFFF",
-        format: "hexa",
-        value: siteTheme.bodyBackgroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, bodyBackgroundColor: value })),
-        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Body \uC804\uACBD\uC0C9",
-        placeholder: "#000000",
-        format: "hexa",
-        value: siteTheme.bodyForegroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, bodyForegroundColor: value })),
-        swatches: ["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Footer \uBC30\uACBD\uC0C9",
-        placeholder: "#EEEEEE",
-        format: "hexa",
-        value: siteTheme.footerBackgroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, footerBackgroundColor: value })),
-        swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      ColorInput,
-      {
-        label: "Footer \uC804\uACBD\uC0C9",
-        placeholder: "#000000",
-        format: "hexa",
-        value: siteTheme.footerForegroundColor,
-        onChange: (value) => setSiteTheme((prev) => ({ ...prev, footerForegroundColor: value })),
-        swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"],
-        withEyeDropper: false,
-        clearable: true
-      }
-    )), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React5.createElement(Stack3, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React5.createElement(
-      "div",
-      {
-        style: {
-          backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE",
-          color: siteTheme.headerForegroundColor || "#000000",
-          padding: "12px 14px",
-          fontWeight: 600
-        }
-      },
-      "Header Preview"
-    ), /* @__PURE__ */ React5.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React5.createElement(
-      "div",
-      {
-        style: {
-          backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE",
-          color: siteTheme.footerForegroundColor || "#000000",
-          padding: "12px 14px",
-          fontWeight: 600
-        }
-      },
-      "Footer Preview"
-    )))), /* @__PURE__ */ React5.createElement(Group4, { mt: "md" }, /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        color: "grape",
-        loading: savingSiteTheme,
-        disabled: !selectedSiteSeq,
-        onClick: async () => {
-          await saveSiteTheme(selectedSiteSeq, siteTheme);
-          await loadSiteTheme(selectedSiteSeq);
-        }
-      },
-      "Save theme"
-    ), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", disabled: !selectedSiteSeq, onClick: () => loadSiteTheme(selectedSiteSeq) }, "Refresh"), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        color: "gray",
-        variant: "light",
-        disabled: !selectedSiteSeq,
-        onClick: async () => {
-          const emptyTheme = {
-            headerBackgroundColor: "",
-            headerForegroundColor: "",
-            bodyBackgroundColor: "",
-            bodyForegroundColor: "",
-            footerBackgroundColor: "",
-            footerForegroundColor: ""
-          };
-          setSiteTheme(emptyTheme);
-          await saveSiteTheme(selectedSiteSeq, emptyTheme);
-          await loadSiteTheme(selectedSiteSeq);
-        }
-      },
-      "Reset"
-    )))) : null, page === "site-cache" ? /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React5.createElement(Badge4, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4. \uB3C4\uBA54\uC778/\uD398\uC774\uC9C0/\uD5E4\uB354 \uCE90\uC2DC\uAC00 \uAC15\uC81C\uB85C \uAC31\uC2E0\uB429\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "center" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        color: "orange",
-        variant: "filled",
-        disabled: !selectedSite,
-        loading: selectedSite ? clearingSiteSeq === selectedSite.seq : false,
-        onClick: () => {
-          if (!selectedSite) {
-            return;
-          }
-          clearSiteCache(selectedSite.seq);
-        }
-      },
-      "Clear current site cache"
-    ))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React5.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table3.Thead, null, /* @__PURE__ */ React5.createElement(Table3.Tr, null, /* @__PURE__ */ React5.createElement(Table3.Th, null, "Port"), /* @__PURE__ */ React5.createElement(Table3.Th, null, "Key Count"), /* @__PURE__ */ React5.createElement(Table3.Th, null, "Value Count"), /* @__PURE__ */ React5.createElement(Table3.Th, null, "Captured At"))), /* @__PURE__ */ React5.createElement(Table3.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React5.createElement(Table3.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React5.createElement(Table3.Td, null, row.instancePort), /* @__PURE__ */ React5.createElement(Table3.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React5.createElement(Table3.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React5.createElement(Table3.Td, null, row.stats?.capturedAtIso8601 ?? "-"))))))) : null);
-  }
-  if (page === "s3-browser") {
-    const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
-    const root = { children: {} };
-    fileRows.forEach((item) => {
-      const parts = String(item.key || "").split("/").filter(Boolean);
-      if (parts.length === 0) return;
-      let node = root;
-      parts.forEach((part, index) => {
-        const currentPath = parts.slice(0, index + 1).join("/");
-        if (!node.children[part]) {
-          node.children[part] = { name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null };
-        }
-        if (index === parts.length - 1) {
-          node.children[part].isFile = true;
-          node.children[part].meta = item;
-        }
-        node = node.children[part];
-      });
-    });
-    const rows = [];
-    const visit = (node, depth = 0) => {
-      Object.values(node.children).sort((a, b) => {
-        if (a.isFile === b.isFile) return a.name.localeCompare(b.name);
-        return a.isFile ? 1 : -1;
-      }).forEach((child) => {
-        rows.push({ depth, node: child });
-        if (!child.isFile && expandedS3Nodes[child.path]) {
-          visit(child, depth + 1);
-        }
-      });
-    };
-    visit(root, 0);
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React5.createElement(Badge4, { color: "red", variant: "light" }, "Admin Only")), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button2, { loading: loadingS3, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: expandAllS3Nodes, leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React5.createElement(Button2, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: deleteS3Selected, leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React5.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React5.createElement(Table3.Thead, null, /* @__PURE__ */ React5.createElement(Table3.Tr, null, /* @__PURE__ */ React5.createElement(Table3.Th, null, /* @__PURE__ */ React5.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (event) => {
-      if (event.currentTarget.checked) {
-        setSelectedS3Keys(fileRows.map((item) => item.key));
-      } else {
-        setSelectedS3Keys([]);
-      }
-    } })), /* @__PURE__ */ React5.createElement(Table3.Th, null, "Key"), /* @__PURE__ */ React5.createElement(Table3.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React5.createElement(Table3.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React5.createElement(Table3.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React5.createElement(Table3.Tbody, null, rows.map(({ depth, node }) => {
-      const key = node.path;
-      const checked = selectedS3Keys.includes(key);
-      return /* @__PURE__ */ React5.createElement(Table3.Tr, { key }, /* @__PURE__ */ React5.createElement(Table3.Td, null, /* @__PURE__ */ React5.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (event) => {
-        if (event.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
-        else setSelectedS3Keys((prev) => prev.filter((selectedKey) => selectedKey !== key));
-      } })), /* @__PURE__ */ React5.createElement(Table3.Td, null, /* @__PURE__ */ React5.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React5.createElement(Button2, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React5.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React5.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React5.createElement("span", null, /* @__PURE__ */ React5.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React5.createElement("span", null, node.name))), /* @__PURE__ */ React5.createElement(Table3.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React5.createElement(Table3.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React5.createElement(Table3.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React5.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
-    }))));
-  }
-  if (page === "crawler-cache") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React5.createElement(Badge4, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(Button2, { variant: "filled", onClick: () => loadCrawlerCaches({ page: crawlerPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder }) }, "\uC870\uD68C")), /* @__PURE__ */ React5.createElement(Group4, { mb: "sm", align: "end" }, /* @__PURE__ */ React5.createElement(TextInput, { label: "search", value: crawlerSearchInput, onChange: (event) => setCrawlerSearchInput(event.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: () => {
-      setCrawlerPage(1);
-      setCrawlerSearch(crawlerSearchInput);
-      loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearchInput, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder });
-    } }, "\uAC80\uC0C9")), /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        sortIcons: { sorted: /* @__PURE__ */ React5.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React5.createElement(IconSelector, { size: 14 }) },
-        withTableBorder: true,
-        striped: true,
-        highlightOnHover: true,
-        records: crawlerCaches,
-        columns: [
-          { accessor: "id", title: "ID", sortable: true, render: (row) => row.id },
-          { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React5.createElement(Text4, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
-          { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
-          { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },
-          {
-            accessor: "image",
-            title: "Image",
-            sortable: true,
-            render: (row) => {
-              if (!row.image) return "-";
-              return /* @__PURE__ */ React5.createElement(Anchor, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React5.createElement(
-                Image,
-                {
-                  src: row.image,
-                  alt: row.title || row.url || "crawler image",
-                  h: 44,
-                  w: 72,
-                  fit: "cover",
-                  radius: "sm",
-                  fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
-                }
-              ));
-            }
-          },
-          { accessor: "description", title: "Description", sortable: true, render: (row) => row.description || "-" },
-          { accessor: "dateUpdated", title: "Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
-          { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React5.createElement(Group4, { gap: 6 }, /* @__PURE__ */ React5.createElement(Button2, { size: "xs", variant: "light", loading: refreshingCrawlerUrl === row.url, onClick: () => refreshCrawlerCache(row.url) }, "\uAC31\uC2E0"), /* @__PURE__ */ React5.createElement(Button2, { size: "xs", color: "red", variant: "light", loading: deletingCrawlerUrl === row.url, onClick: () => deleteCrawlerCache(row.url) }, "\uC0AD\uC81C")) }
-        ],
-        sortStatus: { columnAccessor: crawlerSortBy, direction: crawlerSortOrder },
-        onSortStatusChange: (nextSortStatus) => {
-          setCrawlerPage(1);
-          setCrawlerSortBy(nextSortStatus.columnAccessor);
-          setCrawlerSortOrder(nextSortStatus.direction ?? "desc");
-          loadCrawlerCaches({
-            page: 1,
-            pageSize: CRAWLER_CACHE_PAGE_SIZE,
-            search: crawlerSearch,
-            sortBy: nextSortStatus.columnAccessor,
-            sortOrder: nextSortStatus.direction ?? "desc"
-          });
-        },
-        totalRecords: crawlerCacheCount,
-        recordsPerPage: CRAWLER_CACHE_PAGE_SIZE,
-        page: normalizedCrawlerPage,
-        onPageChange: (nextPage) => {
-          setCrawlerPage(nextPage);
-          loadCrawlerCaches({ page: nextPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: crawlerSearch, sortBy: crawlerSortBy, sortOrder: crawlerSortOrder });
-        },
-        paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
-        minHeight: 380
-      }
-    ));
-  }
-  if (page === "recent-changes") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "\uC870\uD68C \uAC1C\uC218 n",
-        value: recentChangeLimitInput,
-        onChange: (event) => setRecentChangeLimitInput(event.currentTarget.value),
-        placeholder: "1 ~ 500"
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        onClick: () => {
-          const parsed = Number.parseInt(recentChangeLimitInput, 10);
-          const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
-          setRecentChangeLimitInput(String(n));
-          loadRecentChanges(n);
-        }
-      },
-      "\uC870\uD68C"
-    )), makeTable(
-      ["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"],
-      recentChanges.map((row) => {
-        const siteUrl = resolveSiteUrl(row);
-        const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
-        const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-        const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-        return [
-          row.dateTime,
-          siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
-          pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name,
-          revisionUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision,
-          editorUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: editorUrl }, row.nickname) : row.nickname ?? "-",
-          row.comment || "-",
-          row.remoteAddress
-        ];
-      })
-    ));
-  }
-  if (page === "access-logs") {
-    return /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, selectedAccessLogSite ? `Access Logs (${selectedAccessLogSite.name} #${selectedAccessLogSite.seq})` : "Access Logs (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React5.createElement(
-      TextInput,
-      {
-        label: "search",
-        value: accessLogSearchInput,
-        onChange: (event) => setAccessLogSearchInput(event.currentTarget.value),
-        placeholder: "site/method/uri/ip/user-agent"
-      }
-    ), /* @__PURE__ */ React5.createElement(
-      Button2,
-      {
-        variant: "filled",
-        onClick: () => {
-          setAccessLogPage(1);
-          loadAccessLogs({
-            page: 1,
-            pageSize: ACCESS_LOG_PAGE_SIZE,
-            search: accessLogSearchInput,
-            sortBy: accessLogSortBy,
-            sortOrder: accessLogSortOrder,
-            siteSeq: selectedAccessLogSiteSeq
-          });
-        }
-      },
-      "\uC870\uD68C"
-    )), /* @__PURE__ */ React5.createElement(
-      DataTable,
-      {
-        sortIcons: {
-          sorted: /* @__PURE__ */ React5.createElement(IconChevronUp, { size: 14 }),
-          unsorted: /* @__PURE__ */ React5.createElement(IconSelector, { size: 14 })
-        },
-        withTableBorder: true,
-        borderRadius: "sm",
-        striped: true,
-        highlightOnHover: true,
-        minHeight: 420,
-        records: Array.isArray(accessLogs) ? accessLogs : [],
-        idAccessor: "seq",
-        columns: [
-          { accessor: "seq", title: "seq", sortable: true },
-          { accessor: "dateInserted", title: "DateInserted", sortable: true },
-          { accessor: "siteName", title: "Site", render: (row) => `${row.siteName} (#${row.siteSeq})` },
-          { accessor: "ipDenySeq", title: "IpDeny", render: (row) => row.ipDenySeq ?? "-" },
-          { accessor: "userSeq", title: "User", render: (row) => row.userSeq ?? "-" },
-          { accessor: "method", title: "Method", sortable: true },
-          {
-            accessor: "uri",
-            title: "Request URL",
-            sortable: true,
-            render: (row) => {
-              const href = `${row.scheme}://${row.host}${row.uri}`;
-              return /* @__PURE__ */ React5.createElement(Anchor, { href, target: "_blank", rel: "noopener noreferrer" }, href);
-            }
-          },
-          { accessor: "status", title: "Status", sortable: true },
-          { accessor: "remoteAddress", title: "IP" },
-          { accessor: "durationMilli", title: "Duration(ms)", sortable: true },
-          { accessor: "userAgent", title: "User-Agent" }
-        ],
-        sortStatus: { columnAccessor: accessLogSortBy, direction: accessLogSortOrder },
-        onSortStatusChange: (nextSortStatus) => {
-          const nextDirection = nextSortStatus.direction ?? "desc";
-          setAccessLogPage(1);
-          setAccessLogSortBy(nextSortStatus.columnAccessor);
-          setAccessLogSortOrder(nextDirection);
-          loadAccessLogs({
-            page: 1,
-            pageSize: ACCESS_LOG_PAGE_SIZE,
-            search: accessLogSearchInput,
-            sortBy: nextSortStatus.columnAccessor,
-            sortOrder: nextDirection,
-            siteSeq: selectedAccessLogSiteSeq
-          });
-        }
-      }
-    ), /* @__PURE__ */ React5.createElement(Group4, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "Page ", accessLogPage, " / ", accessLogTotalPages), /* @__PURE__ */ React5.createElement(
-      Pagination,
-      {
-        value: accessLogPage,
-        onChange: (nextPage) => {
-          setAccessLogPage(nextPage);
-          loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: accessLogSearchInput, sortBy: accessLogSortBy, sortOrder: accessLogSortOrder, siteSeq: selectedAccessLogSiteSeq });
-        },
-        total: accessLogTotalPages,
-        siblings: 1,
-        boundaries: 1,
-        size: "sm"
-      }
-    )));
-  }
-  return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, sites.length)), /* @__PURE__ */ React5.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, allUsers.length)), /* @__PURE__ */ React5.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React5.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E")))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React5.createElement(Badge4, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: () => onNavigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", onClick: () => onNavigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"))), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React5.createElement(
-    StatTrendCard,
-    {
-      title: "New Users",
-      color: "blue",
-      rows: dailyStats.userCreated,
-      total: dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)
-    }
-  ), /* @__PURE__ */ React5.createElement(
-    StatTrendCard,
-    {
-      title: "New Pages",
-      color: "indigo",
-      rows: dailyStats.pageCreated,
-      total: dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0)
-    }
-  ), /* @__PURE__ */ React5.createElement(
-    StatTrendCard,
-    {
-      title: "Page Edits",
-      color: "grape",
-      rows: dailyStats.pageEdited,
-      total: dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0)
-    }
-  )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC2E0\uADDC \uC0AC\uC6A9\uC790, \uC0AC\uC774\uD2B8 \uAC00\uC785, \uBB38\uC11C \uC0DD\uC131/\uC218\uC815 \uC9C0\uD45C\uB97C \uD558\uB098\uC758 \uC2DC\uACC4\uC5F4 \uCC28\uD2B8\uB85C \uBE44\uAD50\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(
-    MultiTrendChart,
-    {
-      series: [
-        { name: "New Users", color: "blue", rows: dailyStats.userCreated },
-        { name: "New Pages", color: "indigo", rows: dailyStats.pageCreated },
-        { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }
-      ]
-    }
-  )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React5.createElement(Badge4, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 30))), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uB85C\uADF8\uC778 \uC5EC\uBD80\uC640 \uC0C1\uAD00\uC5C6\uC774 \uD398\uC774\uC9C0 \uC870\uD68C \uB204\uC801 \uC0C1\uC704 \uBB38\uC11C 30\uAC1C\uC785\uB2C8\uB2E4."), makeTable(
-    ["Rank", "Site", "Page", "Views", "Last Viewed"],
-    topViewedPages.slice(0, 30).map((row, index) => {
-      const siteUrl = resolveSiteUrl(row);
-      const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
-      return [
-        index + 1,
-        siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
-        pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName,
-        row.viewCount,
-        row.lastViewedAt
-      ];
-    })
-  )), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React5.createElement(Badge4, { color: "violet", variant: "light" }, recentChanges.length)), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC804\uCCB4 \uC0AC\uC774\uD2B8 \uAE30\uC900 \uCD5C\uADFC \uBCC0\uACBD 30\uAC1C\uC785\uB2C8\uB2E4. \uB354 \uB9CE\uC774 \uBCF4\uB824\uBA74 \uC67C\uCABD \uBA54\uB274 Recent Changes\uB97C \uC0AC\uC6A9\uD558\uC138\uC694."), makeTable(
-    ["When", "Site", "Page", "Revision", "Editor", "Comment"],
-    recentChanges.map((row) => {
-      const siteUrl = resolveSiteUrl(row);
-      const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
-      const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-      const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-      return [
-        row.dateTime,
-        siteUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`,
-        pageUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name,
-        revisionUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision,
-        editorUrl ? /* @__PURE__ */ React5.createElement(Anchor, { href: editorUrl }, row.nickname) : row.nickname ?? "-",
-        row.comment || "-"
-      ];
-    })
-  )));
-}
-function AdminApp({ initialPage }) {
-  const [page, setPage] = useState2(initialPage);
-  const [pathname, setPathname] = useState2(window.location.pathname);
-  const [search, setSearch] = useState2(window.location.search);
-  const [me, setMe] = useState2(null);
-  const pageTitle = pageTitleByKey(page);
-  useEffect2(() => {
-    fetchJson2("/api/me").then(setMe).catch((err) => {
-      logError("app:me:error", err);
-      setMe({ loggedIn: false });
-    });
+
+// app/assets/js/admin/pages/CrawlerCachePage.jsx
+function CrawlerCachePage() {
+  const { loading, crawlerCaches, crawlerCacheCount, refreshingUrl, deletingUrl, loadCrawlerCaches, refreshCrawlerCache, deleteCrawlerCache } = useCrawlerCacheData();
+  const [page, setPage] = useState26(1);
+  const [searchInput, setSearchInput] = useState26("");
+  const [search, setSearch] = useState26("");
+  const [sortBy, setSortBy] = useState26("id");
+  const [sortOrder, setSortOrder] = useState26("desc");
+  const totalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
+  const normalizedPage = Math.min(page, totalPages);
+  const currentParams = { page, pageSize: CRAWLER_CACHE_PAGE_SIZE, search, sortBy, sortOrder };
+  useEffect17(() => {
+    loadCrawlerCaches();
   }, []);
-  useEffect2(() => {
-    const onPopState = () => {
-      setPathname(window.location.pathname);
-      setSearch(window.location.search);
-      setPage(routeToPage(window.location.pathname));
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.removeEventListener("popstate", onPopState);
-    };
-  }, []);
-  const onNavigate = useCallback(
-    (href) => {
-      const nextUrl = new URL(href, window.location.origin);
-      const currentPathWithSearch = `${window.location.pathname}${window.location.search}`;
-      const nextPathWithSearch = `${nextUrl.pathname}${nextUrl.search}`;
-      if (currentPathWithSearch !== nextPathWithSearch) {
-        window.history.pushState({}, "", href);
-      }
-      setPathname(nextUrl.pathname);
-      setSearch(nextUrl.search);
-      setPage(routeToPage(nextUrl.pathname));
-    },
-    []
-  );
-  return /* @__PURE__ */ React5.createElement(
-    MantineProvider,
+  return /* @__PURE__ */ React21.createElement(Card15, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group18, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title16, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React21.createElement(Badge17, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React21.createElement(Text18, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React21.createElement(Group18, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button14, { variant: "filled", onClick: () => loadCrawlerCaches(currentParams) }, "\uC870\uD68C")), /* @__PURE__ */ React21.createElement(Group18, { mb: "sm", align: "end" }, /* @__PURE__ */ React21.createElement(TextInput7, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React21.createElement(Button14, { variant: "light", onClick: () => {
+    setPage(1);
+    setSearch(searchInput);
+    loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React21.createElement(
+    DataTable6,
     {
-      defaultColorScheme: "light",
-      theme: {
-        primaryColor: "indigo",
-        defaultRadius: "md"
-      }
-    },
-    /* @__PURE__ */ React5.createElement(
-      AppShell,
-      {
-        padding: "md",
-        navbar: {
-          width: 240,
-          breakpoint: "sm"
-        }
+      sortIcons: { sorted: /* @__PURE__ */ React21.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React21.createElement(IconSelector, { size: 14 }) },
+      withTableBorder: true,
+      striped: true,
+      highlightOnHover: true,
+      records: crawlerCaches,
+      columns: [
+        { accessor: "id", title: "ID", sortable: true },
+        { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React21.createElement(Text18, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
+        { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
+        { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },
+        { accessor: "image", title: "Image", sortable: true, render: (row) => {
+          if (!row.image) return "-";
+          return /* @__PURE__ */ React21.createElement(Anchor7, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React21.createElement(Image2, { src: row.image, alt: row.title || row.url || "crawler image", h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" }));
+        } },
+        { accessor: "description", title: "Description", sortable: true, render: (row) => row.description || "-" },
+        { accessor: "dateUpdated", title: "Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
+        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React21.createElement(Group18, { gap: 6 }, /* @__PURE__ */ React21.createElement(Button14, { size: "xs", variant: "light", loading: refreshingUrl === row.url, onClick: () => refreshCrawlerCache(row.url, currentParams) }, "\uAC31\uC2E0"), /* @__PURE__ */ React21.createElement(Button14, { size: "xs", color: "red", variant: "light", loading: deletingUrl === row.url, onClick: () => deleteCrawlerCache(row.url, currentParams) }, "\uC0AD\uC81C")) }
+      ],
+      sortStatus: { columnAccessor: sortBy, direction: sortOrder },
+      onSortStatusChange: (next) => {
+        const dir = next.direction ?? "desc";
+        setPage(1);
+        setSortBy(next.columnAccessor);
+        setSortOrder(dir);
+        loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search, sortBy: next.columnAccessor, sortOrder: dir });
       },
-      /* @__PURE__ */ React5.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React5.createElement(Stack3, { mb: "md", gap: 4 }, /* @__PURE__ */ React5.createElement(Text4, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React5.createElement(Navigation, { activePage: page, onNavigate, me })),
-      /* @__PURE__ */ React5.createElement(AppShell.Main, null, /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "center" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, pageTitle)), /* @__PURE__ */ React5.createElement(Badge4, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React5.createElement(AdminContent, { page, onNavigate, pathname, search, me })))
-    )
-  );
+      totalRecords: crawlerCacheCount,
+      recordsPerPage: CRAWLER_CACHE_PAGE_SIZE,
+      page: normalizedPage,
+      onPageChange: (nextPage) => {
+        setPage(nextPage);
+        loadCrawlerCaches({ page: nextPage, pageSize: CRAWLER_CACHE_PAGE_SIZE, search, sortBy, sortOrder });
+      },
+      paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
+      minHeight: 380
+    }
+  ));
 }
-function pageLoad() {
-  logInfo("pageLoad:start", window.location.pathname);
+
+// app/assets/js/admin.jsx
+var router = createBrowserRouter([
+  {
+    path: "/Admin",
+    element: /* @__PURE__ */ React22.createElement(AdminLayout, null),
+    children: [
+      { index: true, element: /* @__PURE__ */ React22.createElement(DashboardPage, null) },
+      { path: "Site", element: /* @__PURE__ */ React22.createElement(SitesPage, null) },
+      { path: "Sites", element: /* @__PURE__ */ React22.createElement(SitesPage, null) },
+      {
+        path: "Site/:siteSeq",
+        element: /* @__PURE__ */ React22.createElement(SiteLayout, null),
+        children: [
+          { index: true, element: /* @__PURE__ */ React22.createElement(SiteDetailPage, null) },
+          { path: "Config", element: /* @__PURE__ */ React22.createElement(SiteConfigPage, null) },
+          { path: "Cache", element: /* @__PURE__ */ React22.createElement(SiteCachePage, null) },
+          { path: "Permission", element: /* @__PURE__ */ React22.createElement(SitePermissionPage, null) },
+          { path: "Admins", element: /* @__PURE__ */ React22.createElement(SiteAdminsPage, null) }
+        ]
+      },
+      { path: "User", element: /* @__PURE__ */ React22.createElement(AllUsersPage, null) },
+      { path: "AllUsers", element: /* @__PURE__ */ React22.createElement(AllUsersPage, null) },
+      { path: "User/UserViewHistory", element: /* @__PURE__ */ React22.createElement(UserViewsPage, null) },
+      { path: "UserViews", element: /* @__PURE__ */ React22.createElement(UserViewsPage, null) },
+      { path: "AccessLog", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
+      { path: "AccessLogs", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
+      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
+      { path: "RecentChange", element: /* @__PURE__ */ React22.createElement(RecentChangesPage, null) },
+      { path: "RecentChanges", element: /* @__PURE__ */ React22.createElement(RecentChangesPage, null) },
+      { path: "S3", element: /* @__PURE__ */ React22.createElement(S3BrowserPage, null) },
+      { path: "S3Browser", element: /* @__PURE__ */ React22.createElement(S3BrowserPage, null) },
+      { path: "CrawlerCache", element: /* @__PURE__ */ React22.createElement(CrawlerCachePage, null) },
+      { path: "CrawlerCaches", element: /* @__PURE__ */ React22.createElement(CrawlerCachePage, null) }
+    ]
+  }
+]);
+window.addEventListener("error", (event) => console.error("[AdminUI] window:error", event.message, event.error));
+window.addEventListener("unhandledrejection", (event) => console.error("[AdminUI] window:unhandledrejection", event.reason));
+window.addEventListener("DOMContentLoaded", () => {
   const rootElement = document.getElementById("main");
   if (!rootElement) {
-    logError("pageLoad:no-root", "#main not found");
+    console.error("[AdminUI] #main not found");
     return;
   }
-  const page = routeToPage(window.location.pathname);
-  logInfo("pageLoad:render", { page });
-  const root = createRoot(rootElement);
-  root.render(/* @__PURE__ */ React5.createElement(AdminApp, { initialPage: page }));
-}
-window.addEventListener("error", (event) => {
-  logError("window:error", event.message, event.error);
+  createRoot(rootElement).render(
+    /* @__PURE__ */ React22.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React22.createElement(RouterProvider, { router }))
+  );
 });
-window.addEventListener("unhandledrejection", (event) => {
-  logError("window:unhandledrejection", event.reason);
-});
-window.addEventListener("DOMContentLoaded", pageLoad);

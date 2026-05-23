@@ -70,18 +70,6 @@ export default function Navigation({me, onNavigate}) {
 
     return (
         <Stack gap={8}>
-            <Paper withBorder radius="md" p={8}>
-                <Group justify="space-between" mb={6}>
-                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">Sites</Text>
-                    {isAdmin && <Badge color="indigo" variant="light" size="sm">{siteLinks.length}</Badge>}
-                </Group>
-                <Stack gap={2}>
-                    {siteLinks.map((site) => (
-                        <SiteNavItem key={`site-${site.seq}`} site={site} currentPathname={currentPathname} currentSiteSeq={currentSiteSeq} isAdmin={isAdmin}/>
-                    ))}
-                    {siteLinks.length === 0 && <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>}
-                </Stack>
-            </Paper>
             {isAdmin && (
                 <Paper withBorder radius="md" p={8}>
                     <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={6}>전체 관리</Text>
@@ -95,6 +83,18 @@ export default function Navigation({me, onNavigate}) {
                     </Stack>
                 </Paper>
             )}
+            <Paper withBorder radius="md" p={8}>
+                <Group justify="space-between" mb={6}>
+                    <Text size="xs" c="dimmed" fw={700} tt="uppercase">Sites</Text>
+                    {isAdmin && <Badge color="indigo" variant="light" size="sm">{siteLinks.length}</Badge>}
+                </Group>
+                <Stack gap={2}>
+                    {siteLinks.map((site) => (
+                        <SiteNavItem key={`site-${site.seq}`} site={site} currentPathname={currentPathname} currentSiteSeq={currentSiteSeq} isAdmin={isAdmin}/>
+                    ))}
+                    {siteLinks.length === 0 && <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>}
+                </Stack>
+            </Paper>
             <Divider my={6} label="바로가기" labelPosition="center"/>
             <Paper withBorder radius="md" p={6}>
                 <NavLink href="/" label="위키로 돌아가기" description="관리자 영역을 나가 메인 위키로 이동" leftSection={<i className="fas fa-arrow-left" aria-hidden="true"/>} rightSection={<i className="fas fa-external-link-alt" aria-hidden="true"/>} color="gray" variant="subtle"/>
