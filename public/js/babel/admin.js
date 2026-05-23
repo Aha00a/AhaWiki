@@ -1009,6 +1009,7 @@ function SitePermissionPage() {
       borderRadius: "md",
       striped: true,
       highlightOnHover: true,
+      sortIcons: { sorted: /* @__PURE__ */ React17.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React17.createElement(IconSelector, { size: 14 }) },
       records: sortedRows,
       columns: [
         { accessor: "targetType", title: "Target Type", sortable: true },

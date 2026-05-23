@@ -58,6 +58,7 @@ export default function SitePermissionPage() {
             ) : null}
             <DataTable
                 withTableBorder borderRadius="md" striped highlightOnHover
+                sortIcons={{sorted: <IconChevronUp size={14}/>, unsorted: <IconSelector size={14}/>}}
                 records={sortedRows}
                 columns={[
                     {accessor: "targetType", title: "Target Type", sortable: true},
