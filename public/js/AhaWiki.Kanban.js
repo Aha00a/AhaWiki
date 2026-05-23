@@ -2907,6 +2907,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 titleEditorWrap.appendChild(titleSaveButton);
                 titleWrap.insertBefore(titleEditorWrap, cardIdLabel);
                 actionBar.appendChild(submit);
+                var submitHint = document.createElement('span');
+                submitHint.textContent = 'Ctrl+Enter / Alt+Enter';
+                submitHint.style.fontSize = '11px';
+                submitHint.style.color = '#8590a2';
+                actionBar.appendChild(submitHint);
                 dueDateEditor.appendChild(dueDateInput);
                 dueDateEditor.appendChild(dueDateSaveButton);
             }
