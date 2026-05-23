@@ -935,6 +935,10 @@ document.addEventListener('DOMContentLoaded', function () {
         title.className = 'kanban-column-title';
         title.title = isWritable ? 'Click to edit list name' : '';
 
+        var cardCountBadge = document.createElement('span');
+        cardCountBadge.className = 'kanban-column-badge';
+        cardCountBadge.textContent = String((column.cards || []).length);
+
         var deleteListButton = document.createElement('button');
         deleteListButton.type = 'button';
         deleteListButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
@@ -942,6 +946,7 @@ document.addEventListener('DOMContentLoaded', function () {
         deleteListButton.className = 'kanban-icon-button';
 
         titleRow.appendChild(title);
+        titleRow.appendChild(cardCountBadge);
         if (isWritable) {
             titleRow.appendChild(deleteListButton);
         }
@@ -1879,17 +1884,12 @@ document.addEventListener('DOMContentLoaded', function () {
         var submitListButton = document.createElement('button');
         submitListButton.type = 'button';
         submitListButton.innerHTML = '<i class="fas fa-plus" aria-hidden="true"></i> Add a List';
-        submitListButton.style.border = 'none';
-        submitListButton.style.borderRadius = '4px';
-        submitListButton.style.padding = '8px 12px';
-        submitListButton.style.background = '#0c66e4';
-        submitListButton.style.color = '#fff';
+        submitListButton.className = 'kanban-primary-button';
 
         var cancelListButton = document.createElement('button');
         cancelListButton.type = 'button';
         cancelListButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i> Cancel';
-        cancelListButton.style.border = 'none';
-        cancelListButton.style.background = 'transparent';
+        cancelListButton.className = 'kanban-ghost-button';
 
         addListActions.appendChild(submitListButton);
         addListActions.appendChild(cancelListButton);
@@ -2063,54 +2063,21 @@ document.addEventListener('DOMContentLoaded', function () {
             var overlay = document.createElement('div');
             overlay.className = 'kanban-card-detail-overlay';
             overlay.setAttribute('data-card-id', card.id || '');
-            overlay.style.position = 'fixed';
-            overlay.style.inset = '0';
-            overlay.style.background = 'rgba(9, 30, 66, 0.5)';
-            overlay.style.zIndex = '1000';
-            overlay.style.display = 'flex';
-            overlay.style.alignItems = 'center';
-            overlay.style.justifyContent = 'center';
-            overlay.style.backdropFilter = 'blur(2px)';
             var modal = document.createElement('div');
-            modal.style.width = 'min(640px, calc(100vw - 24px))';
-            modal.style.maxHeight = 'calc(100vh - 24px)';
-            modal.style.overflowY = 'auto';
-            modal.style.background = '#fff';
-            modal.style.borderRadius = '14px';
-            modal.style.padding = '20px';
-            modal.style.boxShadow = '0 20px 48px rgba(9, 30, 66, 0.28)';
-            modal.style.border = '1px solid rgba(9, 30, 66, 0.12)';
-            modal.style.position = 'relative';
+            modal.className = 'kanban-modal';
             var dragDepthInModal = 0;
             var dragDepthInOverlay = 0;
             var modalDropHint = document.createElement('div');
             modalDropHint.textContent = 'Drop files here to attach to this card';
-            modalDropHint.style.display = 'none';
-            modalDropHint.style.position = 'sticky';
-            modalDropHint.style.top = '0';
-            modalDropHint.style.zIndex = '2';
-            modalDropHint.style.margin = '-8px 0 12px';
-            modalDropHint.style.padding = '10px 12px';
-            modalDropHint.style.border = '1px dashed #0c66e4';
-            modalDropHint.style.borderRadius = '8px';
-            modalDropHint.style.background = 'rgba(12, 102, 228, 0.10)';
-            modalDropHint.style.color = '#0c66e4';
-            modalDropHint.style.fontWeight = '700';
-            modalDropHint.style.fontSize = '12px';
+            modalDropHint.className = 'kanban-modal-drop-hint kanban-hidden';
             var setModalDropFeedback = function (active) {
                 if (active) {
-                    modal.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-                    modal.style.setProperty('outline-offset', '2px', 'important');
-                    modal.style.setProperty('background', '#f7fbff', 'important');
-                    modal.style.setProperty('box-shadow', '0 0 0 4px rgba(12,102,228,0.2), 0 20px 48px rgba(9, 30, 66, 0.28)', 'important');
-                    modalDropHint.style.display = '';
+                    modal.classList.add('kanban-modal-drop-active');
+                    modalDropHint.classList.remove('kanban-hidden');
                     return;
                 }
-                modal.style.removeProperty('outline');
-                modal.style.removeProperty('outline-offset');
-                modal.style.setProperty('background', '#fff');
-                modal.style.setProperty('box-shadow', '0 20px 48px rgba(9, 30, 66, 0.28)');
-                modalDropHint.style.display = 'none';
+                modal.classList.remove('kanban-modal-drop-active');
+                modalDropHint.classList.add('kanban-hidden');
             };
             var logModalDragEvent = function (scope, evt, extra) {
                 var payload = Object.assign({
@@ -2124,19 +2091,13 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             var header = document.createElement('div');
-            header.style.display = 'flex';
-            header.style.alignItems = 'flex-start';
-            header.style.justifyContent = 'space-between';
-            header.style.gap = '12px';
+            header.className = 'kanban-modal-header';
 
             var title = document.createElement('h3');
             title.textContent = card.text || '';
-            title.style.cursor = isWritable ? 'pointer' : 'default';
+            title.className = 'kanban-modal-title';
+            if (!isWritable) { title.classList.add('kanban-read-only'); }
             title.title = isWritable ? 'Click to edit title' : '';
-            title.style.margin = '0';
-            title.style.fontSize = '22px';
-            title.style.lineHeight = '1.35';
-            title.style.color = '#172b4d';
 
             var cardIdLabel = document.createElement('a');
             var cardId = (card.id || '').trim();
@@ -2147,93 +2108,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 cardIdLabel.href = '#';
                 cardIdLabel.textContent = '-';
             }
-            cardIdLabel.style.marginTop = '4px';
-            cardIdLabel.style.fontSize = '12px';
-            cardIdLabel.style.color = '#6b778c';
-            cardIdLabel.style.textDecoration = 'underline';
+            cardIdLabel.className = 'kanban-modal-card-id';
             cardIdLabel.title = 'Copy/share this link to reopen this card popup';
 
             var titleWrap = document.createElement('div');
-            titleWrap.style.flex = '1 1 auto';
+            titleWrap.className = 'kanban-modal-title-wrap';
             titleWrap.appendChild(title);
             titleWrap.appendChild(cardIdLabel);
 
             var titleEditorWrap = document.createElement('div');
-            titleEditorWrap.classList.add('kanban-hidden');
-            titleEditorWrap.style.display = 'none';
-            titleEditorWrap.style.alignItems = 'center';
-            titleEditorWrap.style.gap = '8px';
-            titleEditorWrap.style.margin = '0';
+            titleEditorWrap.className = 'kanban-modal-title-editor-wrap kanban-hidden';
 
             var titleEditor = document.createElement('input');
             titleEditor.type = 'text';
             titleEditor.value = card.text || '';
-            titleEditor.style.flex = '1 1 auto';
-            titleEditor.style.boxSizing = 'border-box';
-            titleEditor.style.margin = '0';
-            titleEditor.style.border = '1px solid #b6c2cf';
-            titleEditor.style.borderRadius = '8px';
-            titleEditor.style.padding = '10px 12px';
-            titleEditor.style.fontSize = '18px';
-            titleEditor.style.fontWeight = '600';
-            titleEditor.style.color = '#172b4d';
+            titleEditor.className = 'kanban-modal-title-editor';
 
             var titleSaveButton = document.createElement('button');
             titleSaveButton.type = 'button';
             titleSaveButton.textContent = 'Save';
-            titleSaveButton.style.border = 'none';
-            titleSaveButton.style.borderRadius = '8px';
-            titleSaveButton.style.padding = '10px 12px';
-            titleSaveButton.style.background = '#0c66e4';
-            titleSaveButton.style.color = '#fff';
-            titleSaveButton.style.cursor = 'pointer';
+            titleSaveButton.className = 'kanban-modal-title-save-btn';
 
             var headerActions = document.createElement('div');
-            headerActions.style.display = 'flex';
-            headerActions.style.alignItems = 'center';
-            headerActions.style.gap = '6px';
+            headerActions.className = 'kanban-modal-header-actions';
 
             var deleteCardButton = document.createElement('button');
             deleteCardButton.type = 'button';
             deleteCardButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
             deleteCardButton.title = 'Delete Card';
-            deleteCardButton.style.border = '1px solid #f1b5b5';
-            deleteCardButton.style.borderRadius = '50%';
-            deleteCardButton.style.width = '32px';
-            deleteCardButton.style.height = '32px';
-            deleteCardButton.style.background = '#fff5f5';
-            deleteCardButton.style.color = '#ae2a19';
-            deleteCardButton.style.cursor = 'pointer';
+            deleteCardButton.className = 'kanban-modal-btn-delete';
 
             var closeButton = document.createElement('button');
             closeButton.type = 'button';
             closeButton.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
-            closeButton.style.border = 'none';
-            closeButton.style.background = 'transparent';
-            closeButton.style.cursor = 'pointer';
-            closeButton.style.width = '32px';
-            closeButton.style.height = '32px';
-            closeButton.style.borderRadius = '50%';
-            closeButton.style.fontSize = '18px';
-            closeButton.style.color = '#44546f';
+            closeButton.className = 'kanban-modal-btn-close';
 
             var closeTitleEditor = function () {
                 titleEditorWrap.classList.add('kanban-hidden');
-                titleEditorWrap.style.display = 'none';
                 title.classList.remove('kanban-hidden');
                 cardIdLabel.classList.remove('kanban-hidden');
-                title.style.display = '';
-                cardIdLabel.style.display = '';
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
                 title.classList.add('kanban-hidden');
                 cardIdLabel.classList.add('kanban-hidden');
-                title.style.display = 'none';
-                cardIdLabel.style.display = 'none';
                 titleEditorWrap.classList.remove('kanban-hidden');
-                titleEditorWrap.style.display = 'flex';
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
                 titleEditor.select();
@@ -2280,52 +2200,32 @@ document.addEventListener('DOMContentLoaded', function () {
             var textarea = document.createElement('textarea');
             textarea.placeholder = 'Write a comment...';
             textarea.rows = 3;
-            textarea.style.width = '100%';
-            textarea.style.boxSizing = 'border-box';
-            textarea.style.border = '1px solid #b6c2cf';
-            textarea.style.borderRadius = '8px';
-            textarea.style.padding = '10px 12px';
-            textarea.style.resize = 'vertical';
-            textarea.style.fontSize = '14px';
-            textarea.style.marginTop = '8px';
+            textarea.className = 'kanban-comment-textarea';
 
             var actionBar = document.createElement('div');
-            actionBar.style.display = 'flex';
-            actionBar.style.alignItems = 'center';
-            actionBar.style.gap = '8px';
-            actionBar.style.marginTop = '10px';
+            actionBar.className = 'kanban-comment-action-bar';
 
             var submit = document.createElement('button');
             submit.type = 'button';
             submit.innerHTML = '<i class="fas fa-comment-medical" aria-hidden="true"></i> Add Comment';
-            submit.style.border = 'none';
-            submit.style.borderRadius = '8px';
-            submit.style.padding = '8px 12px';
-            submit.style.background = '#0c66e4';
-            submit.style.color = '#fff';
-            submit.style.cursor = 'pointer';
+            submit.className = 'kanban-comment-submit-btn';
 
             var propertyTitle = document.createElement('div');
             propertyTitle.innerHTML = '<i class="fas fa-tags" aria-hidden="true"></i> Properties';
-            propertyTitle.style.marginTop = '16px';
-            propertyTitle.style.fontWeight = '600';
-            propertyTitle.style.fontSize = '14px';
-            propertyTitle.style.color = '#44546f';
+            propertyTitle.className = 'kanban-modal-section-title';
 
             var propertyList = document.createElement('div');
-            propertyList.style.marginTop = '8px';
             var dueDateEditor = document.createElement('div');
-            dueDateEditor.style.marginTop = '10px';
-            dueDateEditor.style.display = 'flex';
-            dueDateEditor.style.alignItems = 'center';
-            dueDateEditor.style.gap = '8px';
+            dueDateEditor.className = 'kanban-duedate-row';
 
             var dueDateInput = document.createElement('input');
             dueDateInput.type = 'date';
+            dueDateInput.className = 'kanban-duedate-input';
 
             var dueDateSaveButton = document.createElement('button');
             dueDateSaveButton.type = 'button';
             dueDateSaveButton.textContent = 'Save DueDate';
+            dueDateSaveButton.className = 'kanban-duedate-save-btn';
 
             var renderProperties = function () {
                 propertyList.innerHTML = '';
@@ -2356,18 +2256,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 propertyEntries.forEach(function (key) {
                     var values = card.properties[key];
                     var row = document.createElement('div');
-                    row.style.padding = '8px 10px';
-                    row.style.border = '1px solid #eceff3';
-                    row.style.borderRadius = '8px';
-                    row.style.background = '#fafbfc';
-                    row.style.marginBottom = '8px';
+                    row.className = 'kanban-property-row';
 
                     var label = document.createElement('div');
                     label.textContent = key;
-                    label.style.fontWeight = '600';
-                    label.style.fontSize = '13px';
+                    label.className = 'kanban-property-key';
                     if (Array.isArray(values)) {
-                        label.style.marginBottom = '4px';
                         row.appendChild(label);
                         var attachmentGrid = null;
                         if (key === 'Attachment') {
@@ -2384,9 +2278,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                             var valueRow = document.createElement('div');
                             valueRow.textContent = displayValue;
-                            valueRow.style.fontSize = '13px';
-                            valueRow.style.color = '#172b4d';
-                            valueRow.style.paddingLeft = '8px';
+                            valueRow.className = 'kanban-property-value';
                             var attachmentItem = null;
                             if (attachmentGrid) {
                                 attachmentItem = document.createElement('div');
@@ -2406,22 +2298,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 removeButton.innerHTML = '<i class="fas fa-trash-alt" aria-hidden="true"></i>';
                                 removeButton.title = '첨부파일 삭제';
                                 removeButton.setAttribute('aria-label', '첨부파일 삭제');
-                                removeButton.style.marginTop = '0';
-                                removeButton.style.width = '28px';
-                                removeButton.style.height = '28px';
-                                removeButton.style.border = '1px solid #f1c0c0';
-                                removeButton.style.borderRadius = '50%';
-                                removeButton.style.padding = '0';
-                                removeButton.style.background = '#fff';
-                                removeButton.style.color = '#c9372c';
-                                removeButton.style.cursor = 'pointer';
-                                removeButton.style.display = 'inline-flex';
-                                removeButton.style.alignItems = 'center';
-                                removeButton.style.justifyContent = 'center';
-                                removeButton.style.position = 'absolute';
-                                removeButton.style.top = '8px';
-                                removeButton.style.right = '8px';
-                                removeButton.style.zIndex = '2';
+                                removeButton.className = 'kanban-attachment-remove-btn';
                                 removeButton.addEventListener('click', function () {
                                     if (!window.confirm('이 첨부파일을 삭제할까요?')) {
                                         return;
@@ -2454,14 +2331,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 } else {
                                     row.appendChild(removeButton);
                                 }
-                                removeButton.addEventListener('mouseenter', function () {
-                                    removeButton.style.background = '#ffebe9';
-                                    removeButton.style.borderColor = '#e9a9a9';
-                                });
-                                removeButton.addEventListener('mouseleave', function () {
-                                    removeButton.style.background = '#fff';
-                                    removeButton.style.borderColor = '#f1c0c0';
-                                });
                             }
 
                             requestRenderInlineComment(pageName, displayValue).then(function (html) {
@@ -2481,7 +2350,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         row.style.alignItems = 'center';
                         row.style.justifyContent = 'space-between';
                         row.style.gap = '12px';
-                        label.style.marginBottom = '0';
                         row.appendChild(label);
                         var displayValue = values;
                         if (key === 'Creator') {
@@ -2491,11 +2359,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         var valueRow = document.createElement('div');
                         valueRow.textContent = displayValue;
-                        valueRow.style.fontSize = '13px';
-                        valueRow.style.color = '#172b4d';
+                        valueRow.className = 'kanban-property-value';
                         valueRow.style.textAlign = 'left';
                         valueRow.style.wordBreak = 'break-word';
-                        valueRow.style.marginLeft = '8px';
                         row.appendChild(valueRow);
 
                         requestRenderInlineComment(pageName, displayValue).then(function (html) {
@@ -2515,17 +2381,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 var dueDates = (card.properties && card.properties.DueDate) || [];
                 dueDateInput.value = dueDates.length > 0 ? String(dueDates[0]).replace(/^\[|\]$/g, '') : '';
             };
-            dueDateInput.style.border = '1px solid #b6c2cf';
-            dueDateInput.style.borderRadius = '6px';
-            dueDateInput.style.padding = '6px 8px';
-            dueDateInput.style.fontSize = '13px';
-            dueDateInput.style.color = '#172b4d';
-            dueDateSaveButton.style.border = '1px solid #d0d7de';
-            dueDateSaveButton.style.borderRadius = '6px';
-            dueDateSaveButton.style.padding = '6px 10px';
-            dueDateSaveButton.style.background = '#f6f8fa';
-            dueDateSaveButton.style.color = '#172b4d';
-            dueDateSaveButton.style.cursor = 'pointer';
 
             var submitDueDate = function () {
                 var nextDueDate = (dueDateInput.value || '').trim();
@@ -2560,13 +2415,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var commentsTitle = document.createElement('div');
             commentsTitle.innerHTML = '<i class="fas fa-history" aria-hidden="true"></i> Activity';
-            commentsTitle.style.marginTop = '16px';
-            commentsTitle.style.fontWeight = '600';
-            commentsTitle.style.fontSize = '14px';
-            commentsTitle.style.color = '#44546f';
+            commentsTitle.className = 'kanban-modal-section-title';
 
             var comments = document.createElement('div');
-            comments.style.marginTop = '12px';
             var renderComments = function () {
                 comments.innerHTML = '';
                 (card.comments || []).forEach(function (entry) {
@@ -2575,17 +2426,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     var row = document.createElement('div');
-                    row.style.padding = '10px 12px';
-                    row.style.border = '1px solid #eceff3';
-                    row.style.borderRadius = '8px';
-                    row.style.background = '#fafbfc';
-                    row.style.marginBottom = '8px';
-                    row.style.color = '#172b4d';
-                    row.style.lineHeight = '1.4';
+                    row.className = 'kanban-activity-row';
 
                     var header = document.createElement('div');
-                    header.style.fontWeight = '600';
-                    header.style.marginBottom = '6px';
+                    header.className = 'kanban-activity-header';
                     row.appendChild(header);
 
                     var displayHeader = toClientKanbanCommentHeader(entry.header);
@@ -2602,8 +2446,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     (entry.details || []).forEach(function (detailLine) {
                          var detailRow = document.createElement('div');
-                         detailRow.style.paddingLeft = '12px';
-                         detailRow.style.marginTop = '4px';
+                         detailRow.className = 'kanban-activity-detail';
                          var restoredDetailLine = restoreCommentNewlines(detailLine);
                          detailRow.textContent = restoredDetailLine;
                          row.appendChild(detailRow);
@@ -2909,8 +2752,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 actionBar.appendChild(submit);
                 var submitHint = document.createElement('span');
                 submitHint.textContent = 'Ctrl+Enter / Alt+Enter';
-                submitHint.style.fontSize = '11px';
-                submitHint.style.color = '#8590a2';
+                submitHint.className = 'kanban-comment-hint';
                 actionBar.appendChild(submitHint);
                 dueDateEditor.appendChild(dueDateInput);
                 dueDateEditor.appendChild(dueDateSaveButton);
