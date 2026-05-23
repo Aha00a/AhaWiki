@@ -11,3 +11,5 @@ cache
 logs
 node_modules
 target
+/.bkit
+/.claude/settings.local.json
