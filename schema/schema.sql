@@ -364,6 +364,24 @@ CREATE TABLE `Site` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `SiteAdmin`
+--
+
+DROP TABLE IF EXISTS `SiteAdmin`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `SiteAdmin` (
+  `site` int NOT NULL,
+  `user` int NOT NULL,
+  `dateInserted` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`site`,`user`),
+  KEY `SiteAdmin_User_seq_fk` (`user`),
+  CONSTRAINT `SiteAdmin_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
+  CONSTRAINT `SiteAdmin_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `SiteDomain`
 --
 

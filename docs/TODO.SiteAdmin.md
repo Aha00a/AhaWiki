@@ -2,11 +2,11 @@
 
 ## DB
 
-- [ ] evolution 파일 추가 (`conf/evolutions/default/XX.sql`)
-  - [ ] `SiteAdmin` 테이블 생성 (`site`, `user`, `dateInserted`)
-  - [ ] `(site, user)` 복합 PK
-  - [ ] `site` → `Site(seq)` FK
-  - [ ] `user` → `User(seq)` FK
+- [x] evolution 파일 추가 (`conf/evolutions/default/61.sql`)
+  - [x] `SiteAdmin` 테이블 생성 (`site`, `user`, `dateInserted`)
+  - [x] `(site, user)` 복합 PK
+  - [x] `site` → `Site(seq)` FK
+  - [x] `user` → `User(seq)` FK
 
 ## Model / DAO
 
