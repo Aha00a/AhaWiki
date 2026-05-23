@@ -1162,7 +1162,9 @@ function useAdminData(page) {
 }
 
 
-function AdminContent({page, onNavigate, pathname, search}) {
+const ADMIN_ONLY_PAGES = new Set(["all-users", "user-views", "s3-browser", "crawler-cache", "recent-changes", "access-logs", "sites"]);
+
+function AdminContent({page, onNavigate, pathname, search, me}) {
     const ACCESS_LOG_PAGE_SIZE = 20;
     const {
         loading,
@@ -1415,6 +1417,37 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     클라이언트 렌더링 오류: {error}
                 </Text>
             </Paper>
+        );
+    }
+
+    const isAdmin = me?.isAdmin ?? false;
+
+    if (!isAdmin && ADMIN_ONLY_PAGES.has(page)) {
+        return (
+            <Paper p="xl" withBorder radius="md">
+                <Stack align="center" gap="xs" py="xl">
+                    <Text size="xl">🔒</Text>
+                    <Title order={4} c="dark">접근 권한이 없습니다</Title>
+                    <Text c="dimmed" size="sm">이 페이지는 전체 관리자만 접근할 수 있습니다.</Text>
+                </Stack>
+            </Paper>
+        );
+    }
+
+    if (!isAdmin && page === "dashboard") {
+        return (
+            <Stack gap="md">
+                <Card withBorder radius="md" padding="lg">
+                    <Title order={3} mb="xs">내 담당 사이트</Title>
+                    <Text size="sm" c="dimmed" mb="md">SiteAdmin으로 등록된 사이트 목록입니다.</Text>
+                    <SimpleGrid cols={{base: 1, sm: 2}} spacing="md">
+                        {sites.map((site) => (
+                            <SiteListCard key={site.seq} sites={[site]} onNavigate={onNavigate}/>
+                        ))}
+                    </SimpleGrid>
+                    {sites.length === 0 && <Text c="dimmed" size="sm">담당 사이트가 없습니다.</Text>}
+                </Card>
+            </Stack>
         );
     }
 
@@ -2647,7 +2680,15 @@ function AdminApp({initialPage}) {
     const [page, setPage] = useState(initialPage);
     const [pathname, setPathname] = useState(window.location.pathname);
     const [search, setSearch] = useState(window.location.search);
+    const [me, setMe] = useState(null);
     const pageTitle = pageTitleByKey(page);
+
+    useEffect(() => {
+        fetchJson("/api/me").then(setMe).catch((err) => {
+            logError("app:me:error", err);
+            setMe({loggedIn: false});
+        });
+    }, []);
 
     useEffect(() => {
         const onPopState = () => {
@@ -2692,11 +2733,10 @@ function AdminApp({initialPage}) {
                 }}
             >
                 <AppShell.Navbar p="md" style={{overflowY: "auto"}}>
-
                     <Stack mb="md" gap={4}>
                         <Text fw={700} size="lg">AhaWiki Admin</Text>
                     </Stack>
-                    <Navigation activePage={page} onNavigate={onNavigate}/>
+                    <Navigation activePage={page} onNavigate={onNavigate} me={me}/>
                 </AppShell.Navbar>
                 <AppShell.Main>
                     <Stack gap="md">
@@ -2708,7 +2748,7 @@ function AdminApp({initialPage}) {
                                 Live
                             </Badge>
                         </Group>
-                        <AdminContent page={page} onNavigate={onNavigate} pathname={pathname} search={search}/>
+                        <AdminContent page={page} onNavigate={onNavigate} pathname={pathname} search={search} me={me}/>
                     </Stack>
                 </AppShell.Main>
             </AppShell>

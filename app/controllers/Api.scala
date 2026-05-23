@@ -266,7 +266,15 @@ class Api @Inject()(
   }
 
   def adminSites: Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    val userOpt = logics.SessionLogic.getUser(request)
+    val siteAdminSeqsOpt: Option[Set[Long]] = if (isAdmin) None else {
+      userOpt.map { user =>
+        database.withConnection { implicit connection =>
+          SiteAdmin.selectByUser(user.seq).map(_.site).toSet
+        }
+      }
+    }
+    if (!isAdmin && siteAdminSeqsOpt.forall(_.isEmpty)) {
       Forbidden("Access denied.")
     } else {
       database.withConnection { implicit connection =>
@@ -311,7 +319,12 @@ class Api @Inject()(
             )
           }
 
-        Ok(sites.asJson)
+        val filtered = siteAdminSeqsOpt match {
+          case None       => sites
+          case Some(seqs) => sites.filter(s => seqs.contains(s.seq))
+        }
+
+        Ok(filtered.asJson)
       }
     }
   }
@@ -1354,6 +1367,29 @@ class Api @Inject()(
               }
           }
       }
+    }
+  }
+
+  def me: Action[AnyContent] = Action { implicit request =>
+    SessionLogic.getUser(request) match {
+      case None =>
+        Ok(Json.obj("loggedIn" -> Json.fromBoolean(false)))
+      case Some(user) =>
+        val profileImageUrl = SessionLogic.getUserProfileImageUrl(request).getOrElse("")
+        val currentSite = SiteLogic.get(request.host)
+        val siteAdminSeqs = database.withConnection { implicit connection =>
+          SiteAdmin.selectByUser(user.seq).map(_.site)
+        }
+        Ok(Json.obj(
+          "loggedIn"        -> Json.fromBoolean(true),
+          "seq"             -> Json.fromLong(user.seq),
+          "nickname"        -> Json.fromString(user.nickname),
+          "loginEmail"      -> user.loginEmail.fold(Json.Null)(Json.fromString),
+          "profileImageUrl" -> Json.fromString(profileImageUrl),
+          "isAdmin"         -> Json.fromBoolean(logics.AdminLogic.isAdmin(request)),
+          "siteAdminSeqs"   -> Json.fromValues(siteAdminSeqs.map(Json.fromLong)),
+          "currentSiteSeq"  -> Json.fromLong(currentSite.seq),
+        ))
     }
   }
 

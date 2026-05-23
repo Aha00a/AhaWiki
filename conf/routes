@@ -57,6 +57,7 @@ GET           /Admin/RecentChanges                   controllers.Admin.index()
 GET           /Admin/CrawlerCache                    controllers.Admin.index()
 
 
+GET           /api/me                                controllers.Api.me
 GET           /api/csrf                              controllers.Api.csrf
 GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)

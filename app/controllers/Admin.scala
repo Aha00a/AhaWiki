@@ -25,8 +25,14 @@ class Admin @Inject()(
   private def isAdmin(implicit request: RequestHeader): Boolean =
     logics.AdminLogic.isAdmin(request)
 
+  private def isSiteAdmin(siteSeq: Long)(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isSiteAdmin(siteSeq, request)(database)
+
+  private def currentSiteSeq(implicit request: RequestHeader): Long =
+    logics.SiteLogic.get(request.host).seq
+
   def index(): Action[AnyContent] = Action { implicit request =>
-    if (isAdmin) {
+    if (isAdmin || isSiteAdmin(currentSiteSeq)) {
       Ok(views.html.Admin.index())
     } else {
       Forbidden("Access denied.")
@@ -34,7 +40,7 @@ class Admin @Inject()(
   }
 
   def site(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (isAdmin) {
+    if (isAdmin || isSiteAdmin(seq)) {
       Ok(views.html.Admin.index())
     } else {
       Forbidden("Access denied.")

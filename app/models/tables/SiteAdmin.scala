@@ -23,6 +23,14 @@ object SiteAdmin {
         AND `user` = $user
     """.as(long("cnt").single) > 0
 
+  def selectByUser(user: Long)(implicit connection: Connection): Seq[SiteAdmin] =
+    SQL"""
+      SELECT site, `user`, dateInserted
+      FROM SiteAdmin
+      WHERE `user` = $user
+      ORDER BY site
+    """.as(rowParser.*).map(flatten).map(SiteAdmin.tupled)
+
   def selectBySite(site: Long)(implicit connection: Connection): Seq[SiteAdmin] =
     SQL"""
       SELECT site, `user`, dateInserted

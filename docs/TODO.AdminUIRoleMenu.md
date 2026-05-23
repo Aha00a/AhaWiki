@@ -36,30 +36,34 @@
 
 ## Backend
 
-- [ ] `GET /api/me` API 추가 (`conf/routes`)
-- [ ] `Api.scala`에 `me` 액션 구현
+- [x] `GET /api/me` API 추가 (`conf/routes`)
+- [x] `Api.scala`에 `me` 액션 구현
   - 로그인한 경우: `{ "loggedIn": true, "seq": 42, "nickname": "...", "loginEmail": "...", "profileImageUrl": "...", "isAdmin": false, "siteAdminSeqs": [1, 3], "currentSiteSeq": 2 }` 반환
     - `currentSiteSeq`: `request.host`로 찾은 현재 사이트의 seq
   - 미로그인: `{ "loggedIn": false }` 반환
-- [ ] `Admin.scala` 컨트롤러: SiteAdmin도 `/Admin` 접근 허용하도록 수정
-  - 현재는 `isAdmin`(전체Admin)만 허용 → `isSiteAdmin(currentSiteSeq)`도 허용
+- [x] `SiteAdmin.selectByUser(userSeq)` 추가 (`SiteAdmin.scala`)
+- [x] `adminSites` API: SiteAdmin도 접근 가능하되 담당 사이트만 반환하도록 수정
+- [x] `Admin.scala` 컨트롤러: SiteAdmin도 `/Admin` 접근 허용하도록 수정
+  - `index()`: `isAdmin || isSiteAdmin(currentSiteSeq)` 허용
+  - `site(seq)`: `isAdmin || isSiteAdmin(seq)` 허용
 
 ## Frontend — navigation.jsx
 
-- [ ] `fetchJson("/api/me")` 호출해 `me` 상태 저장
-- [ ] **[Sites]** 섹션
-  - `me.isAdmin`이면 전체 사이트 목록 표시, 아니면 `me.siteAdminSeqs` 해당 사이트만 표시
+- [x] `AdminApp`에서 `me` fetch 후 Navigation에 prop으로 전달 (중복 fetch 제거)
+- [x] **[Sites]** 섹션
+  - `/api/Admin/Sites` 응답이 권한에 따라 필터링되므로 그대로 표시
   - `me.currentSiteSeq`에 해당하는 사이트는 자동 펼침 + 강조 표시
   - 사이트별 서브메뉴 컴포넌트 분리 (`SiteNavItem`) 하여 재사용
   - `SiteAdmins` 서브메뉴는 `me.isAdmin`일 때만 표시
-- [ ] **[전체 관리]** 섹션 (`me.isAdmin`일 때만 표시)
+- [x] **[전체 관리]** 섹션 (`me.isAdmin`일 때만 표시)
   - Dashboard, User, RecentChange, AccessLog, Cache, S3
-- [ ] Me API 로딩 중 네비게이션 skeleton 표시 (UX)
+- [x] Me API 로딩 중 네비게이션 skeleton 표시 (UX)
 
 ## Frontend — admin.jsx (AdminContent)
 
-- [ ] `me.isAdmin`이 false이고 `page === "dashboard"`면 현재 사이트 정보 카드 표시
-- [ ] `me.isAdmin`이 false이고 전체Admin 전용 page 접근 시 접근 불가 메시지 표시
+- [x] `me` prop을 `AdminApp`에서 fetch해 `AdminContent`에 전달
+- [x] `me.isAdmin`이 false이고 `page === "dashboard"`면 담당 사이트 카드 표시
+- [x] `me.isAdmin`이 false이고 전체Admin 전용 page 접근 시 접근 불가 메시지 표시
   (`all-users`, `s3-browser`, `crawler-cache`, `recent-changes`, `access-logs`, `sites`)
 
 ## 참고
