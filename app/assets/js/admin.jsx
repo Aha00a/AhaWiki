@@ -8,6 +8,7 @@ import DashboardPage from "./admin/pages/DashboardPage.jsx";
 import SitesPage from "./admin/pages/SitesPage.jsx";
 import AllUsersPage from "./admin/pages/AllUsersPage.jsx";
 import UserViewsPage from "./admin/pages/UserViewsPage.jsx";
+import SiteDashboardPage from "./admin/pages/SiteDashboardPage.jsx";
 import SiteDetailPage from "./admin/pages/SiteDetailPage.jsx";
 import SiteConfigPage from "./admin/pages/SiteConfigPage.jsx";
 import SiteCachePage from "./admin/pages/SiteCachePage.jsx";
@@ -30,7 +31,8 @@ const router = createBrowserRouter([
                 path: "Site/:siteSeq",
                 element: <SiteLayout/>,
                 children: [
-                    {index: true, element: <SiteDetailPage/>},
+                    {index: true, element: <SiteDashboardPage/>},
+                    {path: "Detail", element: <SiteDetailPage/>},
                     {path: "Config", element: <SiteConfigPage/>},
                     {path: "Cache", element: <SiteCachePage/>},
                     {path: "Permission", element: <SitePermissionPage/>},

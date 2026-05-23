@@ -1,5 +1,5 @@
 // app/assets/js/admin.jsx
-import React22 from "react";
+import React23 from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -39,7 +39,7 @@ async function fetchCsrfToken() {
 
 // app/assets/js/admin/navigation.jsx
 function parseSiteSeqFromPathname(pathname) {
-  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog|Admins))?$/);
+  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Detail|Config|Cache|Permission|AccessLog|Admins))?$/);
   if (!matched) return "";
   const siteSeq = Number.parseInt(matched[1], 10);
   return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -53,7 +53,7 @@ function SiteNavItem({ site, currentPathname, currentSiteSeq, isAdmin }) {
     event.preventDefault();
     navigate(href);
   };
-  return /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}`, label: `${site.name} (#${site.seq})`, leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }), active: isActiveSite, opened: isCurrentSite || isActiveSite, variant: isActiveSite ? "filled" : "light", onClick: navTo(`/Admin/Site/${site.seq}`) }, /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}`, label: "Meta\uBAA9\uB85D", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-list", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}`, variant: currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Config`, label: "Config", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Config`, variant: currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Config`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Cache`, label: "Cache", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Cache`, variant: currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Cache`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Permission`, label: "Permission", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-key", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Permission`, variant: currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Permission`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/${site.seq}/AccessLog`, label: "AccessLog", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }), active: currentPathname === `/Admin/${site.seq}/AccessLog`, variant: currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle", onClick: navTo(`/Admin/${site.seq}/AccessLog`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Admins`, label: "SiteAdmins", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-user-shield", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Admins`, variant: currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Admins`) }));
+  return /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}`, label: `${site.name} (#${site.seq})`, leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }), active: isActiveSite, opened: isCurrentSite || isActiveSite, variant: isActiveSite ? "filled" : "light", onClick: navTo(`/Admin/Site/${site.seq}`) }, /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Detail`, label: "Meta\uBAA9\uB85D", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-list", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Detail`, variant: currentPathname === `/Admin/Site/${site.seq}/Detail` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Detail`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Config`, label: "Config", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-sliders-h", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Config`, variant: currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Config`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Cache`, label: "Cache", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Cache`, variant: currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Cache`) }), /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Permission`, label: "Permission", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-key", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Permission`, variant: currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Permission`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/${site.seq}/AccessLog`, label: "AccessLog", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-network-wired", "aria-hidden": "true" }), active: currentPathname === `/Admin/${site.seq}/AccessLog`, variant: currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle", onClick: navTo(`/Admin/${site.seq}/AccessLog`) }), isAdmin && /* @__PURE__ */ React.createElement(NavLink, { href: `/Admin/Site/${site.seq}/Admins`, label: "SiteAdmins", leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-user-shield", "aria-hidden": "true" }), active: currentPathname === `/Admin/Site/${site.seq}/Admins`, variant: currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle", onClick: navTo(`/Admin/Site/${site.seq}/Admins`) }));
 }
 function Navigation({ me, onNavigate }) {
   const [siteLinks, setSiteLinks] = useState([]);
@@ -105,7 +105,8 @@ function pageTitleFromPath(pathname) {
   if (/^\/Admin\/Site\/\d+\/Config/.test(pathname)) return "Config";
   if (/^\/Admin\/Site\/\d+\/Cache/.test(pathname)) return "Cache";
   if (/^\/Admin\/Site\/\d+\/Admins/.test(pathname)) return "SiteAdmins";
-  if (/^\/Admin\/Site\/\d+/.test(pathname)) return "Site";
+  if (/^\/Admin\/Site\/\d+\/Detail/.test(pathname)) return "Meta\uBAA9\uB85D";
+  if (/^\/Admin\/Site\/\d+/.test(pathname)) return "Dashboard";
   if (/^\/Admin\/Site/.test(pathname)) return "Sites";
   if (/\/UserViewHistory/.test(pathname) || /\/UserViews/.test(pathname)) return "User";
   if (/\/User/.test(pathname) || /\/AllUsers/.test(pathname)) return "User";
@@ -587,10 +588,19 @@ function UserViewsPage() {
   ));
 }
 
-// app/assets/js/admin/pages/SiteDetailPage.jsx
-import React13, { useEffect as useEffect9, useState as useState12 } from "react";
+// app/assets/js/admin/pages/SiteDashboardPage.jsx
+import React13 from "react";
 import { useOutletContext } from "react-router-dom";
-import { Badge as Badge9, Button as Button6, Card as Card7, Group as Group10, Text as Text10, Title as Title8 } from "@mantine/core";
+import { Badge as Badge9, Card as Card7, Group as Group10, Stack as Stack7, Text as Text10, Title as Title8 } from "@mantine/core";
+function SiteDashboardPage() {
+  const { site, sitePageNames } = useOutletContext();
+  return /* @__PURE__ */ React13.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React13.createElement(Group10, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React13.createElement(Title8, { order: 3 }, "Dashboard"), /* @__PURE__ */ React13.createElement(Badge9, { color: "indigo", variant: "light" }, "Site")), /* @__PURE__ */ React13.createElement(Stack7, { gap: "sm" }, /* @__PURE__ */ React13.createElement(Group10, null, /* @__PURE__ */ React13.createElement(Text10, { size: "sm", c: "dimmed", w: 120 }, "\uC0AC\uC774\uD2B8 \uC774\uB984"), /* @__PURE__ */ React13.createElement(Text10, { fw: 500 }, site?.name ?? "-")), /* @__PURE__ */ React13.createElement(Group10, null, /* @__PURE__ */ React13.createElement(Text10, { size: "sm", c: "dimmed", w: 120 }, "\uB3C4\uBA54\uC778"), /* @__PURE__ */ React13.createElement(Text10, { fw: 500 }, (site?.domains ?? []).join(", ") || "-")), /* @__PURE__ */ React13.createElement(Group10, null, /* @__PURE__ */ React13.createElement(Text10, { size: "sm", c: "dimmed", w: 120 }, "\uD398\uC774\uC9C0 \uC218"), /* @__PURE__ */ React13.createElement(Text10, { fw: 500 }, sitePageNames ? sitePageNames.length : "-"))));
+}
+
+// app/assets/js/admin/pages/SiteDetailPage.jsx
+import React14, { useEffect as useEffect9, useState as useState12 } from "react";
+import { useOutletContext as useOutletContext2 } from "react-router-dom";
+import { Badge as Badge10, Button as Button6, Card as Card8, Group as Group11, Text as Text11, Title as Title9 } from "@mantine/core";
 import { DataTable as DataTable2 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useAdminPageMetaData.js
@@ -620,7 +630,7 @@ function useAdminPageMetaData(siteSeq) {
 // app/assets/js/admin/pages/SiteDetailPage.jsx
 import { Anchor as Anchor3, Image } from "@mantine/core";
 function SiteDetailPage() {
-  const { site, siteSeq, sitePageNames, refreshPageNames } = useOutletContext();
+  const { site, siteSeq, sitePageNames, refreshPageNames } = useOutletContext2();
   const { rows, count, load } = useAdminPageMetaData(siteSeq);
   const [metaPage, setMetaPage] = useState12(1);
   const [searchInput, setSearchInput] = useState12("");
@@ -652,11 +662,11 @@ function SiteDetailPage() {
       setCalculating(false);
     }
   };
-  return /* @__PURE__ */ React13.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React13.createElement(Group10, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React13.createElement(Title8, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React13.createElement(Badge9, { color: "indigo", variant: "light" }, count, " rows")), /* @__PURE__ */ React13.createElement(Group10, { mb: "md" }, /* @__PURE__ */ React13.createElement("input", { type: "text", value: searchInput, onChange: (e) => setSearchInput(e.target.value), placeholder: "page name, image", style: { border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px" } }), /* @__PURE__ */ React13.createElement(Button6, { mt: 22, variant: "filled", onClick: () => {
+  return /* @__PURE__ */ React14.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React14.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React14.createElement(Title9, { order: 3 }, "Admin Page \uBAA9\uB85D"), /* @__PURE__ */ React14.createElement(Badge10, { color: "indigo", variant: "light" }, count, " rows")), /* @__PURE__ */ React14.createElement(Group11, { mb: "md" }, /* @__PURE__ */ React14.createElement("input", { type: "text", value: searchInput, onChange: (e) => setSearchInput(e.target.value), placeholder: "page name, image", style: { border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px" } }), /* @__PURE__ */ React14.createElement(Button6, { mt: 22, variant: "filled", onClick: () => {
     setMetaPage(1);
     setSearch(searchInput);
     load({ siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
-  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React13.createElement(
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React14.createElement(
     DataTable2,
     {
       withTableBorder: true,
@@ -667,10 +677,10 @@ function SiteDetailPage() {
       columns: [
         { accessor: "name", title: "Page", sortable: true },
         { accessor: "revision", title: "Revision", sortable: true },
-        { accessor: "image", title: "Image", sortable: true, render: (row) => row.image ? /* @__PURE__ */ React13.createElement(Anchor3, { href: row.image, target: "_blank", rel: "noopener" }, /* @__PURE__ */ React13.createElement(Image, { src: row.image, alt: `${row.name} image`, h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" })) : "-" },
+        { accessor: "image", title: "Image", sortable: true, render: (row) => row.image ? /* @__PURE__ */ React14.createElement(Anchor3, { href: row.image, target: "_blank", rel: "noopener" }, /* @__PURE__ */ React14.createElement(Image, { src: row.image, alt: `${row.name} image`, h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" })) : "-" },
         { accessor: "dateUpdated", title: "Date Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
         { accessor: "size", title: "Size", sortable: true },
-        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React13.createElement(Button6, { size: "xs", variant: "light", color: "teal", disabled: !siteSeq, loading: calculating, onClick: async () => {
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React14.createElement(Button6, { size: "xs", variant: "light", color: "teal", disabled: !siteSeq, loading: calculating, onClick: async () => {
           const res = await runCalculate(row.name);
           if (res) setCalculateMessage(`\uC120\uD0DD \uD398\uC774\uC9C0: ${res?.pageName ?? row.name} (queued)`);
         } }, "\uC7AC\uACC4\uC0B0") }
@@ -693,13 +703,13 @@ function SiteDetailPage() {
       paginationText: ({ from, to, totalRecords }) => `${from}-${to} / ${totalRecords}`,
       minHeight: 320
     }
-  ), calculateMessage ? /* @__PURE__ */ React13.createElement(Text10, { size: "sm", c: "teal", mt: "xs" }, calculateMessage) : null, /* @__PURE__ */ React13.createElement(Text10, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", metaPage, " / ", totalPages));
+  ), calculateMessage ? /* @__PURE__ */ React14.createElement(Text11, { size: "sm", c: "teal", mt: "xs" }, calculateMessage) : null, /* @__PURE__ */ React14.createElement(Text11, { size: "xs", c: "dimmed", mt: "xs" }, "Page ", metaPage, " / ", totalPages));
 }
 
 // app/assets/js/admin/pages/SiteConfigPage.jsx
-import React14, { useEffect as useEffect10, useState as useState14 } from "react";
-import { useOutletContext as useOutletContext2 } from "react-router-dom";
-import { Anchor as Anchor4, Badge as Badge10, Button as Button7, Card as Card8, ColorInput, Group as Group11, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack7, Text as Text11, Title as Title9 } from "@mantine/core";
+import React15, { useEffect as useEffect10, useState as useState14 } from "react";
+import { useOutletContext as useOutletContext3 } from "react-router-dom";
+import { Anchor as Anchor4, Badge as Badge11, Button as Button7, Card as Card9, ColorInput, Group as Group12, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack8, Text as Text12, Title as Title10 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useSiteConfigData.js
 import { useCallback as useCallback6, useState as useState13 } from "react";
@@ -814,7 +824,7 @@ function useSiteConfigData(siteSeq) {
 
 // app/assets/js/admin/pages/SiteConfigPage.jsx
 function SiteConfigPage() {
-  const { site, siteSeq } = useOutletContext2();
+  const { site, siteSeq } = useOutletContext3();
   const { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme } = useSiteConfigData(siteSeq);
   const [faviconFile, setFaviconFile] = useState14(null);
   useEffect10(() => {
@@ -822,24 +832,24 @@ function SiteConfigPage() {
     loadFavicon();
     loadTheme();
   }, [siteSeq]);
-  return /* @__PURE__ */ React14.createElement(React14.Fragment, null, /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React14.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React14.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React14.createElement(Title9, { order: 3 }, "Favicon"), /* @__PURE__ */ React14.createElement(Badge10, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React14.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React14.createElement(Text11, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React14.createElement(Group11, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React14.createElement(Stack7, { gap: 6 }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React14.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React14.createElement(Text11, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React14.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React14.createElement(Stack7, { gap: 8 }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React14.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React14.createElement(Group11, null, /* @__PURE__ */ React14.createElement(Button7, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
+  return /* @__PURE__ */ React15.createElement(React15.Fragment, null, /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Favicon"), /* @__PURE__ */ React15.createElement(Badge11, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React15.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React15.createElement(Text12, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Group12, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React15.createElement(Stack8, { gap: 6 }, /* @__PURE__ */ React15.createElement(Text12, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React15.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React15.createElement(Text12, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React15.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React15.createElement(Stack8, { gap: 8 }, /* @__PURE__ */ React15.createElement(Text12, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React15.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React15.createElement(Group12, null, /* @__PURE__ */ React15.createElement(Button7, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
     await uploadFavicon(faviconFile);
     await loadFavicon();
-  } }, "Upload favicon"), /* @__PURE__ */ React14.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadFavicon() }, "Refresh"), /* @__PURE__ */ React14.createElement(Button7, { color: "red", variant: "light", loading: deletingFavicon, disabled: !siteSeq, onClick: async () => {
+  } }, "Upload favicon"), /* @__PURE__ */ React15.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadFavicon() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button7, { color: "red", variant: "light", loading: deletingFavicon, disabled: !siteSeq, onClick: async () => {
     await resetFavicon();
     await loadFavicon();
     setFaviconFile(null);
-  } }, "Reset to default")), /* @__PURE__ */ React14.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React14.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React14.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React14.createElement(Title9, { order: 3 }, "Theme"), /* @__PURE__ */ React14.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React14.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React14.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md" }, [
+  } }, "Reset to default")), /* @__PURE__ */ React15.createElement(Text12, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Theme"), /* @__PURE__ */ React15.createElement(Badge11, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md" }, [
     { key: "headerBackgroundColor", label: "Header \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"] },
     { key: "headerForegroundColor", label: "Header \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"] },
     { key: "bodyBackgroundColor", label: "Body \uBC30\uACBD\uC0C9", placeholder: "#FFFFFF", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"] },
     { key: "bodyForegroundColor", label: "Body \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"] },
     { key: "footerBackgroundColor", label: "Footer \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"] },
     { key: "footerForegroundColor", label: "Footer \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"] }
-  ].map(({ key, label, placeholder, swatches }) => /* @__PURE__ */ React14.createElement(ColorInput, { key, label, placeholder, format: "hexa", value: siteTheme[key], onChange: (value) => setSiteTheme((prev) => ({ ...prev, [key]: value })), swatches, withEyeDropper: false, clearable: true }))), /* @__PURE__ */ React14.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React14.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React14.createElement(Stack7, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React14.createElement("div", { style: { backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE", color: siteTheme.headerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Header Preview"), /* @__PURE__ */ React14.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React14.createElement("div", { style: { backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE", color: siteTheme.footerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Footer Preview")))), /* @__PURE__ */ React14.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React14.createElement(Button7, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
+  ].map(({ key, label, placeholder, swatches }) => /* @__PURE__ */ React15.createElement(ColorInput, { key, label, placeholder, format: "hexa", value: siteTheme[key], onChange: (value) => setSiteTheme((prev) => ({ ...prev, [key]: value })), swatches, withEyeDropper: false, clearable: true }))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React15.createElement(Text12, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement(Stack8, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React15.createElement("div", { style: { backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE", color: siteTheme.headerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Header Preview"), /* @__PURE__ */ React15.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), /* @__PURE__ */ React15.createElement("div", { style: { backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE", color: siteTheme.footerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Footer Preview")))), /* @__PURE__ */ React15.createElement(Group12, { mt: "md" }, /* @__PURE__ */ React15.createElement(Button7, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
     await saveTheme(siteTheme);
     await loadTheme();
-  } }, "Save theme"), /* @__PURE__ */ React14.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React14.createElement(Button7, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
+  } }, "Save theme"), /* @__PURE__ */ React15.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button7, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
     const empty = { headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "" };
     setSiteTheme(empty);
     await saveTheme(empty);
@@ -848,9 +858,9 @@ function SiteConfigPage() {
 }
 
 // app/assets/js/admin/pages/SiteCachePage.jsx
-import React15, { useEffect as useEffect11 } from "react";
-import { useOutletContext as useOutletContext3 } from "react-router-dom";
-import { Badge as Badge11, Button as Button8, Card as Card9, Group as Group12, Stack as Stack8, Table as Table3, Text as Text12, Title as Title10 } from "@mantine/core";
+import React16, { useEffect as useEffect11 } from "react";
+import { useOutletContext as useOutletContext4 } from "react-router-dom";
+import { Badge as Badge12, Button as Button8, Card as Card10, Group as Group13, Stack as Stack9, Table as Table3, Text as Text13, Title as Title11 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useSiteCacheData.js
 import { useCallback as useCallback7, useState as useState15 } from "react";
@@ -886,18 +896,18 @@ function useSiteCacheData(siteSeq) {
 
 // app/assets/js/admin/pages/SiteCachePage.jsx
 function SiteCachePage() {
-  const { site, siteSeq } = useOutletContext3();
+  const { site, siteSeq } = useOutletContext4();
   const { clearing, memoryCacheStats, error, clearSiteCache, loadMemoryCacheStats } = useSiteCacheData(siteSeq);
   useEffect11(() => {
     loadMemoryCacheStats();
   }, [siteSeq]);
-  return /* @__PURE__ */ React15.createElement(React15.Fragment, null, /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React15.createElement(Badge11, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React15.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React15.createElement(Text12, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", align: "center" }, /* @__PURE__ */ React15.createElement(Stack8, { gap: 2 }, /* @__PURE__ */ React15.createElement(Text12, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React15.createElement(Text12, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React15.createElement(Button8, { color: "orange", variant: "filled", disabled: !site, loading: clearing, onClick: () => clearSiteCache() }, "Clear current site cache"))), /* @__PURE__ */ React15.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title10, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React15.createElement(Button8, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React15.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React15.createElement(Table3.Thead, null, /* @__PURE__ */ React15.createElement(Table3.Tr, null, /* @__PURE__ */ React15.createElement(Table3.Th, null, "Port"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Key Count"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Value Count"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "Captured At"))), /* @__PURE__ */ React15.createElement(Table3.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React15.createElement(Table3.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React15.createElement(Table3.Td, null, row.instancePort), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React15.createElement(Table3.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
+  return /* @__PURE__ */ React16.createElement(React16.Fragment, null, /* @__PURE__ */ React16.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title11, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React16.createElement(Badge12, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React16.createElement(Text13, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React16.createElement(Text13, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React16.createElement(Group13, { justify: "space-between", align: "center" }, /* @__PURE__ */ React16.createElement(Stack9, { gap: 2 }, /* @__PURE__ */ React16.createElement(Text13, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React16.createElement(Text13, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React16.createElement(Button8, { color: "orange", variant: "filled", disabled: !site, loading: clearing, onClick: () => clearSiteCache() }, "Clear current site cache"))), /* @__PURE__ */ React16.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title11, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React16.createElement(Button8, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React16.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React16.createElement(Table3.Thead, null, /* @__PURE__ */ React16.createElement(Table3.Tr, null, /* @__PURE__ */ React16.createElement(Table3.Th, null, "Port"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Key Count"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Value Count"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Captured At"))), /* @__PURE__ */ React16.createElement(Table3.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React16.createElement(Table3.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React16.createElement(Table3.Td, null, row.instancePort), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
 }
 
 // app/assets/js/admin/pages/SitePermissionPage.jsx
-import React16, { useEffect as useEffect12, useMemo as useMemo4, useState as useState17 } from "react";
-import { useOutletContext as useOutletContext4 } from "react-router-dom";
-import { Autocomplete, Badge as Badge12, Button as Button9, Card as Card10, Group as Group13, Paper as Paper3, Select, SimpleGrid as SimpleGrid3, Text as Text13, TextInput as TextInput3, Title as Title11 } from "@mantine/core";
+import React17, { useEffect as useEffect12, useMemo as useMemo4, useState as useState17 } from "react";
+import { useOutletContext as useOutletContext5 } from "react-router-dom";
+import { Autocomplete, Badge as Badge13, Button as Button9, Card as Card11, Group as Group14, Paper as Paper3, Select, SimpleGrid as SimpleGrid3, Text as Text14, TextInput as TextInput3, Title as Title12 } from "@mantine/core";
 import { DataTable as DataTable3 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/usePermissionData.js
@@ -974,7 +984,7 @@ function usePermissionData(siteSeq) {
 
 // app/assets/js/admin/pages/SitePermissionPage.jsx
 function SitePermissionPage() {
-  const { siteSeq, sitePageNames } = useOutletContext4();
+  const { siteSeq, sitePageNames } = useOutletContext5();
   const { permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission } = usePermissionData(siteSeq);
   const [form, setForm] = useState17({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
   const [diagnoseForm, setDiagnoseForm] = useState17({ pageName: "", actor: "", action: "Read" });
@@ -988,10 +998,10 @@ function SitePermissionPage() {
     const rightValue = sortBy === "actionLabel" ? formatPermissionAction(b.actionName, b.action) : b[sortBy];
     return compareValuesForSort(leftValue, rightValue, sortOrder);
   }), [permissionRows, sortBy, sortOrder]);
-  return /* @__PURE__ */ React16.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title11, { order: 3 }, "Permission"), /* @__PURE__ */ React16.createElement(Badge12, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React16.createElement(Text13, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React16.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React16.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React16.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React16.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React16.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React16.createElement(Group13, { mb: "md" }, /* @__PURE__ */ React16.createElement(Button9, { size: "xs", loading: saving, onClick: async () => {
+  return /* @__PURE__ */ React17.createElement(Card11, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React17.createElement(Group14, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React17.createElement(Title12, { order: 3 }, "Permission"), /* @__PURE__ */ React17.createElement(Badge13, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React17.createElement(Text14, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React17.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React17.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React17.createElement(Group14, { mb: "md" }, /* @__PURE__ */ React17.createElement(Button9, { size: "xs", loading: saving, onClick: async () => {
     const saved = await savePermission(form);
     if (saved) setForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-  } }, "Save")), /* @__PURE__ */ React16.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React16.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React16.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React16.createElement(Button9, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React16.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React16.createElement(Group13, { gap: "xs" }, /* @__PURE__ */ React16.createElement(Badge12, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React16.createElement(Text13, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React16.createElement(
+  } }, "Save")), /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React17.createElement(Button9, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React17.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React17.createElement(Group14, { gap: "xs" }, /* @__PURE__ */ React17.createElement(Badge13, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React17.createElement(Text14, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React17.createElement(
     DataTable3,
     {
       withTableBorder: true,
@@ -1008,7 +1018,7 @@ function SitePermissionPage() {
         { accessor: "specificity", title: "Specificity", sortable: true },
         { accessor: "actions", title: "Actions", render: (row) => {
           const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
-          return /* @__PURE__ */ React16.createElement(Group13, { gap: 6 }, /* @__PURE__ */ React16.createElement(Button9, { size: "xs", variant: "light", onClick: () => setForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React16.createElement(Button9, { size: "xs", variant: "light", color: "red", loading: deletingKey === key, onClick: () => deletePermission(row) }, "Delete"));
+          return /* @__PURE__ */ React17.createElement(Group14, { gap: 6 }, /* @__PURE__ */ React17.createElement(Button9, { size: "xs", variant: "light", onClick: () => setForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React17.createElement(Button9, { size: "xs", variant: "light", color: "red", loading: deletingKey === key, onClick: () => deletePermission(row) }, "Delete"));
         } }
       ],
       sortStatus: { columnAccessor: sortBy, direction: sortOrder },
@@ -1022,9 +1032,9 @@ function SitePermissionPage() {
 }
 
 // app/assets/js/admin/pages/SiteAdminsPage.jsx
-import React17, { useEffect as useEffect13, useState as useState19 } from "react";
-import { useOutletContext as useOutletContext5, useNavigate as useNavigate8 } from "react-router-dom";
-import { Badge as Badge13, Button as Button10, Card as Card11, Group as Group14, Stack as Stack9, Text as Text14, TextInput as TextInput4, Title as Title12 } from "@mantine/core";
+import React18, { useEffect as useEffect13, useState as useState19 } from "react";
+import { useOutletContext as useOutletContext6, useNavigate as useNavigate8 } from "react-router-dom";
+import { Badge as Badge14, Button as Button10, Card as Card12, Group as Group15, Stack as Stack10, Text as Text15, TextInput as TextInput4, Title as Title13 } from "@mantine/core";
 import { DataTable as DataTable4 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useSiteAdminsData.js
@@ -1089,19 +1099,19 @@ function useSiteAdminsData(siteSeq) {
 
 // app/assets/js/admin/pages/SiteAdminsPage.jsx
 function SiteAdminsPage() {
-  const { site, siteSeq } = useOutletContext5();
+  const { site, siteSeq } = useOutletContext6();
   const navigate = useNavigate8();
   const { siteAdmins, adding, deletingUserSeq, error, loadSiteAdmins, insertSiteAdmin, deleteSiteAdmin } = useSiteAdminsData(siteSeq);
   const [userSeqInput, setUserSeqInput] = useState19("");
   useEffect13(() => {
     if (siteSeq) loadSiteAdmins();
   }, [siteSeq]);
-  return /* @__PURE__ */ React17.createElement(Card11, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React17.createElement(Group14, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React17.createElement(Title12, { order: 3 }, "Site Admins"), /* @__PURE__ */ React17.createElement(Badge13, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React17.createElement(Text14, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React17.createElement(Text14, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(Group14, { mb: "md", align: "end" }, /* @__PURE__ */ React17.createElement(TextInput4, { label: "User Seq", placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)", value: userSeqInput, onChange: (e) => setUserSeqInput(e.currentTarget.value), type: "number", min: "1" }), /* @__PURE__ */ React17.createElement(Button10, { variant: "filled", loading: adding, disabled: !siteSeq || !userSeqInput.trim(), onClick: async () => {
+  return /* @__PURE__ */ React18.createElement(Card12, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React18.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React18.createElement(Title13, { order: 3 }, "Site Admins"), /* @__PURE__ */ React18.createElement(Badge14, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React18.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React18.createElement(Text15, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React18.createElement(Group15, { mb: "md", align: "end" }, /* @__PURE__ */ React18.createElement(TextInput4, { label: "User Seq", placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)", value: userSeqInput, onChange: (e) => setUserSeqInput(e.currentTarget.value), type: "number", min: "1" }), /* @__PURE__ */ React18.createElement(Button10, { variant: "filled", loading: adding, disabled: !siteSeq || !userSeqInput.trim(), onClick: async () => {
     const userSeq = Number.parseInt(userSeqInput, 10);
     if (!Number.isFinite(userSeq) || userSeq <= 0) return;
     const ok = await insertSiteAdmin(userSeq);
     if (ok) setUserSeqInput("");
-  } }, "\uCD94\uAC00")), /* @__PURE__ */ React17.createElement(
+  } }, "\uCD94\uAC00")), /* @__PURE__ */ React18.createElement(
     DataTable4,
     {
       withTableBorder: true,
@@ -1112,7 +1122,7 @@ function SiteAdminsPage() {
       columns: [
         { accessor: "user", title: "User Seq" },
         { accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
-        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React17.createElement(Button10, { size: "xs", variant: "light", color: "red", loading: deletingUserSeq === row.user, onClick: () => deleteSiteAdmin(row.user) }, "\uC0AD\uC81C") }
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React18.createElement(Button10, { size: "xs", variant: "light", color: "red", loading: deletingUserSeq === row.user, onClick: () => deleteSiteAdmin(row.user) }, "\uC0AD\uC81C") }
       ],
       minHeight: 160
     }
@@ -1120,8 +1130,8 @@ function SiteAdminsPage() {
 }
 
 // app/assets/js/admin/pages/RecentChangesPage.jsx
-import React18, { useEffect as useEffect14, useMemo as useMemo5, useState as useState21 } from "react";
-import { Anchor as Anchor5, Badge as Badge14, Button as Button11, Card as Card12, Group as Group15, Text as Text15, TextInput as TextInput5, Title as Title13 } from "@mantine/core";
+import React19, { useEffect as useEffect14, useMemo as useMemo5, useState as useState21 } from "react";
+import { Anchor as Anchor5, Badge as Badge15, Button as Button11, Card as Card13, Group as Group16, Text as Text16, TextInput as TextInput5, Title as Title14 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useRecentChangesData.js
 import { useCallback as useCallback10, useState as useState20 } from "react";
@@ -1160,7 +1170,7 @@ function RecentChangesPage() {
     loadRecentChanges(50);
   }, []);
   const siteDomainBySeq = useMemo5(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
-  return /* @__PURE__ */ React18.createElement(Card12, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React18.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React18.createElement(Title13, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React18.createElement(Badge14, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React18.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React18.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React18.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React18.createElement(Button11, { variant: "filled", onClick: () => {
+  return /* @__PURE__ */ React19.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group16, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title14, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React19.createElement(Badge15, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React19.createElement(Text16, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group16, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React19.createElement(Button11, { variant: "filled", onClick: () => {
     const parsed = Number.parseInt(limitInput, 10);
     const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
     setLimitInput(String(n));
@@ -1170,14 +1180,14 @@ function RecentChangesPage() {
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
     const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React18.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.comment || "-", row.remoteAddress];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.comment || "-", row.remoteAddress];
   })));
 }
 
 // app/assets/js/admin/pages/AccessLogsPage.jsx
-import React19, { useEffect as useEffect15, useMemo as useMemo6, useState as useState23 } from "react";
+import React20, { useEffect as useEffect15, useMemo as useMemo6, useState as useState23 } from "react";
 import { useParams as useParams2 } from "react-router-dom";
-import { Anchor as Anchor6, Badge as Badge15, Button as Button12, Card as Card13, Group as Group16, Pagination, Text as Text16, TextInput as TextInput6, Title as Title14 } from "@mantine/core";
+import { Anchor as Anchor6, Badge as Badge16, Button as Button12, Card as Card14, Group as Group17, Pagination, Text as Text17, TextInput as TextInput6, Title as Title15 } from "@mantine/core";
 import { DataTable as DataTable5 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useAccessLogData.js
@@ -1231,13 +1241,13 @@ function AccessLogsPage() {
     loadSites();
     loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: "", sortBy: "seq", sortOrder: "desc", siteSeq });
   }, [siteSeq]);
-  return /* @__PURE__ */ React19.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group16, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title14, { order: 3 }, selectedSite ? `Access Logs (${selectedSite.name} #${selectedSite.seq})` : "Access Logs (All Sites)"), /* @__PURE__ */ React19.createElement(Badge15, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React19.createElement(Text16, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group16, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput6, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "site/method/uri/ip/user-agent" }), /* @__PURE__ */ React19.createElement(Button12, { variant: "filled", onClick: () => {
+  return /* @__PURE__ */ React20.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React20.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React20.createElement(Title15, { order: 3 }, selectedSite ? `Access Logs (${selectedSite.name} #${selectedSite.seq})` : "Access Logs (All Sites)"), /* @__PURE__ */ React20.createElement(Badge16, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React20.createElement(Text17, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React20.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React20.createElement(TextInput6, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "site/method/uri/ip/user-agent" }), /* @__PURE__ */ React20.createElement(Button12, { variant: "filled", onClick: () => {
     setPage(1);
     loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
-  } }, "\uC870\uD68C")), /* @__PURE__ */ React19.createElement(
+  } }, "\uC870\uD68C")), /* @__PURE__ */ React20.createElement(
     DataTable5,
     {
-      sortIcons: { sorted: /* @__PURE__ */ React19.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React19.createElement(IconSelector, { size: 14 }) },
+      sortIcons: { sorted: /* @__PURE__ */ React20.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React20.createElement(IconSelector, { size: 14 }) },
       withTableBorder: true,
       borderRadius: "sm",
       striped: true,
@@ -1254,7 +1264,7 @@ function AccessLogsPage() {
         { accessor: "method", title: "Method", sortable: true },
         { accessor: "uri", title: "Request URL", sortable: true, render: (row) => {
           const href = `${row.scheme}://${row.host}${row.uri}`;
-          return /* @__PURE__ */ React19.createElement(Anchor6, { href, target: "_blank", rel: "noopener noreferrer" }, href);
+          return /* @__PURE__ */ React20.createElement(Anchor6, { href, target: "_blank", rel: "noopener noreferrer" }, href);
         } },
         { accessor: "status", title: "Status", sortable: true },
         { accessor: "remoteAddress", title: "IP" },
@@ -1270,15 +1280,15 @@ function AccessLogsPage() {
         loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy: next.columnAccessor, sortOrder: dir, siteSeq });
       }
     }
-  ), /* @__PURE__ */ React19.createElement(Group16, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React19.createElement(Text16, { size: "sm", c: "dimmed" }, "Page ", page, " / ", totalPages), /* @__PURE__ */ React19.createElement(Pagination, { value: page, onChange: (nextPage) => {
+  ), /* @__PURE__ */ React20.createElement(Group17, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React20.createElement(Text17, { size: "sm", c: "dimmed" }, "Page ", page, " / ", totalPages), /* @__PURE__ */ React20.createElement(Pagination, { value: page, onChange: (nextPage) => {
     setPage(nextPage);
     loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
   }, total: totalPages, siblings: 1, boundaries: 1, size: "sm" })));
 }
 
 // app/assets/js/admin/pages/S3BrowserPage.jsx
-import React20, { useEffect as useEffect16 } from "react";
-import { Badge as Badge16, Button as Button13, Card as Card14, Group as Group17, Table as Table4, Text as Text17, Title as Title15 } from "@mantine/core";
+import React21, { useEffect as useEffect16 } from "react";
+import { Badge as Badge17, Button as Button13, Card as Card15, Group as Group18, Table as Table4, Text as Text18, Title as Title16 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useS3Data.js
 import { useCallback as useCallback12, useState as useState24 } from "react";
@@ -1384,21 +1394,21 @@ function S3BrowserPage() {
     });
   };
   visit(root, 0);
-  return /* @__PURE__ */ React20.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React20.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React20.createElement(Title15, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React20.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React20.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React20.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React20.createElement(Button13, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React20.createElement(Button13, { variant: "light", onClick: () => expandAllS3Nodes(s3Items), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React20.createElement(Button13, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React20.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React20.createElement(Table4.Thead, null, /* @__PURE__ */ React20.createElement(Table4.Tr, null, /* @__PURE__ */ React20.createElement(Table4.Th, null, /* @__PURE__ */ React20.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (e) => {
+  return /* @__PURE__ */ React21.createElement(Card15, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group18, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title16, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge17, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text18, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group18, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button13, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button13, { variant: "light", onClick: () => expandAllS3Nodes(s3Items), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button13, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (e) => {
     setSelectedS3Keys(e.currentTarget.checked ? fileRows.map((item) => item.key) : []);
-  } })), /* @__PURE__ */ React20.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React20.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React20.createElement(Table4.Tbody, null, rows.map(({ depth, node }) => {
+  } })), /* @__PURE__ */ React21.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map(({ depth, node }) => {
     const key = node.path;
     const checked = selectedS3Keys.includes(key);
-    return /* @__PURE__ */ React20.createElement(Table4.Tr, { key }, /* @__PURE__ */ React20.createElement(Table4.Td, null, /* @__PURE__ */ React20.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (e) => {
+    return /* @__PURE__ */ React21.createElement(Table4.Tr, { key }, /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (e) => {
       if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
       else setSelectedS3Keys((prev) => prev.filter((k) => k !== key));
-    } })), /* @__PURE__ */ React20.createElement(Table4.Td, null, /* @__PURE__ */ React20.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React20.createElement(Button13, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React20.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React20.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React20.createElement("span", null, /* @__PURE__ */ React20.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React20.createElement("span", null, node.name))), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React20.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React20.createElement(Button13, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React20.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React21.createElement(Button13, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", null, node.name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React21.createElement(Button13, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
   }))));
 }
 
 // app/assets/js/admin/pages/CrawlerCachePage.jsx
-import React21, { useEffect as useEffect17, useState as useState26 } from "react";
-import { Anchor as Anchor7, Badge as Badge17, Button as Button14, Card as Card15, Group as Group18, Image as Image2, Text as Text18, TextInput as TextInput7, Title as Title16 } from "@mantine/core";
+import React22, { useEffect as useEffect17, useState as useState26 } from "react";
+import { Anchor as Anchor7, Badge as Badge18, Button as Button14, Card as Card16, Group as Group19, Image as Image2, Text as Text19, TextInput as TextInput7, Title as Title17 } from "@mantine/core";
 import { DataTable as DataTable6 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useCrawlerCacheData.js
@@ -1474,30 +1484,30 @@ function CrawlerCachePage() {
   useEffect17(() => {
     loadCrawlerCaches();
   }, []);
-  return /* @__PURE__ */ React21.createElement(Card15, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group18, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title16, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React21.createElement(Badge17, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React21.createElement(Text18, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React21.createElement(Group18, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button14, { variant: "filled", onClick: () => loadCrawlerCaches(currentParams) }, "\uC870\uD68C")), /* @__PURE__ */ React21.createElement(Group18, { mb: "sm", align: "end" }, /* @__PURE__ */ React21.createElement(TextInput7, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React21.createElement(Button14, { variant: "light", onClick: () => {
+  return /* @__PURE__ */ React22.createElement(Card16, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React22.createElement(Group19, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React22.createElement(Title17, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React22.createElement(Badge18, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React22.createElement(Text19, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React22.createElement(Group19, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React22.createElement(Button14, { variant: "filled", onClick: () => loadCrawlerCaches(currentParams) }, "\uC870\uD68C")), /* @__PURE__ */ React22.createElement(Group19, { mb: "sm", align: "end" }, /* @__PURE__ */ React22.createElement(TextInput7, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React22.createElement(Button14, { variant: "light", onClick: () => {
     setPage(1);
     setSearch(searchInput);
     loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
-  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React21.createElement(
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React22.createElement(
     DataTable6,
     {
-      sortIcons: { sorted: /* @__PURE__ */ React21.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React21.createElement(IconSelector, { size: 14 }) },
+      sortIcons: { sorted: /* @__PURE__ */ React22.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React22.createElement(IconSelector, { size: 14 }) },
       withTableBorder: true,
       striped: true,
       highlightOnHover: true,
       records: crawlerCaches,
       columns: [
         { accessor: "id", title: "ID", sortable: true },
-        { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React21.createElement(Text18, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
+        { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React22.createElement(Text19, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
         { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
         { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },
         { accessor: "image", title: "Image", sortable: true, render: (row) => {
           if (!row.image) return "-";
-          return /* @__PURE__ */ React21.createElement(Anchor7, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React21.createElement(Image2, { src: row.image, alt: row.title || row.url || "crawler image", h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" }));
+          return /* @__PURE__ */ React22.createElement(Anchor7, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React22.createElement(Image2, { src: row.image, alt: row.title || row.url || "crawler image", h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" }));
         } },
         { accessor: "description", title: "Description", sortable: true, render: (row) => row.description || "-" },
         { accessor: "dateUpdated", title: "Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
-        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React21.createElement(Group18, { gap: 6 }, /* @__PURE__ */ React21.createElement(Button14, { size: "xs", variant: "light", loading: refreshingUrl === row.url, onClick: () => refreshCrawlerCache(row.url, currentParams) }, "\uAC31\uC2E0"), /* @__PURE__ */ React21.createElement(Button14, { size: "xs", color: "red", variant: "light", loading: deletingUrl === row.url, onClick: () => deleteCrawlerCache(row.url, currentParams) }, "\uC0AD\uC81C")) }
+        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React22.createElement(Group19, { gap: 6 }, /* @__PURE__ */ React22.createElement(Button14, { size: "xs", variant: "light", loading: refreshingUrl === row.url, onClick: () => refreshCrawlerCache(row.url, currentParams) }, "\uAC31\uC2E0"), /* @__PURE__ */ React22.createElement(Button14, { size: "xs", color: "red", variant: "light", loading: deletingUrl === row.url, onClick: () => deleteCrawlerCache(row.url, currentParams) }, "\uC0AD\uC81C")) }
       ],
       sortStatus: { columnAccessor: sortBy, direction: sortOrder },
       onSortStatusChange: (next) => {
@@ -1524,35 +1534,36 @@ function CrawlerCachePage() {
 var router = createBrowserRouter([
   {
     path: "/Admin",
-    element: /* @__PURE__ */ React22.createElement(AdminLayout, null),
+    element: /* @__PURE__ */ React23.createElement(AdminLayout, null),
     children: [
-      { index: true, element: /* @__PURE__ */ React22.createElement(DashboardPage, null) },
-      { path: "Site", element: /* @__PURE__ */ React22.createElement(SitesPage, null) },
-      { path: "Sites", element: /* @__PURE__ */ React22.createElement(SitesPage, null) },
+      { index: true, element: /* @__PURE__ */ React23.createElement(DashboardPage, null) },
+      { path: "Site", element: /* @__PURE__ */ React23.createElement(SitesPage, null) },
+      { path: "Sites", element: /* @__PURE__ */ React23.createElement(SitesPage, null) },
       {
         path: "Site/:siteSeq",
-        element: /* @__PURE__ */ React22.createElement(SiteLayout, null),
+        element: /* @__PURE__ */ React23.createElement(SiteLayout, null),
         children: [
-          { index: true, element: /* @__PURE__ */ React22.createElement(SiteDetailPage, null) },
-          { path: "Config", element: /* @__PURE__ */ React22.createElement(SiteConfigPage, null) },
-          { path: "Cache", element: /* @__PURE__ */ React22.createElement(SiteCachePage, null) },
-          { path: "Permission", element: /* @__PURE__ */ React22.createElement(SitePermissionPage, null) },
-          { path: "Admins", element: /* @__PURE__ */ React22.createElement(SiteAdminsPage, null) }
+          { index: true, element: /* @__PURE__ */ React23.createElement(SiteDashboardPage, null) },
+          { path: "Detail", element: /* @__PURE__ */ React23.createElement(SiteDetailPage, null) },
+          { path: "Config", element: /* @__PURE__ */ React23.createElement(SiteConfigPage, null) },
+          { path: "Cache", element: /* @__PURE__ */ React23.createElement(SiteCachePage, null) },
+          { path: "Permission", element: /* @__PURE__ */ React23.createElement(SitePermissionPage, null) },
+          { path: "Admins", element: /* @__PURE__ */ React23.createElement(SiteAdminsPage, null) }
         ]
       },
-      { path: "User", element: /* @__PURE__ */ React22.createElement(AllUsersPage, null) },
-      { path: "AllUsers", element: /* @__PURE__ */ React22.createElement(AllUsersPage, null) },
-      { path: "User/UserViewHistory", element: /* @__PURE__ */ React22.createElement(UserViewsPage, null) },
-      { path: "UserViews", element: /* @__PURE__ */ React22.createElement(UserViewsPage, null) },
-      { path: "AccessLog", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
-      { path: "AccessLogs", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
-      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React22.createElement(AccessLogsPage, null) },
-      { path: "RecentChange", element: /* @__PURE__ */ React22.createElement(RecentChangesPage, null) },
-      { path: "RecentChanges", element: /* @__PURE__ */ React22.createElement(RecentChangesPage, null) },
-      { path: "S3", element: /* @__PURE__ */ React22.createElement(S3BrowserPage, null) },
-      { path: "S3Browser", element: /* @__PURE__ */ React22.createElement(S3BrowserPage, null) },
-      { path: "CrawlerCache", element: /* @__PURE__ */ React22.createElement(CrawlerCachePage, null) },
-      { path: "CrawlerCaches", element: /* @__PURE__ */ React22.createElement(CrawlerCachePage, null) }
+      { path: "User", element: /* @__PURE__ */ React23.createElement(AllUsersPage, null) },
+      { path: "AllUsers", element: /* @__PURE__ */ React23.createElement(AllUsersPage, null) },
+      { path: "User/UserViewHistory", element: /* @__PURE__ */ React23.createElement(UserViewsPage, null) },
+      { path: "UserViews", element: /* @__PURE__ */ React23.createElement(UserViewsPage, null) },
+      { path: "AccessLog", element: /* @__PURE__ */ React23.createElement(AccessLogsPage, null) },
+      { path: "AccessLogs", element: /* @__PURE__ */ React23.createElement(AccessLogsPage, null) },
+      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React23.createElement(AccessLogsPage, null) },
+      { path: "RecentChange", element: /* @__PURE__ */ React23.createElement(RecentChangesPage, null) },
+      { path: "RecentChanges", element: /* @__PURE__ */ React23.createElement(RecentChangesPage, null) },
+      { path: "S3", element: /* @__PURE__ */ React23.createElement(S3BrowserPage, null) },
+      { path: "S3Browser", element: /* @__PURE__ */ React23.createElement(S3BrowserPage, null) },
+      { path: "CrawlerCache", element: /* @__PURE__ */ React23.createElement(CrawlerCachePage, null) },
+      { path: "CrawlerCaches", element: /* @__PURE__ */ React23.createElement(CrawlerCachePage, null) }
     ]
   }
 ]);
@@ -1565,6 +1576,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
   createRoot(rootElement).render(
-    /* @__PURE__ */ React22.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React22.createElement(RouterProvider, { router }))
+    /* @__PURE__ */ React23.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React23.createElement(RouterProvider, { router }))
   );
 });
