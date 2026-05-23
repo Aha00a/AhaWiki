@@ -49,4 +49,4 @@
 
 - [x] `SiteAdminDao` 단위 테스트 (`test/com/aha00a/models/tables/SiteAdminSpec.scala`)
 - [x] `AdminLogic.isSiteAdmin` 단위 테스트 (`test/com/aha00a/logics/AdminLogicSpec.scala`)
-- [ ] API 통합 테스트
+- [x] API 통합 테스트 (`test/com/aha00a/controllers/ApiSiteAdminSpec.scala`)
