@@ -32,7 +32,7 @@ import { DataTable } from "mantine-datatable";
 
 // app/assets/js/admin/navigation.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { Badge, Divider, Group, NavLink, Paper, Stack, Text } from "@mantine/core";
+import { Badge, Divider, Group, NavLink, Paper, Skeleton, Stack, Text } from "@mantine/core";
 function fetchJson(url) {
   return fetch(url, { credentials: "same-origin" }).then((response) => {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -40,94 +40,24 @@ function fetchJson(url) {
   });
 }
 function parseSiteSeqFromPathname(pathname) {
-  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog))?$/);
+  const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog|Admins))?$/);
   if (!matched) return "";
   const siteSeq = Number.parseInt(matched[1], 10);
   return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
 }
-function Navigation({ activePage, onNavigate }) {
-  const [siteLinks, setSiteLinks] = useState([]);
-  const currentPathname = window.location.pathname;
-  const currentSiteSeq = parseSiteSeqFromPathname(currentPathname);
-  useEffect(() => {
-    let mounted = true;
-    fetchJson("/api/Admin/Sites").then((siteData) => {
-      if (mounted) setSiteLinks(Array.isArray(siteData) ? siteData : []);
-    }).catch((caughtError) => {
-      console.error("[AdminUI] navigation:sites:error", caughtError);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-  const links = useMemo(() => [
-    { href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line" },
-    { href: "/Admin/Site", label: "Site", key: "sites", iconClassName: "fas fa-sitemap" },
-    { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
-    { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
-    { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
-    { href: "/Admin/CrawlerCache", label: "Crawler", key: "crawler-cache", iconClassName: "fas fa-spider" },
-    { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
-  ], []);
-  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission" || activePage === "site-admins") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
-    if (link.key === "crawler-cache") {
-      return /* @__PURE__ */ React.createElement(
-        NavLink,
-        {
-          key: "cache-group",
-          href: "/Admin/CrawlerCache",
-          label: "Cache",
-          leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-database", "aria-hidden": "true" }),
-          active: isActive,
-          opened: true,
-          variant: isActive ? "filled" : "light",
-          onClick: (event) => {
-            event.preventDefault();
-            onNavigate("/Admin/CrawlerCache");
-          }
-        },
-        /* @__PURE__ */ React.createElement(
-          NavLink,
-          {
-            href: link.href,
-            label: link.label,
-            leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
-            active: isActive,
-            variant: isActive ? "filled" : "subtle",
-            onClick: (event) => {
-              event.preventDefault();
-              onNavigate(link.href);
-            }
-          }
-        )
-      );
-    }
-    return /* @__PURE__ */ React.createElement(
-      NavLink,
-      {
-        key: link.key,
-        href: link.href,
-        label: link.label,
-        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
-        active: isActive,
-        variant: isActive ? "filled" : "light",
-        onClick: (event) => {
-          event.preventDefault();
-          onNavigate(link.href);
-        }
-      }
-    );
-  }))), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
+function SiteNavItem({ site, currentPathname, currentSiteSeq, isAdmin, onNavigate }) {
+  const siteSeq = String(site.seq);
+  const isCurrentSite = siteSeq === String(currentSiteSeq);
+  const isActiveSite = parseSiteSeqFromPathname(currentPathname) === siteSeq;
+  return /* @__PURE__ */ React.createElement(
     NavLink,
     {
-      key: `site-${site.seq}`,
       href: `/Admin/Site/${site.seq}`,
       label: `${site.name} (#${site.seq})`,
       leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-globe-asia", "aria-hidden": "true" }),
-      active: currentSiteSeq === String(site.seq),
-      opened: true,
-      variant: currentSiteSeq === String(site.seq) ? "filled" : "light",
+      active: isActiveSite,
+      opened: isCurrentSite || isActiveSite,
+      variant: isActiveSite ? "filled" : "light",
       onClick: (event) => {
         event.preventDefault();
         onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
@@ -202,8 +132,79 @@ function Navigation({ activePage, onNavigate }) {
           onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
         }
       }
+    ),
+    isAdmin && /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        href: `/Admin/Site/${site.seq}/Admins`,
+        label: "SiteAdmins",
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: "fas fa-user-shield", "aria-hidden": "true" }),
+        active: currentPathname === `/Admin/Site/${site.seq}/Admins`,
+        variant: currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Admins`);
+        }
+      }
     )
-  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
+  );
+}
+function Navigation({ activePage, onNavigate, me }) {
+  const [siteLinks, setSiteLinks] = useState([]);
+  const currentPathname = window.location.pathname;
+  useEffect(() => {
+    if (!me?.loggedIn) return;
+    let mounted = true;
+    fetchJson("/api/Admin/Sites").then((siteData) => {
+      if (mounted) setSiteLinks(Array.isArray(siteData) ? siteData : []);
+    }).catch((err) => {
+      console.error("[AdminUI] navigation:sites:error", err);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [me]);
+  const globalLinks = useMemo(() => [
+    { href: "/Admin", label: "Dashboard", key: "dashboard", iconClassName: "fas fa-chart-line" },
+    { href: "/Admin/User", label: "User", key: "all-users", iconClassName: "fas fa-users" },
+    { href: "/Admin/RecentChange", label: "RecentChanges", key: "recent-changes", iconClassName: "fas fa-history" },
+    { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
+    { href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider" },
+    { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
+  ], []);
+  if (!me) {
+    return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Skeleton, { height: 12, mb: 8, radius: "sm" }), [1, 2, 3].map((i) => /* @__PURE__ */ React.createElement(Skeleton, { key: i, height: 32, mb: 4, radius: "sm" }))));
+  }
+  const isAdmin = me?.isAdmin ?? false;
+  const currentSiteSeq = me?.currentSiteSeq ?? "";
+  return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Group, { justify: "space-between", mb: 6 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase" }, "Sites"), isAdmin && /* @__PURE__ */ React.createElement(Badge, { color: "indigo", variant: "light", size: "sm" }, siteLinks.length)), /* @__PURE__ */ React.createElement(Stack, { gap: 2 }, siteLinks.map((site) => /* @__PURE__ */ React.createElement(
+    SiteNavItem,
+    {
+      key: `site-${site.seq}`,
+      site,
+      currentPathname,
+      currentSiteSeq,
+      isAdmin,
+      onNavigate
+    }
+  )), siteLinks.length === 0 && /* @__PURE__ */ React.createElement(Text, { size: "sm", c: "dimmed", px: "sm", py: 6 }, "\uB4F1\uB85D\uB41C Site \uAC00 \uC5C6\uC2B5\uB2C8\uB2E4."))), isAdmin && /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "\uC804\uCCB4 \uAD00\uB9AC"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, globalLinks.map((link) => {
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users";
+    return /* @__PURE__ */ React.createElement(
+      NavLink,
+      {
+        key: link.key,
+        href: link.href,
+        label: link.label,
+        leftSection: /* @__PURE__ */ React.createElement("i", { className: link.iconClassName, "aria-hidden": "true" }),
+        active: isActive,
+        variant: isActive ? "filled" : "light",
+        onClick: (event) => {
+          event.preventDefault();
+          onNavigate(link.href);
+        }
+      }
+    );
+  }))), /* @__PURE__ */ React.createElement(Divider, { my: 6, label: "\uBC14\uB85C\uAC00\uAE30", labelPosition: "center" }), /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 6 }, /* @__PURE__ */ React.createElement(
     NavLink,
     {
       href: "/",
@@ -1338,7 +1339,8 @@ function useAdminData(page) {
     error
   };
 }
-function AdminContent({ page, onNavigate, pathname, search }) {
+var ADMIN_ONLY_PAGES = /* @__PURE__ */ new Set(["all-users", "user-views", "s3-browser", "crawler-cache", "recent-changes", "access-logs", "sites"]);
+function AdminContent({ page, onNavigate, pathname, search, me }) {
   const ACCESS_LOG_PAGE_SIZE = 20;
   const {
     loading,
@@ -1567,6 +1569,13 @@ function AdminContent({ page, onNavigate, pathname, search }) {
   }
   if (error) {
     return /* @__PURE__ */ React5.createElement(Paper2, { p: "lg", withBorder: true, radius: "md" }, /* @__PURE__ */ React5.createElement(Text4, { c: "red", fw: 600 }, "\uD074\uB77C\uC774\uC5B8\uD2B8 \uB80C\uB354\uB9C1 \uC624\uB958: ", error));
+  }
+  const isAdmin = me?.isAdmin ?? false;
+  if (!isAdmin && ADMIN_ONLY_PAGES.has(page)) {
+    return /* @__PURE__ */ React5.createElement(Paper2, { p: "xl", withBorder: true, radius: "md" }, /* @__PURE__ */ React5.createElement(Stack3, { align: "center", gap: "xs", py: "xl" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xl" }, "\u{1F512}"), /* @__PURE__ */ React5.createElement(Title3, { order: 4, c: "dark" }, "\uC811\uADFC \uAD8C\uD55C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4"), /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uC774 \uD398\uC774\uC9C0\uB294 \uC804\uCCB4 \uAD00\uB9AC\uC790\uB9CC \uC811\uADFC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4.")));
+  }
+  if (!isAdmin && page === "dashboard") {
+    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3, mb: "xs" }, "\uB0B4 \uB2F4\uB2F9 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "SiteAdmin\uC73C\uB85C \uB4F1\uB85D\uB41C \uC0AC\uC774\uD2B8 \uBAA9\uB85D\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 1, sm: 2 }, spacing: "md" }, sites.map((site) => /* @__PURE__ */ React5.createElement(SiteListCard, { key: site.seq, sites: [site], onNavigate }))), sites.length === 0 && /* @__PURE__ */ React5.createElement(Text4, { c: "dimmed", size: "sm" }, "\uB2F4\uB2F9 \uC0AC\uC774\uD2B8\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.")));
   }
   if (page === "sites") {
     return /* @__PURE__ */ React5.createElement(SiteListCard, { sites, onNavigate });
@@ -2406,7 +2415,14 @@ function AdminApp({ initialPage }) {
   const [page, setPage] = useState2(initialPage);
   const [pathname, setPathname] = useState2(window.location.pathname);
   const [search, setSearch] = useState2(window.location.search);
+  const [me, setMe] = useState2(null);
   const pageTitle = pageTitleByKey(page);
+  useEffect2(() => {
+    fetchJson2("/api/me").then(setMe).catch((err) => {
+      logError("app:me:error", err);
+      setMe({ loggedIn: false });
+    });
+  }, []);
   useEffect2(() => {
     const onPopState = () => {
       setPathname(window.location.pathname);
@@ -2450,8 +2466,8 @@ function AdminApp({ initialPage }) {
           breakpoint: "sm"
         }
       },
-      /* @__PURE__ */ React5.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React5.createElement(Stack3, { mb: "md", gap: 4 }, /* @__PURE__ */ React5.createElement(Text4, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React5.createElement(Navigation, { activePage: page, onNavigate })),
-      /* @__PURE__ */ React5.createElement(AppShell.Main, null, /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "center" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, pageTitle)), /* @__PURE__ */ React5.createElement(Badge4, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React5.createElement(AdminContent, { page, onNavigate, pathname, search })))
+      /* @__PURE__ */ React5.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React5.createElement(Stack3, { mb: "md", gap: 4 }, /* @__PURE__ */ React5.createElement(Text4, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React5.createElement(Navigation, { activePage: page, onNavigate, me })),
+      /* @__PURE__ */ React5.createElement(AppShell.Main, null, /* @__PURE__ */ React5.createElement(Stack3, { gap: "md" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "center" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Title3, { order: 2 }, pageTitle)), /* @__PURE__ */ React5.createElement(Badge4, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React5.createElement(AdminContent, { page, onNavigate, pathname, search, me })))
     )
   );
 }
