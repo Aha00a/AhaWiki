@@ -37,17 +37,18 @@ export default function SiteDetailPage() {
     };
 
     return (
-        <Card withBorder radius="md" padding="lg">
+        <Card radius="md" padding="lg">
             <Group justify="space-between" mb="md">
-                <Title order={3}>Admin Page 목록</Title>
+                <Title order={3}>Page</Title>
                 <Badge color="indigo" variant="light">{count} rows</Badge>
             </Group>
-            <Group mb="md">
+            <Group mb="md" align="flex-end">
                 <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="page name, image" style={{border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px"}}/>
-                <Button mt={22} variant="filled" onClick={() => { setMetaPage(1); setSearch(searchInput); load({siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder}); }}>검색</Button>
+                <Button variant="filled" onClick={() => { setMetaPage(1); setSearch(searchInput); load({siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder}); }}>검색</Button>
             </Group>
             <DataTable
                 withTableBorder borderRadius="md" striped highlightOnHover
+                sortIcons={{sorted: <IconChevronUp size={14}/>, unsorted: <IconSelector size={14}/>}}
                 records={rows}
                 columns={[
                     {accessor: "name", title: "Page", sortable: true},

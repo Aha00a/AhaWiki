@@ -4,7 +4,7 @@ import {Badge, Divider, Group, NavLink, Paper, Skeleton, Stack, Text} from "@man
 import {fetchJson} from "./api.js";
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Detail|Config|Cache|Permission|AccessLog|Admins))?$/);
+    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Page|Detail|Config|Cache|Permission|AccessLog|Admins))?$/);
     if (!matched) return "";
     const siteSeq = Number.parseInt(matched[1], 10);
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -21,7 +21,7 @@ function SiteNavItem({site, currentPathname, currentSiteSeq, isAdmin}) {
     return (
         <NavLink href={`/Admin/Site/${site.seq}`} label={`${site.name} (#${site.seq})`} leftSection={<i className="fas fa-globe-asia" aria-hidden="true"/>} active={isActiveSite} opened={isCurrentSite || isActiveSite} variant={isActiveSite ? "filled" : "light"} onClick={navTo(`/Admin/Site/${site.seq}`)}>
             <NavLink href={`/Admin/Site/${site.seq}/Config`} label="Config" leftSection={<i className="fas fa-sliders-h" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Config`} variant={currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Config`)}/>
-            <NavLink href={`/Admin/Site/${site.seq}/Detail`} label="Meta목록" leftSection={<i className="fas fa-list" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Detail`} variant={currentPathname === `/Admin/Site/${site.seq}/Detail` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Detail`)}/>
+            <NavLink href={`/Admin/Site/${site.seq}/Page`} label="Page" leftSection={<i className="fas fa-list" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Page` || currentPathname === `/Admin/Site/${site.seq}/Detail`} variant={currentPathname === `/Admin/Site/${site.seq}/Page` || currentPathname === `/Admin/Site/${site.seq}/Detail` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Page`)}/>
             <NavLink href={`/Admin/Site/${site.seq}/Cache`} label="Cache" leftSection={<i className="fas fa-database" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Cache`} variant={currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Cache`)}/>
             <NavLink href={`/Admin/Site/${site.seq}/Permission`} label="Permission" leftSection={<i className="fas fa-key" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Permission`} variant={currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Permission`)}/>
             {isAdmin && <NavLink href={`/Admin/${site.seq}/AccessLog`} label="AccessLog" leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>} active={currentPathname === `/Admin/${site.seq}/AccessLog`} variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"} onClick={navTo(`/Admin/${site.seq}/AccessLog`)}/>}

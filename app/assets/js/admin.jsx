@@ -32,6 +32,7 @@ const router = createBrowserRouter([
                 element: <SiteLayout/>,
                 children: [
                     {index: true, element: <SiteDashboardPage/>},
+                    {path: "Page", element: <SiteDetailPage/>},
                     {path: "Detail", element: <SiteDetailPage/>},
                     {path: "Config", element: <SiteConfigPage/>},
                     {path: "Cache", element: <SiteCachePage/>},

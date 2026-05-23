@@ -38,23 +38,8 @@ GET           /google/oauth/connect                  controllers.GoogleOAuth.con
 
 GET           /Admin                                 controllers.Admin.index()
 GET           /Admin/                                controllers.Admin.index()
-GET           /Admin/Site                            controllers.Admin.index()
-GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
-GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
-GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
-GET           /Admin/Site/:seq/Permission            controllers.Admin.site(seq: Long)
-GET           /Admin/Site/:seq/Admins               controllers.Admin.site(seq: Long)
-GET           /Admin/User                            controllers.Admin.index()
-GET           /Admin/User/UserViewHistory            controllers.Admin.index()
-GET           /Admin/AccessLog                       controllers.Admin.index()
-GET           /Admin/:seq/AccessLog                  controllers.Admin.site(seq: Long)
-GET           /Admin/RecentChange                    controllers.Admin.index()
-GET           /Admin/S3                              controllers.Admin.index()
 GET           /Admin/Sites                           controllers.Admin.sites()
-GET           /Admin/AllUsers                        controllers.Admin.index()
-GET           /Admin/UserViews                       controllers.Admin.index()
-GET           /Admin/RecentChanges                   controllers.Admin.index()
-GET           /Admin/CrawlerCache                    controllers.Admin.index()
+GET           /Admin/*path                           controllers.Admin.spa(path)
 
 
 GET           /api/me                                controllers.Api.me
