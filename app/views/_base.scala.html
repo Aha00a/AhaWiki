@@ -15,7 +15,7 @@
         <kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>
     </span>
 }
-@isAdmin = @{ contextSite.requestWrapper.getUser.exists(_.seq == 1) }
+@isAdmin = @{ logics.AdminLogic.isAdmin(contextSite.requestWrapper) }
 @canWrite = @{ contextSite.requestWrapper.getUser.isDefined }
 @wikiContextOpt = @{ contextSite match {
     case wikiContext: models.ContextWikiPage => Some(wikiContext)

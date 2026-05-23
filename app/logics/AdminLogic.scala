@@ -8,6 +8,9 @@ object AdminLogic {
   def isAdmin(request: RequestHeader): Boolean =
     SessionLogic.getUser(request).exists(_.seq == 1)
 
+  def isAdmin(requestWrapper: models.RequestWrapper): Boolean =
+    requestWrapper.getUser.exists(_.seq == 1)
+
   def isSiteAdminBySeq(siteSeq: Long, userSeq: Long)(implicit db: Database): Boolean =
     userSeq == 1 || db.withConnection(implicit c => SiteAdmin.exists(siteSeq, userSeq))
 
