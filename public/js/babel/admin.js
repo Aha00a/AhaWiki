@@ -70,7 +70,7 @@ function Navigation({ activePage, onNavigate }) {
     { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" }
   ], []);
   return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Text, { size: "xs", c: "dimmed", fw: 700, tt: "uppercase", mb: 6 }, "Main Menu"), /* @__PURE__ */ React.createElement(Stack, { gap: 4 }, links.map((link) => {
-    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
+    const isActive = activePage === link.key || activePage === "user-views" && link.key === "all-users" || (activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission" || activePage === "site-admins") && link.key === "sites" || activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites";
     if (link.key === "crawler-cache") {
       return /* @__PURE__ */ React.createElement(
         NavLink,
@@ -349,6 +349,9 @@ function routeToPage(pathname) {
   if (/^\/Admin\/Site\/\d+\/Permission$/.test(pathname)) {
     return "site-permission";
   }
+  if (/^\/Admin\/Site\/\d+\/Admins$/.test(pathname)) {
+    return "site-admins";
+  }
   if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
     return "site-detail";
   }
@@ -409,7 +412,7 @@ function parseUserSeqFromPathname(pathname) {
   return Number.isFinite(userSeqByLegacyQuery) && userSeqByLegacyQuery > 0 ? userSeqByLegacyQuery : 0;
 }
 function parseSiteSeqFromPathname2(pathname) {
-  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission))?$/);
+  const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission|Admins))?$/);
   if (!matched) {
     return "";
   }
@@ -431,7 +434,7 @@ function pageTitleByKey(page) {
   if (page === "all-users" || page === "user-views") {
     return "User";
   }
-  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites") {
+  if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins" || page === "sites") {
     return "Site";
   }
   if (page === "access-logs") {
@@ -523,6 +526,10 @@ function useAdminData(page) {
   const [permissionDiagnose, setPermissionDiagnose] = useState2(null);
   const [savingPermission, setSavingPermission] = useState2(false);
   const [deletingPermissionKey, setDeletingPermissionKey] = useState2("");
+  const [siteAdmins, setSiteAdmins] = useState2([]);
+  const [siteAdminUserSeqInput, setSiteAdminUserSeqInput] = useState2("");
+  const [addingSiteAdmin, setAddingSiteAdmin] = useState2(false);
+  const [deletingSiteAdminUserSeq, setDeletingSiteAdminUserSeq] = useState2(0);
   const loadAdminPageMetaList = useCallback(async ({
     siteSeq,
     page: page2 = 1,
@@ -614,6 +621,62 @@ function useAdminData(page) {
       setDeletingPermissionKey("");
     }
   }, [loadPermissions]);
+  const loadSiteAdmins = useCallback(async (siteSeq) => {
+    if (!siteSeq) {
+      setSiteAdmins([]);
+      return;
+    }
+    const data = await fetchJson2(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`);
+    setSiteAdmins(Array.isArray(data) ? data : []);
+  }, []);
+  const insertSiteAdmin = useCallback(async (siteSeq, userSeq) => {
+    if (!siteSeq || !userSeq) return false;
+    setAddingSiteAdmin(true);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("user", String(userSeq));
+      payload.set(csrfToken.name, csrfToken.value);
+      payload.set("csrfToken", csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
+        body: payload.toString()
+      });
+      if (!response.ok) {
+        const payloadJson = await response.json().catch(() => null);
+        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+      }
+      await loadSiteAdmins(siteSeq);
+      return true;
+    } catch (caughtError) {
+      logError("site-admin:insert:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+      return false;
+    } finally {
+      setAddingSiteAdmin(false);
+    }
+  }, [loadSiteAdmins]);
+  const deleteSiteAdmin = useCallback(async (siteSeq, userSeq) => {
+    if (!siteSeq || !userSeq) return;
+    setDeletingSiteAdminUserSeq(userSeq);
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await loadSiteAdmins(siteSeq);
+    } catch (caughtError) {
+      logError("site-admin:delete:error", caughtError);
+      setError(caughtError.message || String(caughtError));
+    } finally {
+      setDeletingSiteAdminUserSeq(0);
+    }
+  }, [loadSiteAdmins]);
   const diagnosePermission = useCallback(async (siteSeq, pageName, actor, action) => {
     if (!siteSeq) return;
     const params = new URLSearchParams({
@@ -1264,6 +1327,14 @@ function useAdminData(page) {
     diagnosePermission,
     savingPermission,
     deletingPermissionKey,
+    siteAdmins,
+    siteAdminUserSeqInput,
+    setSiteAdminUserSeqInput,
+    loadSiteAdmins,
+    insertSiteAdmin,
+    deleteSiteAdmin,
+    addingSiteAdmin,
+    deletingSiteAdminUserSeq,
     error
   };
 }
@@ -1344,6 +1415,14 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     diagnosePermission,
     savingPermission,
     deletingPermissionKey,
+    siteAdmins,
+    siteAdminUserSeqInput,
+    setSiteAdminUserSeqInput,
+    loadSiteAdmins,
+    insertSiteAdmin,
+    deleteSiteAdmin,
+    addingSiteAdmin,
+    deletingSiteAdminUserSeq,
     error
   } = useAdminData(page);
   const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1431,7 +1510,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     });
   }, [permissionRows, permissionSortBy, permissionSortOrder]);
   useEffect2(() => {
-    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission") {
+    if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission" && page !== "site-admins") {
       return;
     }
     const siteSeqByPath = parseSiteSeqFromPathname2(pathname);
@@ -1442,7 +1521,11 @@ function AdminContent({ page, onNavigate, pathname, search }) {
     }
   }, [page, pathname, selectedSiteSeq]);
   useEffect2(() => {
-    if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") && selectedSiteSeq) {
+    if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins") && selectedSiteSeq) {
+      loadSiteAdmins(selectedSiteSeq).catch((caughtError) => {
+        logError("site:admins:error", selectedSiteSeq, caughtError);
+      });
+      if (page === "site-admins") return;
       loadSiteFavicon(selectedSiteSeq);
       loadSiteTheme(selectedSiteSeq);
       loadAdminSitePageNames(selectedSiteSeq).then((pageNames) => {
@@ -1464,7 +1547,7 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         logError("site:permissions:error", selectedSiteSeq, caughtError);
       });
     }
-  }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
+  }, [page, selectedSiteSeq, loadSiteAdmins, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
   useEffect2(() => {
     if (page !== "access-logs") {
       return;
@@ -1548,6 +1631,62 @@ function AdminContent({ page, onNavigate, pathname, search }) {
         ];
       })
     ));
+  }
+  if (page === "site-admins") {
+    return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")))), /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React5.createElement(Title3, { order: 3 }, "Site Admins"), /* @__PURE__ */ React5.createElement(Badge4, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Group4, { mb: "md", align: "end" }, /* @__PURE__ */ React5.createElement(
+      TextInput,
+      {
+        label: "User Seq",
+        placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)",
+        value: siteAdminUserSeqInput,
+        onChange: (event) => setSiteAdminUserSeqInput(event.currentTarget.value),
+        type: "number",
+        min: "1"
+      }
+    ), /* @__PURE__ */ React5.createElement(
+      Button2,
+      {
+        variant: "filled",
+        loading: addingSiteAdmin,
+        disabled: !selectedSiteSeq || !siteAdminUserSeqInput.trim(),
+        onClick: async () => {
+          const userSeq = Number.parseInt(siteAdminUserSeqInput, 10);
+          if (!Number.isFinite(userSeq) || userSeq <= 0) return;
+          const ok = await insertSiteAdmin(selectedSiteSeq, userSeq);
+          if (ok) setSiteAdminUserSeqInput("");
+        }
+      },
+      "\uCD94\uAC00"
+    )), /* @__PURE__ */ React5.createElement(
+      DataTable,
+      {
+        withTableBorder: true,
+        borderRadius: "md",
+        striped: true,
+        highlightOnHover: true,
+        records: siteAdmins,
+        columns: [
+          { accessor: "user", title: "User Seq" },
+          { accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
+          {
+            accessor: "actions",
+            title: "Actions",
+            render: (row) => /* @__PURE__ */ React5.createElement(
+              Button2,
+              {
+                size: "xs",
+                variant: "light",
+                color: "red",
+                loading: deletingSiteAdminUserSeq === row.user,
+                onClick: () => deleteSiteAdmin(selectedSiteSeq, row.user)
+              },
+              "\uC0AD\uC81C"
+            )
+          }
+        ],
+        minHeight: 160
+      }
+    )));
   }
   if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") {
     return /* @__PURE__ */ React5.createElement(Stack3, { gap: "lg" }, /* @__PURE__ */ React5.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React5.createElement(Title3, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React5.createElement(Badge4, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed", mb: "md" }, "/Admin/Site/", `{seq}`, " \uACBD\uB85C\uB85C \uC811\uADFC\uD55C \uC0AC\uC774\uD2B8 \uC0C1\uC138 \uC815\uBCF4\uC785\uB2C8\uB2E4."), /* @__PURE__ */ React5.createElement(Stack3, { gap: "sm" }, /* @__PURE__ */ React5.createElement(Group4, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React5.createElement(Stack3, { gap: 2 }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React5.createElement(Text4, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React5.createElement(Button2, { variant: "light", size: "xs", onClick: () => onNavigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React5.createElement(SimpleGrid, { cols: { base: 2, sm: 4 }, spacing: "sm" }, /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "Site Seq"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.seq ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uC774\uB984"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.name ?? "-")), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uB3C4\uBA54\uC778 \uC218"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, selectedSite?.domains?.length ?? 0)), /* @__PURE__ */ React5.createElement(Paper2, { withBorder: true, radius: "md", p: "sm" }, /* @__PURE__ */ React5.createElement(Text4, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0 \uBAA9\uB85D \uCE90\uC2DC"), /* @__PURE__ */ React5.createElement(Text4, { fw: 700 }, sitePageNames.length.toLocaleString()))), /* @__PURE__ */ React5.createElement(Group4, { align: "end", mt: "sm" }, /* @__PURE__ */ React5.createElement(

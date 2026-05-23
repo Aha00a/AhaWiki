@@ -115,6 +115,9 @@ function routeToPage(pathname) {
     if (/^\/Admin\/Site\/\d+\/Permission$/.test(pathname)) {
         return "site-permission";
     }
+    if (/^\/Admin\/Site\/\d+\/Admins$/.test(pathname)) {
+        return "site-admins";
+    }
     if (/^\/Admin\/Site\/\d+$/.test(pathname)) {
         return "site-detail";
     }
@@ -177,7 +180,7 @@ function parseUserSeqFromPathname(pathname) {
 }
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission))?$/);
+    const matched = pathname.match(/^\/Admin\/Site\/(\d+)(?:\/(?:Config|Cache|Permission|Admins))?$/);
     if (!matched) {
         return "";
     }
@@ -202,7 +205,7 @@ function pageTitleByKey(page) {
     if (page === "all-users" || page === "user-views") {
         return "User";
     }
-    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "sites") {
+    if (page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins" || page === "sites") {
         return "Site";
     }
     if (page === "access-logs") {
@@ -306,6 +309,10 @@ function useAdminData(page) {
     const [permissionDiagnose, setPermissionDiagnose] = useState(null);
     const [savingPermission, setSavingPermission] = useState(false);
     const [deletingPermissionKey, setDeletingPermissionKey] = useState("");
+    const [siteAdmins, setSiteAdmins] = useState([]);
+    const [siteAdminUserSeqInput, setSiteAdminUserSeqInput] = useState("");
+    const [addingSiteAdmin, setAddingSiteAdmin] = useState(false);
+    const [deletingSiteAdminUserSeq, setDeletingSiteAdminUserSeq] = useState(0);
     const loadAdminPageMetaList = useCallback(async ({
         siteSeq,
         page = 1,
@@ -399,6 +406,62 @@ function useAdminData(page) {
             setDeletingPermissionKey("");
         }
     }, [loadPermissions]);
+    const loadSiteAdmins = useCallback(async (siteSeq) => {
+        if (!siteSeq) { setSiteAdmins([]); return; }
+        const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`);
+        setSiteAdmins(Array.isArray(data) ? data : []);
+    }, []);
+
+    const insertSiteAdmin = useCallback(async (siteSeq, userSeq) => {
+        if (!siteSeq || !userSeq) return false;
+        setAddingSiteAdmin(true);
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const payload = new URLSearchParams();
+            payload.set("user", String(userSeq));
+            payload.set(csrfToken.name, csrfToken.value);
+            payload.set("csrfToken", csrfToken.value);
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
+                body: payload.toString(),
+            });
+            if (!response.ok) {
+                const payloadJson = await response.json().catch(() => null);
+                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
+            }
+            await loadSiteAdmins(siteSeq);
+            return true;
+        } catch (caughtError) {
+            logError("site-admin:insert:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+            return false;
+        } finally {
+            setAddingSiteAdmin(false);
+        }
+    }, [loadSiteAdmins]);
+
+    const deleteSiteAdmin = useCallback(async (siteSeq, userSeq) => {
+        if (!siteSeq || !userSeq) return;
+        setDeletingSiteAdminUserSeq(userSeq);
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, {
+                method: "DELETE",
+                credentials: "same-origin",
+                headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await loadSiteAdmins(siteSeq);
+        } catch (caughtError) {
+            logError("site-admin:delete:error", caughtError);
+            setError(caughtError.message || String(caughtError));
+        } finally {
+            setDeletingSiteAdminUserSeq(0);
+        }
+    }, [loadSiteAdmins]);
+
     const diagnosePermission = useCallback(async (siteSeq, pageName, actor, action) => {
         if (!siteSeq) return;
         const params = new URLSearchParams({
@@ -1086,6 +1149,14 @@ function useAdminData(page) {
         diagnosePermission,
         savingPermission,
         deletingPermissionKey,
+        siteAdmins,
+        siteAdminUserSeqInput,
+        setSiteAdminUserSeqInput,
+        loadSiteAdmins,
+        insertSiteAdmin,
+        deleteSiteAdmin,
+        addingSiteAdmin,
+        deletingSiteAdminUserSeq,
         error,
     };
 }
@@ -1168,6 +1239,14 @@ function AdminContent({page, onNavigate, pathname, search}) {
         diagnosePermission,
         savingPermission,
         deletingPermissionKey,
+        siteAdmins,
+        siteAdminUserSeqInput,
+        setSiteAdminUserSeqInput,
+        loadSiteAdmins,
+        insertSiteAdmin,
+        deleteSiteAdmin,
+        addingSiteAdmin,
+        deletingSiteAdminUserSeq,
         error,
     } = useAdminData(page);
     const crawlerTotalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
@@ -1256,7 +1335,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
     }, [permissionRows, permissionSortBy, permissionSortOrder]);
 
     useEffect(() => {
-        if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission") {
+        if (page !== "site-detail" && page !== "site-config" && page !== "site-cache" && page !== "site-permission" && page !== "site-admins") {
             return;
         }
         const siteSeqByPath = parseSiteSeqFromPathname(pathname);
@@ -1268,7 +1347,11 @@ function AdminContent({page, onNavigate, pathname, search}) {
     }, [page, pathname, selectedSiteSeq]);
 
     useEffect(() => {
-        if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission") && selectedSiteSeq) {
+        if ((page === "site-detail" || page === "site-config" || page === "site-cache" || page === "site-permission" || page === "site-admins") && selectedSiteSeq) {
+            loadSiteAdmins(selectedSiteSeq).catch((caughtError) => {
+                logError("site:admins:error", selectedSiteSeq, caughtError);
+            });
+            if (page === "site-admins") return;
             loadSiteFavicon(selectedSiteSeq);
             loadSiteTheme(selectedSiteSeq);
             loadAdminSitePageNames(selectedSiteSeq)
@@ -1292,7 +1375,7 @@ function AdminContent({page, onNavigate, pathname, search}) {
                 logError("site:permissions:error", selectedSiteSeq, caughtError);
             });
         }
-    }, [page, selectedSiteSeq, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
+    }, [page, selectedSiteSeq, loadSiteAdmins, loadSiteFavicon, loadSiteTheme, loadAdminSitePageNames, loadAdminPageMetaList, loadPermissions]);
 
     useEffect(() => {
         if (page !== "access-logs") {
@@ -1441,6 +1524,89 @@ function AdminContent({page, onNavigate, pathname, search}) {
                     }),
                 )}
             </Card>
+        );
+    }
+
+    if (page === "site-admins") {
+        return (
+            <Stack gap="lg">
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="xs">
+                        <Title order={4}>사이트 상세</Title>
+                        <Badge color="blue" variant="light">Site Detail</Badge>
+                    </Group>
+                    <Stack gap="sm">
+                        <Group justify="space-between" align="flex-start" wrap="wrap">
+                            <Stack gap={2}>
+                                <Text size="xs" c="dimmed">선택된 사이트</Text>
+                                <Text fw={700}>{selectedSite ? `${selectedSite.name} (#${selectedSite.seq})` : "선택된 사이트 없음"}</Text>
+                            </Stack>
+                            <Button variant="light" size="xs" onClick={() => onNavigate("/Admin/Site")}>
+                                ← 사이트 목록
+                            </Button>
+                        </Group>
+                    </Stack>
+                </Card>
+                <Card withBorder radius="md" padding="lg">
+                    <Group justify="space-between" mb="md">
+                        <Title order={3}>Site Admins</Title>
+                        <Badge color="orange" variant="light">{siteAdmins.length} admins</Badge>
+                    </Group>
+                    <Text size="sm" c="dimmed" mb="md">
+                        이 사이트의 관리자 목록입니다. Site Admin은 해당 사이트의 Permission, 페이지 등을 관리할 수 있습니다.
+                    </Text>
+                    <Group mb="md" align="end">
+                        <TextInput
+                            label="User Seq"
+                            placeholder="추가할 유저의 seq (숫자)"
+                            value={siteAdminUserSeqInput}
+                            onChange={(event) => setSiteAdminUserSeqInput(event.currentTarget.value)}
+                            type="number"
+                            min="1"
+                        />
+                        <Button
+                            variant="filled"
+                            loading={addingSiteAdmin}
+                            disabled={!selectedSiteSeq || !siteAdminUserSeqInput.trim()}
+                            onClick={async () => {
+                                const userSeq = Number.parseInt(siteAdminUserSeqInput, 10);
+                                if (!Number.isFinite(userSeq) || userSeq <= 0) return;
+                                const ok = await insertSiteAdmin(selectedSiteSeq, userSeq);
+                                if (ok) setSiteAdminUserSeqInput("");
+                            }}
+                        >
+                            추가
+                        </Button>
+                    </Group>
+                    <DataTable
+                        withTableBorder
+                        borderRadius="md"
+                        striped
+                        highlightOnHover
+                        records={siteAdmins}
+                        columns={[
+                            {accessor: "user", title: "User Seq"},
+                            {accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted)},
+                            {
+                                accessor: "actions",
+                                title: "Actions",
+                                render: (row) => (
+                                    <Button
+                                        size="xs"
+                                        variant="light"
+                                        color="red"
+                                        loading={deletingSiteAdminUserSeq === row.user}
+                                        onClick={() => deleteSiteAdmin(selectedSiteSeq, row.user)}
+                                    >
+                                        삭제
+                                    </Button>
+                                ),
+                            },
+                        ]}
+                        minHeight={160}
+                    />
+                </Card>
+            </Stack>
         );
     }
 

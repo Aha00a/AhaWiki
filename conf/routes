@@ -43,6 +43,7 @@ GET           /Admin/Site/:seq                       controllers.Admin.site(seq:
 GET           /Admin/Site/:seq/Config                controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Cache                 controllers.Admin.site(seq: Long)
 GET           /Admin/Site/:seq/Permission            controllers.Admin.site(seq: Long)
+GET           /Admin/Site/:seq/Admins               controllers.Admin.site(seq: Long)
 GET           /Admin/User                            controllers.Admin.index()
 GET           /Admin/User/UserViewHistory            controllers.Admin.index()
 GET           /Admin/AccessLog                       controllers.Admin.index()
@@ -76,6 +77,9 @@ PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdate
 GET           /api/Admin/PermissionAudit             controllers.Api.adminPermissionAudit
 GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
 GET           /api/Admin/Site/:seq/PageMetaList      controllers.Api.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
+GET           /api/Admin/Site/:seq/Admins            controllers.Api.adminSiteAdmins(seq: Long)
+POST          /api/Admin/Site/:seq/Admins            controllers.Api.adminInsertSiteAdmin(seq: Long)
+DELETE        /api/Admin/Site/:seq/Admins/:userSeq   controllers.Api.adminDeleteSiteAdmin(seq: Long, userSeq: Long)
 GET           /api/Admin/Site/:seq/Permissions       controllers.Api.adminPermissions(seq: Long)
 POST          /api/Admin/Site/:seq/Permissions       controllers.Api.adminUpsertPermission(seq: Long)
 DELETE        /api/Admin/Site/:seq/Permissions       controllers.Api.adminDeletePermission(seq: Long)

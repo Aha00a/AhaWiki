@@ -51,7 +51,7 @@ export default function Navigation({activePage, onNavigate}) {
                 {links.map((link) => {
                     const isActive = activePage === link.key
                         || (activePage === "user-views" && link.key === "all-users")
-                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission") && link.key === "sites")
+                        || ((activePage === "site-detail" || activePage === "site-config" || activePage === "site-cache" || activePage === "site-permission" || activePage === "site-admins") && link.key === "sites")
                         || (activePage === "access-logs" && /^\/Admin\/\d+\/AccessLog$/.test(currentPathname) && link.key === "sites");
                     if (link.key === "crawler-cache") {
                         return <NavLink

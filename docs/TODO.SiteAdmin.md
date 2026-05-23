@@ -10,33 +10,40 @@
 
 ## Model / DAO
 
-- [ ] `app/models/tables/SiteAdmin.scala` 생성
-- [ ] `SiteAdminDao` 구현
-  - [ ] `exists(siteSeq, userSeq): Boolean`
-  - [ ] `findBySite(siteSeq): Seq[SiteAdmin]`
-  - [ ] `insert(siteSeq, userSeq)`
-  - [ ] `delete(siteSeq, userSeq)`
+- [x] `app/models/tables/SiteAdmin.scala` 생성
+- [x] `SiteAdminDao` 구현
+  - [x] `exists(siteSeq, userSeq): Boolean`
+  - [x] `findBySite(siteSeq): Seq[SiteAdmin]`
+  - [x] `insert(siteSeq, userSeq)`
+  - [x] `delete(siteSeq, userSeq)`
 
 ## Logic
 
-- [ ] `app/logics/AdminLogic.scala` 수정
-  - [ ] `isAdmin` → super admin (seq == 1) 체크 유지
-  - [ ] `isSiteAdmin(siteSeq, request)` 추가 (`isAdmin` 포함)
+- [x] `app/logics/AdminLogic.scala` 수정
+  - [x] `isAdmin` → super admin (seq == 1) 체크 유지
+  - [x] `isSiteAdmin(siteSeq, request)` 추가 (`isAdmin` 포함)
 
 ## Controller / API
 
-- [ ] Super admin 전용 SiteAdmin 관리 API 추가
-  - [ ] `GET  /admin/site/:siteSeq/admins` — 목록 조회
-  - [ ] `POST /admin/site/:siteSeq/admins` — 추가
-  - [ ] `DELETE /admin/site/:siteSeq/admins/:userSeq` — 삭제
-- [ ] 기존 Site 관련 컨트롤러에서 `isAdmin` → `isSiteAdmin` 으로 교체
+- [x] Super admin 전용 SiteAdmin 관리 API 추가
+  - [x] `GET    /api/Admin/Site/:seq/Admins` — 목록 조회
+  - [x] `POST   /api/Admin/Site/:seq/Admins` — 추가
+  - [x] `DELETE /api/Admin/Site/:seq/Admins/:userSeq` — 삭제
+- [x] 사이트 범위 API에 `isSiteAdmin` 적용 (전체 시스템 작업은 `isAdmin` 유지)
+  - [x] `adminPermissions`
+  - [x] `adminUpsertPermission`
+  - [x] `adminDeletePermission`
+  - [x] `adminPermissionDiagnose`
+  - [x] `adminPageMetaList`
+  - [x] `adminSitePageNames`
+  - [x] `adminSiteCalculate`
 
 ## UI
 
-- [ ] Super admin 화면에서 SiteAdmin 관리 UI 추가
-  - [ ] 사이트별 관리자 목록 표시
-  - [ ] 관리자 추가 (유저 검색 또는 seq 입력)
-  - [ ] 관리자 삭제
+- [x] Super admin 화면에서 SiteAdmin 관리 UI 추가 (`/Admin/Site/:seq/Admins`)
+  - [x] 사이트별 관리자 목록 표시
+  - [x] 관리자 추가 (user seq 입력)
+  - [x] 관리자 삭제
 
 ## 테스트
 

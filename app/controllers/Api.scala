@@ -46,6 +46,7 @@ import models.tables.Page
 import models.tables.Site
 import models.tables.Config
 import models.tables.Permission
+import models.tables.SiteAdmin
 import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -87,6 +88,9 @@ class Api @Inject()(
 
   private def isAdmin(implicit request: RequestHeader): Boolean =
     logics.AdminLogic.isAdmin(request)
+
+  private def isSiteAdmin(siteSeq: Long)(implicit request: RequestHeader): Boolean =
+    logics.AdminLogic.isSiteAdmin(siteSeq, request)(database)
 
   def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
@@ -349,7 +353,7 @@ class Api @Inject()(
   }
 
   def adminPermissions(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -368,7 +372,7 @@ class Api @Inject()(
   }
 
   def adminUpsertPermission(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -394,7 +398,7 @@ class Api @Inject()(
   }
 
   def adminDeletePermission(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -418,8 +422,64 @@ class Api @Inject()(
     }
   }
 
-  def adminPermissionDiagnose(seq: Long, pageName: String, actor: String, action: String): Action[AnyContent] = Action { implicit request =>
+  def adminSiteAdmins(seq: Long): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(_) =>
+          database.withConnection { implicit connection =>
+            val admins = SiteAdmin.selectBySite(seq).map(sa =>
+              Json.obj(
+                "site" -> Json.fromLong(sa.site),
+                "user" -> Json.fromLong(sa.user),
+                "dateInserted" -> Json.fromString(sa.dateInserted.toString),
+              )
+            )
+            Ok(admins.asJson)
+          }
+      }
+    }
+  }
+
+  def adminInsertSiteAdmin(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(_) =>
+          val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+          form.get("user").flatMap(_.headOption).flatMap(s => s.toLongOption) match {
+            case None => BadRequest(Json.obj("error" -> Json.fromString("user is required")).toString()).as(JSON)
+            case Some(userSeq) =>
+              database.withConnection { implicit connection =>
+                SiteAdmin.insert(seq, userSeq)
+                Ok(Json.obj("ok" -> Json.fromBoolean(true), "site" -> Json.fromLong(seq), "user" -> Json.fromLong(userSeq)))
+              }
+          }
+      }
+    }
+  }
+
+  def adminDeleteSiteAdmin(seq: Long, userSeq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(_) =>
+          database.withConnection { implicit connection =>
+            val deletedCount = SiteAdmin.delete(seq, userSeq)
+            Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(deletedCount)))
+          }
+      }
+    }
+  }
+
+  def adminPermissionDiagnose(seq: Long, pageName: String, actor: String, action: String): Action[AnyContent] = Action { implicit request =>
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -1198,7 +1258,7 @@ class Api @Inject()(
   }
 
   def adminPageMetaList(seq: Long, page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -1228,7 +1288,7 @@ class Api @Inject()(
   }
 
   def adminSitePageNames(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
@@ -1246,7 +1306,7 @@ class Api @Inject()(
   }
 
   def adminSiteCalculate(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
+    if (!isSiteAdmin(seq)) {
       Forbidden("Access denied.")
     } else {
       SiteLogic.get(seq)(database) match {
