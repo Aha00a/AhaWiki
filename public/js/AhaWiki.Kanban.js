@@ -2832,6 +2832,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     });
                 });
+                textarea.addEventListener('keydown', function (evt) {
+                    if ((evt.altKey || evt.ctrlKey) && evt.key === 'Enter') {
+                        evt.preventDefault();
+                        submit.click();
+                    }
+                });
                 dueDateSaveButton.addEventListener('click', submitDueDate);
                 dueDateInput.addEventListener('keydown', function (evt) {
                     if (evt.key === 'Enter') {
