@@ -2530,30 +2530,58 @@ kbd.MacroKbd {
 	max-height: calc(100vh - 32px) !important;
 	overflow-y: auto !important;
 	background: #ffffff !important;
-	border-radius: 14px !important;
-	padding: 24px !important;
-	box-shadow: 0 20px 48px rgba(9,30,66,0.28) !important;
-	border: 1px solid rgba(9,30,66,0.10) !important;
+	border-radius: 5px !important;
+	padding: 0 !important;
+	box-shadow: 0 24px 64px rgba(9,30,66,0.32) !important;
+	border: 1px solid rgba(9,30,66,0.12) !important;
 	position: relative !important;
 	box-sizing: border-box !important;
 	&.kanban-modal-drop-active {
 		outline: 2px dashed #0c66e4 !important;
 		outline-offset: 2px !important;
 		background: #f7fbff !important;
-		box-shadow: 0 0 0 4px rgba(12,102,228,0.2), 0 20px 48px rgba(9,30,66,0.28) !important;
+		box-shadow: 0 0 0 4px rgba(12,102,228,0.2), 0 24px 64px rgba(9,30,66,0.32) !important;
 	}
 }
-.kanban-modal-header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+// 헤더 - 그라데이션 배경으로 강조
+.kanban-modal-header {
+	display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+	padding: 20px 24px 16px;
+	background: linear-gradient(135deg, #f4f6fb 0%, #eaeff8 100%);
+	border-bottom: 1px solid #dde3ef;
+	border-radius: 16px 16px 0 0;
+	margin-bottom: 0;
+}
+// 헤더 아래 본문 패딩
+.kanban-modal-drop-hint,
+.kanban-modal-section-title,
+.kanban-property-row,
+.kanban-duedate-row,
+.kanban-activity-row,
+.kanban-comment-textarea,
+.kanban-comment-action-bar {
+	margin-left: 24px;
+	margin-right: 24px;
+}
+.kanban-modal-section-title:first-of-type { margin-top: 16px; }
+.kanban-modal > .kanban-comment-textarea { margin-bottom: 0; }
+.kanban-modal > .kanban-comment-action-bar { margin-bottom: 20px; }
+.kanban-modal > .kanban-activity-row:last-child { margin-bottom: 24px; }
+
 .kanban-modal-title-wrap { flex:1 1 auto; min-width:0; }
 .kanban-modal-title {
-	margin:0; font-size:20px; font-weight:700; line-height:1.35; color:#172b4d;
+	margin:0; font-size:18px; font-weight:700; line-height:1.35; color:#172b4d;
 	cursor:pointer; word-break:break-word;
-	&:hover { text-decoration:underline; text-underline-offset:2px; }
-	&.kanban-read-only { cursor:default; text-decoration:none; }
+	&:hover { color:#0c66e4; }
+	&.kanban-read-only { cursor:default; color:#172b4d; }
 }
+// 카드 ID를 배지 스타일로
 .kanban-modal-card-id {
-	display:block; margin-top:3px; font-size:11px; color:#8590a2;
-	font-family:monospace; text-decoration:underline; cursor:pointer;
+	display:inline-block; margin-top:6px; font-size:10px;
+	font-family:monospace;
+	background:#ccc; padding:2px 8px; border-radius:10px; letter-spacing:0.03em;
+	transition: background 120ms ease;
+	&:hover { background:#0c66e4; }
 }
 .kanban-modal-header-actions { display:flex; align-items:center; gap:6px; flex:0 0 auto; }
 .kanban-modal-btn-delete {
@@ -2568,7 +2596,7 @@ kbd.MacroKbd {
 	width:32px; height:32px; border-radius:50%; font-size:16px; color:#44546f;
 	display:inline-flex; align-items:center; justify-content:center;
 	transition: background 120ms ease;
-	&:hover { background:#f1f3f5; }
+	&:hover { background:#dde3ef; }
 }
 .kanban-modal-title-display { }
 .kanban-modal-title-editor-wrap { display:none; align-items:center; gap:8px; margin-bottom:4px; }
@@ -2583,32 +2611,63 @@ kbd.MacroKbd {
 	background:#0c66e4; color:#fff; cursor:pointer; font-size:13px; white-space:nowrap;
 }
 .kanban-modal-section-title {
-	margin-top:16px; margin-bottom:8px;
-	font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+	margin-top:20px; margin-bottom:8px;
+	font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
 	color:#44546f; display:flex; align-items:center; gap:6px;
+	&::after { content:''; flex:1; height:1px; background:#e4e8ef; }
 }
 .kanban-modal-drop-hint {
 	position:sticky; top:0; z-index:2;
-	margin:-4px 0 12px; padding:10px 12px;
+	margin-top: 12px; margin-bottom: 4px; padding:10px 12px;
 	border:1px dashed #0c66e4; border-radius:8px;
 	background:rgba(12,102,228,0.10); color:#0c66e4;
 	font-weight:700; font-size:12px;
 }
-.kanban-property-row { padding:8px 10px; border:1px solid #eceff3; border-radius:8px; background:#fafbfc; margin-bottom:8px; }
-.kanban-property-key { font-weight:600; font-size:12px; color:#44546f; margin-bottom:4px; }
-.kanban-property-value { font-size:13px; color:#172b4d; padding-left:8px; line-height:1.4; }
-.kanban-activity-row { padding:10px 12px; border:1px solid #eceff3; border-radius:8px; background:#fafbfc; margin-bottom:8px; color:#172b4d; line-height:1.4; font-size:13px; }
-.kanban-activity-header { font-weight:600; font-size:12px; color:#44546f; margin-bottom:4px; }
-.kanban-activity-detail { padding-left:12px; margin-top:4px; font-size:13px; color:#172b4d; }
+// Properties - 2열 그리드로 compact 표시
+.kanban-property-row {
+	display: grid;
+	grid-template-columns: 120px 1fr;
+	align-items: baseline;
+	gap: 6px 10px;
+	padding:7px 10px; border:none; border-radius:0;
+	background: transparent; margin-bottom: 0;
+	border-bottom: 1px solid #f0f2f5;
+	&:last-child { border-bottom: none; }
+}
+.kanban-property-key { font-weight:600; font-size:11px; color:#6b778c; margin-bottom:0; white-space:nowrap; }
+.kanban-property-value { font-size:13px; color:#172b4d; padding-left:0; line-height:1.4; }
+// Activity - 타임라인 스타일
+.kanban-activity-row {
+	position: relative;
+	padding: 8px 10px 8px 32px;
+	border: none; border-radius: 0;
+	background: transparent; margin-bottom: 0;
+	color:#172b4d; line-height:1.4; font-size:13px;
+	border-bottom: 1px solid #f0f2f5;
+	&:last-child { border-bottom: none; margin-bottom: 20px; }
+	&::before {
+		content: '';
+		position: absolute;
+		left: 10px; top: 14px;
+		width: 8px; height: 8px;
+		border-radius: 50%;
+		background: #b6c2cf;
+		border: 2px solid #fff;
+		outline: 1px solid #b6c2cf;
+	}
+}
+.kanban-activity-header { font-weight:600; font-size:11px; color:#6b778c; margin-bottom:3px; }
+.kanban-activity-detail { padding-left:0; margin-top:3px; font-size:13px; color:#172b4d; }
 .kanban-comment-textarea {
-	width:100%; box-sizing:border-box; border:1px solid #b6c2cf; border-radius:8px;
+	width: calc(100% - 48px);
+	box-sizing:border-box; border:1px solid #b6c2cf; border-radius:8px;
 	padding:10px 12px; resize:vertical; font-size:14px; margin-top:8px;
 	&:focus { outline:none; border-color:#0c66e4; box-shadow:0 0 0 2px rgba(12,102,228,0.15); }
 }
 .kanban-comment-action-bar { display:flex; align-items:center; gap:8px; margin-top:8px; }
 .kanban-comment-submit-btn { border:none; border-radius:8px; padding:8px 14px; background:#0c66e4; color:#fff; cursor:pointer; font-size:13px; }
 .kanban-comment-hint { font-size:11px; color:#8590a2; }
-.kanban-duedate-row { display:flex; align-items:center; gap:8px; margin-top:10px; margin-bottom:4px; }
+.kanban-duedate-row { display:flex; align-items:center; gap:8px; margin-top:4px; margin-bottom:4px; }
 .kanban-duedate-input { border:1px solid #b6c2cf; border-radius:6px; padding:6px 8px; font-size:13px; color:#172b4d; }
 .kanban-duedate-save-btn { border:1px solid #d0d7de; border-radius:6px; padding:6px 10px; background:#f6f8fa; color:#172b4d; cursor:pointer; font-size:13px; }
 .kanban-attachment-remove-btn {
