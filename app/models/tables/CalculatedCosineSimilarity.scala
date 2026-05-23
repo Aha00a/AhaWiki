@@ -56,8 +56,8 @@ INNER JOIN CalculatedTermFrequencyNorm CandidateNorm
     ON CandidateNorm.site = CandidateDot.site
     AND CandidateNorm.name = CandidateDot.name
 CROSS JOIN (
-    SELECT SQRT(SUM(frequency * frequency)) AS norm
-    FROM CalculatedTermFrequency
+    SELECT norm
+    FROM CalculatedTermFrequencyNorm
     WHERE site = ${site.seq} AND name = $name
 ) SourceNorm
 WHERE
