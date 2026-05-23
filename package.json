@@ -2,11 +2,11 @@
   "name": "ahawiki-admin-build",
   "private": true,
   "scripts": {
-    "build:admin": "node scripts/build-admin.mjs",
+    "admin:build": "node scripts/admin.build.mjs",
+    "admin:watch": "node scripts/admin.watch.mjs",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "schemaDump": "sh ./schemaDump.sh",
-    "test": "node --test test/*.test.mjs",
-    "watch:admin": "node scripts/watch-admin.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.25.11"
