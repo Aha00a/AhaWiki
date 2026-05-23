@@ -2113,8 +2113,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var titleWrap = document.createElement('div');
             titleWrap.className = 'kanban-modal-title-wrap';
-            titleWrap.appendChild(title);
-            titleWrap.appendChild(cardIdLabel);
+
+            var titleDisplay = document.createElement('div');
+            titleDisplay.className = 'kanban-modal-title-display';
+            titleDisplay.appendChild(title);
+            titleDisplay.appendChild(cardIdLabel);
 
             var titleEditorWrap = document.createElement('div');
             titleEditorWrap.className = 'kanban-modal-title-editor-wrap kanban-hidden';
@@ -2128,6 +2131,9 @@ document.addEventListener('DOMContentLoaded', function () {
             titleSaveButton.type = 'button';
             titleSaveButton.textContent = 'Save';
             titleSaveButton.className = 'kanban-modal-title-save-btn';
+
+            titleWrap.appendChild(titleDisplay);
+            titleWrap.appendChild(titleEditorWrap);
 
             var headerActions = document.createElement('div');
             headerActions.className = 'kanban-modal-header-actions';
@@ -2145,14 +2151,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var closeTitleEditor = function () {
                 titleEditorWrap.classList.add('kanban-hidden');
-                title.classList.remove('kanban-hidden');
-                cardIdLabel.classList.remove('kanban-hidden');
+                titleDisplay.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
             };
 
             var openTitleEditor = function () {
-                title.classList.add('kanban-hidden');
-                cardIdLabel.classList.add('kanban-hidden');
+                titleDisplay.classList.add('kanban-hidden');
                 titleEditorWrap.classList.remove('kanban-hidden');
                 titleEditor.value = card.text || '';
                 titleEditor.focus();
@@ -2748,7 +2752,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 modal.appendChild(modalDropHint);
                 titleEditorWrap.appendChild(titleEditor);
                 titleEditorWrap.appendChild(titleSaveButton);
-                titleWrap.insertBefore(titleEditorWrap, cardIdLabel);
                 actionBar.appendChild(submit);
                 var submitHint = document.createElement('span');
                 submitHint.textContent = 'Ctrl+Enter / Alt+Enter';

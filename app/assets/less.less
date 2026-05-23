@@ -2517,6 +2517,7 @@ kbd.MacroKbd {
 }
 
 // ─── Kanban popup styles (appended to body, outside .InterpreterKanban) ───────
+.kanban-card-detail-overlay .kanban-hidden { display: none !important; }
 .kanban-card-detail-overlay {
 	position: fixed; inset: 0;
 	background: rgba(9,30,66,0.5);
@@ -2569,7 +2570,9 @@ kbd.MacroKbd {
 	transition: background 120ms ease;
 	&:hover { background:#f1f3f5; }
 }
-.kanban-modal-title-editor-wrap { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.kanban-modal-title-display { }
+.kanban-modal-title-editor-wrap { display:none; align-items:center; gap:8px; margin-bottom:4px; }
+.kanban-modal-title-editor-wrap:not(.kanban-hidden) { display:flex; }
 .kanban-modal-title-editor {
 	flex:1 1 auto; box-sizing:border-box;
 	border:1px solid #b6c2cf; border-radius:8px; padding:8px 12px;
