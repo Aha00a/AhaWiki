@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useOutletContext, useNavigate} from "react-router-dom";
-import {Badge, Button, Card, Group, Stack, Text, TextInput, Title} from "@mantine/core";
+import {Badge, Button, Group, Stack, Text, TextInput} from "@mantine/core";
 import {DataTable} from "mantine-datatable";
 import {useSiteAdminsData} from "../hooks/useSiteAdminsData.js";
 import {formatDateTimeInClientTimezone} from "../utils.js";
@@ -14,9 +14,8 @@ export default function SiteAdminsPage() {
     useEffect(() => { if (siteSeq) loadSiteAdmins(); }, [siteSeq]);
 
     return (
-        <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between" mb="md">
-                <Title order={3}>Site Admins</Title>
+        <>
+            <Group justify="flex-end" mb="md">
                 <Badge color="orange" variant="light">{siteAdmins.length} admins</Badge>
             </Group>
             <Text size="sm" c="dimmed" mb="md">이 사이트의 관리자 목록입니다. Site Admin은 해당 사이트의 Permission, 페이지 등을 관리할 수 있습니다.</Text>
@@ -42,6 +41,6 @@ export default function SiteAdminsPage() {
                 ]}
                 minHeight={160}
             />
-        </Card>
+        </>
     );
 }

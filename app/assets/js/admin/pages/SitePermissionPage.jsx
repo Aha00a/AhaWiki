@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {useOutletContext} from "react-router-dom";
-import {Autocomplete, Badge, Button, Card, Group, Paper, Select, SimpleGrid, Text, TextInput, Title} from "@mantine/core";
+import {Autocomplete, Badge, Button, Group, Paper, Select, SimpleGrid, Text, TextInput} from "@mantine/core";
 import {DataTable} from "mantine-datatable";
 import {usePermissionData} from "../hooks/usePermissionData.js";
 import {IconChevronUp, IconSelector} from "../../component/commonWidgets.jsx";
@@ -24,9 +24,8 @@ export default function SitePermissionPage() {
     }), [permissionRows, sortBy, sortOrder]);
 
     return (
-        <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between" mb="md">
-                <Title order={3}>Permission</Title>
+        <>
+            <Group justify="flex-end" mb="md">
                 <Badge color="grape" variant="light">{permissionRows.length} rows</Badge>
             </Group>
             {error ? <Text c="red" size="sm" mb="sm">{error}</Text> : null}
@@ -81,6 +80,6 @@ export default function SitePermissionPage() {
                 onSortStatusChange={(next) => { setSortBy(next.columnAccessor); setSortOrder(next.direction ?? "asc"); }}
                 minHeight={220}
             />
-        </Card>
+        </>
     );
 }

@@ -10,7 +10,8 @@ function pageTitleFromPath(pathname) {
     if (/^\/Admin\/Site\/\d+\/Config/.test(pathname)) return "Config";
     if (/^\/Admin\/Site\/\d+\/Cache/.test(pathname)) return "Cache";
     if (/^\/Admin\/Site\/\d+\/Admins/.test(pathname)) return "SiteAdmins";
-    if (/^\/Admin\/Site\/\d+\/Detail/.test(pathname)) return "Meta목록";
+    if (/^\/Admin\/Site\/\d+\/Page/.test(pathname)) return "Page";
+    if (/^\/Admin\/Site\/\d+\/Detail/.test(pathname)) return "Page";
     if (/^\/Admin\/Site\/\d+/.test(pathname)) return "Dashboard";
     if (/^\/Admin\/Site/.test(pathname)) return "Sites";
     if (/\/UserViewHistory/.test(pathname) || /\/UserViews/.test(pathname)) return "User";

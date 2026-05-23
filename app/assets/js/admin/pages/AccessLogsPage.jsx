@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router-dom";
-import {Anchor, Badge, Button, Card, Group, Pagination, Text, TextInput, Title} from "@mantine/core";
+import {Anchor, Badge, Button, Group, Pagination, Text, TextInput} from "@mantine/core";
 import {DataTable} from "mantine-datatable";
 import {useAccessLogData} from "../hooks/useAccessLogData.js";
 import {IconChevronUp, IconSelector} from "../../component/commonWidgets.jsx";
@@ -23,9 +23,8 @@ export default function AccessLogsPage() {
     }, [siteSeq]);
 
     return (
-        <Card withBorder radius="md" padding="lg">
-            <Group justify="space-between" mb="md">
-                <Title order={3}>{selectedSite ? `Access Logs (${selectedSite.name} #${selectedSite.seq})` : "Access Logs (All Sites)"}</Title>
+        <>
+            <Group justify="flex-end" mb="md">
                 <Badge color="cyan" variant="light">{accessLogs.length} / {accessLogCount} rows</Badge>
             </Group>
             <Text size="sm" c="dimmed" mb="md">검색과 헤더 정렬, 페이지 이동으로 요청 로그를 조회할 수 있습니다.</Text>
@@ -62,6 +61,6 @@ export default function AccessLogsPage() {
                 <Text size="sm" c="dimmed">Page {page} / {totalPages}</Text>
                 <Pagination value={page} onChange={(nextPage) => { setPage(nextPage); loadAccessLogs({page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq}); }} total={totalPages} siblings={1} boundaries={1} size="sm"/>
             </Group>
-        </Card>
+        </>
     );
 }
