@@ -1,10 +1,12 @@
-import { build } from "esbuild";
+import { build, context } from "esbuild";
 import { access } from "node:fs/promises";
 
 const inputPath = "app/assets/js/admin.jsx";
 const outputPath = "public/js/babel/admin.js";
 
-await build({
+const isWatch = process.argv.includes("--watch");
+
+const config = {
   entryPoints: [inputPath],
   outfile: outputPath,
   bundle: true,
@@ -14,7 +16,14 @@ await build({
   minify: false,
   sourcemap: false,
   logLevel: "info",
-});
+};
 
-await access(outputPath);
-console.log(`Built ${outputPath} from ${inputPath}`);
+if (isWatch) {
+  const ctx = await context(config);
+  await ctx.watch();
+  console.log(`Watching ${inputPath} -> ${outputPath}`);
+} else {
+  await build(config);
+  await access(outputPath);
+  console.log(`Built ${outputPath} from ${inputPath}`);
+}

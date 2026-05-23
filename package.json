@@ -2,8 +2,8 @@
   "name": "ahawiki-admin-build",
   "private": true,
   "scripts": {
-    "admin:build": "node scripts/admin.build.mjs",
-    "admin:watch": "node scripts/admin.watch.mjs",
+    "admin:build": "node scripts/admin.mjs",
+    "admin:watch": "node scripts/admin.mjs --watch",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "schemaDump": "sh ./schemaDump.sh",
     "test": "node --test test/*.test.mjs"
