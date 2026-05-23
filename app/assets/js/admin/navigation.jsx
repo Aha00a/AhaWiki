@@ -1,12 +1,7 @@
 import React, {useEffect, useMemo, useState} from "react";
+import {useLocation, useNavigate} from "react-router-dom";
 import {Badge, Divider, Group, NavLink, Paper, Skeleton, Stack, Text} from "@mantine/core";
-
-function fetchJson(url) {
-    return fetch(url, {credentials: "same-origin"}).then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-    });
-}
+import {fetchJson} from "./api.js";
 
 function parseSiteSeqFromPathname(pathname) {
     const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Config|Cache|Permission|AccessLog|Admins))?$/);
@@ -15,112 +10,38 @@ function parseSiteSeqFromPathname(pathname) {
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
 }
 
-function SiteNavItem({site, currentPathname, currentSiteSeq, isAdmin, onNavigate}) {
+function SiteNavItem({site, currentPathname, currentSiteSeq, isAdmin}) {
+    const navigate = useNavigate();
     const siteSeq = String(site.seq);
     const isCurrentSite = siteSeq === String(currentSiteSeq);
     const isActiveSite = parseSiteSeqFromPathname(currentPathname) === siteSeq;
 
+    const navTo = (href) => (event) => { event.preventDefault(); navigate(href); };
+
     return (
-        <NavLink
-            href={`/Admin/Site/${site.seq}`}
-            label={`${site.name} (#${site.seq})`}
-            leftSection={<i className="fas fa-globe-asia" aria-hidden="true"/>}
-            active={isActiveSite}
-            opened={isCurrentSite || isActiveSite}
-            variant={isActiveSite ? "filled" : "light"}
-            onClick={(event) => {
-                event.preventDefault();
-                onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-            }}
-        >
-            <NavLink
-                href={`/Admin/Site/${site.seq}`}
-                label="Meta목록"
-                leftSection={<i className="fas fa-list" aria-hidden="true"/>}
-                active={currentPathname === `/Admin/Site/${site.seq}`}
-                variant={currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle"}
-                onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}`);
-                }}
-            />
-            <NavLink
-                href={`/Admin/Site/${site.seq}/Config`}
-                label="Config"
-                leftSection={<i className="fas fa-sliders-h" aria-hidden="true"/>}
-                active={currentPathname === `/Admin/Site/${site.seq}/Config`}
-                variant={currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle"}
-                onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Config`);
-                }}
-            />
-            <NavLink
-                href={`/Admin/Site/${site.seq}/Cache`}
-                label="Cache"
-                leftSection={<i className="fas fa-database" aria-hidden="true"/>}
-                active={currentPathname === `/Admin/Site/${site.seq}/Cache`}
-                variant={currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle"}
-                onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Cache`);
-                }}
-            />
-            <NavLink
-                href={`/Admin/Site/${site.seq}/Permission`}
-                label="Permission"
-                leftSection={<i className="fas fa-key" aria-hidden="true"/>}
-                active={currentPathname === `/Admin/Site/${site.seq}/Permission`}
-                variant={currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle"}
-                onClick={(event) => {
-                    event.preventDefault();
-                    onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Permission`);
-                }}
-            />
-            {isAdmin && (
-                <NavLink
-                    href={`/Admin/${site.seq}/AccessLog`}
-                    label="AccessLog"
-                    leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>}
-                    active={currentPathname === `/Admin/${site.seq}/AccessLog`}
-                    variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"}
-                    onClick={(event) => {
-                        event.preventDefault();
-                        onNavigate(`/Admin/${encodeURIComponent(site.seq)}/AccessLog`);
-                    }}
-                />
-            )}
-            {isAdmin && (
-                <NavLink
-                    href={`/Admin/Site/${site.seq}/Admins`}
-                    label="SiteAdmins"
-                    leftSection={<i className="fas fa-user-shield" aria-hidden="true"/>}
-                    active={currentPathname === `/Admin/Site/${site.seq}/Admins`}
-                    variant={currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle"}
-                    onClick={(event) => {
-                        event.preventDefault();
-                        onNavigate(`/Admin/Site/${encodeURIComponent(site.seq)}/Admins`);
-                    }}
-                />
-            )}
+        <NavLink href={`/Admin/Site/${site.seq}`} label={`${site.name} (#${site.seq})`} leftSection={<i className="fas fa-globe-asia" aria-hidden="true"/>} active={isActiveSite} opened={isCurrentSite || isActiveSite} variant={isActiveSite ? "filled" : "light"} onClick={navTo(`/Admin/Site/${site.seq}`)}>
+            <NavLink href={`/Admin/Site/${site.seq}`} label="Meta목록" leftSection={<i className="fas fa-list" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}`} variant={currentPathname === `/Admin/Site/${site.seq}` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}`)}/>
+            <NavLink href={`/Admin/Site/${site.seq}/Config`} label="Config" leftSection={<i className="fas fa-sliders-h" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Config`} variant={currentPathname === `/Admin/Site/${site.seq}/Config` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Config`)}/>
+            <NavLink href={`/Admin/Site/${site.seq}/Cache`} label="Cache" leftSection={<i className="fas fa-database" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Cache`} variant={currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Cache`)}/>
+            <NavLink href={`/Admin/Site/${site.seq}/Permission`} label="Permission" leftSection={<i className="fas fa-key" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Permission`} variant={currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Permission`)}/>
+            {isAdmin && <NavLink href={`/Admin/${site.seq}/AccessLog`} label="AccessLog" leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>} active={currentPathname === `/Admin/${site.seq}/AccessLog`} variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"} onClick={navTo(`/Admin/${site.seq}/AccessLog`)}/>}
+            {isAdmin && <NavLink href={`/Admin/Site/${site.seq}/Admins`} label="SiteAdmins" leftSection={<i className="fas fa-user-shield" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Admins`} variant={currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Admins`)}/>}
         </NavLink>
     );
 }
 
-export default function Navigation({activePage, onNavigate, me}) {
+export default function Navigation({me, onNavigate}) {
     const [siteLinks, setSiteLinks] = useState([]);
-    const currentPathname = window.location.pathname;
+    const location = useLocation();
+    const navigate = useNavigate();
+    const currentPathname = location.pathname;
 
     useEffect(() => {
         if (!me?.loggedIn) return;
         let mounted = true;
         fetchJson("/api/Admin/Sites")
-            .then((siteData) => {
-                if (mounted) setSiteLinks(Array.isArray(siteData) ? siteData : []);
-            })
-            .catch((err) => {
-                console.error("[AdminUI] navigation:sites:error", err);
-            });
+            .then((data) => { if (mounted) setSiteLinks(Array.isArray(data) ? data : []); })
+            .catch((err) => console.error("[AdminUI] navigation:sites:error", err));
         return () => { mounted = false; };
     }, [me]);
 
@@ -156,58 +77,27 @@ export default function Navigation({activePage, onNavigate, me}) {
                 </Group>
                 <Stack gap={2}>
                     {siteLinks.map((site) => (
-                        <SiteNavItem
-                            key={`site-${site.seq}`}
-                            site={site}
-                            currentPathname={currentPathname}
-                            currentSiteSeq={currentSiteSeq}
-                            isAdmin={isAdmin}
-                            onNavigate={onNavigate}
-                        />
+                        <SiteNavItem key={`site-${site.seq}`} site={site} currentPathname={currentPathname} currentSiteSeq={currentSiteSeq} isAdmin={isAdmin}/>
                     ))}
-                    {siteLinks.length === 0 && (
-                        <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>
-                    )}
+                    {siteLinks.length === 0 && <Text size="sm" c="dimmed" px="sm" py={6}>등록된 Site 가 없습니다.</Text>}
                 </Stack>
             </Paper>
-
             {isAdmin && (
                 <Paper withBorder radius="md" p={8}>
                     <Text size="xs" c="dimmed" fw={700} tt="uppercase" mb={6}>전체 관리</Text>
                     <Stack gap={4}>
                         {globalLinks.map((link) => {
-                            const isActive = activePage === link.key
-                                || (activePage === "user-views" && link.key === "all-users");
+                            const isActive = currentPathname === link.href || (link.key === "all-users" && currentPathname.startsWith("/Admin/User"));
                             return (
-                                <NavLink
-                                    key={link.key}
-                                    href={link.href}
-                                    label={link.label}
-                                    leftSection={<i className={link.iconClassName} aria-hidden="true"/>}
-                                    active={isActive}
-                                    variant={isActive ? "filled" : "light"}
-                                    onClick={(event) => {
-                                        event.preventDefault();
-                                        onNavigate(link.href);
-                                    }}
-                                />
+                                <NavLink key={link.key} href={link.href} label={link.label} leftSection={<i className={link.iconClassName} aria-hidden="true"/>} active={isActive} variant={isActive ? "filled" : "light"} onClick={(e) => { e.preventDefault(); navigate(link.href); }}/>
                             );
                         })}
                     </Stack>
                 </Paper>
             )}
-
             <Divider my={6} label="바로가기" labelPosition="center"/>
             <Paper withBorder radius="md" p={6}>
-                <NavLink
-                    href="/"
-                    label="위키로 돌아가기"
-                    description="관리자 영역을 나가 메인 위키로 이동"
-                    leftSection={<i className="fas fa-arrow-left" aria-hidden="true"/>}
-                    rightSection={<i className="fas fa-external-link-alt" aria-hidden="true"/>}
-                    color="gray"
-                    variant="subtle"
-                />
+                <NavLink href="/" label="위키로 돌아가기" description="관리자 영역을 나가 메인 위키로 이동" leftSection={<i className="fas fa-arrow-left" aria-hidden="true"/>} rightSection={<i className="fas fa-external-link-alt" aria-hidden="true"/>} color="gray" variant="subtle"/>
             </Paper>
         </Stack>
     );
