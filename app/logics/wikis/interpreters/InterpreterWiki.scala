@@ -29,8 +29,8 @@ object InterpreterWiki extends TraitInterpreter {
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
 
     val chunkExtracted: String = extractConvertInjectInterpreter.extract(pageContent.content)
-    val chunkMacroExtracted: String = extractConvertInjectMacro.extract(chunkExtracted)
-    val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(chunkMacroExtracted)
+    val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(chunkExtracted)
+    val chunkMacroExtracted: String = extractConvertInjectMacro.extract(backQuoteExtracted)
 
     def process(): T
   }
@@ -50,7 +50,7 @@ object InterpreterWiki extends TraitInterpreter {
     val regexListUpperHangulConsonant: Regex = """[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+\.""".r
 
     override def process(): T = {
-      for((s, index) <- backQuoteExtracted.split("""(\r\n|\n)""", -1).zipWithIndex) {
+      for((s, index) <- chunkMacroExtracted.split("""(\r\n|\n)""", -1).zipWithIndex) {
         val lineNumber = extractConvertInjectInterpreter.originalLineNumber(index + 1)
         s match {
           case "" => emptyLine()
@@ -103,7 +103,7 @@ object InterpreterWiki extends TraitInterpreter {
     })
 
     override def process(): String = {
-      val lines = backQuoteExtracted.split("""(\r\n|\n)""", -1).toVector
+      val lines = chunkMacroExtracted.split("""(\r\n|\n)""", -1).toVector
       var index = 0
       while (index < lines.length) {
         val s = lines(index)
@@ -253,8 +253,8 @@ object InterpreterWiki extends TraitInterpreter {
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
       extractConvertInjectInterpreter.inject(
-        extractConvertInjectMacro.inject(
-          extractConvertInjectBackQuote.inject(str)
+        extractConvertInjectBackQuote.inject(
+          extractConvertInjectMacro.inject(str)
         )
       )
     }
@@ -338,7 +338,7 @@ object InterpreterWiki extends TraitInterpreter {
     override def process(): Seq[CalculatedLink] = {
       val seqLinkInterpreter: Seq[CalculatedLink] = extractConvertInjectInterpreter.extractLink().toList
       val seqLinkMacro: Seq[CalculatedLink] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
-      val seqLinkWikiText: Seq[CalculatedLink] = InterpreterWiki.extractLinkMarkup(backQuoteExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
+      val seqLinkWikiText: Seq[CalculatedLink] = InterpreterWiki.extractLinkMarkup(chunkMacroExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
       seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }
   }
