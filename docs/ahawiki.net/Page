@@ -1,50 +1,50 @@
-# Page
+= Page
 
-## Page
+== Page
 
 `Page` 테이블은 페이지 revision 원본을 저장한다.
 
-- 키: `(site, name, revision)`
-- 본문: `content`
-- revision 메타: `dateTime`, `user`, `remoteAddress`, `comment`, `isMinorEdit`
-- `permRead`는 더 이상 사용하지 않으며 evolution 51에서 제거했다.
+ * 키: `(site, name, revision)`
+ * 본문: `content`
+ * revision 메타: `dateTime`, `user`, `remoteAddress`, `comment`, `isMinorEdit`
+ * `permRead`는 더 이상 사용하지 않으며 evolution 51에서 제거했다.
 
 최신 본문, history, diff, blame, include, search처럼 revision 원본이 필요한 경로는 `Page`를 직접 읽는다.
 
-## PageMeta
+== PageMeta
 
 `PageMeta` 테이블은 페이지별 최신 상태 캐시다.
 
-- 키: `(site, name)`
-- `revision`: 최신 revision
-- `dateInserted`: row 생성 시각
-- `dateUpdated`: 계산 완료 시각
-- `image`: 대표 이미지
-- `size`: 최신 revision의 content length
+ * 키: `(site, name)`
+ * `revision`: 최신 revision
+ * `dateInserted`: row 생성 시각
+ * `dateUpdated`: 계산 완료 시각
+ * `image`: 대표 이미지
+ * `size`: 최신 revision의 content length
 
 `PageMeta.permRead`도 evolution 51에서 제거했다. 읽기 권한 판정은 `Permission` 기반으로 처리한다.
 
-## Calculation
+== Calculation
 
 페이지 계산 시 `PageLogic.calculate`가 최신 `Page`를 읽고 `PageMeta.upsert`를 수행한다.
 
 대표 이미지는 다음 순서로 선택한다.
 
-1. `#!Schema`의 `image` 또는 `logo`
-2. 업로드된 `Attachment`
-3. `[[Image(...)]]`
-4. `[[Attachment(...)]]`
+ 1. `#!Schema`의 `image` 또는 `logo`
+ 1. 업로드된 `Attachment`
+ 1. `[[Image(...)]]`
+ 1. `[[Attachment(...)]]`
 
 이미지가 없으면 `NULL`로 저장하고 렌더링/API 쪽에서 기본 이미지를 사용한다.
 
-## Read Paths
+== Read Paths
 
 페이지 이름 목록과 최신 페이지 목록/size는 `PageMeta` 기반 캐시를 사용한다.
 
-- `AhaWikiCache.PageMeta.SeqPageName`
-- `AhaWikiCache.PageMeta.SeqPageLatestSummary`
-- `ContextSite.setPageName`
-- `ContextSite.seqPageByPermission`
-- Admin Page 목록과 재계산 대상 선택
+ * `AhaWikiCache.PageMeta.SeqPageName`
+ * `AhaWikiCache.PageMeta.SeqPageLatestSummary`
+ * `ContextSite.setPageName`
+ * `ContextSite.seqPageByPermission`
+ * Admin Page 목록과 재계산 대상 선택
 
 페이지 생성, 수정, 삭제, rename 시 관련 `PageMeta` row와 캐시를 갱신하거나 무효화한다.
