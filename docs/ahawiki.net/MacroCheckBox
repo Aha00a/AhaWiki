@@ -1,0 +1,38 @@
+= [Macro]CheckBox
+체크박스를 인라인으로 표시합니다. `disabled` 상태로 렌더링되어 클릭은 되지 않습니다.
+
+== 문법
+
+ * 빈 체크박스: `[ ]` 또는 `[[CheckBox]]` 또는 `[[CB]]`
+ * 체크된 체크박스: `[[CheckBox(x)]]` 또는 `[[CB(x)]]` — 인자 내용은 무관, 인자가 있으면 체크됨
+
+== 예시
+
+[[[#!WikiSyntaxPreview
+ * [ ] 아직 안 한 일
+ * [[CB(x)]] 완료된 일
+ * [[CB(v)]] 이것도 체크됨
+ * [[CB(done)]] 인자 내용은 무관
+ * [[CheckBox]] 긴 형태 빈 체크박스
+ * [[CheckBox(x)]] 긴 형태 체크된 체크박스
+]]]
+
+== 설계 경위
+
+마크다운 표준(GFM)에서 체크박스는 `[ ]` / `[x]`로 표기한다.
+AhaMark에서는 `[PageName]`이 페이지 링크 문법이므로 `[x]`를 그대로 쓰면 `x`라는 페이지로의 링크로 파싱된다.
+
+이 충돌을 해결하기 위해 검토한 방안:
+
+ * `\[x]` (이스케이프): 체크박스가 아닌 리터럴 텍스트로만 표시됨 — 불가
+ * `` `[x]` `` (백틱): `<code>` 태그로 렌더링되어 체크박스 불가, 코드 표시 용도와 충돌 — 불가
+ * `[[CheckBox(x)]]` (매크로): 기존 `[[MacroName(argument)]]` 시스템에 그대로 통합 가능 — 채택
+
+빈 체크박스 `[ ]`는 링크 regex `[^]\s]+` 가 공백을 허용하지 않아 링크로 파싱되지 않으므로,
+별도 처리(InterpreterWiki.replaceLink)를 통해 그대로 체크박스 문법으로 지원한다.
+
+== 구현
+
+ * `app/logics/wikis/macros/MacroCheckBox.scala` — 매크로 본체
+ * `app/logics/wikis/ExtractConvertInjectMacro.scala` — `CheckBox` 등록, `CB` 별칭 추가
+ * `app/logics/wikis/interpreters/InterpreterWiki.scala` — `[ ]` → 빈 체크박스 변환 (`replaceLink` 내)
