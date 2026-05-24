@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-24T11:49:39.707Z",
-  "count": 71,
+  "downloadedAt": "2026-05-24T11:53:38.881Z",
+  "count": 62,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -37,7 +37,7 @@
       "name": "Setup",
       "rawUrl": "https://ahawiki.net/w/Setup?action=raw",
       "fileName": "Setup",
-      "bytes": 434
+      "bytes": 356
     },
     {
       "name": "MacroTrivial",
@@ -340,70 +340,16 @@
       "bytes": 4299
     },
     {
-      "name": "AhaWikiToDo",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiToDo?action=raw",
-      "fileName": "AhaWikiToDo",
-      "bytes": 15
-    },
-    {
       "name": "AhaWikiSchema",
       "rawUrl": "https://ahawiki.net/w/AhaWikiSchema?action=raw",
       "fileName": "AhaWikiSchema",
       "bytes": 3318
     },
     {
-      "name": "AhaWikiInterpreterExamples",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiInterpreterExamples?action=raw",
-      "fileName": "AhaWikiInterpreterExamples",
-      "bytes": 39
-    },
-    {
-      "name": "AhaWikiInstallation",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiInstallation?action=raw",
-      "fileName": "AhaWikiInstallation",
-      "bytes": 16
-    },
-    {
-      "name": "AhaWikiHotKey",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiHotKey?action=raw",
-      "fileName": "AhaWikiHotKey",
-      "bytes": 17
-    },
-    {
-      "name": "AhaWikiFeature",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiFeature?action=raw",
-      "fileName": "AhaWikiFeature",
-      "bytes": 19
-    },
-    {
-      "name": "AhaWikiCustomizing",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiCustomizing?action=raw",
-      "fileName": "AhaWikiCustomizing",
-      "bytes": 22
-    },
-    {
-      "name": "AhaWikiChangeLog",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiChangeLog?action=raw",
-      "fileName": "AhaWikiChangeLog",
-      "bytes": 20
-    },
-    {
-      "name": "AhaWikiAccessControl",
-      "rawUrl": "https://ahawiki.net/w/AhaWikiAccessControl?action=raw",
-      "fileName": "AhaWikiAccessControl",
-      "bytes": 24
-    },
-    {
       "name": "AhaWiki",
       "rawUrl": "https://ahawiki.net/w/AhaWiki?action=raw",
       "fileName": "AhaWiki",
       "bytes": 1529
-    },
-    {
-      "name": "AhaMark Macro",
-      "rawUrl": "https://ahawiki.net/w/AhaMark%20Macro?action=raw",
-      "fileName": "AhaMark Macro",
-      "bytes": 16
     },
     {
       "name": "AhaMark Basic",
