@@ -13,6 +13,10 @@ object InterpreterWikiUnit {
     assert(html.contains("""<div class="HeadingWrappercustom-id">"""))
     assert(html.contains("""<h1 id="custom-id" class="Headinghero Headingcompact">"""))
 
+    val generatedHeadingHtml = InterpreterWiki.toHtmlString("== See Also == #See-Also-Generated.generated")
+    assert(generatedHeadingHtml.contains("""<h2 id="See-Also-Generated" class="Headinggenerated generated">"""))
+    assert(!generatedHeadingHtml.contains("""data-edit-link="""))
+
     val htmlColumns = InterpreterWiki.toHtmlString("""<Columns count=\"3\" gap=\"16\" minWidth=\"220\">\n 1. a\n 1. b\n 1. c\n</Columns>""")
 
     val htmlDiv = InterpreterWiki.toHtmlString("""<div id=\"box\" class=\"card\" style=\"color:red\" onclick=\"evil()\">\n 1. [FrontPage]\n</div>""")
