@@ -1,31 +1,138 @@
 = Attachment
-현재는 Image만 본문에 붙여넣기시 base64로 embedding 가능. --[2020-01-08]
 
-== 결정사항
- * [S3]
- * namespace
-  * `file:`
+== 개요
+파일을 [S3]에 업로드하고, 위키 페이지에서 `[[Attachment(...)]]` 매크로로 첨부파일을 삽입하는 기능.
 
-== 고려사항
- * 전역/종속
-  * 전역에 위치할 것인가?
-  * 페이지 내부에 종속될 것인가?
-  * 비교[[[#!Table tsv 1 1
-	전역	종속
-[MediaWiki]	O	X
-[NamuWiki]	O	X
-페이지 view시	-	-
-페이지 edit시	목록 표시 불가	목록 표시 가능
-페이지 rename시	신경쓸 일이 없음	추가 구현 필요 혹은 사용자가 수동으로 해야함
-페이지 delete시	신경쓸 일이 없음	추가 구현 필요 혹은 사용자가 수동으로 해야함
-파일 rename시	-	-
-파일 update시(history)	-	-
-파일 delete시	-	-
+== 매크로 사용법
+[[[
+[[Attachment(파일명)]]
+[[Attachment(파일명, 300px)]]
+[[Attachment(파일명, 50%)]]
 ]]]
- * 최근변경에 표시
- * permalink
-  * [MediaWiki] - permalink
-  * [NamuWiki] - dynamically generated.
- * S3에서 referer 체크? signed url로 expire?
-  * https://docs.aws.amazon.com/ko_kr/AmazonS3/latest/userguide/example-bucket-policies.html#example-bucket-policies-use-case-4
- * 사용량 계산
+ * 이미지 확장자(png, jpg, jpeg, gif, webp, svg, bmp, avif, tiff, tif, ico)면 `<img>` 태그로 인라인 표시
+ * 그 외 확장자면 `<a>` 다운로드 링크로 표시
+ * 두 번째 인자로 너비 지정 가능 (`px` 또는 `%` 단위)
+ * 이미지 로드 실패 시 fallback 이미지(`attachmentFallback.svg`) 표시
+
+== S3 오브젝트 키 구조
+[[[
+Attachment/{siteSeq}/{pageName}/{originalFilename}/{basename}.{timestamp}.{ext}
+]]]
+예시:
+[[[
+Attachment/1/MyPage/photo.jpg/photo.20240101120000000.jpg
+Attachment/1/MyPage/clipboard/clipboard.20240101120000000.png
+]]]
+ * `pageName`과 파일명의 특수문자는 `[^\p{IsHangul}\p{IsHan}\p{IsHiragana}\p{IsKatakana}a-zA-Z0-9._-]` 패턴으로 `_` 치환
+ * 클립보드 이미지는 `{pageName}/clipboard/` 하위에 저장
+
+== presigned URL
+ * 오브젝트에 접근 시 AWS S3 presigned URL 생성 (유효기간 24시간)
+ * 매크로 렌더링마다 URL이 새로 생성됨
+
+== DB 스키마 (Attachment 테이블)
+[[[#!Table tsv 1 1
+컬럼	설명
+seq	PK
+site	사이트 seq
+pageName	첨부된 페이지 이름
+user	업로드 사용자 seq (nullable)
+uploaderEmail	업로드자 이메일 (nullable)
+originalFilename	원래 파일명
+storedFilename	S3에 저장된 파일명
+bucket	S3 버킷 이름
+objectKey	S3 오브젝트 키
+contentType	MIME 타입
+fileSize	파일 크기 (bytes)
+status	Initiated / Uploaded / Failed / Deleted
+etag	S3 ETag (업로드 후 저장)
+dateInserted	레코드 생성 일시
+dateUploaded	S3 업로드 완료 일시
+dateUpdated	최근 변경 일시
+dateDeleted	삭제 일시 (soft delete)
+]]]
+
+=== status 흐름
+[[[
+Initiated → Uploaded (S3 업로드 성공)
+          → Failed   (S3 업로드 실패)
+Uploaded  → Deleted  (삭제 처리)
+]]]
+
+== API 엔드포인트
+=== 파일 업로드
+[[[
+POST /api/uploadAttachment
+Content-Type: multipart/form-data
+
+파라미터:
+  pageName (text)  - 첨부할 페이지 이름
+  file     (file)  - 업로드할 파일
+
+응답 (JSON):
+  objectKey        - S3 오브젝트 키
+  attachmentMacro  - 바로 사용 가능한 매크로 문자열 예: [[Attachment(파일명)]]
+  fileUrl          - presigned URL (24시간 유효)
+  contentType      - MIME 타입
+]]]
+
+=== 페이지 첨부파일 목록
+[[[
+GET /api/pageAttachments?pageName={pageName}
+
+응답 (JSON):
+  attachments: [
+    {
+      objectKey       - S3 오브젝트 키
+      originalFilename
+      contentType
+      fileSize
+      fileUrl         - presigned URL
+      integrityStatus - OK / DB_ONLY / S3_ONLY
+      attachmentMacro - 매크로 문자열
+    }
+  ]
+]]]
+ * DB 레코드와 S3 오브젝트를 함께 조회하여 정합성 상태(`integrityStatus`) 제공
+
+=== 첨부파일 삭제
+[[[
+POST /api/deleteAttachment
+Content-Type: application/x-www-form-urlencoded
+
+파라미터:
+  pageName  - 페이지 이름
+  objectKey - S3 오브젝트 키 (전체 경로 또는 상대 경로)
+
+응답 (JSON):
+  ok        - true
+  objectKey - 삭제된 오브젝트 키
+]]]
+ * S3에서 실제 삭제 후 DB에 soft delete (status='Deleted', dateDeleted=NOW())
+
+=== 클립보드 이미지 업로드
+[[[
+POST /api/uploadClipboardImage
+Content-Type: application/x-www-form-urlencoded
+
+파라미터:
+  pageName - 페이지 이름
+  dataUrl  - data:image/...;base64,... 형식의 이미지 데이터
+
+응답 (JSON):
+  objectKey
+  attachmentMacro
+  fileUrl
+  contentType
+]]]
+
+== 페이지 삭제 시 동작
+ * 페이지 삭제 시 해당 페이지의 첨부파일도 S3 및 DB에서 함께 삭제 (cascade)
+ * S3는 `Attachment/{siteSeq}/{pageName}/` 프리픽스로 최대 200개 조회하여 삭제
+
+== 설계 결정사항
+ * 저장소: [S3] presigned URL 방식 (직접 S3 URL 노출 없음)
+ * 종속 방식: 페이지에 종속 (`Attachment/{siteSeq}/{pageName}/` 경로)
+ * 파일 목록: 페이지 편집 시 해당 페이지 첨부파일 목록 표시 가능
+ * 파일명 중복: 타임스탬프를 파일명에 포함하여 덮어쓰기 방지
+ * referer 체크 없음, presigned URL의 만료(24시간)로 접근 제어
