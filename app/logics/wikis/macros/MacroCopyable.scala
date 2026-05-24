@@ -8,12 +8,12 @@ object MacroCopyable extends TraitMacro {
   }
 
   def doToHtmlString(argument: String): String = {
-    <div class="MacroCopyable">
+    <span class="MacroCopyable">
       <input class="auto resizeInputToContent" value={argument} readonly="readonly"/>
       <button type="button" aria-label="Copy" onclick={"window.AhaWiki.Clipboard.copy(this.previousElementSibling.value);$(this).next().fadeIn();setTimeout(() => $(this).next().fadeOut(), 1000);"}>
         <i class="far fa-copy" aria-hidden="true"></i>
       </button>
-      <div class="tooltip" onclick="$(this).fadeOut();">Copied!!</div>
-    </div>.toString()
+      <span class="tooltip" onclick="$(this).fadeOut();">Copied!!</span>
+    </span>.toString()
   }
 }
