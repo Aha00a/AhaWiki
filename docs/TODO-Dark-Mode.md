@@ -1,0 +1,165 @@
+# TODO: 다크모드 토글 버튼
+
+## Goal
+
+사용자가 AhaWiki를 다크모드로 볼 수 있도록 한다.
+navbar 우측에 토글 버튼을 추가하여 라이트/다크 모드를 전환한다.
+
+- 기본값: 라이트 모드 (현재 동작 유지)
+- 토글 ON: `body`에 `darkMode` 클래스 부여 → CSS 변수로 색상 전환
+- 설정은 `localStorage`에 저장하여 페이지 이동 후에도 유지
+- OS 다크모드 설정(`prefers-color-scheme: dark`)을 초기 기본값으로 사용
+
+## UI 배치
+
+navbar 우측, 가로폭 토글 버튼 오른쪽, 계정 메뉴 왼쪽에 아이콘 버튼으로 배치한다.
+
+```
+[AhaWiki]  [Navigate▾]  [Page▾]  ···  [⇔]  [🌙]  [👤 닉네임▾]
+```
+
+- 아이콘: `fa-moon` (현재 라이트, 다크로 전환 가능) / `fa-sun` (현재 다크, 라이트로 전환 가능)
+- 버튼에 `title` 및 `aria-label` 속성으로 설명 제공
+
+## 구현 계획
+
+### 1. CSS 변수 및 다크 테마 추가 (`app/assets/less.less`)
+
+라이트 모드의 주요 색상을 CSS 변수로 전환하고, `body.darkMode` 시 override한다.
+
+```css
+:root {
+    --color-bg: #ffffff;
+    --color-text: #000000;
+    --color-link: #015ADC;
+    --color-link-visited: #000066;
+    --color-code-bg: #000022;
+    --color-code-text: #cccccc;
+    --color-blockquote-bg: #f3f3ff;
+    --color-heading-border: #cccccc;
+    --color-navbar-bg: rgba(255, 255, 255, 0.25);
+    --color-pre-bg: #000022;
+}
+
+body.darkMode {
+    --color-bg: #1a1a2e;
+    --color-text: #e0e0e0;
+    --color-link: #6da3f8;
+    --color-link-visited: #a0a0cc;
+    --color-code-bg: #0d0d1a;
+    --color-code-text: #cccccc;
+    --color-blockquote-bg: #1e1e3a;
+    --color-heading-border: #444466;
+    --color-navbar-bg: rgba(20, 20, 40, 0.7);
+    --color-pre-bg: #0d0d1a;
+}
+
+body.darkMode {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+```
+
+기존 하드코딩된 색상 값을 CSS 변수로 점진적으로 교체한다.
+한 번에 전부 바꾸기보다 핵심 요소(body, navbar, commonAhaWiki, wikiContent)부터 시작한다.
+
+### 2. 버튼 HTML 추가 (`app/views/_base.scala.html`)
+
+가로폭 토글 버튼 오른쪽에 삽입한다.
+
+```html
+<button type="button" class="darkModeToggle hotkeyHint"
+        aria-label="Switch to dark mode"
+        title="Switch to dark mode">
+    <i class="fas fa-moon"></i>
+</button>
+```
+
+### 3. JavaScript 추가
+
+```js
+(function () {
+    const KEY = 'ahawiki-dark-mode';
+    const $body = $('body');
+    const $btn = $('.darkModeToggle');
+
+    function apply(dark) {
+        $body.toggleClass('darkMode', dark);
+        $btn.find('i')
+            .toggleClass('fa-moon', !dark)
+            .toggleClass('fa-sun', dark);
+        $btn.attr('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+
+    const stored = localStorage.getItem(KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    apply(stored !== null ? stored === '1' : prefersDark);
+
+    $btn.on('click', function () {
+        const next = !$body.hasClass('darkMode');
+        localStorage.setItem(KEY, next ? '1' : '0');
+        apply(next);
+    });
+})();
+```
+
+OS 다크모드 설정을 초기 기본값으로 사용하되, 사용자가 직접 토글하면 그 값을 localStorage에 저장한다.
+
+### 4. FOUC(Flash of Unstyled Content) 방지
+
+페이지 로드 시 라이트 모드가 잠깐 보였다가 다크모드로 바뀌는 현상을 막기 위해
+`<head>` 안에 인라인 스크립트를 삽입하여 body 클래스를 즉시 적용한다.
+
+`app/views/_baseSkeleton.scala.html`의 `<head>` 끝에 추가:
+
+```html
+<script>
+    (function () {
+        var stored = localStorage.getItem('ahawiki-dark-mode');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored !== null ? stored === '1' : prefersDark) {
+            document.documentElement.classList.add('darkMode');
+        }
+    })();
+</script>
+```
+
+`body` 대신 `documentElement`(`<html>`)에 클래스를 붙이는 방식으로 FOUC를 완전히 방지한다.
+이 경우 CSS 셀렉터도 `html.darkMode body { ... }` 로 조정한다.
+
+### 5. navbar 다크 테마 처리
+
+navbar는 `backdrop-filter` 블러를 사용하므로 배경색 변수만 바꿔도 자연스럽게 적용된다.
+
+```css
+body.darkMode nav.topNavbar {
+    background-color: var(--color-navbar-bg);
+    border-bottom-color: rgba(100, 100, 150, 0.3);
+}
+
+body.darkMode nav.topNavbar a,
+body.darkMode nav.topNavbar button {
+    color: #e0e0e0;
+}
+```
+
+## 점진적 적용 순서
+
+CSS 변수 전환 작업량이 많으므로 단계적으로 진행한다.
+
+1. CSS 변수 선언 및 body/html 배경·텍스트 색 적용
+2. navbar 다크 처리
+3. `.commonAhaWiki` / `.wikiContent` 다크 처리 (코드블록, blockquote, 링크 등)
+4. 기타 UI 컴포넌트 (flash, toc, schema, revisionInfo 등)
+
+## Verification Checklist
+
+- [ ] 토글 ON 시 배경/텍스트/링크 색상이 다크 팔레트로 전환되는지 확인
+- [ ] 토글 OFF 시 라이트 모드로 복귀하는지 확인
+- [ ] 페이지 이동 후에도 설정이 유지되는지 확인 (localStorage)
+- [ ] OS 다크모드 설정이 있을 때 초기 기본값으로 적용되는지 확인
+- [ ] 사용자가 직접 토글하면 OS 설정과 무관하게 해당 값이 유지되는지 확인
+- [ ] FOUC(다크모드 깜빡임) 없이 로드되는지 확인
+- [ ] 코드블록, blockquote, toc, schema 박스 등 다크 팔레트에서 가독성 확인
+- [ ] 가로폭 토글 버튼과 나란히 배치되었을 때 시각적으로 자연스러운지 확인
+- [ ] 모바일에서도 토글 버튼이 정상 동작하는지 확인
