@@ -22,8 +22,10 @@ object SchemaOrgUnit {
       CalculatedSchemaOrg.renderExistingPages(Map(
         "Thing" -> Seq("Something")
       )),
-      """= ["schema:Thing" Thing]
+      """= ["schema:Thing" Thing] (1) = #Thing
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Something"]
+        |</Columns>
         |
         |""".stripMargin
     )
@@ -35,24 +37,32 @@ object SchemaOrgUnit {
         "Person" -> Seq("Someone1", "Someone2"),
         "WebSite" -> Seq("Site1", "Site2")
       )),
-      """= ["schema:Thing" Thing]
+      """= ["schema:Thing" Thing] (7) = #Thing
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Something"]
-        |== ["schema:CreativeWork" Creative Work]
+        |</Columns>
+        |== ["schema:CreativeWork" Creative Work] (4) == #CreativeWork
         |
-        |=== ["schema:Movie" Movie]
+        |=== ["schema:Movie" Movie] (2) === #Movie
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["AwesomeMovie1"]
         | 1. ["AwesomeMovie2"]
+        |</Columns>
         |
         |
-        |=== ["schema:WebSite" Web Site]
+        |=== ["schema:WebSite" Web Site] (2) === #WebSite
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Site1"]
         | 1. ["Site2"]
+        |</Columns>
         |
         |
         |
-        |== ["schema:Person" Person]
+        |== ["schema:Person" Person] (2) == #Person
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Someone1"]
         | 1. ["Someone2"]
+        |</Columns>
         |
         |
         |""".stripMargin
@@ -64,14 +74,18 @@ object SchemaOrgUnit {
         "CustomClass" -> Seq("Anything")
       )),
       """
-        |= ["schema:Thing" Thing]
+        |= ["schema:Thing" Thing] (1) = #Thing
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Something"]
+        |</Columns>
         |
         |
         |
         |= Custom
-        |== ["schema:CustomClass" Custom Class]
+        |== ["schema:CustomClass" Custom Class] (1) == #CustomClass
+        |<Columns count="3" gap="16" minWidth="220">
         | 1. ["Anything"]
+        |</Columns>
         |
         |""".stripMargin
     )

@@ -80,9 +80,8 @@ object CalculatedSchemaOrg {
          |
          |= Custom
          |${mapCustom.toSeq.sortBy(_._1).map(k =>
-      s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}]
-         |${k._2.toSeq.map(s =>
-      s""" 1. ["$s"]""").mkString(System.lineSeparator)}
+      s"""== ["schema:${k._1}" ${EnglishCaseConverter.pascalCase2TitleCase(k._1)}] (${k._2.distinct.size}) == #${schemaHeadingId(k._1)}
+         |${renderPageListColumns(k._2)}
          |""".stripMargin).mkString(System.lineSeparator)}
          |""".stripMargin
     }
@@ -90,21 +89,38 @@ object CalculatedSchemaOrg {
   }
 
   def renderSchemaClassTreeWithExistingPages(map: Map[String, Seq[String]], node:JsValue = jsonTree, depth: Int = 1): String = {
+    renderSchemaClassTreeWithExistingPagesAndPages(map, node, depth)._1
+  }
+
+  private def renderSchemaClassTreeWithExistingPagesAndPages(map: Map[String, Seq[String]], node:JsValue = jsonTree, depth: Int = 1): (String, Set[String]) = {
     val id = (node \ "id").as[String]
     val children = (node \ "children").asOpt[Seq[JsValue]].getOrElse(Seq())
 
-    val seqNodeSeq: Seq[String] = children.map(j => renderSchemaClassTreeWithExistingPages(map, j, depth + 1)).filter(_.nonEmpty)
+    val seqNodeSeqWithPages: Seq[(String, Set[String])] = children.map(j => renderSchemaClassTreeWithExistingPagesAndPages(map, j, depth + 1)).filter(_._1.nonEmpty)
+    val seqNodeSeq: Seq[String] = seqNodeSeqWithPages.map(_._1)
     val seq = map.getOrElse(id, Seq())
-    if(seq.isEmpty && seqNodeSeq.isEmpty) {
-      ""
+    val pages = seq.toSet ++ seqNodeSeqWithPages.flatMap(_._2)
+    if(pages.isEmpty) {
+      ("", Set())
     } else {
-      s"""${"=" * depth} ["schema:$id" ${EnglishCaseConverter.pascalCase2TitleCase(id)}]
-         |${if(seq.isEmpty) "" else seq.map(s =>
-      s""" 1. ["$s"]""").mkString(System.lineSeparator)}
+      (s"""${"=" * depth} ["schema:$id" ${EnglishCaseConverter.pascalCase2TitleCase(id)}] (${pages.size}) ${"=" * depth} #${schemaHeadingId(id)}
+         |${renderPageListColumns(seq)}
          |${seqNodeSeq.mkString(System.lineSeparator)}
-         |""".stripMargin
+         |""".stripMargin, pages)
     }
   }
+
+  private def renderPageListColumns(seq: Seq[String]): String = {
+    if(seq.isEmpty) {
+      ""
+    } else {
+      s"""<Columns count="3" gap="16" minWidth="220">
+         |${seq.map(s => s""" 1. ["$s"]""").mkString(System.lineSeparator)}
+         |</Columns>""".stripMargin
+    }
+  }
+
+  private def schemaHeadingId(id: String): String = id.replaceAll("""\s+""", "-").replaceAll("""[#.]+""", "-")
 
 
 
