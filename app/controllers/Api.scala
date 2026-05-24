@@ -110,7 +110,7 @@ class Api @Inject()(
   }
 
   applicationLifecycleHook.scheduleWithDynamicDelay(
-    name = "apiMemoryCacheStatsRefresh",
+    name = "ahaWikiCacheMemoryApiLinks",
     initialDelay = scala.concurrent.duration.Duration.Zero,
     nextDelay = () => 5 minutes,
     job = () => {
