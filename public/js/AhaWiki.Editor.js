@@ -82,6 +82,25 @@
             };
         }
 
+        if (normalizedKey === 'Enter' && !isComposing) {
+            const lastNewlineIndex = selectionStart === 0 ? -1 : value.lastIndexOf('\n', selectionStart - 1);
+            const lineStart = lastNewlineIndex + 1;
+            const linePrefix = value.substring(lineStart, selectionStart);
+            const listMatch = linePrefix.match(/^(\s*)([*-]|(?:[a-zA-Z]+|\d+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s/);
+            if (listMatch) {
+                const prefix = listMatch[1] + listMatch[2] + ' ';
+                const insertText = '\n' + prefix;
+                const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
+                const newPos = selectionStart + insertText.length;
+                return {
+                    handled: true,
+                    value: newValue,
+                    selectionStart: newPos,
+                    selectionEnd: newPos,
+                };
+            }
+        }
+
         if (normalizedKey === '[' && !(normalized.fromCode && key === 'Process')) {
             if (value.slice(selectionStart - 3, selectionStart) === '[[[') {
                 const insertText = '[' + selected + '\n]';
