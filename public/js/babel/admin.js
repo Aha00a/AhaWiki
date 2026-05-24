@@ -244,6 +244,23 @@ function useDashboardData() {
       setLoading(false);
     }
   }, []);
+  const loadSitesOnly = useCallback2(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const siteData = await fetchJson("/api/Admin/Sites");
+      setSites(Array.isArray(siteData) ? siteData : []);
+      setAllUsers([]);
+      setRecentChanges([]);
+      setTopViewedPages([]);
+      setDailyStats({ userCreated: [], pageCreated: [], pageEdited: [] });
+    } catch (err) {
+      logError("dashboard:sites-only:load:error", err);
+      setError(err.message || String(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
   const loadMemoryCacheStats = useCallback2(async () => {
     try {
       const data = await fetchJson("/api/Admin/MemoryCacheStats");
@@ -252,7 +269,7 @@ function useDashboardData() {
       logError("memory-cache:load:error", err);
     }
   }, []);
-  return { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats };
+  return { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats };
 }
 
 // app/assets/js/site/siteWidgets.jsx
@@ -386,16 +403,16 @@ function resolveSiteUrl(row, siteDomainBySeq) {
 function DashboardPage() {
   const { me } = useAdminContext();
   const navigate = useNavigate3();
-  const { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats } = useDashboardData();
+  const { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats } = useDashboardData();
   useEffect4(() => {
     if (me === null) return;
     if (me?.isAdmin) {
       load();
       loadMemoryCacheStats();
     } else {
-      load();
+      loadSitesOnly();
     }
-  }, [me]);
+  }, [me, load, loadMemoryCacheStats, loadSitesOnly]);
   const siteDomainBySeq = useMemo2(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
   if (loading) return null;
   if (!me?.isAdmin) {

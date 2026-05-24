@@ -47,6 +47,14 @@ class Admin @Inject()(
     }
   }
 
+  def siteSpa(seq: Long, path: String): Action[AnyContent] = Action { implicit request =>
+    if (isAdmin || isSiteAdmin(seq)) {
+      Ok(views.html.Admin.index())
+    } else {
+      Forbidden("Access denied.")
+    }
+  }
+
   def spa(path: String): Action[AnyContent] = Action { implicit request =>
     if (isAdmin || isSiteAdmin(currentSiteSeq)) {
       Ok(views.html.Admin.index())

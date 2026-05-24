@@ -50,3 +50,9 @@
  * [[CB(x)]] `SiteAdminDao` 단위 테스트 (`test/com/aha00a/models/tables/SiteAdminSpec.scala`)
  * [[CB(x)]] `AdminLogic.isSiteAdmin` 단위 테스트 (`test/com/aha00a/logics/AdminLogicSpec.scala`)
  * [[CB(x)]] API 통합 테스트 (`test/com/aha00a/controllers/ApiSiteAdminSpec.scala`)
+
+== 추가 점검 / 보완
+
+ * [[CB(x)]] `AdminLogicSpec`가 현재 Play `Database` 인터페이스 구현 누락으로 컴파일 실패하는 문제 수정
+ * [[CB(x)]] SiteAdmin 대시보드가 super admin 전용 API를 호출해서 담당 사이트 목록이 비는 문제 수정
+ * [[CB(x)]] `/Admin/Site/:seq/...` 직접 진입 시 URL의 site seq 기준으로 접근 권한을 검사하도록 라우팅 보강

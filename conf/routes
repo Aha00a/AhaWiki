@@ -39,6 +39,8 @@ GET           /google/oauth/connect                  controllers.GoogleOAuth.con
 GET           /Admin                                 controllers.Admin.index()
 GET           /Admin/                                controllers.Admin.index()
 GET           /Admin/Sites                           controllers.Admin.sites()
+GET           /Admin/Site/:seq                       controllers.Admin.site(seq: Long)
+GET           /Admin/Site/:seq/*path                 controllers.Admin.siteSpa(seq: Long, path)
 GET           /Admin/*path                           controllers.Admin.spa(path)
 
 

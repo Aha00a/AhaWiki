@@ -31,7 +31,7 @@ class SiteAdminSpec extends AnyFreeSpec {
         )
       """,
       """
-        CREATE TABLE User (
+        CREATE TABLE `User` (
           seq INT AUTO_INCREMENT PRIMARY KEY,
           created DATETIME DEFAULT NOW() NOT NULL,
           updated DATETIME DEFAULT NOW() NOT NULL,
@@ -45,14 +45,14 @@ class SiteAdminSpec extends AnyFreeSpec {
           dateInserted DATETIME DEFAULT NOW() NOT NULL,
           PRIMARY KEY (site, `user`),
           CONSTRAINT SiteAdmin_Site_seq_fk FOREIGN KEY (site) REFERENCES Site (seq),
-          CONSTRAINT SiteAdmin_User_seq_fk FOREIGN KEY (`user`) REFERENCES User (seq)
+          CONSTRAINT SiteAdmin_User_seq_fk FOREIGN KEY (`user`) REFERENCES `User` (seq)
         )
       """,
       "INSERT INTO Site (seq, name) VALUES (1, 'SiteA')",
       "INSERT INTO Site (seq, name) VALUES (2, 'SiteB')",
-      "INSERT INTO User (seq, nickname) VALUES (10, 'alice')",
-      "INSERT INTO User (seq, nickname) VALUES (20, 'bob')",
-      "INSERT INTO User (seq, nickname) VALUES (30, 'carol')",
+      "INSERT INTO `User` (seq, nickname) VALUES (10, 'alice')",
+      "INSERT INTO `User` (seq, nickname) VALUES (20, 'bob')",
+      "INSERT INTO `User` (seq, nickname) VALUES (30, 'carol')",
     ).foreach(sql => SQL(sql).execute()(connection))
   }
 

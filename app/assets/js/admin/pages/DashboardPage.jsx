@@ -11,7 +11,7 @@ import {resolveSiteUrl} from "../utils.js";
 export default function DashboardPage() {
     const {me} = useAdminContext();
     const navigate = useNavigate();
-    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats} = useDashboardData();
+    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats} = useDashboardData();
 
     useEffect(() => {
         if (me === null) return;
@@ -19,9 +19,9 @@ export default function DashboardPage() {
             load();
             loadMemoryCacheStats();
         } else {
-            load();
+            loadSitesOnly();
         }
-    }, [me]);
+    }, [me, load, loadMemoryCacheStats, loadSitesOnly]);
 
     const siteDomainBySeq = useMemo(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
 

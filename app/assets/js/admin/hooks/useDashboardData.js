@@ -41,6 +41,24 @@ export function useDashboardData() {
         }
     }, []);
 
+    const loadSitesOnly = useCallback(async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const siteData = await fetchJson("/api/Admin/Sites");
+            setSites(Array.isArray(siteData) ? siteData : []);
+            setAllUsers([]);
+            setRecentChanges([]);
+            setTopViewedPages([]);
+            setDailyStats({userCreated: [], pageCreated: [], pageEdited: []});
+        } catch (err) {
+            logError("dashboard:sites-only:load:error", err);
+            setError(err.message || String(err));
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     const loadMemoryCacheStats = useCallback(async () => {
         try {
             const data = await fetchJson("/api/Admin/MemoryCacheStats");
@@ -50,5 +68,5 @@ export function useDashboardData() {
         }
     }, []);
 
-    return {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadMemoryCacheStats};
+    return {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats};
 }
