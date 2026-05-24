@@ -1,6 +1,7 @@
 = [Model]Page
 
-== Page
+== Tables
+=== Page
 
 `Page` 테이블은 페이지 revision 원본을 저장한다.
 
@@ -11,7 +12,7 @@
 
 최신 본문, history, diff, blame, include, search처럼 revision 원본이 필요한 경로는 `Page`를 직접 읽는다.
 
-== PageMeta
+=== PageMeta
 
 `PageMeta` 테이블은 페이지별 최신 상태 캐시다.
 
