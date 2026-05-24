@@ -199,18 +199,18 @@ timestamp 성격의 값만 변환한다.
 
 == Verification Checklist
 
- * \[ ] 운영 DB 백업을 완료했다.
- * \[ ] timestamp 성격의 `DATETIME`/`TIMESTAMP` 컬럼 목록을 확정했다.
- * \[ ] 변환 대상과 제외 대상을 구분했다.
- * \[ ] staging DB에서 `-9 hours` 변환을 리허설했다.
- * \[ ] JVM timezone을 UTC로 바꾼 상태에서 신규 저장 시간이 UTC로 들어가는지 확인했다.
- * \[ ] DB session timezone이 UTC인지 확인했다.
- * \[ ] API 응답 시간이 `Z` 또는 offset 포함 ISO-8601인지 확인했다.
- * \[ ] WebSocket payload 시간이 `Z` 또는 offset 포함 ISO-8601인지 확인했다.
- * \[ ] history/action/blame/search/RecentChanges 화면이 사용자 타임존으로 표시되는지 확인했다.
- * \[ ] admin 화면의 날짜 formatter가 offset 없는 문자열에 의존하지 않는지 확인했다.
- * \[ ] KST 사용자에게 기존 표시 시각이 마이그레이션 전과 동일하게 보이는지 확인했다.
- * \[ ] KST가 아닌 사용자에게 브라우저 타임존 기준으로 표시되는지 확인했다.
+ * [ ] 운영 DB 백업을 완료했다.
+ * [ ] timestamp 성격의 `DATETIME`/`TIMESTAMP` 컬럼 목록을 확정했다.
+ * [ ] 변환 대상과 제외 대상을 구분했다.
+ * [ ] staging DB에서 `-9 hours` 변환을 리허설했다.
+ * [ ] JVM timezone을 UTC로 바꾼 상태에서 신규 저장 시간이 UTC로 들어가는지 확인했다.
+ * [ ] DB session timezone이 UTC인지 확인했다.
+ * [ ] API 응답 시간이 `Z` 또는 offset 포함 ISO-8601인지 확인했다.
+ * [ ] WebSocket payload 시간이 `Z` 또는 offset 포함 ISO-8601인지 확인했다.
+ * [ ] history/action/blame/search/RecentChanges 화면이 사용자 타임존으로 표시되는지 확인했다.
+ * [ ] admin 화면의 날짜 formatter가 offset 없는 문자열에 의존하지 않는지 확인했다.
+ * [ ] KST 사용자에게 기존 표시 시각이 마이그레이션 전과 동일하게 보이는지 확인했다.
+ * [ ] KST가 아닌 사용자에게 브라우저 타임존 기준으로 표시되는지 확인했다.
 
 == Rollback Notes
 

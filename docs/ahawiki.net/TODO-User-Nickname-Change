@@ -2,12 +2,12 @@
 
 == Decisions
 
- * \[x] 1. 사용자가 직접 닉네임을 변경하지 않는다.
+ * [[CB(x)]] 1. 사용자가 직접 닉네임을 변경하지 않는다.
   * 사용자는 닉네임 변경 신청만 생성한다.
   * 관리자가 신청을 승인해야 실제 `User.nickname`이 변경된다.
   * 관리자는 신청을 거절할 수 있다.
- * \[x] 2. 닉네임 규칙: `^[a-zA-Z0-9가-힣]{5,16}$`
- * \[x] 3. 기존 로그인 세션의 닉네임은 자동으로 즉시 바뀌지 않는다.
+ * [[CB(x)]] 2. 닉네임 규칙: `^[a-zA-Z0-9가-힣]{5,16}$`
+ * [[CB(x)]] 3. 기존 로그인 세션의 닉네임은 자동으로 즉시 바뀌지 않는다.
   * Play 기본 session은 서버 저장소가 아니라 서명된 클라이언트 쿠키다.
   * 관리자 승인 시점에 다른 브라우저, 다른 기기, 다른 탭의 쿠키 값을 서버가 직접 수정할 수 없다.
   * 기존 로그인 세션의 stale nickname 처리는 이번 구현 범위에서 제외한다.
@@ -15,17 +15,17 @@
 
 == Scope
 
- * \[ ] 1. 닉네임 변경 신청 기능을 추가한다.
+ * [ ] 1. 닉네임 변경 신청 기능을 추가한다.
   * Account Settings 화면에서 신청 form을 제공한다.
   * 현재 닉네임을 보여준다.
   * 대기 중인 신청이 있으면 새 신청을 막는다.
   * 사용자가 자신의 대기 신청을 취소할 수 있게 한다.
- * \[ ] 2. 관리자 승인 기능을 추가한다.
+ * [ ] 2. 관리자 승인 기능을 추가한다.
   * Admin UI에서 대기 신청 목록을 보여준다.
   * 관리자는 신청자, 현재 닉네임, 요청 닉네임, 신청일을 확인한다.
   * 관리자는 승인 또는 거절을 선택한다.
   * 거절 시 사유를 저장할 수 있게 한다.
- * \[ ] 3. 승인 시에만 `User.nickname`을 변경한다.
+ * [ ] 3. 승인 시에만 `User.nickname`을 변경한다.
   * 승인 transaction 안에서 신청 상태를 lock한다.
   * 신청 상태가 `Pending`인지 확인한다.
   * 요청 닉네임 검증을 다시 수행한다.
@@ -36,7 +36,7 @@
 
 == Data Model
 
- * \[ ] 1. `UserNicknameChangeRequest` 테이블을 추가한다.
+ * [ ] 1. `UserNicknameChangeRequest` 테이블을 추가한다.
   * `seq BIGINT AUTO_INCREMENT`
   * `user INT NOT NULL`
   * `requestedNickname VARCHAR(255) NOT NULL`
@@ -46,7 +46,7 @@
   * `rejectReason VARCHAR(1000) NULL`
   * `dateInserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL`
   * `dateReviewed DATETIME NULL`
- * \[ ] 2. `UserNicknameChangeRequest` 제약 조건을 추가한다.
+ * [ ] 2. `UserNicknameChangeRequest` 제약 조건을 추가한다.
   * `PRIMARY KEY (seq)`
   * `FOREIGN KEY (user) REFERENCES User(seq)`
   * `FOREIGN KEY (requestedBy) REFERENCES User(seq)`
@@ -54,34 +54,34 @@
   * `INDEX (status, dateInserted)`
   * `INDEX (user, status)`
   * `INDEX (requestedNickname, status)`
- * \[ ] 3. 대기 신청 중복은 application transaction에서 막는다.
+ * [ ] 3. 대기 신청 중복은 application transaction에서 막는다.
   * MySQL partial unique index를 쓰지 않는다.
   * 같은 user의 `Pending` 신청은 하나만 허용한다.
   * 같은 requestedNickname의 `Pending` 신청은 하나만 허용한다.
   * 승인 시점에는 `User.nickname` unique 제약 조건으로 최종 방어한다.
- * \[ ] 4. 기존 `UserNicknameHistory`를 실제 변경 이력으로 사용한다.
+ * [ ] 4. 기존 `UserNicknameHistory`를 실제 변경 이력으로 사용한다.
   * 신청 생성은 history에 기록하지 않는다.
   * 관리자 승인으로 실제 닉네임이 바뀐 경우에만 history에 기록한다.
   * `changedBy`에는 승인한 관리자 user seq를 저장한다.
 
 == Validation
 
- * \[ ] 1. 닉네임 검증 로직을 공통 함수로 분리한다.
+ * [ ] 1. 닉네임 검증 로직을 공통 함수로 분리한다.
   * 예: `UserNicknamePolicy.validate(requestedNickname)`
   * controller, model, test에서 같은 규칙을 사용한다.
- * \[ ] 2. 입력 정규화를 정의한다.
+ * [ ] 2. 입력 정규화를 정의한다.
   * 앞뒤 공백은 trim한다.
   * trim 후 빈 문자열이면 실패한다.
   * 내부 공백은 실패한다.
   * 영문 대소문자는 표시용으로 보존한다.
   * 중복 비교는 현재 DB collation 기준으로 case-insensitive 처리한다.
- * \[ ] 3. 예약어를 막는다.
+ * [ ] 3. 예약어를 막는다.
   * `Anonymous`
   * `Guest`
   * `Admin`
   * `AhaWiki`
   * `User`
- * \[ ] 4. 에러 메시지를 구체적으로 돌려준다.
+ * [ ] 4. 에러 메시지를 구체적으로 돌려준다.
   * 길이 오류
   * 허용 문자 오류
   * 이미 사용 중인 닉네임
@@ -90,66 +90,66 @@
 
 == Session Handling
 
- * \[ ] 1. 닉네임의 source of truth는 `User` 테이블로 둔다.
+ * [ ] 1. 닉네임의 source of truth는 `User` 테이블로 둔다.
   * session의 `nickname`은 표시용 snapshot으로만 취급한다.
   * 권한, 작성자 identity, 변경 승인에는 session nickname을 사용하지 않는다.
   * identity는 계속 `User.seq`를 사용한다.
- * \[ ] 2. 세션 자동 갱신은 구현하지 않는다.
+ * [ ] 2. 세션 자동 갱신은 구현하지 않는다.
   * stale session nickname을 감지해서 cookie를 다시 쓰는 middleware는 만들지 않는다.
   * server-side session store나 session version table도 만들지 않는다.
   * 기존 로그인 세션은 재로그인 전까지 이전 nickname을 표시할 수 있다.
   * 운영자가 Play session signing key를 교체하면 기존 session cookie는 무효화된다.
- * \[ ] 3. Account와 Admin 화면은 DB의 최신 닉네임을 직접 조회한다.
+ * [ ] 3. Account와 Admin 화면은 DB의 최신 닉네임을 직접 조회한다.
   * 사용자의 현재 신청 상태와 승인 결과는 session nickname에 기대지 않는다.
   * 관리자 승인 화면의 현재 닉네임도 DB에서 조회한다.
   * stale session nickname은 상단 nav 같은 표시 영역에만 남을 수 있다.
- * \[ ] 4. WebSocket 연결은 재연결 전까지 이전 닉네임을 표시할 수 있다.
+ * [ ] 4. WebSocket 연결은 재연결 전까지 이전 닉네임을 표시할 수 있다.
   * 현재 `cursor.hello`는 연결 시점의 nickname을 사용한다.
   * 승인 후 이미 열린 WebSocket은 자동으로 hello를 다시 보내지 않는다.
   * 페이지 reload 또는 WebSocket reconnect 후 새 닉네임을 사용한다.
- * \[ ] 5. 강제 로그아웃은 1차 구현에서 하지 않는다.
+ * [ ] 5. 강제 로그아웃은 1차 구현에서 하지 않는다.
   * 닉네임은 인증 권한의 source of truth가 아니다.
   * 권한 평가는 `User.seq`와 연결된 email 기준으로 유지한다.
   * 운영자가 session signing key를 교체하는 방식은 별도 운영 작업으로 둔다.
 
 == API And Routes
 
- * \[ ] 1. 사용자 신청 route를 추가한다.
+ * [ ] 1. 사용자 신청 route를 추가한다.
   * `POST /account/nickname/request`
   * `POST /account/nickname/request/cancel`
- * \[ ] 2. 관리자 API route를 추가한다.
+ * [ ] 2. 관리자 API route를 추가한다.
   * `GET /api/Admin/UserNicknameChangeRequests`
   * `POST /api/Admin/UserNicknameChangeRequests/:seq/approve`
   * `POST /api/Admin/UserNicknameChangeRequests/:seq/reject`
- * \[ ] 3. 관리자 권한 확인을 기존 Admin 경로와 같은 방식으로 적용한다.
+ * [ ] 3. 관리자 권한 확인을 기존 Admin 경로와 같은 방식으로 적용한다.
   * 1차 구현은 현재 hard-coded admin 판정을 따른다.
   * 추후 role 또는 permission 기반 admin 판정으로 이관할 수 있게 한 곳에 모은다.
 
 == UI
 
- * \[ ] 1. Account Settings 화면을 변경한다.
+ * [ ] 1. Account Settings 화면을 변경한다.
   * 현재 닉네임을 보여준다.
   * 새 닉네임 신청 form을 보여준다.
   * 허용 규칙을 짧게 안내한다.
   * 대기 중인 신청이 있으면 상태와 취소 버튼을 보여준다.
   * 승인 또는 거절된 최근 신청 결과를 보여준다.
- * \[ ] 2. Admin UI에 닉네임 변경 신청 목록을 추가한다.
+ * [ ] 2. Admin UI에 닉네임 변경 신청 목록을 추가한다.
   * `Pending`을 기본 필터로 보여준다.
   * user seq, 현재 닉네임, 요청 닉네임, 신청일을 보여준다.
   * 승인 버튼을 제공한다.
   * 거절 사유 입력과 거절 버튼을 제공한다.
- * \[ ] 3. 사용자에게 승인 결과를 보여준다.
+ * [ ] 3. 사용자에게 승인 결과를 보여준다.
   * 승인 후 Account Settings에서 새 닉네임을 보여준다.
   * 거절 후 거절 사유를 보여준다.
   * flash message와 화면 상태가 서로 모순되지 않게 한다.
 
 == User Page And Links
 
- * \[ ] 1. 닉네임 변경 시 wiki content를 자동으로 대량 수정하지 않는다.
+ * [ ] 1. 닉네임 변경 시 wiki content를 자동으로 대량 수정하지 않는다.
   * 기존 `[User:oldNickname]` 링크는 그대로 둔다.
   * page history와 blame은 `User.seq` join 결과로 새 닉네임을 표시할 수 있다.
   * 문서 본문 안의 과거 링크까지 자동 수정하면 사용자 작성 내용을 바꾸는 부작용이 크다.
- * \[ ] 2. `User:<oldNickname>` profile page 처리는 별도 정책으로 둔다.
+ * [ ] 2. `User:<oldNickname>` profile page 처리는 별도 정책으로 둔다.
   * 1차 구현은 자동 rename하지 않는다.
   * 승인 후 새 profile link는 `/w/User:<newNickname>`로 이동한다.
   * 기존 profile page가 있으면 관리자가 필요할 때 wiki rename 기능을 사용할 수 있다.
@@ -157,16 +157,16 @@
 
 == Cache
 
- * \[ ] 1. 닉네임 승인 후 user profile cache를 무효화한다.
+ * [ ] 1. 닉네임 승인 후 user profile cache를 무효화한다.
   * old nickname 기준 `UserProfileImageUrl` cache를 무효화한다.
   * new nickname 기준 `UserProfileImageUrl` cache를 무효화한다.
- * \[ ] 2. Page cache는 기본적으로 무효화하지 않는다.
+ * [ ] 2. Page cache는 기본적으로 무효화하지 않는다.
   * page content 자체는 바뀌지 않는다.
   * history, recent changes, blame은 DB join 또는 API 응답 시점의 nickname을 사용한다.
 
 == Tests
 
- * \[ ] 1. 닉네임 검증 테스트를 추가한다.
+ * [ ] 1. 닉네임 검증 테스트를 추가한다.
   * 한글 허용
   * 영문 허용
   * 공백 거절
@@ -175,23 +175,23 @@
   * emoji 거절
   * 너무 짧은 값 거절
   * 너무 긴 값 거절
- * \[ ] 2. 신청 생성 테스트를 추가한다.
+ * [ ] 2. 신청 생성 테스트를 추가한다.
   * 로그인 사용자만 신청 가능
   * 중복 닉네임 신청 거절
   * 이미 대기 중인 자기 신청이 있으면 거절
   * 같은 요청 닉네임으로 대기 신청이 있으면 거절
- * \[ ] 3. 관리자 승인 테스트를 추가한다.
+ * [ ] 3. 관리자 승인 테스트를 추가한다.
   * 관리자가 아니면 승인 불가
   * 승인 시 `User.nickname` 변경
   * 승인 시 `UserNicknameHistory` 기록
   * 승인 시 신청 상태 `Approved` 변경
   * 승인 직전 중복이 생기면 승인 실패
- * \[ ] 4. 관리자 거절 테스트를 추가한다.
+ * [ ] 4. 관리자 거절 테스트를 추가한다.
   * 관리자가 아니면 거절 불가
   * 거절 시 `User.nickname` 유지
   * 거절 시 신청 상태 `Rejected` 변경
   * 거절 사유 저장
- * \[ ] 5. stale session 처리 범위를 테스트한다.
+ * [ ] 5. stale session 처리 범위를 테스트한다.
   * stale session도 identity는 `seq`로 유지된다.
   * Account 화면은 DB의 최신 nickname을 표시한다.
   * Admin 승인 화면은 DB의 최신 nickname을 표시한다.
@@ -199,9 +199,9 @@
 
 == Deployment Checks
 
- * \[ ] 1. 운영 DB migration 전 백업을 확인한다.
- * \[ ] 2. `User.nickname` unique 제약 조건 이름을 확인한다.
- * \[ ] 3. `UserNicknameHistory` 테이블 존재 여부를 확인한다.
- * \[ ] 4. 기존 닉네임 중 새 규칙에 맞지 않는 값은 유지되는지 확인한다.
- * \[ ] 5. 관리자 계정으로 승인과 거절 flow를 staging에서 확인한다.
- * \[ ] 6. 기존 로그인 세션은 재로그인 또는 signing key 교체 전까지 이전 닉네임을 표시할 수 있음을 확인한다.
+ * [ ] 1. 운영 DB migration 전 백업을 확인한다.
+ * [ ] 2. `User.nickname` unique 제약 조건 이름을 확인한다.
+ * [ ] 3. `UserNicknameHistory` 테이블 존재 여부를 확인한다.
+ * [ ] 4. 기존 닉네임 중 새 규칙에 맞지 않는 값은 유지되는지 확인한다.
+ * [ ] 5. 관리자 계정으로 승인과 거절 flow를 staging에서 확인한다.
+ * [ ] 6. 기존 로그인 세션은 재로그인 또는 signing key 교체 전까지 이전 닉네임을 표시할 수 있음을 확인한다.
