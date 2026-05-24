@@ -1,10 +1,114 @@
 = [Interpreter]Schema
-schema.org 구조화 데이터를 문서에 표시하고 JSON-LD로도 제공합니다.
+
+`#!Schema`는 [schema.org] 구조화 데이터를 문서에 표시하고 JSON-LD로도 제공하는 [Interpreter]입니다.
+이전의 `AhaWikiSchema` 구상은 이 문서로 통합했습니다.
+
+== 기본 문법
+
 `Schema` 뒤의 첫 인자는 schema.org class 이름입니다.
-본문은 탭으로 구분한 `property	value` 형식으로 작성합니다.
+본문은 탭으로 구분한 TSV 형식이며, 첫 column은 `property`, 나머지 column은 `value`입니다.
+빈 줄과 `#`으로 시작하는 줄은 무시합니다.
 
 [[[#!WikiSyntaxPreview Schema Person
 name	Ada Lovelace
 birthDate	1815-12-10
 url	https://en.wikipedia.org/wiki/Ada_Lovelace
 ]]]
+
+== 여러 값
+
+하나의 property에 여러 값을 넣을 수 있습니다.
+같은 property를 여러 줄에 나누어 써도 됩니다.
+
+[[[#!WikiSyntaxPreview Schema WebApplication
+name	AhaWiki
+applicationCategory	Wiki
+sameAs	https://github.com/Aha00a/AhaWiki	https://ahawiki.net
+]]]
+
+== 표시와 링크
+
+일반 값은 위키 링크로 렌더링합니다.
+`url`, `codeRepository`, `sameAs`는 URL로 렌더링하고, scheme이 없으면 `https://`를 붙입니다.
+`image`, `logo`는 이미지로 렌더링합니다.
+`image`, `logo` 값에 `[[Attachment(...)]]`를 사용할 수 있습니다.
+
+[[[#!WikiSyntaxPreview Schema SoftwareSourceCode
+name	AhaWiki
+codeRepository	github.com/Aha00a/AhaWiki
+logo	[[Attachment(logo.png)]]
+]]]
+
+== 날짜
+
+`date`로 시작하거나 `Date`로 끝나는 property는 날짜 링크와 함께 기간 정보를 표시합니다.
+검색/계산용 schema 정보에는 `YYYY-MM-DD` 값에서 `YYYY-MM`도 함께 추출합니다.
+
+[[[#!WikiSyntaxPreview Schema Event
+name	Release
+startDate	2026-05-25
+endDate	2026-05-26
+]]]
+
+== 장소
+
+`address`, `geo`, `location`, `foundingLocation`, `birthPlace`, 그리고 `Location`으로 끝나는 property는 장소로 취급합니다.
+한국어 주소는 단계별 주소 후보도 함께 추출합니다.
+렌더링 시 지도 iframe과 Google/Naver/Kakao Map 링크를 표시합니다.
+
+[[[#!WikiSyntaxPreview Schema LocalBusiness
+name	Example Cafe
+address	서울특별시 마포구 망원동
+geo	37.556,-126.905
+]]]
+
+== 쌍으로 표시하는 property
+
+아래 property가 바로 다음 줄에 같은 개수의 값으로 이어지면 한 줄에 쌍으로 표시합니다.
+
+ * `birthDate` / `deathDate`
+ * `startDate` / `endDate`
+ * `actor` / `character`
+
+[[[#!WikiSyntaxPreview Schema Movie
+name	Example Movie
+actor	Actor A	Actor B
+character	Character A	Character B
+]]]
+
+== JSON-LD
+
+일반 렌더링에서는 HTML 표시와 함께 `application/ld+json` script를 출력합니다.
+JSON-LD에는 다음 기본 값이 자동으로 들어갑니다.
+
+ * `@context`: `https://schema.org`
+ * `@type`: shebang의 schema class
+ * `url`: 현재 문서 URL. 단, `url` property를 직접 쓴 경우에는 직접 쓴 값을 사용합니다.
+ * `mainEntityOfPage`: 현재 문서 URL
+ * `@id`: 현재 문서 URL
+ * `name`: 현재 문서 이름. 단, `name` property를 직접 쓴 경우에는 직접 쓴 값을 사용합니다.
+ * `inLanguage`: 현재 요청 locale
+
+`address`는 `PostalAddress`, `location`과 `foundingLocation`은 `Place`, `geo`의 `lat,lng` 값은 `GeoCoordinates`로 변환합니다.
+
+== Preview
+
+preview 렌더링에서는 현재 class의 추천 property, schema 계층, 사용 가능한 property 목록을 함께 보여줍니다.
+
+== TODO
+
+있으면 좋을 것 같은 Schema 구상입니다.
+현재 구현된 schema.org 해석과는 별개로, AhaWiki에서 추가로 다루고 싶은 custom class/property 후보입니다.
+
+ * [schema:Thing]
+  * '''[schema:recommendedBy]''' - 추천해준 사람
+  * [schema:CreativeWork]
+   * '''[schema:Standard] - 표준안을 정리하고 싶다.'''
+   * '''[schema:Novel] - 소설. 왜 없지?'''
+  * '''[schema:Species] - 생물 종'''
+  * '''[schema:Organ] - 장기, 기관'''
+
+== 참고
+
+schema class와 property는 `schema:` 링크로 연결됩니다.
+예: [schema:Person], [schema:name], [schema:WebApplication]
