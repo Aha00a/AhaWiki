@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-05-22T09:44:32.163Z",
-  "count": 72,
+  "downloadedAt": "2026-05-24T11:15:27.756Z",
+  "count": 73,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -142,6 +142,12 @@
       "bytes": 313
     },
     {
+      "name": "MacroCheckBox",
+      "rawUrl": "https://ahawiki.net/w/MacroCheckBox?action=raw",
+      "fileName": "MacroCheckBox",
+      "bytes": 1760
+    },
+    {
       "name": "MacroBr",
       "rawUrl": "https://ahawiki.net/w/MacroBr?action=raw",
       "fileName": "MacroBr",
@@ -157,7 +163,7 @@
       "name": "Macro",
       "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
       "fileName": "Macro",
-      "bytes": 1226
+      "bytes": 1261
     },
     {
       "name": "InterpreterVim",
@@ -415,7 +421,7 @@
       "name": "AhaMark Basic",
       "rawUrl": "https://ahawiki.net/w/AhaMark%20Basic?action=raw",
       "fileName": "AhaMark Basic",
-      "bytes": 3509
+      "bytes": 3601
     },
     {
       "name": "AhaMark",

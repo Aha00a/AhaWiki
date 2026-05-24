@@ -14,6 +14,7 @@
 == List
  1. [MacroAhaWikiSiteList]
  1. [MacroBr] - 강제 줄바꿈
+ 1. [MacroCheckBox] - 체크박스
  1. [MacroColorCode] - 색상 코드 미리보기
  1. [MacroCopyable] - 복사 버튼이 있는 텍스트
  1. [MacroEmbed] - YouTube 임베드

@@ -18,7 +18,8 @@
 [[CheckBox(x)]] 긴 형태 체크된 체크박스
 ]]]
 
-== 설계 경위
+==> 개발 문서
+=== 설계 경위
 
 마크다운 표준(GFM)에서 체크박스는 `[ ]` / `[x]`로 표기한다.
 [AhaMark]에서는 `[PageName]`이 페이지 링크 문법이므로 `[x]`를 그대로 쓰면 `x`라는 페이지로의 링크로 파싱된다.
@@ -31,7 +32,7 @@
 
 빈 체크박스 `[ ]`는 링크 regex `[^]\s]+` 가 공백을 허용하지 않아 링크로 파싱되지 않으므로, 별도 처리(InterpreterWiki.replaceLink)를 통해 그대로 체크박스 문법으로 지원한다.
 
-== 구현
+=== 구현
  * `app/logics/wikis/macros/MacroCheckBox.scala` — 매크로 본체
  * `app/logics/wikis/ExtractConvertInjectMacro.scala` — `CheckBox` 등록, `CB` 별칭 추가
  * `app/logics/wikis/interpreters/InterpreterWiki.scala` — `[ ]` → 빈 체크박스 변환 (`replaceLink` 내)
