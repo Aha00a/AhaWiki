@@ -362,10 +362,13 @@ object InterpreterWiki extends TraitInterpreter {
           )
     """.r
 
+  private val regexEmptyCheckbox: Regex = """\[ \]""".r
+
   def replaceLink(s:String)(implicit wikiContext:ContextWikiPage):String = {
+    val s2 = regexEmptyCheckbox.replaceAllIn(s, Regex.quoteReplacement("""<input type="checkbox" disabled>"""))
     val set: Set[String] = wikiContext.setPageNameByPermission
 
-    regexLink.replaceAllIn(s, _ match {
+    regexLink.replaceAllIn(s2, _ match {
       case regexLink(null, uri , null, null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString())
       case regexLink(null, null, uri , null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
       case regexLink(null, null, null, uri , null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))

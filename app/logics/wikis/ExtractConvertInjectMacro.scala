@@ -22,6 +22,7 @@ object ExtractConvertInjectMacro {
     MacroTrivial,
     MacroCopyable,
     MacroKbd,
+    MacroCheckBox,
 
     MacroNavigation,
     MacroPageList,
@@ -60,7 +61,7 @@ object ExtractConvertInjectMacro {
     MacroError,
     MacroInfo,
     MacroSuccess
-  ).map(m => m.name -> m).toMap
+  ).map(m => m.name -> m).toMap ++ Map("CB" -> MacroCheckBox)
 
   val macroNames: Seq[String] = mapMacros.keys.toSeq.sorted
 }
