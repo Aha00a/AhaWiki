@@ -1,0 +1,20 @@
+= SiteAdmin
+
+SiteAdmin 기능 구현을 완료했다.
+
+== 구현 결과
+
+ * `SiteAdmin` 테이블을 추가했다. (`site`, `user`, `dateInserted`, `(site, user)` 복합 PK, Site/User FK)
+ * `SiteAdmin` 모델/DAO를 추가했다. (`exists`, `selectBySite`, `selectByUser`, `insert`, `delete`)
+ * `AdminLogic.isSiteAdmin`을 추가했다. super admin(`user.seq == 1`)은 모든 사이트의 SiteAdmin으로 취급한다.
+ * 사이트 범위 Admin API는 SiteAdmin도 접근할 수 있도록 `isSiteAdmin` 기준으로 정리했다.
+ * SiteAdmin 관리 API와 UI를 추가했다. (`/Admin/Site/:seq/Admins`)
+ * SiteAdmin 대시보드는 담당 사이트 목록만 조회하도록 수정했다.
+ * `/Admin/Site/:seq/...` 직접 접근은 URL의 site seq 기준으로 권한을 검사하도록 보강했다.
+
+== 검증 결과
+
+ * `npm.cmd run admin:build` 성공
+ * `sbt compile` 성공
+ * `sbt "testOnly com.aha00a.models.tables.SiteAdminSpec com.aha00a.logics.AdminLogicSpec com.aha00a.controllers.ApiSiteAdminSpec"` 성공
+ * 관련 테스트 21개 통과
