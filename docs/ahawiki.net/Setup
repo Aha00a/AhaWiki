@@ -10,38 +10,31 @@ AhaWiki는 단일 인스턴스가 멀티 도메인을 서비스하므로, DB·�
 
 == DNS 설정
  * `something.ahawiki.net` CNAME → 서버 도메인 추가
- * 전파 확인
 
 == DB 설정
- * `Site` row 추가 (`name`, `abbr`, `mainDomain` 포함)
+ * `Site` row 추가
  * `SiteDomain` row 추가
- * `SiteAdmin` row 추가 (관리자 user seq 지정)
  * 기본 `Permission` row 추가 (공개/비공개 여부에 따라)
 
 == nginx 설정
  * nginx 설정 파일에 server block 추가
- * letsencrypt 인증서 발급
-[[[#!Vim bash
-certbot --nginx -d something.ahawiki.net
+ * letsencrypt 인증서 발급 [[[#!Vim bash
+sudo certbot --nginx -d something.ahawiki.net
+sudo nginx reload
 ]]]
- * nginx reload
 
 == Google API 설정
 https://console.cloud.google.com/apis/credentials
-
- * OAuth 2.0 Client에 redirect URI 추가
-[[[#!text
+ * OAuth 2.0 Client에 redirect URI 추가 [[[#!text
 https://something.ahawiki.net/google/oauth/callback
 ]]]
- * API 키 HTTP referrer 제한에 도메인 추가
-[[[#!text
+ * API 키 HTTP referrer 제한에 도메인 추가 [[[#!text
 *.something.ahawiki.net/*
 ]]]
 
 == reCAPTCHA 설정
 https://www.google.com/recaptcha/admin/
-
- * 기존 사이트에 도메인 추가 (`something.ahawiki.net`)
+ * 기존 도메인 추가 (`something.ahawiki.net`)
 
 == 관리자 설정
  * 관리자 Google 계정으로 로그인
