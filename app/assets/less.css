@@ -83,6 +83,7 @@ html.theme-ahawiki-light {
   --color-surface: #ffffff;
   --color-surface-alt: #f7f7f7;
   --color-surface-panel: linear-gradient(135deg, #eef 0%, #eff 100%);
+  --color-surface-panel-frosted: rgba(238, 238, 255, 0.5);
   --color-border: #cccccc;
   --color-border-subtle: #e3e8ef;
   --color-muted: #666666;
@@ -165,6 +166,7 @@ html.theme-ahawiki-light {
     --color-surface: #20203a;
     --color-surface-alt: #252542;
     --color-surface-panel: linear-gradient(135deg, #20203a 0%, #24304a 100%);
+    --color-surface-panel-frosted: rgba(32, 32, 58, 0.5);
     --color-border: #444466;
     --color-border-subtle: #383852;
     --color-muted: #b5b5c8;
@@ -1556,10 +1558,12 @@ kbd.MacroKbd {
   max-width: 50vw;
   border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: var(--color-surface-panel);
+  background: var(--color-surface-panel-frosted);
   padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
   box-shadow: 0 0 1em var(--color-shadow-soft);
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
 }
 .AhaWiki .commonAhaWiki div.toc p,
 .AhaWiki .commonAhaWiki div.MacroLinkDate p,
@@ -2058,10 +2062,12 @@ kbd.MacroKbd {
   max-width: 50vw;
   border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: var(--color-surface-panel);
+  background: var(--color-surface-panel-frosted);
   padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
   box-shadow: 0 0 1em var(--color-shadow-soft);
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
 }
 .AhaWiki .wikiContent div.toc p,
 .AhaWiki .wikiContent div.MacroLinkDate p,
@@ -2753,10 +2759,12 @@ kbd.MacroKbd {
   max-width: 50vw;
   border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: var(--color-surface-panel);
+  background: var(--color-surface-panel-frosted);
   padding: 10px 20px;
   -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
   box-shadow: 0 0 1em var(--color-shadow-soft);
+  backdrop-filter: saturate(180%) blur(5px);
+  -webkit-backdrop-filter: saturate(180%) blur(5px);
 }
 .AhaWiki .paperContent .page .pageContent div.toc p,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate p,
