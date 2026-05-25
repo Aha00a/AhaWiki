@@ -1063,15 +1063,24 @@ kbd.MacroKbd {
 }
 .AhaWiki.width-1600 .limitWidth {
   max-width: 1600px;
-  margin: 0 auto;
 }
 .AhaWiki.width-1280 .limitWidth {
   max-width: 1280px;
-  margin: 0 auto;
 }
 .AhaWiki.width-960 .limitWidth {
   max-width: 960px;
+}
+.AhaWiki.width-1600,
+.AhaWiki.width-1280,
+.AhaWiki.width-960 {
+  background-color: var(--color-surface-alt);
+}
+.AhaWiki.width-1600 .limitWidth,
+.AhaWiki.width-1280 .limitWidth,
+.AhaWiki.width-960 .limitWidth {
   margin: 0 auto;
+  background: var(--color-surface);
+  box-shadow: 0 2px 16px var(--color-navbar-shadow);
 }
 .AhaWiki .aspectRatioWrapper {
   position: relative;
