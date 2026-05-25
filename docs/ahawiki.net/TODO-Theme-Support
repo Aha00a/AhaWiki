@@ -1,0 +1,282 @@
+= TODO: Theme Support
+
+== Goal
+
+사용자가 AhaWiki의 표시 테마를 선택할 수 있게 한다.
+기존 Light 스타일을 기본값으로 유지하면서, AhaWiki Dark와 Solarized 계열 테마를 추가한다.
+
+지원할 테마는 다음 네 가지다.
+
+ * AhaWiki Light
+ * AhaWiki Dark
+ * Solarized Light
+ * Solarized Dark
+
+== Design
+
+다크모드 boolean(`darkMode`)이 아니라 테마 문자열을 저장한다.
+
+[[[#!text
+localStorage key: ahawiki-theme
+values:
+  ahawiki-light
+  ahawiki-dark
+  solarized-light
+  solarized-dark
+]]]
+
+HTML에는 선택된 테마를 class로 부여한다.
+
+[[[#!text
+<html class="theme-ahawiki-light">
+<html class="theme-ahawiki-dark">
+<html class="theme-solarized-light">
+<html class="theme-solarized-dark">
+]]]
+
+기본값은 `theme-ahawiki-light`다.
+저장된 값이 없으면 AhaWiki Light를 적용한다.
+OS의 `prefers-color-scheme` 자동 반영은 이번 범위에서는 제외한다.
+필요하면 이후 `system` 테마를 별도로 추가한다.
+
+== Theme Palette
+
+테마 색상은 Less 변수(`@color`)가 아니라 CSS custom properties로 정의한다.
+Less는 selector 중첩, mixin, media query 정리 용도로 계속 사용한다.
+
+=== AhaWiki Light
+
+현재 AhaWiki 스타일과 최대한 동일하게 유지한다.
+사이트별 커스텀 body/header/footer 색상은 AhaWiki Light의 기본값을 대체하는 용도로만 사용한다.
+
+[[[#!text
+:root,
+html.theme-ahawiki-light {
+    --color-bg: #ffffff;
+    --color-text: #000000;
+    --color-link: #015ADC;
+    --color-link-visited: #000066;
+    --color-link-hover-bg: #eaf2ff;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f7f7f7;
+    --color-border: #cccccc;
+    --color-muted: #666666;
+    --color-code-bg: #000022;
+    --color-code-text: #cccccc;
+    --color-blockquote-bg: #f3f3ff;
+    --color-navbar-bg: rgba(255, 255, 255, 0.25);
+    --color-navbar-border: rgba(217, 225, 238, 0.3);
+    --color-navbar-shadow: rgba(9, 30, 66, 0.12);
+}
+]]]
+
+=== AhaWiki Dark
+
+기존 AhaWiki 색감의 파란 계열을 유지하되, 배경과 본문 대비를 다크 환경에 맞춘다.
+
+[[[#!text
+html.theme-ahawiki-dark {
+    --color-bg: #1a1a2e;
+    --color-text: #e0e0e0;
+    --color-link: #6da3f8;
+    --color-link-visited: #a0a0cc;
+    --color-link-hover-bg: #263854;
+    --color-surface: #20203a;
+    --color-surface-alt: #252542;
+    --color-border: #444466;
+    --color-muted: #b5b5c8;
+    --color-code-bg: #0d0d1a;
+    --color-code-text: #cccccc;
+    --color-blockquote-bg: #1e1e3a;
+    --color-navbar-bg: rgba(20, 20, 40, 0.7);
+    --color-navbar-border: rgba(100, 100, 150, 0.3);
+    --color-navbar-shadow: rgba(0, 0, 0, 0.35);
+}
+]]]
+
+=== Solarized Light
+
+Solarized 공식 팔레트를 기반으로 한다.
+
+[[[#!text
+html.theme-solarized-light {
+    --color-bg: #fdf6e3;
+    --color-text: #657b83;
+    --color-link: #268bd2;
+    --color-link-visited: #6c71c4;
+    --color-link-hover-bg: #eee8d5;
+    --color-surface: #eee8d5;
+    --color-surface-alt: #f5efdc;
+    --color-border: #93a1a1;
+    --color-muted: #93a1a1;
+    --color-code-bg: #eee8d5;
+    --color-code-text: #586e75;
+    --color-blockquote-bg: #eee8d5;
+    --color-navbar-bg: rgba(253, 246, 227, 0.72);
+    --color-navbar-border: rgba(147, 161, 161, 0.35);
+    --color-navbar-shadow: rgba(101, 123, 131, 0.16);
+}
+]]]
+
+=== Solarized Dark
+
+Solarized 공식 다크 팔레트를 기반으로 한다.
+
+[[[#!text
+html.theme-solarized-dark {
+    --color-bg: #002b36;
+    --color-text: #839496;
+    --color-link: #268bd2;
+    --color-link-visited: #6c71c4;
+    --color-link-hover-bg: #073642;
+    --color-surface: #073642;
+    --color-surface-alt: #0b3a46;
+    --color-border: #586e75;
+    --color-muted: #586e75;
+    --color-code-bg: #073642;
+    --color-code-text: #93a1a1;
+    --color-blockquote-bg: #073642;
+    --color-navbar-bg: rgba(0, 43, 54, 0.78);
+    --color-navbar-border: rgba(88, 110, 117, 0.45);
+    --color-navbar-shadow: rgba(0, 0, 0, 0.32);
+}
+]]]
+
+== Implementation Plan
+
+=== CSS 변수 도입 (`app/assets/less.less`)
+
+공통 색상 토큰을 먼저 선언하고, 주요 영역부터 점진적으로 하드코딩 색상을 치환한다.
+
+우선 적용 대상:
+
+ * body 배경/본문색
+ * nav.topNavbar 배경/테두리/그림자/링크
+ * `.AhaWiki a`
+ * `.commonAhaWiki` 제목 border, code, pre, blockquote
+ * flash message, toc, schema, table 등 반복 UI
+ * `.InterpreterKanban`의 `--kanban-*` 변수
+
+=== Inline body 색상 처리 (`app/views/_baseSkeleton.scala.html`)
+
+현재 body에는 사이트별 body 색상이 inline style로 들어간다.
+inline style은 일반 CSS보다 우선순위가 높으므로 테마 CSS를 덮어쓸 수 있다.
+
+기존 방식:
+
+[[[#!text
+<body style="background-color: #FFFFFF; color: #000000;">
+]]]
+
+권장 방식:
+
+[[[#!text
+<body style="--site-body-bg: #FFFFFF; --site-body-text: #000000;">
+]]]
+
+AhaWiki Light에서만 사이트 색상을 사용한다.
+
+[[[#!text
+html.theme-ahawiki-light {
+    --color-bg: var(--site-body-bg, #ffffff);
+    --color-text: var(--site-body-text, #000000);
+}
+]]]
+
+Solarized나 AhaWiki Dark를 사용자가 선택하면 사용자 테마가 우선한다.
+
+=== FOUC 방지 (`app/views/_baseSkeleton.scala.html`)
+
+테마가 늦게 적용되어 화면이 깜빡이지 않도록 `<head>`에서 먼저 class를 부여한다.
+
+[[[#!text
+<script>
+    (function () {
+        var allowed = {
+            'ahawiki-light': true,
+            'ahawiki-dark': true,
+            'solarized-light': true,
+            'solarized-dark': true
+        };
+        var theme = localStorage.getItem('ahawiki-theme');
+        if (!allowed[theme]) {
+            theme = 'ahawiki-light';
+        }
+        document.documentElement.classList.add('theme-' + theme);
+    })();
+</script>
+]]]
+
+=== Theme Picker UI (`app/views/_base.scala.html`)
+
+navbar 오른쪽에 테마 선택 컨트롤을 추가한다.
+처음 구현은 `<select>` 또는 작은 메뉴로 시작해도 된다.
+
+[[[#!text
+<select class="themePicker" aria-label="Theme">
+    <option value="ahawiki-light">AhaWiki Light</option>
+    <option value="ahawiki-dark">AhaWiki Dark</option>
+    <option value="solarized-light">Solarized Light</option>
+    <option value="solarized-dark">Solarized Dark</option>
+</select>
+]]]
+
+버튼 UI로 개선할 경우 현재 테마 이름과 아이콘을 보여주고, 메뉴에서 네 가지 테마를 선택한다.
+
+=== JavaScript
+
+`darkMode` 클래스 토글 대신 theme class를 교체한다.
+
+[[[#!text
+(function () {
+    var KEY = 'ahawiki-theme';
+    var THEMES = [
+        'ahawiki-light',
+        'ahawiki-dark',
+        'solarized-light',
+        'solarized-dark'
+    ];
+
+    function normalize(theme) {
+        return THEMES.indexOf(theme) >= 0 ? theme : 'ahawiki-light';
+    }
+
+    function apply(theme) {
+        theme = normalize(theme);
+        THEMES.forEach(function (name) {
+            document.documentElement.classList.toggle('theme-' + name, name === theme);
+        });
+        $('.themePicker').val(theme);
+    }
+
+    apply(localStorage.getItem(KEY));
+
+    $('.themePicker').on('change', function () {
+        var theme = normalize(this.value);
+        localStorage.setItem(KEY, theme);
+        apply(theme);
+    });
+})();
+]]]
+
+== Migration Notes
+
+기존 TODO의 `body.darkMode`, `html.darkMode`, `darkModeToggle`, `ahawiki-dark-mode`는 사용하지 않는다.
+새 구현은 `html.theme-*`, `themePicker`, `ahawiki-theme`를 사용한다.
+
+기존 AhaWiki Light 시각 결과가 깨지지 않도록 가장 먼저 Light 토큰을 현재 하드코딩 값과 맞춘다.
+그 다음 Dark와 Solarized 테마의 override를 적용한다.
+
+== Verification Checklist
+
+ * [ ] 저장값이 없을 때 AhaWiki Light가 적용되는지 확인
+ * [ ] 네 가지 테마 선택지가 모두 UI에 표시되는지 확인
+ * [ ] 테마 선택 후 페이지 이동/새로고침에도 유지되는지 확인
+ * [ ] FOUC 없이 `<head>` 단계에서 테마 class가 적용되는지 확인
+ * [ ] AhaWiki Light에서 기존 사이트별 body/header/footer 색상이 유지되는지 확인
+ * [ ] AhaWiki Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [ ] Solarized Light에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [ ] Solarized Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [ ] navbar, dropdown, mobile menu 색상이 각 테마에서 어색하지 않은지 확인
+ * [ ] flash, toc, schema, table, Kanban UI가 각 테마에서 읽기 좋은지 확인
+ * [ ] 모바일에서도 theme picker가 정상 동작하는지 확인
