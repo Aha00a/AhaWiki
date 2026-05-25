@@ -2,12 +2,13 @@ package controllers
 
 import actors.ActorPageCalculator.Calculate
 import org.apache.pekko.actor._
-import org.apache.pekko.{NotUsed}
+import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.stream.{Materializer, OverflowStrategy}
 import org.apache.pekko.stream.scaladsl.SourceQueueWithComplete
 import org.apache.pekko.stream.scaladsl.Keep
 import com.aha00a.commons.Implicits._
+import com.aha00a.commons.utils.BooleanUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.supercsv.SupercsvUtil
@@ -570,7 +571,7 @@ controllerComponents: ControllerComponents,
     }
     finally {
       //noinspection SimplifyBoolean
-      if (true || environment.mode == Mode.Dev && request.isLocalhost)
+      if (BooleanUtil.random(0.1) || environment.mode == Mode.Dev && request.isLocalhost)
         wikiActors.pageCalculation ! Calculate(site, name)
     }
   }

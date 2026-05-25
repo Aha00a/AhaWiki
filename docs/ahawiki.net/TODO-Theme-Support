@@ -313,16 +313,16 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
  * [[CB(x)]] `lessc`로 `app/assets/less.css`와 source map 재생성
  * [[CB(x)]] `git diff --check`
- * [[CB]] `sbt compile`
+ * [[CB(x)]] `sbt compile`
  * [[CB]] 주요 화면 수동 확인: read page, edit page, Similar Pages, Adjacent Pages, Kanban
  * [[CB]] Search result, Blame, History, RecentChanges 테이블이 각 테마에서 읽기 좋은지 확인
  * [[CB]] autocomplete, crawler preview, kbd tooltip이 각 테마에서 배경과 충돌하지 않는지 확인
- * [[CB]] `npm test`는 현재 AhaMark CodeMirror mode 테스트의 기존 실패를 별도 이슈로 분리해 본다.
+ * [[CB(x)]] `npm test`
 
 검증 메모:
 
- * [[CB]] `sbt compile`은 `\\.\pipe\sbt-load-2077611263929801485_lock, error 5` 잠금이 풀린 뒤 재시도
- * [[CB]] `npm test`는 `test/ahamark-codemirror-mode.test.mjs:88`의 기존 list marker 스타일 기대값 차이만 실패
+ * [[CB(x)]] `sbt compile`은 `SBT_OPTS=-Dsbt.server.forcestart=true`로 통과
+ * [[CB(x)]] `npm test`는 CodeMirror list marker 스타일 수정 후 37개 모두 통과
 
 == Implementation Plan
 

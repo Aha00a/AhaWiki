@@ -22,15 +22,12 @@
                 token: function (stream, state) {
                     if (stream.sol()) {
                         state.inTripleInterpreter = false;
-                        state.inListLine = false;
                         if (stream.match(/\s*-{4,}\s*$/))
                             return 'ahamark-hr';
                         if (stream.match(/\s*={1,6}>?\s.+/))
                             return 'ahamark-header';
-                        if (stream.match(listLineRegex)) {
-                            state.inListLine = true;
+                        if (stream.match(listLineRegex))
                             return 'ahamark-list';
-                        }
                         if (stream.match(/\s*\[\[\[#![^\]]*/)) {
                             state.inTripleInterpreter = true;
                             return 'ahamark-interpreter';
@@ -74,10 +71,10 @@
                         return 'ahamark-tag';
 
                     stream.next();
-                    return state.inListLine ? 'ahamark-list' : null;
+                    return null;
                 },
                 startState: function () {
-                    return { inTripleInterpreter: false, inListLine: false };
+                    return { inTripleInterpreter: false };
                 }
             };
         });
