@@ -262,6 +262,11 @@ nav.topNavbar {
   -webkit-backdrop-filter: saturate(180%) blur(5px);
   text-shadow: var(--color-navbar-text-shadow);
 }
+@media print {
+  nav.topNavbar {
+    display: none;
+  }
+}
 nav.topNavbar > .wrap {
   display: flex;
   align-items: center;
@@ -3132,12 +3137,17 @@ kbd.MacroKbd {
 @media print {
   .AhaWiki .header,
   .AhaWiki .footer,
-  .AhaWiki .See-Also-Generated,
-  .AhaWiki .Schema-Generated,
-  .AhaWiki .Backlinks-Generated,
-  .AhaWiki .Similar-Pages-Generated,
-  .AhaWiki .Adjacent-Pages-Generated {
+  .AhaWiki .flash,
+  .AhaWiki .generatedSection {
     display: none;
+  }
+}
+@media print {
+  .AhaWiki div.toc,
+  .AhaWiki div.schema {
+    float: right;
+    clear: right;
+    max-width: 40%;
   }
 }
 .AhaWiki .percentTotal {
@@ -4862,4 +4872,3 @@ kbd.MacroKbd {
   background: var(--color-link-hover-bg);
   border-color: var(--color-flash-error-border);
 }
-/*# sourceMappingURL=less.css.map */

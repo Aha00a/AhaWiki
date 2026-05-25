@@ -199,6 +199,10 @@ html.theme-ahawiki-light body {
 }
 
 nav.topNavbar {
+	@media print {
+		display: none;
+	}
+
 	position: sticky;
 	top: 0;
 	left: 0;
@@ -1968,9 +1972,18 @@ kbd.MacroKbd {
 		}
 	}
 
-	.header, .footer, .See-Also-Generated, .Schema-Generated, .Backlinks-Generated, .Similar-Pages-Generated, .Adjacent-Pages-Generated {
+	.header, .footer, .flash,
+	.generatedSection {
 		@media print {
 			display: none;
+		}
+	}
+
+	div.toc, div.schema {
+		@media print {
+			float: right;
+			clear: right;
+			max-width: 40%;
 		}
 	}
 

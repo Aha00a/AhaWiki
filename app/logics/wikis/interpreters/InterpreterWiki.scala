@@ -175,8 +175,8 @@ object InterpreterWiki extends TraitInterpreter {
       val rawHeadingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
       val headingClasses = rawHeadingClasses.map("Heading" + _)
       val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
-      val wrapperClass = Seq("HeadingWrapper" + idNotEmpty, if (isInitiallyCollapsed) "sectionCollapsed" else "").filter(_.nonEmpty).mkString(" ")
       val isGeneratedHeading = rawHeadingClasses.contains("generated")
+      val wrapperClass = Seq("HeadingWrapper" + idNotEmpty, if (isInitiallyCollapsed) "sectionCollapsed" else "", if (isGeneratedHeading) "generatedSection" else "").filter(_.nonEmpty).mkString(" ")
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
       val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
       val lineEndExclusive = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber) + 1
