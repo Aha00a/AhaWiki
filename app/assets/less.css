@@ -2240,15 +2240,17 @@ kbd.MacroKbd {
 }
 .AhaWiki .MacroColorCode {
   display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
+  gap: 4px;
   vertical-align: middle;
+}
+.AhaWiki .MacroColorCode .MacroCopyable {
+  top: 0;
 }
 .AhaWiki .MacroColorCode .MacroColorCodeSwatch {
   display: inline-flex;
-  width: 18px;
-  height: 14px;
-  flex: 0 0 18px;
+  width: 24px;
+  flex: 0 0 24px;
   border: 1px solid var(--color-border);
   border-radius: 3px;
   overflow: hidden;
