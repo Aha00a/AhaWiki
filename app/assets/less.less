@@ -670,6 +670,131 @@ kbd.MacroKbd {
 	}
 }
 
+.MacroThemes {
+	margin: 16px 0;
+
+	.MacroThemesPreviewGrid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: 12px;
+		margin-bottom: 14px;
+	}
+
+	.MacroThemesPreview {
+		box-sizing: border-box;
+		border: 1px solid var(--theme-preview-border);
+		border-radius: 8px;
+		background: var(--theme-preview-bg);
+		color: var(--theme-preview-text);
+		padding: 12px;
+	}
+
+	.MacroThemesPreviewTitle {
+		font-weight: 700;
+		margin-bottom: 8px;
+	}
+
+	.MacroThemesPreview p {
+		margin: 0 0 8px 0;
+	}
+
+	.MacroThemesPreviewLink {
+		color: var(--theme-preview-link);
+		text-decoration: underline;
+	}
+
+	.MacroThemesPreviewCode {
+		display: inline-block;
+		border: 1px solid var(--theme-preview-code-border);
+		border-radius: 5px;
+		background: var(--theme-preview-code-bg);
+		color: var(--theme-preview-code-text);
+		padding: 3px 6px;
+		font-family: 'Ubuntu Mono', 'Consolas', monospace;
+	}
+
+	.MacroThemesContrast {
+		margin-top: 8px;
+		font-size: 12px;
+		opacity: 0.75;
+	}
+
+	.MacroThemesTableWrapper {
+		overflow-x: auto;
+	}
+
+	.MacroThemesTable {
+		width: 100%;
+	}
+
+	.MacroThemesTable th,
+	.MacroThemesTable td {
+		vertical-align: middle;
+	}
+
+	.MacroThemesTable code {
+		white-space: nowrap;
+	}
+
+	.MacroThemesGroup th {
+		background: var(--color-surface-alt);
+		color: var(--color-muted-strong);
+		text-align: left;
+		font-size: 12px;
+		text-transform: uppercase;
+	}
+
+	.MacroThemesValue {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		min-width: 0;
+	}
+
+	.MacroThemesSwatch {
+		display: inline-flex;
+		width: 28px;
+		height: 18px;
+		flex: 0 0 28px;
+		border: 1px solid var(--color-border);
+		border-radius: 4px;
+		overflow: hidden;
+		background-color: #fff;
+		background-image:
+			linear-gradient(45deg, #ddd 25%, transparent 25%),
+			linear-gradient(-45deg, #ddd 25%, transparent 25%),
+			linear-gradient(45deg, transparent 75%, #ddd 75%),
+			linear-gradient(-45deg, transparent 75%, #ddd 75%);
+		background-size: 8px 8px;
+		background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+
+		> span {
+			display: block;
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	.MacroThemesSwatchShadow > span {
+		width: 16px;
+		height: 10px;
+		margin: 4px 6px;
+		border-radius: 3px;
+		background: var(--color-surface);
+	}
+
+	.MacroThemesSwatchTextShadow > span {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--color-surface);
+		color: var(--color-text);
+		font-size: 10px;
+		font-weight: 700;
+		line-height: 1;
+	}
+}
+
 @media @widthTablet {
 	kbd {
 		display: none;
