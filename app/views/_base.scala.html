@@ -211,29 +211,38 @@
 
             const widthStorageKey = 'ahawiki-limit-width';
             const $widthToggle = $nav.find('.widthToggle');
+            const widthSteps = [
+                { label: 'Wide', icon: 'fa-arrows-left-right', bodyClass: null },
+                { label: '1600', icon: 'fa-compress-alt',      bodyClass: 'width-1600' },
+                { label: '1280', icon: 'fa-compress-alt',      bodyClass: 'width-1280' },
+                { label: '960',  icon: 'fa-compress-alt',      bodyClass: 'width-960' },
+            ];
+            const widthBodyClasses = ['width-1600', 'width-1280', 'width-960'];
+            let currentWidthStep = 0;
 
-            function applyWidth(limited) {
-                $('body').toggleClass('limitedWidth', limited);
-                $widthToggle.toggleClass('active', limited)
-                    .attr('aria-pressed', limited ? 'true' : 'false');
-                $widthToggle.find('i')
-                    .toggleClass('fa-arrows-left-right', !limited)
-                    .toggleClass('fa-compress-alt', limited);
-                $widthToggle.find('.themeOptionLabel').text(limited ? 'Limit' : 'Wide');
-                $widthToggle.attr('aria-label', limited ? 'Expand content width' : 'Limit content width');
+            function applyWidthStep(idx) {
+                const step = widthSteps[idx];
+                widthBodyClasses.forEach(function (cls) { $('body').removeClass(cls); });
+                if (step.bodyClass) { $('body').addClass(step.bodyClass); }
+                $widthToggle.toggleClass('active', idx !== 0)
+                    .attr('aria-pressed', idx !== 0 ? 'true' : 'false');
+                $widthToggle.find('i').attr('class', 'fas ' + step.icon);
+                $widthToggle.find('.themeOptionLabel').text(step.label);
             }
 
             (function () {
-                let limited = false;
-                try { limited = localStorage.getItem(widthStorageKey) === '1'; } catch (e) {}
-                applyWidth(limited);
+                try {
+                    const stored = parseInt(localStorage.getItem(widthStorageKey), 10);
+                    if (stored > 0 && stored < widthSteps.length) { currentWidthStep = stored; }
+                } catch (e) {}
+                applyWidthStep(currentWidthStep);
             })();
 
             $widthToggle.on('click', function (event) {
                 event.stopPropagation();
-                const next = !$('body').hasClass('limitedWidth');
-                try { localStorage.setItem(widthStorageKey, next ? '1' : '0'); } catch (e) {}
-                applyWidth(next);
+                currentWidthStep = (currentWidthStep + 1) % widthSteps.length;
+                try { localStorage.setItem(widthStorageKey, String(currentWidthStep)); } catch (e) {}
+                applyWidthStep(currentWidthStep);
             });
 
             $authToggle.on('click', function (event) {

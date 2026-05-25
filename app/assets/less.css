@@ -1061,7 +1061,15 @@ kbd.MacroKbd {
     padding: 0 12px;
   }
 }
-.AhaWiki.limitedWidth .limitWidth {
+.AhaWiki.width-1600 .limitWidth {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.AhaWiki.width-1280 .limitWidth {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.AhaWiki.width-960 .limitWidth {
   max-width: 960px;
   margin: 0 auto;
 }
