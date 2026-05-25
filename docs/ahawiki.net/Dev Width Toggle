@@ -1,0 +1,35 @@
+= [Dev] Width Toggle
+
+== Result Summary
+
+본문 가로폭을 사용자가 직접 전환할 수 있는 내비게이션 버튼을 추가했다.
+설정은 `localStorage`에 저장되어 페이지 이동 뒤에도 유지된다.
+
+ * 버튼 위치: 계정 메뉴와 모바일 flat 메뉴의 테마 선택 그룹
+ * 저장 키: `ahawiki-limit-width`
+ * 기본 상태: `Wide`
+ * 전환 순서: `Wide` -> `1600` -> `1280` -> `960`
+ * 적용 클래스: `body.AhaWiki.width-1600`, `body.AhaWiki.width-1280`, `body.AhaWiki.width-960`
+
+== Behavior
+
+버튼을 누르면 현재 viewport보다 작은 폭 옵션만 순환한다.
+예를 들어 1280px보다 좁은 화면에서는 `1280` 이상의 제한 단계는 건너뛴다.
+
+제한 폭이 적용되면 `.limitWidth`에 `max-width`와 `margin: 0 auto`가 적용되고,
+본문 배경, 상단 여백, 그림자, 첫 제목 여백이 함께 조정된다.
+
+== Files
+
+ * `app/views/_base.scala.html`
+  * `widthToggle` 버튼 추가
+  * `ahawiki-limit-width` 저장/복원
+  * `Wide`, `1600`, `1280`, `960` 단계 순환 처리
+ * `app/assets/less.less`
+  * `.limitWidth` 기본 padding 정리
+  * `width-1600`, `width-1280`, `width-960` 레이아웃 스타일 추가
+
+== Notes
+
+테마 선택과 같은 `themeIconGroup` 안에 배치되어 Light, Dark, Width 세 버튼이 같은 패턴으로 동작한다.
+모바일 메뉴에서도 같은 컨트롤을 재사용한다.
