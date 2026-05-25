@@ -187,8 +187,8 @@ html.theme-solarized-dark {
  * [[CB(x)]] Adjacent Pages HUD panel/button/dot
  * [[CB(x)]] Adjacent Pages canvas host border
  * [[CB(x)]] wikiTableSimple 계열과 revisionInfo
- * [[CB]] generated section 주변의 반복 UI
- * [[CB]] schema/toc 세부 색상 재검증
+ * [[CB(x)]] generated section 주변의 반복 UI
+ * [[CB(x)]] schema/toc 세부 색상 재검증
 
 1차 적용 완료:
 
@@ -202,9 +202,9 @@ html.theme-solarized-dark {
 
 남은 항목:
 
- * [[CB]] search result, blame, crawler preview 같은 읽기 화면 부가 UI는 별도 pass에서 처리
- * [[CB]] kbd/hotkey hint의 키캡 색상 토큰화
- * [[CB]] devbridge autocomplete dropdown 색상 토큰화
+ * [[CB(x)]] search result, blame, crawler preview 같은 읽기 화면 부가 UI는 별도 pass에서 처리
+ * [[CB(x)]] kbd/hotkey hint의 키캡 색상 토큰화
+ * [[CB(x)]] devbridge autocomplete dropdown 색상 토큰화
 
 완료 기준:
 
@@ -311,13 +311,18 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 각 단계가 끝날 때마다 가능한 범위에서 검증한다.
 
- * [[CB]] `lessc`로 `app/assets/less.css`와 source map 재생성
- * [[CB]] `git diff --check`
+ * [[CB(x)]] `lessc`로 `app/assets/less.css`와 source map 재생성
+ * [[CB(x)]] `git diff --check`
  * [[CB]] `sbt compile`
  * [[CB]] 주요 화면 수동 확인: read page, edit page, Similar Pages, Adjacent Pages, Kanban
  * [[CB]] Search result, Blame, History, RecentChanges 테이블이 각 테마에서 읽기 좋은지 확인
  * [[CB]] autocomplete, crawler preview, kbd tooltip이 각 테마에서 배경과 충돌하지 않는지 확인
  * [[CB]] `npm test`는 현재 AhaMark CodeMirror mode 테스트의 기존 실패를 별도 이슈로 분리해 본다.
+
+검증 메모:
+
+ * [[CB]] `sbt compile`은 `\\.\pipe\sbt-load-2077611263929801485_lock, error 5` 잠금이 풀린 뒤 재시도
+ * [[CB]] `npm test`는 `test/ahamark-codemirror-mode.test.mjs:88`의 기존 list marker 스타일 기대값 차이만 실패
 
 == Implementation Plan
 

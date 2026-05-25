@@ -3702,7 +3702,7 @@ kbd.MacroKbd {
   line-height: 1.2;
   border: none;
   background: transparent;
-  color: #99a;
+  color: var(--color-muted);
   cursor: pointer;
 }
 .AhaWiki .wikiContent div.toc .tocBody {
@@ -3854,13 +3854,13 @@ kbd.MacroKbd {
   margin-bottom: 16px;
 }
 .AhaWiki .Macro.WikiStatistics .statCard {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 8px;
   padding: 12px;
-  background: #fff;
+  background: var(--color-surface);
 }
 .AhaWiki .Macro.WikiStatistics .statLabel {
-  color: #6b7280;
+  color: var(--color-muted);
   font-size: 12px;
   margin-bottom: 4px;
 }
@@ -3871,7 +3871,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .Macro.WikiStatistics .statSub {
   margin-top: 2px;
-  color: #6b7280;
+  color: var(--color-muted);
   font-size: 12px;
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table {
@@ -3882,7 +3882,7 @@ kbd.MacroKbd {
   --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
   --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
   display: inline-block;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-subtle);
   border-radius: 5px;
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable {
