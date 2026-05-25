@@ -1,15 +1,57 @@
 = Setup
-== 신청받기
- * domain을 받음
+새 위키 사이트 개설 체크리스트.
+AhaWiki는 단일 인스턴스가 멀티 도메인을 서비스하므로, DB·앱·conf 파일은 공유하고 아래 항목만 추가한다.
 
-== 서버 설정하기
- 1. DNS 설정
- 1. `Site` 추가
- * `SiteDomain` 추가
- * nginx 설정 및 letsencrypt 적용
-  * reload 하기
- * https://console.cloud.google.com/apis/credentials
-  * OAuth 2.0 Client 설정
-  * Maps JavaScript API 설정
- * reCAPTCHA 설정 - https://www.google.com/recaptcha/admin/
+== 신청 접수
+ * 사이트 이름
+ * 서브도메인 (`something.ahawiki.net`)
+ * 관리자 Gmail 주소
+ * 공개/비공개 여부
 
+== DNS 설정
+ * `something.ahawiki.net` CNAME → 서버 도메인 추가
+ * 전파 확인
+
+== DB 설정
+ * `Site` row 추가 (`name`, `abbr`, `mainDomain` 포함)
+ * `SiteDomain` row 추가
+ * `SiteAdmin` row 추가 (관리자 user seq 지정)
+ * 기본 `Permission` row 추가 (공개/비공개 여부에 따라)
+
+== nginx 설정
+ * nginx 설정 파일에 server block 추가
+ * letsencrypt 인증서 발급
+[[[#!Vim bash
+certbot --nginx -d something.ahawiki.net
+]]]
+ * nginx reload
+
+== Google API 설정
+https://console.cloud.google.com/apis/credentials
+
+ * OAuth 2.0 Client에 redirect URI 추가
+[[[#!text
+https://something.ahawiki.net/google/oauth/callback
+]]]
+ * API 키 HTTP referrer 제한에 도메인 추가
+[[[#!text
+*.something.ahawiki.net/*
+]]]
+
+== reCAPTCHA 설정
+https://www.google.com/recaptcha/admin/
+
+ * 기존 사이트에 도메인 추가 (`something.ahawiki.net`)
+
+== 관리자 설정
+ * 관리자 Google 계정으로 로그인
+ * `SiteAdmin` 등록 (`/Admin/Site/:seq/Admins`)
+ * Permission 설정 확인 (`/Admin/Site/:seq/Permission`)
+
+== 최종 확인
+ * HTTPS 접속
+ * Google OAuth 로그인
+ * 페이지 생성 / 편집 / 저장
+ * 첨부파일 업로드 (S3)
+ * 지도 표시 (`InterpreterMap`)
+ * reCAPTCHA 동작
