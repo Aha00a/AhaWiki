@@ -3145,17 +3145,6 @@ kbd.MacroKbd {
     display: none !important;
   }
 }
-@media print {
-  .AhaWiki .sectionCollapsed > * {
-    display: block !important;
-  }
-}
-@media print {
-  .AhaWiki .wikiContent div.toc.collapsed .tocBody {
-    max-height: none !important;
-    opacity: 1 !important;
-  }
-}
 .AhaWiki .percentTotal {
   position: relative;
   display: inline-block;
@@ -4878,4 +4867,3 @@ kbd.MacroKbd {
   background: var(--color-link-hover-bg);
   border-color: var(--color-flash-error-border);
 }
-/*# sourceMappingURL=less.css.map */
