@@ -74,6 +74,7 @@ html.theme-ahawiki-light {
 	--color-percent-bar: #000000;
 	--color-percent-label: #ffffff;
 	--color-adjacent-placeholder-bg: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
+	--color-adjacent-placeholder-bg-frosted: rgba(241, 245, 255, 0.5);
 	--color-adjacent-placeholder-border: #d8deea;
 	--color-adjacent-placeholder-text: #4e5f82;
 	--color-adjacent-placeholder-icon: #7088bf;
@@ -158,6 +159,7 @@ html.theme-ahawiki-light {
 		--color-percent-bar: #6da3f8;
 		--color-percent-label: #ffffff;
 		--color-adjacent-placeholder-bg: linear-gradient(135deg, #20203a 0%, #1a1a2e 100%);
+		--color-adjacent-placeholder-bg-frosted: rgba(26, 26, 46, 0.5);
 		--color-adjacent-placeholder-border: #444466;
 		--color-adjacent-placeholder-text: #d5d5e8;
 		--color-adjacent-placeholder-icon: #8cb4ff;
@@ -2106,7 +2108,9 @@ kbd.MacroKbd {
 		gap: 10px;
 		border: 1px dashed var(--color-adjacent-placeholder-border);
 		border-radius: 8px;
-		background: var(--color-adjacent-placeholder-bg);
+		background: var(--color-adjacent-placeholder-bg-frosted);
+		backdrop-filter: saturate(180%) blur(5px);
+		-webkit-backdrop-filter: saturate(180%) blur(5px);
 		color: var(--color-adjacent-placeholder-text);
 		text-align: center;
 		padding: 20px;
