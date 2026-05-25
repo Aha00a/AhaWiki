@@ -13,7 +13,7 @@ class MacroThemesSpec extends AnyFreeSpec {
       assert(html.contains("AhaWiki Dark"))
       assert(html.contains("--color-bg"))
       assert(html.contains("#ffffff"))
-      assert(html.contains("#1a1a2e"))
+      assert(html.contains("#0f1115"))
       assert(html.contains("Body contrast 21.0:1"))
       assert(html.contains("""class="MacroThemesTable wikiTableSimple""""))
     }
@@ -22,7 +22,7 @@ class MacroThemesSpec extends AnyFreeSpec {
   "contrastRatio" - {
     "calculates WCAG contrast for hex colors" in {
       assert(MacroThemes.contrastRatio("#000", "#fff").exists(ratio => math.abs(ratio - 21.0) < 0.01))
-      assert(MacroThemes.contrastRatio("#e0e0e0", "#1a1a2e").exists(_ > 10.0))
+      assert(MacroThemes.contrastRatio("#e6e8eb", "#0f1115").exists(_ > 14.0))
     }
   }
 
