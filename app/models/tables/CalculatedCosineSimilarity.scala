@@ -23,13 +23,9 @@ object CalculatedCosineSimilarity {
   private val MinimumSimilarity = 0.3
 
   def recalc(name: String)(implicit connection: Connection, site: Site): Int = {
+    delete(name)
     SQL"""
-      DELETE FROM CalculatedCosineSimilarity
-      WHERE (site1 = ${site.seq} AND name1 = $name)
-         OR (site2 = ${site.seq} AND name2 = $name)
-    """.executeUpdate()
-    SQL"""
-REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
+INSERT INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT
     CAST(${site.seq} AS SIGNED) AS site1,
     CAST($name AS CHAR(255)) AS name1,
@@ -44,12 +40,10 @@ FROM (
     FROM CalculatedTermFrequency TF2
     INNER JOIN CalculatedTermFrequency TF1
         ON TF1.term = TF2.term
-    INNER JOIN PageMeta PM
-        ON PM.site = TF1.site
-        AND PM.name = TF1.name
     WHERE
         TF2.site = ${site.seq}
         AND TF2.name = $name
+        AND NOT (TF1.site = ${site.seq} AND TF1.name = $name)
     GROUP BY TF1.site, TF1.name
 ) CandidateDot
 INNER JOIN CalculatedTermFrequencyNorm CandidateNorm
@@ -64,14 +58,17 @@ WHERE
     SourceNorm.norm > 0
     AND CandidateNorm.norm > 0
     AND CandidateDot.dotProduct / (SourceNorm.norm * CandidateNorm.norm) > $MinimumSimilarity
-    AND NOT (CandidateDot.site = ${site.seq} AND CandidateDot.name = $name)
+ON DUPLICATE KEY UPDATE
+    similarity = VALUES(similarity)
     """.executeUpdate()
 
     SQL"""
-REPLACE INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
+INSERT INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT site2, name2, site1, name1, similarity FROM CalculatedCosineSimilarity
     WHERE
         site1 = ${site.seq} AND name1 = $name
+ON DUPLICATE KEY UPDATE
+    similarity = VALUES(similarity)
       """.executeUpdate()
   }
 
@@ -111,11 +108,14 @@ SELECT site2, name2, site1, name1, similarity FROM CalculatedCosineSimilarity
   }
 
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
-    SQL"""
+    val sourceCount = SQL"""
       DELETE FROM CalculatedCosineSimilarity
-      WHERE (site1 = ${site.seq} AND name1 = $name)
-         OR (site2 = ${site.seq} AND name2 = $name)
+      WHERE site1 = ${site.seq} AND name1 = $name
     """.executeUpdate()
+    val targetCount = SQL"""
+      DELETE FROM CalculatedCosineSimilarity
+      WHERE site2 = ${site.seq} AND name2 = $name
+    """.executeUpdate()
+    sourceCount + targetCount
   }
 }
-

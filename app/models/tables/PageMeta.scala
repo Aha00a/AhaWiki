@@ -60,12 +60,14 @@ object PageMeta {
     SQL"""
       SELECT p.name
       FROM (
-        SELECT DISTINCT name
+        SELECT name, MAX(revision) AS revision
         FROM Page
         WHERE site = ${site.seq}
+        GROUP BY name
       ) p
       LEFT JOIN PageMeta pm ON pm.site = ${site.seq} AND pm.name = p.name
       WHERE pm.name IS NULL
+         OR pm.revision <> p.revision
       ORDER BY RAND()
       LIMIT $limit
     """.as(SqlParser.str("name").*)
