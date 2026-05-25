@@ -186,7 +186,7 @@ html.theme-solarized-dark {
  * [[CB(x)]] Adjacent Pages preview placeholder
  * [[CB(x)]] Adjacent Pages HUD panel/button/dot
  * [[CB(x)]] Adjacent Pages canvas host border
- * [[CB(x)]] table 계열과 revisionInfo
+ * [[CB(x)]] simpleTable 계열과 revisionInfo
  * [[CB]] generated section 주변의 반복 UI
  * [[CB]] schema/toc 세부 색상 재검증
 
@@ -202,8 +202,9 @@ html.theme-solarized-dark {
 
 남은 항목:
 
- * [[CB]] Adjacent Pages canvas drawing color는 Phase 4에서 JS와 함께 처리
  * [[CB]] search result, blame, crawler preview 같은 읽기 화면 부가 UI는 별도 pass에서 처리
+ * [[CB]] kbd/hotkey hint의 키캡 색상 토큰화
+ * [[CB]] devbridge autocomplete dropdown 색상 토큰화
 
 완료 기준:
 
@@ -271,6 +272,41 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
  * [[CB]] canvas나 JS 생성 UI가 CSS 변수 또는 theme-aware palette를 사용한다.
  * [[CB]] 새 하드코딩 색상이 생기지 않도록 검색 기준을 남긴다.
 
+=== Phase 4.5: Table / Structured Data UI Leftovers
+
+`simpleTable`만으로 끝나지 않는 테이블류를 별도 단계로 처리한다.
+검색/블레임/매크로/인터프리터 테이블은 selector와 화면 맥락이 달라서 한 번에 묶어 재검증한다.
+
+대상:
+
+ * [[CB]] `Search.search` 결과의 `.searchResult table.tableSearchResult`
+ * [[CB]] blame 화면의 `.blame table.tableBlame`, `.blame table.tableLegend`
+ * [[CB]] `.tablesorter` header/filter input/dropdown 상태
+ * [[CB]] `.wikiHistory` 내부 table spacing과 table header/body 색상 확인
+ * [[CB]] `InterpreterTable` / `.Interpreter.Table` 주변 border/background
+ * [[CB]] `MacroRecentChanges` table wrapper, header, row hover, loading/empty 상태
+ * [[CB]] `MacroSearch` / `MacroBacklinks`처럼 내부에서 표 형태를 만드는 매크로 확인
+ * [[CB]] table 안의 `input`, `select`, line number, empty cell 색상 토큰화
+
+완료 기준:
+
+ * [[CB]] Search result, Blame, History, RecentChanges 테이블이 네 가지 테마에서 읽힌다.
+ * [[CB]] row hover와 alternating row가 다크/솔라라이즈드에서 과하게 튀지 않는다.
+ * [[CB]] tablesorter filter input/select가 주변 테마와 같은 input 토큰을 사용한다.
+ * [[CB]] AhaWiki Light에서 기존 table 밀도와 구분감은 유지된다.
+
+=== Phase 4.6: Preview / Popup Leftovers
+
+읽기 화면의 hover/preview/popup성 UI 중 아직 Light 전용 색상이 남은 영역을 모아서 처리한다.
+
+대상:
+
+ * [[CB]] `.crawlerPreview` panel, arrow, thumbnail placeholder, title/body text
+ * [[CB]] `.autocomplete-suggestions`, `.autocomplete-selected`, highlighted `strong`
+ * [[CB]] `kbd`, `.MacroKbd`, `.hotkeyHint` tooltip
+ * [[CB]] legacy `svg.graph` 스타일
+ * [[CB]] `.Paper` / print-preview style 중 screen preview 색상
+
 === Phase 5: Verification
 
 각 단계가 끝날 때마다 가능한 범위에서 검증한다.
@@ -279,6 +315,8 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
  * [[CB]] `git diff --check`
  * [[CB]] `sbt compile`
  * [[CB]] 주요 화면 수동 확인: read page, edit page, Similar Pages, Adjacent Pages, Kanban
+ * [[CB]] Search result, Blame, History, RecentChanges 테이블이 각 테마에서 읽기 좋은지 확인
+ * [[CB]] autocomplete, crawler preview, kbd tooltip이 각 테마에서 배경과 충돌하지 않는지 확인
  * [[CB]] `npm test`는 현재 AhaMark CodeMirror mode 테스트의 기존 실패를 별도 이슈로 분리해 본다.
 
 == Implementation Plan
@@ -294,6 +332,8 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
  * [[CB(x)]] Phase 2: edit page 전용 UI
  * [[CB(x)]] Phase 3: Kanban detail modal
  * [[CB(x)]] Phase 4: JS/canvas/inline style 잔여 색상
+ * [[CB]] Phase 4.5: table/search/blame/macro structured UI
+ * [[CB]] Phase 4.6: preview/autocomplete/kbd/legacy graph
 
 === Inline body 색상 처리 (`app/views/_baseSkeleton.scala.html`)
 
