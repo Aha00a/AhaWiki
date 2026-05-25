@@ -11,13 +11,14 @@ navbar 우측에 토글 버튼을 추가하여 사용자가 가로폭 제한(max
 
 == UI 배치
 
-navbar 우측, 계정 메뉴 왼쪽에 아이콘 버튼으로 배치한다.
+테마 선택 그룹(`themeIconGroup`) 안에 Light/Dark 버튼과 나란히 배치한다. 드롭다운 메뉴를 열어야 접근 가능하나, localStorage로 유지되는 설정성 기능이므로 적합하다.
 
 [[[#!text
-[AhaWiki]  [Navigate▾]  [Page▾]  ···  [⇔]  [👤 닉네임▾]
+[ Light ][ Dark ][ Wide ]   ← themeIconGroup 내부
 ]]]
 
  * 아이콘: `fa-arrows-left-right` (폭 제한 OFF) / `fa-compress-alt` (폭 제한 ON)
+ * 레이블: `Wide` (OFF) / `Limit` (ON)
  * 버튼에 `title` 및 `aria-label` 속성으로 설명 제공
 
 == 구현 계획
@@ -56,13 +57,15 @@ body.limitedWidth .AhaWiki .limitWidth {
 
 === 버튼 HTML 추가 (`app/views/_base.scala.html`)
 
-`actionAuth` ul 바로 앞에 버튼을 삽입한다.
+`@themePicker`의 `themeIconGroup` div 안, Dark 버튼 다음에 삽입한다.
 
 [[[#!text
-<button type="button" class="widthToggle hotkeyHint"
-        aria-label="Toggle content width"
-        title="Toggle content width">
+<button type="button" class="themeOption widthToggle"
+        aria-label="Limit content width"
+        title="Limit content width"
+        aria-pressed="false">
     <i class="fas fa-arrows-left-right"></i>
+    <span class="themeOptionLabel">Wide</span>
 </button>
 ]]]
 
@@ -94,15 +97,7 @@ body.limitedWidth .AhaWiki .limitWidth {
 
 === 모바일 처리
 
-`max-width: 767px` 구간에서는 토글 버튼을 숨긴다 (어차피 창이 좁아서 의미 없음).
-
-[[[#!text
-@media (max-width: 767px) {
-    .widthToggle {
-        display: none;
-    }
-}
-]]]
+별도 처리 불필요. 버튼이 `themeIconGroup` 안에 있으므로 모바일 flat 메뉴에서도 Light/Dark와 함께 자연스럽게 표시된다. `themeIconGroup`을 3열 grid로 변경하는 것으로 충분하다.
 
 == Verification Checklist
 

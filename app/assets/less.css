@@ -377,7 +377,7 @@ nav.topNavbar .actionAuth .authSubmenu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 160px;
+  min-width: 240px;
   background: var(--color-navbar-menu-bg);
   border: 1px solid var(--color-input-border);
   border-radius: 12px;
@@ -406,7 +406,7 @@ nav.topNavbar .themeMenu {
 }
 nav.topNavbar .themeIconGroup {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   padding: 0 6px;
 }
@@ -1053,14 +1053,17 @@ kbd.MacroKbd {
   tab-size: 4;
 }
 .AhaWiki .limitWidth {
-  width: 97%;
-  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 @media (max-width: 767px) {
   .AhaWiki .limitWidth {
-    width: auto;
-    margin: 0 12px;
+    padding: 0 12px;
   }
+}
+.AhaWiki.limitedWidth .limitWidth {
+  max-width: 960px;
+  margin: 0 auto;
 }
 .AhaWiki .aspectRatioWrapper {
   position: relative;

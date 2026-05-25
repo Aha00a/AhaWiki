@@ -26,6 +26,10 @@
         <div class="themeIconGroup" role="group" aria-label="Theme">
             @themeOption("ahawiki-light", "themeAhaWikiLight", "AhaWiki Light", "fa-sun", "Light")
             @themeOption("ahawiki-dark", "themeAhaWikiDark", "AhaWiki Dark", "fa-moon", "Dark")
+            <button type="button" class="themeOption widthToggle" aria-label="Limit content width" title="Limit content width" aria-pressed="false">
+                <i class="fas fa-arrows-left-right"></i>
+                <span class="themeOptionLabel">Wide</span>
+            </button>
         </div>
     </li>
 }
@@ -203,6 +207,33 @@
                 const theme = normalizeTheme($(this).data('theme-option'));
                 saveTheme(theme);
                 applyTheme(theme);
+            });
+
+            const widthStorageKey = 'ahawiki-limit-width';
+            const $widthToggle = $nav.find('.widthToggle');
+
+            function applyWidth(limited) {
+                $('body').toggleClass('limitedWidth', limited);
+                $widthToggle.toggleClass('active', limited)
+                    .attr('aria-pressed', limited ? 'true' : 'false');
+                $widthToggle.find('i')
+                    .toggleClass('fa-arrows-left-right', !limited)
+                    .toggleClass('fa-compress-alt', limited);
+                $widthToggle.find('.themeOptionLabel').text(limited ? 'Limit' : 'Wide');
+                $widthToggle.attr('aria-label', limited ? 'Expand content width' : 'Limit content width');
+            }
+
+            (function () {
+                let limited = false;
+                try { limited = localStorage.getItem(widthStorageKey) === '1'; } catch (e) {}
+                applyWidth(limited);
+            })();
+
+            $widthToggle.on('click', function (event) {
+                event.stopPropagation();
+                const next = !$('body').hasClass('limitedWidth');
+                try { localStorage.setItem(widthStorageKey, next ? '1' : '0'); } catch (e) {}
+                applyWidth(next);
             });
 
             $authToggle.on('click', function (event) {
