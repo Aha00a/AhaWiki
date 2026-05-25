@@ -919,9 +919,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return false;
     };
-    var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns, isWritable) {
+    var createColumnElement = function (root, columns, column, index, shiftLineNumbersAfterInsert, getCardInsertLineStart, enqueueMutation, rerenderColumns, persistColumns, isWritable, boardAutoScroll) {
         var columnElement = document.createElement('div');
         var pageName = root.getAttribute('data-page-name') || '';
+        boardAutoScroll = boardAutoScroll || {
+            start: function () {},
+            update: function () {},
+            stop: function () {}
+        };
         columnElement.className = 'kanban-column';
         columnElement.setAttribute('data-column-index', String(index));
         columnElement.setAttribute('data-column-line-number', String(column.lineNumber || 1));
@@ -1405,6 +1410,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!draggingCard || !evt) {
                     return;
                 }
+                boardAutoScroll.update(evt);
                 if (Number.isFinite(evt.clientX)) {
                     latestPointerForCardDrag.x = evt.clientX;
                 }
@@ -1430,6 +1436,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearCardDropTargetHighlight();
                     latestPointerForCardDrag.x = null;
                     latestPointerForCardDrag.y = null;
+                    boardAutoScroll.start();
+                    boardAutoScroll.update(evt.originalEvent);
                     window.addEventListener('dragover', updateCardDragPointer, true);
                     doc.addEventListener('dragover', updateCardDragPointer, true);
                 },
@@ -1453,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     doc.removeEventListener('keydown', handleDragEscape, true);
                     window.removeEventListener('dragover', updateCardDragPointer, true);
                     doc.removeEventListener('dragover', updateCardDragPointer, true);
+                    boardAutoScroll.stop();
                     clearCardDropTargetHighlight();
 
                     var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || !Number.isFinite(evt.newIndex);
@@ -1723,6 +1732,72 @@ document.addEventListener('DOMContentLoaded', function () {
             board.style.removeProperty('background');
         };
 
+        var boardAutoScrollState = {
+            active: false,
+            pointerX: null,
+            frameId: null
+        };
+        var requestAutoScrollFrame = function (callback) {
+            if (window.requestAnimationFrame) {
+                return window.requestAnimationFrame(callback);
+            }
+            return window.setTimeout(callback, 16);
+        };
+        var cancelAutoScrollFrame = function (frameId) {
+            if (frameId === null || frameId === undefined) {
+                return;
+            }
+            if (window.cancelAnimationFrame) {
+                window.cancelAnimationFrame(frameId);
+                return;
+            }
+            window.clearTimeout(frameId);
+        };
+        var stepBoardAutoScroll = function () {
+            if (!boardAutoScrollState.active) {
+                boardAutoScrollState.frameId = null;
+                return;
+            }
+            var pointerX = boardAutoScrollState.pointerX;
+            if (Number.isFinite(pointerX) && board.scrollWidth > board.clientWidth) {
+                var rect = board.getBoundingClientRect();
+                var rectLeft = Number.isFinite(rect.left) ? rect.left : 0;
+                var rectWidth = Number.isFinite(rect.width) ? rect.width : board.clientWidth;
+                var rectRight = Number.isFinite(rect.right) ? rect.right : rectLeft + rectWidth;
+                var edgeSize = Math.min(96, Math.max(48, rectWidth * 0.18));
+                var maxStep = 28;
+                var scrollDelta = 0;
+                if (pointerX < rectLeft + edgeSize) {
+                    scrollDelta = -maxStep * Math.min(1, (rectLeft + edgeSize - pointerX) / edgeSize);
+                } else if (pointerX > rectRight - edgeSize) {
+                    scrollDelta = maxStep * Math.min(1, (pointerX - (rectRight - edgeSize)) / edgeSize);
+                }
+                if (scrollDelta !== 0) {
+                    board.scrollLeft += scrollDelta;
+                }
+            }
+            boardAutoScrollState.frameId = requestAutoScrollFrame(stepBoardAutoScroll);
+        };
+        var startBoardAutoScroll = function () {
+            if (boardAutoScrollState.active) {
+                return;
+            }
+            boardAutoScrollState.active = true;
+            boardAutoScrollState.frameId = requestAutoScrollFrame(stepBoardAutoScroll);
+        };
+        var updateBoardAutoScrollPointer = function (evt) {
+            if (!evt || !Number.isFinite(evt.clientX)) {
+                return;
+            }
+            boardAutoScrollState.pointerX = evt.clientX;
+        };
+        var stopBoardAutoScroll = function () {
+            boardAutoScrollState.active = false;
+            boardAutoScrollState.pointerX = null;
+            cancelAutoScrollFrame(boardAutoScrollState.frameId);
+            boardAutoScrollState.frameId = null;
+        };
+
         var backgroundDragState = {
             active: false,
             startX: 0,
@@ -1940,7 +2015,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             columns.forEach(function (column, index) {
-                board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns, isWritable), isWritable ? addListWrapper : null);
+                board.insertBefore(createColumnElement(root, columns, column, index, normalizeLineNumbers, getCardInsertLineStart, enqueueMutation, renderColumns, persistColumns, isWritable, {
+                    start: startBoardAutoScroll,
+                    update: updateBoardAutoScrollPointer,
+                    stop: stopBoardAutoScroll
+                }), isWritable ? addListWrapper : null);
             });
         };
         rerenderColumns = renderColumns;

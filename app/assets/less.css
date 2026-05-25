@@ -4230,6 +4230,7 @@ kbd.MacroKbd {
   border-radius: calc(var(--kanban-radius) - 2px);
   padding: 14px;
   box-sizing: border-box;
+  min-height: 360px;
 }
 .InterpreterKanban .kanban-draggable {
   cursor: grab;
@@ -4515,6 +4516,7 @@ kbd.MacroKbd {
     flex-direction: column;
     gap: 12px;
     padding: 10px;
+    min-height: 280px;
   }
   .InterpreterKanban .kanban-add-list-wrapper {
     width: 100%;

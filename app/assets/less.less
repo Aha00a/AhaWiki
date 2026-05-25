@@ -2958,6 +2958,7 @@ kbd.MacroKbd {
 		border-radius: calc(var(--kanban-radius) - 2px);
 		padding: 14px;
 		box-sizing: border-box;
+		min-height: 360px;
 	}
 
 	// background drag state
@@ -3086,7 +3087,7 @@ kbd.MacroKbd {
 
 	// Responsive: stack columns on small screens for better mobile UX
 	@media (max-width: 767px) {
-		.kanban-board-ready { flex-direction: column; gap:12px; padding:10px; }
+		.kanban-board-ready { flex-direction: column; gap:12px; padding:10px; min-height: 280px; }
 		.kanban-add-list-wrapper { width:100%; min-width:0; }
 		.kanban-column { width:100%; max-width:none; min-width:0; }
 		.kanban-card { max-width:100%; }
