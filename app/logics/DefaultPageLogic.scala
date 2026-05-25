@@ -61,7 +61,7 @@ object DefaultPageLogic {
         // TODO: extract macro
         val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
 
-        val r = <table class="month simpleTable">
+        val r = <table class="month wikiTableSimple">
           <thead>
             <tr>
               <th colspan="31">
@@ -96,7 +96,7 @@ object DefaultPageLogic {
         // TODO: extract macro
         val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
 
-        val r = <table class="month simpleTable">
+        val r = <table class="month wikiTableSimple">
           <thead>
             <tr>
               <th colspan="31">

@@ -25,9 +25,15 @@ object InterpreterTable extends TraitInterpreter {
   private val defaultCellValue = ""
 
   case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String]) {
-    def getClasses: String = (Seq("simpleTable", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")))
-      .distinct
-      .mkString(" ")
+    def getClasses: String =
+      (Seq("wikiTableSimple", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")).map(normalizeClassToken))
+        .distinct
+        .mkString(" ")
+  }
+
+  private def normalizeClassToken(token: String): String = token match {
+    case "simpleTable" => "wikiTableSimple"
+    case _ => token
   }
 
   private def sanitizeClasses(classes: String): Option[String] = Option(classes)
@@ -35,6 +41,7 @@ object InterpreterTable extends TraitInterpreter {
     .filter(_.nonEmpty)
     .map(_.split("""\s+""").toSeq
       .filter(token => regexCssClassToken.matches(token))
+      .map(normalizeClassToken)
       .distinct
       .mkString(" ")
     )

@@ -763,6 +763,31 @@ kbd.MacroKbd {
 	.description {
 		color: var(--color-muted);
 	}
+
+	.hotkeyHelpTable {
+		width: 100%;
+		border-collapse: collapse;
+		border: 1px solid var(--color-table-border);
+
+		th, td {
+			padding: 6px 8px;
+			border: 1px solid var(--color-table-border);
+		}
+
+		th {
+			text-align: left;
+			white-space: nowrap;
+			background: var(--color-table-header-bg);
+		}
+
+		tr:nth-child(even) td {
+			background: var(--color-table-row-alt-bg);
+		}
+
+		tr:hover td {
+			background: var(--color-table-row-hover-bg);
+		}
+	}
 }
 
 @widthMonitor: ~"(max-width: 1279px)";
@@ -1407,7 +1432,6 @@ kbd.MacroKbd {
 
 
 		.wikiSyntax {
-			.simpleTable;
 			width: 100%;
 			&>tbody {
 				&>tr {
@@ -1683,7 +1707,7 @@ kbd.MacroKbd {
 		}
 	}
 
-    .MacroCalendar.simpleTable {
+    .MacroCalendar.wikiTableSimple {
         display: inline-table;
         vertical-align: top;
         margin: 0 20px 20px 0;
@@ -1702,7 +1726,7 @@ kbd.MacroKbd {
 			padding: 0;
 		}
     }
-	.simpleTable {
+	.wikiTableSimple() {
 		border-collapse: collapse;
 		border: 1px solid var(--color-table-border);
 		border-radius: 10px;
@@ -1735,22 +1759,37 @@ kbd.MacroKbd {
 			background: var(--color-table-row-hover-bg);
 		}
 	}
+	.wikiTableSimple {
+		.wikiTableSimple();
+	}
 	.tablesorter {
-		@unsortedBlack: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
-		@sortAscBlack: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
-		@sortDescBlack: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
 		.tablesorter-header {
-			background-image: @unsortedBlack;
-			background-repeat: no-repeat;
-			background-position: right 5px center;
+			position: relative;
 			padding-right: 30px;
 			cursor: pointer;
+
+			&::after {
+				content: "";
+				position: absolute;
+				top: 50%;
+				right: 10px;
+				margin-top: -2px;
+				border-left: 4px solid transparent;
+				border-right: 4px solid transparent;
+				border-top: 5px solid var(--color-muted);
+				opacity: 0.75;
+			}
 		}
 		.tablesorter-headerAsc {
-			background-image: @sortAscBlack;
+			&::after {
+				border-top: 0;
+				border-bottom: 5px solid var(--color-link);
+			}
 		}
 		.tablesorter-headerDesc {
-			background-image: @sortDescBlack;
+			&::after {
+				border-top-color: var(--color-link);
+			}
 		}
 		thead {
 			td {
@@ -1759,6 +1798,10 @@ kbd.MacroKbd {
 					width: 100%;
 					height: 21px;
 					vertical-align: middle;
+					border: 1px solid var(--color-input-border);
+					border-radius: 4px;
+					background: var(--color-input-bg);
+					color: var(--color-text);
 				}
 			}
 		}
@@ -2212,21 +2255,15 @@ kbd.MacroKbd {
 	.searchResult {
 		.item {
 			padding: 10px;
-			table.tableSearchResult {
+			table.wikiTableSimple.tableSearchResult {
 				width: 100%;
-				border-collapse: collapse;
-				border: 1px solid #ccc;
 				td {
-					border: 1px solid #ccc;
-					border-bottom: 1px solid #eee;
-
 					.monospace();
 					white-space: pre-wrap;
 					word-break: break-word;
 
 					&.empty {
-						border: 1px solid #ccc;
-						background-color: #eee;
+						background-color: var(--color-table-row-alt-bg);
 						height: 12px;
 					}
 					&.lineNumber {
@@ -2241,7 +2278,7 @@ kbd.MacroKbd {
 				}
 				tr:last-of-type {
 					> td {
-						border-bottom: 1px solid #ccc;
+						border-bottom: 1px solid var(--color-table-border);
 					}
 				}
 			}
@@ -2269,17 +2306,13 @@ kbd.MacroKbd {
 
 
 	.blame {
-		table.tableLegend {
-			border-collapse: collapse;
+		table.wikiTableSimple.tableLegend {
 			margin: 20px 0;
 		}
-		table.tableBlame {
+		table.wikiTableSimple.tableBlame {
 			width: 100%;
-			border-collapse: collapse;
-			border: 1px solid #ccc;
 			thead {
-				border: 1px solid #ccc;
-				background-color: #f7f7f7;
+				background-color: var(--color-table-header-bg);
 			}
 			th, td {
 				padding: 5px;
@@ -2287,31 +2320,30 @@ kbd.MacroKbd {
 				white-space: pre-wrap;
 				word-break: break-word;
 
-				&.lineDateTime, &.lineAuthor, &.lineRevision, &.lineNumber, &.lineComment {
+				&.lineDateTime, &.lineAuthor, &.lineNickname, &.lineRevision, &.lineNumber, &.lineComment {
 					padding: 5px 10px;
 					white-space: nowrap;
-					background-color: #f7f7f7;
+					background-color: var(--color-table-header-bg);
 				}
 
-				&.lineDateTime, &.lineAuthor, &.lineNumber, &.lineContent, &.lineComment {
-					border-bottom: 1px solid #eee;
+				&.lineDateTime, &.lineAuthor, &.lineNickname, &.lineNumber, &.lineContent, &.lineComment {
+					border-bottom: 1px solid var(--color-table-border);
 				}
 
 				&.lineRevision, &.lineNumber {
 					text-align: right;
 				}
 				&.lineContent {
-					background-color: #fff;
-					border: 1px solid #ccc;
-					border-bottom: 1px solid #eee;
+					background-color: var(--color-surface);
+					border: 1px solid var(--color-table-border);
 				}
 				&.lineComment {
-					background-color: #f7f7f7;
+					background-color: var(--color-table-header-bg);
 				}
 			}
 			tr:last-of-type {
 				> td {
-					border-bottom: 1px solid #ccc;
+					border-bottom: 1px solid var(--color-table-border);
 				}
 			}
 		}
@@ -2560,11 +2592,11 @@ kbd.MacroKbd {
 					align-items: center;
 					gap: 12px 20px;
 					padding: 14px 16px;
-					border: 1px solid #dbe4ef;
+					border: 1px solid var(--color-border-subtle);
 					border-radius: 5px;
-					background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+					background: var(--color-surface-panel);
 					margin-bottom: 12px;
-					box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+					box-shadow: inset 0 1px 0 var(--color-shadow-soft);
 
 					.macro-recent-changes-form-title-wrap {
 						display: flex;
@@ -2586,15 +2618,17 @@ kbd.MacroKbd {
 						padding: 5px;
 
 						.label-text {
-							color: #334155;
+							color: var(--color-muted-strong);
 							font-weight: 600;
 						}
 
 						input[type="number"] {
 							width: 86px;
-							border: 1px solid #d1d5db;
+							border: 1px solid var(--color-input-border);
 							border-radius: 5px;
 							padding: 5px 8px;
+							background: var(--color-input-bg);
+							color: var(--color-text);
 							font-size: 13px;
 						}
 
@@ -2607,29 +2641,29 @@ kbd.MacroKbd {
 						border: 0;
 						border-radius: 5px;
 						padding: 8px 14px;
-						background: #2563eb;
-						color: #fff;
+						background: var(--color-adjacent-hud-action-active-bg);
+						color: var(--color-adjacent-hud-action-active-text);
 						font-size: 14px;
 						font-weight: 600;
 						cursor: pointer;
 
 						&:hover {
-							background: #1d4ed8;
+							filter: brightness(0.95);
 						}
 					}
 				}
 
 				.macro-recent-changes {
-					border: 1px solid #e5e7eb;
+					border: 1px solid var(--color-table-border);
 					border-radius: 5px;
 					overflow: hidden;
-					background: #ffffff;
+					background: var(--color-surface);
 
 					.macro-recent-changes-status {
 						padding: 14px;
-						color: #4b5563;
+						color: var(--color-muted);
 						font-size: 14px;
-						background: #f9fafb;
+						background: var(--color-surface-alt);
 
 						@keyframes recentChangesSpin {
 							from {
@@ -2646,8 +2680,8 @@ kbd.MacroKbd {
 							width: 14px;
 							height: 14px;
 							margin-right: 8px;
-							border: 2px solid #cbd5e1;
-							border-top-color: #2563eb;
+							border: 2px solid var(--color-border-subtle);
+							border-top-color: var(--color-focus-ring);
 							border-radius: 50%;
 							vertical-align: -2px;
 							animation: recentChangesSpin 0.8s linear infinite;
@@ -2662,35 +2696,18 @@ kbd.MacroKbd {
 					.macro-recent-changes-table {
 						margin-left: 0;
 						width: 100%;
-						border-collapse: collapse;
 
 						@media (max-width: 767px) {
 							min-width: 760px;
 						}
 
 						th, td {
-							padding: 10px 12px;
-							border: 1px solid #f1f5f9;
 							text-align: left;
 							word-break: break-word;
 						}
 
 						th {
-							background: #f8fafc;
 							white-space: nowrap;
-						}
-
-						td {
-							> ol {
-								margin: 0;
-							}
-						}
-
-						tr:nth-child(even) td {
-							background: #fcfdff;
-						}
-						tr:hover td {
-							background: #f7f8ff;
 						}
 					}
 				}

@@ -24,7 +24,7 @@ object InterpreterWikiSyntaxPreview extends TraitInterpreter {
   }
 
   private def render(raw: String, preview: String): String = {
-    s"""<table class="wikiSyntax">
+    s"""<table class="wikiTableSimple wikiSyntax">
        |    <thead>
        |        <tr>
        |            <th>Raw</th>
