@@ -10,7 +10,9 @@ object MacroColorCode extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {
       case "" => ""
-      case regexColorCodeSharpHex(color) => <span class="MacroColorCode"><spen class="preview" style={s"""background-color: $color"""}></spen> {color}</span>.toString()
+      case regexColorCodeSharpHex(color) =>
+        val swatch = s"""<span class="MacroColorCodeSwatch"><span style="background: $color"></span></span>"""
+        s"""<span class="MacroColorCode">$swatch${MacroCopyable.doToHtmlString(color)}</span>"""
       case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
     }
   }

@@ -335,7 +335,7 @@ object MacroThemes extends TraitMacro {
        |</tr>""".stripMargin.replaceAll("\n", "")
 
   private def renderValueCell(value: String, preview: Preview): String =
-    s"""<td><span class="MacroThemesValue">${renderSwatch(value, preview)}<code>${value.escapeHtml()}</code></span></td>"""
+    s"""<td><span class="MacroThemesValue">${renderSwatch(value, preview)}${MacroCopyable.doToHtmlString(value)}</span></td>"""
 
   private def renderSwatch(value: String, preview: Preview): String = {
     val escaped = value.escapeHtmlAttribute()
