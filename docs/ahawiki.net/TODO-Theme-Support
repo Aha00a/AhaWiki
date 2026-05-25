@@ -167,12 +167,12 @@ html.theme-solarized-dark {
 테마를 선택하고 저장하는 기본 골격이다.
 이미 적용한 범위:
 
- * `localStorage` key를 `ahawiki-theme`로 사용
- * `<html>`에 `theme-*` class를 조기에 부여해 FOUC 방지
- * 프로필 팝업 메뉴 안에 네 가지 아이콘 버튼 추가
- * body/header/footer/nav의 기본 색상 토큰화
- * `.AhaWiki` 본문 링크, code, pre, blockquote의 기본 색상 토큰화
- * Kanban board의 1차 `--kanban-*` 변수 도입
+ * [[CB(x)]] `localStorage` key를 `ahawiki-theme`로 사용
+ * [[CB(x)]] `<html>`에 `theme-*` class를 조기에 부여해 FOUC 방지
+ * [[CB(x)]] 프로필 팝업 메뉴 안에 네 가지 아이콘 버튼 추가
+ * [[CB(x)]] body/header/footer/nav의 기본 색상 토큰화
+ * [[CB(x)]] `.AhaWiki` 본문 링크, code, pre, blockquote의 기본 색상 토큰화
+ * [[CB(x)]] Kanban board의 1차 `--kanban-*` 변수 도입
 
 === Phase 1: Read Page Common UI
 
@@ -181,35 +181,36 @@ html.theme-solarized-dark {
 
 대상:
 
- * 상단 flash 영역
- * Similar Pages의 `.percentTotal` / `.percentBar`
- * Adjacent Pages preview placeholder
- * Adjacent Pages HUD panel/button/dot
- * Adjacent Pages canvas host border
- * generated section 주변의 반복 UI
- * table, schema, toc, revisionInfo처럼 읽기 화면에서 반복되는 표면
+ * [[CB(x)]] 상단 flash 영역
+ * [[CB(x)]] Similar Pages의 `.percentTotal` / `.percentBar`
+ * [[CB(x)]] Adjacent Pages preview placeholder
+ * [[CB(x)]] Adjacent Pages HUD panel/button/dot
+ * [[CB(x)]] Adjacent Pages canvas host border
+ * [[CB(x)]] table 계열과 revisionInfo
+ * [[CB]] generated section 주변의 반복 UI
+ * [[CB]] schema/toc 세부 색상 재검증
 
 1차 적용 완료:
 
- * [x] flash success/error/info/warning 색상 토큰화
- * [x] Similar Pages percent bar 색상 토큰화
- * [x] Adjacent Pages preview placeholder 색상 토큰화
- * [x] Adjacent Pages HUD panel/button/dot 색상 토큰화
- * [x] Adjacent Pages canvas host border를 CSS 변수로 변경
- * [x] simpleTable, MacroCalendar, revisionInfo 색상 토큰화
- * [x] MacroCopyable, MacroColorCode의 border/background/text 색상 토큰화
+ * [[CB(x)]] flash success/error/info/warning 색상 토큰화
+ * [[CB(x)]] Similar Pages percent bar 색상 토큰화
+ * [[CB(x)]] Adjacent Pages preview placeholder 색상 토큰화
+ * [[CB(x)]] Adjacent Pages HUD panel/button/dot 색상 토큰화
+ * [[CB(x)]] Adjacent Pages canvas host border를 CSS 변수로 변경
+ * [[CB(x)]] simpleTable, MacroCalendar, revisionInfo 색상 토큰화
+ * [[CB(x)]] MacroCopyable, MacroColorCode의 border/background/text 색상 토큰화
 
 남은 항목:
 
- * [ ] Adjacent Pages canvas drawing color는 Phase 4에서 JS와 함께 처리
- * [ ] search result, blame, crawler preview 같은 읽기 화면 부가 UI는 별도 pass에서 처리
+ * [[CB]] Adjacent Pages canvas drawing color는 Phase 4에서 JS와 함께 처리
+ * [[CB]] search result, blame, crawler preview 같은 읽기 화면 부가 UI는 별도 pass에서 처리
 
 완료 기준:
 
- * 네 가지 테마에서 flash message가 읽힌다.
- * Similar Pages bar가 다크/솔라라이즈드 배경에서 묻히지 않는다.
- * Adjacent Pages placeholder/HUD가 테마 배경과 충돌하지 않는다.
- * AhaWiki Light에서 기존 색감이 크게 바뀌지 않는다.
+ * [[CB]] 네 가지 테마에서 flash message가 읽힌다.
+ * [[CB]] Similar Pages bar가 다크/솔라라이즈드 배경에서 묻히지 않는다.
+ * [[CB]] Adjacent Pages placeholder/HUD가 테마 배경과 충돌하지 않는다.
+ * [[CB]] AhaWiki Light에서 기존 색감이 크게 바뀌지 않는다.
 
 === Phase 2: Edit Page
 
@@ -217,17 +218,17 @@ html.theme-solarized-dark {
 
 대상:
 
- * `app/views/Wiki/edit.scala.html`의 inline `<style>`
- * `.edit` toolbar/link/divider/preview pane
- * `.editHelp`, `.editHelpBody`, edit flash warning
- * editor/preview split 주변 border와 background
- * 편집 화면에서만 쓰는 input/textarea/button 색상
+ * [[CB]] `app/views/Wiki/edit.scala.html`의 inline `<style>`
+ * [[CB]] `.edit` toolbar/link/divider/preview pane
+ * [[CB]] `.editHelp`, `.editHelpBody`, edit flash warning
+ * [[CB]] editor/preview split 주변 border와 background
+ * [[CB]] 편집 화면에서만 쓰는 input/textarea/button 색상
 
 완료 기준:
 
- * 편집 도움말, 에디터 주변, 미리보기 영역이 네 가지 테마에서 읽힌다.
- * AhaWiki Light의 편집 화면 밀도와 레이아웃은 유지된다.
- * CodeMirror 자체 테마 변경은 필요 여부를 확인한 뒤 별도 판단한다.
+ * [[CB]] 편집 도움말, 에디터 주변, 미리보기 영역이 네 가지 테마에서 읽힌다.
+ * [[CB]] AhaWiki Light의 편집 화면 밀도와 레이아웃은 유지된다.
+ * [[CB]] CodeMirror 자체 테마 변경은 필요 여부를 확인한 뒤 별도 판단한다.
 
 === Phase 3: Kanban Detail UI
 
@@ -235,18 +236,18 @@ Kanban board 본체는 1차 변수화가 되어 있지만, 상세 팝업과 드�
 
 대상:
 
- * `.kanban-modal`
- * `.kanban-modal-header`, title, card id badge
- * delete/close/save/comment/due date button
- * comment textarea, activity row, property row
- * attachment remove button
- * drop active/drop hint 상태
+ * [[CB]] `.kanban-modal`
+ * [[CB]] `.kanban-modal-header`, title, card id badge
+ * [[CB]] delete/close/save/comment/due date button
+ * [[CB]] comment textarea, activity row, property row
+ * [[CB]] attachment remove button
+ * [[CB]] drop active/drop hint 상태
 
 완료 기준:
 
- * board와 modal이 같은 테마 토큰을 공유한다.
- * 다크 테마에서 modal 내부 텍스트와 form control 대비가 충분하다.
- * drag/drop 강조색이 네 가지 테마에서 보인다.
+ * [[CB]] board와 modal이 같은 테마 토큰을 공유한다.
+ * [[CB]] 다크 테마에서 modal 내부 텍스트와 form control 대비가 충분하다.
+ * [[CB]] drag/drop 강조색이 네 가지 테마에서 보인다.
 
 === Phase 4: Inline JS / Canvas Leftovers
 
@@ -254,26 +255,26 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 대상:
 
- * Adjacent Pages canvas drawing color
- * page update toast
- * hotkey toast
- * view/edit page의 남은 inline style
- * JavaScript에서 직접 만든 DOM의 색상 의존성
+ * [[CB]] Adjacent Pages canvas drawing color
+ * [[CB]] page update toast
+ * [[CB]] hotkey toast
+ * [[CB]] view/edit page의 남은 inline style
+ * [[CB]] JavaScript에서 직접 만든 DOM의 색상 의존성
 
 완료 기준:
 
- * canvas나 JS 생성 UI가 CSS 변수 또는 theme-aware palette를 사용한다.
- * 새 하드코딩 색상이 생기지 않도록 검색 기준을 남긴다.
+ * [[CB]] canvas나 JS 생성 UI가 CSS 변수 또는 theme-aware palette를 사용한다.
+ * [[CB]] 새 하드코딩 색상이 생기지 않도록 검색 기준을 남긴다.
 
 === Phase 5: Verification
 
 각 단계가 끝날 때마다 가능한 범위에서 검증한다.
 
- * `lessc`로 `app/assets/less.css`와 source map 재생성
- * `git diff --check`
- * `sbt compile`
- * 주요 화면 수동 확인: read page, edit page, Similar Pages, Adjacent Pages, Kanban
- * `npm test`는 현재 AhaMark CodeMirror mode 테스트의 기존 실패를 별도 이슈로 분리해 본다.
+ * [[CB]] `lessc`로 `app/assets/less.css`와 source map 재생성
+ * [[CB]] `git diff --check`
+ * [[CB]] `sbt compile`
+ * [[CB]] 주요 화면 수동 확인: read page, edit page, Similar Pages, Adjacent Pages, Kanban
+ * [[CB]] `npm test`는 현재 AhaMark CodeMirror mode 테스트의 기존 실패를 별도 이슈로 분리해 본다.
 
 == Implementation Plan
 
@@ -283,11 +284,11 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 단계별 적용 대상:
 
- * Phase 0: body/header/footer/nav, 본문 기본 링크/code/pre/blockquote, theme picker
- * Phase 1: flash, Similar Pages bar, Adjacent Pages, 읽기 화면 반복 UI
- * Phase 2: edit page 전용 UI
- * Phase 3: Kanban detail modal
- * Phase 4: JS/canvas/inline style 잔여 색상
+ * [[CB(x)]] Phase 0: body/header/footer/nav, 본문 기본 링크/code/pre/blockquote, theme picker
+ * [[CB(x)]] Phase 1: flash, Similar Pages bar, Adjacent Pages, 읽기 화면 반복 UI
+ * [[CB]] Phase 2: edit page 전용 UI
+ * [[CB]] Phase 3: Kanban detail modal
+ * [[CB]] Phase 4: JS/canvas/inline style 잔여 색상
 
 === Inline body 색상 처리 (`app/views/_baseSkeleton.scala.html`)
 
@@ -424,14 +425,14 @@ Solarized나 AhaWiki Dark를 사용자가 선택하면 사용자 테마가 우�
 
 == Verification Checklist
 
- * [ ] 저장값이 없을 때 AhaWiki Light가 적용되는지 확인
- * [ ] 네 가지 테마 선택지가 모두 UI에 표시되는지 확인
- * [ ] 테마 선택 후 페이지 이동/새로고침에도 유지되는지 확인
- * [ ] FOUC 없이 `<head>` 단계에서 테마 class가 적용되는지 확인
- * [ ] AhaWiki Light에서 기존 사이트별 body/header/footer 색상이 유지되는지 확인
- * [ ] AhaWiki Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
- * [ ] Solarized Light에서 본문, 링크, 코드블록, blockquote 가독성 확인
- * [ ] Solarized Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
- * [ ] navbar, dropdown, mobile menu 색상이 각 테마에서 어색하지 않은지 확인
- * [ ] flash, toc, schema, table, Kanban UI가 각 테마에서 읽기 좋은지 확인
- * [ ] 모바일에서도 theme picker가 정상 동작하는지 확인
+ * [[CB]] 저장값이 없을 때 AhaWiki Light가 적용되는지 확인
+ * [[CB]] 네 가지 테마 선택지가 모두 UI에 표시되는지 확인
+ * [[CB]] 테마 선택 후 페이지 이동/새로고침에도 유지되는지 확인
+ * [[CB]] FOUC 없이 `<head>` 단계에서 테마 class가 적용되는지 확인
+ * [[CB]] AhaWiki Light에서 기존 사이트별 body/header/footer 색상이 유지되는지 확인
+ * [[CB]] AhaWiki Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [[CB]] Solarized Light에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [[CB]] Solarized Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
+ * [[CB]] navbar, dropdown, mobile menu 색상이 각 테마에서 어색하지 않은지 확인
+ * [[CB]] flash, toc, schema, table, Kanban UI가 각 테마에서 읽기 좋은지 확인
+ * [[CB]] 모바일에서도 theme picker가 정상 동작하는지 확인
