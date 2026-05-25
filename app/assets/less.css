@@ -70,12 +70,199 @@
   font-weight: 700;
   src: url(https://fonts.gstatic.com/s/ubuntumono/v19/KFO-CneDtsqEr0keqCMhbC-BL9H1tYg.ttf) format('truetype');
 }
+:root,
+html.theme-ahawiki-light {
+  --color-bg: #ffffff;
+  --color-text: #000000;
+  --color-link: #015ADC;
+  --color-link-visited: #000066;
+  --color-link-hover-bg: #eaf2ff;
+  --color-link-schema: #000033;
+  --color-missing-decoration: rgba(0, 0, 0, 0.3);
+  --color-missing-marker: rgba(0, 0, 0, 0.5);
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f7f7;
+  --color-surface-panel: linear-gradient(135deg, #eef 0%, #eff 100%);
+  --color-border: #cccccc;
+  --color-border-subtle: #e3e8ef;
+  --color-muted: #666666;
+  --color-muted-strong: #333333;
+  --color-code-bg: #000022;
+  --color-code-text: #cccccc;
+  --color-code-border: #9999cc;
+  --color-code-link: #3399ff;
+  --color-blockquote-bg: #f3f3ff;
+  --color-blockquote-border: #9999cc;
+  --color-heading-border: #cccccc;
+  --color-heading-shadow: 1px 1px 2px #99a;
+  --color-shadow-soft: #eeeeee;
+  --color-navbar-bg: rgba(255, 255, 255, 0.25);
+  --color-navbar-border: rgba(217, 225, 238, 0.3);
+  --color-navbar-shadow: rgba(9, 30, 66, 0.12);
+  --color-navbar-text: #000000;
+  --color-navbar-home: #0b57d0;
+  --color-navbar-menu-bg: #ffffff;
+  --color-navbar-text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
+  --color-input-bg: #ffffff;
+  --color-input-border: #d9e1ee;
+  --color-focus-ring: #268bd2;
+  --color-kanban-bg: linear-gradient(135deg, #f1f6ff 0%, #f7fbff 100%);
+  --color-kanban-column-bg: #fbfcff;
+  --color-kanban-card-bg: #ffffff;
+  --color-kanban-border: #d7dce2;
+  --color-kanban-muted: #6b778c;
+  --color-kanban-text: #172b4d;
+  --color-kanban-primary: #0c66e4;
+  --color-kanban-shadow: 0 6px 18px rgba(9, 30, 66, 0.08);
+}
+html.theme-ahawiki-dark {
+  --color-bg: #1a1a2e;
+  --color-text: #e0e0e0;
+  --color-link: #6da3f8;
+  --color-link-visited: #a0a0cc;
+  --color-link-hover-bg: #263854;
+  --color-link-schema: #b7c7ff;
+  --color-missing-decoration: rgba(224, 224, 224, 0.45);
+  --color-missing-marker: rgba(224, 224, 224, 0.65);
+  --color-surface: #20203a;
+  --color-surface-alt: #252542;
+  --color-surface-panel: linear-gradient(135deg, #20203a 0%, #24304a 100%);
+  --color-border: #444466;
+  --color-border-subtle: #383852;
+  --color-muted: #b5b5c8;
+  --color-muted-strong: #d5d5e8;
+  --color-code-bg: #0d0d1a;
+  --color-code-text: #cccccc;
+  --color-code-border: #555588;
+  --color-code-link: #6da3f8;
+  --color-blockquote-bg: #1e1e3a;
+  --color-blockquote-border: #555588;
+  --color-heading-border: #444466;
+  --color-heading-shadow: none;
+  --color-shadow-soft: rgba(0, 0, 0, 0.4);
+  --color-navbar-bg: rgba(20, 20, 40, 0.7);
+  --color-navbar-border: rgba(100, 100, 150, 0.3);
+  --color-navbar-shadow: rgba(0, 0, 0, 0.35);
+  --color-navbar-text: #e0e0e0;
+  --color-navbar-home: #8cb4ff;
+  --color-navbar-menu-bg: #20203a;
+  --color-navbar-text-shadow: none;
+  --color-input-bg: #20203a;
+  --color-input-border: #444466;
+  --color-focus-ring: #6da3f8;
+  --color-kanban-bg: linear-gradient(135deg, #18182c 0%, #20203a 100%);
+  --color-kanban-column-bg: #20203a;
+  --color-kanban-card-bg: #252542;
+  --color-kanban-border: #444466;
+  --color-kanban-muted: #b5b5c8;
+  --color-kanban-text: #e0e0e0;
+  --color-kanban-primary: #6da3f8;
+  --color-kanban-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+html.theme-solarized-light {
+  --color-bg: #fdf6e3;
+  --color-text: #657b83;
+  --color-link: #268bd2;
+  --color-link-visited: #6c71c4;
+  --color-link-hover-bg: #eee8d5;
+  --color-link-schema: #2aa198;
+  --color-missing-decoration: rgba(101, 123, 131, 0.42);
+  --color-missing-marker: rgba(101, 123, 131, 0.66);
+  --color-surface: #fdf6e3;
+  --color-surface-alt: #eee8d5;
+  --color-surface-panel: linear-gradient(135deg, #eee8d5 0%, #f5efdc 100%);
+  --color-border: #93a1a1;
+  --color-border-subtle: #d8d0b8;
+  --color-muted: #93a1a1;
+  --color-muted-strong: #586e75;
+  --color-code-bg: #eee8d5;
+  --color-code-text: #586e75;
+  --color-code-border: #93a1a1;
+  --color-code-link: #268bd2;
+  --color-blockquote-bg: #eee8d5;
+  --color-blockquote-border: #93a1a1;
+  --color-heading-border: #93a1a1;
+  --color-heading-shadow: none;
+  --color-shadow-soft: rgba(101, 123, 131, 0.18);
+  --color-navbar-bg: rgba(253, 246, 227, 0.72);
+  --color-navbar-border: rgba(147, 161, 161, 0.35);
+  --color-navbar-shadow: rgba(101, 123, 131, 0.16);
+  --color-navbar-text: #586e75;
+  --color-navbar-home: #268bd2;
+  --color-navbar-menu-bg: #fdf6e3;
+  --color-navbar-text-shadow: none;
+  --color-input-bg: #fdf6e3;
+  --color-input-border: #93a1a1;
+  --color-focus-ring: #268bd2;
+  --color-kanban-bg: linear-gradient(135deg, #eee8d5 0%, #fdf6e3 100%);
+  --color-kanban-column-bg: #eee8d5;
+  --color-kanban-card-bg: #fdf6e3;
+  --color-kanban-border: #93a1a1;
+  --color-kanban-muted: #93a1a1;
+  --color-kanban-text: #586e75;
+  --color-kanban-primary: #268bd2;
+  --color-kanban-shadow: 0 6px 18px rgba(101, 123, 131, 0.14);
+}
+html.theme-solarized-dark {
+  --color-bg: #002b36;
+  --color-text: #839496;
+  --color-link: #268bd2;
+  --color-link-visited: #6c71c4;
+  --color-link-hover-bg: #073642;
+  --color-link-schema: #2aa198;
+  --color-missing-decoration: rgba(131, 148, 150, 0.45);
+  --color-missing-marker: rgba(131, 148, 150, 0.7);
+  --color-surface: #073642;
+  --color-surface-alt: #0b3a46;
+  --color-surface-panel: linear-gradient(135deg, #073642 0%, #0b3a46 100%);
+  --color-border: #586e75;
+  --color-border-subtle: #164753;
+  --color-muted: #586e75;
+  --color-muted-strong: #93a1a1;
+  --color-code-bg: #073642;
+  --color-code-text: #93a1a1;
+  --color-code-border: #586e75;
+  --color-code-link: #268bd2;
+  --color-blockquote-bg: #073642;
+  --color-blockquote-border: #586e75;
+  --color-heading-border: #586e75;
+  --color-heading-shadow: none;
+  --color-shadow-soft: rgba(0, 0, 0, 0.32);
+  --color-navbar-bg: rgba(0, 43, 54, 0.78);
+  --color-navbar-border: rgba(88, 110, 117, 0.45);
+  --color-navbar-shadow: rgba(0, 0, 0, 0.32);
+  --color-navbar-text: #93a1a1;
+  --color-navbar-home: #268bd2;
+  --color-navbar-menu-bg: #073642;
+  --color-navbar-text-shadow: none;
+  --color-input-bg: #073642;
+  --color-input-border: #586e75;
+  --color-focus-ring: #268bd2;
+  --color-kanban-bg: linear-gradient(135deg, #002b36 0%, #073642 100%);
+  --color-kanban-column-bg: #073642;
+  --color-kanban-card-bg: #002b36;
+  --color-kanban-border: #586e75;
+  --color-kanban-muted: #586e75;
+  --color-kanban-text: #93a1a1;
+  --color-kanban-primary: #268bd2;
+  --color-kanban-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+html.theme-ahawiki-dark,
+html.theme-solarized-dark {
+  color-scheme: dark;
+}
 html,
 body {
   padding: 0;
   margin: 0;
   font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+html.theme-ahawiki-light body {
+  background-color: var(--site-body-bg, var(--color-bg));
+  color: var(--site-body-text, var(--color-text));
 }
 nav.topNavbar {
   position: sticky;
@@ -83,12 +270,12 @@ nav.topNavbar {
   left: 0;
   right: 0;
   z-index: 1;
-  border-bottom: 1px solid rgba(217, 225, 238, 0.3);
-  box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
-  background-color: rgba(255, 255, 255, 0.25);
+  border-bottom: 1px solid var(--color-navbar-border);
+  box-shadow: 0 8px 24px var(--color-navbar-shadow);
+  background-color: var(--color-navbar-bg);
   backdrop-filter: saturate(180%) blur(5px);
   -webkit-backdrop-filter: saturate(180%) blur(5px);
-  text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
+  text-shadow: var(--color-navbar-text-shadow);
 }
 nav.topNavbar > .wrap {
   display: flex;
@@ -105,19 +292,19 @@ nav.topNavbar button {
   height: 34px;
   padding: 0 12px;
   text-decoration: none;
-  color: #000;
+  color: var(--color-navbar-text);
   background-color: transparent;
   transition: all 160ms ease;
-  text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
+  text-shadow: var(--color-navbar-text-shadow);
 }
 nav.topNavbar a:hover,
 nav.topNavbar button:hover {
-  background-color: #eaf2ff;
+  background-color: var(--color-link-hover-bg);
 }
 nav.topNavbar .homeLink {
   font-size: 18px;
   font-weight: 800;
-  color: #0b57d0;
+  color: var(--color-navbar-home);
   margin-right: auto;
   min-width: 0;
   max-width: 100%;
@@ -135,6 +322,27 @@ nav.topNavbar .navDrawerToggle {
 }
 nav.topNavbar .mobileFlatMenu {
   display: none;
+}
+nav.topNavbar .themeControl {
+  display: inline-flex;
+  align-items: center;
+}
+nav.topNavbar .themePicker {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  height: 34px;
+  max-width: 180px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 5px;
+  padding: 0 10px;
+  background: var(--color-input-bg);
+  color: var(--color-navbar-text);
+  cursor: pointer;
+  text-shadow: none;
+}
+nav.topNavbar .themePicker:focus {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 nav.topNavbar ul {
   list-style: none;
@@ -169,11 +377,11 @@ nav.topNavbar .groupMenu .groupMenuToggle {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    background: #fff;
-    border: 1px solid #d9e1ee;
+    background: var(--color-navbar-menu-bg);
+    border: 1px solid var(--color-input-border);
     border-radius: 12px;
     padding: 6px;
-    box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+    box-shadow: 0 8px 24px var(--color-navbar-shadow);
     z-index: 4;
     min-width: 180px;
   }
@@ -206,11 +414,11 @@ nav.topNavbar .actionAuth .authSubmenu {
   top: calc(100% + 8px);
   right: 0;
   min-width: 160px;
-  background: #fff;
-  border: 1px solid #d9e1ee;
+  background: var(--color-navbar-menu-bg);
+  border: 1px solid var(--color-input-border);
   border-radius: 12px;
   padding: 6px;
-  box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+  box-shadow: 0 8px 24px var(--color-navbar-shadow);
   z-index: 4;
 }
 nav.topNavbar .actionAuth .authSubmenu li {
@@ -248,11 +456,11 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-    background: #fff;
-    border: 1px solid #d9e1ee;
+    background: var(--color-navbar-menu-bg);
+    border: 1px solid var(--color-input-border);
     border-radius: 12px;
     padding: 8px;
-    box-shadow: 0 8px 24px rgba(9, 30, 66, 0.12);
+    box-shadow: 0 8px 24px var(--color-navbar-shadow);
     z-index: 5;
   }
   nav.topNavbar .mobileFlatMenu li,
@@ -263,7 +471,7 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
     list-style: none;
     height: 0;
     margin: 4px 0;
-    border-top: 1px solid #e3e8ef;
+    border-top: 1px solid var(--color-border-subtle);
     pointer-events: none;
   }
   nav.topNavbar.menuOpen .mobileFlatMenu {
@@ -284,9 +492,22 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   object-fit: cover;
   vertical-align: text-bottom;
 }
+.header,
+.footer {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
 .header > .wrap,
 .footer > .wrap {
   padding: 10px 30px;
+}
+html.theme-ahawiki-light .header {
+  background-color: var(--site-header-bg, #EEEEEE);
+  color: var(--site-header-text, #000000);
+}
+html.theme-ahawiki-light .footer {
+  background-color: var(--site-footer-bg, #EEEEEE);
+  color: var(--site-footer-text, #000000);
 }
 .monospace {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
@@ -373,7 +594,7 @@ kbd.MacroKbd {
   }
 }
 .AhaWiki a {
-  color: #015ADC;
+  color: var(--color-link);
   word-break: break-word;
 }
 .AhaWiki a[target=_blank]:before {
@@ -385,22 +606,22 @@ kbd.MacroKbd {
   vertical-align: bottom;
 }
 .AhaWiki a:visited {
-  color: #006;
+  color: var(--color-link-visited);
 }
 .AhaWiki a:hover,
 .AhaWiki a:active {
-  background-color: #eaf2ff;
+  background-color: var(--color-link-hover-bg);
 }
 .AhaWiki a.missing {
   color: inherit;
-  text-decoration: underline solid rgba(0, 0, 0, 0.3);
+  text-decoration: underline solid var(--color-missing-decoration);
 }
 .AhaWiki a.missing:after {
   content: "?";
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--color-missing-marker);
 }
 .AhaWiki a.schema {
-  color: #003;
+  color: var(--color-link-schema);
 }
 .AhaWiki a.schema-link::before {
   content: "🧩";
@@ -802,7 +1023,7 @@ kbd.MacroKbd {
   .AhaWiki .commonAhaWiki h4,
   .AhaWiki .commonAhaWiki h5,
   .AhaWiki .commonAhaWiki h6 {
-    text-shadow: 1px 1px 2px #99a;
+    text-shadow: var(--color-heading-shadow);
   }
 }
 .AhaWiki .commonAhaWiki h1 .headingNumber,
@@ -818,7 +1039,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki h3 {
   margin-top: 20px;
   margin-bottom: 10px;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid var(--color-heading-border);
   padding: 5px;
 }
 .AhaWiki .commonAhaWiki h4,
@@ -826,7 +1047,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki h6 {
   margin-top: 10px;
   margin-bottom: 5px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border-subtle);
   padding: 3px;
 }
 .AhaWiki .commonAhaWiki h1 {
@@ -856,7 +1077,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki hr {
   padding: 0;
   border: none;
-  border-bottom: 1px dashed #ccc;
+  border-bottom: 1px dashed var(--color-border);
   margin-left: 0;
   height: 0;
   clear: both;
@@ -878,9 +1099,9 @@ kbd.MacroKbd {
   display: inline-block;
 }
 .AhaWiki .commonAhaWiki code {
-  border: 1px solid #99c;
-  background-color: #002;
-  color: #fff;
+  border: 1px solid var(--color-code-border);
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
@@ -889,8 +1110,8 @@ kbd.MacroKbd {
   margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
-  background-color: #002;
-  color: #CCCCCC;
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   padding-bottom: 0.5em;
   padding-left: 1em;
   padding-top: 0.5em;
@@ -898,18 +1119,18 @@ kbd.MacroKbd {
   word-break: break-all;
 }
 .AhaWiki .commonAhaWiki pre a {
-  color: #3399ff;
+  color: var(--color-code-link);
 }
 .AhaWiki .commonAhaWiki pre.text {
   margin-top: 1px;
   margin-bottom: 1px;
-  border: 2px solid #9999CC;
+  border: 2px solid var(--color-code-border);
   border-left-width: 15px;
 }
 .AhaWiki .commonAhaWiki blockquote {
   position: relative;
-  background-color: #f3f3ff;
-  border: 2px solid #99c;
+  background-color: var(--color-blockquote-bg);
+  border: 2px solid var(--color-blockquote-border);
   border-left-width: 10px;
   overflow: hidden;
   padding: 10px 25px;
@@ -948,11 +1169,11 @@ kbd.MacroKbd {
   line-height: 1.4;
 }
 .AhaWiki .commonAhaWiki div.toc a {
-  color: #2f4583;
+  color: var(--color-link-schema);
   text-decoration: none;
 }
 .AhaWiki .commonAhaWiki div.toc a:hover {
-  color: #1b2f67;
+  color: var(--color-link);
   text-decoration: underline;
 }
 .AhaWiki .commonAhaWiki div.toc,
@@ -976,7 +1197,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
-  border-bottom: 1px solid #d5d5d5;
+  border-bottom: 1px solid var(--color-border-subtle);
   margin-left: 0;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema .schemaFields .schemaFieldRow {
@@ -1010,7 +1231,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dt {
   font-weight: 700;
-  color: #333;
+  color: var(--color-muted-strong);
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd {
   margin-left: 10px;
@@ -1021,18 +1242,18 @@ kbd.MacroKbd {
   margin-left: 10px;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
-  color: #888;
+  color: var(--color-muted);
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl dd .datePeriod {
-  color: #666;
+  color: var(--color-muted);
   font-size: 90%;
   margin-left: 4px;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #f7f7f7;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-alt);
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema dl .address > dd {
   display: block;
@@ -1058,16 +1279,16 @@ kbd.MacroKbd {
   padding-left: 20px;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema .match {
-  color: #00f;
+  color: var(--color-link);
   font-weight: bold;
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema .unknown,
 .AhaWiki .commonAhaWiki div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
-  color: #aaa;
+  color: var(--color-muted);
 }
 .AhaWiki .commonAhaWiki div.InterpreterSchema sup {
-  color: #777;
+  color: var(--color-muted);
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -1083,12 +1304,12 @@ kbd.MacroKbd {
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  background: var(--color-surface-panel);
   padding: 10px 20px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
 }
 .AhaWiki .commonAhaWiki div.toc p,
 .AhaWiki .commonAhaWiki div.MacroLinkDate p,
@@ -1117,7 +1338,7 @@ kbd.MacroKbd {
     margin: 12px 0;
     padding: 12px;
     border-radius: 8px;
-    background: #f8fbff;
+    background: var(--color-surface-alt);
     box-sizing: border-box;
   }
 }
@@ -1150,8 +1371,8 @@ kbd.MacroKbd {
   border-collapse: collapse;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
   backdrop-filter: saturate(180%) blur(5px);
   -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
@@ -1333,7 +1554,7 @@ kbd.MacroKbd {
   .AhaWiki .wikiContent h4,
   .AhaWiki .wikiContent h5,
   .AhaWiki .wikiContent h6 {
-    text-shadow: 1px 1px 2px #99a;
+    text-shadow: var(--color-heading-shadow);
   }
 }
 .AhaWiki .wikiContent h1 .headingNumber,
@@ -1349,7 +1570,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent h3 {
   margin-top: 20px;
   margin-bottom: 10px;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid var(--color-heading-border);
   padding: 5px;
 }
 .AhaWiki .wikiContent h4,
@@ -1357,7 +1578,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent h6 {
   margin-top: 10px;
   margin-bottom: 5px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border-subtle);
   padding: 3px;
 }
 .AhaWiki .wikiContent h1 {
@@ -1387,7 +1608,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent hr {
   padding: 0;
   border: none;
-  border-bottom: 1px dashed #ccc;
+  border-bottom: 1px dashed var(--color-border);
   margin-left: 0;
   height: 0;
   clear: both;
@@ -1409,9 +1630,9 @@ kbd.MacroKbd {
   display: inline-block;
 }
 .AhaWiki .wikiContent code {
-  border: 1px solid #99c;
-  background-color: #002;
-  color: #fff;
+  border: 1px solid var(--color-code-border);
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
@@ -1420,8 +1641,8 @@ kbd.MacroKbd {
   margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
-  background-color: #002;
-  color: #CCCCCC;
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   padding-bottom: 0.5em;
   padding-left: 1em;
   padding-top: 0.5em;
@@ -1429,18 +1650,18 @@ kbd.MacroKbd {
   word-break: break-all;
 }
 .AhaWiki .wikiContent pre a {
-  color: #3399ff;
+  color: var(--color-code-link);
 }
 .AhaWiki .wikiContent pre.text {
   margin-top: 1px;
   margin-bottom: 1px;
-  border: 2px solid #9999CC;
+  border: 2px solid var(--color-code-border);
   border-left-width: 15px;
 }
 .AhaWiki .wikiContent blockquote {
   position: relative;
-  background-color: #f3f3ff;
-  border: 2px solid #99c;
+  background-color: var(--color-blockquote-bg);
+  border: 2px solid var(--color-blockquote-border);
   border-left-width: 10px;
   overflow: hidden;
   padding: 10px 25px;
@@ -1479,11 +1700,11 @@ kbd.MacroKbd {
   line-height: 1.4;
 }
 .AhaWiki .wikiContent div.toc a {
-  color: #2f4583;
+  color: var(--color-link-schema);
   text-decoration: none;
 }
 .AhaWiki .wikiContent div.toc a:hover {
-  color: #1b2f67;
+  color: var(--color-link);
   text-decoration: underline;
 }
 .AhaWiki .wikiContent div.toc,
@@ -1507,7 +1728,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .wikiContent div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
-  border-bottom: 1px solid #d5d5d5;
+  border-bottom: 1px solid var(--color-border-subtle);
   margin-left: 0;
 }
 .AhaWiki .wikiContent div.InterpreterSchema .schemaFields .schemaFieldRow {
@@ -1541,7 +1762,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dt {
   font-weight: 700;
-  color: #333;
+  color: var(--color-muted-strong);
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dd {
   margin-left: 10px;
@@ -1552,18 +1773,18 @@ kbd.MacroKbd {
   margin-left: 10px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
-  color: #888;
+  color: var(--color-muted);
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl dd .datePeriod {
-  color: #666;
+  color: var(--color-muted);
   font-size: 90%;
   margin-left: 4px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #f7f7f7;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-alt);
 }
 .AhaWiki .wikiContent div.InterpreterSchema dl .address > dd {
   display: block;
@@ -1589,16 +1810,16 @@ kbd.MacroKbd {
   padding-left: 20px;
 }
 .AhaWiki .wikiContent div.InterpreterSchema .match {
-  color: #00f;
+  color: var(--color-link);
   font-weight: bold;
 }
 .AhaWiki .wikiContent div.InterpreterSchema .unknown,
 .AhaWiki .wikiContent div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
-  color: #aaa;
+  color: var(--color-muted);
 }
 .AhaWiki .wikiContent div.InterpreterSchema sup {
-  color: #777;
+  color: var(--color-muted);
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -1614,12 +1835,12 @@ kbd.MacroKbd {
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  background: var(--color-surface-panel);
   padding: 10px 20px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
 }
 .AhaWiki .wikiContent div.toc p,
 .AhaWiki .wikiContent div.MacroLinkDate p,
@@ -1648,7 +1869,7 @@ kbd.MacroKbd {
     margin: 12px 0;
     padding: 12px;
     border-radius: 8px;
-    background: #f8fbff;
+    background: var(--color-surface-alt);
     box-sizing: border-box;
   }
 }
@@ -1681,8 +1902,8 @@ kbd.MacroKbd {
   border-collapse: collapse;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
   backdrop-filter: saturate(180%) blur(5px);
   -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
@@ -2040,7 +2261,7 @@ kbd.MacroKbd {
   .AhaWiki .paperContent .page .pageContent h4,
   .AhaWiki .paperContent .page .pageContent h5,
   .AhaWiki .paperContent .page .pageContent h6 {
-    text-shadow: 1px 1px 2px #99a;
+    text-shadow: var(--color-heading-shadow);
   }
 }
 .AhaWiki .paperContent .page .pageContent h1 .headingNumber,
@@ -2056,7 +2277,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent h3 {
   margin-top: 20px;
   margin-bottom: 10px;
-  border-bottom: 1px solid #cccccc;
+  border-bottom: 1px solid var(--color-heading-border);
   padding: 5px;
 }
 .AhaWiki .paperContent .page .pageContent h4,
@@ -2064,7 +2285,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent h6 {
   margin-top: 10px;
   margin-bottom: 5px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border-subtle);
   padding: 3px;
 }
 .AhaWiki .paperContent .page .pageContent h1 {
@@ -2094,7 +2315,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent hr {
   padding: 0;
   border: none;
-  border-bottom: 1px dashed #ccc;
+  border-bottom: 1px dashed var(--color-border);
   margin-left: 0;
   height: 0;
   clear: both;
@@ -2116,9 +2337,9 @@ kbd.MacroKbd {
   display: inline-block;
 }
 .AhaWiki .paperContent .page .pageContent code {
-  border: 1px solid #99c;
-  background-color: #002;
-  color: #fff;
+  border: 1px solid var(--color-code-border);
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   border-radius: 5px;
   padding: 3px;
   word-break: break-all;
@@ -2127,8 +2348,8 @@ kbd.MacroKbd {
   margin-top: 0;
   margin-bottom: 0;
   overflow: hidden;
-  background-color: #002;
-  color: #CCCCCC;
+  background-color: var(--color-code-bg);
+  color: var(--color-code-text);
   padding-bottom: 0.5em;
   padding-left: 1em;
   padding-top: 0.5em;
@@ -2136,18 +2357,18 @@ kbd.MacroKbd {
   word-break: break-all;
 }
 .AhaWiki .paperContent .page .pageContent pre a {
-  color: #3399ff;
+  color: var(--color-code-link);
 }
 .AhaWiki .paperContent .page .pageContent pre.text {
   margin-top: 1px;
   margin-bottom: 1px;
-  border: 2px solid #9999CC;
+  border: 2px solid var(--color-code-border);
   border-left-width: 15px;
 }
 .AhaWiki .paperContent .page .pageContent blockquote {
   position: relative;
-  background-color: #f3f3ff;
-  border: 2px solid #99c;
+  background-color: var(--color-blockquote-bg);
+  border: 2px solid var(--color-blockquote-border);
   border-left-width: 10px;
   overflow: hidden;
   padding: 10px 25px;
@@ -2186,11 +2407,11 @@ kbd.MacroKbd {
   line-height: 1.4;
 }
 .AhaWiki .paperContent .page .pageContent div.toc a {
-  color: #2f4583;
+  color: var(--color-link-schema);
   text-decoration: none;
 }
 .AhaWiki .paperContent .page .pageContent div.toc a:hover {
-  color: #1b2f67;
+  color: var(--color-link);
   text-decoration: underline;
 }
 .AhaWiki .paperContent .page .pageContent div.toc,
@@ -2214,7 +2435,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaClassTitle {
   padding-bottom: 8px;
-  border-bottom: 1px solid #d5d5d5;
+  border-bottom: 1px solid var(--color-border-subtle);
   margin-left: 0;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .schemaFields .schemaFieldRow {
@@ -2248,7 +2469,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dt {
   font-weight: 700;
-  color: #333;
+  color: var(--color-muted-strong);
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd {
   margin-left: 10px;
@@ -2259,18 +2480,18 @@ kbd.MacroKbd {
   margin-left: 10px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd.schemaFieldValuePair .pairSeparator {
-  color: #888;
+  color: var(--color-muted);
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl dd .datePeriod {
-  color: #666;
+  color: var(--color-muted);
   font-size: 90%;
   margin-left: 4px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address {
   margin: 5px 0 5px 10px;
   padding: 10px;
-  border: 1px solid #ccc;
-  background-color: #f7f7f7;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface-alt);
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema dl .address > dd {
   display: block;
@@ -2296,16 +2517,16 @@ kbd.MacroKbd {
   padding-left: 20px;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .match {
-  color: #00f;
+  color: var(--color-link);
   font-weight: bold;
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .unknown,
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema .supersededBy {
   text-decoration: line-through;
-  color: #aaa;
+  color: var(--color-muted);
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterSchema sup {
-  color: #777;
+  color: var(--color-muted);
   display: block;
   white-space: nowrap;
   overflow: hidden;
@@ -2321,12 +2542,12 @@ kbd.MacroKbd {
   margin-bottom: 10px;
   margin-left: 10px;
   max-width: 50vw;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: linear-gradient(135deg, #eef 0%, #eff 100%);
+  background: var(--color-surface-panel);
   padding: 10px 20px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
 }
 .AhaWiki .paperContent .page .pageContent div.toc p,
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate p,
@@ -2355,7 +2576,7 @@ kbd.MacroKbd {
     margin: 12px 0;
     padding: 12px;
     border-radius: 8px;
-    background: #f8fbff;
+    background: var(--color-surface-alt);
     box-sizing: border-box;
   }
 }
@@ -2388,8 +2609,8 @@ kbd.MacroKbd {
   border-collapse: collapse;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
   backdrop-filter: saturate(180%) blur(5px);
   -webkit-backdrop-filter: saturate(180%) blur(5px);
   width: 100%;
@@ -2511,8 +2732,8 @@ kbd.MacroKbd {
   border-collapse: collapse;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
   backdrop-filter: saturate(180%) blur(5px);
   -webkit-backdrop-filter: saturate(180%) blur(5px);
 }
@@ -2950,8 +3171,8 @@ kbd.MacroKbd {
   }
 }
 .AhaWiki .search form {
-  -webkit-box-shadow: 0 0 1em #eee;
-  box-shadow: 0 0 1em #eee;
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
 }
 .AhaWiki .search form input {
   width: 100%;
@@ -3757,15 +3978,15 @@ kbd.MacroKbd {
   height: 30px;
 }
 .InterpreterKanban {
-  --kanban-bg: linear-gradient(135deg, #f1f6ff 0%, #f7fbff 100%);
-  --kanban-column-bg: #fbfcff;
-  --kanban-card-bg: #ffffff;
-  --kanban-border: #d7dce2;
-  --kanban-muted: #6b778c;
-  --kanban-text: #172b4d;
-  --kanban-primary: #0c66e4;
+  --kanban-bg: var(--color-kanban-bg);
+  --kanban-column-bg: var(--color-kanban-column-bg);
+  --kanban-card-bg: var(--color-kanban-card-bg);
+  --kanban-border: var(--color-kanban-border);
+  --kanban-muted: var(--color-kanban-muted);
+  --kanban-text: var(--color-kanban-text);
+  --kanban-primary: var(--color-kanban-primary);
   --kanban-radius: 10px;
-  --kanban-shadow: 0 6px 18px rgba(9, 30, 66, 0.08);
+  --kanban-shadow: var(--color-kanban-shadow);
 }
 .InterpreterKanban .kanban-hidden {
   display: none;
@@ -3798,7 +4019,7 @@ kbd.MacroKbd {
   padding: 6px 12px;
   border: 1px solid var(--kanban-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--kanban-card-bg);
   color: var(--kanban-text);
   font-size: 12px;
   font-weight: 700;
@@ -3823,7 +4044,7 @@ kbd.MacroKbd {
   box-shadow: var(--kanban-shadow);
 }
 .InterpreterKanban .kanban-add-list-editor {
-  background: #f6f7f9;
+  background: var(--kanban-column-bg);
   border: 1px solid var(--kanban-border);
   border-radius: 8px;
   padding: 10px;
@@ -3831,9 +4052,11 @@ kbd.MacroKbd {
 .InterpreterKanban .kanban-add-list-input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 6px;
   padding: 8px;
+  background: var(--color-input-bg);
+  color: var(--kanban-text);
 }
 .InterpreterKanban .kanban-add-list-actions {
   display: flex;
@@ -3903,10 +4126,12 @@ kbd.MacroKbd {
   flex: 1 1 auto;
   min-width: 0;
   box-sizing: border-box;
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 6px;
   padding: 6px 8px;
   margin-right: 8px;
+  background: var(--color-input-bg);
+  color: var(--kanban-text);
 }
 .InterpreterKanban .kanban-card-list {
   min-height: 20px;
@@ -3918,7 +4143,7 @@ kbd.MacroKbd {
 }
 .InterpreterKanban .kanban-card {
   background: var(--kanban-card-bg);
-  border: 1px solid #e6e9ee;
+  border: 1px solid var(--kanban-border);
   border-radius: 10px;
   padding: 10px 12px;
   margin-bottom: 0;
@@ -3931,7 +4156,7 @@ kbd.MacroKbd {
 .InterpreterKanban .kanban-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 14px rgba(9, 30, 66, 0.12);
-  border-color: #b6c2cf;
+  border-color: var(--kanban-primary);
 }
 .InterpreterKanban .kanban-card-text {
   margin-bottom: 6px;
@@ -3992,10 +4217,12 @@ kbd.MacroKbd {
 .InterpreterKanban .kanban-card-textarea {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 8px;
   padding: 8px;
   resize: vertical;
+  background: var(--color-input-bg);
+  color: var(--kanban-text);
 }
 .InterpreterKanban .kanban-inline-actions {
   margin-top: 8px;
@@ -4025,7 +4252,7 @@ kbd.MacroKbd {
   object-fit: cover;
   border-radius: 6px;
   margin-top: 6px;
-  border: 1px solid #eceff3;
+  border: 1px solid var(--kanban-border);
 }
 .InterpreterKanban .kanban-card .attachment-preview {
   display: grid;
@@ -4046,7 +4273,8 @@ kbd.MacroKbd {
   width: min(720px, calc(100vw - 32px)) !important;
   max-height: calc(100vh - 32px) !important;
   overflow-y: auto !important;
-  background: #ffffff !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
   border-radius: 14px !important;
   padding: 24px !important;
   box-shadow: 0 20px 48px rgba(9, 30, 66, 0.28) !important;
@@ -4088,7 +4316,8 @@ kbd.MacroKbd {
   width: min(720px, calc(100vw - 32px)) !important;
   max-height: calc(100vh - 32px) !important;
   overflow-y: auto !important;
-  background: #ffffff !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
   border-radius: 5px !important;
   padding: 0 !important;
   box-shadow: 0 24px 64px rgba(9, 30, 66, 0.32) !important;

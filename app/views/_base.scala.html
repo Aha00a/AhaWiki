@@ -69,6 +69,14 @@
                 </ul>
                 </div>
             }
+            <div class="themeControl">
+                <select class="themePicker" aria-label="Theme">
+                    <option value="ahawiki-light">AhaWiki Light</option>
+                    <option value="ahawiki-dark">AhaWiki Dark</option>
+                    <option value="solarized-light">Solarized Light</option>
+                    <option value="solarized-dark">Solarized Dark</option>
+                </select>
+            </div>
             <ul class="actionAuth">
                 @if(currentUserOpt) {
                     @currentUserOpt.map { user =>
@@ -142,6 +150,49 @@
             const $drawerToggle = $nav.find('.navDrawerToggle');
             const $authMenu = $('nav.topNavbar .actionAuth .authMenu');
             const $authToggle = $authMenu.find('.authMenuToggle').first();
+            const themeStorageKey = 'ahawiki-theme';
+            const themeNames = ['ahawiki-light', 'ahawiki-dark', 'solarized-light', 'solarized-dark'];
+            const defaultTheme = 'ahawiki-light';
+
+            function normalizeTheme(theme) {
+                return themeNames.indexOf(theme) >= 0 ? theme : defaultTheme;
+            }
+
+            function storedTheme() {
+                try {
+                    return localStorage.getItem(themeStorageKey);
+                } catch (e) {
+                    return null;
+                }
+            }
+
+            function saveTheme(theme) {
+                try {
+                    localStorage.setItem(themeStorageKey, theme);
+                } catch (e) {
+                    // Ignore storage failures; the theme still applies for this page.
+                }
+            }
+
+            function applyTheme(theme) {
+                const normalizedTheme = normalizeTheme(theme);
+                themeNames.forEach(function (name) {
+                    document.documentElement.classList.toggle('theme-' + name, name === normalizedTheme);
+                });
+                $nav.find('.themePicker').val(normalizedTheme);
+            }
+
+            applyTheme(storedTheme());
+
+            $nav.find('.themePicker')
+                .on('click', function (event) {
+                    event.stopPropagation();
+                })
+                .on('change', function () {
+                    const theme = normalizeTheme(this.value);
+                    saveTheme(theme);
+                    applyTheme(theme);
+                });
 
             $authToggle.on('click', function (event) {
                 event.stopPropagation();
@@ -199,8 +250,8 @@
         });
     </script>
     <div class="header" style="@Seq(
-        Some(s"background-color: ${Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
-        Some(s"color: ${Option(contextSite.headerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
+        Some(s"--site-header-bg: ${Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
+        Some(s"--site-header-text: ${Option(contextSite.headerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
     ).flatten.mkString(" ")">
         @Html(contextSite.ahaWikiCache.Header.get())
     </div>
@@ -222,8 +273,8 @@
     }
     @body
     <div class="footer" style="@Seq(
-        Some(s"background-color: ${Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
-        Some(s"color: ${Option(contextSite.footerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
+        Some(s"--site-footer-bg: ${Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
+        Some(s"--site-footer-text: ${Option(contextSite.footerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
     ).flatten.mkString(" ")">
         <div class="wrap">
             @Html(contextSite.ahaWikiCache.Footer.get())

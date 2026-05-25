@@ -29,6 +29,26 @@
         }
 
         <link rel="shortcut icon" type="image/png" href="@(logics.AhaWikiConfig().site.favicon())">
+        <script>
+            (function () {
+                var allowed = {
+                    "ahawiki-light": true,
+                    "ahawiki-dark": true,
+                    "solarized-light": true,
+                    "solarized-dark": true
+                };
+                var theme = "ahawiki-light";
+                try {
+                    theme = localStorage.getItem("ahawiki-theme") || theme;
+                } catch (e) {
+                    theme = "ahawiki-light";
+                }
+                if (!allowed[theme]) {
+                    theme = "ahawiki-light";
+                }
+                document.documentElement.classList.add("theme-" + theme);
+            })();
+        </script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="/public/less.css">
 
@@ -96,8 +116,8 @@
         @head
     </head>
     <body class="AhaWiki no-mathjax" style="@Seq(
-        Some(s"background-color: ${Option(contextSite.bodyBackgroundColor).filter(_.nonEmpty).getOrElse("#FFFFFF")};"),
-        Some(s"color: ${Option(contextSite.bodyForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
+        Some(s"--site-body-bg: ${Option(contextSite.bodyBackgroundColor).filter(_.nonEmpty).getOrElse("#FFFFFF")};"),
+        Some(s"--site-body-text: ${Option(contextSite.bodyForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
     ).flatten.mkString(" ")">
         @body
 
