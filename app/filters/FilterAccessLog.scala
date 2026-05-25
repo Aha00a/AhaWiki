@@ -17,6 +17,7 @@ import models.tables.Site
 import play.api.Environment
 import play.api.Logging
 import play.api.db.Database
+import play.api.http.Status.FORBIDDEN
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
@@ -114,7 +115,7 @@ class FilterAccessLog @Inject()(
     implicit val site: Site = siteFound
 
     if (optionIpDeny.isDefined) {
-      logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
+      logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
@@ -137,7 +138,7 @@ class FilterAccessLog @Inject()(
         Future(Results.Forbidden)
       })
     } else if (UriAttackDetector.isAttack(uri)) {
-      logger.warn(s"${requestHeader.method}\t\tAttack\t$remoteAddress\t$url\t$userAgent")
+      logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(10 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
