@@ -1,0 +1,63 @@
+= [Macro]Themes
+[Macro]
+
+`[[Themes]]`는 현재 AhaWiki 테마 팔레트를 미리보기 카드와 토큰 표로 보여준다.
+CSS custom properties를 추가하거나 바꿀 때 Light/Dark 값을 한 화면에서 점검하기 위한 개발용 매크로다.
+
+[[[#!WikiSyntaxPreview
+[[Themes]]
+]]]
+
+== Usage
+
+[[[#!text
+[[Themes]]
+]]]
+
+인자는 받지 않는다.
+block macro이므로 보통 한 줄에 단독으로 배치한다.
+
+== Output
+
+출력 내용은 다음과 같다.
+
+ * AhaWiki Light 미리보기 카드
+ * AhaWiki Dark 미리보기 카드
+ * 각 테마의 본문, 링크, 코드 샘플
+ * 각 테마의 본문 대비 값
+ * swatch와 원본 값을 함께 보여주는 `wikiTableSimple` 토큰 표
+
+표는 `MacroThemesTableWrapper`로 감싸져 있다.
+토큰 값이 길어져도 페이지 전체가 아니라 매크로 내부에서 가로 스크롤된다.
+
+== Token Groups
+
+토큰 표는 UI 영역별로 묶인다.
+
+ * Base
+ * Content
+ * UI
+ * Navigation
+ * Flash
+ * Tables
+ * Metrics
+ * Adjacent Graph
+ * Kanban
+
+각 행은 토큰 이름, 용도, AhaWiki Light 값, AhaWiki Dark 값을 보여준다.
+
+== Implementation Notes
+
+매크로 구현은 `MacroThemes.scala`에 있고, 등록되는 매크로 이름은 `Themes`다.
+문서 이름은 `MacroThemes`이지만 사용 문법은 `[[Themes]]`다.
+
+새 테마 토큰을 추가할 때는 다음을 함께 처리한다.
+
+ * `light.values`와 `dark.values`에 같은 token key를 추가한다.
+ * 용도를 설명하는 `ThemeToken` 행을 추가한다.
+ * 값의 종류에 따라 `Preview.Background`, `Preview.Shadow`, `Preview.TextShadow` 중 하나를 고른다.
+ * 새 group이 생기면 이 문서의 Token Groups도 갱신한다.
+
+== Related
+
+ * ["Dev Theme Support"]
