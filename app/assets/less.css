@@ -1169,6 +1169,10 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > table,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > table,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > table,
+.AhaWiki .commonAhaWiki > .limitWidth > div > .wikiTableSimpleScroll,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > .wikiTableSimpleScroll,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .wikiTableSimpleScroll,
+.AhaWiki .commonAhaWiki > .limitWidth > div > div > div > div > .wikiTableSimpleScroll,
 .AhaWiki .commonAhaWiki > .limitWidth > div > .math,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > .math,
 .AhaWiki .commonAhaWiki > .limitWidth > div > div > div > .math,
@@ -1667,6 +1671,10 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent > .limitWidth > div > div > table,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > table,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > div > table,
+.AhaWiki .wikiContent > .limitWidth > div > .wikiTableSimpleScroll,
+.AhaWiki .wikiContent > .limitWidth > div > div > .wikiTableSimpleScroll,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > .wikiTableSimpleScroll,
+.AhaWiki .wikiContent > .limitWidth > div > div > div > div > .wikiTableSimpleScroll,
 .AhaWiki .wikiContent > .limitWidth > div > .math,
 .AhaWiki .wikiContent > .limitWidth > div > div > .math,
 .AhaWiki .wikiContent > .limitWidth > div > div > div > .math,
@@ -2344,6 +2352,10 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > table,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > table,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > table,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > div > .wikiTableSimpleScroll,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > .math,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > .math,
 .AhaWiki .paperContent .page .pageContent > .limitWidth > div > div > div > .math,
@@ -2841,10 +2853,6 @@ kbd.MacroKbd {
   padding: 0;
 }
 .AhaWiki .wikiTableSimple {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-collapse: collapse;
   border: 1px solid var(--color-table-border);
   border-radius: 10px;
@@ -2878,6 +2886,14 @@ kbd.MacroKbd {
 }
 .AhaWiki .wikiTableSimple tr:hover td {
   background: var(--color-table-row-hover-bg);
+}
+.AhaWiki .wikiTableSimpleScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.AhaWiki .wikiTableSimpleScroll > .wikiTableSimple {
+  margin-left: 0;
 }
 .AhaWiki .tablesorter .tablesorter-header {
   position: relative;
@@ -3745,12 +3761,11 @@ kbd.MacroKbd {
   filter: brightness(0.95);
 }
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes {
-  border: 1px solid var(--color-table-border);
-  border-radius: 5px;
-  overflow: hidden;
   background: var(--color-surface);
 }
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-status {
+  border: 1px solid var(--color-table-border);
+  border-radius: 5px;
   padding: 14px;
   color: var(--color-muted);
   font-size: 14px;

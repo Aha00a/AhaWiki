@@ -40,6 +40,26 @@ location.params = function(params, preventReload) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    var wrappedTableAncestorSelector = [
+        '.wikiTableSimpleScroll',
+        '.macro-recent-changes-table-wrap',
+        '.MacroThemesTableWrapper',
+        '.InterpreterRenderMetaWrapper.Table'
+    ].join(',');
+
+    document.querySelectorAll('table.wikiTableSimple').forEach(function (table) {
+        if (table.classList.contains('MacroCalendar') || table.closest(wrappedTableAncestorSelector) || !table.parentElement) {
+            return;
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'wikiTableSimpleScroll';
+        table.parentElement.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
     var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper');
 
     wrappers.forEach(function (wrapper) {

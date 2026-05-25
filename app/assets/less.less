@@ -1053,7 +1053,7 @@ kbd.MacroKbd {
 		word-break: break-all;
 		>.limitWidth>div {
 			&>, >div, >div>div, >div>div>div{
-				>p, >blockquote, >table, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {
+				>p, >blockquote, >table, >.wikiTableSimpleScroll, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {
 					margin-left: var(--wiki-indent-body, 30px);
 					box-sizing: border-box;
 					max-width: calc(100% - var(--wiki-indent-body, 30px));
@@ -1701,12 +1701,8 @@ kbd.MacroKbd {
 			height: 50px;
 			padding: 0;
 		}
-    }
+	}
 	.wikiTableSimple() {
-		display: block;
-		max-width: 100%;
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
 		border-collapse: collapse;
 		border: 1px solid var(--color-table-border);
 		border-radius: 10px;
@@ -1741,6 +1737,15 @@ kbd.MacroKbd {
 	}
 	.wikiTableSimple {
 		.wikiTableSimple();
+	}
+	.wikiTableSimpleScroll {
+		max-width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+
+		> .wikiTableSimple {
+			margin-left: 0;
+		}
 	}
 	.tablesorter {
 		.tablesorter-header {
@@ -2651,12 +2656,11 @@ kbd.MacroKbd {
 				}
 
 				.macro-recent-changes {
-					border: 1px solid var(--color-table-border);
-					border-radius: 5px;
-					overflow: hidden;
 					background: var(--color-surface);
 
 					.macro-recent-changes-status {
+						border: 1px solid var(--color-table-border);
+						border-radius: 5px;
 						padding: 14px;
 						color: var(--color-muted);
 						font-size: 14px;
