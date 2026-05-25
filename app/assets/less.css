@@ -323,27 +323,6 @@ nav.topNavbar .navDrawerToggle {
 nav.topNavbar .mobileFlatMenu {
   display: none;
 }
-nav.topNavbar .themeControl {
-  display: inline-flex;
-  align-items: center;
-}
-nav.topNavbar .themePicker {
-  font-family: 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans', sans-serif;
-  height: 34px;
-  max-width: 180px;
-  border: 1px solid var(--color-input-border);
-  border-radius: 5px;
-  padding: 0 10px;
-  background: var(--color-input-bg);
-  color: var(--color-navbar-text);
-  cursor: pointer;
-  text-shadow: none;
-}
-nav.topNavbar .themePicker:focus {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-}
 nav.topNavbar ul {
   list-style: none;
   display: inline-flex;
@@ -428,6 +407,55 @@ nav.topNavbar .actionAuth .authSubmenu a {
   display: flex;
   width: 100%;
   box-sizing: border-box;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeMenu {
+  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 4px;
+  padding-top: 6px;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeIconGroup {
+  display: grid;
+  grid-template-columns: repeat(4, 34px);
+  gap: 6px;
+  padding: 0 6px;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-family: 'Noto Sans', sans-serif;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-navbar-text);
+  cursor: pointer;
+  text-shadow: none;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption:hover,
+nav.topNavbar .actionAuth .authSubmenu .themeOption.active {
+  background-color: var(--color-link-hover-bg);
+  border-color: var(--color-focus-ring);
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption:focus {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption i.fas {
+  font-size: 14px;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption.themeAhaWikiLight i {
+  color: #f59e0b;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption.themeAhaWikiDark i {
+  color: #8cb4ff;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption.themeSolarizedLight i {
+  color: #b58900;
+}
+nav.topNavbar .actionAuth .authSubmenu .themeOption.themeSolarizedDark i {
+  color: #2aa198;
 }
 nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   display: block;
