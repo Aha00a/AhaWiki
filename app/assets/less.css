@@ -1054,6 +1054,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .limitWidth {
   padding: 0 24px;
+  padding-bottom: 20px;
   box-sizing: border-box;
 }
 @media (max-width: 767px) {
@@ -1080,7 +1081,6 @@ kbd.MacroKbd {
 .AhaWiki.width-960 .limitWidth {
   margin: 0 auto;
   padding-top: 20px;
-  padding-bottom: 25px;
   background: var(--color-surface);
   box-shadow: 3px 0 8px -3px var(--color-navbar-shadow), -3px 0 8px -3px var(--color-navbar-shadow), 0 4px 12px -2px var(--color-navbar-shadow);
   display: flow-root;
