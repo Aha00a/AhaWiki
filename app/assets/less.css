@@ -757,6 +757,9 @@ kbd.MacroKbd {
   gap: 8px;
   min-width: 0;
 }
+.MacroThemes .MacroThemesValue .MacroCopyable {
+  top: 0;
+}
 .MacroThemes .MacroThemesSwatch {
   display: inline-flex;
   width: 28px;
