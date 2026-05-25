@@ -1573,7 +1573,7 @@ kbd.MacroKbd {
 .AhaWiki .commonAhaWiki div.schema img {
   max-width: 100%;
 }
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
   .AhaWiki .commonAhaWiki div.toc,
   .AhaWiki .commonAhaWiki div.MacroLinkDate,
   .AhaWiki .commonAhaWiki div.rightInfoBox,
@@ -2075,7 +2075,7 @@ kbd.MacroKbd {
 .AhaWiki .wikiContent div.schema img {
   max-width: 100%;
 }
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
   .AhaWiki .wikiContent div.toc,
   .AhaWiki .wikiContent div.MacroLinkDate,
   .AhaWiki .wikiContent div.rightInfoBox,
@@ -2770,7 +2770,7 @@ kbd.MacroKbd {
 .AhaWiki .paperContent .page .pageContent div.schema img {
   max-width: 100%;
 }
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
   .AhaWiki .paperContent .page .pageContent div.toc,
   .AhaWiki .paperContent .page .pageContent div.MacroLinkDate,
   .AhaWiki .paperContent .page .pageContent div.rightInfoBox,
@@ -3143,11 +3143,14 @@ kbd.MacroKbd {
   }
 }
 @media print {
-  .AhaWiki div.toc,
-  .AhaWiki div.schema {
-    float: right;
-    clear: right;
-    max-width: 40%;
+  .AhaWiki .sectionCollapsed > * {
+    display: block !important;
+  }
+}
+@media print {
+  .AhaWiki .wikiContent div.toc.collapsed .tocBody {
+    max-height: none !important;
+    opacity: 1 !important;
   }
 }
 .AhaWiki .percentTotal {

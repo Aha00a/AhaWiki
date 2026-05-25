@@ -1379,7 +1379,7 @@ kbd.MacroKbd {
 				max-width: 100%;
 			}
 
-			@media @widthTablet {
+			@media screen and @widthTablet {
 				float: none;
 				clear: both;
 				max-width: none;
@@ -1979,11 +1979,16 @@ kbd.MacroKbd {
 		}
 	}
 
-	div.toc, div.schema {
+	.sectionCollapsed > * {
 		@media print {
-			float: right;
-			clear: right;
-			max-width: 40%;
+			display: block !important;
+		}
+	}
+
+	.wikiContent div.toc.collapsed .tocBody {
+		@media print {
+			max-height: none !important;
+			opacity: 1 !important;
 		}
 	}
 
