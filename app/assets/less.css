@@ -733,6 +733,67 @@ kbd.MacroKbd {
   top: calc(100% + 6px);
   bottom: auto;
 }
+.ahaWikiToast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  background: var(--color-flash-success-bg);
+  color: var(--color-flash-success-text);
+  border: 1px solid var(--color-flash-success-border);
+  padding: 10px 14px;
+  border-radius: 8px;
+  z-index: 9999;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
+  opacity: 0;
+}
+.ahaWikiToast.error {
+  background: var(--color-flash-error-bg);
+  color: var(--color-flash-error-text);
+  border-color: var(--color-flash-error-border);
+}
+#pageUpdateToast {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  max-width: 340px;
+  padding: 12px 14px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  z-index: 1200;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+#pageUpdateToast .message {
+  font-size: 14px;
+  line-height: 1.4;
+  flex: 1;
+}
+#pageUpdateToast .refreshButton {
+  border: 1px solid var(--color-input-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hotkeyHelp {
+  max-width: 560px;
+  padding: 24px;
+  box-sizing: border-box;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+}
+.hotkeyHelp .description {
+  color: var(--color-muted);
+}
 .MacroAhaWikiSiteList {
   column-count: 3;
   column-gap: 16px;
@@ -2965,6 +3026,26 @@ kbd.MacroKbd {
 .AhaWiki .wikiHistory table {
   margin-top: 20px;
 }
+.AhaWiki .edit input[type='text'],
+.AhaWiki .edit textarea,
+.AhaWiki .edit select {
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-input-border);
+}
+.AhaWiki .edit input[type='checkbox'] {
+  accent-color: var(--color-focus-ring);
+}
+.AhaWiki .edit input[type='submit'],
+.AhaWiki .edit button {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-input-border);
+}
+.AhaWiki .edit input[type='submit']:hover,
+.AhaWiki .edit button:hover {
+  background: var(--color-link-hover-bg);
+}
 .AhaWiki .edit > div.ui > form {
   display: flex;
   flex-direction: row;
@@ -3023,7 +3104,7 @@ kbd.MacroKbd {
 .AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > label {
   display: inline-block;
   padding: 5px 0;
-  color: #222;
+  color: var(--color-muted-strong);
   text-decoration: none;
 }
 .AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft,
@@ -3065,7 +3146,7 @@ kbd.MacroKbd {
 }
 .AhaWiki .edit > div.ui > form > div.divider {
   width: 5px;
-  background-color: #ccc;
+  background-color: var(--color-border);
   margin: 0 10px;
   cursor: ew-resize;
 }
@@ -3078,17 +3159,19 @@ kbd.MacroKbd {
   }
 }
 .AhaWiki .edit > div.ui > form > div.divider:hover {
-  background-color: #aaa;
+  background-color: var(--color-muted);
 }
 .AhaWiki .edit > div.ui > form > div.divider:active {
-  background-color: #888;
+  background-color: var(--color-muted-strong);
 }
 .AhaWiki .edit > div.ui > form > div.right {
   flex: 1;
 }
 .AhaWiki .edit > div.ui > form > div.right > div.preview > div.previewPane {
-  border: 1px solid #ccc;
-  background: url('/public/img/imageDraftVersion.png');
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  background-image: url('/public/img/imageDraftVersion.png');
+  color: var(--color-text);
 }
 @media print {
   .AhaWiki .header,
@@ -4297,7 +4380,7 @@ kbd.MacroKbd {
 }
 .InterpreterKanban .kanban-icon-button:hover {
   opacity: 1;
-  color: #ae2a19;
+  color: var(--color-flash-error-text);
 }
 .InterpreterKanban .kanban-column-title-editor {
   flex: 1 1 auto;
@@ -4327,12 +4410,12 @@ kbd.MacroKbd {
   cursor: pointer;
   box-sizing: border-box;
   max-width: 100%;
-  box-shadow: 0 1px 4px rgba(9, 30, 66, 0.06);
+  box-shadow: var(--kanban-shadow);
   transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
 }
 .InterpreterKanban .kanban-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(9, 30, 66, 0.12);
+  box-shadow: var(--kanban-shadow);
   border-color: var(--kanban-primary);
 }
 .InterpreterKanban .kanban-card-text {
@@ -4354,7 +4437,7 @@ kbd.MacroKbd {
 }
 .InterpreterKanban .kanban-card-id {
   margin-bottom: 0;
-  color: #aab0bb;
+  color: var(--kanban-muted);
   font-size: 10px;
   font-family: monospace;
   letter-spacing: 0.02em;
@@ -4370,11 +4453,11 @@ kbd.MacroKbd {
   gap: 3px;
 }
 .InterpreterKanban .kanban-card-stat.due-date-overdue {
-  color: #ae2a19;
+  color: var(--color-flash-error-text);
   font-weight: 600;
 }
 .InterpreterKanban .kanban-card-stat.due-date-soon {
-  color: #b35c00;
+  color: var(--color-flash-warning-text);
   font-weight: 600;
 }
 .InterpreterKanban .kanban-card-composer {
@@ -4412,7 +4495,7 @@ kbd.MacroKbd {
   border-radius: 6px;
   padding: 8px 12px;
   background: var(--kanban-primary);
-  color: #fff;
+  color: var(--color-adjacent-hud-action-active-text);
   cursor: pointer;
 }
 .InterpreterKanban .kanban-ghost-button {
@@ -4480,6 +4563,14 @@ kbd.MacroKbd {
   display: none !important;
 }
 .kanban-card-detail-overlay {
+  --kanban-bg: var(--color-kanban-bg);
+  --kanban-column-bg: var(--color-kanban-column-bg);
+  --kanban-card-bg: var(--color-kanban-card-bg);
+  --kanban-border: var(--color-kanban-border);
+  --kanban-muted: var(--color-kanban-muted);
+  --kanban-text: var(--color-kanban-text);
+  --kanban-primary: var(--color-kanban-primary);
+  --kanban-shadow: var(--color-kanban-shadow);
   position: fixed;
   inset: 0;
   background: rgba(9, 30, 66, 0.5);
@@ -4498,14 +4589,14 @@ kbd.MacroKbd {
   border-radius: 5px !important;
   padding: 0 !important;
   box-shadow: 0 24px 64px rgba(9, 30, 66, 0.32) !important;
-  border: 1px solid rgba(9, 30, 66, 0.12) !important;
+  border: 1px solid var(--kanban-border) !important;
   position: relative !important;
   box-sizing: border-box !important;
 }
 .kanban-modal.kanban-modal-drop-active {
-  outline: 2px dashed #0c66e4 !important;
+  outline: 2px dashed var(--kanban-primary) !important;
   outline-offset: 2px !important;
-  background: #f7fbff !important;
+  background: var(--color-link-hover-bg) !important;
   box-shadow: 0 0 0 4px rgba(12, 102, 228, 0.2), 0 24px 64px rgba(9, 30, 66, 0.32) !important;
 }
 .kanban-modal-header {
@@ -4514,8 +4605,8 @@ kbd.MacroKbd {
   justify-content: space-between;
   gap: 12px;
   padding: 20px 24px 16px;
-  background: linear-gradient(135deg, #f4f6fb 0%, #eaeff8 100%);
-  border-bottom: 1px solid #dde3ef;
+  background: var(--color-surface-panel);
+  border-bottom: 1px solid var(--kanban-border);
   border-radius: 16px 16px 0 0;
   margin-bottom: 0;
 }
@@ -4550,30 +4641,32 @@ kbd.MacroKbd {
   font-size: 18px;
   font-weight: 700;
   line-height: 1.35;
-  color: #172b4d;
+  color: var(--kanban-text);
   cursor: pointer;
   word-break: break-word;
 }
 .kanban-modal-title:hover {
-  color: #0c66e4;
+  color: var(--kanban-primary);
 }
 .kanban-modal-title.kanban-read-only {
   cursor: default;
-  color: #172b4d;
+  color: var(--kanban-text);
 }
 .kanban-modal-card-id {
   display: inline-block;
   margin-top: 6px;
   font-size: 10px;
   font-family: monospace;
-  background: #ccc;
+  background: var(--kanban-border);
+  color: var(--kanban-muted);
   padding: 2px 8px;
   border-radius: 10px;
   letter-spacing: 0.03em;
   transition: background 120ms ease;
 }
 .kanban-modal-card-id:hover {
-  background: #0c66e4;
+  background: var(--kanban-primary);
+  color: var(--color-adjacent-hud-action-active-text);
 }
 .kanban-modal-header-actions {
   display: flex;
@@ -4582,12 +4675,12 @@ kbd.MacroKbd {
   flex: 0 0 auto;
 }
 .kanban-modal-btn-delete {
-  border: 1px solid #f1b5b5;
+  border: 1px solid var(--color-flash-error-border);
   border-radius: 50%;
   width: 32px;
   height: 32px;
-  background: #fff5f5;
-  color: #ae2a19;
+  background: var(--color-flash-error-bg);
+  color: var(--color-flash-error-text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -4596,8 +4689,8 @@ kbd.MacroKbd {
   transition: background 120ms ease, border-color 120ms ease;
 }
 .kanban-modal-btn-delete:hover {
-  background: #ffebe9;
-  border-color: #e9a9a9;
+  background: var(--color-link-hover-bg);
+  border-color: var(--color-flash-error-border);
 }
 .kanban-modal-btn-close {
   border: none;
@@ -4607,14 +4700,14 @@ kbd.MacroKbd {
   height: 32px;
   border-radius: 50%;
   font-size: 16px;
-  color: #44546f;
+  color: var(--kanban-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: background 120ms ease;
 }
 .kanban-modal-btn-close:hover {
-  background: #dde3ef;
+  background: var(--color-link-hover-bg);
 }
 .kanban-modal-title-editor-wrap {
   display: none;
@@ -4628,19 +4721,20 @@ kbd.MacroKbd {
 .kanban-modal-title-editor {
   flex: 1 1 auto;
   box-sizing: border-box;
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 8px;
   padding: 8px 12px;
+  background: var(--color-input-bg);
   font-size: 16px;
   font-weight: 600;
-  color: #172b4d;
+  color: var(--kanban-text);
 }
 .kanban-modal-title-save-btn {
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
-  background: #0c66e4;
-  color: #fff;
+  background: var(--kanban-primary);
+  color: var(--color-adjacent-hud-action-active-text);
   cursor: pointer;
   font-size: 13px;
   white-space: nowrap;
@@ -4652,7 +4746,7 @@ kbd.MacroKbd {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #44546f;
+  color: var(--kanban-muted);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -4661,7 +4755,7 @@ kbd.MacroKbd {
   content: '';
   flex: 1;
   height: 1px;
-  background: #e4e8ef;
+  background: var(--kanban-border);
 }
 .kanban-modal-drop-hint {
   position: sticky;
@@ -4670,10 +4764,10 @@ kbd.MacroKbd {
   margin-top: 12px;
   margin-bottom: 4px;
   padding: 10px 12px;
-  border: 1px dashed #0c66e4;
+  border: 1px dashed var(--kanban-primary);
   border-radius: 8px;
-  background: rgba(12, 102, 228, 0.1);
-  color: #0c66e4;
+  background: var(--color-link-hover-bg);
+  color: var(--kanban-primary);
   font-weight: 700;
   font-size: 12px;
 }
@@ -4687,7 +4781,7 @@ kbd.MacroKbd {
   border-radius: 0;
   background: transparent;
   margin-bottom: 0;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 .kanban-property-row:last-child {
   border-bottom: none;
@@ -4695,13 +4789,13 @@ kbd.MacroKbd {
 .kanban-property-key {
   font-weight: 600;
   font-size: 11px;
-  color: #6b778c;
+  color: var(--kanban-muted);
   margin-bottom: 0;
   white-space: nowrap;
 }
 .kanban-property-value {
   font-size: 13px;
-  color: #172b4d;
+  color: var(--kanban-text);
   padding-left: 0;
   line-height: 1.4;
 }
@@ -4712,10 +4806,10 @@ kbd.MacroKbd {
   border-radius: 0;
   background: transparent;
   margin-bottom: 0;
-  color: #172b4d;
+  color: var(--kanban-text);
   line-height: 1.4;
   font-size: 13px;
-  border-bottom: 1px solid #f0f2f5;
+  border-bottom: 1px solid var(--color-border-subtle);
 }
 .kanban-activity-row:last-child {
   border-bottom: none;
@@ -4729,27 +4823,29 @@ kbd.MacroKbd {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #b6c2cf;
-  border: 2px solid #fff;
-  outline: 1px solid #b6c2cf;
+  background: var(--kanban-muted);
+  border: 2px solid var(--color-surface);
+  outline: 1px solid var(--kanban-border);
 }
 .kanban-activity-header {
   font-weight: 600;
   font-size: 11px;
-  color: #6b778c;
+  color: var(--kanban-muted);
   margin-bottom: 3px;
 }
 .kanban-activity-detail {
   padding-left: 0;
   margin-top: 3px;
   font-size: 13px;
-  color: #172b4d;
+  color: var(--kanban-text);
 }
 .kanban-comment-textarea {
   width: calc(100% - 48px);
   box-sizing: border-box;
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 8px;
+  background: var(--color-input-bg);
+  color: var(--kanban-text);
   padding: 10px 12px;
   resize: vertical;
   font-size: 14px;
@@ -4757,7 +4853,7 @@ kbd.MacroKbd {
 }
 .kanban-comment-textarea:focus {
   outline: none;
-  border-color: #0c66e4;
+  border-color: var(--kanban-primary);
   box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.15);
 }
 .kanban-comment-action-bar {
@@ -4770,14 +4866,14 @@ kbd.MacroKbd {
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
-  background: #0c66e4;
-  color: #fff;
+  background: var(--kanban-primary);
+  color: var(--color-adjacent-hud-action-active-text);
   cursor: pointer;
   font-size: 13px;
 }
 .kanban-comment-hint {
   font-size: 11px;
-  color: #8590a2;
+  color: var(--kanban-muted);
 }
 .kanban-duedate-row {
   display: flex;
@@ -4787,29 +4883,30 @@ kbd.MacroKbd {
   margin-bottom: 4px;
 }
 .kanban-duedate-input {
-  border: 1px solid #b6c2cf;
+  border: 1px solid var(--kanban-border);
   border-radius: 6px;
   padding: 6px 8px;
   font-size: 13px;
-  color: #172b4d;
+  background: var(--color-input-bg);
+  color: var(--kanban-text);
 }
 .kanban-duedate-save-btn {
-  border: 1px solid #d0d7de;
+  border: 1px solid var(--kanban-border);
   border-radius: 6px;
   padding: 6px 10px;
-  background: #f6f8fa;
-  color: #172b4d;
+  background: var(--color-surface-alt);
+  color: var(--kanban-text);
   cursor: pointer;
   font-size: 13px;
 }
 .kanban-attachment-remove-btn {
   width: 28px;
   height: 28px;
-  border: 1px solid #f1c0c0;
+  border: 1px solid var(--color-flash-error-border);
   border-radius: 50%;
   padding: 0;
-  background: #fff;
-  color: #c9372c;
+  background: var(--color-flash-error-bg);
+  color: var(--color-flash-error-text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -4822,7 +4919,7 @@ kbd.MacroKbd {
   transition: background 120ms ease, border-color 120ms ease;
 }
 .kanban-attachment-remove-btn:hover {
-  background: #ffebe9;
-  border-color: #e9a9a9;
+  background: var(--color-link-hover-bg);
+  border-color: var(--color-flash-error-border);
 }
 /*# sourceMappingURL=less.css.map */

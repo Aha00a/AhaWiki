@@ -3,20 +3,10 @@
 @import com.aha00a.commons.Implicits._
 <script type="text/javascript">
     function showToast(message, type) {
-        var backgroundColor = type === 'error' ? '#b00020' : '#2e7d32';
-        var toast = $('<div></div>').text(message).css({
-            position: 'fixed',
-            right: '20px',
-            bottom: '20px',
-            background: backgroundColor,
-            color: '#fff',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            zIndex: 9999,
-            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
-            fontSize: '13px',
-            opacity: 0
-        });
+        var toast = $('<div></div>')
+            .text(message)
+            .addClass('ahaWikiToast')
+            .addClass(type === 'error' ? 'error' : 'success');
         $('body').append(toast);
         toast.animate({ opacity: 1 }, 150);
         setTimeout(function () {
@@ -83,9 +73,9 @@
 
         var popup = [
             '<div class="searchBg hotkeyHelpBg"></div>',
-            '<div class="search hotkeyHelp" style="max-width:560px;padding:24px;box-sizing:border-box;background-color:#fff;border-radius: 5px;">',
+            '<div class="search hotkeyHelp">',
             '<h2 style="margin:0 0 12px 0;">Hotkeys</h2>',
-            '<p style="margin:0 0 16px 0;color:#777;">Press ESC or click outside to close.</p>',
+            '<p class="description" style="margin:0 0 16px 0;">Press ESC or click outside to close.</p>',
             '<table style="width:100%;border-collapse:collapse;">' + rows + '</table>',
             '</div>'
         ].join('');

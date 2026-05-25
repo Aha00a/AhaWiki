@@ -65,6 +65,32 @@
         fallbackImage.src = fallbackImagePath;
         var $wrapper = $('.aspectRatioWrapper.@(id)');
 
+        function cssVar(name, fallback) {
+            var value = getComputedStyle(document.documentElement).getPropertyValue(name);
+            value = value ? value.trim() : '';
+            return value || fallback;
+        }
+
+        function graphPalette() {
+            return {
+                bgStart: cssVar('--color-surface-alt', '#eef'),
+                bgEnd: cssVar('--color-surface', '#eff'),
+                link: cssVar('--color-border', '#b2bdcf'),
+                linkHop2: cssVar('--color-adjacent-dot-hop2', '#7396df'),
+                linkHighlight: cssVar('--color-adjacent-hud-action-active-bg', '#2b5fc7'),
+                root: cssVar('--color-adjacent-dot-root', '#213a9a'),
+                hover: cssVar('--color-adjacent-hud-action-active-bg', '#2b5fc7'),
+                neighbor: cssVar('--color-adjacent-dot-hop1', '#6a8fe0'),
+                hop1: cssVar('--color-adjacent-dot-hop1', '#3f7bcf'),
+                hop2: cssVar('--color-adjacent-dot-hop2', '#7ea2df'),
+                distant: cssVar('--color-muted', '#9099ab'),
+                imageBg: cssVar('--color-surface', '#fff'),
+                rootRing: cssVar('--color-flash-info-border', '#ffb300'),
+                labelRoot: cssVar('--color-adjacent-hud-title', '#1e2f80'),
+                label: cssVar('--color-adjacent-hud-text', '#23314a')
+            };
+        }
+
         function isFullscreen() {
             return document.fullscreenElement === $wrapper.get(0);
         }
@@ -306,10 +332,11 @@
 
         function draw() {
             var size = syncCanvasSize();
+            var palette = graphPalette();
             ctx.clearRect(0, 0, size.width, size.height);
             var bg = ctx.createLinearGradient(0, 0, size.width, size.height);
-            bg.addColorStop(0, '#eef');
-            bg.addColorStop(1, '#eff');
+            bg.addColorStop(0, palette.bgStart);
+            bg.addColorStop(1, palette.bgEnd);
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, size.width, size.height);
 
@@ -326,7 +353,7 @@
 
                 var highlighted = state.hoverNodeId && (src === state.hoverNodeId || dst === state.hoverNodeId || (neighbors.has(src) && neighbors.has(dst)));
                 var inHop2 = hop2.has(src) && hop2.has(dst);
-                ctx.strokeStyle = highlighted ? '#2b5fc7' : (inHop2 ? '#7396df' : '#b2bdcf');
+                ctx.strokeStyle = highlighted ? palette.linkHighlight : (inHop2 ? palette.linkHop2 : palette.link);
                 ctx.globalAlpha = highlighted ? 0.95 : (inHop2 ? 0.55 : 0.25);
                 ctx.lineWidth = highlighted ? 2.2 : 1;
                 var s = worldToScreen(sNode.x || 0, sNode.y || 0);
@@ -351,7 +378,7 @@
                 var p = worldToScreen(n.x || 0, n.y || 0);
 
                 ctx.beginPath();
-                ctx.fillStyle = isRoot ? '#213a9a' : (isHover ? '#2b5fc7' : (isNeighbor ? '#6a8fe0' : (depth <= 1 ? '#3f7bcf' : (depth <= 2 ? '#7ea2df' : '#9099ab'))));
+                ctx.fillStyle = isRoot ? palette.root : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant))));
                 ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                 ctx.fill();
 
@@ -364,14 +391,14 @@
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, clipRadius, 0, Math.PI * 2);
                         ctx.clip();
-                        ctx.fillStyle = '#fff';
+                        ctx.fillStyle = palette.imageBg;
                         ctx.fillRect(p.x - rScreen, p.y - rScreen, rScreen * 2, rScreen * 2);
                         drawImageCover(image, p.x - rScreen, p.y - rScreen, rScreen * 2);
                         ctx.restore();
                     }
                 }
                 if(isRoot) {
-                    ctx.strokeStyle = '#ffb300';
+                    ctx.strokeStyle = palette.rootRing;
                     ctx.lineWidth = 2.5;
                     ctx.stroke();
                 }
@@ -387,7 +414,7 @@
                 if(isHover || isNeighbor) labelAlpha = 1;
                 if(!isRoot && !isHover && !isNeighbor) labelAlpha *= 0.92;
                 ctx.globalAlpha = labelAlpha;
-                ctx.fillStyle = isRoot ? '#1e2f80' : '#23314a';
+                ctx.fillStyle = isRoot ? palette.labelRoot : palette.label;
                 ctx.font = ((isRoot || isHover || isNeighbor) ? 'bold ' : '') + labelSize.toFixed(1) + 'px sans-serif';
                 ctx.fillText(n.id, p.x + rScreen + 4, p.y + 4);
             });
@@ -742,6 +769,10 @@
             var oldHeight = canvas.height;
             keepViewportCenteredAfterResize(oldWidth, oldHeight);
             updateFullscreenButton();
+            draw();
+        });
+
+        $(document).on('ahawiki:themeChanged.d3canvas@(id)', function() {
             draw();
         });
 

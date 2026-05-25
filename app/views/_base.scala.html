@@ -193,6 +193,7 @@
                         .toggleClass('active', active)
                         .attr('aria-pressed', active ? 'true' : 'false');
                 });
+                $(document).trigger('ahawiki:themeChanged', [normalizedTheme]);
             }
 
             applyTheme(storedTheme());

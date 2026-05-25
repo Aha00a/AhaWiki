@@ -218,11 +218,13 @@ html.theme-solarized-dark {
 
 대상:
 
- * [[CB]] `app/views/Wiki/edit.scala.html`의 inline `<style>`
- * [[CB]] `.edit` toolbar/link/divider/preview pane
- * [[CB]] `.editHelp`, `.editHelpBody`, edit flash warning
- * [[CB]] editor/preview split 주변 border와 background
- * [[CB]] 편집 화면에서만 쓰는 input/textarea/button 색상
+ * [[CB(x)]] `app/views/Wiki/edit.scala.html`의 inline `<style>`
+ * [[CB(x)]] `.edit` toolbar/link/divider/preview pane
+ * [[CB(x)]] `.editHelp`, `.editHelpBody`, edit flash warning
+ * [[CB(x)]] editor/preview split 주변 border와 background
+ * [[CB(x)]] 편집 화면에서만 쓰는 input/textarea/button 색상
+ * [[CB(x)]] attachment list, macro autocomplete, inline table editor 색상 토큰화
+ * [[CB(x)]] CodeMirror 기본 표면과 AhaMark 토큰 색상 토큰화
 
 완료 기준:
 
@@ -236,12 +238,14 @@ Kanban board 본체는 1차 변수화가 되어 있지만, 상세 팝업과 드�
 
 대상:
 
- * [[CB]] `.kanban-modal`
- * [[CB]] `.kanban-modal-header`, title, card id badge
- * [[CB]] delete/close/save/comment/due date button
- * [[CB]] comment textarea, activity row, property row
- * [[CB]] attachment remove button
- * [[CB]] drop active/drop hint 상태
+ * [[CB(x)]] `.kanban-modal`
+ * [[CB(x)]] `.kanban-modal-header`, title, card id badge
+ * [[CB(x)]] delete/close/save/comment/due date button
+ * [[CB(x)]] comment textarea, activity row, property row
+ * [[CB(x)]] attachment remove button
+ * [[CB(x)]] drop active/drop hint 상태
+ * [[CB(x)]] body에 붙는 detail overlay에서도 `--kanban-*` 변수 매핑
+ * [[CB(x)]] board card id, due date 상태, icon hover 색상 토큰화
 
 완료 기준:
 
@@ -255,11 +259,12 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 대상:
 
- * [[CB]] Adjacent Pages canvas drawing color
- * [[CB]] page update toast
- * [[CB]] hotkey toast
- * [[CB]] view/edit page의 남은 inline style
- * [[CB]] JavaScript에서 직접 만든 DOM의 색상 의존성
+ * [[CB(x)]] Adjacent Pages canvas drawing color
+ * [[CB(x)]] page update toast
+ * [[CB(x)]] hotkey toast
+ * [[CB(x)]] hotkey help popup
+ * [[CB(x)]] view page remote cursor label 색상
+ * [[CB(x)]] JavaScript에서 직접 만든 DOM의 색상 의존성
 
 완료 기준:
 
@@ -286,9 +291,9 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
  * [[CB(x)]] Phase 0: body/header/footer/nav, 본문 기본 링크/code/pre/blockquote, theme picker
  * [[CB(x)]] Phase 1: flash, Similar Pages bar, Adjacent Pages, 읽기 화면 반복 UI
- * [[CB]] Phase 2: edit page 전용 UI
- * [[CB]] Phase 3: Kanban detail modal
- * [[CB]] Phase 4: JS/canvas/inline style 잔여 색상
+ * [[CB(x)]] Phase 2: edit page 전용 UI
+ * [[CB(x)]] Phase 3: Kanban detail modal
+ * [[CB(x)]] Phase 4: JS/canvas/inline style 잔여 색상
 
 === Inline body 색상 처리 (`app/views/_baseSkeleton.scala.html`)
 

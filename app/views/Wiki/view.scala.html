@@ -201,9 +201,9 @@
 
                 function showPageUpdateToast(message) {
                     if (!pageUpdateToast) {
-                        pageUpdateToast = $('<div id="pageUpdateToast" style="position:fixed;bottom:20px;right:20px;max-width:340px;padding:12px 14px;background:#1f2937;color:#fff;border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,0.3);z-index:1200;display:flex;gap:10px;align-items:center;"></div>')
-                            .append('<span class="message" style="font-size:14px;line-height:1.4;flex:1;"></span>')
-                            .append('<button type="button" class="refreshButton" style="border:0;background:#fff;color:#1f2937;padding:6px 10px;border-radius:6px;font-weight:600;cursor:pointer;">Refresh</button>')
+                        pageUpdateToast = $('<div id="pageUpdateToast"></div>')
+                            .append('<span class="message"></span>')
+                            .append('<button type="button" class="refreshButton">Refresh</button>')
                             .appendTo('body');
                         pageUpdateToast.find('.refreshButton').on('click', function () {
                             window.location.reload();
@@ -256,7 +256,7 @@
                     var avatarHtml = safeProfileImageUrl
                         ? '<img src="' + safeProfileImageUrl + '" alt="' + safeNickname + '" style="width:16px;height:16px;border-radius:50%;object-fit:cover;border: 1px solid ' + dotColor + ';"/>'
                         : '<span style="width:16px;height:16px;border-radius:50%;background:' + dotColor + ';display:inline-block;"></span>';
-                    var labelHtml = '<span style="padding:1px 3px;border-radius:10px;background:rgba(0,0,0,0.05);color: #000;font-size:11px;line-height:16px;white-space:nowrap;">' + safeNickname + '</span>';
+                    var labelHtml = '<span style="padding:1px 3px;border-radius:10px;background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-border-subtle);font-size:11px;line-height:16px;white-space:nowrap;">' + safeNickname + '</span>';
                     var pointerHtml = '<span style="font-size:12px;line-height:12px;color:' + dotColor + ';">⬤</span>';
                     $cursor.html(avatarHtml + labelHtml);
 
