@@ -202,22 +202,6 @@
 
             applyTheme(storedTheme());
 
-            (function () {
-                var themeBeforePrint = null;
-                window.addEventListener('beforeprint', function () {
-                    themeBeforePrint = storedTheme();
-                    if (themeBeforePrint !== 'ahawiki-light') {
-                        applyTheme('ahawiki-light');
-                    }
-                });
-                window.addEventListener('afterprint', function () {
-                    if (themeBeforePrint !== null && themeBeforePrint !== 'ahawiki-light') {
-                        applyTheme(themeBeforePrint);
-                    }
-                    themeBeforePrint = null;
-                });
-            })();
-
             $nav.find('[data-theme-option]').on('click', function (event) {
                 event.stopPropagation();
                 const theme = normalizeTheme($(this).data('theme-option'));
