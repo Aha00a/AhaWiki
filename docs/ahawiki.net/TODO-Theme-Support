@@ -301,11 +301,11 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 대상:
 
- * [[CB]] `.crawlerPreview` panel, arrow, thumbnail placeholder, title/body text
- * [[CB]] `.autocomplete-suggestions`, `.autocomplete-selected`, highlighted `strong`
- * [[CB]] `kbd`, `.MacroKbd`, `.hotkeyHint` tooltip
- * [[CB]] legacy `svg.graph` 스타일
- * [[CB]] `.Paper` / print-preview style 중 screen preview 색상
+ * [[CB(x)]] `.crawlerPreview` panel, arrow, thumbnail placeholder, title/body text
+ * [[CB(x)]] `.autocomplete-suggestions`, `.autocomplete-selected`, highlighted `strong`
+ * [[CB(x)]] `kbd`, `.MacroKbd`, `.hotkeyHint` tooltip
+ * [[CB(x)]] legacy `svg.graph` 스타일
+ * [[CB(x)]] `.Paper` / print-preview style 중 screen preview 색상
 
 === Phase 5: Verification
 
@@ -332,8 +332,8 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
  * [[CB(x)]] Phase 2: edit page 전용 UI
  * [[CB(x)]] Phase 3: Kanban detail modal
  * [[CB(x)]] Phase 4: JS/canvas/inline style 잔여 색상
- * [[CB]] Phase 4.5: table/search/blame/macro structured UI
- * [[CB]] Phase 4.6: preview/autocomplete/kbd/legacy graph
+ * [[CB(x)]] Phase 4.5: table/search/blame/macro structured UI
+ * [[CB(x)]] Phase 4.6: preview/autocomplete/kbd/legacy graph
 
 === Inline body 색상 처리 (`app/views/_baseSkeleton.scala.html`)
 

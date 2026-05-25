@@ -42,6 +42,7 @@ html.theme-ahawiki-light {
 	--color-heading-border: #cccccc;
 	--color-heading-shadow: 1px 1px 2px #99a;
 	--color-shadow-soft: #eeeeee;
+	--color-overlay-bg: rgba(9, 30, 66, 0.5);
 	--color-navbar-bg: rgba(255, 255, 255, 0.25);
 	--color-navbar-border: rgba(217, 225, 238, 0.3);
 	--color-navbar-shadow: rgba(9, 30, 66, 0.12);
@@ -123,6 +124,7 @@ html.theme-ahawiki-dark {
 	--color-heading-border: #444466;
 	--color-heading-shadow: none;
 	--color-shadow-soft: rgba(0, 0, 0, 0.4);
+	--color-overlay-bg: rgba(0, 0, 0, 0.55);
 	--color-navbar-bg: rgba(20, 20, 40, 0.7);
 	--color-navbar-border: rgba(100, 100, 150, 0.3);
 	--color-navbar-shadow: rgba(0, 0, 0, 0.35);
@@ -204,6 +206,7 @@ html.theme-solarized-light {
 	--color-heading-border: #93a1a1;
 	--color-heading-shadow: none;
 	--color-shadow-soft: rgba(101, 123, 131, 0.18);
+	--color-overlay-bg: rgba(101, 123, 131, 0.42);
 	--color-navbar-bg: rgba(253, 246, 227, 0.72);
 	--color-navbar-border: rgba(147, 161, 161, 0.35);
 	--color-navbar-shadow: rgba(101, 123, 131, 0.16);
@@ -285,6 +288,7 @@ html.theme-solarized-dark {
 	--color-heading-border: #586e75;
 	--color-heading-shadow: none;
 	--color-shadow-soft: rgba(0, 0, 0, 0.32);
+	--color-overlay-bg: rgba(0, 20, 25, 0.62);
 	--color-navbar-bg: rgba(0, 43, 54, 0.78);
 	--color-navbar-border: rgba(88, 110, 117, 0.45);
 	--color-navbar-shadow: rgba(0, 0, 0, 0.32);
@@ -657,17 +661,17 @@ kbd {
 	margin-right: 3px;
 	top: -2px;
 	& > kbd {
-		box-shadow: 0 4px 0 2px #aaa;
-		border: 1px solid #ddd;
+		box-shadow: 0 4px 0 2px var(--color-border-subtle);
+		border: 1px solid var(--color-input-border);
 		border-radius: 0.25rem;
-		background-color: #f0f0f0;
-		color: #333;
+		background-color: var(--color-surface-alt);
+		color: var(--color-text);
 		padding: 2px 5px;
 		font-size: 0.875em;
 		line-height: 1em;
 	}
 	&:hover > kbd {
-		box-shadow: 0 3px 0 1px #999;
+		box-shadow: 0 3px 0 1px var(--color-border);
 		top: 0;
 	}
 }
@@ -685,14 +689,15 @@ kbd.MacroKbd {
 	left: 50%;
 	bottom: calc(100% + 6px);
 	transform: translateX(-50%);
-	background: rgba(28, 28, 30, 0.95);
-	color: #fff;
+	background: var(--color-surface);
+	color: var(--color-text);
+	border: 1px solid var(--color-border);
 	border-radius: 6px;
 	padding: 6px 8px;
 	font-size: 11px;
 	white-space: nowrap;
 	z-index: 1300;
-	box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 3px 12px var(--color-shadow-soft);
 	pointer-events: none;
 }
 .hotkeyHint[data-hotkey-tooltip-position="bottom"]:hover::after {
@@ -1581,7 +1586,7 @@ kbd.MacroKbd {
 
 	.Paper {
 		@media screen {
-			background-color: #ddd;
+			background-color: var(--color-surface-alt);
 		}
 		.revisionInfo {
 			float: none;
@@ -1671,14 +1676,15 @@ kbd.MacroKbd {
 			position: relative;
 			@media screen {
 				margin: 10mm auto;
-				border: 1px solid #000;
-				.boxShadow(10px 10px 50px 5px rgba(0,0,0,0.75));
-				background-color: #fff;
+				border: 1px solid var(--color-border);
+				.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
+				background-color: var(--color-surface);
+				color: var(--color-text);
 			}
 			padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
 
 			.pageHeader {
-				border-bottom: 1mm solid #000;
+				border-bottom: 1mm solid currentColor;
 
 				.documentId {
 					text-align:right;
@@ -1690,7 +1696,7 @@ kbd.MacroKbd {
 				bottom: @a4PaddingBottom;
 				width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
 
-				border-top: 1mm solid #000;
+				border-top: 1mm solid currentColor;
 				padding-top: 3mm;
 
 				.pageNo {
@@ -1989,11 +1995,11 @@ kbd.MacroKbd {
 		@opacityNeighbor: 0.9;
 		@opacityHover: 1;
 
-		@nodeColorNormal: #777;
-		@nodeColorNeighbor: darken(@nodeColorNormal, 20%);
-		@nodeColorHover: darken(@nodeColorNormal, 40%);
+		@nodeColorNormal: var(--color-adjacent-dot-hop2);
+		@nodeColorNeighbor: var(--color-adjacent-dot-hop1);
+		@nodeColorHover: var(--color-adjacent-dot-root);
 
-		border: 1px solid #ccc;
+		border: 1px solid var(--color-border);
 		g {
 			&.node {
 				& {
@@ -2007,7 +2013,7 @@ kbd.MacroKbd {
 						opacity: @opacityNormal;
 						font-size: 12px;
 						fill: @nodeColorNormal;
-						text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+						text-shadow: -1px -1px 0 var(--color-bg), 1px -1px 0 var(--color-bg), -1px 1px 0 var(--color-bg), 1px 1px 0 var(--color-bg);
 
 					}
 				}
@@ -2224,7 +2230,7 @@ kbd.MacroKbd {
 		right: 0;
 		bottom: 0;
 		left: 0;
-		background: rgba(9, 30, 66, 0.5);
+		background: var(--color-overlay-bg);
 		backdrop-filter: blur(2px);
 		z-index: 1;
 	}
@@ -2250,10 +2256,27 @@ kbd.MacroKbd {
 		}
 	}
 
-	.autocomplete-suggestions { border: 1px solid #999; background: #fff; cursor: default; overflow: auto; }
-	.autocomplete-suggestion { padding: 10px 5px; font-size: 1.2em; white-space: nowrap; overflow: hidden; }
-	.autocomplete-selected { background: #f0f0f0; }
-	.autocomplete-suggestions strong { font-weight: normal; color: #3399ff; }
+	.autocomplete-suggestions {
+		border: 1px solid var(--color-input-border);
+		background: var(--color-surface);
+		color: var(--color-text);
+		cursor: default;
+		overflow: auto;
+		box-shadow: 0 8px 20px var(--color-shadow-soft);
+	}
+	.autocomplete-suggestion {
+		padding: 10px 5px;
+		font-size: 1.2em;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.autocomplete-selected {
+		background: var(--color-table-row-hover-bg);
+	}
+	.autocomplete-suggestions strong {
+		font-weight: normal;
+		color: var(--color-link);
+	}
 
 	.searchResult {
 		.item {
@@ -2356,9 +2379,9 @@ kbd.MacroKbd {
 		width: @size;
 		height: @size;
 		border-radius: @size * 10;
-		border: @thickness solid rgba(0,0,0, 0.5);
-		border-top: @thickness solid rgba(255, 255, 255, 0.5);
-		color: rgba(0, 0, 0, 0);
+		border: @thickness solid var(--color-border-subtle);
+		border-top: @thickness solid var(--color-focus-ring);
+		color: transparent;
 		-webkit-animation: spin 2s linear infinite; /* Safari */
 		animation: spin 2s linear infinite;
 		//@-webkit-keyframes spin {
@@ -2377,14 +2400,14 @@ kbd.MacroKbd {
 		z-index: 9999;
 		box-sizing: border-box;
 		width: min(520px, calc(100vw - 32px));
-		border: 1px solid rgba(59, 72, 95, 0.18);
-		background: rgba(255, 255, 255, 0.86);
+		border: 1px solid var(--color-border-subtle);
+		background: var(--color-surface);
 		backdrop-filter: saturate(180%) blur(5px);
 		padding: 12px;
 		border-radius: 5px;
-		box-shadow: 0 18px 48px rgba(31, 41, 55, 0.18), 0 3px 12px rgba(31, 41, 55, 0.12);
+		box-shadow: 0 18px 48px var(--color-shadow-soft), 0 3px 12px var(--color-shadow-soft);
 		overflow: hidden;
-		color: #172033;
+		color: var(--color-text);
 
 		&:before {
 			content: "";
@@ -2393,9 +2416,9 @@ kbd.MacroKbd {
 			left: 22px;
 			width: 14px;
 			height: 14px;
-			background: rgba(255, 255, 255, 0.86);
-			border-top: 1px solid rgba(59, 72, 95, 0.18);
-			border-left: 1px solid rgba(59, 72, 95, 0.18);
+			background: var(--color-surface);
+			border-top: 1px solid var(--color-border-subtle);
+			border-left: 1px solid var(--color-border-subtle);
 			backdrop-filter: saturate(180%) blur(5px);
 			transform: rotate(45deg);
 		}
@@ -2418,8 +2441,8 @@ kbd.MacroKbd {
 			width: 112px;
 			height: 112px;
 			border-radius: 5px;
-			border: 1px solid rgba(59, 72, 95, 0.14);
-			background-color: #f4f6f8;
+			border: 1px solid var(--color-border-subtle);
+			background-color: var(--color-surface-alt);
 			object-fit: cover;
 		}
 		h5 {
@@ -2428,7 +2451,7 @@ kbd.MacroKbd {
 			margin: 2px 0 0 0;
 			margin-bottom: 8px;
 			line-height: 1.3;
-			color: #111827;
+			color: var(--color-muted-strong);
 		}
 		p {
 			margin: 0;
@@ -2436,7 +2459,7 @@ kbd.MacroKbd {
 			overflow: hidden;
 			white-space: pre-wrap;
 			line-height: 1.55;
-			color: #4b5563;
+			color: var(--color-muted);
 		}
 	}
 
