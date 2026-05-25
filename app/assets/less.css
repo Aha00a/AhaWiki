@@ -3138,8 +3138,11 @@ kbd.MacroKbd {
   .AhaWiki .header,
   .AhaWiki .footer,
   .AhaWiki .flash,
-  .AhaWiki .generatedSection {
-    display: none;
+  .AhaWiki .generatedSection,
+  .AhaWiki .InterpreterRenderEditLink,
+  .AhaWiki .InterpreterRenderFoldToggle,
+  .AhaWiki button.tocToggle {
+    display: none !important;
   }
 }
 @media print {
@@ -4875,3 +4878,4 @@ kbd.MacroKbd {
   background: var(--color-link-hover-bg);
   border-color: var(--color-flash-error-border);
 }
+/*# sourceMappingURL=less.css.map */
