@@ -1079,8 +1079,16 @@ kbd.MacroKbd {
 .AhaWiki.width-1280 .limitWidth,
 .AhaWiki.width-960 .limitWidth {
   margin: 0 auto;
+  padding-top: 20px;
+  padding-bottom: 25px;
   background: var(--color-surface);
-  box-shadow: 0 2px 16px var(--color-navbar-shadow);
+  box-shadow: 3px 0 8px -3px var(--color-navbar-shadow), -3px 0 8px -3px var(--color-navbar-shadow), 0 4px 12px -2px var(--color-navbar-shadow);
+  display: flow-root;
+}
+.AhaWiki.width-1600 .limitWidth h1:first-of-type,
+.AhaWiki.width-1280 .limitWidth h1:first-of-type,
+.AhaWiki.width-960 .limitWidth h1:first-of-type {
+  margin-top: 0;
 }
 .AhaWiki .aspectRatioWrapper {
   position: relative;
@@ -1177,7 +1185,7 @@ kbd.MacroKbd {
   --wiki-indent-list: 40px;
   --wiki-contained-indent-body: 0px;
   --wiki-contained-indent-list: 10px;
-  padding: 0 0 25px 0;
+  padding: 0 0 0 0;
   word-break: break-all;
 }
 .AhaWiki .commonAhaWiki > .limitWidth > div > p,
@@ -1679,7 +1687,7 @@ kbd.MacroKbd {
   --wiki-indent-list: 40px;
   --wiki-contained-indent-body: 0px;
   --wiki-contained-indent-list: 10px;
-  padding: 0 0 25px 0;
+  padding: 0 0 0 0;
   word-break: break-all;
 }
 .AhaWiki .wikiContent > .limitWidth > div > p,
@@ -2373,7 +2381,7 @@ kbd.MacroKbd {
   --wiki-indent-list: 40px;
   --wiki-contained-indent-body: 0px;
   --wiki-contained-indent-list: 10px;
-  padding: 0 0 25px 0;
+  padding: 0 0 0 0;
   word-break: break-all;
   text-align: justify;
 }
