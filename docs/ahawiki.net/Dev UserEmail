@@ -1,4 +1,4 @@
-= UserEmail
+= [Dev] UserEmail
 
 == 설계 의도
  * 사용자의 identity는 이메일이 아니라 `User.seq`다. 한 사람이 여러 Google 이메일로 로그인하더라도 같은 `User.seq`에 연결되면 같은 사용자로 취급한다.

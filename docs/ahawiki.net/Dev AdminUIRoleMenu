@@ -1,0 +1,46 @@
+= [Dev] Admin UI 권한별 메뉴
+
+전체Admin과 SiteAdmin의 권한에 따라 `/Admin` 네비게이션 메뉴를 다르게 표시한다.
+
+== 네비게이션 구조
+
+[[[#!text
+[Sites]
+  ▼ AhaWiki (#1)   ← 현재 사이트: 자동 펼침 + 강조 표시
+      Meta목록
+      Config
+      Cache
+      Permission
+      AccessLog
+      SiteAdmins   ← 전체Admin만 표시
+  ▶ OtherSite (#2) ← 전체Admin만 표시 (접힌 상태)
+
+[전체 관리]        ← 전체Admin만 표시
+  Dashboard
+  User
+  RecentChange
+  AccessLog
+  Cache (Crawler)
+  S3 Browser
+]]]
+
+ * 현재 사이트는 `request.host`로 판별 (`/api/me`의 `currentSiteSeq` 활용)
+ * SiteAdmin에게는 담당 사이트만 표시, 전체Admin은 전체 표시
+
+== 구현 결과
+
+=== Backend
+ * `GET /api/me` 추가: `seq`, `nickname`, `isAdmin`, `siteAdminSeqs`, `currentSiteSeq` 반환
+ * `SiteAdmin.selectByUser(userSeq)` 추가
+ * `/api/Admin/Sites`: SiteAdmin은 담당 사이트만 반환하도록 수정
+ * `Admin.scala`: `isAdmin || isSiteAdmin` 기준으로 접근 허용
+
+=== Frontend
+ * `AdminApp`에서 `me` fetch 후 Navigation/AdminContent에 prop으로 전달
+ * `SiteNavItem` 컴포넌트 분리로 사이트별 서브메뉴 재사용
+ * `me.isAdmin`이 false이면 전체Admin 전용 페이지 접근 시 접근 불가 메시지 표시
+ * Me API 로딩 중 네비게이션 skeleton 표시
+
+== 설계 결정
+
+실제 보안은 API 레벨(`isAdmin` / `isSiteAdmin`)에서 처리한다. 프론트 메뉴 분기는 UX 목적으로만 사용한다.
