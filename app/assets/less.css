@@ -1438,7 +1438,7 @@ kbd.MacroKbd {
   clear: right;
   vertical-align: top;
   display: inline-block;
-  max-width: 50vw;
+  max-width: 50%;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .commonAhaWiki div.InterpreterSchema {
@@ -1557,7 +1557,7 @@ kbd.MacroKbd {
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
-  max-width: 50vw;
+  max-width: 50%;
   border: 1px solid var(--color-border);
   border-radius: 5px;
   background: var(--color-surface-panel-frosted);
@@ -1942,7 +1942,7 @@ kbd.MacroKbd {
   clear: right;
   vertical-align: top;
   display: inline-block;
-  max-width: 50vw;
+  max-width: 50%;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .wikiContent div.InterpreterSchema {
@@ -2061,7 +2061,7 @@ kbd.MacroKbd {
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
-  max-width: 50vw;
+  max-width: 50%;
   border: 1px solid var(--color-border);
   border-radius: 5px;
   background: var(--color-surface-panel-frosted);
@@ -2639,7 +2639,7 @@ kbd.MacroKbd {
   clear: right;
   vertical-align: top;
   display: inline-block;
-  max-width: 50vw;
+  max-width: 50%;
 }
 @media only screen and (max-width: 768px) {
   .AhaWiki .paperContent .page .pageContent div.InterpreterSchema {
@@ -2758,7 +2758,7 @@ kbd.MacroKbd {
   float: right;
   margin-bottom: 10px;
   margin-left: 10px;
-  max-width: 50vw;
+  max-width: 50%;
   border: 1px solid var(--color-border);
   border-radius: 5px;
   background: var(--color-surface-panel-frosted);

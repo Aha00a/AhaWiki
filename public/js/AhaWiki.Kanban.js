@@ -1410,7 +1410,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!draggingCard || !evt) {
                     return;
                 }
-                boardAutoScroll.update(evt);
                 if (Number.isFinite(evt.clientX)) {
                     latestPointerForCardDrag.x = evt.clientX;
                 }
@@ -1418,6 +1417,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     latestPointerForCardDrag.y = evt.clientY;
                 }
                 var nearestList = findNearestCardList(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                boardAutoScroll.update(evt, nearestList);
                 setCardDropTargetHighlight(nearestList);
             };
 
@@ -1437,7 +1437,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     latestPointerForCardDrag.x = null;
                     latestPointerForCardDrag.y = null;
                     boardAutoScroll.start();
-                    boardAutoScroll.update(evt.originalEvent);
+                    boardAutoScroll.update(evt.originalEvent, evt.from);
                     window.addEventListener('dragover', updateCardDragPointer, true);
                     doc.addEventListener('dragover', updateCardDragPointer, true);
                 },
@@ -1450,6 +1450,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     updateCardDragPointer(pointerEvent);
                     var currentList = evt && evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list') ? evt.to : null;
                     if (currentList) {
+                        boardAutoScroll.update(pointerEvent, currentList);
                         setCardDropTargetHighlight(currentList);
                     }
                     return true;
@@ -1735,6 +1736,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var boardAutoScrollState = {
             active: false,
             pointerX: null,
+            pointerY: null,
+            verticalTarget: null,
             frameId: null
         };
         var requestAutoScrollFrame = function (callback) {
@@ -1759,6 +1762,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             var pointerX = boardAutoScrollState.pointerX;
+            var pointerY = boardAutoScrollState.pointerY;
             if (Number.isFinite(pointerX) && board.scrollWidth > board.clientWidth) {
                 var rect = board.getBoundingClientRect();
                 var rectLeft = Number.isFinite(rect.left) ? rect.left : 0;
@@ -1776,6 +1780,24 @@ document.addEventListener('DOMContentLoaded', function () {
                     board.scrollLeft += scrollDelta;
                 }
             }
+            var verticalTarget = boardAutoScrollState.verticalTarget;
+            if (verticalTarget && Number.isFinite(pointerY) && verticalTarget.scrollHeight > verticalTarget.clientHeight) {
+                var listRect = verticalTarget.getBoundingClientRect();
+                var listTop = Number.isFinite(listRect.top) ? listRect.top : 0;
+                var listHeight = Number.isFinite(listRect.height) ? listRect.height : verticalTarget.clientHeight;
+                var listBottom = Number.isFinite(listRect.bottom) ? listRect.bottom : listTop + listHeight;
+                var verticalEdgeSize = Math.min(80, Math.max(36, listHeight * 0.18));
+                var maxVerticalStep = 24;
+                var verticalDelta = 0;
+                if (pointerY < listTop + verticalEdgeSize) {
+                    verticalDelta = -maxVerticalStep * Math.min(1, (listTop + verticalEdgeSize - pointerY) / verticalEdgeSize);
+                } else if (pointerY > listBottom - verticalEdgeSize) {
+                    verticalDelta = maxVerticalStep * Math.min(1, (pointerY - (listBottom - verticalEdgeSize)) / verticalEdgeSize);
+                }
+                if (verticalDelta !== 0) {
+                    verticalTarget.scrollTop += verticalDelta;
+                }
+            }
             boardAutoScrollState.frameId = requestAutoScrollFrame(stepBoardAutoScroll);
         };
         var startBoardAutoScroll = function () {
@@ -1785,15 +1807,25 @@ document.addEventListener('DOMContentLoaded', function () {
             boardAutoScrollState.active = true;
             boardAutoScrollState.frameId = requestAutoScrollFrame(stepBoardAutoScroll);
         };
-        var updateBoardAutoScrollPointer = function (evt) {
-            if (!evt || !Number.isFinite(evt.clientX)) {
+        var updateBoardAutoScrollPointer = function (evt, verticalTarget) {
+            if (!evt) {
                 return;
             }
-            boardAutoScrollState.pointerX = evt.clientX;
+            if (Number.isFinite(evt.clientX)) {
+                boardAutoScrollState.pointerX = evt.clientX;
+            }
+            if (Number.isFinite(evt.clientY)) {
+                boardAutoScrollState.pointerY = evt.clientY;
+            }
+            if (verticalTarget && verticalTarget.classList && verticalTarget.classList.contains('kanban-card-list')) {
+                boardAutoScrollState.verticalTarget = verticalTarget;
+            }
         };
         var stopBoardAutoScroll = function () {
             boardAutoScrollState.active = false;
             boardAutoScrollState.pointerX = null;
+            boardAutoScrollState.pointerY = null;
+            boardAutoScrollState.verticalTarget = null;
             cancelAutoScrollFrame(boardAutoScrollState.frameId);
             boardAutoScrollState.frameId = null;
         };
