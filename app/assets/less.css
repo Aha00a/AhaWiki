@@ -125,7 +125,7 @@ html.theme-ahawiki-light {
   --color-table-row-alt-bg: rgba(245, 245, 255, 0.5);
   --color-table-row-hover-bg: rgba(235, 235, 245, 0.5);
   --color-percent-track: #cccccc;
-  --color-percent-bar: #000000;
+  --color-percent-bar: #8fb8ff;
   --color-percent-label: #ffffff;
   --color-adjacent-placeholder-bg: linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%);
   --color-adjacent-placeholder-bg-frosted: rgba(241, 245, 255, 0.5);
@@ -3162,9 +3162,11 @@ kbd.MacroKbd {
   display: inline-block;
   width: 80px;
   height: 20px;
+  line-height: 20px;
   background-color: var(--color-percent-track);
   margin-right: 5px;
   text-align: center;
+  vertical-align: middle;
   border-radius: 3px;
   overflow: hidden;
 }
@@ -3177,6 +3179,8 @@ kbd.MacroKbd {
 }
 .AhaWiki .percentTotal .percentLabel {
   position: relative;
+  display: block;
+  line-height: 20px;
   color: var(--color-percent-label);
   top: 0;
   font-size: 85%;

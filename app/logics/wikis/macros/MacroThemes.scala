@@ -77,7 +77,7 @@ object MacroThemes extends TraitMacro {
       "--color-table-row-alt-bg" -> "rgba(245, 245, 255, 0.5)",
       "--color-table-row-hover-bg" -> "rgba(235, 235, 245, 0.5)",
       "--color-percent-track" -> "#cccccc",
-      "--color-percent-bar" -> "#000000",
+      "--color-percent-bar" -> "#8fb8ff",
       "--color-percent-label" -> "#ffffff",
       "--color-adjacent-placeholder-bg" -> "linear-gradient(135deg, #f8faff 0%, #f1f5ff 100%)",
       "--color-adjacent-placeholder-border" -> "#d8deea",
