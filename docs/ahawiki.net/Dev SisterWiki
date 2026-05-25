@@ -1,8 +1,9 @@
-= SisterWiki
- * Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유사 문서를 `See Also` 영역에 함께 노출한다.
- * 별도의 sister wiki 전용 위키 링크 문법은 추가하지 않고, cross-site 문서 표기는 `Site.abbr` 기반의 `Abbr:PageName` 형식을 사용한다.
- * 실제 cross-site 링크 URL은 대상 site의 `Site.mainDomain`을 사용해 `https://{mainDomain}/w/{encodedPageName}` 형식으로 생성한다.
- * `SiteDomain`은 host-to-site 매핑과 도메인 목록 관리 용도로 유지하고, 대표 링크 생성에는 `Site.mainDomain`을 사용한다.
+= [Dev] SisterWiki
+
+Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유사 문서를 `See Also` 영역에 함께 노출한다.
+별도의 sister wiki 전용 위키 링크 문법은 추가하지 않고, cross-site 문서 표기는 `Site.abbr` 기반의 `Abbr:PageName` 형식을 사용한다.
+실제 cross-site 링크 URL은 대상 site의 `Site.mainDomain`을 사용해 `https://{mainDomain}/w/{encodedPageName}` 형식으로 생성한다.
+`SiteDomain`은 host-to-site 매핑과 도메인 목록 관리 용도로 유지하고, 대표 링크 생성에는 `Site.mainDomain`을 사용한다.
 
 == Site Metadata
  * `Site` 모델은 `seq`, `name`, `abbr`, `mainDomain` 필드를 가진다.
@@ -37,11 +38,11 @@
 
 == See Also
  * generated `See Also` 영역은 다음 순서로 구성된다.
- * `Schema`
- * `Backlinks`
- * `Twin Pages`
- * `Similar Pages`
- * `Adjacent Pages`
+  * `Schema`
+  * `Backlinks`
+  * `Twin Pages`
+  * `Similar Pages`
+  * `Adjacent Pages`
  * `Twin Pages`는 같은 이름의 공개 twin page가 있을 때만 생성된다.
  * `Similar Pages`는 same-site 또는 cross-site 유사 문서가 하나라도 있을 때 생성된다.
  * cross-site 유사 문서만 있는 경우에도 `Similar Pages` 섹션이 생성된다.
