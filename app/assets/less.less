@@ -362,7 +362,7 @@ nav.topNavbar {
 
 	.themeIconGroup {
 		display: grid;
-		grid-template-columns: repeat(2, 34px);
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 6px;
 		padding: 0 6px;
 	}
@@ -370,11 +370,12 @@ nav.topNavbar {
 	.themeOption {
 		.defaultFont();
 		justify-content: center;
-		width: 34px;
+		gap: 6px;
+		width: 100%;
 		height: 34px;
-		padding: 0;
+		padding: 0 10px;
 		border: 1px solid transparent;
-		border-radius: 5px;
+		border-radius: 7px;
 		background: transparent;
 		color: var(--color-navbar-text);
 		cursor: pointer;
@@ -392,6 +393,11 @@ nav.topNavbar {
 		}
 
 		i.fas { font-size: 14px; }
+		.themeOptionLabel {
+			font-size: 12px;
+			font-weight: 700;
+			line-height: 1;
+		}
 		&.themeAhaWikiLight i { color: #f59e0b; }
 		&.themeAhaWikiDark i { color: #8cb4ff; }
 	}

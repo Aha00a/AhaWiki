@@ -15,16 +15,17 @@
         <kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>
     </span>
 }
-@themeOption(theme: String, className: String, label: String, iconClass: String) = {
+@themeOption(theme: String, className: String, label: String, iconClass: String, shortLabel: String) = {
     <button type="button" class="themeOption @className" data-theme-option="@theme" aria-label="@label" title="@label">
         <i class="fas @iconClass"></i>
+        <span class="themeOptionLabel">@shortLabel</span>
     </button>
 }
 @themePicker = {
     <li class="themeMenu">
         <div class="themeIconGroup" role="group" aria-label="Theme">
-            @themeOption("ahawiki-light", "themeAhaWikiLight", "AhaWiki Light", "fa-sun")
-            @themeOption("ahawiki-dark", "themeAhaWikiDark", "AhaWiki Dark", "fa-moon")
+            @themeOption("ahawiki-light", "themeAhaWikiLight", "AhaWiki Light", "fa-sun", "Light")
+            @themeOption("ahawiki-dark", "themeAhaWikiDark", "AhaWiki Dark", "fa-moon", "Dark")
         </div>
     </li>
 }
