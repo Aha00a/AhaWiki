@@ -15,6 +15,21 @@
         <kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>
     </span>
 }
+@themeOption(theme: String, className: String, label: String, iconClass: String) = {
+    <button type="button" class="themeOption @className" data-theme-option="@theme" aria-label="@label" title="@label">
+        <i class="fas @iconClass"></i>
+    </button>
+}
+@themePicker = {
+    <li class="themeMenu">
+        <div class="themeIconGroup" role="group" aria-label="Theme">
+            @themeOption("ahawiki-light", "themeAhaWikiLight", "AhaWiki Light", "fa-sun")
+            @themeOption("ahawiki-dark", "themeAhaWikiDark", "AhaWiki Dark", "fa-moon")
+            @themeOption("solarized-light", "themeSolarizedLight", "Solarized Light", "fa-adjust")
+            @themeOption("solarized-dark", "themeSolarizedDark", "Solarized Dark", "fa-dot-circle")
+        </div>
+    </li>
+}
 @isAdmin = @{ logics.AdminLogic.isAdmin(contextSite.requestWrapper) }
 @canAccessAdmin = @{ isAdmin || logics.AdminLogic.isSiteAdmin(contextSite.site.seq, contextSite.requestWrapper)(contextSite.database) }
 @canWrite = @{ contextSite.requestWrapper.getUser.isDefined }
@@ -92,22 +107,7 @@
                                         <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
                                     </li>
                                 }
-                                <li class="themeMenu">
-                                    <div class="themeIconGroup" role="group" aria-label="Theme">
-                                        <button type="button" class="themeOption themeAhaWikiLight" data-theme-option="ahawiki-light" aria-label="AhaWiki Light" title="AhaWiki Light">
-                                            <i class="fas fa-sun"></i>
-                                        </button>
-                                        <button type="button" class="themeOption themeAhaWikiDark" data-theme-option="ahawiki-dark" aria-label="AhaWiki Dark" title="AhaWiki Dark">
-                                            <i class="fas fa-moon"></i>
-                                        </button>
-                                        <button type="button" class="themeOption themeSolarizedLight" data-theme-option="solarized-light" aria-label="Solarized Light" title="Solarized Light">
-                                            <i class="fas fa-adjust"></i>
-                                        </button>
-                                        <button type="button" class="themeOption themeSolarizedDark" data-theme-option="solarized-dark" aria-label="Solarized Dark" title="Solarized Dark">
-                                            <i class="fas fa-dot-circle"></i>
-                                        </button>
-                                    </div>
-                                </li>
+                                @themePicker
                                 <li>
                                     <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
                                 </li>
@@ -134,6 +134,7 @@
                         @if(canAccessAdmin) {
                             <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a></li>
                         }
+                        @themePicker
                         <li><a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
                     }
                 } else {

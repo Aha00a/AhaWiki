@@ -269,8 +269,21 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
 완료 기준:
 
- * [[CB]] canvas나 JS 생성 UI가 CSS 변수 또는 theme-aware palette를 사용한다.
- * [[CB]] 새 하드코딩 색상이 생기지 않도록 검색 기준을 남긴다.
+ * [[CB(x)]] canvas나 JS 생성 UI가 CSS 변수 또는 theme-aware palette를 사용한다.
+ * [[CB(x)]] 새 하드코딩 색상이 생기지 않도록 검색 기준을 남긴다.
+
+검색 기준:
+
+[[[#!text
+rg -n "style\\.(border|background|color)|setProperty\\('(outline|background)'|fillStyle|strokeStyle|#[0-9a-fA-F]{3,8}|rgb\\(|rgba\\(|hsla?\\(" app/views public/js --glob "!public/js/babel/**" --glob "!public/schema.org/**"
+]]]
+
+허용 예외:
+
+ * Less 테마 토큰 정의 값
+ * `cssVar(..., fallback)`의 fallback 값
+ * AhaWiki Light 사이트별 body/header/footer 기본값
+ * 현재 범위 밖인 Admin/Account 화면
 
 === Phase 4.5: Table / Structured Data UI Leftovers
 
@@ -323,6 +336,8 @@ CSS만으로 해결되지 않는 색상을 마지막에 정리한다.
 
  * [[CB(x)]] `sbt compile`은 `SBT_OPTS=-Dsbt.server.forcestart=true`로 통과
  * [[CB(x)]] `npm test`는 CodeMirror list marker 스타일 수정 후 37개 모두 통과
+ * [[CB(x)]] 모바일 drawer에 theme picker 추가 후 `sbt compile`, `npm test`, `git diff --check` 통과
+ * [[CB(x)]] Kanban JS/drop feedback, JS 생성 버튼, legacy graph canvas, edit inline overlay/autocomplete 색상 정리 후 `sbt compile`, `npm test`, `git diff --check` 통과
 
 == Implementation Plan
 
@@ -394,6 +409,7 @@ Solarized나 AhaWiki Dark를 사용자가 선택하면 사용자 테마가 우�
 
 프로필 버튼을 눌렀을 때 나오는 계정 메뉴 안에 테마 선택 컨트롤을 추가한다.
 셀렉트 박스 대신 네 가지 아이콘 버튼을 사용한다.
+모바일 drawer 안에서도 같은 theme picker helper를 사용한다.
 
 [[[#!text
 <li class="themeMenu">
@@ -475,14 +491,14 @@ Solarized나 AhaWiki Dark를 사용자가 선택하면 사용자 테마가 우�
 
 == Verification Checklist
 
- * [[CB]] 저장값이 없을 때 AhaWiki Light가 적용되는지 확인
- * [[CB]] 네 가지 테마 선택지가 모두 UI에 표시되는지 확인
- * [[CB]] 테마 선택 후 페이지 이동/새로고침에도 유지되는지 확인
- * [[CB]] FOUC 없이 `<head>` 단계에서 테마 class가 적용되는지 확인
+ * [[CB(x)]] 저장값이 없을 때 AhaWiki Light가 적용되는지 확인
+ * [[CB(x)]] 네 가지 테마 선택지가 모두 UI에 표시되는지 확인
+ * [[CB(x)]] 테마 선택 후 페이지 이동/새로고침에도 유지되는지 확인
+ * [[CB(x)]] FOUC 없이 `<head>` 단계에서 테마 class가 적용되는지 확인
  * [[CB]] AhaWiki Light에서 기존 사이트별 body/header/footer 색상이 유지되는지 확인
  * [[CB]] AhaWiki Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
  * [[CB]] Solarized Light에서 본문, 링크, 코드블록, blockquote 가독성 확인
  * [[CB]] Solarized Dark에서 본문, 링크, 코드블록, blockquote 가독성 확인
  * [[CB]] navbar, dropdown, mobile menu 색상이 각 테마에서 어색하지 않은지 확인
  * [[CB]] flash, toc, schema, table, Kanban UI가 각 테마에서 읽기 좋은지 확인
- * [[CB]] 모바일에서도 theme picker가 정상 동작하는지 확인
+ * [[CB(x)]] 모바일에서도 theme picker가 정상 동작하는지 확인

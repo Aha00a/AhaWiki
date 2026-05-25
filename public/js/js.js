@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 editLink.style.width = '50px';
                 editLink.style.height = '20px';
                 editLink.style.borderRadius = '50px';
-                editLink.style.border = '1px solid #888';
-                editLink.style.background = '#fff';
-                editLink.style.color = '#000';
+                editLink.style.border = '1px solid var(--color-input-border)';
+                editLink.style.background = 'var(--color-surface)';
+                editLink.style.color = 'var(--color-text)';
                 editLink.style.textDecoration = 'none';
                 editLink.style.opacity = '.4';
                 editLink.style.fontSize = '12px';
@@ -122,9 +122,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyButton.style.whiteSpace = 'nowrap';
                 copyButton.style.height = '22px';
                 copyButton.style.borderRadius = '50px';
-                copyButton.style.border = '1px solid #888';
-                copyButton.style.background = '#fff';
-                copyButton.style.color = '#000';
+                copyButton.style.border = '1px solid var(--color-input-border)';
+                copyButton.style.background = 'var(--color-surface)';
+                copyButton.style.color = 'var(--color-text)';
                 copyButton.style.textDecoration = 'none';
                 copyButton.style.opacity = '.4';
                 copyButton.style.fontSize = '12px';
@@ -176,8 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle.style.justifyContent = 'center';
                 foldToggle.style.borderRadius = '50px';
                 foldToggle.style.border = 'none';
-                foldToggle.style.background = '#fff';
-                foldToggle.style.color = '#000';
+                foldToggle.style.background = 'var(--color-surface)';
+                foldToggle.style.color = 'var(--color-text)';
                 foldToggle.style.textDecoration = 'none';
                 foldToggle.style.opacity = '.4';
                 foldToggle.style.fontSize = '0.5em';

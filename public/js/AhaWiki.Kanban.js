@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
         overlay.style.top = '0';
         overlay.style.right = '0';
         overlay.style.bottom = '0';
-        overlay.style.background = 'rgba(9, 30, 66, 0.78)';
+        overlay.style.background = 'var(--color-overlay-bg)';
         overlay.style.zIndex = '10001';
         overlay.style.display = 'flex';
         overlay.style.alignItems = 'center';
@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
         image.style.height = 'auto';
         image.style.objectFit = 'contain';
         image.style.borderRadius = '8px';
-        image.style.boxShadow = '0 12px 36px rgba(9, 30, 66, 0.45)';
+        image.style.boxShadow = '0 12px 36px var(--color-shadow-soft)';
 
         overlay.appendChild(image);
         overlay.addEventListener('click', function () {
@@ -513,9 +513,9 @@ document.addEventListener('DOMContentLoaded', function () {
             img.style.maxHeight = '80px';
             img.style.objectFit = 'cover';
             img.style.borderRadius = '6px';
-            img.style.border = '1px solid #d0d7de';
+            img.style.border = '1px solid var(--kanban-border)';
             img.style.cursor = sourceUrl ? 'zoom-in' : 'default';
-            img.style.background = '#fff';
+            img.style.background = 'var(--kanban-card-bg)';
             img.style.padding = '0';
             img.style.margin = '0';
         });
@@ -1037,10 +1037,10 @@ document.addEventListener('DOMContentLoaded', function () {
         listDropHint.style.display = 'none';
         listDropHint.style.padding = '8px 10px';
         listDropHint.style.marginBottom = '8px';
-        listDropHint.style.border = '1px dashed #0c66e4';
+        listDropHint.style.border = '1px dashed var(--kanban-primary)';
         listDropHint.style.borderRadius = '6px';
-        listDropHint.style.background = 'rgba(12, 102, 228, 0.08)';
-        listDropHint.style.color = '#0c66e4';
+        listDropHint.style.background = 'var(--color-link-hover-bg)';
+        listDropHint.style.color = 'var(--kanban-primary)';
         listDropHint.style.fontSize = '12px';
         listDropHint.style.fontWeight = '600';
         cardList.insertBefore(listDropHint, cardList.firstChild);
@@ -1071,8 +1071,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             evt.preventDefault();
             evt.stopPropagation();
-            cardList.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-            cardList.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
+            cardList.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
             listDropHint.style.display = '';
         });
 
@@ -1089,8 +1089,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (evt.dataTransfer) {
                 evt.dataTransfer.dropEffect = 'copy';
             }
-            cardList.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-            cardList.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
+            cardList.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
             listDropHint.style.display = '';
         });
 
@@ -1396,8 +1396,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     highlightedDropTarget.style.removeProperty('background');
                 }
                 highlightedDropTarget = targetList;
-                highlightedDropTarget.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-                highlightedDropTarget.style.setProperty('background', 'rgba(12, 102, 228, 0.12)', 'important');
+                highlightedDropTarget.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
+                highlightedDropTarget.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
             };
 
             var latestPointerForCardDrag = { x: null, y: null };
@@ -1715,8 +1715,8 @@ document.addEventListener('DOMContentLoaded', function () {
         var boardFileDragDepth = 0;
         var setBoardFileDropFeedback = function (active) {
             if (active) {
-                board.style.setProperty('outline', '2px dashed #0c66e4', 'important');
-                board.style.setProperty('background', 'rgba(12, 102, 228, 0.08)', 'important');
+                board.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
+                board.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
                 return;
             }
             board.style.removeProperty('outline');
@@ -2251,7 +2251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (propertyEntries.length === 0) {
                     var empty = document.createElement('div');
                     empty.textContent = 'No properties';
-                    empty.style.color = '#6b778c';
+                    empty.style.color = 'var(--kanban-muted)';
                     empty.style.fontSize = '13px';
                     propertyList.appendChild(empty);
                     return;

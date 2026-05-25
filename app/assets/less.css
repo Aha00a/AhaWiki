@@ -556,7 +556,10 @@ nav.topNavbar .actionAuth .authSubmenu a {
   width: 100%;
   box-sizing: border-box;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeMenu {
+nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
+  display: block;
+}
+nav.topNavbar .themeMenu {
   border-top: 1px solid var(--color-border-subtle);
   margin-top: 4px;
   padding-top: 6px;
@@ -564,13 +567,13 @@ nav.topNavbar .actionAuth .authSubmenu .themeMenu {
   margin-bottom: 4px;
   padding-bottom: 6px;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeIconGroup {
+nav.topNavbar .themeIconGroup {
   display: grid;
   grid-template-columns: repeat(4, 34px);
   gap: 6px;
   padding: 0 6px;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption {
+nav.topNavbar .themeOption {
   font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   justify-content: center;
@@ -584,32 +587,29 @@ nav.topNavbar .actionAuth .authSubmenu .themeOption {
   cursor: pointer;
   text-shadow: none;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption:hover,
-nav.topNavbar .actionAuth .authSubmenu .themeOption.active {
+nav.topNavbar .themeOption:hover,
+nav.topNavbar .themeOption.active {
   background-color: var(--color-link-hover-bg);
   border-color: var(--color-focus-ring);
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption:focus {
+nav.topNavbar .themeOption:focus {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption i.fas {
+nav.topNavbar .themeOption i.fas {
   font-size: 14px;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption.themeAhaWikiLight i {
+nav.topNavbar .themeOption.themeAhaWikiLight i {
   color: #f59e0b;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption.themeAhaWikiDark i {
+nav.topNavbar .themeOption.themeAhaWikiDark i {
   color: #8cb4ff;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption.themeSolarizedLight i {
+nav.topNavbar .themeOption.themeSolarizedLight i {
   color: #b58900;
 }
-nav.topNavbar .actionAuth .authSubmenu .themeOption.themeSolarizedDark i {
+nav.topNavbar .themeOption.themeSolarizedDark i {
   color: #2aa198;
-}
-nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
-  display: block;
 }
 @media (max-width: 767px) {
   nav.topNavbar > .wrap {
@@ -652,6 +652,12 @@ nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
     margin: 4px 0;
     border-top: 1px solid var(--color-border-subtle);
     pointer-events: none;
+  }
+  nav.topNavbar .mobileFlatMenu .themeMenu {
+    width: 100%;
+  }
+  nav.topNavbar .mobileFlatMenu .themeIconGroup {
+    padding: 0;
   }
   nav.topNavbar.menuOpen .mobileFlatMenu {
     display: flex;

@@ -72,6 +72,25 @@
                 return { width: w, height: h };
             }
 
+            function cssVar(name, fallback) {
+                var value = getComputedStyle(document.documentElement).getPropertyValue(name);
+                value = value ? value.trim() : '';
+                return value || fallback;
+            }
+
+            function graphPalette() {
+                return {
+                    link: cssVar('--color-border', '#999'),
+                    linkHighlight: cssVar('--color-adjacent-hud-action-active-bg', '#3366cc'),
+                    root: cssVar('--color-adjacent-dot-root', '#213a9a'),
+                    hover: cssVar('--color-adjacent-hud-action-active-bg', '#3366cc'),
+                    neighbor: cssVar('--color-adjacent-dot-hop1', '#3f7bcf'),
+                    other: cssVar('--color-adjacent-dot-hop2', '#7ea2df'),
+                    labelRoot: cssVar('--color-adjacent-hud-title', '#213a9a'),
+                    label: cssVar('--color-adjacent-hud-text', '#333')
+                };
+            }
+
             function getNode(id) {
                 return state.nodeById.get(id);
             }
@@ -141,6 +160,7 @@
 
             function draw() {
                 var size = syncCanvasSize();
+                var palette = graphPalette();
                 ctx.clearRect(0, 0, size.width, size.height);
 
                 var neighbors = state.hoverNodeId ? (state.adjacency.get(state.hoverNodeId) || new Set()) : new Set();
@@ -153,7 +173,7 @@
                     if(!sNode || !tNode) return;
 
                     var highlighted = state.hoverNodeId && (src === state.hoverNodeId || dst === state.hoverNodeId);
-                    ctx.strokeStyle = highlighted ? '#3366cc' : '#999';
+                    ctx.strokeStyle = highlighted ? palette.linkHighlight : palette.link;
                     ctx.globalAlpha = highlighted ? 0.95 : 0.55;
                     ctx.lineWidth = highlighted ? 1.8 : 1;
                     var s = worldToScreen(sNode.x || 0, sNode.y || 0);
@@ -173,11 +193,11 @@
                     var p = worldToScreen(n.x || 0, n.y || 0);
 
                     ctx.beginPath();
-                    ctx.fillStyle = isRoot ? '#213a9a' : (isHover ? '#3366cc' : (isNeighbor ? '#3f7bcf' : '#7ea2df'));
+                    ctx.fillStyle = isRoot ? palette.root : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : palette.other));
                     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
                     ctx.fill();
 
-                    ctx.fillStyle = isRoot ? '#00f' : '#333';
+                    ctx.fillStyle = isRoot ? palette.labelRoot : palette.label;
                     ctx.font = (12 * state.config.labelScale) + 'px sans-serif';
                     ctx.fillText(n.id, p.x + 12, p.y + 4);
                 });
@@ -449,6 +469,9 @@
             }
 
             render();
+            $(document).on('ahawiki:themeChanged.d3canvas@(id)', function() {
+                draw();
+            });
         });
     </script>
 }

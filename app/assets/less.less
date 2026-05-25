@@ -509,57 +509,58 @@ nav.topNavbar {
 				box-sizing: border-box;
 			}
 
-			.themeMenu {
-				border-top: 1px solid var(--color-border-subtle);
-				margin-top: 4px;
-				padding-top: 6px;
-				border-bottom: 1px solid var(--color-border-subtle);
-				margin-bottom: 4px;
-				padding-bottom: 6px;
-			}
-
-			.themeIconGroup {
-				display: grid;
-				grid-template-columns: repeat(4, 34px);
-				gap: 6px;
-				padding: 0 6px;
-			}
-
-			.themeOption {
-				.defaultFont();
-				justify-content: center;
-				width: 34px;
-				height: 34px;
-				padding: 0;
-				border: 1px solid transparent;
-				border-radius: 5px;
-				background: transparent;
-				color: var(--color-navbar-text);
-				cursor: pointer;
-				text-shadow: none;
-
-				&:hover,
-				&.active {
-					background-color: var(--color-link-hover-bg);
-					border-color: var(--color-focus-ring);
-				}
-
-				&:focus {
-					outline: 2px solid var(--color-focus-ring);
-					outline-offset: 2px;
-				}
-
-				i.fas { font-size: 14px; }
-				&.themeAhaWikiLight i { color: #f59e0b; }
-				&.themeAhaWikiDark i { color: #8cb4ff; }
-				&.themeSolarizedLight i { color: #b58900; }
-				&.themeSolarizedDark i { color: #2aa198; }
-			}
 		}
 
 		.authMenu.open .authSubmenu {
 			display: block;
 		}
+	}
+
+	.themeMenu {
+		border-top: 1px solid var(--color-border-subtle);
+		margin-top: 4px;
+		padding-top: 6px;
+		border-bottom: 1px solid var(--color-border-subtle);
+		margin-bottom: 4px;
+		padding-bottom: 6px;
+	}
+
+	.themeIconGroup {
+		display: grid;
+		grid-template-columns: repeat(4, 34px);
+		gap: 6px;
+		padding: 0 6px;
+	}
+
+	.themeOption {
+		.defaultFont();
+		justify-content: center;
+		width: 34px;
+		height: 34px;
+		padding: 0;
+		border: 1px solid transparent;
+		border-radius: 5px;
+		background: transparent;
+		color: var(--color-navbar-text);
+		cursor: pointer;
+		text-shadow: none;
+
+		&:hover,
+		&.active {
+			background-color: var(--color-link-hover-bg);
+			border-color: var(--color-focus-ring);
+		}
+
+		&:focus {
+			outline: 2px solid var(--color-focus-ring);
+			outline-offset: 2px;
+		}
+
+		i.fas { font-size: 14px; }
+		&.themeAhaWikiLight i { color: #f59e0b; }
+		&.themeAhaWikiDark i { color: #8cb4ff; }
+		&.themeSolarizedLight i { color: #b58900; }
+		&.themeSolarizedDark i { color: #2aa198; }
 	}
 
 	@media (max-width: 767px) {
@@ -591,6 +592,8 @@ nav.topNavbar {
 				border-top: 1px solid var(--color-border-subtle);
 				pointer-events: none;
 			}
+			.themeMenu { width: 100%; }
+			.themeIconGroup { padding: 0; }
 		}
 		&.menuOpen .mobileFlatMenu { display: flex; }
 	}
