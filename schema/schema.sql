@@ -124,7 +124,6 @@ CREATE TABLE `CalculatedCosineSimilarity` (
   `name2` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
   `similarity` double DEFAULT NULL,
   PRIMARY KEY (`site1`,`name1`,`site2`,`name2`),
-  KEY `CalculatedCosineSimilarity_name2_PageMeta_site_name_fk` (`site2`,`name2`),
   KEY `CalculatedCosineSimilarity_site1_name1_similarity_index` (`site1`,`name1`,`similarity`),
   KEY `CalculatedCosineSimilarity_site2_name2_index` (`site2`,`name2`),
   CONSTRAINT `CalculatedCosineSimilarity_name1_PageMeta_site_name_fk` FOREIGN KEY (`site1`, `name1`) REFERENCES `PageMeta` (`site`, `name`),
