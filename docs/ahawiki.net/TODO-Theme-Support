@@ -101,7 +101,7 @@ Solarized 공식 팔레트를 기반으로 한다.
 [[[#!text
 html.theme-solarized-light {
     --color-bg: #fdf6e3;
-    --color-text: #657b83;
+    --color-text: #586e75;
     --color-link: #268bd2;
     --color-link-visited: #6c71c4;
     --color-link-hover-bg: #eee8d5;
@@ -125,7 +125,7 @@ Solarized 공식 다크 팔레트를 기반으로 한다.
 [[[#!text
 html.theme-solarized-dark {
     --color-bg: #002b36;
-    --color-text: #839496;
+    --color-text: #93a1a1;
     --color-link: #268bd2;
     --color-link-visited: #6c71c4;
     --color-link-hover-bg: #073642;
