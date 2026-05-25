@@ -330,6 +330,12 @@
             return r;
         }
 
+        function getNodeAlpha(degree, isRoot, isHover, isNeighbor) {
+            if(isRoot || isHover || isNeighbor) return 1;
+            var normalized = Math.log(degree + 1) / Math.log(13);
+            return Math.max(0.42, Math.min(0.96, 0.42 + normalized * 0.54));
+        }
+
         function draw() {
             var size = syncCanvasSize();
             var palette = graphPalette();
@@ -376,8 +382,10 @@
                 var r = getNodeRadius(n, isHover);
                 var rScreen = Math.max(2, r * state.scale);
                 var p = worldToScreen(n.x || 0, n.y || 0);
+                var nodeAlpha = getNodeAlpha(degree, isRoot, isHover, isNeighbor);
 
                 ctx.beginPath();
+                ctx.globalAlpha = nodeAlpha;
                 ctx.fillStyle = isRoot ? palette.root : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant))));
                 ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                 ctx.fill();
@@ -413,6 +421,7 @@
                 var labelAlpha = Math.min(1, Math.max(0.2, (labelSize - 7) / 12));
                 if(isHover || isNeighbor) labelAlpha = 1;
                 if(!isRoot && !isHover && !isNeighbor) labelAlpha *= 0.92;
+                if(!isRoot && !isHover && !isNeighbor) labelAlpha *= nodeAlpha;
                 ctx.globalAlpha = labelAlpha;
                 ctx.fillStyle = isRoot ? palette.labelRoot : palette.label;
                 ctx.font = ((isRoot || isHover || isNeighbor) ? 'bold ' : '') + labelSize.toFixed(1) + 'px sans-serif';
