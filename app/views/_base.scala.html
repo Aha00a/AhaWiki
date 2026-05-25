@@ -212,10 +212,10 @@
             const widthStorageKey = 'ahawiki-limit-width';
             const $widthToggle = $nav.find('.widthToggle');
             const widthSteps = [
-                { label: 'Wide', icon: 'fa-arrows-left-right', bodyClass: null },
-                { label: '1600', icon: 'fa-compress-alt',      bodyClass: 'width-1600' },
-                { label: '1280', icon: 'fa-compress-alt',      bodyClass: 'width-1280' },
-                { label: '960',  icon: 'fa-compress-alt',      bodyClass: 'width-960' },
+                { label: 'Wide', icon: 'fa-arrows-left-right', bodyClass: null,         maxWidth: Infinity },
+                { label: '1600', icon: 'fa-compress-alt',      bodyClass: 'width-1600', maxWidth: 1600 },
+                { label: '1280', icon: 'fa-compress-alt',      bodyClass: 'width-1280', maxWidth: 1280 },
+                { label: '960',  icon: 'fa-compress-alt',      bodyClass: 'width-960',  maxWidth: 960 },
             ];
             const widthBodyClasses = ['width-1600', 'width-1280', 'width-960'];
             let currentWidthStep = 0;
@@ -240,7 +240,12 @@
 
             $widthToggle.on('click', function (event) {
                 event.stopPropagation();
-                currentWidthStep = (currentWidthStep + 1) % widthSteps.length;
+                const vw = window.innerWidth;
+                let next = (currentWidthStep + 1) % widthSteps.length;
+                while (next !== 0 && widthSteps[next].maxWidth >= vw) {
+                    next = (next + 1) % widthSteps.length;
+                }
+                currentWidthStep = next;
                 try { localStorage.setItem(widthStorageKey, String(currentWidthStep)); } catch (e) {}
                 applyWidthStep(currentWidthStep);
             });
