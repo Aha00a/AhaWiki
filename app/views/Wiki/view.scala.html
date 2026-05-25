@@ -377,22 +377,76 @@
             (function () {
                 var previewCache = {};
                 var fallbackImageUrl = "/public/img/attachmentFallback.svg";
+                var previewMargin = 12;
+                var previewGap = 8;
+
+                function positionPreview($link, div) {
+                    var linkOffset = $link.offset();
+                    if (!linkOffset) {
+                        return;
+                    }
+
+                    var linkWidth = $link.outerWidth() || 0;
+                    var linkHeight = $link.outerHeight() || 0;
+                    var previewWidth = div.outerWidth();
+                    var previewHeight = div.outerHeight();
+                    var scrollLeft = $(window).scrollLeft();
+                    var scrollTop = $(window).scrollTop();
+                    var viewportWidth = $(window).width();
+                    var viewportHeight = $(window).height();
+                    var viewportLeft = scrollLeft + previewMargin;
+                    var viewportRight = scrollLeft + viewportWidth - previewMargin;
+                    var viewportTop = scrollTop + previewMargin;
+                    var viewportBottom = scrollTop + viewportHeight - previewMargin;
+                    var belowTop = linkOffset.top + linkHeight + previewGap;
+                    var aboveTop = linkOffset.top - previewHeight - previewGap;
+                    var left = linkOffset.left;
+                    var top = belowTop;
+                    var placementClass = 'crawlerPreviewBelow';
+
+                    if (belowTop + previewHeight > viewportBottom && aboveTop >= viewportTop) {
+                        top = aboveTop;
+                        placementClass = 'crawlerPreviewAbove';
+                    } else if (belowTop + previewHeight > viewportBottom) {
+                        top = Math.max(viewportTop, viewportBottom - previewHeight);
+                    }
+
+                    if (left + previewWidth > viewportRight) {
+                        left = viewportRight - previewWidth;
+                    }
+                    if (left < viewportLeft) {
+                        left = viewportLeft;
+                    }
+
+                    var arrowLeft = Math.min(
+                        previewWidth - 30,
+                        Math.max(22, linkOffset.left + (linkWidth / 2) - left - 7)
+                    );
+
+                    div
+                        .removeClass('crawlerPreviewAbove crawlerPreviewBelow')
+                        .addClass(placementClass)
+                        .css({
+                            top: top,
+                            left: left,
+                            '--crawler-preview-arrow-left': arrowLeft + 'px'
+                        });
+                }
 
                 function createPreview($link, key) {
                     var div = $('<div class="crawlerPreview"><div class="circle"/></div>')
                         .attr('data-preview-key', key)
                         .css({
-                            position: 'absolute',
-                            top: $link.offset().top + $link.height() + 5,
-                            left: $link.offset().left
+                            position: 'absolute'
                         })
                         .appendTo($("body"));
 
+                    positionPreview($link, div);
                     $(document).data(key, div);
                     return div;
                 }
 
-                function renderPreview(div, data) {
+                function renderPreview($link, div, data) {
                     data = data || {};
                     div.html('').append(
                         $('<div></div>')
@@ -400,6 +454,7 @@
                             .append($('<h5/>').text(data.title || ""))
                             .append($('<p/>').text(data.description || ""))
                     );
+                    positionPreview($link, div);
                 }
 
                 function removePreview(key) {
@@ -413,7 +468,7 @@
                 function showPreview($link, key, ajaxOptions) {
                     var div = createPreview($link, key);
                     if (previewCache[key]) {
-                        renderPreview(div, previewCache[key]);
+                        renderPreview($link, div, previewCache[key]);
                         return;
                     }
 
@@ -422,7 +477,7 @@
                             previewCache[key] = data;
                             var currentDiv = $(document).data(key);
                             if (currentDiv) {
-                                renderPreview(currentDiv, data);
+                                renderPreview($link, currentDiv, data);
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {

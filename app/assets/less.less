@@ -2446,21 +2446,28 @@ kbd.MacroKbd {
 		padding: 12px;
 		border-radius: 5px;
 		box-shadow: 0 18px 48px var(--color-shadow-soft), 0 3px 12px var(--color-shadow-soft);
-		overflow: hidden;
+		overflow: visible;
 		color: var(--color-text);
 
 		&:before {
 			content: "";
 			position: absolute;
-			top: -8px;
-			left: 22px;
+			left: var(--crawler-preview-arrow-left, 22px);
 			width: 14px;
 			height: 14px;
 			background: var(--color-surface);
-			border-top: 1px solid var(--color-border-subtle);
-			border-left: 1px solid var(--color-border-subtle);
 			backdrop-filter: saturate(180%) blur(5px);
 			transform: rotate(45deg);
+		}
+		&.crawlerPreviewBelow:before {
+			top: -8px;
+			border-top: 1px solid var(--color-border-subtle);
+			border-left: 1px solid var(--color-border-subtle);
+		}
+		&.crawlerPreviewAbove:before {
+			bottom: -8px;
+			border-right: 1px solid var(--color-border-subtle);
+			border-bottom: 1px solid var(--color-border-subtle);
 		}
 		>.circle {
 			margin: 10px auto;
