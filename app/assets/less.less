@@ -973,9 +973,10 @@ kbd.MacroKbd {
 			margin: 0 auto;
 			padding-top: 20px;
 			background: var(--color-surface);
-			box-shadow: 3px 0 8px -3px var(--color-navbar-shadow), -3px 0 8px -3px var(--color-navbar-shadow), 0 4px 12px -2px var(--color-navbar-shadow);
+			box-shadow: 3px 0 8px -3px var(--color-navbar-shadow), -3px 0 8px -3px var(--color-navbar-shadow);
 			display: flow-root;
 			h1:first-of-type { margin-top: 0; }
+			@media print { box-shadow: none; }
 		}
 	}
 
