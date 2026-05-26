@@ -26,7 +26,7 @@ object MacroCalendar extends TraitMacro {
       val r = <table class="MacroCalendar wikiTableSimple">
         <thead>
           <tr>
-            <th colspan="7">{scala.xml.XML.loadString(AhaMarkLink(s"$y-$m").toHtmlString())}</th>
+            <th colspan="7">{scala.xml.XML.loadString(AhaMarkLink(s"$y-$m", noFollow = true).toHtmlString())}</th>
           </tr>
           <tr>
             {
