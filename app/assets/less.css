@@ -4977,4 +4977,91 @@ kbd.MacroKbd {
     display: none !important;
   }
 }
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-file-header {
+  background-color: #1d2128;
+  border-color: #3a404a;
+  color: #e6e8eb;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-file-name {
+  color: #e6e8eb;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-tag {
+  background-color: #1d2128;
+  border-color: #3a404a;
+  color: #b7bec9;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-file-wrapper {
+  border-color: #3a404a;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper td.d2h-code-linenumber {
+  background-color: #1d2128;
+  border-color: #3a404a;
+  color: #6b7280;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper td.d2h-code-linenumber:before {
+  color: #6b7280;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-code-line {
+  background-color: #0f1115;
+  color: #e6e8eb;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-code-line del,
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-code-line ins {
+  background-color: transparent;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-del {
+  background-color: #3d1212;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-del td.d2h-code-linenumber {
+  background-color: #2e0e0e;
+  border-color: #5c1f1f;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-del .d2h-code-line {
+  background-color: #3d1212;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-del .d2h-code-line del {
+  background-color: #6b1f1f;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-ins {
+  background-color: #0e2e17;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-ins td.d2h-code-linenumber {
+  background-color: #0a2211;
+  border-color: #1a5c30;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-ins .d2h-code-line {
+  background-color: #0e2e17;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-ins .d2h-code-line ins {
+  background-color: #1a5c30;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-info {
+  background-color: #171a20;
+  border-color: #3a404a;
+  color: #6b7280;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-info td.d2h-code-linenumber {
+  background-color: #171a20;
+  border-color: #3a404a;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-info .d2h-code-line {
+  background-color: #171a20;
+  color: #6b7280;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-emptyplaceholder {
+  background-color: #171a20;
+  border-color: #3a404a;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-emptyplaceholder .d2h-code-line {
+  background-color: #171a20;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-emptyplaceholder td.d2h-code-linenumber {
+  background-color: #171a20;
+  border-color: #3a404a;
+}
+html.theme-ahawiki-dark .AhaWiki .diff .d2h-wrapper .d2h-moved-tag {
+  background-color: #1d2128;
+  color: #b7bec9;
+  border-color: #3a404a;
+}
 /*# sourceMappingURL=less.css.map */
