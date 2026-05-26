@@ -1,0 +1,106 @@
+@import "_mixins";
+
+.AhaWiki {
+	.searchBg {
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background: var(--color-overlay-bg);
+		backdrop-filter: blur(2px);
+		z-index: 1;
+	}
+	.search {
+		position: fixed;
+		top: 30%;
+		left: 40%;
+		width: 20%;
+		z-index: 1;
+
+		@media @widthTablet {
+			left: 10%;
+			width: 80%;
+		}
+
+		form {
+			.boxShadow();
+			input {
+				width: 100%;
+				padding: 10px;
+				font-size: 25px;
+			}
+		}
+	}
+
+	.autocomplete-suggestions {
+		border: 1px solid var(--color-input-border);
+		background: var(--color-surface);
+		color: var(--color-text);
+		cursor: default;
+		overflow: auto;
+		box-shadow: 0 8px 20px var(--color-shadow-soft);
+	}
+	.autocomplete-suggestion {
+		padding: 10px 5px;
+		font-size: 1.2em;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+	.autocomplete-selected {
+		background: var(--color-table-row-hover-bg);
+	}
+	.autocomplete-suggestions strong {
+		font-weight: normal;
+		color: var(--color-link);
+	}
+
+	.searchResult {
+		.item {
+			padding: 10px;
+			table.wikiTableSimple.tableSearchResult {
+				width: 100%;
+				td {
+					.monospace();
+					white-space: pre-wrap;
+					word-break: break-word;
+
+					&.empty {
+						background-color: var(--color-table-row-alt-bg);
+						height: 12px;
+					}
+					&.lineNumber {
+						width: 50px;
+						padding: 5px 10px;
+						text-align: right;
+						.userSelect(none);
+					}
+					&.lineContent {
+						padding: 5px;
+					}
+				}
+				tr:last-of-type {
+					> td {
+						border-bottom: 1px solid var(--color-table-border);
+					}
+				}
+			}
+		}
+	}
+
+	.ahaWikiLoader {
+		&.bg {
+			.searchBg;
+		}
+		&.circle {
+			@size: 10vmin;
+			@thickness: 5vmin;
+			.circleWithRotateAnimation(@size, @thickness);
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			margin-top: (-(@size )/2 - @thickness);
+			margin-left: (-(@size)/2 - @thickness);
+		}
+	}
+}

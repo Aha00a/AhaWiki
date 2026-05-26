@@ -1,0 +1,124 @@
+@import "_mixins";
+
+.AhaWiki {
+	.edit {
+		input[type='text'],
+		textarea,
+		select {
+			background: var(--color-input-bg);
+			color: var(--color-text);
+			border: 1px solid var(--color-input-border);
+		}
+
+		input[type='checkbox'] {
+			accent-color: var(--color-focus-ring);
+		}
+
+		input[type='submit'],
+		button {
+			background: var(--color-surface);
+			color: var(--color-text);
+			border: 1px solid var(--color-input-border);
+		}
+
+		input[type='submit']:hover,
+		button:hover {
+			background: var(--color-link-hover-bg);
+		}
+
+		> div.ui {
+			> form {
+				display: flex;
+				flex-direction: row;
+				@media @widthTablet {
+					flex-direction: column;
+				}
+				> div.left,
+				> div.right {
+					min-width: 200px;
+					min-height: 200px;
+					@media @widthTablet {
+						min-width: 0;
+						width: 100%;
+					}
+
+					> div.toolbar,
+					> div.editorAdditional,
+					> div.previewAdditional  {
+						display: flex;
+						flex-direction: row;
+						flex-wrap: wrap;
+						gap: 4px 10px;
+
+						>div.toolbarLeft,
+						>div.toolbarRight {
+							> a, > label {
+								display: inline-block;
+								padding: 5px 0;
+								color: var(--color-muted-strong);
+								text-decoration: none;
+							}
+						}
+						> div.toolbarLeft {
+							flex-grow: 1;
+						}
+						> div.toolbarRight {
+							flex-grow: 1;
+							text-align: right;
+						}
+					}
+				}
+				> div.left {
+					width: 50%;
+					@media @widthTablet {
+						width: 100%;
+					}
+
+					> div.editorBody {
+						> textarea {
+							width: 100%;
+							box-sizing: border-box;
+							height: 500px;
+							resize: vertical;
+
+							@media @widthTablet {
+								height: 55vh;
+								min-height: 320px;
+							}
+						}
+					}
+				}
+				> div.divider {
+					width: 5px;
+					background-color: var(--color-border);
+					margin: 0 10px;
+					cursor: ew-resize;
+					@media @widthTablet {
+						width: auto;
+						height: 5px;
+						margin: 10px 0;
+						cursor: ns-resize;
+					}
+					&:hover {
+						background-color: var(--color-muted);
+					}
+					&:active {
+						background-color: var(--color-muted-strong);
+					}
+				}
+				> div.right {
+					flex: 1;
+					>div.preview {
+						> div.previewPane {
+							border: 1px solid var(--color-border);
+							//noinspection CssUnknownTarget
+							background-color: var(--color-surface);
+							background-image: url('/public/img/imageDraftVersion.png');
+							color: var(--color-text);
+						}
+					}
+				}
+			}
+		}
+	}
+}

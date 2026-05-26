@@ -1,0 +1,344 @@
+@import "_mixins";
+
+.AhaWiki {
+	.interpreterMap {
+		clear: right;
+		>.mapArea {
+			position: relative;
+			.googleMapsInfoWindow {
+				.defaultFont();
+				line-height: 1.5;
+				.title {
+					font-size: 2em;
+					font-weight: bold;
+				}
+				.score {
+					font-size: 1.5em;
+				}
+			}
+			>.poi, >.sheetLink, >.refreshLink {
+				position: absolute;
+				background: none rgb(255, 255, 255);
+				border: 0;
+				margin: 0;
+				cursor: pointer;
+				user-select: none;
+				border-radius: 2px;
+				box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
+                padding: 9px 12px;
+			}
+			>.poi {
+				top: 10px;
+				left: 160px;
+				.fas {
+					&.fa-store {
+						display: none;
+					}
+					&.fa-store-slash {
+						display: inherit;
+					}
+				}
+				&.on {
+					.fas {
+						&.fa-store {
+							display: inherit;
+						}
+						&.fa-store-slash {
+							display: none;
+						}
+					}
+				}
+			}
+			>.sheetLink {
+				top: 10px;
+				right: 110px;
+			}
+			>.refreshLink {
+				top: 10px;
+				right: 60px;
+			}
+		}
+		>.tableArea {
+			.circle {
+				display: inline-block;
+				width: 10px;
+				height: 10px;
+				border-radius: 100%;
+			}
+			.distance, .count {
+				text-align: right;
+			}
+		}
+	}
+
+	.Macro {
+		&.PageList {
+			> table {
+				margin-left: 0;
+				> thead > tr > th {
+					white-space: nowrap;
+				}
+				> tbody > tr > td{
+					&.dateTime {
+						white-space: nowrap;
+					}
+					&.size, &.revision {
+						text-align: right;
+					}
+				}
+			}
+		}
+
+		&.RecentChanges {
+			.macroRecentChanges {
+				.macro-recent-changes-form {
+					display: flex;
+					flex-wrap: wrap;
+					justify-content: space-between;
+					align-items: center;
+					gap: 12px 20px;
+					padding: 14px 16px;
+					border: 1px solid var(--color-border-subtle);
+					border-radius: 5px;
+					background: var(--color-surface-panel);
+					margin-bottom: 12px;
+					box-shadow: inset 0 1px 0 var(--color-shadow-soft);
+
+					.macro-recent-changes-form-title-wrap {
+						display: flex;
+						flex-direction: column;
+						gap: 3px;
+					}
+
+					.macro-recent-changes-form-controls {
+						display: flex;
+						flex-wrap: wrap;
+						align-items: center;
+						gap: 10px;
+					}
+
+					.macro-recent-changes-form-control {
+						display: inline-flex;
+						align-items: center;
+						gap: 8px;
+						padding: 5px;
+
+						.label-text {
+							color: var(--color-muted-strong);
+							font-weight: 600;
+						}
+
+						input[type="number"] {
+							width: 86px;
+							border: 1px solid var(--color-input-border);
+							border-radius: 5px;
+							padding: 5px 8px;
+							background: var(--color-input-bg);
+							color: var(--color-text);
+							font-size: 13px;
+						}
+
+						&.is-checkbox {
+							padding-right: 12px;
+						}
+					}
+
+					button {
+						border: 0;
+						border-radius: 5px;
+						padding: 8px 14px;
+						background: var(--color-adjacent-hud-action-active-bg);
+						color: var(--color-adjacent-hud-action-active-text);
+						font-size: 14px;
+						font-weight: 600;
+						cursor: pointer;
+
+						&:hover {
+							filter: brightness(0.95);
+						}
+					}
+				}
+
+				.macro-recent-changes {
+					background: var(--color-surface);
+
+					.macro-recent-changes-status {
+						border: 1px solid var(--color-table-border);
+						border-radius: 5px;
+						padding: 14px;
+						color: var(--color-muted);
+						font-size: 14px;
+						background: var(--color-surface-alt);
+
+						@keyframes recentChangesSpin {
+							from {
+								transform: rotate(0deg);
+							}
+							to {
+								transform: rotate(360deg);
+							}
+						}
+
+						&.is-loading::before {
+							content: "";
+							display: inline-block;
+							width: 14px;
+							height: 14px;
+							margin-right: 8px;
+							border: 2px solid var(--color-border-subtle);
+							border-top-color: var(--color-focus-ring);
+							border-radius: 50%;
+							vertical-align: -2px;
+							animation: recentChangesSpin 0.8s linear infinite;
+						}
+					}
+
+					.macro-recent-changes-table-wrap {
+						width: 100%;
+						overflow-x: auto;
+					}
+
+					.macro-recent-changes-table {
+						margin-left: 0;
+						width: 100%;
+
+						@media (max-width: 767px) {
+							min-width: 760px;
+						}
+
+						th, td {
+							text-align: left;
+							word-break: break-word;
+						}
+
+						th {
+							white-space: nowrap;
+						}
+					}
+				}
+			}
+		}
+
+		&.WikiStatistics {
+			.statsGrid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 12px;
+				margin-bottom: 16px;
+			}
+
+			.statCard {
+				border: 1px solid var(--color-border-subtle);
+				border-radius: 8px;
+				padding: 12px;
+				background: var(--color-surface);
+			}
+
+			.statLabel {
+				color: var(--color-muted);
+				font-size: 12px;
+				margin-bottom: 4px;
+			}
+
+			.statValue {
+				font-size: 20px;
+				font-weight: 600;
+				line-height: 1.2;
+			}
+
+			.statSub {
+				margin-top: 2px;
+				color: var(--color-muted);
+				font-size: 12px;
+			}
+		}
+	}
+
+	.InterpreterRenderMetaWrapper {
+		&.Table {
+			overflow-x: auto;
+			margin-left: var(--wiki-indent-body, 30px);
+			.InterpreterRenderContent {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
+				display: inline-block;
+				border: 1px solid var(--color-border-subtle);
+				border-radius: 5px;
+				.InterpreterTable {
+					margin-left: 0;
+				}
+			}
+		}
+
+		&.Text, &.Vim {
+			> .InterpreterRenderContent {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
+
+				> .Interpreter {
+					margin-left: 0;
+					max-width: 100%;
+				}
+			}
+		}
+	}
+
+	.Interpreter {
+		.borderAndBeforeBackground(@bgc, @fgc: #fff) {
+			border: 2px solid @bgc;
+			border-left-width: 15px;
+			border-radius: 5px;
+			background-color: @bgc;
+			&:before {
+				color: @fgc;
+				background: rgba(@bgc, 0.8);
+			}
+		}
+		&.Text, &.Vim {
+			margin-top: 3px;
+			margin-bottom: 3px;
+		}
+		&.Text {
+		}
+
+		&.Vim {
+			position: relative;
+			overflow: hidden;
+
+			&[data-lang] {.borderAndBeforeBackground(#9999cc);}
+			&[data-lang=scala] {.borderAndBeforeBackground(#DC322F);}
+			&[data-lang=perl] {.borderAndBeforeBackground(#004065);}
+			&[data-lang=python] {.borderAndBeforeBackground(#75A8D3);}
+			&[data-lang=javascript] {.borderAndBeforeBackground(#F0DB4F, #000);}
+			&[data-lang=css] {.borderAndBeforeBackground(#FF6600);}
+			&[data-lang=html] {.borderAndBeforeBackground(#E44D26);}
+			&[data-lang=typescript] {.borderAndBeforeBackground(#3178C6);}
+			&[data-lang=java] {.borderAndBeforeBackground(#007396);}
+			&[data-lang=c] {.borderAndBeforeBackground(#A8B9CC);}
+			&[data-lang=cpp] {.borderAndBeforeBackground(#00599C);}
+			&[data-lang=csharp] {.borderAndBeforeBackground(#512BD4);}
+			&[data-lang=go] {.borderAndBeforeBackground(#00ADD8);}
+			&[data-lang=rust] {.borderAndBeforeBackground(#DEA584);}
+			&[data-lang=php] {.borderAndBeforeBackground(#777BB4);}
+			&[data-lang=ruby] {.borderAndBeforeBackground(#CC342D);}
+			&[data-lang=swift] {.borderAndBeforeBackground(#FA7343);}
+			&[data-lang=kotlin] {.borderAndBeforeBackground(#7F52FF);}
+			&[data-lang=sql] {.borderAndBeforeBackground(#336791);}
+			&[data-lang=shell] {.borderAndBeforeBackground(#89E051, #000);}
+			&[data-lang=bash] {.borderAndBeforeBackground(#4EAA25);}
+			&[data-lang=lua] {.borderAndBeforeBackground(#2C2D72);}
+			&[data-lang=r] {.borderAndBeforeBackground(#276DC3);}
+
+			&::before {
+				content: attr(data-lang);
+				color: #fff;
+				position: absolute;
+				top: 0;
+				right: 0;
+				padding: 1px 142px 5px 10px;
+				overflow: hidden;
+				border-radius: 0 0 0 5px;
+			}
+		}
+	}
+}

@@ -1,0 +1,1143 @@
+@import "_mixins";
+
+.AhaWiki {
+	a {
+		color: var(--color-link);
+		word-break: break-word;
+
+		&[target=_blank] {
+			&:before {
+				content: "\f35d";
+				font-family: "Font Awesome 5 Free", sans-serif;
+				font-weight: 900;
+				display: inline-block;
+				scale: 0.75;
+				vertical-align: bottom;
+			}
+		}
+		&:link{
+
+		}
+		&:visited{
+			color: var(--color-link-visited);
+		}
+		&:hover, &:active {
+			background-color: var(--color-link-hover-bg);
+		}
+		&.missing {
+			color: inherit;
+			text-decoration: underline solid var(--color-missing-decoration);
+
+			&:after {
+				content: "?";
+				color: var(--color-missing-marker);
+			}
+		}
+		&.schema {
+			color: var(--color-link-schema);
+		}
+		&.schema-link {
+			&::before {
+				content: "🧩";
+				display: inline-block;
+				margin-right: 0.2em;
+			}
+
+			&.schema-thing::before { content: "🧩"; }
+			&.schema-schema::before { content: "🗂️"; }
+			&.schema-action::before { content: "⚡"; }
+			&.schema-play-action::before { content: "▶️"; }
+			&.schema-bio-chem-entity::before { content: "🧪"; }
+			&.schema-molecular-entity::before { content: "🧬"; }
+			&.schema-creative-work::before { content: "📝"; }
+			&.schema-article::before { content: "📰"; }
+			&.schema-social-media-posting::before { content: "💬"; }
+			&.schema-tech-article::before { content: "🧑‍💻"; }
+			&.schema-book::before { content: "📚"; }
+			&.schema-creative-work-series::before { content: "🗂️"; }
+			&.schema-book-series::before { content: "📚"; }
+			&.schema-movie-series::before { content: "🎬"; }
+			&.schema-periodical::before { content: "🗞️"; }
+			&.schema-comic-series::before { content: "🦸"; }
+			&.schema-tvseries::before { content: "📺"; }
+			&.schema-game::before { content: "🎮"; }
+			&.schema-video-game::before { content: "🕹️"; }
+			&.schema-how-to::before { content: "🛠️"; }
+			&.schema-recipe::before { content: "🍳"; }
+			&.schema-legislation::before { content: "⚖️"; }
+			&.schema-movie::before { content: "🎞️"; }
+			&.schema-software-application::before { content: "💻"; }
+			&.schema-web-application::before { content: "🌐"; }
+			&.schema-software-source-code::before { content: "👨‍💻"; }
+			&.schema-web-site::before { content: "🕸️"; }
+			&.schema-event::before { content: "📅"; }
+			&.schema-intangible::before { content: "💡"; }
+			&.schema-computer-language::before { content: "⌨️"; }
+			&.schema-language::before { content: "🗣️"; }
+			&.schema-rating::before { content: "⭐"; }
+			&.schema-series::before { content: "🎞️"; }
+			&.schema-medical-entity::before { content: "🩺"; }
+			&.schema-anatomical-structure::before { content: "🫀"; }
+			&.schema-medical-condition::before { content: "🤒"; }
+			&.schema-substance::before { content: "🧫"; }
+			&.schema-drug::before { content: "💊"; }
+			&.schema-organization::before { content: "🏢"; }
+			&.schema-corporation::before { content: "🏭"; }
+			&.schema-educational-organization::before { content: "🎓"; }
+			&.schema-college-or-university::before { content: "🏫"; }
+			&.schema-local-business::before { content: "🏪"; }
+			&.schema-emergency-service::before { content: "🚨"; }
+			&.schema-hospital::before { content: "🏥"; }
+			&.schema-financial-service::before { content: "💳"; }
+			&.schema-food-establishment::before { content: "🍴"; }
+			&.schema-cafe-or-coffee-shop::before { content: "☕"; }
+			&.schema-restaurant::before { content: "🍽️"; }
+			&.schema-government-office::before { content: "🏛️"; }
+			&.schema-medical-organization::before { content: "⚕️"; }
+			&.schema-ngo::before { content: "🤝"; }
+			&.schema-political-party::before { content: "🗳️"; }
+			&.schema-person::before { content: "🧑"; }
+			&.schema-place::before { content: "📍"; }
+			&.schema-administrative-area::before { content: "🗺️"; }
+			&.schema-city::before { content: "🏙️"; }
+			&.schema-country::before { content: "🌏"; }
+			&.schema-civic-structure::before { content: "🏛️"; }
+			&.schema-product::before { content: "📦"; }
+			&.schema-custom::before { content: "🧷"; }
+			&.schema-cognag::before { content: "🥃"; }
+			&.schema-poem::before { content: "✒️"; }
+			&.schema-standard::before { content: "📏"; }
+			&.schema-whiskey::before { content: "🥃"; }
+		}
+	}
+
+	code, kbd, pre, samp, tt {
+		.monospace();
+	}
+
+	s {
+		opacity: 0.5;
+		&:hover {
+			opacity: 0.7;
+			text-decoration: none;
+		}
+	}
+	textarea, pre {
+		tab-size : 4;
+	}
+
+	.limitWidth {
+		padding: 0 24px;
+		padding-bottom: 20px;
+
+		box-sizing: border-box;
+
+		@media @widthTablet {
+			padding: 0 12px;
+		}
+	}
+
+	&.width-1600 { .limitWidth { max-width: 1600px; } }
+	&.width-1280 { .limitWidth { max-width: 1280px; } }
+	&.width-960  { .limitWidth { max-width:  960px; } }
+	&.width-1600, &.width-1280, &.width-960 {
+		background-color: var(--color-surface-alt);
+		.limitWidth {
+			margin: 0 auto;
+			padding-top: 20px;
+			background: var(--color-surface);
+			box-shadow: 3px 0 8px -3px var(--color-navbar-shadow), -3px 0 8px -3px var(--color-navbar-shadow);
+			display: flow-root;
+			h1:first-of-type { margin-top: 0; }
+			@media print { box-shadow: none; }
+		}
+	}
+
+	.aspectRatioWrapper {
+		position: relative;
+		.ratio_1_1 {
+			padding-bottom: 100%;
+		}
+		.ratio_4_3 {
+			padding-bottom: 75%;
+		}
+		.ratio_16_9 {
+			padding-bottom: 56.25%;
+		}
+		.responsiveRatio_16_9  {
+			padding-bottom: 56.25%;
+			@media all and (orientation: portrait) {
+				padding-bottom: 156.25%;
+			}
+		}
+		.aspectRatioContent {
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+		}
+	}
+
+	.flash {
+		cursor: pointer;
+		.success {
+			color: var(--color-flash-success-text);
+			background-color: var(--color-flash-success-bg);
+			border: 1px solid var(--color-flash-success-border);
+			padding: 10px;
+		}
+
+		.error {
+			color: var(--color-flash-error-text);
+			background-color: var(--color-flash-error-bg);
+			border: 1px solid var(--color-flash-error-border);
+			padding: 10px;
+		}
+
+		.info {
+			color: var(--color-flash-info-text);
+			background-color: var(--color-flash-info-bg);
+			border: 1px solid var(--color-flash-info-border);
+			padding: 10px;
+		}
+
+		.permissionRestrictionFlash {
+			line-height: 1.45;
+		}
+
+		.permissionRestrictionTitle {
+			font-weight: 700;
+			margin-bottom: 8px;
+		}
+
+		.permissionRestrictionDetail {
+			font-size: 0.9em;
+			word-break: break-word;
+
+			dl {
+				display: grid;
+				grid-template-columns: max-content minmax(0, 1fr);
+				gap: 4px 10px;
+				margin: 0;
+			}
+
+			dt {
+				font-weight: 700;
+				white-space: nowrap;
+			}
+
+			dd {
+				margin: 0;
+
+				span {
+					color: var(--color-muted-strong);
+				}
+			}
+
+			@media @widthTablet {
+				dl {
+					grid-template-columns: 1fr;
+					gap: 2px;
+				}
+
+				dd {
+					margin-bottom: 6px;
+				}
+			}
+		}
+
+		.warning {
+			color: var(--color-flash-warning-text);
+			background-color: var(--color-flash-warning-bg);
+			border: 1px solid var(--color-flash-warning-border);
+			padding: 10px;
+		}
+	}
+
+	.commonAhaWiki {
+		--wiki-indent-body: 30px;
+		--wiki-indent-list: 40px;
+		--wiki-contained-indent-body: 0px;
+		--wiki-contained-indent-list: 10px;
+
+		padding: 0 0 0 0;
+		word-break: break-all;
+		>.limitWidth>div {
+			&>, >div, >div>div, >div>div>div{
+				>p, >blockquote, >table, >.wikiTableSimpleScroll, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {
+					margin-left: var(--wiki-indent-body, 30px);
+					box-sizing: border-box;
+					max-width: calc(100% - var(--wiki-indent-body, 30px));
+				}
+				>ul, ol {
+					margin-left: var(--wiki-indent-list, 40px);
+				}
+				>.tocBody>div {
+					>ul {
+						margin-left: 20px;
+					}
+				}
+			}
+		}
+
+		h1, h2, h3, h4, h5, h6 {
+			margin: 0;
+			scroll-margin-top: 65px;
+			overflow: hidden;
+			word-break: keep-all;
+
+			@media screen {
+				text-shadow: var(--color-heading-shadow);
+			}
+
+
+			.headingNumber {
+				text-decoration: none;
+			}
+		}
+
+		h1, h2, h3 { margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid var(--color-heading-border); padding: 5px; }
+		h4, h5, h6 { margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--color-border-subtle); padding: 3px; }
+
+		h1 { font-size: 2.25em; margin-left: 0; }
+		h2 { font-size: 2em; margin-left: 5px; }
+		h3 { font-size: 1.75em; margin-left: 10px; }
+		h4 { font-size: 1.5em; margin-left: 15px; }
+		h5 { font-size: 1.25em; margin-left: 20px; }
+		h6 { font-size: 1em; margin-left: 25px; }
+
+		hr {
+			padding: 0;
+			border: none;
+			border-bottom: 1px dashed var(--color-border);
+			margin-left: 0;
+			height: 0;
+			clear: both;
+			&.pageBreakAfterAlways {
+				page-break-after: always;
+				@media print {
+					opacity: 0;
+				}
+			}
+		}
+
+		ul, ol {
+			padding-left: 25px;
+		}
+
+		li > p {
+			margin: 0;
+			display: inline-block;
+		}
+
+		code {
+			border: 1px solid var(--color-code-border);
+			background-color: var(--color-code-bg);
+			color: var(--color-code-text);
+			border-radius: 5px;
+			padding: 3px;
+			word-break: break-all;
+		}
+
+		pre {
+			margin-top: 0;
+			margin-bottom: 0;
+			overflow: hidden;
+			background-color: var(--color-code-bg);
+			color: var(--color-code-text);
+			padding-bottom: 0.5em;
+			padding-left: 1em;
+			padding-top: 0.5em;
+			white-space: pre-wrap;
+			word-break: break-all;
+			a {
+				color: var(--color-code-link);
+			    &:link {
+
+			    }
+				&:visited{
+
+				}
+			}
+
+			&.text {
+				margin-top: 1px;
+				margin-bottom: 1px;
+				border: 2px solid var(--color-code-border);
+				border-left-width: 15px;
+			}
+		}
+
+
+		blockquote {
+			position: relative;
+			background-color: var(--color-blockquote-bg);
+			border: 2px solid var(--color-blockquote-border);
+			border-left-width: 10px;
+			overflow: hidden;
+			padding: 10px 25px;
+			margin: 0 0 1px;
+			line-height: 150%;
+			p {
+				margin-block-start: 0;
+				margin-block-end: 0;
+			}
+
+			&:before, &:after {
+				position: absolute;
+				font-size: 200%;
+				font-family: serif;
+			}
+			&:before { left: 3px; top: 5px; content: '"'; }
+			&:after { top: 5px; right: 3px; content: '"'; }
+		}
+
+		div.toc {
+			.tocBody > div > p:first-child {
+				margin-left: 0;
+			}
+
+			ul {
+				margin: 0;
+				padding-left: 16px;
+			}
+
+			li {
+				margin: 4px 0;
+				line-height: 1.4;
+			}
+
+			a {
+				color: var(--color-link-schema);
+				text-decoration: none;
+
+				&:hover {
+					color: var(--color-link);
+					text-decoration: underline;
+				}
+			}
+		}
+
+		div.toc, div.schema {
+			clear: right;
+		}
+
+		div.InterpreterSchema {
+			clear: right;
+			vertical-align: top;
+			display: inline-block;
+			max-width: 50%;
+
+			@media only screen and (max-width: 768px) {
+				clear: right;
+				float: none;
+				display: block;
+				max-width: initial;
+				margin: 10px 0;
+			}
+
+			.schemaClassTitle {
+				padding-bottom: 8px;
+				border-bottom: 1px solid var(--color-border-subtle);
+				margin-left: 0;
+			}
+
+			.schemaFields {
+				.schemaFieldRow {
+					padding: 6px 0;
+
+					&.actorCharacterPairRow {
+						column-count: 3;
+						column-gap: 16px;
+
+						> dt.schemaFieldKey {
+							-webkit-column-span: all;
+							column-span: all;
+							display: block;
+							margin-bottom: 4px;
+						}
+
+						dd.schemaFieldValuePair {
+							break-inside: avoid;
+						}
+					}
+				}
+			}
+
+			h5:first-of-type {
+				margin-top: 0;
+			}
+			p {
+				margin-top: 0;
+			}
+			img {
+				min-width: 230px;
+				max-width: 100%;
+			}
+			dl {
+				margin: 0;
+				dt {
+					font-weight: 700;
+					color: var(--color-muted-strong);
+				}
+				dd {
+					margin-left: 10px;
+					display: inline-block;
+
+					&.schemaFieldValuePair {
+						display: block;
+						margin-left: 10px;
+
+						.pairSeparator {
+							color: var(--color-muted);
+						}
+					}
+
+					.datePeriod {
+						color: var(--color-muted);
+						font-size: 90%;
+						margin-left: 4px;
+					}
+				}
+				.address {
+					margin: 5px 0 5px 10px;
+					padding: 10px;
+					border: 1px solid var(--color-border);
+					background-color: var(--color-surface-alt);
+					> dd {
+						display: block;
+						margin-left: 0;
+						> div.mapServiceLinks {
+							> a {
+								white-space: nowrap;
+							}
+						}
+					}
+					img.iconMap {
+						display: inline-block;
+						width: 16px;
+						min-width: 16px;
+						height: 16px;
+						vertical-align: middle;
+					}
+					.aspectRatioWrapper {
+						margin-top: 5px;
+						margin-bottom: 5px;
+					}
+				}
+			}
+			ul {
+				list-style-type: none;
+				margin: 0;
+				padding-left: 20px;
+			}
+			.match {
+				color: var(--color-link);
+				font-weight: bold;
+			}
+			.unknown, .supersededBy {
+				text-decoration: line-through;
+				color: var(--color-muted);
+			}
+			sup {
+				color: var(--color-muted);
+				display: block;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+		div.toc, div.MacroLinkDate, div.rightInfoBox, div.InterpreterSchema, div.schema {
+			position: relative;
+			float: right;
+			margin-bottom: 10px;
+			margin-left: 10px;
+			max-width: 50%;
+			border: 1px solid var(--color-border);
+			border-radius: 5px;
+			background: var(--color-surface-panel-frosted);
+			padding: 10px 20px;
+			.boxShadow();
+			backdrop-filter: saturate(180%) blur(5px);
+			-webkit-backdrop-filter: saturate(180%) blur(5px);
+
+			p {
+				margin-top: 0;
+			}
+			img {
+				max-width: 100%;
+			}
+
+			@media screen and @widthTablet {
+				float: none;
+				clear: both;
+				max-width: none;
+				width: auto;
+				margin: 12px 0;
+				padding: 12px;
+				border-radius: 8px;
+				background: var(--color-surface-alt);
+				box-sizing: border-box;
+			}
+		}
+
+		div.MacroLinkDate.around {
+            clear: right;
+		}
+
+		.previewPane {
+			div.toc, div.schema {
+				max-width: 25vw;
+			}
+			div.schema {
+				>div.preview.info {
+					.properties {
+						ol.groupedProperties {
+							list-style-type: none;
+							padding-left: 0;
+							margin: 0 0 5px 0;
+							li {
+								display: inline-block;
+								margin-right: 5px;
+								&:after {
+									content: ',';
+								}
+								&:last-of-type {
+									&:after {
+										content: '';
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			>ul {
+				padding-left: 0;
+			}
+		}
+
+
+
+		.wikiSyntax {
+			width: 100%;
+			&>tbody {
+				&>tr {
+					&>td {
+						width: 50%;
+					}
+					&:hover {
+						background-color: inherit;
+					}
+				}
+			}
+			.raw {
+				padding: 10px 10px;
+			}
+
+			.preview {
+				padding: 10px 10px 10px 10+25px;
+			}
+		}
+
+		.success {
+			overflow: hidden;
+			.flash.success;
+		}
+		.error {
+			overflow: hidden;
+			.flash.error;
+		}
+		.info {
+			overflow: hidden;
+			.flash.info;
+		}
+
+		.trivial {
+			font-size: 0.7em;
+			opacity: 0.7;
+		}
+
+        &.schema\:Schema,
+		&.TitleIndex,
+
+		table.column2 {
+			width: 100%;
+			> tbody {
+				> tr {
+					> td {
+						width: 50%;
+						@media @widthTablet { width: 100%; display: block; }
+
+						padding: 0;
+						vertical-align: top;
+						&:first-of-type {
+
+						}
+						&:last-of-type {
+							padding-left: 20px;
+							@media @widthTablet { padding-left: 0; }
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.wikiContent {
+		.commonAhaWiki;
+	}
+
+	@media @widthTablet {
+		.commonAhaWiki {
+			padding: 0 0 20px;
+
+			h1, h2, h3, h4, h5, h6 {
+				margin-left: 0;
+			}
+
+			hr {
+				margin-left: 0;
+			}
+
+			div.toc ul, div.schema dl {
+				max-height: 40vh;
+				overflow-y: auto;
+				padding-right: 4px;
+			}
+
+			div.toc ul {
+				padding-left: 18px;
+			}
+
+			table {
+				display: block;
+				max-width: 100%;
+				overflow-x: auto;
+				-webkit-overflow-scrolling: touch;
+			}
+
+			.seeAlsoGrid {
+				display: block;
+				.seeAlsoSecondary {
+					margin-top: 12px;
+				}
+			}
+		}
+	}
+
+	.revisionInfo {
+		clear: right;
+		float: right;
+		margin-bottom: 10px;
+		margin-left: 10px;
+		text-align: right;
+		color: var(--color-muted-strong);
+		font-style: italic;
+		font-size: 13px;
+
+		a {
+			i.fas {
+				margin-right: 5px;
+			}
+			color: var(--color-muted-strong);
+		}
+
+		@media @widthTablet {
+			float: none;
+			clear: both;
+			margin: 10px 0 12px;
+			padding: 10px 12px;
+			text-align: left;
+			border: 1px solid var(--color-border-subtle);
+			border-radius: 8px;
+			background-color: var(--color-surface-alt);
+		}
+
+		@media print {
+			display: none;
+		}
+
+
+		.revision {
+			font-weight: bold;
+		}
+	}
+
+	.Paper {
+		@media screen {
+			background-color: var(--color-surface-alt);
+		}
+		.revisionInfo {
+			float: none;
+			margin: 0;
+
+		}
+	}
+
+	.MacroEmbed {
+		clear: both;
+	}
+
+	.MacroColorCode {
+		display: inline-flex;
+		align-items: stretch;
+		gap: 4px;
+		vertical-align: middle;
+
+		.MacroCopyable {
+			top: 0;
+		}
+
+		.MacroColorCodeSwatch {
+			display: inline-flex;
+			width: 24px;
+			flex: 0 0 24px;
+			border: 1px solid var(--color-border);
+			border-radius: 3px;
+			overflow: hidden;
+			background-color: #fff;
+			background-image:
+				linear-gradient(45deg, #ddd 25%, transparent 25%),
+				linear-gradient(-45deg, #ddd 25%, transparent 25%),
+				linear-gradient(45deg, transparent 75%, #ddd 75%),
+				linear-gradient(-45deg, transparent 75%, #ddd 75%);
+			background-size: 6px 6px;
+			background-position: 0 0, 0 3px, 3px -3px, -3px 0;
+
+			> span {
+				display: block;
+				width: 100%;
+				height: 100%;
+			}
+		}
+	}
+
+	.MacroCopyable {
+		position: relative;
+		top: -1px;
+		display: inline-flex;
+		border: 1px solid var(--color-border);
+		border-radius: 5px;
+		background-color: var(--color-surface-alt);
+		> input {
+			.monospace();
+			box-sizing: border-box;
+			border: none;
+			border-radius: 5px 0 0 5px;
+			min-width: 50px;
+			background-color: transparent;
+			padding: 3px;
+			color: var(--color-text);
+			margin-right: 1px;
+		}
+		> button {
+			border: none;
+			border-left: 1px solid var(--color-border);
+			border-radius: 0 5px 5px 0;
+			background-color: var(--color-surface);
+			color: var(--color-text);
+		}
+		> .tooltip {
+			display: none;
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			background-color: var(--color-surface-alt);
+			color: var(--color-text);
+			border-radius: 5px;
+			opacity: 0.9;
+			text-align: center;
+			font-size: 0.8em;
+			vertical-align: middle;
+		}
+	}
+
+	.paperContent {
+		padding: 1mm;
+
+
+		.page {
+
+			@a4Width: 210mm;
+			@a4Height: 297mm;
+			@a4PaddingLeft: 15mm;
+			@a4PaddingTop: 15mm;
+			@a4PaddingRight: 15mm;
+			@a4PaddingBottom: 15mm;
+
+			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+			height: @a4Height - @a4PaddingTop - @a4PaddingBottom;
+			page-break-after: always;
+			&:last-of-type {
+				page-break-after: auto;
+			}
+			font-size: 12px;
+			position: relative;
+			@media screen {
+				margin: 10mm auto;
+				border: 1px solid var(--color-border);
+				.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
+				background-color: var(--color-surface);
+				color: var(--color-text);
+			}
+			padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
+
+			.pageHeader {
+				border-bottom: 1mm solid currentColor;
+
+				.documentId {
+					text-align:right;
+				}
+			}
+
+			.pageFooter {
+				position: absolute;
+				bottom: @a4PaddingBottom;
+				width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+
+				border-top: 1mm solid currentColor;
+				padding-top: 3mm;
+
+				.pageNo {
+					float: right;
+				}
+			}
+
+			.pageContent {
+				.commonAhaWiki;
+				text-align: justify;
+			}
+			.toc {
+				display: none;
+			}
+
+
+		}
+	}
+
+    .MacroCalendar.wikiTableSimple {
+        display: inline-table;
+        vertical-align: top;
+        margin: 0 20px 20px 0;
+		thead {
+			tr:first-of-type {
+				th {
+					background-color: var(--color-table-header-bg);
+					padding: 10px 10px;
+				}
+			}
+		}
+		td {
+			text-align: center;
+			width: 50px;
+			height: 50px;
+			padding: 0;
+		}
+	}
+
+	.wikiTableSimple() {
+		border-collapse: collapse;
+		border: 1px solid var(--color-table-border);
+		border-radius: 10px;
+		.boxShadow;
+		backdrop-filter: saturate(180%) blur(5px);
+		-webkit-backdrop-filter: saturate(180%) blur(5px);
+
+		th, td {
+			padding: 10px 12px;
+			border: 1px solid var(--color-table-border);
+			p:first-of-type {margin-top: 0;}
+			p:last-of-type {margin-bottom: 0;}
+		}
+		th {
+			background: var(--color-table-header-bg);
+			white-space: nowrap;
+		}
+		td {
+			> ol {
+				margin: 0;
+			}
+
+		}
+		tr {
+		}
+		tr:nth-child(even) td {
+			background: var(--color-table-row-alt-bg);
+		}
+		tr:hover td {
+			background: var(--color-table-row-hover-bg);
+		}
+	}
+	.wikiTableSimple {
+		.wikiTableSimple();
+	}
+	.wikiTableSimpleScroll {
+		max-width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+
+		> .wikiTableSimple {
+			margin-left: 0;
+		}
+	}
+	.tablesorter {
+		.tablesorter-header {
+			position: relative;
+			padding-right: 30px;
+			cursor: pointer;
+
+			&::after {
+				content: "";
+				position: absolute;
+				top: 50%;
+				right: 10px;
+				margin-top: -2px;
+				border-left: 4px solid transparent;
+				border-right: 4px solid transparent;
+				border-top: 5px solid var(--color-muted);
+				opacity: 0.75;
+			}
+		}
+		.tablesorter-headerAsc {
+			&::after {
+				border-top: 0;
+				border-bottom: 5px solid var(--color-link);
+			}
+		}
+		.tablesorter-headerDesc {
+			&::after {
+				border-top-color: var(--color-link);
+			}
+		}
+		thead {
+			td {
+				padding: 1px 4px 4px 4px;
+				input, select {
+					width: 100%;
+					height: 21px;
+					vertical-align: middle;
+					border: 1px solid var(--color-input-border);
+					border-radius: 4px;
+					background: var(--color-input-bg);
+					color: var(--color-text);
+				}
+			}
+		}
+		.filtered {
+			display: none;
+		}
+	}
+
+	.wikiHistory {
+		table {
+			margin-top: 20px;
+		}
+	}
+
+	.header, .footer, .flash,
+	.generatedSection,
+	.InterpreterRenderEditLink,
+	.InterpreterRenderFoldToggle,
+	button.tocToggle {
+		@media print {
+			display: none !important;
+		}
+	}
+
+
+	.percentTotal {
+		position: relative;
+		display: inline-block;
+		width: 80px;
+		height: 20px;
+		line-height: 20px;
+		background-color: var(--color-percent-track);
+		margin-right: 5px;
+		text-align: center;
+		vertical-align: middle;
+		border-radius: 3px;
+		overflow: hidden;
+
+		.percentBar {
+			position: absolute;
+			display: block;
+			width: 0;
+			height: 100%;
+			background-color: var(--color-percent-bar);
+		}
+		.percentLabel {
+			position: relative;
+			display: block;
+			line-height: 20px;
+			color: var(--color-percent-label);
+			top: 0;
+			font-size: 85%;
+			text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+		}
+	}
+
+	.WikiLine {
+		border: 1px solid var(--color-border);
+		padding: 1px;
+		margin: 1px;
+	}
+
+	.wikiContent {
+		div.toc {
+			button.tocToggle {
+				float: left;
+				display: inline-block;
+				margin: 4px 8px 0 0;
+				padding: 0;
+				font-size: 0.75em;
+				line-height: 1.2;
+				border: none;
+				background: transparent;
+				color: var(--color-muted);
+				cursor: pointer;
+			}
+
+			.tocBody {
+				overflow: hidden;
+				max-height: 3000px;
+				opacity: 1;
+				transition: max-height 250ms linear, opacity 200ms ease;
+			}
+
+			&.collapsed {
+				.tocBody {
+					max-height: 26px;
+					opacity: 0.6;
+				}
+			}
+		}
+	}
+
+	.Macro {
+		&.BlockMacro {
+			margin-left: var(--wiki-indent-body, 30px);
+			> * {
+				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
+				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
+			}
+		}
+	}
+
+	.WikiColumns {
+		padding-top: 15px;
+		padding-bottom: 5px;
+		> :first-child {
+			margin-top: 0;
+			> :first-child {
+				margin-top: 0;
+				> :first-child {
+					margin-top: 0;
+				}
+			}
+		}
+	}
+}

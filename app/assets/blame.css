@@ -1,0 +1,73 @@
+.AhaWiki .blame table.tableLegend {
+  margin: 20px 30px;
+  border-collapse: collapse;
+}
+.AhaWiki .blame table.tableLegend td {
+  background-color: var(--blame-color-light);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame {
+  width: 100%;
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame thead {
+  background-color: var(--color-table-header-bg);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td {
+  padding: 5px;
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineDateTime,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineDateTime,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineAuthor,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineAuthor,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineNickname,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineNickname,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineNumber,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineNumber,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineComment,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineComment {
+  padding: 5px 10px;
+  white-space: nowrap;
+  background-color: var(--color-table-header-bg);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineRevision {
+  background-color: var(--blame-color-light);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineDateTime,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineDateTime,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineAuthor,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineAuthor,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineNickname,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineNickname,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineNumber,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineNumber,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineContent,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineContent,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineComment,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineComment {
+  border-bottom: 1px solid var(--color-table-border);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineNumber,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineNumber {
+  text-align: right;
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineContent,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineContent {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-table-border);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineComment,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineComment {
+  background-color: var(--color-table-header-bg);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame tr:last-of-type > td {
+  border-bottom: 1px solid var(--color-table-border);
+}
+/*# sourceMappingURL=blame.css.map */

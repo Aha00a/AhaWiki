@@ -1,0 +1,148 @@
+.AhaWiki .edit input[type='text'],
+.AhaWiki .edit textarea,
+.AhaWiki .edit select {
+  background: var(--color-input-bg);
+  color: var(--color-text);
+  border: 1px solid var(--color-input-border);
+}
+.AhaWiki .edit input[type='checkbox'] {
+  accent-color: var(--color-focus-ring);
+}
+.AhaWiki .edit input[type='submit'],
+.AhaWiki .edit button {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-input-border);
+}
+.AhaWiki .edit input[type='submit']:hover,
+.AhaWiki .edit button:hover {
+  background: var(--color-link-hover-bg);
+}
+.AhaWiki .edit > div.ui > form {
+  display: flex;
+  flex-direction: row;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form {
+    flex-direction: column;
+  }
+}
+.AhaWiki .edit > div.ui > form > div.left,
+.AhaWiki .edit > div.ui > form > div.right {
+  min-width: 200px;
+  min-height: 200px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left,
+  .AhaWiki .edit > div.ui > form > div.right {
+    min-width: 0;
+    width: 100%;
+  }
+}
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft > a,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > a,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft > label,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight > label,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > label {
+  display: inline-block;
+  padding: 5px 0;
+  color: var(--color-muted-strong);
+  text-decoration: none;
+}
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft {
+  flex-grow: 1;
+}
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight {
+  flex-grow: 1;
+  text-align: right;
+}
+.AhaWiki .edit > div.ui > form > div.left {
+  width: 50%;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left {
+    width: 100%;
+  }
+}
+.AhaWiki .edit > div.ui > form > div.left > div.editorBody > textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 500px;
+  resize: vertical;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.left > div.editorBody > textarea {
+    height: 55vh;
+    min-height: 320px;
+  }
+}
+.AhaWiki .edit > div.ui > form > div.divider {
+  width: 5px;
+  background-color: var(--color-border);
+  margin: 0 10px;
+  cursor: ew-resize;
+}
+@media (max-width: 767px) {
+  .AhaWiki .edit > div.ui > form > div.divider {
+    width: auto;
+    height: 5px;
+    margin: 10px 0;
+    cursor: ns-resize;
+  }
+}
+.AhaWiki .edit > div.ui > form > div.divider:hover {
+  background-color: var(--color-muted);
+}
+.AhaWiki .edit > div.ui > form > div.divider:active {
+  background-color: var(--color-muted-strong);
+}
+.AhaWiki .edit > div.ui > form > div.right {
+  flex: 1;
+}
+.AhaWiki .edit > div.ui > form > div.right > div.preview > div.previewPane {
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  background-image: url('/public/img/imageDraftVersion.png');
+  color: var(--color-text);
+}
+/*# sourceMappingURL=edit.css.map */

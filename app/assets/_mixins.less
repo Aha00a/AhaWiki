@@ -1,0 +1,42 @@
+@widthMonitor: ~"(max-width: 1279px)";
+@widthTablet: ~"(max-width: 767px)";
+@widthMobile: ~"(max-width: 319px)";
+
+.defaultFont() {
+	font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
+}
+
+.monospace() {
+	font-family: 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+.boxShadow(@s : 0 0 1em var(--color-shadow-soft)) {
+	-webkit-box-shadow: @s;
+	box-shadow: @s;
+}
+
+.userSelect(@v: none) {
+	-webkit-touch-callout: @v; // iOS Safari
+	-webkit-user-select: @v; // Safari
+	//noinspection CssUnknownProperty
+	-khtml-user-select: @v; // Konqueror HTML
+	-moz-user-select: @v; // Old versions of Firefox
+	-ms-user-select: @v; // Internet Explorer/Edge
+	user-select: @v; // Non-prefixed version, currently supported by Chrome, Opera and Firefox
+}
+
+.circleWithRotateAnimation(@size, @thickness) {
+	width: @size;
+	height: @size;
+	border-radius: @size * 10;
+	border: @thickness solid var(--color-border-subtle);
+	border-top: @thickness solid var(--color-focus-ring);
+	color: transparent;
+	-webkit-animation: spin 2s linear infinite; /* Safari */
+	animation: spin 2s linear infinite;
+
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+}

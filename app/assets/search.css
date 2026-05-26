@@ -1,0 +1,120 @@
+.AhaWiki .searchBg {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-overlay-bg);
+  backdrop-filter: blur(2px);
+  z-index: 1;
+}
+.AhaWiki .search {
+  position: fixed;
+  top: 30%;
+  left: 40%;
+  width: 20%;
+  z-index: 1;
+}
+@media (max-width: 767px) {
+  .AhaWiki .search {
+    left: 10%;
+    width: 80%;
+  }
+}
+.AhaWiki .search form {
+  -webkit-box-shadow: 0 0 1em var(--color-shadow-soft);
+  box-shadow: 0 0 1em var(--color-shadow-soft);
+}
+.AhaWiki .search form input {
+  width: 100%;
+  padding: 10px;
+  font-size: 25px;
+}
+.AhaWiki .autocomplete-suggestions {
+  border: 1px solid var(--color-input-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: default;
+  overflow: auto;
+  box-shadow: 0 8px 20px var(--color-shadow-soft);
+}
+.AhaWiki .autocomplete-suggestion {
+  padding: 10px 5px;
+  font-size: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.AhaWiki .autocomplete-selected {
+  background: var(--color-table-row-hover-bg);
+}
+.AhaWiki .autocomplete-suggestions strong {
+  font-weight: normal;
+  color: var(--color-link);
+}
+.AhaWiki .searchResult .item {
+  padding: 10px;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult {
+  width: 100%;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult td {
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult td.empty {
+  background-color: var(--color-table-row-alt-bg);
+  height: 12px;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult td.lineNumber {
+  width: 50px;
+  padding: 5px 10px;
+  text-align: right;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult td.lineContent {
+  padding: 5px;
+}
+.AhaWiki .searchResult .item table.wikiTableSimple.tableSearchResult tr:last-of-type > td {
+  border-bottom: 1px solid var(--color-table-border);
+}
+.AhaWiki .ahaWikiLoader.bg {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--color-overlay-bg);
+  backdrop-filter: blur(2px);
+  z-index: 1;
+}
+.AhaWiki .ahaWikiLoader.circle {
+  width: 10vmin;
+  height: 10vmin;
+  border-radius: 100vmin;
+  border: 5vmin solid var(--color-border-subtle);
+  border-top: 5vmin solid var(--color-focus-ring);
+  color: transparent;
+  -webkit-animation: spin 2s linear infinite;
+  /* Safari */
+  animation: spin 2s linear infinite;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  margin-top: -10vmin;
+  margin-left: -10vmin;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+/*# sourceMappingURL=search.css.map */

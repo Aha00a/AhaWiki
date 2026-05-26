@@ -1,0 +1,52 @@
+@import "_mixins";
+
+.AhaWiki {
+	.blame {
+		table.tableLegend {
+			margin: 20px 30px;
+			border-collapse: collapse;
+			td { background-color: var(--blame-color-light); }
+		}
+		table.wikiTableSimple.tableBlame {
+			width: 100%;
+			thead {
+				background-color: var(--color-table-header-bg);
+			}
+			th, td {
+				padding: 5px;
+				.monospace();
+				white-space: pre-wrap;
+				word-break: break-word;
+
+				&.lineDateTime, &.lineAuthor, &.lineNickname, &.lineRevision, &.lineNumber, &.lineComment {
+					padding: 5px 10px;
+					white-space: nowrap;
+					background-color: var(--color-table-header-bg);
+				}
+				&.lineRevision {
+					background-color: var(--blame-color-light);
+				}
+
+				&.lineDateTime, &.lineAuthor, &.lineNickname, &.lineNumber, &.lineContent, &.lineComment {
+					border-bottom: 1px solid var(--color-table-border);
+				}
+
+				&.lineRevision, &.lineNumber {
+					text-align: right;
+				}
+				&.lineContent {
+					background-color: var(--color-surface);
+					border: 1px solid var(--color-table-border);
+				}
+				&.lineComment {
+					background-color: var(--color-table-header-bg);
+				}
+			}
+			tr:last-of-type {
+				> td {
+					border-bottom: 1px solid var(--color-table-border);
+				}
+			}
+		}
+	}
+}
