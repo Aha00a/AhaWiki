@@ -28,7 +28,7 @@ object MacroPageList extends TraitMacro {
         .append(page.size)
         .append("</td><td class=\"revision\"><a href=\"")
         .append(diffHref.escapeHtmlAttribute())
-        .append("\">")
+        .append("\" rel=\"nofollow\">")
         .append(page.revision)
         .append("</a></td></tr>")
     }
