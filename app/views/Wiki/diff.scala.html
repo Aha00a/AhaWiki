@@ -1,8 +1,7 @@
 @(name: String, before:Int, beforeComment:String, after:Int, afterComment:String, unifiedDiff: String)(implicit wikiContext: models.ContextWikiPage)
 @_base(name, s"Diff of $name") {
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html.min.css" integrity="sha256-g/AR0iN639QFgl5CwIQoH9JOlWFuPJ2L9kRi+sKOmxA=" crossorigin="anonymous" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html-ui.min.js" integrity="sha256-08hEwaeqghdW6TAaEo1EGHDC/mrLMaWl6gRlMqV+54I=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff2html/2.12.1/diff2html.min.js" integrity="sha256-cTH7epla2XtsxlSV0eHjVwQ8WLbvbs57MPtOh4K7DjM=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/diff2html@@3.4.52/bundles/css/diff2html.min.css" crossorigin="anonymous" />
+    <script src="https://unpkg.com/diff2html@@3.4.52/bundles/js/diff2html-ui.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript" src="/public/js/Wiki/diff.js"></script>
 } {
     <div class="wikiContent diff">
