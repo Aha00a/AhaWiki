@@ -45,74 +45,68 @@ class FilterAccessLog @Inject()(
 ) extends Filter with Logging {
   private val accessLogSampleRate = applicationConf.AhaWiki.accessLog.sampleRate().max(0.0).min(1.0)
 
-  private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit = {
-    logger.info(Seq(
-      f"${duration}%,12dms",
-      method.padRight(7),
-      status,
-      remoteAddress.padRight(15),
-      url,
-      userAgent
-    ).mkString("\t"))
-  }
+  private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit =
+    logger.info(Seq(f"${duration}%,12dms", method.padRight(7), status, remoteAddress.padRight(15), url, userAgent).mkString("\t"))
 
-  private def shouldSkipAccessLogUri(uri: String): Boolean = {
-    uri.startsWith("/public/")
-  }
+  private def shouldSkipAccessLogUri(uri: String): Boolean = uri.startsWith("/public/")
 
-  private def shouldInsertAccessLog(status: Int): Boolean = {
-    if (300 <= status && status < 400) {
-      false
-    } else if (400 <= status) {
-      true
-    } else {
-      Random.nextDouble() <= accessLogSampleRate
-    }
-  }
+  private def shouldInsertAccessLog(status: Int): Boolean =
+    if (300 <= status && status < 400) false
+    else if (400 <= status)            true
+    else                               Random.nextDouble() <= accessLogSampleRate
 
-  private def enqueueAccessLog(
-    site: Site,
-    user: Option[Long],
-    ipDeny: Option[Long],
-    method: String,
-    scheme: String,
-    host: String,
-    uri: String,
-    remoteAddress: String,
-    userAgent: String,
-    status: Int,
-    duration: Int,
-  ): Unit = {
-    actorAccessLog ! ActorAccessLog.Insert(
+  private def makeInsert(status: Int, duration: Int, ipDenySeq: Option[Long] = None)
+                        (implicit site: Site, rh: RequestHeader): ActorAccessLog.Insert =
+    ActorAccessLog.Insert(
       site,
-      user,
-      ipDeny,
-      method,
-      scheme,
-      host,
-      uri,
-      remoteAddress,
-      userAgent,
-      status,
-      duration,
+      SessionLogic.getUser(rh).map(_.seq),
+      ipDenySeq,
+      rh.method, rh.scheme, rh.host, rh.uri,
+      rh.remoteAddressWithXRealIp,
+      rh.userAgent.getOrElse(""),
+      status, duration,
     )
+
+  private def enqueue(insert: ActorAccessLog.Insert): Unit =
+    actorAccessLog ! insert
+
+  private def enqueueAndDeny(insert: ActorAccessLog.Insert, reason: String): Unit =
+    actorAccessLog ! ActorAccessLog.InsertAndDeny(insert, reason)
+
+  private def rejectWithTarpit(label: String, maxExtraMin: Int, startTime: Long)
+                               (onLog: Int => Unit)
+                               (implicit site: Site, rh: RequestHeader): Future[Result] = {
+    val url = s"${rh.scheme}://${rh.host}${rh.uri}"
+    logger.warn(s"${rh.method}\t\t$label\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$url\t${rh.userAgent.getOrElse("")}")
+    after((Random.nextInt(maxExtraMin * 60) + 60).seconds, actorSystem.scheduler)({
+      val duration = (System.currentTimeMillis - startTime).toInt
+      logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
+      if (!shouldSkipAccessLogUri(rh.uri)) onLog(duration)
+      Future(Results.Forbidden)
+    })
   }
 
-  private def enqueueAccessLogAndDeny(insert: ActorAccessLog.Insert, reason: String): Unit = {
-    actorAccessLog ! ActorAccessLog.InsertAndDeny(insert, reason)
+  private def rejectImmediately(label: String, startTime: Long)
+                                (onLog: Int => Unit)
+                                (implicit site: Site, rh: RequestHeader): Future[Result] = {
+    val url      = s"${rh.scheme}://${rh.host}${rh.uri}"
+    val duration = (System.currentTimeMillis - startTime).toInt
+    logger.warn(s"${rh.method}\t\t$label\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$url\t${rh.userAgent.getOrElse("")}")
+    logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
+    onLog(duration)
+    Future.successful(Results.Forbidden)
   }
 
   override def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
-    val startTime = System.currentTimeMillis
-    val scheme = requestHeader.scheme
-    val host = requestHeader.host
-    val uri: String = requestHeader.uri
-    val url = s"$scheme://$host$uri"
-    val remoteAddress = requestHeader.remoteAddressWithXRealIp
-    val userAgent = requestHeader.userAgent.getOrElse("")
+    val startTime              = System.currentTimeMillis
+    implicit val rh: RequestHeader = requestHeader
+    val remoteAddress          = rh.remoteAddressWithXRealIp
+    val uri                    = rh.uri
+    val url                    = s"${rh.scheme}://${rh.host}$uri"
+
     val isBannedInMemory = ipRateLimiter.isKnownBanned(remoteAddress)
     val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.get(requestHeader.host)
+      implicit val site: Site = SiteLogic.get(rh.host)
       val ipDeny =
         if (isBannedInMemory) None
         else {
@@ -126,106 +120,30 @@ class FilterAccessLog @Inject()(
 
     if (isBannedInMemory || optionIpDeny.isDefined) {
       val label = if (isBannedInMemory) "IpDeny:Cache" else "IpDeny:DB"
-      logger.warn(s"${requestHeader.method}\t\t$label\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
-      after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
-        val endTime = System.currentTimeMillis
-        val duration = endTime - startTime
-        logRequest(requestHeader.method, Results.Forbidden.header.status, duration, remoteAddress, url, userAgent)
-        if (!shouldSkipAccessLogUri(uri)) {
-          enqueueAccessLog(
-            site,
-            getUserSeq(requestHeader),
-            optionIpDeny.map(_.seq),
-            requestHeader.method,
-            scheme,
-            host,
-            uri,
-            remoteAddress,
-            userAgent,
-            Results.Forbidden.header.status,
-            duration.toInt
-          )
-        }
-        Future(Results.Forbidden)
-      })
+      rejectWithTarpit(label, maxExtraMin = 5, startTime) { duration =>
+        enqueue(makeInsert(FORBIDDEN, duration, optionIpDeny.map(_.seq)))
+      }
     } else if (UriAttackDetector.isAttack(uri)) {
       ipRateLimiter.ban(remoteAddress)
-      logger.warn(s"${requestHeader.method}\t\tUriAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
-      after((Random.nextInt(10 * 60) + 60).seconds, actorSystem.scheduler)({
-        val endTime = System.currentTimeMillis
-        val duration = endTime - startTime
-        logRequest(requestHeader.method, 403, duration, remoteAddress, url, userAgent)
-        if (!shouldSkipAccessLogUri(uri)) {
-          enqueueAccessLogAndDeny(
-            ActorAccessLog.Insert(
-              site,
-              getUserSeq(requestHeader),
-              None,
-              requestHeader.method,
-              scheme,
-              host,
-              uri,
-              remoteAddress,
-              userAgent,
-              Results.Forbidden.header.status,
-              duration.toInt
-            ),
-            s"$scheme://$host$uri",
-          )
-        }
-        Future(Results.Forbidden)
-      })
+      rejectWithTarpit("UriAttack", maxExtraMin = 10, startTime) { duration =>
+        enqueueAndDeny(makeInsert(FORBIDDEN, duration), url)
+      }
     } else if (ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
-      val duration = (System.currentTimeMillis - startTime).toInt
-      logger.warn(s"${requestHeader.method}\t\tRateLimit\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
-      logRequest(requestHeader.method, FORBIDDEN, duration, remoteAddress, url, userAgent)
-      enqueueAccessLogAndDeny(
-        ActorAccessLog.Insert(
-          site,
-          getUserSeq(requestHeader),
-          None,
-          requestHeader.method,
-          scheme,
-          host,
-          uri,
-          remoteAddress,
-          userAgent,
-          FORBIDDEN,
-          duration,
-        ),
-        s"RateLimit:$remoteAddress",
-      )
-      Future.successful(Results.Forbidden)
+      rejectImmediately("RateLimit", startTime) { duration =>
+        enqueueAndDeny(makeInsert(FORBIDDEN, duration), s"RateLimit:$remoteAddress")
+      }
     } else {
-      nextFilter(requestHeader).map(result => {
-        val endTime = System.currentTimeMillis
-        val duration = endTime - startTime
-        logRequest(requestHeader.method, result.header.status, duration, remoteAddress, url, userAgent)
-        if (shouldSkipAccessLogUri(uri)) {
+      nextFilter(requestHeader).map { result =>
+        val duration = (System.currentTimeMillis - startTime).toInt
+        logRequest(rh.method, result.header.status, duration, remoteAddress, url, rh.userAgent.getOrElse(""))
+        if (shouldSkipAccessLogUri(uri))
           logger.debug(s"Skip AccessLog insert: uri=$uri")
-        } else if (shouldInsertAccessLog(result.header.status)) {
-          enqueueAccessLog(
-            site,
-            getUserSeq(requestHeader),
-            None,
-            requestHeader.method,
-            scheme,
-            host,
-            uri,
-            remoteAddress,
-            userAgent,
-            result.header.status,
-            duration.toInt,
-          )
-        } else {
+        else if (shouldInsertAccessLog(result.header.status))
+          enqueue(makeInsert(result.header.status, duration))
+        else
           logger.debug(s"Skip AccessLog insert by policy: status=${result.header.status}")
-        }
         result.withHeaders("Request-Time" -> duration.toString)
-      })
+      }
     }
-  }
-
-  private def getUserSeq(requestHeader: RequestHeader): Option[Long] = {
-    SessionLogic.getUser(requestHeader).map(_.seq)
   }
 }
