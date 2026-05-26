@@ -46,7 +46,9 @@
     @views.html.Wiki.hotkey(enablePageActions = wikiContextOpt.isDefined)
     @head
 } {
+    <a class="skipToContent" href="#mainContent">Skip to content</a>
     <nav class="topNavbar">
+        <div id="scrollProgressBar"></div>
         <div class="wrap">
             <a class="homeLink" href="/">AhaWiki</a>
             <button type="button" class="navDrawerToggle" aria-expanded="false" aria-label="Open main menu"><i class="fas fa-bars"></i>Menu</button>
@@ -303,6 +305,20 @@
             } else if (topNavMediaQuery.addListener) {
                 topNavMediaQuery.addListener(resetTopNavDesktopState);
             }
+
+            (function () {
+                const $bar = $('#scrollProgressBar');
+                const $btn = $('#backToTop');
+                $(window).on('scroll', function () {
+                    const scrollTop = $(window).scrollTop();
+                    const docHeight = $(document).height() - $(window).height();
+                    $bar.css('width', docHeight > 0 ? ((scrollTop / docHeight) * 100) + '%' : '0%');
+                    $btn.css('display', scrollTop > 300 ? 'flex' : 'none');
+                });
+                $btn.on('click', function () {
+                    $('html, body').animate({ scrollTop: 0 }, 300);
+                });
+            })();
         });
     </script>
     <div class="header" style="@Seq(
@@ -336,4 +352,5 @@
             @Html(contextSite.ahaWikiCache.Footer.get())
         </div>
     </div>
+    <button id="backToTop" aria-label="Back to top" title="Back to top"><i class="fas fa-chevron-up"></i></button>
 }(contextSite)

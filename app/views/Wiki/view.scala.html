@@ -638,6 +638,7 @@
         <div class="wikiContent Page@title" data-wiki-writable="@isWritable">
             <div class="limitWidth">
                 @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull, hasReadPermissionRestriction)
+                <div id="mainContent" tabindex="-1"></div>
                 @Html(contentInterpreted)
             </div>
             <div style="clear: both;"></div>

@@ -4908,4 +4908,73 @@ kbd.MacroKbd {
   background: var(--color-link-hover-bg);
   border-color: var(--color-flash-error-border);
 }
+#mainContent {
+  outline: none;
+}
+.skipToContent {
+  position: absolute;
+  top: -100px;
+  left: 0;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--color-focus-ring);
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 0 0 6px 0;
+}
+.skipToContent:focus {
+  top: 0;
+}
+@media print {
+  .skipToContent {
+    display: none;
+  }
+}
+#scrollProgressBar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--color-focus-ring);
+  transition: width 80ms linear;
+  pointer-events: none;
+}
+@media print {
+  #scrollProgressBar {
+    display: none;
+  }
+}
+#backToTop {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 10px var(--color-navbar-shadow);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+#backToTop:hover {
+  background: var(--color-link-hover-bg);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--color-navbar-shadow);
+}
+#backToTop i.fas {
+  font-size: 14px;
+}
+@media print {
+  #backToTop {
+    display: none !important;
+  }
+}
 /*# sourceMappingURL=less.css.map */
