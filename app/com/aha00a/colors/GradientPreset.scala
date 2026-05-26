@@ -55,4 +55,5 @@ object GradientPreset {
 
   lazy val ahaWikiMap = Gradient(Seq(GradientPoint(0, Color(255, 255, 255)), GradientPoint(0.33, Color(255, 210, 0)), GradientPoint(0.66, Color(255, 210, 0)), GradientPoint(1, Color(255, 0, 0))))
   lazy val ahaWikiBlame = Gradient(Seq(GradientPoint(0, Color(255, 255, 255)), GradientPoint(0.33, Color(210, 210, 255)), GradientPoint(0.66, Color(255, 210, 0)), GradientPoint(1, Color(255, 100, 100))))
+  lazy val ahaWikiBlameDark = Gradient(Seq(GradientPoint(0, Color(25, 35, 70)), GradientPoint(0.33, Color(20, 90, 120)), GradientPoint(0.66, Color(160, 110, 10)), GradientPoint(1, Color(160, 35, 35))))
 }

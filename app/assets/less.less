@@ -189,6 +189,11 @@ html.theme-ahawiki-light {
 	html.theme-ahawiki-dark {
 		color-scheme: dark;
 	}
+
+	html.theme-ahawiki-dark .blame {
+		table.tableLegend td { background-color: var(--blame-color-dark); }
+		table.wikiTableSimple.tableBlame td.lineRevision { background-color: var(--blame-color-dark); }
+	}
 }
 
 html, body {
@@ -2371,6 +2376,7 @@ kbd.MacroKbd {
 		table.tableLegend {
 			margin: 20px 30px;
 			border-collapse: collapse;
+			td { background-color: var(--blame-color-light); }
 		}
 		table.wikiTableSimple.tableBlame {
 			width: 100%;
@@ -2387,6 +2393,9 @@ kbd.MacroKbd {
 					padding: 5px 10px;
 					white-space: nowrap;
 					background-color: var(--color-table-header-bg);
+				}
+				&.lineRevision {
+					background-color: var(--blame-color-light);
 				}
 
 				&.lineDateTime, &.lineAuthor, &.lineNickname, &.lineNumber, &.lineContent, &.lineComment {

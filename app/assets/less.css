@@ -241,6 +241,12 @@ html.theme-ahawiki-light {
   html.theme-ahawiki-dark {
     color-scheme: dark;
   }
+  html.theme-ahawiki-dark .blame table.tableLegend td {
+    background-color: var(--blame-color-dark);
+  }
+  html.theme-ahawiki-dark .blame table.wikiTableSimple.tableBlame td.lineRevision {
+    background-color: var(--blame-color-dark);
+  }
 }
 html,
 body {
@@ -3492,6 +3498,9 @@ kbd.MacroKbd {
   margin: 20px 30px;
   border-collapse: collapse;
 }
+.AhaWiki .blame table.tableLegend td {
+  background-color: var(--blame-color-light);
+}
 .AhaWiki .blame table.wikiTableSimple.tableBlame {
   width: 100%;
 }
@@ -3520,6 +3529,10 @@ kbd.MacroKbd {
   padding: 5px 10px;
   white-space: nowrap;
   background-color: var(--color-table-header-bg);
+}
+.AhaWiki .blame table.wikiTableSimple.tableBlame th.lineRevision,
+.AhaWiki .blame table.wikiTableSimple.tableBlame td.lineRevision {
+  background-color: var(--blame-color-light);
 }
 .AhaWiki .blame table.wikiTableSimple.tableBlame th.lineDateTime,
 .AhaWiki .blame table.wikiTableSimple.tableBlame td.lineDateTime,

@@ -401,8 +401,9 @@ controllerComponents: ControllerComponents,
           import com.aha00a.colors.GradientPreset
           val blame = Page.selectHistoryStream(name, new Blame[PageMetaData, String](), (blame: Blame[PageMetaData, String], p) => blame.next(new PageMetaData(p), p.content.splitLinesSeq()))
           val seqRevision: Seq[Long] = blame.seqBlameLine.map(_.metaData.revision).distinct.sorted
-          val mapRevisionColor = seqRevision.map(v => (v, GradientPreset.ahaWikiBlame.getColor(seqRevision.indexOf(v).toDouble / seqRevision.size).toHashString)).toMap
-          Ok(views.html.Wiki.blame(blame, mapRevisionColor, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
+          val mapRevisionColorLight = seqRevision.map(v => (v, GradientPreset.ahaWikiBlame.getColor(seqRevision.indexOf(v).toDouble / seqRevision.size).toHashString)).toMap
+          val mapRevisionColorDark = seqRevision.map(v => (v, GradientPreset.ahaWikiBlameDark.getColor(seqRevision.indexOf(v).toDouble / seqRevision.size).toHashString)).toMap
+          Ok(views.html.Wiki.blame(blame, mapRevisionColorLight, mapRevisionColorDark, isWritable, pageFirstRevision, pageLastRevision)).withHeaderRobotNoIndexNoFollow
 
         case (Some(page), "edit", _, true) =>
           val (initialEditorText, partialRange) = buildEditFormState(page.content, request)

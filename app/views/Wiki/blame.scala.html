@@ -1,4 +1,4 @@
-@(blame:models.Blame[PageMetaData, String], mapRevisionColor: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
+@(blame:models.Blame[PageMetaData, String], mapRevisionColorLight: Map[Long, String], mapRevisionColorDark: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
 } {
     <div class="wikiContent blame">
@@ -6,15 +6,13 @@
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
             <h1>Blame of <a href="@wikiContext.name">@wikiContext.name</a></h1>
             <table class="tableLegend">
-                @for(g <- Seq(com.aha00a.colors.GradientPreset.ahaWikiBlame)) {
-                    <tr>
-                        <td style="padding: 5px;">older</td>
-                        @for(i <- 0 to 200) {
-                            <td style="background-color: @(g.getColor(i / 200.0).toHashString)"> </td>
-                        }
-                        <td style="padding: 5px;">newer</td>
-                    </tr>
-                }
+                <tr>
+                    <td style="padding: 5px;">older</td>
+                    @for(i <- 0 to 200) {
+                        <td style="--blame-color-light: @(com.aha00a.colors.GradientPreset.ahaWikiBlame.getColor(i / 200.0).toHashString); --blame-color-dark: @(com.aha00a.colors.GradientPreset.ahaWikiBlameDark.getColor(i / 200.0).toHashString);"> </td>
+                    }
+                    <td style="padding: 5px;">newer</td>
+                </tr>
             </table>
             <table class="wikiTableSimple tableBlame">
                 <thead>
@@ -32,7 +30,7 @@
                         <tr>
                             <td class="lineDateTime">@blameLine.metaData.toIsoLocalDateTimeString</td>
                             <td class="lineNickname">@Html(logics.wikis.UserPageLogic.toHtmlString(blameLine.metaData.nickname))</td>
-                            <td class="lineRevision" style="background-color: @(mapRevisionColor(blameLine.metaData.revision));">
+                            <td class="lineRevision" style="--blame-color-light: @(mapRevisionColorLight(blameLine.metaData.revision)); --blame-color-dark: @(mapRevisionColorDark(blameLine.metaData.revision));">
                                 <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
                             </td>
                             <td class="lineNumber">
