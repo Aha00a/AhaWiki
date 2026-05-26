@@ -10,7 +10,8 @@ $(function () {
         var diff2htmlUi = new Diff2HtmlUI(targetElement, diffText, {
             outputFormat: outputFormat,
             drawFileList: false,
-            matching: 'lines'
+            matching: 'lines',
+            fileContentToggle: false
         });
         diff2htmlUi.draw();
         targetElement.classList.toggle('d2h-dark-color-scheme', isDarkTheme());
