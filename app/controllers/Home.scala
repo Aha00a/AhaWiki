@@ -11,6 +11,8 @@ import models.PageContent
 import models.WikiActors
 import models.tables.Site
 import play.api.Environment
+
+import java.io.File
 import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
@@ -46,24 +48,8 @@ class Home @Inject() (
       implicit val site: Site = SiteLogic.get(request.host)
 
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(
-        """User-agent: *
-          |Disallow: /
-          |Crawl-delay: 10
-          |
-          |User-agent: Googlebot
-          |Allow: /
-          |
-          |User-agent: DuckDuckBot
-          |Allow: /
-          |Crawl-delay: 10
-          |
-          |# Adsense
-          |User-agent: Mediapartners-Google
-          |Disallow:
-          |
-          |User-agent: Linguee
-          |Disallow: /
-          |""".stripMargin))
+        PageContent(new File("app/assets/Page", ".robots.txt").readAllString()).content
+      ))
     }
   }
 
