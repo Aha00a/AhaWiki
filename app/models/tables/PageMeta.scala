@@ -57,20 +57,22 @@ object PageMeta {
 
 
   def selectMissingPageNames(limit: Int = 1)(implicit connection: Connection, site: Site): List[String] = {
-    SQL"""
-      SELECT p.name
-      FROM (
-        SELECT name, MAX(revision) AS revision
-        FROM Page
-        WHERE site = ${site.seq}
-        GROUP BY name
-      ) p
-      LEFT JOIN PageMeta pm ON pm.site = ${site.seq} AND pm.name = p.name
-      WHERE pm.name IS NULL
-         OR pm.revision <> p.revision
-      ORDER BY RAND()
-      LIMIT $limit
-    """.as(SqlParser.str("name").*)
+    val candidates = limit * 10
+    scala.util.Random.shuffle(
+      SQL"""
+        SELECT p.name
+        FROM (
+          SELECT name, MAX(revision) AS revision
+          FROM Page
+          WHERE site = ${site.seq}
+          GROUP BY name
+        ) p
+        LEFT JOIN PageMeta pm ON pm.site = ${site.seq} AND pm.name = p.name
+        WHERE pm.name IS NULL
+           OR pm.revision <> p.revision
+        LIMIT $candidates
+      """.as(SqlParser.str("name").*)
+    ).take(limit)
   }
 
 
