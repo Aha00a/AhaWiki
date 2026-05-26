@@ -128,7 +128,7 @@ class FilterAccessLog @Inject()(
       rejectWithTarpit("UriAttack", maxExtraMin = 10, startTime) { duration =>
         enqueueAndDeny(makeInsert(FORBIDDEN, duration), url)
       }
-    } else if (ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
+    } else if (!applicationConf.AhaWiki.ipWhitelist().contains(remoteAddress) && ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
       rejectImmediately("RateLimit", startTime) { duration =>
         enqueueAndDeny(makeInsert(FORBIDDEN, duration), s"RateLimit:$remoteAddress")
       }

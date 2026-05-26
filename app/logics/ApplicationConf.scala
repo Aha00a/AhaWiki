@@ -12,6 +12,8 @@ class ApplicationConf @Inject()(configuration: Configuration) {
   }
 
   object AhaWiki {
+    def ipWhitelist(): Seq[String] = configuration.getOptional[Seq[String]](fqn).getOrElse(Seq.empty)
+
     object accessLog {
       def sampleRate(): Double = configuration.getOptional[Double](fqn).getOrElse(0.5)
     }
