@@ -32,7 +32,7 @@
                             <td class="lineDateTime">@blameLine.metaData.toIsoLocalDateTimeString</td>
                             <td class="lineNickname">@Html(logics.wikis.UserPageLogic.toHtmlString(blameLine.metaData.nickname))</td>
                             <td class="lineRevision" style="--blame-color-light: @(mapRevisionColorLight(blameLine.metaData.revision)); --blame-color-dark: @(mapRevisionColorDark(blameLine.metaData.revision));">
-                                <a href="?action=diff&after=@blameLine.metaData.revision">@blameLine.metaData.revision</a>
+                                <a href="?action=diff&after=@blameLine.metaData.revision" rel="nofollow">@blameLine.metaData.revision</a>
                             </td>
                             <td class="lineNumber">
                                 @i
