@@ -50,7 +50,7 @@ class ContextSite()(
   lazy val setPageName: Set[String] = ahaWikiCache.PageMeta.SeqPageName.get().toSet
 
   lazy val seqPageByPermission: Seq[PageLatestSummary] = database.withConnection { implicit connection =>
-    PageLogic.getListPageByPermission()(requestWrapper, connection, this)
+    PageLogic.getListPageByPermission()(requestWrapper, connection, this, ahaWikiCache)
   }
 
   lazy val seqPageNameByPermission: Seq[String] = seqPageByPermission.map(_.name)

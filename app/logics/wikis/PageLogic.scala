@@ -85,15 +85,14 @@ object PageLogic {
     wikiContext.pageCalculationActor ! Calculate(site, name)
   }
 
-  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite): Seq[PageLatestSummary] = {
+  def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite, ahaWikiCache: AhaWikiCache): Seq[PageLatestSummary] = {
     implicit val site: Site = contextSite.site
     implicit val tupleDatabaseSite: (Database, Site) = (contextSite.database, site)
 
     val wikiPermission = WikiPermission()
 
-    val list: Seq[PageLatestSummary] = models.tables.PageMeta.selectSeqPageLatestSummary()
+    val list: Seq[PageLatestSummary] = ahaWikiCache.PageMeta.SeqPageLatestSummary.get()
     val listFiltered = list.filter(p => wikiPermission.isReadable(p.name))
-    // TODO: caching?
 
     listFiltered
   }
