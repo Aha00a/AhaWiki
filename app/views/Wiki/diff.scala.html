@@ -1,5 +1,6 @@
 @(name: String, before:Int, beforeComment:String, after:Int, afterComment:String, unifiedDiff: String)(implicit wikiContext: models.ContextWikiPage)
 @_base(name, s"Diff of $name") {
+    <link rel="stylesheet" href="/public/diff.css">
     <link rel="stylesheet" href="https://unpkg.com/diff2html@@3.4.52/bundles/css/diff2html.min.css" crossorigin="anonymous" />
     <script src="https://unpkg.com/diff2html@@3.4.52/bundles/js/diff2html-ui.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript" src="/public/js/Wiki/diff.js"></script>

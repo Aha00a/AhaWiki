@@ -1,5 +1,6 @@
 @(blame:models.Blame[PageMetaData, String], mapRevisionColorLight: Map[Long, String], mapRevisionColorDark: Map[Long, String], isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page])(implicit wikiContext:ContextWikiPage)
 @_base("Blame " + wikiContext.name, "Blame " + wikiContext.name) {
+    <link rel="stylesheet" href="/public/blame.css">
 } {
     <div class="wikiContent blame">
         <div class="limitWidth">
