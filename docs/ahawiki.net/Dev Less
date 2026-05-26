@@ -1,10 +1,5 @@
 = [Dev] Less
 
-== 목적
-
-`less.less` 파일이 3349줄로 비대해져 IntelliJ FileWatcher(lessc) 빌드 시간이 오래 걸리는 문제를 해결한다.
-기능/화면 단위로 분리해 수정 시 해당 파일만 독립 컴파일되도록 한다.
-
 == 빌드 구조
 
 IntelliJ FileWatcher가 `_`로 시작하지 않는 `.less` 파일을 저장할 때 자동으로 같은 이름의 `.css`로 컴파일한다.
@@ -15,10 +10,7 @@ IntelliJ FileWatcher가 `_`로 시작하지 않는 `.less` 파일을 저장할 �
 == 파일 구조
 
 === 공용 믹스인 (컴파일 안 함)
-
  * `app/assets/_mixins.less`
-  * `@widthTablet`, `@widthMonitor`, `@widthMobile`
-  * `.defaultFont()`, `.monospace()`, `.boxShadow()`, `.userSelect()`, `.circleWithRotateAnimation()`
 
 === 독립 컴파일 파일
 
@@ -30,29 +22,9 @@ IntelliJ FileWatcher가 `_`로 시작하지 않는 `.less` 파일을 저장할 �
 `kanban.less`	`.InterpreterKanban`, `.kanban-modal` 등 칸반 전체	모든 페이지 (위키 본문에 칸반 매크로가 올 수 있음)
 `interpreter.less`	`.Interpreter`, `.Macro`, `.InterpreterRenderMetaWrapper`, `.interpreterMap`	모든 페이지
 `adjacent.less`	`svg.graph`, `.adjacentPagesHud`, `.crawlerPreview` 등 인접 페이지 그래프	모든 페이지
+-
 `edit.less`	`.AhaWiki .edit`	`edit.scala.html` 에서만
 `blame.less`	`.AhaWiki .blame`	`blame.scala.html` 에서만
 `diff.less`	`.AhaWiki .diff`	`diff.scala.html` 에서만
 ]]]
 
-== CSS 로딩 위치
-
-=== `_baseSkeleton.scala.html`, `Admin/_baseAdmin.scala.html` (모든 페이지)
-
- * `less.css`
- * `wiki.css`
- * `search.css`
- * `kanban.css`
- * `interpreter.css`
- * `adjacent.css`
-
-=== 페이지별 개별 로딩
-
- * `blame.scala.html` → `blame.css`
- * `diff.scala.html` → `diff.css`
- * `edit.scala.html` → `edit.css`
-
-== 효과
-
-변경 전: `less.less` 3349줄 전체를 매번 컴파일
-변경 후: 수정한 파일만 컴파일 (예: `blame.less` 수정 시 blame.less만 빌드)
