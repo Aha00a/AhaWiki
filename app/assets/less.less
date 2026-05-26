@@ -3354,101 +3354,157 @@ html.theme-ahawiki-dark {
 	.AhaWiki {
 		.diff {
 			.d2h-wrapper {
+				// 파일 래퍼 전체
+				.d2h-file-wrapper {
+					background-color: #0d1117;
+					border-color: #30363d;
+				}
+				// 파일 헤더 (파일명 + CHANGED 태그)
 				.d2h-file-header {
-					background-color: #1d2128;
-					border-color: #3a404a;
-					color: #e6e8eb;
+					background-color: #161b22;
+					border-color: #30363d;
+					color: #e6edf3;
 				}
 				.d2h-file-name {
-					color: #e6e8eb;
+					color: #e6edf3;
+				}
+				.d2h-file-stats {
+					color: #8b949e;
+					.d2h-del {
+						color: #ff7b72;
+					}
+					.d2h-ins {
+						color: #3fb950;
+					}
 				}
 				.d2h-tag {
-					background-color: #1d2128;
-					border-color: #3a404a;
-					color: #b7bec9;
+					background-color: #1c2128;
+					border-color: #30363d;
+					color: #8b949e;
 				}
-				.d2h-file-wrapper {
-					border-color: #3a404a;
-				}
+				// 기본 라인 번호 (컨텍스트)
 				td.d2h-code-linenumber {
-					background-color: #1d2128;
-					border-color: #3a404a;
-					color: #6b7280;
+					background-color: #161b22;
+					border-color: #30363d;
+					color: #6e7681;
 					&:before {
-						color: #6b7280;
+						color: #6e7681;
 					}
+				}
+				// 기본 코드 셀 (컨텍스트)
+				td.d2h-code {
+					background-color: #0d1117;
+					color: #e6edf3;
 				}
 				.d2h-code-line {
-					background-color: #0f1115;
-					color: #e6e8eb;
+					background-color: #0d1117;
+					color: #e6edf3;
 					del, ins {
 						background-color: transparent;
+						color: #e6edf3;
 					}
 				}
-				.d2h-del {
-					background-color: #3d1212;
-					td.d2h-code-linenumber {
-						background-color: #2e0e0e;
-						border-color: #5c1f1f;
-					}
-					.d2h-code-line {
-						background-color: #3d1212;
-						del {
-							background-color: #6b1f1f;
-						}
-					}
-				}
-				.d2h-ins {
-					background-color: #0e2e17;
-					td.d2h-code-linenumber {
-						background-color: #0a2211;
-						border-color: #1a5c30;
-					}
-					.d2h-code-line {
-						background-color: #0e2e17;
-						ins {
-							background-color: #1a5c30;
-						}
-					}
-				}
-				.d2h-info {
-					background-color: #171a20;
-					border-color: #3a404a;
-					color: #6b7280;
-					td.d2h-code-linenumber {
-						background-color: #171a20;
-						border-color: #3a404a;
-					}
-					.d2h-code-line {
-						background-color: #171a20;
-						color: #6b7280;
-					}
-				}
-				.d2h-emptyplaceholder {
-					background-color: #171a20;
-					border-color: #3a404a;
-					.d2h-code-line {
-						background-color: #171a20;
-					}
-					td.d2h-code-linenumber {
-						background-color: #171a20;
-						border-color: #3a404a;
-					}
-				}
+				// 변경 없는 컨텍스트 라인
 				.d2h-cntx {
-					background-color: #0f1115;
+					background-color: #0d1117;
 					td.d2h-code-linenumber {
-						background-color: #1d2128;
-						border-color: #3a404a;
+						background-color: #161b22;
+						border-color: #30363d;
+						color: #6e7681;
+					}
+					td.d2h-code {
+						background-color: #0d1117;
+						color: #e6edf3;
 					}
 					.d2h-code-line {
-						background-color: #0f1115;
+						background-color: #0d1117;
+						color: #e6edf3;
+					}
+				}
+				// 삭제 라인
+				.d2h-del {
+					background-color: #3d0910;
+					td.d2h-code-linenumber {
+						background-color: #2c0608;
+						border-color: #6e1119;
+						color: #f85149;
+					}
+					td.d2h-code {
+						background-color: #3d0910;
+						color: #e6edf3;
+					}
+					.d2h-code-line {
+						background-color: #3d0910;
+						color: #e6edf3;
+						del {
+							background-color: #67060c;
+							color: #ffa198;
+						}
+					}
+				}
+				// 추가 라인
+				.d2h-ins {
+					background-color: #0d2d1a;
+					td.d2h-code-linenumber {
+						background-color: #051d0f;
+						border-color: #176332;
+						color: #3fb950;
+					}
+					td.d2h-code {
+						background-color: #0d2d1a;
+						color: #e6edf3;
+					}
+					.d2h-code-line {
+						background-color: #0d2d1a;
+						color: #e6edf3;
+						ins {
+							background-color: #0f5323;
+							color: #7ee787;
+						}
+					}
+				}
+				// 헝크 헤더 (@@ -1,5 +1,5 @@)
+				.d2h-info {
+					background-color: #1c2128;
+					border-color: #30363d;
+					color: #8b949e;
+					td.d2h-code-linenumber {
+						background-color: #1c2128;
+						border-color: #30363d;
+						color: #8b949e;
+					}
+					td.d2h-code {
+						background-color: #1c2128;
+						color: #8b949e;
+					}
+					.d2h-code-line {
+						background-color: #1c2128;
+						color: #8b949e;
+					}
+				}
+				// side-by-side 빈 자리
+				.d2h-emptyplaceholder {
+					background-color: #161b22;
+					border-color: #30363d;
+					color: #6e7681;
+					td.d2h-code-linenumber {
+						background-color: #161b22;
+						border-color: #30363d;
+						color: #6e7681;
+					}
+					td.d2h-code {
+						background-color: #161b22;
+						color: #6e7681;
+					}
+					.d2h-code-line {
+						background-color: #161b22;
+						color: #6e7681;
 					}
 				}
 				.d2h-moved-tag {
-					background-color: #1d2128;
-					color: #b7bec9;
-					border-color: #3a404a;
+					background-color: #1c2128;
+					color: #8b949e;
+					border-color: #30363d;
 				}
 			}
 		}
