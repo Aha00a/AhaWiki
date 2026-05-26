@@ -1,5 +1,6 @@
 package logics
 
+import com.aha00a.commons.utils.FiniteDurationUtil
 import com.aha00a.commons.utils.StopWatch
 import logics.wikis.RenderingMode
 import logics.wikis.interpreters.Interpreters
@@ -169,11 +170,10 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   object PageMeta {
     object SeqPageLatestSummary extends CacheEntity[Seq[PageLatestSummary], (Database, Site)] {
       override def durationExpire: FiniteDuration = {
-        if (environment.mode == Dev) 1.minute
-        else {
-          val jitter: Int = scala.util.Random.nextInt(120)
-          4.minutes + jitter.seconds
-        }
+        if (environment.mode == Dev)
+          FiniteDurationUtil.random(1.minutes, 2.minutes)
+        else
+          FiniteDurationUtil.random(5.minutes, 30.minutes)
       }
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
       override def orElse()(implicit t2: (Database, Site)): Seq[PageLatestSummary] = t2._1.withConnection { implicit connection =>
