@@ -77,7 +77,7 @@ class FilterAccessLog @Inject()(
                                (onLog: Int => Unit)
                                (implicit site: Site, rh: RequestHeader): Future[Result] = {
     val url = s"${rh.scheme}://${rh.host}${rh.uri}"
-    logger.warn(s"${rh.method}\t\t$label\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$url\t${rh.userAgent.getOrElse("")}")
+    logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
     after((Random.nextInt(maxExtraMin * 60) + 60).seconds, actorSystem.scheduler)({
       val duration = (System.currentTimeMillis - startTime).toInt
       logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
@@ -89,9 +89,9 @@ class FilterAccessLog @Inject()(
   private def rejectImmediately(label: String, startTime: Long)
                                 (onLog: Int => Unit)
                                 (implicit site: Site, rh: RequestHeader): Future[Result] = {
-    val url      = s"${rh.scheme}://${rh.host}${rh.uri}"
+    val url = s"${rh.scheme}://${rh.host}${rh.uri}"
     val duration = (System.currentTimeMillis - startTime).toInt
-    logger.warn(s"${rh.method}\t\t$label\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$url\t${rh.userAgent.getOrElse("")}")
+    logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
     logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
     onLog(duration)
     Future.successful(Results.Forbidden)
