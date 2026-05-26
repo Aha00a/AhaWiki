@@ -3488,8 +3488,9 @@ kbd.MacroKbd {
 .AhaWiki .diff .unifiedDiff {
   display: none;
 }
-.AhaWiki .blame table.wikiTableSimple.tableLegend {
-  margin: 20px 0;
+.AhaWiki .blame table.tableLegend {
+  margin: 20px 30px;
+  border-collapse: collapse;
 }
 .AhaWiki .blame table.wikiTableSimple.tableBlame {
   width: 100%;

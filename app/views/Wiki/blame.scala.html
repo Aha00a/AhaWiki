@@ -5,7 +5,7 @@
         <div class="limitWidth">
             @views.html.Wiki.action(isWritable, wikiFirst.orNull, wikiLast.orNull)
             <h1>Blame of <a href="@wikiContext.name">@wikiContext.name</a></h1>
-            <table class="wikiTableSimple tableLegend">
+            <table class="tableLegend">
                 @for(g <- Seq(com.aha00a.colors.GradientPreset.ahaWikiBlame)) {
                     <tr>
                         <td style="padding: 5px;">older</td>
