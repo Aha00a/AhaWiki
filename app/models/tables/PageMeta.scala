@@ -86,7 +86,7 @@ object PageMeta {
     """.as(SqlParser.str("name").*)
   }
   def selectSeqPageLatestSummary()(implicit connection: Connection, site: Site): Seq[PageLatestSummary] = {
-    StopWatch(s"AhaWikiCache.PageMeta.SeqPageLatestSummary.selectSeqPageLatestSummary site=${site.seq}") {
+    StopWatch(s"DB\tSELECT\tAhaWikiCache.PageMeta.SeqPageLatestSummary.selectSeqPageLatestSummary site=${site.seq}") {
       SQL"""
       SELECT PM.name, PM.revision, P.dateTime, P.user, PM.image, PM.size
       FROM PageMeta PM
