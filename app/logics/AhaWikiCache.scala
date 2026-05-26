@@ -53,27 +53,29 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
       val cacheKey = key()
 
-      val json: String = try {
-        val cachedJson = withSingleFlight(cacheKey) {
-          syncCacheApi.getOrElseUpdate(cacheKey, durationExpire) {
-            wrapOrElse().toJson
-          }
-        }
-        staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
-        cachedJson
-      } catch {
-        case timeoutException: java.util.concurrent.TimeoutException =>
-          Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
-            case Some(staleJson) =>
-              logger.warn(s"Cache\tTimeout\t${cacheKey}\tServing stale cache", timeoutException)
-              staleJson
-            case None =>
-              logger.warn(s"Cache\tTimeout\t${cacheKey}\tNo stale cache, falling back to uncached value", timeoutException)
-              val refreshedJson = withSingleFlight(cacheKey) {
-                wrapOrElse().toJson
+      val json: String = syncCacheApi.get[String](cacheKey) match {
+        case Some(cachedJson) =>
+          staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
+          cachedJson
+        case None =>
+          try {
+            withSingleFlight(cacheKey) {
+              syncCacheApi.get[String](cacheKey).getOrElse {
+                val freshJson = wrapOrElse().toJson
+                syncCacheApi.set(cacheKey, freshJson, durationExpire)
+                staleEntries.put(cacheKey, CachedJson(freshJson, System.currentTimeMillis()))
+                freshJson
               }
-              staleEntries.put(cacheKey, CachedJson(refreshedJson, System.currentTimeMillis()))
-              refreshedJson
+            }
+          } catch {
+            case e: Exception =>
+              Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
+                case Some(staleJson) =>
+                  logger.warn(s"Cache\tError\t${cacheKey}\tServing stale cache", e)
+                  staleJson
+                case None =>
+                  throw e
+              }
           }
       }
 
