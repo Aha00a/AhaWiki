@@ -19,4 +19,8 @@ $(function () {
     $('.selectOutputFormat').change(function () {
         draw($(this).val());
     }).change();
+
+    new MutationObserver(function () {
+        targetElement.classList.toggle('d2h-dark-color-scheme', isDarkTheme());
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 });
