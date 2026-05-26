@@ -11,6 +11,7 @@ import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SessionLogic
 import logics.SiteLogic
+import logics.security.IpRateLimiter
 import logics.security.UriAttackDetector
 import models.tables.IpDeny
 import models.tables.Site
@@ -39,7 +40,8 @@ class FilterAccessLog @Inject()(
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
   wsClient: WSClient,
-  executionContext: ExecutionContext
+  executionContext: ExecutionContext,
+  ipRateLimiter: IpRateLimiter,
 ) extends Filter with Logging {
   private val accessLogSampleRate = applicationConf.AhaWiki.accessLog.sampleRate().max(0.0).min(1.0)
 
@@ -108,13 +110,21 @@ class FilterAccessLog @Inject()(
     val url = s"$scheme://$host$uri"
     val remoteAddress = requestHeader.remoteAddressWithXRealIp
     val userAgent = requestHeader.userAgent.getOrElse("")
+    val isBannedInMemory = ipRateLimiter.isKnownBanned(remoteAddress)
     val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(requestHeader.host)
-      (models.tables.IpDeny.selectLatest(remoteAddress), site)
+      val ipDeny =
+        if (isBannedInMemory) None
+        else {
+          val found = models.tables.IpDeny.selectLatest(remoteAddress)
+          if (found.isDefined) ipRateLimiter.ban(remoteAddress)
+          found
+        }
+      (ipDeny, site)
     }
     implicit val site: Site = siteFound
 
-    if (optionIpDeny.isDefined) {
+    if (isBannedInMemory || optionIpDeny.isDefined) {
       logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
@@ -138,6 +148,7 @@ class FilterAccessLog @Inject()(
         Future(Results.Forbidden)
       })
     } else if (UriAttackDetector.isAttack(uri)) {
+      ipRateLimiter.ban(remoteAddress)
       logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(10 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
@@ -163,6 +174,27 @@ class FilterAccessLog @Inject()(
         }
         Future(Results.Forbidden)
       })
+    } else if (ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
+      val duration = (System.currentTimeMillis - startTime).toInt
+      logger.warn(s"${requestHeader.method}\t\tRateLimit\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
+      logRequest(requestHeader.method, FORBIDDEN, duration, remoteAddress, url, userAgent)
+      enqueueAccessLogAndDeny(
+        ActorAccessLog.Insert(
+          site,
+          getUserSeq(requestHeader),
+          None,
+          requestHeader.method,
+          scheme,
+          host,
+          uri,
+          remoteAddress,
+          userAgent,
+          FORBIDDEN,
+          duration,
+        ),
+        s"RateLimit:$remoteAddress",
+      )
+      Future.successful(Results.Forbidden)
     } else {
       nextFilter(requestHeader).map(result => {
         val endTime = System.currentTimeMillis

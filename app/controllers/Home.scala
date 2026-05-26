@@ -48,15 +48,21 @@ class Home @Inject() (
       Ok(models.tables.Page.selectLastRevision(".robots.txt").map(p => PageContent(p.content).content).getOrElse(
         """User-agent: *
           |Disallow: /
+          |Crawl-delay: 10
           |
           |User-agent: Googlebot
           |Allow: /
           |
-          |User-agent: Mediapartners-Google
-          |Allow: /
-          |
           |User-agent: DuckDuckBot
           |Allow: /
+          |Crawl-delay: 10
+          |
+          |# Adsense
+          |User-agent: Mediapartners-Google
+          |Disallow:
+          |
+          |User-agent: Linguee
+          |Disallow: /
           |""".stripMargin))
     }
   }
