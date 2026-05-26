@@ -125,7 +125,8 @@ class FilterAccessLog @Inject()(
     implicit val site: Site = siteFound
 
     if (isBannedInMemory || optionIpDeny.isDefined) {
-      logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
+      val label = if (isBannedInMemory) "IpDeny:Cache" else "IpDeny:DB"
+      logger.warn(s"${requestHeader.method}\t\t$label\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(5 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
@@ -149,7 +150,7 @@ class FilterAccessLog @Inject()(
       })
     } else if (UriAttackDetector.isAttack(uri)) {
       ipRateLimiter.ban(remoteAddress)
-      logger.warn(s"${requestHeader.method}\t\tAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
+      logger.warn(s"${requestHeader.method}\t\tUriAttack\t${FORBIDDEN}\t$remoteAddress\t$url\t$userAgent")
       after((Random.nextInt(10 * 60) + 60).seconds, actorSystem.scheduler)({
         val endTime = System.currentTimeMillis
         val duration = endTime - startTime
