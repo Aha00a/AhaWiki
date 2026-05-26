@@ -2,6 +2,7 @@ package models.tables
 
 import anorm.SqlParser.{flatten, long, str}
 import anorm._
+import com.aha00a.commons.utils.StopWatch
 import com.aha00a.play.AnormSqlParser.localDateTime
 import models.PageLatestSummary
 
@@ -85,7 +86,8 @@ object PageMeta {
     """.as(SqlParser.str("name").*)
   }
   def selectSeqPageLatestSummary()(implicit connection: Connection, site: Site): Seq[PageLatestSummary] = {
-    SQL"""
+    StopWatch(s"AhaWikiCache.PageMeta.SeqPageLatestSummary.selectSeqPageLatestSummary site=${site.seq}") {
+      SQL"""
       SELECT PM.name, PM.revision, P.dateTime, P.user, PM.image, PM.size
       FROM PageMeta PM
       INNER JOIN Page P
@@ -95,6 +97,7 @@ object PageMeta {
       WHERE PM.site = ${site.seq}
       ORDER BY PM.name DESC
     """.as(rowParserPageLatestSummary.*).map(flatten).map(PageLatestSummary.tupled)
+    }
   }
 
 

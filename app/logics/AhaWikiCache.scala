@@ -38,7 +38,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   trait CacheEntity[T, I] {
     //noinspection ScalaWeakerAccess
-    val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 5 minutes
+    def durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 5 minutes
 
     def key()(implicit i: I): String
     def keyDefault()(implicit @unused i: I): String = s"${getClass.getName}"
@@ -168,6 +168,13 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   object PageMeta {
     object SeqPageLatestSummary extends CacheEntity[Seq[PageLatestSummary], (Database, Site)] {
+      override def durationExpire: FiniteDuration = {
+        if (environment.mode == Dev) 1.minute
+        else {
+          val jitter: Int = scala.util.Random.nextInt(120)
+          4.minutes + jitter.seconds
+        }
+      }
       override def key()(implicit t2: (Database, Site)): String = s"${getClass.getName}:${t2._2}"
       override def orElse()(implicit t2: (Database, Site)): Seq[PageLatestSummary] = t2._1.withConnection { implicit connection =>
         implicit val (_, site: Site) = t2
