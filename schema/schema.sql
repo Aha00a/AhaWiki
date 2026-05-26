@@ -293,6 +293,7 @@ CREATE TABLE `Page` (
   PRIMARY KEY (`site`,`name`,`revision`),
   KEY `Page_User_seq_fk` (`user`),
   KEY `Page_site_isMinorEdit_name_revision_index` (`site`,`isMinorEdit`,`name`,`revision`),
+  KEY `Page_site_name_revision_dateTime_user_index` (`site`,`name`,`revision`,`dateTime`,`user`),
   CONSTRAINT `Page_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`) ON DELETE RESTRICT ON UPDATE RESTRICT,
   CONSTRAINT `Page_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
