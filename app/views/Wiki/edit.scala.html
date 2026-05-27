@@ -1,4 +1,4 @@
-@(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)], canManagePagePermission: Boolean, pagePermissionDefault: String, pagePermissionSummary: Seq[(String, String)], isNewPage: Boolean)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
+@(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)], canManagePagePermission: Boolean, pagePermissionDefault: String, pagePermissionSummary: Seq[(String, String)], isNewPage: Boolean, isRenamable: Boolean, isDeletable: Boolean)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
 @permissionSelected(mode: String) = @{ if(pagePermissionDefault == mode) "selected" else "" }
 @hotKeyDescription(key: String) = @{
@@ -526,8 +526,10 @@
                                 <div class="toolbarLeft">
                                 </div>
                                 <div class="toolbarRight">
-                                    @if(page.revision != 0) {
+                                    @if(page.revision != 0 && isRenamable) {
                                         <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename@kbdHotKeyAlt("R")</a>
+                                    }
+                                    @if(page.revision != 0 && isDeletable) {
                                         <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete@kbdHotKeyAlt("T")</a>
                                     }
                                 </div>

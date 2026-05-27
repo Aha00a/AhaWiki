@@ -383,6 +383,8 @@ controllerComponents: ControllerComponents,
             pagePermissionDefault = pagePermissionModeGeneral,
             pagePermissionSummary = pagePermissionSummary(name),
             isNewPage = true,
+            isRenamable = isRenamable,
+            isDeletable = isDeletable,
           )).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
@@ -418,6 +420,8 @@ controllerComponents: ControllerComponents,
             pagePermissionDefault = pagePermissionModeKeep,
             pagePermissionSummary = pagePermissionSummary(name),
             isNewPage = false,
+            isRenamable = isRenamable,
+            isDeletable = isDeletable,
           )).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, _) if isRenamable => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, _) if isDeletable => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
