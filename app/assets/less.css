@@ -102,7 +102,7 @@ html.theme-ahawiki-light {
   --color-navbar-border: rgba(217, 225, 238, 0.3);
   --color-navbar-shadow: rgba(9, 30, 66, 0.12);
   --color-navbar-text: #000000;
-  --color-navbar-home: #0b57d0;
+  --color-navbar-home: #000000;
   --color-navbar-menu-bg: #ffffff;
   --color-navbar-text-shadow: -1px 1px 10px #fff, 0 1px 10px #fff, 1px 0 10px #fff, 0 1px 10px #fff;
   --color-input-bg: #ffffff;
@@ -186,7 +186,7 @@ html.theme-ahawiki-light {
     --color-navbar-border: rgba(97, 108, 124, 0.3);
     --color-navbar-shadow: rgba(0, 0, 0, 0.35);
     --color-navbar-text: #e6e8eb;
-    --color-navbar-home: #6ea8ff;
+    --color-navbar-home: #e6e8eb;
     --color-navbar-menu-bg: #171a20;
     --color-navbar-text-shadow: none;
     --color-input-bg: #171a20;
@@ -304,7 +304,7 @@ nav.topNavbar a:hover,
 nav.topNavbar button:hover {
   background-color: var(--color-link-hover-bg);
 }
-nav.topNavbar .homeLink {
+nav.topNavbar a.homeLink {
   font-size: 18px;
   font-weight: 800;
   color: var(--color-navbar-home);
@@ -314,6 +314,12 @@ nav.topNavbar .homeLink {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+nav.topNavbar a.homeLink small {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.6;
+  margin-left: 4px;
 }
 nav.topNavbar .navDrawerToggle {
   display: none;
