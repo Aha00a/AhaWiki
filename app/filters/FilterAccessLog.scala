@@ -105,18 +105,17 @@ class FilterAccessLog @Inject()(
     val url                    = s"${rh.scheme}://${rh.host}$uri"
 
     val isBannedInMemory = ipRateLimiter.isKnownBanned(remoteAddress)
-    val (optionIpDeny: Option[IpDeny], siteFound) = database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.get(rh.host)
-      val ipDeny =
-        if (isBannedInMemory) None
-        else {
-          val found = models.tables.IpDeny.selectLatest(remoteAddress)
-          if (found.isDefined) ipRateLimiter.ban(remoteAddress)
-          found
-        }
-      (ipDeny, site)
-    }
-    implicit val site: Site = siteFound
+    val isCleanInMemory  = !isBannedInMemory && ipRateLimiter.isKnownClean(remoteAddress)
+    // SiteLogic.get은 AhaWikiCacheMemoryDomainSite(메모리)만 사용하므로 connection 불필요
+    implicit val site: Site = SiteLogic.get(rh.host)
+    val optionIpDeny: Option[IpDeny] =
+      if (isBannedInMemory || isCleanInMemory) None
+      else database.withConnection { implicit connection =>
+        val found = models.tables.IpDeny.selectLatest(remoteAddress)
+        if (found.isDefined) ipRateLimiter.ban(remoteAddress)
+        else ipRateLimiter.markClean(remoteAddress)
+        found
+      }
 
     if (isBannedInMemory || optionIpDeny.isDefined) {
       val label = if (isBannedInMemory) "IpDeny:Cache" else "IpDeny:DB"

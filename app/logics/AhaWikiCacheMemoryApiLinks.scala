@@ -17,7 +17,7 @@ object AhaWikiCacheMemoryApiLinks {
 
 @Singleton
 class AhaWikiCacheMemoryApiLinks {
-  private val cache = new AhaWikiCacheMemoryTrieMap[(Long, String), Seq[CalculatedLink]]
+  private val cache = new AhaWikiCacheMemoryTrieMap[(Long, String), Seq[CalculatedLink]](maxSize = 2000)
 
   def getOrElseUpdate(siteSeq: Long, pageName: String)(orElse: => Seq[CalculatedLink]): Seq[CalculatedLink] =
     cache.getOrElseUpdate((siteSeq, pageName))(orElse)

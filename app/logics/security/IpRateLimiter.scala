@@ -32,14 +32,29 @@ class IpRateLimiter {
 
   private val windows     = new ConcurrentHashMap[String, IpWindow]()
   private val knownBanned = newKeySet[String]()
+  private val knownClean  = new ConcurrentHashMap[String, Long]()  // ip → expireAtMs
+  private val cleanTtlMs: Long = 60_000L
 
   def isKnownBanned(ip: String): Boolean = knownBanned.contains(ip)
 
-  def ban(ip: String): Unit = knownBanned.add(ip)
+  def isKnownClean(ip: String): Boolean = {
+    val exp = knownClean.getOrDefault(ip, 0L)
+    if (exp > System.currentTimeMillis()) true
+    else { knownClean.remove(ip); false }
+  }
+
+  def markClean(ip: String): Unit =
+    knownClean.put(ip, System.currentTimeMillis() + cleanTtlMs)
+
+  def ban(ip: String): Unit = {
+    knownBanned.add(ip)
+    knownClean.remove(ip)
+  }
 
   def unban(ip: String): Unit = {
     knownBanned.remove(ip)
     windows.remove(ip)
+    knownClean.remove(ip)
   }
 
   def recordAndCheck(ip: String, uri: String): Boolean = {
@@ -75,7 +90,8 @@ class IpRateLimiter {
   }
 
   def cleanup(): Unit = {
-    val cutoff = System.currentTimeMillis() - windowMs
+    val now    = System.currentTimeMillis()
+    val cutoff = now - windowMs
     val iter   = windows.entrySet().iterator()
     while (iter.hasNext) {
       val e = iter.next()
@@ -84,6 +100,10 @@ class IpRateLimiter {
         pruneOld(e.getValue.humanSignals, cutoff)
         if (e.getValue.wikiPages.isEmpty && e.getValue.humanSignals.isEmpty) iter.remove()
       }
+    }
+    val cleanIter = knownClean.entrySet().iterator()
+    while (cleanIter.hasNext) {
+      if (cleanIter.next().getValue <= now) cleanIter.remove()
     }
   }
 

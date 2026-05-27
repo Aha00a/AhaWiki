@@ -12,7 +12,7 @@ object AhaWikiCacheMemoryPermission extends Logging {
 
   def get()(implicit connection: Connection, site: Site): Seq[Permission] =
     cache.getOrElseUpdate(site.seq) {
-      StopWatch("Cache\tMiss\tAhaWikiCacheMemoryPermission") {
+      StopWatch(s"Cache\tMiss\tAhaWikiCacheMemoryPermission\t${site}") {
         Permission.select()
       }
     }

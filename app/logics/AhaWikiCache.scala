@@ -29,6 +29,16 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
   private case class CachedJson(value: String, cachedAtEpochMs: Long)
 
+  private val staleMaxMs: Long = 12 * 3600 * 1000L  // 12시간 이상 된 stale 엔트리 제거
+
+  private def cleanupStaleEntries(): Unit = {
+    val cutoff = System.currentTimeMillis() - staleMaxMs
+    val iter   = staleEntries.entrySet().iterator()
+    while (iter.hasNext) {
+      if (iter.next().getValue.cachedAtEpochMs < cutoff) iter.remove()
+    }
+  }
+
   private def withSingleFlight[R](cacheKey: String)(f: => R): R = {
     val lock = cacheKeyLocks.computeIfAbsent(cacheKey, _ => new AnyRef)
     lock.synchronized {
@@ -52,6 +62,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
       val cacheKey = key()
+
+      if (scala.util.Random.nextInt(500) == 0) cleanupStaleEntries()
 
       val json: String = syncCacheApi.get[String](cacheKey) match {
         case Some(cachedJson) =>
