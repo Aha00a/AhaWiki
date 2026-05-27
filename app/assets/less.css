@@ -314,12 +314,22 @@ nav.topNavbar a.homeLink {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 nav.topNavbar a.homeLink small {
   font-size: 11px;
   font-weight: 400;
   opacity: 0.6;
-  margin-left: 4px;
+  margin-left: 0;
+}
+nav.topNavbar a.homeLink svg.homeLogo {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  fill: currentColor;
+  stroke: currentColor;
 }
 nav.topNavbar .navDrawerToggle {
   display: none;
@@ -915,4 +925,3 @@ kbd.MacroKbd {
     display: none !important;
   }
 }
-/*# sourceMappingURL=less.css.map */

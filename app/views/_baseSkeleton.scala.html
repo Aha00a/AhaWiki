@@ -28,7 +28,14 @@
             <meta property="og:url" content="@(resolvedCanonicalUrl)" />
         }
 
-        <link rel="shortcut icon" type="image/png" href="@(logics.AhaWikiConfig().site.favicon())">
+        <link rel="icon" type="image/png" href="/public/favicon.png">
+        @defining(logics.AhaWikiConfig().site.favicon()) { adminFavicon =>
+            @if(adminFavicon != "/public/favicon.png") {
+                <link rel="icon" href="@adminFavicon">
+            } else {
+                <link rel="icon" type="image/svg+xml" href="/public/img/favicon.svg">
+            }
+        }
         <script>
             (function () {
                 var allowed = {
