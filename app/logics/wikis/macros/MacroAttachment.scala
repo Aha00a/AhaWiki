@@ -29,7 +29,7 @@ object MacroAttachment extends TraitMacro {
     if (sanitized.nonEmpty) sanitized else "_"
   }
 
-  private def normalizeObjectKey(rawObjectKey: String)(implicit wikiContext: ContextWikiPage): String = {
+  private def normalizeObjectKey(rawObjectKey: String, siteSeq: Long, pageName: String): String = {
     val trimmed = rawObjectKey.trim.stripPrefix("/")
     if (trimmed.startsWith(s"$attachmentRoot/")) {
       trimmed
@@ -37,19 +37,27 @@ object MacroAttachment extends TraitMacro {
       val segments = trimmed.split("/").toSeq.filter(_.nonEmpty)
       segments match {
         case Seq("clipboard", _*) =>
-          val sanitizedPageName = sanitizeAttachmentPathSegment(wikiContext.name)
-          s"$attachmentRoot/${wikiContext.site.seq}/$sanitizedPageName/$trimmed"
-        case Seq(pageName, "clipboard", rest @ _*) =>
-          val normalizedPagePath = (Seq(sanitizeAttachmentPathSegment(pageName), "clipboard") ++ rest).mkString("/")
-          s"$attachmentRoot/${wikiContext.site.seq}/$normalizedPagePath"
+          val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
+          s"$attachmentRoot/$siteSeq/$sanitizedPageName/$trimmed"
+        case Seq(pn, "clipboard", rest @ _*) =>
+          val normalizedPagePath = (Seq(sanitizeAttachmentPathSegment(pn), "clipboard") ++ rest).mkString("/")
+          s"$attachmentRoot/$siteSeq/$normalizedPagePath"
         case Seq(fileName, rest @ _*) =>
-          val sanitizedPageName = sanitizeAttachmentPathSegment(wikiContext.name)
+          val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
           val normalizedPagePath = (Seq(sanitizedPageName, sanitizeAttachmentPathSegment(fileName)) ++ rest.map(sanitizeAttachmentPathSegment)).mkString("/")
-          s"$attachmentRoot/${wikiContext.site.seq}/$normalizedPagePath"
+          s"$attachmentRoot/$siteSeq/$normalizedPagePath"
         case _ =>
           trimmed
       }
     }
+  }
+
+  private def normalizeObjectKey(rawObjectKey: String)(implicit wikiContext: ContextWikiPage): String =
+    normalizeObjectKey(rawObjectKey, wikiContext.site.seq, wikiContext.name)
+
+  def toAttachmentUri(rawObjectKey: String, siteSeq: Long, pageName: String): String = {
+    val objectKey = normalizeObjectKey(rawObjectKey, siteSeq, pageName)
+    s"attachment:${objectKey.stripPrefix(s"$attachmentRoot/$siteSeq/")}"
   }
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {

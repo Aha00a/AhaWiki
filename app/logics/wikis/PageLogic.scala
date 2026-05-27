@@ -10,6 +10,7 @@ import com.aha00a.commons.utils.StopWatch
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.wikis.interpreters.Interpreters
+import logics.wikis.macros.MacroAttachment
 import models.HighScoredTerm
 import models._
 import models.tables.CalculatedCosineSimilarity
@@ -32,6 +33,15 @@ object PageLogic {
   private val regexMacroImage = """(?is)\[\[Image\((.*?)\)]]""".r
   private val regexMacroAttachment = """(?is)\[\[Attachment\((.*?)\)]]""".r
   private val regexSchemaBlock = """(?is)\[\[\[#!\s*Schema[^\n]*\n(.*?)]]]""".r
+
+  private def normalizeImageValue(value: String, pageName: String)(implicit site: models.tables.Site): String = {
+    regexMacroAttachment.findFirstMatchIn(value) match {
+      case Some(m) =>
+        val rawKey = m.group(1).split(",").headOption.map(_.trim).getOrElse("")
+        MacroAttachment.toAttachmentUri(rawKey, site.seq, pageName)
+      case None => value
+    }
+  }
 
   private def extractSchemaImage(content: String): Option[String] = {
     regexSchemaBlock
@@ -58,16 +68,19 @@ object PageLogic {
   }
 
   private def extractAttachmentImage(pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
-    Attachment.selectUploadedByPage(site.seq, pageName).headOption.map(_.objectKey)
+    Attachment.selectUploadedByPage(site.seq, pageName).headOption.map { att =>
+      s"attachment:${att.objectKey.stripPrefix(s"Attachment/${site.seq}/")}"
+    }
   }
 
   private def extractRepresentativeImage(content: String, pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
-    extractSchemaImage(content)
+    extractSchemaImage(content).map(normalizeImageValue(_, pageName))
       .orElse(extractAttachmentImage(pageName))
       .orElse(extractMacroImage(content))
       .orElse {
         regexMacroAttachment.findAllMatchIn(content).flatMap { m =>
           m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
+            .map(MacroAttachment.toAttachmentUri(_, site.seq, pageName))
         }.toSeq.headOption
       }
   }

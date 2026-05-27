@@ -1486,7 +1486,7 @@ class Api @Inject()(
     if (normalized.length <= maxLength) normalized else normalized.take(maxLength).trim + "..."
   }
 
-  private def previewImageUrl(raw: String)(implicit request: RequestHeader): String = {
+  private def previewImageUrl(raw: String)(implicit request: RequestHeader, site: Site): String = {
     val trimmed = Option(raw).map(_.trim).getOrElse("")
     if (trimmed.isEmpty) {
       ""
@@ -1494,8 +1494,9 @@ class Api @Inject()(
       trimmed
     } else if (trimmed.startsWith("//")) {
       s"${request.scheme}:$trimmed"
-    } else if (trimmed.startsWith("Attachment/")) {
-      S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, trimmed).toOption.getOrElse("")
+    } else if (trimmed.startsWith("attachment:")) {
+      val objectKey = s"Attachment/${site.seq}/${trimmed.stripPrefix("attachment:")}"
+      S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("")
     } else if (trimmed.startsWith("/")) {
       s"${request.scheme}://${request.host}$trimmed"
     } else {
@@ -1554,6 +1555,10 @@ class Api @Inject()(
 
       def toAbsoluteImageUrl(raw: String): String = {
         if (raw.startsWith("http://") || raw.startsWith("https://")) raw
+        else if (raw.startsWith("attachment:")) {
+          val objectKey = s"Attachment/${site.seq}/${raw.stripPrefix("attachment:")}"
+          S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("")
+        }
         else s"https://${request.host}/$raw"
       }
 
