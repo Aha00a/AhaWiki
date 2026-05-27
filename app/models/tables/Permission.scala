@@ -82,8 +82,9 @@ object Permission {
     val Read: Action = Value(1, "Read")
     val Edit: Action = Value(2, "Edit")
     val Create: Action = Value(4, "Create")
-    val Upload: Action = Value(8, "Upload")
-    val Delete: Action = Value(16, "Delete")
+    val Rename: Action = Value(8, "Rename")
+    val Upload: Action = Value(16, "Upload")
+    val Delete: Action = Value(32, "Delete")
     val Admin: Action = Value(255, "Admin")
   }
 

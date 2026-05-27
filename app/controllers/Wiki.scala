@@ -365,6 +365,7 @@ controllerComponents: ControllerComponents,
       )
       val isReadable = isReadableByPermission || isReadableBySignedUrl
       val isWritable = wikiPermission.isWritable(name, pageLastRevisionContent)
+      val isRenamable = wikiPermission.isRenamable(name)
 
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
@@ -417,7 +418,7 @@ controllerComponents: ControllerComponents,
             pagePermissionSummary = pagePermissionSummary(name),
             isNewPage = false,
           )).withHeaderRobotNoIndexNoFollow
-        case (Some(page), "rename", _, true) => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
+        case (Some(page), "rename", _, _) if isRenamable => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, true) => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
       }
@@ -933,8 +934,8 @@ controllerComponents: ControllerComponents,
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
-        case (Some(page), None) =>
-          if (WikiPermission().isWritable(name, PageContent(page.content))) {
+        case (Some(_), None) =>
+          if (WikiPermission().isRenamable(name)) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
 

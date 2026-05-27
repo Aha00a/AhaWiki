@@ -105,6 +105,10 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
     isWritable(target, Some(pageContent))
   }
 
+  def isRenamable(target: String): Boolean = {
+    permissionLogic.permitted(target, actors, Permission.Action.Rename.id)
+  }
+
   def detail(target: String, pageContent: Option[PageContent]): WikiPermissionDetail = {
     val currentActors = actors
     val writeAction = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)

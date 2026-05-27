@@ -64,11 +64,14 @@
  * `1 - Read` - 읽기를 허용합니다.
  * `2 - Edit` - 기존 페이지 편집을 허용합니다.
  * `4 - Create` - 신규 페이지 생성을 허용합니다.
- * `8 - Upload` - 업로드 권한입니다.
- * `16 - Delete` - 삭제 권한입니다.
+ * `8 - Rename` - 페이지 이름 변경을 허용합니다.
+ * `16 - Upload` - 파일 업로드를 허용합니다.
+ * `32 - Delete` - 삭제 권한입니다.
  * `255 - Admin` - 가장 높은 permission action입니다.
 
 기존 페이지 저장에는 `Edit` 권한이 필요하고, 없는 페이지 생성에는 `Create` 권한이 필요합니다.
+
+페이지 이름 변경(rename)에는 `Rename` 권한이 필요합니다. Rename은 모든 revision의 페이지명을 변경하고 원본 위치에 리다이렉트 페이지를 생성하는 구조적 변경이므로, 단순 편집보다 높은 권한을 요구합니다. `Upload(16)` 이상의 권한을 가진 사용자는 자동으로 rename도 허용됩니다.
 
 
 == Priority 우선순위
@@ -131,6 +134,21 @@ VALUES
 site	target	targetType	actor	actorType	action
 1		All		All	1
 1		All		Login	4
+]]]
+
+로그인 사용자에게 rename까지 허용하려면 action을 `8`으로 높입니다.
+
+[[[#!Vim sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES
+  (1, '', 'All', '', 'All', 1),
+  (1, '', 'All', '', 'Login', 8);
+]]]
+
+[[[#!Table tsv 1
+site	target	targetType	actor	actorType	action
+1		All		All	1
+1		All		Login	8
 ]]]
 
 === Read Only Wiki 읽기 전용 위키
@@ -219,6 +237,27 @@ VALUES
 site	target	targetType	actor	actorType	action
 1	Team	StartsWith	@example.com	Domain	1
 ]]]
+
+=== Rename Restriction 이름 변경 제한
+
+로그인 사용자에게 읽기와 편집은 허용하지만 이름 변경은 특정 사용자에게만 허용합니다.
+
+[[[#!Vim sql
+INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+VALUES
+  (1, '', 'All', '', 'All', 1),
+  (1, '', 'All', '', 'Login', 4),
+  (1, '', 'All', 'aha00a@gmail.com', 'Exact', 255);
+]]]
+
+[[[#!Table tsv 1
+site	target	targetType	actor	actorType	action
+1		All		All	1
+1		All		Login	4
+1		All	aha00a@gmail.com	Exact	255
+]]]
+
+로그인 사용자의 action이 `4(Create)`이면 rename에 필요한 `8(Rename)`보다 작으므로 rename이 차단됩니다. `aha00a@gmail.com`은 `255(Admin)`이므로 rename을 포함한 모든 작업이 허용됩니다.
 
 === Regex Target 정규식 target
 
