@@ -109,6 +109,10 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
     permissionLogic.permitted(target, actors, Permission.Action.Rename.id)
   }
 
+  def isDeletable(target: String): Boolean = {
+    permissionLogic.permitted(target, actors, Permission.Action.Delete.id)
+  }
+
   def detail(target: String, pageContent: Option[PageContent]): WikiPermissionDetail = {
     val currentActors = actors
     val writeAction = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
