@@ -1,16 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <style>
-        rect { fill: #2563eb; }
-        @media (prefers-color-scheme: dark) {
-            rect { fill: #93c5fd; }
-        }
-    </style>
+    <!-- Left bracket ] rounded — V2와 동일 -->
     <rect x="10" y="8" width="8" height="84" rx="3"/>
     <rect x="10" y="8" width="22" height="8" rx="3"/>
     <rect x="10" y="84" width="22" height="8" rx="3"/>
+    <!-- Right bracket ] rounded -->
     <rect x="82" y="8" width="8" height="84" rx="3"/>
     <rect x="68" y="8" width="22" height="8" rx="3"/>
     <rect x="68" y="84" width="22" height="8" rx="3"/>
-    <rect x="44" y="12" width="12" height="50" rx="4"/>
-    <rect x="44" y="72" width="12" height="12" rx="3"/>
+    <!-- ! bar — 브래킷 안쪽(y=16)보다 아래서 시작 -->
+    <rect x="44" y="19" width="12" height="44" rx="4"/>
+    <!-- ! dot -->
+    <rect x="44" y="71" width="12" height="11" rx="3"/>
 </svg>
