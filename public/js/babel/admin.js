@@ -717,11 +717,11 @@ function SiteDetailPage() {
 // app/assets/js/admin/pages/SiteConfigPage.jsx
 import React15, { useEffect as useEffect9, useState as useState13 } from "react";
 import { useNavigate as useNavigate7, useOutletContext as useOutletContext3 } from "react-router-dom";
-import { Anchor as Anchor4, Badge as Badge10, Button as Button6, Card as Card7, ColorInput, Group as Group11, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack7, Text as Text11, TextInput as TextInput2, Title as Title8 } from "@mantine/core";
+import { Anchor as Anchor4, Badge as Badge10, Button as Button6, Card as Card7, Group as Group11, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack7, Text as Text11, TextInput as TextInput2, Title as Title8 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useSiteConfigData.js
 import { useCallback as useCallback6, useState as useState12 } from "react";
-var DEFAULT_THEME = { headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "", defaultHue: "" };
+var DEFAULT_THEME = { defaultHue: "" };
 function useSiteConfigData(siteSeq) {
   const [faviconUrl, setFaviconUrl] = useState12("/public/favicon.png");
   const [faviconObjectKey, setFaviconObjectKey] = useState12("");
@@ -797,7 +797,7 @@ function useSiteConfigData(siteSeq) {
     }
     try {
       const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
-      setSiteTheme({ headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "", defaultHue: data?.defaultHue ?? "" });
+      setSiteTheme({ defaultHue: data?.defaultHue ?? "" });
     } catch (err) {
       logError("site-theme:load:error", err);
       setError(err.message);
@@ -819,7 +819,7 @@ function useSiteConfigData(siteSeq) {
         throw new Error(p?.error || `HTTP ${response.status}`);
       }
       const data = await response.json();
-      setSiteTheme({ headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "", defaultHue: data?.defaultHue ?? "" });
+      setSiteTheme({ defaultHue: data?.defaultHue ?? "" });
     } catch (err) {
       logError("site-theme:save:error", err);
       setError(err.message);
@@ -857,9 +857,9 @@ function SiteConfigPage() {
     await resetFavicon();
     await loadFavicon();
     setFaviconFile(null);
-  } }, "Reset to default")), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Theme"), /* @__PURE__ */ React15.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uD5E4\uB354/\uD478\uD130 \uBC30\uACBD\uC0C9\xB7\uC804\uACBD\uC0C9\uC744 16\uC9C4\uC218(#RGB, #RRGGBB, #RRGGBBAA)\uB85C \uC9C0\uC815\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), (() => {
+  } }, "Reset to default")), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Theme"), /* @__PURE__ */ React15.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uAE30\uBCF8 \uC0C9\uC870(Hue)\uB97C \uC9C0\uC815\uD569\uB2C8\uB2E4."), (() => {
     const hue = siteTheme.defaultHue === "" ? 220 : Number(siteTheme.defaultHue);
-    return /* @__PURE__ */ React15.createElement(Stack7, { gap: 4, mb: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React15.createElement(Text11, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC 220")), /* @__PURE__ */ React15.createElement(Group11, { gap: "sm", align: "center" }, /* @__PURE__ */ React15.createElement(
+    return /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md", mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 4 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React15.createElement(Text11, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC 220")), /* @__PURE__ */ React15.createElement(Group11, { gap: "sm", align: "center" }, /* @__PURE__ */ React15.createElement(
       "input",
       {
         type: "range",
@@ -869,22 +869,12 @@ function SiteConfigPage() {
         onChange: (e) => setSiteTheme((prev) => ({ ...prev, defaultHue: e.target.value })),
         style: { flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", background: "linear-gradient(to right, hsl(0,80%,55%), hsl(30,80%,55%), hsl(60,80%,55%), hsl(90,80%,55%), hsl(120,80%,55%), hsl(150,80%,55%), hsl(180,80%,55%), hsl(210,80%,55%), hsl(240,80%,55%), hsl(270,80%,55%), hsl(300,80%,55%), hsl(330,80%,55%), hsl(360,80%,55%))", cursor: "pointer", outline: "none", border: "none" }
       }
-    ), /* @__PURE__ */ React15.createElement("div", { style: { width: 24, height: 24, borderRadius: 6, backgroundColor: `hsl(${hue},80%,55%)`, border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", style: { width: 32, textAlign: "right" } }, hue)));
-  })(), /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, lg: 2 }, spacing: "md" }, /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md" }, [
-    { key: "headerBackgroundColor", label: "Header \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#6c5ce7", "#0b7285"] },
-    { key: "headerForegroundColor", label: "Header \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ffd43b"] },
-    { key: "bodyBackgroundColor", label: "Body \uBC30\uACBD\uC0C9", placeholder: "#FFFFFF", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#f1f3f5", "#e9ecef"] },
-    { key: "bodyForegroundColor", label: "Body \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#000000", "#343a40", "#ffffff"] },
-    { key: "footerBackgroundColor", label: "Footer \uBC30\uACBD\uC0C9", placeholder: "#EEEEEE", swatches: ["#ffffff", "#f8f9fa", "#1f2937", "#111111", "#2b8a3e", "#862e9c"] },
-    { key: "footerForegroundColor", label: "Footer \uC804\uACBD\uC0C9", placeholder: "#000000", swatches: ["#111111", "#212529", "#495057", "#ffffff", "#f1f3f5", "#ff922b"] }
-  ].map(({ key, label, placeholder, swatches }) => /* @__PURE__ */ React15.createElement(ColorInput, { key, label, placeholder, format: "hexa", value: siteTheme[key], onChange: (value) => setSiteTheme((prev) => ({ ...prev, [key]: value })), swatches, withEyeDropper: false, clearable: true }))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md", style: { overflow: "hidden" } }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement(Stack7, { gap: 0, style: { borderRadius: 10, overflow: "hidden", border: "1px solid #e9ecef" } }, /* @__PURE__ */ React15.createElement("div", { style: { backgroundColor: siteTheme.headerBackgroundColor || "#EEEEEE", color: siteTheme.headerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Header Preview"), /* @__PURE__ */ React15.createElement("div", { style: { padding: "16px 14px", backgroundColor: siteTheme.bodyBackgroundColor || "#FFFFFF", color: siteTheme.bodyForegroundColor || "#000000" } }, /* @__PURE__ */ React15.createElement("div", null, "\uCF58\uD150\uCE20 \uC601\uC5ED (\uACE0\uC815 \uBBF8\uB9AC\uBCF4\uAE30)"), (() => {
-    const hue = siteTheme.defaultHue === "" ? 220 : Number(siteTheme.defaultHue);
-    return /* @__PURE__ */ React15.createElement("div", { style: { marginTop: 8, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React15.createElement("span", { style: { color: `hsl(${hue},99%,43%)`, textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: `hsl(${hue},100%,7%)`, color: `hsl(${hue},100%,80%)`, fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: `hsl(${hue},89%,47%)`, color: "#fff", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React15.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: `linear-gradient(to right, hsl(${hue},100%,96%), hsl(${hue},89%,47%))`, marginTop: 4 } }));
-  })()), /* @__PURE__ */ React15.createElement("div", { style: { backgroundColor: siteTheme.footerBackgroundColor || "#EEEEEE", color: siteTheme.footerForegroundColor || "#000000", padding: "12px 14px", fontWeight: 600 } }, "Footer Preview")))), /* @__PURE__ */ React15.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
+    ), /* @__PURE__ */ React15.createElement("div", { style: { width: 24, height: 24, borderRadius: 6, backgroundColor: `hsl(${hue},80%,55%)`, border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", style: { width: 32, textAlign: "right" } }, hue))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React15.createElement("span", { style: { color: `hsl(${hue},99%,43%)`, textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: `hsl(${hue},100%,7%)`, color: `hsl(${hue},100%,80%)`, fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: `hsl(${hue},89%,47%)`, color: "#fff", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React15.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: `linear-gradient(to right, hsl(${hue},100%,96%), hsl(${hue},89%,47%))`, marginTop: 4 } }))));
+  })(), /* @__PURE__ */ React15.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
     await saveTheme(siteTheme);
     await loadTheme();
   } }, "Save theme"), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button6, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
-    const empty = { headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "", defaultHue: "" };
+    const empty = { defaultHue: "" };
     setSiteTheme(empty);
     await saveTheme(empty);
     await loadTheme();

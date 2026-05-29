@@ -1,7 +1,7 @@
 import {useCallback, useState} from "react";
 import {fetchJson, fetchCsrfToken, logError} from "../api.js";
 
-const DEFAULT_THEME = {headerBackgroundColor: "", headerForegroundColor: "", bodyBackgroundColor: "", bodyForegroundColor: "", footerBackgroundColor: "", footerForegroundColor: "", defaultHue: ""};
+const DEFAULT_THEME = {defaultHue: ""};
 
 export function useSiteConfigData(siteSeq) {
     const [faviconUrl, setFaviconUrl] = useState("/public/favicon.png");
@@ -58,7 +58,7 @@ export function useSiteConfigData(siteSeq) {
         if (!siteSeq) { setSiteTheme(DEFAULT_THEME); return; }
         try {
             const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
-            setSiteTheme({headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "", defaultHue: data?.defaultHue ?? ""});
+            setSiteTheme({defaultHue: data?.defaultHue ?? ""});
         } catch (err) { logError("site-theme:load:error", err); setError(err.message); }
     }, [siteSeq]);
 
@@ -75,7 +75,7 @@ export function useSiteConfigData(siteSeq) {
             const response = await fetch("/api/Admin/SiteTheme", {method: "PUT", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
             if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
             const data = await response.json();
-            setSiteTheme({headerBackgroundColor: data?.headerBackgroundColor ?? "", headerForegroundColor: data?.headerForegroundColor ?? "", bodyBackgroundColor: data?.bodyBackgroundColor ?? "", bodyForegroundColor: data?.bodyForegroundColor ?? "", footerBackgroundColor: data?.footerBackgroundColor ?? "", footerForegroundColor: data?.footerForegroundColor ?? "", defaultHue: data?.defaultHue ?? ""});
+            setSiteTheme({defaultHue: data?.defaultHue ?? ""});
         } catch (err) { logError("site-theme:save:error", err); setError(err.message); }
         finally { setSavingTheme(false); }
     }, [siteSeq]);
