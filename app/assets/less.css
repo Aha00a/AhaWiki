@@ -447,6 +447,25 @@ nav.topNavbar .actionAuth .authSubmenu li.authHuePicker i {
 nav.topNavbar .actionAuth .authSubmenu li.authHuePicker span {
   white-space: nowrap;
 }
+nav.topNavbar .actionAuth .authSubmenu li.authHuePicker .hueReset {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  font-size: 11px;
+}
+nav.topNavbar .actionAuth .authSubmenu li.authHuePicker .hueReset:hover {
+  background: var(--color-link-hover-bg);
+  color: var(--color-link);
+}
 nav.topNavbar .actionAuth .authSubmenu li.authHuePicker .hueSlider {
   -webkit-appearance: none;
   appearance: none;

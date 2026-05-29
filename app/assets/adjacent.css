@@ -169,6 +169,7 @@
   width: 84px;
   vertical-align: middle;
   margin-left: 5px;
+  accent-color: var(--color-focus-ring);
 }
 .AhaWiki .adjacentPagesHud .dot {
   width: 8px;
@@ -279,4 +280,3 @@
   line-height: 1.55;
   color: var(--color-muted);
 }
-/*# sourceMappingURL=adjacent.css.map */
