@@ -655,6 +655,7 @@ class Api @Inject()(
             val bodyForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.BodyForegroundColorKey).map(_.v))
             val footerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterBackgroundColorKey).map(_.v))
             val footerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterForegroundColorKey).map(_.v))
+            val defaultHue = Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v)).map(_.toString).getOrElse("")
             Ok(Json.obj(
               "siteSeq" -> Json.fromLong(site.seq),
               "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
@@ -663,6 +664,7 @@ class Api @Inject()(
               "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
+              "defaultHue" -> Json.fromString(defaultHue),
             ))
       }
     }
@@ -682,6 +684,7 @@ class Api @Inject()(
             val bodyForegroundColor = parseHexColorValue(body.get("bodyForegroundColor").flatMap(_.headOption))
             val footerBackgroundColor = parseHexColorValue(body.get("footerBackgroundColor").flatMap(_.headOption))
             val footerForegroundColor = parseHexColorValue(body.get("footerForegroundColor").flatMap(_.headOption))
+            val defaultHue = SiteThemeLogic.parseHue(body.get("defaultHue").flatMap(_.headOption).getOrElse("")).map(_.toString).getOrElse("")
 
             Seq(
               SiteThemeLogic.HeaderBackgroundColorKey -> headerBackgroundColor,
@@ -690,6 +693,7 @@ class Api @Inject()(
               SiteThemeLogic.BodyForegroundColorKey -> bodyForegroundColor,
               SiteThemeLogic.FooterBackgroundColorKey -> footerBackgroundColor,
               SiteThemeLogic.FooterForegroundColorKey -> footerForegroundColor,
+              SiteThemeLogic.DefaultHueKey -> defaultHue,
             ).foreach { case (key, value) =>
               if (value.nonEmpty) {
                 Config.upsert(key, value)
@@ -707,6 +711,7 @@ class Api @Inject()(
               "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
               "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
               "footerForegroundColor" -> Json.fromString(footerForegroundColor),
+              "defaultHue" -> Json.fromString(defaultHue),
             ))
       }
     }

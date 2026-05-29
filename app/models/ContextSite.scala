@@ -68,6 +68,9 @@ class ContextSite()(
   lazy val bodyForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.BodyForegroundColorKey)
   lazy val footerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterBackgroundColorKey)
   lazy val footerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterForegroundColorKey)
+  lazy val defaultHue: Option[Int] = database.withConnection { implicit connection =>
+    Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v))
+  }
 
   def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)
 

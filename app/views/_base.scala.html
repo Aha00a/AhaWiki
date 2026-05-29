@@ -257,7 +257,7 @@
             });
 
             const hueStorageKey = 'ahawiki-hue';
-            const defaultHue = 220;
+            const defaultHue = @{contextSite.defaultHue.getOrElse(220)};
 
             function applyHue(hue) {
                 const h = parseInt(hue, 10);
