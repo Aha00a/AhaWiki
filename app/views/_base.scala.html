@@ -28,7 +28,7 @@
             <span class="themeOptionLabel">Theme</span>
         </button>
         <button type="button" class="themeOption widthToggle" aria-label="Limit content width" title="Limit content width" aria-pressed="false">
-            <i class="fas fa-arrows-alt-h"></i>
+            <i class="fas fa-arrows-left-right"></i>
             <span class="themeOptionLabel">Wide</span>
         </button>
     </div>
@@ -98,30 +98,30 @@
                                 @currentUserProfileImageUrl.map { imageUrl =>
                                     <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/>
                                 }.getOrElse {
-                                    <i class="fas fa-user-cog"></i>
+                                    <i class="fas fa-user-gear"></i>
                                 } @(user.nickname)
                             </button>
                             <ul class="authSubmenu">
                                 <li>
-                                    <a href="/w/User:@(user.nickname)"><i class="fas fa-user-cog"></i>Profile</a>
+                                    <a href="/w/User:@(user.nickname)"><i class="fas fa-user-gear"></i>Profile</a>
                                 </li>
                                 <li>
                                     <a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>Account</a>
                                 </li>
                                 @if(canAccessAdmin) {
                                     <li>
-                                        <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
+                                        <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>Admin</a>
                                     </li>
                                 }
                                 <li>
-                                    <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
+                                    <a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>Logout</a>
                                 </li>
                             </ul>
                         </li>
                     }
                 } else {
                     <li>
-                        <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a>
+                        <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>Login</a>
                     </li>
                 }
             </ul>
@@ -134,15 +134,15 @@
                 <li class="menuSplitter" aria-hidden="true"></li>
                 @if(currentUserOpt) {
                     @currentUserOpt.map { user =>
-                        <li><a href="/w/User:@(user.nickname)">@currentUserProfileImageUrl.map { imageUrl => <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/> }.getOrElse { <i class="fas fa-user-cog"></i> }@(user.nickname)</a></li>
+                        <li><a href="/w/User:@(user.nickname)">@currentUserProfileImageUrl.map { imageUrl => <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/> }.getOrElse { <i class="fas fa-user-gear"></i> }@(user.nickname)</a></li>
                         <li><a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>Account</a></li>
                         @if(canAccessAdmin) {
-                            <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a></li>
+                            <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>Admin</a></li>
                         }
-                        <li><a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
+                        <li><a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>Logout</a></li>
                     }
                 } else {
-                    <li><a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-sign-in-alt"></i>Login</a></li>
+                    <li><a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>Login</a></li>
                 }
                 @if(wikiContextOpt.isDefined) {
                     <li class="menuSplitter" aria-hidden="true"></li>
@@ -213,10 +213,10 @@
             const widthStorageKey = 'ahawiki-limit-width';
             const $widthToggle = $nav.find('.widthToggle');
             const widthSteps = [
-                { label: 'Wide', icon: 'fa-arrows-alt-h',      bodyClass: null,         maxWidth: Infinity },
-                { label: '1600', icon: 'fa-compress-alt',      bodyClass: 'width-1600', maxWidth: 1600 },
-                { label: '1280', icon: 'fa-compress-alt',      bodyClass: 'width-1280', maxWidth: 1280 },
-                { label: '960',  icon: 'fa-compress-alt',      bodyClass: 'width-960',  maxWidth: 960 },
+                { label: 'Wide', icon: 'fa-arrows-left-right',      bodyClass: null,         maxWidth: Infinity },
+                { label: '1600', icon: 'fa-compress',      bodyClass: 'width-1600', maxWidth: 1600 },
+                { label: '1280', icon: 'fa-compress',      bodyClass: 'width-1280', maxWidth: 1280 },
+                { label: '960',  icon: 'fa-compress',      bodyClass: 'width-960',  maxWidth: 960 },
             ];
             const widthBodyClasses = ['width-1600', 'width-1280', 'width-960'];
             let currentWidthStep = 0;

@@ -449,6 +449,12 @@ nav.topNavbar .themePickerInline .themeOption {
   height: 32px;
   padding: 0;
 }
+nav.topNavbar .themePickerInline .themeToggle i.fa-sun {
+  color: #f59e0b;
+}
+nav.topNavbar .themePickerInline .themeToggle i.fa-moon {
+  color: #8cb4ff;
+}
 nav.topNavbar .themePickerInline .themeOptionLabel {
   display: none;
 }
