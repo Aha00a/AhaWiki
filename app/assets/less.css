@@ -433,19 +433,24 @@ nav.topNavbar .actionAuth .authSubmenu a {
 nav.topNavbar .actionAuth .authMenu.open .authSubmenu {
   display: block;
 }
-nav.topNavbar .themeMenu {
-  border-top: 1px solid var(--color-border-subtle);
-  margin-top: 4px;
-  padding-top: 6px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  margin-bottom: 4px;
-  padding-bottom: 6px;
+nav.topNavbar .actionNavigateMenu {
+  margin-left: auto;
 }
-nav.topNavbar .themeIconGroup {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  padding: 0 6px;
+nav.topNavbar .themePickerInline {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+nav.topNavbar .themePickerInline .themeOption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+nav.topNavbar .themePickerInline .themeOptionLabel {
+  display: none;
 }
 nav.topNavbar .themeOption {
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
@@ -497,6 +502,9 @@ nav.topNavbar .themeOption.themeAhaWikiDark i {
   nav.topNavbar .groupMenu {
     display: none;
   }
+  nav.topNavbar .themePickerInline {
+    margin-left: 0;
+  }
   nav.topNavbar .actionAuth {
     margin-left: 0;
   }
@@ -527,12 +535,6 @@ nav.topNavbar .themeOption.themeAhaWikiDark i {
     margin: 4px 0;
     border-top: 1px solid var(--color-border-subtle);
     pointer-events: none;
-  }
-  nav.topNavbar .mobileFlatMenu .themeMenu {
-    width: 100%;
-  }
-  nav.topNavbar .mobileFlatMenu .themeIconGroup {
-    padding: 0;
   }
   nav.topNavbar.menuOpen .mobileFlatMenu {
     display: flex;
@@ -925,3 +927,4 @@ kbd.MacroKbd {
     display: none !important;
   }
 }
+/*# sourceMappingURL=less.css.map */

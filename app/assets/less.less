@@ -382,20 +382,25 @@ nav.topNavbar {
 		}
 	}
 
-	.themeMenu {
-		border-top: 1px solid var(--color-border-subtle);
-		margin-top: 4px;
-		padding-top: 6px;
-		border-bottom: 1px solid var(--color-border-subtle);
-		margin-bottom: 4px;
-		padding-bottom: 6px;
+	.actionNavigateMenu {
+		margin-left: auto;
 	}
 
-	.themeIconGroup {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 6px;
-		padding: 0 6px;
+	.themePickerInline {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+
+		.themeOption {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 32px;
+			height: 32px;
+			padding: 0;
+		}
+
+		.themeOptionLabel { display: none; }
 	}
 
 	.themeOption {
@@ -437,6 +442,7 @@ nav.topNavbar {
 		> .wrap { padding: 10px 12px; }
 		.navDrawerToggle { display: inline-flex; margin-left: auto; }
 		.groupMenu { display: none; }
+		.themePickerInline { margin-left: 0; }
 		.actionAuth { margin-left: 0; }
 		.mobileFlatMenu {
 			display: none;
@@ -462,8 +468,6 @@ nav.topNavbar {
 				border-top: 1px solid var(--color-border-subtle);
 				pointer-events: none;
 			}
-			.themeMenu { width: 100%; }
-			.themeIconGroup { padding: 0; }
 		}
 		&.menuOpen .mobileFlatMenu { display: flex; }
 	}

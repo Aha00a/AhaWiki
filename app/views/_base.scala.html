@@ -21,17 +21,17 @@
         <span class="themeOptionLabel">@shortLabel</span>
     </button>
 }
-@themePicker = {
-    <li class="themeMenu">
-        <div class="themeIconGroup" role="group" aria-label="Theme">
-            @themeOption("ahawiki-light", "themeAhaWikiLight", "AhaWiki Light", "fa-sun", "Light")
-            @themeOption("ahawiki-dark", "themeAhaWikiDark", "AhaWiki Dark", "fa-moon", "Dark")
-            <button type="button" class="themeOption widthToggle" aria-label="Limit content width" title="Limit content width" aria-pressed="false">
-                <i class="fas fa-arrows-left-right"></i>
-                <span class="themeOptionLabel">Wide</span>
-            </button>
-        </div>
-    </li>
+@themePickerInline = {
+    <div class="themePickerInline" role="group" aria-label="Theme">
+        <button type="button" class="themeOption themeToggle" aria-label="Toggle theme" title="Toggle theme" aria-pressed="false">
+            <i class="fas fa-sun"></i>
+            <span class="themeOptionLabel">Theme</span>
+        </button>
+        <button type="button" class="themeOption widthToggle" aria-label="Limit content width" title="Limit content width" aria-pressed="false">
+            <i class="fas fa-arrows-alt-h"></i>
+            <span class="themeOptionLabel">Wide</span>
+        </button>
+    </div>
 }
 @isAdmin = @{ logics.AdminLogic.isAdmin(contextSite.requestWrapper) }
 @canAccessAdmin = @{ isAdmin || logics.AdminLogic.isSiteAdmin(contextSite.site.seq, contextSite.requestWrapper)(contextSite.database) }
@@ -89,6 +89,7 @@
                 </ul>
                 </div>
             }
+            @themePickerInline
             <ul class="actionAuth">
                 @if(currentUserOpt) {
                     @currentUserOpt.map { user =>
@@ -112,7 +113,6 @@
                                         <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a>
                                     </li>
                                 }
-                                @themePicker
                                 <li>
                                     <a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a>
                                 </li>
@@ -139,7 +139,6 @@
                         @if(canAccessAdmin) {
                             <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-tools"></i>Admin</a></li>
                         }
-                        @themePicker
                         <li><a href="@(routes.Auth.logout)"><i class="fas fa-sign-out-alt"></i>Logout</a></li>
                     }
                 } else {
@@ -193,28 +192,28 @@
                 themeNames.forEach(function (name) {
                     document.documentElement.classList.toggle('theme-' + name, name === normalizedTheme);
                 });
-                $nav.find('[data-theme-option]').each(function () {
-                    const active = $(this).data('theme-option') === normalizedTheme;
-                    $(this)
-                        .toggleClass('active', active)
-                        .attr('aria-pressed', active ? 'true' : 'false');
+                const isDark = normalizedTheme === 'ahawiki-dark';
+                $nav.find('.themeToggle').each(function () {
+                    $(this).find('i').attr('class', 'fas ' + (isDark ? 'fa-moon' : 'fa-sun'));
+                    $(this).toggleClass('active', isDark).attr('aria-pressed', isDark ? 'true' : 'false');
                 });
                 $(document).trigger('ahawiki:themeChanged', [normalizedTheme]);
             }
 
             applyTheme(storedTheme());
 
-            $nav.find('[data-theme-option]').on('click', function (event) {
+            $nav.find('.themeToggle').on('click', function (event) {
                 event.stopPropagation();
-                const theme = normalizeTheme($(this).data('theme-option'));
-                saveTheme(theme);
-                applyTheme(theme);
+                const current = normalizeTheme(storedTheme());
+                const next = current === 'ahawiki-light' ? 'ahawiki-dark' : 'ahawiki-light';
+                saveTheme(next);
+                applyTheme(next);
             });
 
             const widthStorageKey = 'ahawiki-limit-width';
             const $widthToggle = $nav.find('.widthToggle');
             const widthSteps = [
-                { label: 'Wide', icon: 'fa-arrows-left-right', bodyClass: null,         maxWidth: Infinity },
+                { label: 'Wide', icon: 'fa-arrows-alt-h',      bodyClass: null,         maxWidth: Infinity },
                 { label: '1600', icon: 'fa-compress-alt',      bodyClass: 'width-1600', maxWidth: 1600 },
                 { label: '1280', icon: 'fa-compress-alt',      bodyClass: 'width-1280', maxWidth: 1280 },
                 { label: '960',  icon: 'fa-compress-alt',      bodyClass: 'width-960',  maxWidth: 960 },
