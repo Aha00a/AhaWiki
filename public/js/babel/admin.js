@@ -1316,43 +1316,90 @@ import React21, { useEffect as useEffect15 } from "react";
 import { Badge as Badge16, Button as Button12, Card as Card10, Group as Group17, Table as Table4, Text as Text17, Title as Title11 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useS3Data.js
-import { useCallback as useCallback12, useState as useState23 } from "react";
+import { useCallback as useCallback12, useRef, useState as useState23 } from "react";
 function useS3Data() {
   const [loading, setLoading] = useState23(false);
   const [error, setError] = useState23("");
-  const [s3Items, setS3Items] = useState23([]);
+  const [itemsByPrefix, setItemsByPrefix] = useState23({});
   const [selectedS3Keys, setSelectedS3Keys] = useState23([]);
   const [deletingS3, setDeletingS3] = useState23(false);
   const [expandedS3Nodes, setExpandedS3Nodes] = useState23({});
-  const loadS3Objects = useCallback12(async () => {
-    setLoading(true);
-    setError("");
+  const [loadingPrefixes, setLoadingPrefixes] = useState23(/* @__PURE__ */ new Set());
+  const [expandingAll, setExpandingAll] = useState23(false);
+  const loadedRef = useRef(/* @__PURE__ */ new Set());
+  const loadingRef = useRef(/* @__PURE__ */ new Set());
+  const itemsByPrefixRef = useRef({});
+  const loadPrefix = useCallback12(async (prefix) => {
+    if (loadedRef.current.has(prefix) || loadingRef.current.has(prefix)) return;
+    loadingRef.current.add(prefix);
+    setLoadingPrefixes((prev) => {
+      const next = new Set(prev);
+      next.add(prefix);
+      return next;
+    });
     try {
-      const params = new URLSearchParams({ prefix: "", maxKeys: "5000", recursive: "true" });
+      const apiPrefix = prefix ? prefix + "/" : "";
+      const params = new URLSearchParams({ prefix: apiPrefix, maxKeys: "1000", recursive: "false" });
       const data = await fetchJson(`/api/Admin/S3Objects?${params.toString()}`);
-      setS3Items(Array.isArray(data?.items) ? data.items : []);
-      setSelectedS3Keys([]);
-      setExpandedS3Nodes({ "__root__": true });
+      const items = Array.isArray(data?.items) ? data.items : [];
+      loadedRef.current.add(prefix);
+      itemsByPrefixRef.current = { ...itemsByPrefixRef.current, [prefix]: items };
+      setItemsByPrefix({ ...itemsByPrefixRef.current });
     } catch (err) {
       logError("s3:load:error", err);
       setError(`S3 \uC870\uD68C \uC2E4\uD328: ${err.message}`);
     } finally {
-      setLoading(false);
+      loadingRef.current.delete(prefix);
+      setLoadingPrefixes((prev) => {
+        const next = new Set(prev);
+        next.delete(prefix);
+        return next;
+      });
     }
   }, []);
-  const toggleS3Node = useCallback12((key) => {
-    setExpandedS3Nodes((prev) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
-  const expandAllS3Nodes = useCallback12((items) => {
-    const next = { "__root__": true };
-    (Array.isArray(items) ? items : []).filter((item) => !item.isDirectory).forEach((item) => {
-      const parts = String(item.key || "").split("/").filter(Boolean);
-      for (let i = 1; i < parts.length; i += 1) {
-        next[parts.slice(0, i).join("/")] = true;
-      }
+  const loadS3Objects = useCallback12(async () => {
+    setLoading(true);
+    setError("");
+    loadedRef.current = /* @__PURE__ */ new Set();
+    loadingRef.current = /* @__PURE__ */ new Set();
+    itemsByPrefixRef.current = {};
+    setItemsByPrefix({});
+    setSelectedS3Keys([]);
+    setExpandedS3Nodes({});
+    setLoadingPrefixes(/* @__PURE__ */ new Set());
+    try {
+      await loadPrefix("");
+    } finally {
+      setLoading(false);
+    }
+  }, [loadPrefix]);
+  const toggleS3Node = useCallback12((path) => {
+    setExpandedS3Nodes((prev) => {
+      const expanding = !prev[path];
+      if (expanding) loadPrefix(path);
+      return { ...prev, [path]: expanding };
     });
-    setExpandedS3Nodes(next);
-  }, []);
+  }, [loadPrefix]);
+  const expandAllS3Nodes = useCallback12(async () => {
+    setExpandingAll(true);
+    try {
+      const queue = [];
+      const enqueue = (prefix) => {
+        (itemsByPrefixRef.current[prefix] || []).filter((item) => item.isDirectory).forEach((item) => queue.push(item.key.replace(/\/$/, "")));
+      };
+      enqueue("");
+      let i = 0;
+      while (i < queue.length) {
+        const path = queue[i];
+        setExpandedS3Nodes((prev) => ({ ...prev, [path]: true }));
+        await loadPrefix(path);
+        enqueue(path);
+        i++;
+      }
+    } finally {
+      setExpandingAll(false);
+    }
+  }, [loadPrefix]);
   const deleteS3Selected = useCallback12(async (keys) => {
     if (keys.length === 0) return;
     setDeletingS3(true);
@@ -1365,6 +1412,9 @@ function useS3Data() {
         body: JSON.stringify({ keys })
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      loadedRef.current = /* @__PURE__ */ new Set();
+      loadingRef.current = /* @__PURE__ */ new Set();
+      itemsByPrefixRef.current = {};
       await loadS3Objects();
     } catch (err) {
       logError("s3:delete:error", err);
@@ -1383,51 +1433,77 @@ function useS3Data() {
       setError(`\uB2E4\uC6B4\uB85C\uB4DC URL \uC0DD\uC131 \uC2E4\uD328: ${err.message}`);
     }
   }, []);
-  return { loading, error, s3Items, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object };
+  return { loading, error, itemsByPrefix, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadingPrefixes, expandingAll, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object };
 }
 
 // app/assets/js/admin/pages/S3BrowserPage.jsx
 function S3BrowserPage() {
-  const { loading, error, s3Items, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object } = useS3Data();
+  const { loading, error, itemsByPrefix, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadingPrefixes, expandingAll, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object } = useS3Data();
   useEffect15(() => {
     loadS3Objects();
   }, []);
-  const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
-  const root = { children: {} };
-  fileRows.forEach((item) => {
-    const parts = String(item.key || "").split("/").filter(Boolean);
-    if (parts.length === 0) return;
-    let node = root;
-    parts.forEach((part, index) => {
-      const currentPath = parts.slice(0, index + 1).join("/");
-      if (!node.children[part]) node.children[part] = { name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null };
-      if (index === parts.length - 1) {
-        node.children[part].isFile = true;
-        node.children[part].meta = item;
-      }
-      node = node.children[part];
-    });
-  });
-  const rows = [];
-  const visit = (node, depth = 0) => {
-    Object.values(node.children).sort((a, b) => {
-      if (a.isFile === b.isFile) return a.name.localeCompare(b.name);
-      return a.isFile ? 1 : -1;
-    }).forEach((child) => {
-      rows.push({ depth, node: child });
-      if (!child.isFile && expandedS3Nodes[child.path]) visit(child, depth + 1);
+  const computeLoadedSize = (prefix) => {
+    return (itemsByPrefix[prefix] || []).reduce((sum, item) => {
+      if (item.isDirectory) return sum + computeLoadedSize(item.key.replace(/\/$/, ""));
+      return sum + Number(item.size ?? 0);
+    }, 0);
+  };
+  const hasUnloadedSubdirs = (prefix) => {
+    return (itemsByPrefix[prefix] || []).some((item) => {
+      if (!item.isDirectory) return false;
+      const childPath = item.key.replace(/\/$/, "");
+      if (!(childPath in itemsByPrefix)) return true;
+      return hasUnloadedSubdirs(childPath);
     });
   };
-  visit(root, 0);
-  return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button12, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button12, { variant: "light", onClick: () => expandAllS3Nodes(s3Items), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button12, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length, onChange: (e) => {
-    setSelectedS3Keys(e.currentTarget.checked ? fileRows.map((item) => item.key) : []);
-  } })), /* @__PURE__ */ React21.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map(({ depth, node }) => {
-    const key = node.path;
-    const checked = selectedS3Keys.includes(key);
-    return /* @__PURE__ */ React21.createElement(Table4.Tr, { key }, /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", disabled: !node.isFile, checked, onChange: (e) => {
-      if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]);
-      else setSelectedS3Keys((prev) => prev.filter((k) => k !== key));
-    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px` } }, !node.isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", onClick: () => toggleS3Node(node.path) }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", null, node.name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right" } }, node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, node.isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "xs", variant: "light", onClick: () => downloadS3Object(key), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+  const buildRows = (prefix, depth) => {
+    const items = itemsByPrefix[prefix];
+    if (!items) return [];
+    const parentTotal = computeLoadedSize(prefix);
+    const rows2 = [];
+    [...items].sort((a, b) => {
+      if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
+      return a.key.localeCompare(b.key);
+    }).forEach((item) => {
+      const path = item.key.replace(/\/$/, "");
+      const name = path.split("/").pop();
+      const itemSize = item.isDirectory ? computeLoadedSize(path) : Number(item.size ?? 0);
+      const parentPercent = parentTotal > 0 ? itemSize / parentTotal * 100 : 0;
+      if (item.isDirectory) {
+        const isExpanded = !!expandedS3Nodes[path];
+        const isLoading = loadingPrefixes.has(path);
+        rows2.push({ depth, name, path, isFile: false, isDir: true, isExpanded, isLoading, itemSize, parentPercent, meta: null });
+        if (isExpanded) {
+          if (isLoading) {
+            rows2.push({ depth: depth + 1, name: null, path: path + "/__loading__", isLoadingRow: true });
+          } else {
+            rows2.push(...buildRows(path, depth + 1));
+          }
+        }
+      } else {
+        rows2.push({ depth, name, path, isFile: true, isDir: false, itemSize, parentPercent, meta: item });
+      }
+    });
+    return rows2;
+  };
+  const rows = buildRows("", 0);
+  const loadedFileRows = rows.filter((r) => r.isFile);
+  const rootTotal = computeLoadedSize("");
+  return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button12, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button12, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button12, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
+    setSelectedS3Keys(e.currentTarget.checked ? loadedFileRows.map((r) => r.path) : []);
+  } })), /* @__PURE__ */ React21.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map((row) => {
+    const { depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, parentPercent, meta } = row;
+    if (isLoadingRow) {
+      return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, { colSpan: 5 }, /* @__PURE__ */ React21.createElement("div", { style: { paddingLeft: `${depth * 22 + 28}px` } }, /* @__PURE__ */ React21.createElement("i", { className: "fas fa-spinner fa-spin", "aria-hidden": "true" }), " \uB85C\uB529 \uC911...")));
+    }
+    const checked = selectedS3Keys.includes(path);
+    const showSize = isFile || isDir && isExpanded;
+    const sizeIncomplete = isDir && isExpanded && hasUnloadedSubdirs(path);
+    const percent = rootTotal > 0 ? itemSize / rootTotal * 100 : 0;
+    return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", disabled: !isFile, checked, onChange: (e) => {
+      if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, path]);
+      else setSelectedS3Keys((prev) => prev.filter((k) => k !== path));
+    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0 } }, name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? formatDateTimeInClientTimezone(meta?.lastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "xs", variant: "light", onClick: () => downloadS3Object(path), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
   }))));
 }
 

@@ -17,6 +17,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
  1. [InterpreterMarkdown] - Markdown 문법
  1. [InterpreterMath] - MathJax 수식
  1. [InterpreterMermaid] - Mermaid 다이어그램
+ 1. [InterpreterPaper] - 인쇄용 A4 용지 문서
  1. [InterpreterQuote] - 인용문
  1. [InterpreterSchema] - schema.org 구조화 데이터
  1. [InterpreterTable] - TSV/CSV 표

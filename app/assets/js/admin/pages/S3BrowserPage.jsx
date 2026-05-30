@@ -4,31 +4,62 @@ import {useS3Data} from "../hooks/useS3Data.js";
 import {formatDateTimeInClientTimezone} from "../utils.js";
 
 export default function S3BrowserPage() {
-    const {loading, error, s3Items, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object} = useS3Data();
+    const {loading, error, itemsByPrefix, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadingPrefixes, expandingAll, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object} = useS3Data();
 
     useEffect(() => { loadS3Objects(); }, []);
 
-    const fileRows = Array.isArray(s3Items) ? s3Items.filter((item) => !item.isDirectory) : [];
-    const root = {children: {}};
-    fileRows.forEach((item) => {
-        const parts = String(item.key || "").split("/").filter(Boolean);
-        if (parts.length === 0) return;
-        let node = root;
-        parts.forEach((part, index) => {
-            const currentPath = parts.slice(0, index + 1).join("/");
-            if (!node.children[part]) node.children[part] = {name: part, path: currentPath, isFile: index === parts.length - 1, children: {}, meta: null};
-            if (index === parts.length - 1) { node.children[part].isFile = true; node.children[part].meta = item; }
-            node = node.children[part];
-        });
-    });
-    const rows = [];
-    const visit = (node, depth = 0) => {
-        Object.values(node.children).sort((a, b) => { if (a.isFile === b.isFile) return a.name.localeCompare(b.name); return a.isFile ? 1 : -1; }).forEach((child) => {
-            rows.push({depth, node: child});
-            if (!child.isFile && expandedS3Nodes[child.path]) visit(child, depth + 1);
+    const computeLoadedSize = (prefix) => {
+        return (itemsByPrefix[prefix] || []).reduce((sum, item) => {
+            if (item.isDirectory) return sum + computeLoadedSize(item.key.replace(/\/$/, ""));
+            return sum + Number(item.size ?? 0);
+        }, 0);
+    };
+
+    const hasUnloadedSubdirs = (prefix) => {
+        return (itemsByPrefix[prefix] || []).some(item => {
+            if (!item.isDirectory) return false;
+            const childPath = item.key.replace(/\/$/, "");
+            if (!(childPath in itemsByPrefix)) return true;
+            return hasUnloadedSubdirs(childPath);
         });
     };
-    visit(root, 0);
+
+    const buildRows = (prefix, depth) => {
+        const items = itemsByPrefix[prefix];
+        if (!items) return [];
+        const parentTotal = computeLoadedSize(prefix);
+        const rows = [];
+        [...items]
+            .sort((a, b) => {
+                if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
+                return a.key.localeCompare(b.key);
+            })
+            .forEach(item => {
+                const path = item.key.replace(/\/$/, "");
+                const name = path.split("/").pop();
+                const itemSize = item.isDirectory ? computeLoadedSize(path) : Number(item.size ?? 0);
+                const parentPercent = parentTotal > 0 ? itemSize / parentTotal * 100 : 0;
+                if (item.isDirectory) {
+                    const isExpanded = !!expandedS3Nodes[path];
+                    const isLoading = loadingPrefixes.has(path);
+                    rows.push({depth, name, path, isFile: false, isDir: true, isExpanded, isLoading, itemSize, parentPercent, meta: null});
+                    if (isExpanded) {
+                        if (isLoading) {
+                            rows.push({depth: depth + 1, name: null, path: path + "/__loading__", isLoadingRow: true});
+                        } else {
+                            rows.push(...buildRows(path, depth + 1));
+                        }
+                    }
+                } else {
+                    rows.push({depth, name, path, isFile: true, isDir: false, itemSize, parentPercent, meta: item});
+                }
+            });
+        return rows;
+    };
+
+    const rows = buildRows("", 0);
+    const loadedFileRows = rows.filter(r => r.isFile);
+    const rootTotal = computeLoadedSize("");
 
     return (
         <Card withBorder radius="md" padding="lg">
@@ -39,13 +70,13 @@ export default function S3BrowserPage() {
             {error ? <Text c="red" size="sm" mb="md">{error}</Text> : null}
             <Group align="flex-end" mb="md">
                 <Button loading={loading} onClick={() => loadS3Objects()} leftSection={<i className="fas fa-sync-alt" aria-hidden="true"/>}>새로고침</Button>
-                <Button variant="light" onClick={() => expandAllS3Nodes(s3Items)} leftSection={<i className="fas fa-angle-double-down" aria-hidden="true"/>}>모두 펼치기</Button>
+                <Button variant="light" loading={expandingAll} onClick={() => expandAllS3Nodes()} leftSection={<i className="fas fa-angle-double-down" aria-hidden="true"/>}>모두 펼치기</Button>
                 <Button color="red" variant="light" disabled={selectedS3Keys.length === 0} loading={deletingS3} onClick={() => deleteS3Selected(selectedS3Keys)} leftSection={<i className="fas fa-trash-alt" aria-hidden="true"/>}>선택 삭제 ({selectedS3Keys.length})</Button>
             </Group>
             <Table striped highlightOnHover withTableBorder withColumnBorders>
                 <Table.Thead>
                     <Table.Tr>
-                        <Table.Th><input type="checkbox" checked={selectedS3Keys.length > 0 && selectedS3Keys.length === fileRows.length} onChange={(e) => { setSelectedS3Keys(e.currentTarget.checked ? fileRows.map((item) => item.key) : []); }}/></Table.Th>
+                        <Table.Th><input type="checkbox" checked={loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length} onChange={(e) => { setSelectedS3Keys(e.currentTarget.checked ? loadedFileRows.map(r => r.path) : []); }}/></Table.Th>
                         <Table.Th>Key</Table.Th>
                         <Table.Th style={{textAlign: "right"}}>Size(bytes)</Table.Th>
                         <Table.Th style={{textAlign: "center"}}>Last Modified</Table.Th>
@@ -53,22 +84,38 @@ export default function S3BrowserPage() {
                     </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                    {rows.map(({depth, node}) => {
-                        const key = node.path;
-                        const checked = selectedS3Keys.includes(key);
+                    {rows.map((row) => {
+                        const {depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, parentPercent, meta} = row;
+                        if (isLoadingRow) {
+                            return (
+                                <Table.Tr key={path}>
+                                    <Table.Td colSpan={5}>
+                                        <div style={{paddingLeft: `${depth * 22 + 28}px`}}>
+                                            <i className="fas fa-spinner fa-spin" aria-hidden="true"/> 로딩 중...
+                                        </div>
+                                    </Table.Td>
+                                </Table.Tr>
+                            );
+                        }
+                        const checked = selectedS3Keys.includes(path);
+                        const showSize = isFile || (isDir && isExpanded);
+                        const sizeIncomplete = isDir && isExpanded && hasUnloadedSubdirs(path);
+                        const percent = rootTotal > 0 ? itemSize / rootTotal * 100 : 0;
                         return (
-                            <Table.Tr key={key}>
-                                <Table.Td><input type="checkbox" disabled={!node.isFile} checked={checked} onChange={(e) => { if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, key]); else setSelectedS3Keys((prev) => prev.filter((k) => k !== key)); }}/></Table.Td>
+                            <Table.Tr key={path}>
+                                <Table.Td><input type="checkbox" disabled={!isFile} checked={checked} onChange={(e) => { if (e.currentTarget.checked) setSelectedS3Keys(prev => [...prev, path]); else setSelectedS3Keys(prev => prev.filter(k => k !== path)); }}/></Table.Td>
                                 <Table.Td>
-                                    <div style={{display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`}}>
-                                        {!node.isFile ? <Button size="compact-xs" variant="subtle" onClick={() => toggleS3Node(node.path)}><i className={`fas ${expandedS3Nodes[node.path] ? "fa-chevron-down" : "fa-chevron-right"}`} aria-hidden="true"/></Button> : <span style={{display: "inline-block", width: 20}}/>}
-                                        <span><i className={`fas ${node.isFile ? "fa-file-alt" : "fa-folder"}`} aria-hidden="true"/></span>
-                                        <span>{node.name}</span>
+                                    <div style={{display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : undefined}} onClick={isDir ? () => toggleS3Node(path) : undefined}>
+                                        {isDir ? <Button size="compact-xs" variant="subtle" tabIndex={-1}><i className={`fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`} aria-hidden="true"/></Button> : <span style={{display: "inline-block", width: 20}}/>}
+                                        <span><i className={`fas ${isFile ? "fa-file-alt" : "fa-folder"}`} aria-hidden="true"/></span>
+                                        <span style={{flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : undefined}}>{name}</span>
                                     </div>
                                 </Table.Td>
-                                <Table.Td style={{textAlign: "right"}}>{node.isFile ? Number(node.meta?.size ?? 0).toLocaleString() : "-"}</Table.Td>
-                                <Table.Td style={{textAlign: "center"}}>{node.isFile ? formatDateTimeInClientTimezone(node.meta?.lastModified) : "-"}</Table.Td>
-                                <Table.Td style={{textAlign: "center"}}>{node.isFile ? <Button size="xs" variant="light" onClick={() => downloadS3Object(key)} leftSection={<i className="fas fa-download" aria-hidden="true"/>}>다운로드</Button> : "-"}</Table.Td>
+                                <Table.Td style={{textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...(showSize && parentPercent > 0 ? {background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)`} : {})}}>
+                                    {showSize ? Number(itemSize).toLocaleString() : "-"}
+                                </Table.Td>
+                                <Table.Td style={{textAlign: "center"}}>{isFile ? formatDateTimeInClientTimezone(meta?.lastModified) : "-"}</Table.Td>
+                                <Table.Td style={{textAlign: "center"}}>{isFile ? <Button size="xs" variant="light" onClick={() => downloadS3Object(path)} leftSection={<i className="fas fa-download" aria-hidden="true"/>}>다운로드</Button> : "-"}</Table.Td>
                             </Table.Tr>
                         );
                     })}

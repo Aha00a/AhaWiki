@@ -1,0 +1,87 @@
+= [Interpreter]Paper
+wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
+계약서·증명서 등 인쇄용 문서 작성에 사용합니다.
+
+== 기본 문법
+
+{{{
+[[[#!Paper cssClass docId
+내용
+]]]
+}}}
+
+ * Arguments
+  1. `cssClass` - optional. 루트 div에 추가할 CSS 클래스. 생략하면 `#!var class` 변수 값 사용.
+  1. `docId` - optional. 페이지 헤더 우측에 표시되는 문서 ID. 생략하면 `#!var docId` 변수 값 사용.
+
+== 다중 페이지
+
+본문 안에 `----` (대시 4개 이상, 해당 줄 단독)을 넣으면 페이지가 나뉩니다.
+
+{{{
+[[[#!Paper
+1페이지 내용
+
+----
+
+2페이지 내용
+]]]
+}}}
+
+각 페이지에는 헤더(문서 ID)·푸터(페이지 번호)가 자동으로 붙습니다.
+
+== 변수 시스템
+
+=== #!var 디렉티브
+
+{{{
+[[[#!Paper
+#!var docId  A-EC-20250101-01
+#!var 갑     홍길동
+#!var 을     (주)아하라이즈
+
+{{갑}}이 {{을}}에게 위탁합니다.
+]]]
+}}}
+
+ * `#!var key value` 형식 (첫 번째 공백이 key / value 구분자)
+ * `{{key}}` 로 치환
+ * `class`, `docId` 키는 인수와 동일하게 동작
+
+== Landscape (가로) 모드
+
+`class` 에 `landscape` 를 포함하면 용지 방향이 가로로 전환됩니다.
+
+{{{
+[[[#!Paper
+#!var class  landscape
+내용
+]]]
+}}}
+
+|| 구분 || Portrait (기본) || Landscape ||
+|| 페이지 너비 || 180mm || 267mm ||
+|| 페이지 높이 || 267mm || 180mm ||
+
+인쇄 시 브라우저에 `@page { size: A4 landscape }` 가 자동 적용됩니다.
+
+== CSS 클래스 조합
+
+공백으로 구분하여 여러 클래스를 동시에 지정할 수 있습니다.
+
+{{{
+[[[#!Paper
+#!var class  contract landscape
+내용
+]]]
+}}}
+
+== 인쇄 시 동작
+
+ * TOC 숨김
+ * See Also 섹션 미렌더링 (서버에서 생략)
+ * 마지막 페이지를 제외한 모든 페이지에서 자동 페이지 나누기
+
+== Related Pages
+ * [Interpreter]
+ * ["Interpreter Examples"]
