@@ -2105,6 +2105,27 @@
 .AhaWiki .paperContent .page .toc {
   display: none;
 }
+.AhaWiki .paperContent .page .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .wikiTableSimple {
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.AhaWiki .paperContent .page .InterpreterRenderMetaWrapper.Table {
+  margin-left: 0;
+}
+.AhaWiki .paperContent .page .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent {
+  display: block;
+  border: none;
+  border-radius: 0;
+}
+.AhaWiki .paperContent.landscape .page {
+  width: 267mm;
+  height: 180mm;
+}
+.AhaWiki .paperContent.landscape .page .pageFooter {
+  width: 267mm;
+}
 .AhaWiki .paperContent + .paperAdditionalSection {
   background-color: var(--color-surface);
   padding: 10mm;
@@ -2223,6 +2244,15 @@
   .AhaWiki .InterpreterRenderFoldToggle,
   .AhaWiki button.tocToggle {
     display: none !important;
+  }
+}
+@media print {
+  .AhaWiki .tablesorter .tablesorter-header {
+    padding-right: 0;
+    cursor: default;
+  }
+  .AhaWiki .tablesorter .tablesorter-header::after {
+    display: none;
   }
 }
 .AhaWiki .percentTotal {

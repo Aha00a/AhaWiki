@@ -1146,18 +1146,25 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 return Math.max(min, Math.min(value, max));
             }
 
+            function getPartialEditLineOffset() {
+                const lineStartVal = $('input[name=lineStart]').val();
+                const lineStart = lineStartVal ? parseInt(lineStartVal, 10) : NaN;
+                return (Number.isFinite(lineStart) && lineStart > 1) ? lineStart - 1 : 0;
+            }
+
             function getCurrentEditorLine() {
+                const offset = getPartialEditLineOffset();
                 const cm = getEditor();
                 if (cm) {
                     const cursor = cm.getCursor();
-                    return (cursor ? cursor.line : 0) + 1;
+                    return (cursor ? cursor.line : 0) + 1 + offset;
                 }
                 const textarea = $textarea.get(0);
                 if (!textarea)
-                    return 1;
+                    return 1 + offset;
                 const position = textarea.selectionStart || 0;
                 const textUntilCursor = textarea.value.slice(0, position);
-                return textUntilCursor.split('\n').length;
+                return textUntilCursor.split('\n').length + offset;
             }
 
             function scrollPreviewToCurrentLine() {
@@ -1195,8 +1202,10 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (!target)
                     return;
 
-                const targetTop = target.offsetTop;
-                const targetHeight = target.offsetHeight || 0;
+                const targetRect = target.getBoundingClientRect();
+                const paneRect = previewPane.getBoundingClientRect();
+                const targetTop = targetRect.top - paneRect.top + previewPane.scrollTop;
+                const targetHeight = targetRect.height || 0;
                 const paneHeight = previewPane.clientHeight || 0;
                 const nextScrollTop = Math.max(0, targetTop - ((paneHeight - targetHeight) / 2));
 

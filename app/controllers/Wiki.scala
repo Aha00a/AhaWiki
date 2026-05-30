@@ -971,7 +971,8 @@ controllerComponents: ControllerComponents,
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
       val isPartialEditPreview = partialLineStart.isDefined && partialLineEnd.isDefined
-      val additionalInfo = if (isPartialEditPreview) "" else getAhaMarkAdditionalInfo(name)
+      val hasPaperContent = body.contains("#!Paper")
+      val additionalInfo = if (isPartialEditPreview || hasPaperContent) "" else getAhaMarkAdditionalInfo(name)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")
     }
   }

@@ -40,6 +40,14 @@ location.params = function(params, preventReload) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (document.querySelector('.paperContent.landscape')) {
+        var landscapeStyle = document.createElement('style');
+        landscapeStyle.textContent = '@page { size: A4 landscape; }';
+        document.head.appendChild(landscapeStyle);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
     var wrappedTableAncestorSelector = [
         '.wikiTableSimpleScroll',
         '.macro-recent-changes-table-wrap',

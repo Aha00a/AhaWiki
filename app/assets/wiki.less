@@ -923,7 +923,36 @@
 				display: none;
 			}
 
+			.wikiTableSimpleScroll,
+			.wikiTableSimple {
+				box-shadow: none;
+				backdrop-filter: none;
+				-webkit-backdrop-filter: none;
+			}
 
+			.InterpreterRenderMetaWrapper.Table {
+				margin-left: 0;
+				.InterpreterRenderContent {
+					display: block;
+					border: none;
+					border-radius: 0;
+				}
+			}
+
+		}
+
+		&.landscape .page {
+			@a4LandscapeWidth: 297mm;
+			@a4LandscapeHeight: 210mm;
+			@a4LandscapePageWidth: @a4LandscapeWidth - 15mm - 15mm;
+			@a4LandscapePageHeight: @a4LandscapeHeight - 15mm - 15mm;
+
+			width: @a4LandscapePageWidth;
+			height: @a4LandscapePageHeight;
+
+			.pageFooter {
+				width: @a4LandscapePageWidth;
+			}
 		}
 
 		& + .paperAdditionalSection {
@@ -1061,6 +1090,16 @@
 	button.tocToggle {
 		@media print {
 			display: none !important;
+		}
+	}
+
+	@media print {
+		.tablesorter .tablesorter-header {
+			padding-right: 0;
+			cursor: default;
+			&::after {
+				display: none;
+			}
 		}
 	}
 
