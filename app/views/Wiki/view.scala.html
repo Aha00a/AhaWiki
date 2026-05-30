@@ -522,7 +522,7 @@
                     removePreview("external:" + href);
                 });
 
-                $('.wikiContent').on('mouseenter', 'a[href]:not([target=_blank])', function () {
+                $('.wikiContent').on('mouseenter', 'a[href]:not([target=_blank]):not(.InterpreterRenderEditLink)', function () {
                     var link = $(this);
                     if (link.hasClass('missing')) {
                         return;
@@ -538,7 +538,7 @@
                     showPreview(link, key, {
                         url: "/api/pagePreview/" + encodeURIComponent(pageName)
                     });
-                }).on('mouseleave', 'a[href]:not([target=_blank])', function () {
+                }).on('mouseleave', 'a[href]:not([target=_blank]):not(.InterpreterRenderEditLink)', function () {
                     var link = $(this);
                     var key = link.data('previewKey');
                     if (key) {
