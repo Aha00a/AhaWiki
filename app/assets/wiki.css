@@ -1544,16 +1544,23 @@
 .AhaWiki .paperContent {
   padding: 1mm;
 }
+@media screen {
+  .AhaWiki .paperContent {
+    background-color: var(--color-surface-alt);
+  }
+}
 .AhaWiki .paperContent .page {
   width: 180mm;
   height: 267mm;
   page-break-after: always;
-  font-size: 12px;
+  break-after: always;
+  font-size: 13px;
   position: relative;
   padding: 15mm 15mm 15mm 15mm;
 }
 .AhaWiki .paperContent .page:last-of-type {
-  page-break-after: auto;
+  page-break-after: avoid;
+  break-after: avoid;
 }
 @media screen {
   .AhaWiki .paperContent .page {
@@ -2086,8 +2093,26 @@
     padding-left: 0;
   }
 }
+.AhaWiki .paperContent .page .pageContent h1,
+.AhaWiki .paperContent .page .pageContent h2,
+.AhaWiki .paperContent .page .pageContent h3,
+.AhaWiki .paperContent .page .pageContent h4,
+.AhaWiki .paperContent .page .pageContent h5,
+.AhaWiki .paperContent .page .pageContent h6 {
+  margin-top: 0;
+  border-bottom: none;
+}
 .AhaWiki .paperContent .page .toc {
   display: none;
+}
+.AhaWiki .paperContent + .paperAdditionalSection {
+  background-color: var(--color-surface);
+  padding: 10mm;
+}
+@media print {
+  .AhaWiki .paperContent + .paperAdditionalSection {
+    display: none;
+  }
 }
 .AhaWiki .MacroCalendar.wikiTableSimple {
   display: inline-table;
@@ -2287,7 +2312,7 @@
 .AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > p,
 .AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ol,
 .AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ul {
-  margin-left: 50mm;
+  margin-left: 60mm;
   line-height: 1.6;
 }
 .AhaWiki .wikiContent .contract .headingNumber {

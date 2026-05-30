@@ -858,7 +858,9 @@
 
 	.paperContent {
 		padding: 1mm;
-
+		@media screen {
+			background-color: var(--color-surface-alt);
+		}
 
 		.page {
 
@@ -872,10 +874,12 @@
 			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
 			height: @a4Height - @a4PaddingTop - @a4PaddingBottom;
 			page-break-after: always;
+			break-after: always;
 			&:last-of-type {
-				page-break-after: auto;
+				page-break-after: avoid;
+				break-after: avoid;
 			}
-			font-size: 12px;
+			font-size: 13px;
 			position: relative;
 			@media screen {
 				margin: 10mm auto;
@@ -910,12 +914,24 @@
 			.pageContent {
 				.commonAhaWiki;
 				text-align: justify;
+				h1, h2, h3, h4, h5, h6 {
+					margin-top: 0;
+					border-bottom: none;
+				}
 			}
 			.toc {
 				display: none;
 			}
 
 
+		}
+
+		& + .paperAdditionalSection {
+			background-color: var(--color-surface);
+			padding: 10mm;
+			@media print {
+				display: none;
+			}
 		}
 	}
 
@@ -1130,7 +1146,7 @@
 			}
 
 			// 조항 제목 h3~h6 (====== 제N조 제목):
-			// 본문 크기 + 굵게, 좌측 float 50mm
+			// 본문 크기 + 굵게, 좌측 float 50mm (본문 margin-left 60mm → 10mm 여백)
 			h3, h4, h5, h6 {
 				float: left;
 				clear: both;
@@ -1144,11 +1160,11 @@
 				word-break: keep-all;
 			}
 
-			// 조항 내용: HeadingWrapper 직속 자식만 50mm 들여쓰기
+			// 조항 내용: HeadingWrapper 직속 자식만 60mm 들여쓰기
 			div[class^="HeadingWrapper"] > p,
 			div[class^="HeadingWrapper"] > ol,
 			div[class^="HeadingWrapper"] > ul {
-				margin-left: 50mm;
+				margin-left: 60mm;
 				line-height: 1.6;
 			}
 

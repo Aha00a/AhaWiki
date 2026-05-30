@@ -52,6 +52,7 @@ object Interpreters extends TraitInterpreter {
         .filterNot(_.startsWith("read"))
         .filterNot(_.startsWith("write"))
         .filterNot(_.startsWith("redirect"))
+        .filterNot(d => d == "var" || d.startsWith("var ") || d.startsWith("var\t"))
         .flatMap(_.split("""\s+"""))
         .find(_.nonEmpty)
     }

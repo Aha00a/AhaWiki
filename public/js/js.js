@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var foldToggle = null;
-        if (heading) {
+        if (heading && !wrapper.closest('.paperContent')) {
             foldToggle = wrapper.querySelector('.InterpreterRenderFoldToggle');
             if (!foldToggle) {
                 foldToggle = document.createElement('button');

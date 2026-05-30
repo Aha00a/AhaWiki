@@ -24,7 +24,12 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   abstract class Handler[T](val pageContent: PageContent) {
-    val extractConvertInjectVariable = new ExtractConvertInjectVariable()
+    val extractConvertInjectVariable = {
+      val eciv = new ExtractConvertInjectVariable()
+      // #!var 디렉티브 변수를 먼저 시드 → [[[#!Variable]]] 블록이 나중에 덮어쓸 수 있음
+      eciv.variables ++= pageContent.variables
+      eciv
+    }
     val extractConvertInjectInterpreter = new ExtractConvertInjectInterpreter()
     val extractConvertInjectMacro = new ExtractConvertInjectMacro()
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()

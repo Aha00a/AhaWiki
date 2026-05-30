@@ -564,9 +564,14 @@ controllerComponents: ControllerComponents,
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
           Ok(pageContent.interpreter match {
-              case None | Some("Wiki") | Some("Paper") =>
+              case None | Some("Wiki") =>
                 val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
                 views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
+              case Some("Paper") =>
+                // additionalInfo(See Also 등)를 Paper 바깥에 독립 렌더링, 흰색 배경 보장
+                val contentInterpreted = Interpreters.toHtmlString(page.content) +
+                  s"""<div class="paperAdditionalSection">${Interpreters.toHtmlString(additionalInfo)}</div>"""
+                views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
               case _ =>
                 val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
                 views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)

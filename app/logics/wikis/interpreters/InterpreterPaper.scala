@@ -1,5 +1,6 @@
 package logics.wikis.interpreters
 
+import logics.wikis.ExtractConvertInjectVariable
 import models.{PageContent, ContextWikiPage}
 
 object InterpreterPaper extends TraitInterpreter {
@@ -9,14 +10,28 @@ object InterpreterPaper extends TraitInterpreter {
   //noinspection ZeroIndexToHead
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
-    s"""<div class="paperContent ${pageContent.argument(0)}">""" +
-      pageContent.content.split("""(?m)^-{4,}$""").map(InterpreterWiki.toHtmlString)
+
+    // Step 1: #!var 디렉티브 변수 시드 + [[[#!Variable]]] 블록 추출·파싱
+    //         (split 전에 처리해야 모든 페이지에서 {{key}} 치환이 동작함)
+    val eciv = new ExtractConvertInjectVariable()
+    eciv.variables ++= pageContent.variables          // #!var key=value
+    val bodyExtracted = eciv.extract(pageContent.content)  // [[[#!Variable]]] 블록도 추가
+    val bodyResolved  = eciv.applyVariables(bodyExtracted)
+
+    // Step 2: 인수 우선, 없으면 변수에서 fallback
+    val cssClass = Option(pageContent.argument(0)).filter(_.nonEmpty)
+      .getOrElse(eciv.variables.getOrElse("class", ""))
+    val docId = Option(pageContent.argument(1)).filter(_.nonEmpty)
+      .getOrElse(eciv.variables.getOrElse("docId", ""))
+
+    s"""<div class="paperContent $cssClass">""" +
+      bodyResolved.split("""(?m)^-{4,}$""").map(InterpreterWiki.toHtmlString)
         .zipWithIndex
         .map { case (s, index) =>
           s"""<div class="page">
-             |  <!-- ${index} -->
+             |  <!-- $index -->
              |  <div class="pageHeader">
-             |    <div class="documentId">${pageContent.argument(1)}</div>
+             |    <div class="documentId">$docId</div>
              |  </div>
              |  <div class="pageFooter">
              |    <div class="pageNo">${index + 1}</div>
@@ -26,7 +41,7 @@ object InterpreterPaper extends TraitInterpreter {
              |      $s
              |    </div>
              |  </div>
-             |  <!-- ${index} -->
+             |  <!-- $index -->
              |</div>""".stripMargin
         }.mkString("\n") +
       """</div>"""
@@ -34,6 +49,10 @@ object InterpreterPaper extends TraitInterpreter {
 
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
-    InterpreterWiki.toSeqLink(pageContent.content)
+    val eciv = new ExtractConvertInjectVariable()
+    eciv.variables ++= pageContent.variables
+    val bodyExtracted = eciv.extract(pageContent.content)
+    val bodyResolved  = eciv.applyVariables(bodyExtracted)
+    InterpreterWiki.toSeqLink(bodyResolved)
   }
 }
