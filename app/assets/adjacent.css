@@ -255,6 +255,9 @@
   column-gap: 14px;
   align-items: start;
 }
+.AhaWiki .crawlerPreview > div:not(.circle).noPreviewImage {
+  grid-template-columns: minmax(0, 1fr);
+}
 .AhaWiki .crawlerPreview img.preview {
   grid-row: 1 / span 2;
   width: 112px;
@@ -280,3 +283,4 @@
   line-height: 1.55;
   color: var(--color-muted);
 }
+/*# sourceMappingURL=adjacent.css.map */

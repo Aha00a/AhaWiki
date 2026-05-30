@@ -449,12 +449,16 @@
 
                 function renderPreview($link, div, data) {
                     data = data || {};
-                    div.html('').append(
-                        $('<div></div>')
-                            .append($('<img class="preview"/>').attr('src', data.image || fallbackImageUrl))
-                            .append($('<h5/>').text(data.title || ""))
-                            .append($('<p/>').text(data.description || ""))
-                    );
+                    var $inner = $('<div></div>');
+                    if (data.image) {
+                        $inner.append($('<img class="preview"/>').attr('src', data.image));
+                    } else {
+                        $inner.addClass('noPreviewImage');
+                    }
+                    $inner
+                        .append($('<h5/>').text(data.title || ""))
+                        .append($('<p/>').text(data.description || ""));
+                    div.html('').append($inner);
                     positionPreview($link, div);
                 }
 
