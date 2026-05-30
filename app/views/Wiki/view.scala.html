@@ -379,6 +379,7 @@
                 var fallbackImageUrl = "/public/img/attachmentFallback.svg";
                 var previewMargin = 12;
                 var previewGap = 8;
+                var hoverDelay = 200;
 
                 function positionPreview($link, div) {
                     var linkOffset = $link.offset();
@@ -442,7 +443,7 @@
                         .appendTo($("body"));
 
                     positionPreview($link, div);
-                    $(document).data(key, div);
+                    $link.data('activePreviewDiv', div);
                     return div;
                 }
 
@@ -457,11 +458,11 @@
                     positionPreview($link, div);
                 }
 
-                function removePreview(key) {
-                    var div = $(document).data(key);
+                function removePreview($link) {
+                    var div = $link.data('activePreviewDiv');
                     if (div) {
                         div.remove();
-                        $(document).removeData(key);
+                        $link.removeData('activePreviewDiv');
                     }
                 }
 
@@ -475,14 +476,14 @@
                     $.ajax($.extend({}, ajaxOptions, {
                         success: function(data) {
                             previewCache[key] = data;
-                            var currentDiv = $(document).data(key);
+                            var currentDiv = $link.data('activePreviewDiv');
                             if (currentDiv) {
                                 renderPreview($link, currentDiv, data);
                             }
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             console.log(jqXHR, textStatus, errorThrown);
-                            removePreview(key);
+                            removePreview($link);
                         }
                     }));
                 }
@@ -512,14 +513,20 @@
                 }
 
                 $('a[target=_blank]').hover(function () {
-                    var href = $(this).attr('href');
-                    showPreview($(this), "external:" + href, {
-                        url: "/api/crawler",
-                        data: { q: href }
-                    });
+                    var $link = $(this);
+                    var href = $link.attr('href');
+                    var timer = setTimeout(function() {
+                        showPreview($link, "external:" + href, {
+                            url: "/api/crawler",
+                            data: { q: href }
+                        });
+                    }, hoverDelay);
+                    $link.data('previewTimer', timer);
                 }, function () {
-                    var href = $(this).attr('href');
-                    removePreview("external:" + href);
+                    var $link = $(this);
+                    clearTimeout($link.data('previewTimer'));
+                    $link.removeData('previewTimer');
+                    removePreview($link);
                 });
 
                 $('.wikiContent').on('mouseenter', 'a[href]:not([target=_blank]):not(.InterpreterRenderEditLink)', function () {
@@ -534,17 +541,17 @@
                     }
 
                     var key = "internal:" + pageName;
-                    link.data('previewKey', key);
-                    showPreview(link, key, {
-                        url: "/api/pagePreview/" + encodeURIComponent(pageName)
-                    });
+                    var timer = setTimeout(function() {
+                        showPreview(link, key, {
+                            url: "/api/pagePreview/" + encodeURIComponent(pageName)
+                        });
+                    }, hoverDelay);
+                    link.data('previewTimer', timer);
                 }).on('mouseleave', 'a[href]:not([target=_blank]):not(.InterpreterRenderEditLink)', function () {
                     var link = $(this);
-                    var key = link.data('previewKey');
-                    if (key) {
-                        removePreview(key);
-                        link.removeData('previewKey');
-                    }
+                    clearTimeout(link.data('previewTimer'));
+                    link.removeData('previewTimer');
+                    removePreview(link);
                 });
             })();
 
