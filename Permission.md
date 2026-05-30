@@ -82,8 +82,9 @@ this.action >= action
 | `read` | 1 |
 | `edit` | 2 |
 | `create` | 4 |
-| `upload` | 8 |
-| `delete` | 16 |
+| `rename` | 8 |
+| `upload` | 16 |
+| `delete` | 32 |
 | `admin` | 255 |
 
 주요 사용:

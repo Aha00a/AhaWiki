@@ -105,6 +105,10 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
     isWritable(target, Some(pageContent))
   }
 
+  def isUploadable(target: String): Boolean = {
+    permissionLogic.permitted(target, actors, Permission.Action.Upload.id)
+  }
+
   def isRenamable(target: String): Boolean = {
     permissionLogic.permitted(target, actors, Permission.Action.Rename.id)
   }

@@ -286,15 +286,15 @@ controllerComponents: ControllerComponents,
     }
   }
 
-  private def getWritablePageContext(pageName: String)
-                                    (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
+  private def getPageContextFor(pageName: String)(permitted: WikiPermission => Boolean)
+                               (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-    val latestContent = Page.selectLastRevision(pageName).map(page => PageContent(page.content))
-    if (!WikiPermission().isWritable(pageName, latestContent)) Left(Forbidden("Permission denied."))
+    if (!permitted(WikiPermission())) Left(Forbidden("Permission denied."))
     else Right((site, contextWikiPage, provider))
   }
+
 
   private def buildAmazonS3Client(): com.amazonaws.services.s3.AmazonS3 = {
     import com.amazonaws.auth.AWSStaticCredentialsProvider
@@ -988,7 +988,7 @@ controllerComponents: ControllerComponents,
     (pageNameOption, fileOption) match {
       case (Some(pageName), Some(filePart)) =>
         database.withConnection { implicit connection =>
-          getWritablePageContext(pageName) match {
+          getPageContextFor(pageName)(_.isUploadable(pageName)) match {
             case Left(result) => result
             case Right((site0, contextWikiPage0, provider0)) =>
               implicit val site: Site = site0
@@ -1061,7 +1061,7 @@ controllerComponents: ControllerComponents,
         BadRequest("pageName is required")
     } else {
       database.withConnection { implicit connection =>
-        getWritablePageContext(pageName) match {
+        getPageContextFor(pageName)(_.isReadable(pageName)) match {
           case Left(result) => result
           case Right((site0, contextWikiPage0, provider0)) =>
             implicit val site: Site = site0
@@ -1114,7 +1114,7 @@ controllerComponents: ControllerComponents,
           BadRequest("pageName and objectKey are required")
         } else {
           database.withConnection { implicit connection =>
-            getWritablePageContext(pageName) match {
+            getPageContextFor(pageName)(_.isDeletable(pageName)) match {
               case Left(result) => result
               case Right((site0, contextWikiPage0, provider0)) =>
                 implicit val site: Site = site0
@@ -1153,7 +1153,7 @@ controllerComponents: ControllerComponents,
     form.fold(_ => BadRequest("invalid form"), {
       case (pageName, dataUrl) =>
         database.withConnection { implicit connection =>
-          getWritablePageContext(pageName) match {
+          getPageContextFor(pageName)(_.isUploadable(pageName)) match {
             case Left(result) => result
             case Right((site0, contextWikiPage0, provider0)) =>
               implicit val site: Site = site0
