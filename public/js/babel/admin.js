@@ -1312,7 +1312,7 @@ function AccessLogsPage() {
 }
 
 // app/assets/js/admin/pages/S3BrowserPage.jsx
-import React21, { useEffect as useEffect15 } from "react";
+import React21, { useEffect as useEffect15, useState as useState24 } from "react";
 import { Badge as Badge16, Button as Button12, Card as Card10, Group as Group17, Table as Table4, Text as Text17, Title as Title11 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useS3Data.js
@@ -1439,14 +1439,29 @@ function useS3Data() {
 // app/assets/js/admin/pages/S3BrowserPage.jsx
 function S3BrowserPage() {
   const { loading, error, itemsByPrefix, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadingPrefixes, expandingAll, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object } = useS3Data();
+  const [sortBy, setSortBy] = useState24("key");
+  const [sortDir, setSortDir] = useState24("asc");
   useEffect15(() => {
     loadS3Objects();
   }, []);
+  const handleSort = (col) => {
+    if (sortBy === col) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else {
+      setSortBy(col);
+      setSortDir("asc");
+    }
+  };
   const computeLoadedSize = (prefix) => {
     return (itemsByPrefix[prefix] || []).reduce((sum, item) => {
       if (item.isDirectory) return sum + computeLoadedSize(item.key.replace(/\/$/, ""));
       return sum + Number(item.size ?? 0);
     }, 0);
+  };
+  const computeMaxLastModified = (prefix) => {
+    return (itemsByPrefix[prefix] || []).reduce((max, item) => {
+      const val = item.isDirectory ? computeMaxLastModified(item.key.replace(/\/$/, "")) : item.lastModified || "";
+      return val > max ? val : max;
+    }, "");
   };
   const hasUnloadedSubdirs = (prefix) => {
     return (itemsByPrefix[prefix] || []).some((item) => {
@@ -1463,16 +1478,31 @@ function S3BrowserPage() {
     const rows2 = [];
     [...items].sort((a, b) => {
       if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-      return a.key.localeCompare(b.key);
+      const aPath = a.key.replace(/\/$/, "");
+      const bPath = b.key.replace(/\/$/, "");
+      let cmp = 0;
+      if (sortBy === "size") {
+        const aSize = a.isDirectory ? computeLoadedSize(aPath) : Number(a.size ?? 0);
+        const bSize = b.isDirectory ? computeLoadedSize(bPath) : Number(b.size ?? 0);
+        cmp = aSize - bSize;
+      } else if (sortBy === "lastModified") {
+        const aDate = a.isDirectory ? computeMaxLastModified(aPath) : a.lastModified || "";
+        const bDate = b.isDirectory ? computeMaxLastModified(bPath) : b.lastModified || "";
+        cmp = aDate.localeCompare(bDate);
+      } else {
+        cmp = a.key.localeCompare(b.key);
+      }
+      return sortDir === "desc" ? -cmp : cmp;
     }).forEach((item) => {
       const path = item.key.replace(/\/$/, "");
       const name = path.split("/").pop();
       const itemSize = item.isDirectory ? computeLoadedSize(path) : Number(item.size ?? 0);
+      const itemLastModified = item.isDirectory ? computeMaxLastModified(path) : item.lastModified || "";
       const parentPercent = parentTotal > 0 ? itemSize / parentTotal * 100 : 0;
       if (item.isDirectory) {
         const isExpanded = !!expandedS3Nodes[path];
         const isLoading = loadingPrefixes.has(path);
-        rows2.push({ depth, name, path, isFile: false, isDir: true, isExpanded, isLoading, itemSize, parentPercent, meta: null });
+        rows2.push({ depth, name, path, isFile: false, isDir: true, isExpanded, isLoading, itemSize, itemLastModified, parentPercent, meta: null });
         if (isExpanded) {
           if (isLoading) {
             rows2.push({ depth: depth + 1, name: null, path: path + "/__loading__", isLoadingRow: true });
@@ -1481,7 +1511,7 @@ function S3BrowserPage() {
           }
         }
       } else {
-        rows2.push({ depth, name, path, isFile: true, isDir: false, itemSize, parentPercent, meta: item });
+        rows2.push({ depth, name, path, isFile: true, isDir: false, itemSize, itemLastModified, parentPercent, meta: item });
       }
     });
     return rows2;
@@ -1489,37 +1519,42 @@ function S3BrowserPage() {
   const rows = buildRows("", 0);
   const loadedFileRows = rows.filter((r) => r.isFile);
   const rootTotal = computeLoadedSize("");
+  const SortIcon = ({ col }) => {
+    if (sortBy !== col) return /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sort", style: { opacity: 0.3, marginLeft: 4 } });
+    return /* @__PURE__ */ React21.createElement("i", { className: `fas fa-sort-${sortDir === "asc" ? "up" : "down"}`, style: { marginLeft: 4 } });
+  };
   return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button12, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button12, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button12, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
     setSelectedS3Keys(e.currentTarget.checked ? loadedFileRows.map((r) => r.path) : []);
-  } })), /* @__PURE__ */ React21.createElement(Table4.Th, null, "Key"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right" } }, "Size(bytes)"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Last Modified"), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map((row) => {
-    const { depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, parentPercent, meta } = row;
+  } })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { cursor: "pointer" }, onClick: () => handleSort("key") }, "Key", /* @__PURE__ */ React21.createElement(SortIcon, { col: "key" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right", cursor: "pointer" }, onClick: () => handleSort("size") }, "Size(bytes)", /* @__PURE__ */ React21.createElement(SortIcon, { col: "size" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center", cursor: "pointer" }, onClick: () => handleSort("lastModified") }, "Last Modified", /* @__PURE__ */ React21.createElement(SortIcon, { col: "lastModified" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map((row) => {
+    const { depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, itemLastModified, parentPercent, meta } = row;
     if (isLoadingRow) {
       return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, { colSpan: 5 }, /* @__PURE__ */ React21.createElement("div", { style: { paddingLeft: `${depth * 22 + 28}px` } }, /* @__PURE__ */ React21.createElement("i", { className: "fas fa-spinner fa-spin", "aria-hidden": "true" }), " \uB85C\uB529 \uC911...")));
     }
     const checked = selectedS3Keys.includes(path);
     const showSize = isFile || isDir && isExpanded;
+    const showLastModified = isFile || isDir && isExpanded;
     const sizeIncomplete = isDir && isExpanded && hasUnloadedSubdirs(path);
     const percent = rootTotal > 0 ? itemSize / rootTotal * 100 : 0;
     return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", disabled: !isFile, checked, onChange: (e) => {
       if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, path]);
       else setSelectedS3Keys((prev) => prev.filter((k) => k !== path));
-    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0 } }, name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? formatDateTimeInClientTimezone(meta?.lastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "xs", variant: "light", onClick: () => downloadS3Object(path), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0 } }, name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center", opacity: sizeIncomplete ? 0.4 : 1 } }, showLastModified ? formatDateTimeInClientTimezone(itemLastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "xs", variant: "light", onClick: () => downloadS3Object(path), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
   }))));
 }
 
 // app/assets/js/admin/pages/CrawlerCachePage.jsx
-import React22, { useEffect as useEffect16, useState as useState25 } from "react";
+import React22, { useEffect as useEffect16, useState as useState26 } from "react";
 import { Anchor as Anchor7, Badge as Badge17, Button as Button13, Card as Card11, Group as Group18, Image as Image2, Text as Text18, TextInput as TextInput7, Title as Title12 } from "@mantine/core";
 import { DataTable as DataTable6 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useCrawlerCacheData.js
-import { useCallback as useCallback13, useState as useState24 } from "react";
+import { useCallback as useCallback13, useState as useState25 } from "react";
 function useCrawlerCacheData() {
-  const [loading, setLoading] = useState24(true);
-  const [crawlerCaches, setCrawlerCaches] = useState24([]);
-  const [crawlerCacheCount, setCrawlerCacheCount] = useState24(0);
-  const [refreshingUrl, setRefreshingUrl] = useState24("");
-  const [deletingUrl, setDeletingUrl] = useState24("");
+  const [loading, setLoading] = useState25(true);
+  const [crawlerCaches, setCrawlerCaches] = useState25([]);
+  const [crawlerCacheCount, setCrawlerCacheCount] = useState25(0);
+  const [refreshingUrl, setRefreshingUrl] = useState25("");
+  const [deletingUrl, setDeletingUrl] = useState25("");
   const loadCrawlerCaches = useCallback13(async ({ page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc" } = {}) => {
     setLoading(true);
     try {
@@ -1574,11 +1609,11 @@ function useCrawlerCacheData() {
 // app/assets/js/admin/pages/CrawlerCachePage.jsx
 function CrawlerCachePage() {
   const { loading, crawlerCaches, crawlerCacheCount, refreshingUrl, deletingUrl, loadCrawlerCaches, refreshCrawlerCache, deleteCrawlerCache } = useCrawlerCacheData();
-  const [page, setPage] = useState25(1);
-  const [searchInput, setSearchInput] = useState25("");
-  const [search, setSearch] = useState25("");
-  const [sortBy, setSortBy] = useState25("id");
-  const [sortOrder, setSortOrder] = useState25("desc");
+  const [page, setPage] = useState26(1);
+  const [searchInput, setSearchInput] = useState26("");
+  const [search, setSearch] = useState26("");
+  const [sortBy, setSortBy] = useState26("id");
+  const [sortOrder, setSortOrder] = useState26("desc");
   const totalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
   const normalizedPage = Math.min(page, totalPages);
   const currentParams = { page, pageSize: CRAWLER_CACHE_PAGE_SIZE, search, sortBy, sortOrder };
