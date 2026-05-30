@@ -24,26 +24,37 @@ object InterpreterPaper extends TraitInterpreter {
     val docId = Option(pageContent.argument(1)).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("docId", ""))
 
+    // Step 3: ---- 기준으로 split하되, 각 청크 앞에 \n × offset을 붙여 원본 줄 번호 보존
+    //   lineOffset[N+1] = lineOffset[N] + chunks[N].count('\n')
+    //   (chunk의 선행 \n이 separator 줄을 포함하므로 +1 불필요)
+    val chunks = bodyExtracted.split("""(?m)^-{4,}$""", -1)
+    // lineOffset starts at the number of directive lines (#! lines stripped by PageContent),
+    // so that padded content line numbers map to raw-document line numbers.
+    var lineOffset = pageContent.directives.length
+    val pages = chunks.zipWithIndex.map { case (chunk, index) =>
+      val offset = lineOffset
+      lineOffset += chunk.count(_ == '\n')
+      val paddedResolved = "\n" * offset + eciv.applyVariables(chunk)
+      val rendered = InterpreterWiki.toHtmlString(paddedResolved)
+      s"""<div class="page">
+         |  <!-- $index -->
+         |  <div class="pageHeader">
+         |    <div class="documentId">$docId</div>
+         |  </div>
+         |  <div class="pageFooter">
+         |    <div class="pageNo">${index + 1}</div>
+         |  </div>
+         |  <div class="pageContent">
+         |    <div>
+         |      $rendered
+         |    </div>
+         |  </div>
+         |  <!-- $index -->
+         |</div>""".stripMargin
+    }
+
     s"""<div class="paperContent $cssClass">""" +
-      bodyResolved.split("""(?m)^-{4,}$""").map(InterpreterWiki.toHtmlString)
-        .zipWithIndex
-        .map { case (s, index) =>
-          s"""<div class="page">
-             |  <!-- $index -->
-             |  <div class="pageHeader">
-             |    <div class="documentId">$docId</div>
-             |  </div>
-             |  <div class="pageFooter">
-             |    <div class="pageNo">${index + 1}</div>
-             |  </div>
-             |  <div class="pageContent">
-             |    <div>
-             |      $s
-             |    </div>
-             |  </div>
-             |  <!-- $index -->
-             |</div>""".stripMargin
-        }.mkString("\n") +
+      pages.mkString("\n") +
       """</div>"""
   }
 

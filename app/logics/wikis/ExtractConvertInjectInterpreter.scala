@@ -21,7 +21,10 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   override def extract(s: String): String = {
     if (s == null || !s.contains("[[[") || !s.contains("]]]")) {
-      extractedLineToOriginalLine = Vector(1)
+      // No interpreter blocks: extracted content == original content (identity mapping).
+      // Map line N → N so that originalLineNumber(N) == N for all lines.
+      val lineCount = if (s == null || s.isEmpty) 1 else s.count(_ == '\n') + 1
+      extractedLineToOriginalLine = (1 to lineCount).toVector
       s
     } else {
       val open = "[[["
