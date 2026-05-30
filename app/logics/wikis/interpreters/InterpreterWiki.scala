@@ -24,13 +24,21 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   abstract class Handler[T](val pageContent: PageContent) {
+    val extractConvertInjectVariable = new ExtractConvertInjectVariable()
     val extractConvertInjectInterpreter = new ExtractConvertInjectInterpreter()
     val extractConvertInjectMacro = new ExtractConvertInjectMacro()
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
 
-    val chunkExtracted: String = extractConvertInjectInterpreter.extract(pageContent.content)
-    val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(chunkExtracted)
-    val chunkMacroExtracted: String = extractConvertInjectMacro.extract(backQuoteExtracted)
+    // Step 1: [[[#!Variable]]] 블록 제거 + TSV 파싱 (줄 수 보존 → 원본 줄 번호 유지)
+    val variableExtractedContent: String = extractConvertInjectVariable.extract(pageContent.content)
+    // Step 2: 백틱 블록 먼저 추출 → 백틱 안의 {{key}}를 UUID로 보호
+    val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(variableExtractedContent)
+    // Step 3: {{key}} 치환 (백틱 내부는 이미 UUID라 안전; [[[...]]] 블록 내부도 치환됨)
+    val variableAppliedContent: String = extractConvertInjectVariable.applyVariables(backQuoteExtracted)
+    // Step 4: [[[interpreter]]] 블록 추출 (변수가 이미 치환된 상태로 추출)
+    val chunkExtracted: String = extractConvertInjectInterpreter.extract(variableAppliedContent)
+    // Step 5: [[macro]] 추출
+    val chunkMacroExtracted: String = extractConvertInjectMacro.extract(chunkExtracted)
 
     def process(): T
   }
@@ -81,7 +89,7 @@ object InterpreterWiki extends TraitInterpreter {
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
     private val revision = InterpreterWiki.getRevisionForPartialEdit
-    private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(pageContent.content, regexHeading)
+    private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(variableExtractedContent, regexHeading)
 
     var oldIndent = 0
     private val regexColumnsStart: Regex = """^\s*<Columns(?:\s+([^>]*))?>\s*$""".r
@@ -246,18 +254,24 @@ object InterpreterWiki extends TraitInterpreter {
 
     override def result(): String = {
       variableHolderState := State.Normal
-      if (!suppressToc && arrayBufferHeading.length > 6)
+      val suppressTocFinal = suppressToc || extractConvertInjectVariable.variables.get("toc").exists(_.toLowerCase == "false")
+      if (!suppressTocFinal && arrayBufferHeading.length > 6)
         arrayBuffer.insert(0,
           """<div class="toc" data-default-collapsed-mobile="true"><button type="button" class="tocToggle" aria-expanded="true"><i class="fas fa-chevron-down fa-fw"></i></button><div class="tocBody">""" +
             InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) +
             """</div></div>""")
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
-      extractConvertInjectInterpreter.inject(
+      val injected = extractConvertInjectInterpreter.inject(
         extractConvertInjectBackQuote.inject(
           extractConvertInjectMacro.inject(str)
         )
       )
+
+      extractConvertInjectVariable.variables.get("class")
+        .map(_.replaceAll("[^a-zA-Z0-9 _-]", ""))
+        .filter(_.nonEmpty)
+        .fold(injected)(cls => s"""<div class="$cls">$injected</div>""")
     }
 
     private def renderColumnsOpen(attrsRaw: String): String = {

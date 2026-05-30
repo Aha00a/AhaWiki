@@ -564,10 +564,7 @@ controllerComponents: ControllerComponents,
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
           Ok(pageContent.interpreter match {
-              case Some("Paper") =>
-                val contentInterpreted = Interpreters.toHtmlString(page.content)
-                views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
-              case None | Some("Wiki") =>
+              case None | Some("Wiki") | Some("Paper") =>
                 val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
                 views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
               case _ =>

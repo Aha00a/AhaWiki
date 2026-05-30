@@ -1087,6 +1087,93 @@
 	}
 
 	.wikiContent {
+		.contract {
+			font-size: 0.85em;
+			line-height: 1.6;
+
+			// 접기/펴기 토글 버튼 숨김
+			.InterpreterRenderFoldToggle {
+				display: none;
+			}
+
+			// hr (----): 화면에 보이지 않고 인쇄 시 페이지 나누기
+			hr {
+				page-break-after: always;
+				@media print {
+					border: none;
+					height: 0;
+					margin: 0;
+					padding: 0;
+				}
+			}
+
+			// HeadingWrapper: 섹션 구분 간격 + clearfix (float 넘침 방지)
+			div[class^="HeadingWrapper"] {
+				margin-top: 1em;
+				&::after {
+					content: "";
+					display: table;
+					clear: both;
+				}
+			}
+
+			// 표지 제목 h2 (== SERVICE CONTRACT 용역 계약서):
+			// 기본 h2 크기/볼드 유지, 좌측 float 50mm
+			h2 {
+				float: left;
+				clear: both;
+				width: 40mm;
+				border: none;
+				margin: 0;
+				padding-right: 3mm;
+				word-break: keep-all;
+			}
+
+			// 조항 제목 h3~h6 (====== 제N조 제목):
+			// 본문 크기 + 굵게, 좌측 float 50mm
+			h3, h4, h5, h6 {
+				float: left;
+				clear: both;
+				width: 50mm;
+				border: none;
+				margin: 0;
+				padding-right: 3mm;
+				font-size: 1em;
+				font-weight: bold;
+				line-height: 1.6;
+				word-break: keep-all;
+			}
+
+			// 조항 내용: HeadingWrapper 직속 자식만 50mm 들여쓰기
+			div[class^="HeadingWrapper"] > p,
+			div[class^="HeadingWrapper"] > ol,
+			div[class^="HeadingWrapper"] > ul {
+				margin-left: 50mm;
+				line-height: 1.6;
+			}
+
+			// 조항 번호 숨김
+			.headingNumber {
+				display: none;
+			}
+
+			// 테이블 (옵션 사용 시)
+			.InterpreterTable {
+				width: 100%;
+				border-collapse: collapse;
+				margin: 1em 0;
+				th, td {
+					border: 1px solid;
+					padding: 6px 12px;
+					vertical-align: top;
+				}
+				th {
+					text-align: center;
+					font-weight: bold;
+				}
+			}
+		}
+
 		div.toc {
 			button.tocToggle {
 				float: left;
