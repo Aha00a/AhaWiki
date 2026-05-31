@@ -10,6 +10,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
 == List
  1. [InterpreterComment] - 렌더링하지 않는 주석
  1. [InterpreterFold] - 접고 펼칠 수 있는 영역
+ 1. [InterpreterGantt] - 간트차트
  1. [InterpreterGraph] - 간단한 방향 그래프
  1. [InterpreterHtml] - HTML 조각
  1. [InterpreterKanban]
