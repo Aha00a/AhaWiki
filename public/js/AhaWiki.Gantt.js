@@ -599,13 +599,13 @@
             '<div class="gantt-summary"></div>',
             '<div class="gantt-controls">',
             '<div class="gantt-btn-group">',
-            '<button class="gantt-btn gantt-zoom-out" title="축소">−</button>',
+            '<button class="gantt-btn gantt-zoom-out" title="축소"><i class="fa-solid fa-magnifying-glass-minus"></i></button>',
             '<span class="gantt-zoom-label" title="현재 배율">100%</span>',
-            '<button class="gantt-btn gantt-zoom-in"  title="확대">+</button>',
+            '<button class="gantt-btn gantt-zoom-in"  title="확대"><i class="fa-solid fa-magnifying-glass-plus"></i></button>',
             '</div>',
             '<button class="gantt-btn gantt-zoom-100" title="기본 배율 (1일=1칸)">100%</button>',
-            '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤">Fit</button>',
-            '<button class="gantt-btn gantt-export-svg" title="SVG로 저장">SVG</button>',
+            '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤"><i class="fa-solid fa-expand"></i> Fit</button>',
+            '<button class="gantt-btn gantt-export-svg" title="SVG로 저장"><i class="fa-solid fa-download"></i> Download .SVG</button>',
             '</div>',
         ].join('');
         el.insertBefore(toolbar, container.nextSibling);
