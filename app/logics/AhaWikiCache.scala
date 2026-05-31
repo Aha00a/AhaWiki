@@ -124,23 +124,8 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     implicit val ds = (database, site)
     PageMeta.SeqPageLatestSummary.invalidate()
     PageMeta.SeqPageName.invalidate()
-    Header.invalidate()
     Footer.invalidate()
     Config.invalidate()
-  }
-
-  object Header extends CacheEntityWithContextSite[String] {
-    override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 1 hour
-
-    override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
-      implicit val context: ContextWikiPage = contextSite.toContextWikiPage(Seq(""), RenderingMode.Normal)
-      implicit val site: Site = context.site
-      removePartialEditDataAttrs(
-        Interpreters.toHtmlString(
-          models.tables.Page.selectLastRevision(".header").map(_.content).orElse(DefaultPageLogic.getOption(".header").toOption).getOrElse("")
-        )
-      )
-    }
   }
 
   object Footer extends CacheEntityWithContextSite[String] {

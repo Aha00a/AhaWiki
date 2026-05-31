@@ -152,7 +152,6 @@ class Api @Inject()(
   }
 
   private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
-  private def parseHexColorValue(v: Option[String]): String = v.flatMap(SiteThemeLogic.normalizeHexColor).getOrElse("")
 
   private def parsePublicListedOrder(v: Option[String]): Either[String, Option[BigDecimal]] = {
     val raw = v.map(_.trim).getOrElse("")
@@ -649,21 +648,9 @@ class Api @Inject()(
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
-            val headerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderBackgroundColorKey).map(_.v))
-            val headerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.HeaderForegroundColorKey).map(_.v))
-            val bodyBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.BodyBackgroundColorKey).map(_.v))
-            val bodyForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.BodyForegroundColorKey).map(_.v))
-            val footerBackgroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterBackgroundColorKey).map(_.v))
-            val footerForegroundColor = parseHexColorValue(Config.select(SiteThemeLogic.FooterForegroundColorKey).map(_.v))
             val defaultHue = Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v)).map(_.toString).getOrElse("")
             Ok(Json.obj(
               "siteSeq" -> Json.fromLong(site.seq),
-              "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
-              "headerForegroundColor" -> Json.fromString(headerForegroundColor),
-              "bodyBackgroundColor" -> Json.fromString(bodyBackgroundColor),
-              "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
-              "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
-              "footerForegroundColor" -> Json.fromString(footerForegroundColor),
               "defaultHue" -> Json.fromString(defaultHue),
             ))
       }
@@ -678,21 +665,9 @@ class Api @Inject()(
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
-            val headerBackgroundColor = parseHexColorValue(body.get("headerBackgroundColor").flatMap(_.headOption))
-            val headerForegroundColor = parseHexColorValue(body.get("headerForegroundColor").flatMap(_.headOption))
-            val bodyBackgroundColor = parseHexColorValue(body.get("bodyBackgroundColor").flatMap(_.headOption))
-            val bodyForegroundColor = parseHexColorValue(body.get("bodyForegroundColor").flatMap(_.headOption))
-            val footerBackgroundColor = parseHexColorValue(body.get("footerBackgroundColor").flatMap(_.headOption))
-            val footerForegroundColor = parseHexColorValue(body.get("footerForegroundColor").flatMap(_.headOption))
             val defaultHue = SiteThemeLogic.parseHue(body.get("defaultHue").flatMap(_.headOption).getOrElse("")).map(_.toString).getOrElse("")
 
             Seq(
-              SiteThemeLogic.HeaderBackgroundColorKey -> headerBackgroundColor,
-              SiteThemeLogic.HeaderForegroundColorKey -> headerForegroundColor,
-              SiteThemeLogic.BodyBackgroundColorKey -> bodyBackgroundColor,
-              SiteThemeLogic.BodyForegroundColorKey -> bodyForegroundColor,
-              SiteThemeLogic.FooterBackgroundColorKey -> footerBackgroundColor,
-              SiteThemeLogic.FooterForegroundColorKey -> footerForegroundColor,
               SiteThemeLogic.DefaultHueKey -> defaultHue,
             ).foreach { case (key, value) =>
               if (value.nonEmpty) {
@@ -705,12 +680,6 @@ class Api @Inject()(
             Ok(Json.obj(
               "ok" -> Json.fromBoolean(true),
               "siteSeq" -> Json.fromLong(site.seq),
-              "headerBackgroundColor" -> Json.fromString(headerBackgroundColor),
-              "headerForegroundColor" -> Json.fromString(headerForegroundColor),
-              "bodyBackgroundColor" -> Json.fromString(bodyBackgroundColor),
-              "bodyForegroundColor" -> Json.fromString(bodyForegroundColor),
-              "footerBackgroundColor" -> Json.fromString(footerBackgroundColor),
-              "footerForegroundColor" -> Json.fromString(footerForegroundColor),
               "defaultHue" -> Json.fromString(defaultHue),
             ))
       }

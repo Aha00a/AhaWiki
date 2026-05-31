@@ -772,7 +772,6 @@ controllerComponents: ControllerComponents,
               PageCursorHub.broadcastPageUpdated(roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
 
               name match {
-                case ".header" => ahaWikiCache.Header.invalidate()
                 case ".footer" => ahaWikiCache.Footer.invalidate()
                 case ".config" => ahaWikiCache.Config.invalidate()
                 case _ => // do nothing

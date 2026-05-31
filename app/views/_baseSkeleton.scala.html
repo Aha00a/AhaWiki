@@ -125,10 +125,7 @@
 
         @head
     </head>
-    <body class="AhaWiki no-mathjax" style="@Seq(
-        Some(s"--site-body-bg: ${Option(contextSite.bodyBackgroundColor).filter(_.nonEmpty).getOrElse("#FFFFFF")};"),
-        Some(s"--site-body-text: ${Option(contextSite.bodyForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
-    ).flatten.mkString(" ")">
+    <body class="AhaWiki no-mathjax">
         @body
 
         @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {

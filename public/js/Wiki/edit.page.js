@@ -3,9 +3,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
         function adjustEditorLayoutHeight() {
             var windowInnerHeight = $(window).innerHeight();
-            var headerInnerHeight = $('.header').innerHeight();
             var flashInnerHeight = $('.flash').innerHeight();
-            var baseColumnHeight = Math.max(280, windowInnerHeight - headerInnerHeight - flashInnerHeight - 300);
+            var baseColumnHeight = Math.max(280, windowInnerHeight - flashInnerHeight - 300);
 
             var leftFixedHeight = ($('.left > .toolbar').outerHeight(true) || 0) +
                 ($('.left > .editHelp').outerHeight(true) || 0) +

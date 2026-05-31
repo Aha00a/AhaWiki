@@ -259,10 +259,6 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
 }
-html.theme-ahawiki-light body {
-  background-color: var(--site-body-bg, var(--color-bg));
-  color: var(--site-body-text, var(--color-text));
-}
 nav.topNavbar {
   position: sticky;
   top: 0;
@@ -644,13 +640,9 @@ nav.topNavbar .themeOption.themeAhaWikiDark i {
   border-top: 1px solid var(--color-navbar-border);
   box-shadow: 0 -8px 24px var(--color-navbar-shadow);
 }
-html.theme-ahawiki-light .header {
-  background-color: var(--site-header-bg, #EEEEEE);
-  color: var(--site-header-text, #000000);
-}
 html.theme-ahawiki-light .footer {
-  background-color: var(--site-footer-bg, #EEEEEE);
-  color: var(--site-footer-text, #000000);
+  background-color: #EEEEEE;
+  color: #000000;
 }
 .monospace {
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
@@ -1001,3 +993,4 @@ kbd.MacroKbd {
     display: none !important;
   }
 }
+/*# sourceMappingURL=less.css.map */

@@ -56,18 +56,6 @@ class ContextSite()(
   lazy val seqPageNameByPermission: Seq[String] = seqPageByPermission.map(_.name)
   lazy val setPageNameByPermission: Set[String] = seqPageNameByPermission.toSet
 
-  private def getSiteHexColorConfig(key: String): String = database.withConnection { implicit connection =>
-    Config.select(key)
-      .flatMap(config => SiteThemeLogic.normalizeHexColor(config.v))
-      .getOrElse("")
-  }
-
-  lazy val headerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderBackgroundColorKey)
-  lazy val headerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.HeaderForegroundColorKey)
-  lazy val bodyBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.BodyBackgroundColorKey)
-  lazy val bodyForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.BodyForegroundColorKey)
-  lazy val footerBackgroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterBackgroundColorKey)
-  lazy val footerForegroundColor: String = getSiteHexColorConfig(SiteThemeLogic.FooterForegroundColorKey)
   lazy val defaultHue: Option[Int] = database.withConnection { implicit connection =>
     Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v))
   }

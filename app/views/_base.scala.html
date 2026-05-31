@@ -355,12 +355,6 @@
             })();
         });
     </script>
-    <div class="header" style="@Seq(
-        Some(s"--site-header-bg: ${Option(contextSite.headerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
-        Some(s"--site-header-text: ${Option(contextSite.headerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
-    ).flatten.mkString(" ")">
-        @Html(contextSite.ahaWikiCache.Header.get())
-    </div>
     @if(contextSite.requestWrapper.host.startsWith("localhost:")) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
             <div class="error">
@@ -378,10 +372,7 @@
         }
     }
     @body
-    <div class="footer" style="@Seq(
-        Some(s"--site-footer-bg: ${Option(contextSite.footerBackgroundColor).filter(_.nonEmpty).getOrElse("#EEEEEE")};"),
-        Some(s"--site-footer-text: ${Option(contextSite.footerForegroundColor).filter(_.nonEmpty).getOrElse("#000000")};")
-    ).flatten.mkString(" ")">
+    <div class="footer">
         <div class="wrap">
             @Html(contextSite.ahaWikiCache.Footer.get())
         </div>
