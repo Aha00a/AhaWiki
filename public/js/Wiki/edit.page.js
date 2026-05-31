@@ -316,7 +316,19 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             $tableInlineEditor.on('keydown', 'input', function (e) {
                 const row = parseInt($(this).attr('data-r'), 10) || 0;
                 const col = parseInt($(this).attr('data-c'), 10) || 0;
-                if (e.key === 'ArrowUp') { e.preventDefault(); focusTableCell(row - 1, col, true); }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const size = getGridSize();
+                    if (row >= size.rowCount - 1) {
+                        const rows = gridAsMatrix();
+                        const newRow = Array.from({ length: size.colCount }, () => '');
+                        rows.push(newRow);
+                        rerenderWithCursor(rows, row + 1, col, true);
+                    } else {
+                        focusTableCell(row + 1, col, true);
+                    }
+                }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); focusTableCell(row - 1, col, true); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); focusTableCell(row + 1, col, true); }
                 else if (e.key === 'ArrowLeft' && this.selectionStart === 0 && this.selectionEnd === 0) { e.preventDefault(); focusTableCell(row, col - 1, true); }
                 else if (e.key === 'ArrowRight' && this.selectionStart === this.value.length && this.selectionEnd === this.value.length) { e.preventDefault(); focusTableCell(row, col + 1, true); }
@@ -1291,7 +1303,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 syncEditorToTextarea();
             });
             preview();
-            if ($('input[name=lineStart]').length)
+            const initialSrc = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+            if ($('input[name=lineStart]').length || detectTableBlock(initialSrc))
                 openInlineTableEditor();
         });
         function preventXss(html) {
