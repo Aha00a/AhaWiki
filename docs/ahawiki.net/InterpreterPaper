@@ -25,12 +25,12 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
 [[[#!Table tsv 1 1
 위치	변수명	기본값
-헤더 좌	`topLeft`	(없음)
-헤더 중앙	`topCenter`	(없음)
-헤더 우	`topRight`	`docId` 값 (하위호환)
-푸터 좌	`bottomLeft`	(없음)
-푸터 중앙	`bottomCenter`	(없음)
-푸터 우	`bottomRight`	`{{pageNo}} / {{pageTotal}}`
+헤더 좌	topLeft	(없음)
+헤더 중앙	topCenter	(없음)
+헤더 우	topRight	docId 값 (하위호환)
+푸터 좌	bottomLeft	(없음)
+푸터 중앙	bottomCenter	(없음)
+푸터 우	bottomRight	{{pageNo}} / {{pageTotal}}
 ]]]
 
  * `{{pageNo}}` : 현재 페이지 번호 (1부터 시작)
