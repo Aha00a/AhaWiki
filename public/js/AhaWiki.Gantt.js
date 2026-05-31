@@ -55,6 +55,15 @@
         return count;
     }
 
+    function parseDefaultEst(value) {
+        var s = String(value || '').trim();
+        if (/^\d+$/.test(s)) {
+            var n = parseInt(s, 10);
+            if (n > 0) return n;
+        }
+        return 1;
+    }
+
     // ── TSV 파싱 ──────────────────────────────────────────────────────────────
     function asRef(s) { return s.charAt(0) === '#' ? s.slice(1) : s; }
 
@@ -127,7 +136,7 @@
     }
 
     // ── 날짜 계산 ─────────────────────────────────────────────────────────────
-    function calcDates(nodes, parentStart, prevSiblingEnd, labelMap) {
+    function calcDates(nodes, parentStart, prevSiblingEnd, labelMap, defaultEst) {
         var cursor = prevSiblingEnd;
         nodes.forEach(function (node) {
             var start;
@@ -144,11 +153,11 @@
             }
 
             if (node.children.length === 0) {
-                var est = node.explicitEst || 1;
+                var est = node.explicitEst || defaultEst;
                 node.start = start; node.est = est; node.end = calcEnd(start, est);
                 cursor = node.end;
             } else {
-                calcDates(node.children, start, null, labelMap);
+                calcDates(node.children, start, null, labelMap, defaultEst);
                 node.start = node.children[0].start;
                 node.end   = node.children[node.children.length - 1].end;
                 node.est   = countBizDays(node.start, node.end);
@@ -449,14 +458,14 @@
     }
 
     // ── 전체 레이아웃 조립 ────────────────────────────────────────────────────
-    function buildAll(rootNodes, collapsedIds, dayW) {
+    function buildAll(rootNodes, collapsedIds, dayW, defaultEst) {
         dayW = dayW || DAY_W_DEF;
         if (!rootNodes.length) return { html: '<p class="gantt-empty">데이터가 없습니다.</p>', totalDays: 0 };
 
         assignColors(rootNodes, undefined);
         var labelMap = {};
         collectLabels(rootNodes, labelMap);
-        calcDates(rootNodes, null, null, labelMap);
+        calcDates(rootNodes, null, null, labelMap, defaultEst);
 
         var visible = [];
         flatten(rootNodes, visible, collapsedIds);
@@ -491,6 +500,7 @@
         if (!preEl || !container) return;
 
         var raw = preEl.textContent || '';
+        var defaultEst = parseDefaultEst(el.getAttribute('data-default-est'));
         var rootNodes = parseGantt(raw);
         if (!rootNodes.length) return;
 
@@ -512,7 +522,7 @@
         el.insertBefore(toolbar, container);
 
         function render() {
-            var result = buildAll(rootNodes, collapsedIds, currentDayW);
+            var result = buildAll(rootNodes, collapsedIds, currentDayW, defaultEst);
             lastTotalDays = result.totalDays;
             container.innerHTML = result.html;
 

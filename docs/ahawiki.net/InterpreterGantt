@@ -1,5 +1,9 @@
 = InterpreterGantt
 
+== 변수
+
+ * `#!var defaultEst 3`: leaf 작업의 Est 컬럼이 생략되면 `3d`로 계산한다. 생략하거나 유효하지 않으면 기본값은 `1d`.
+
 Gantt 인터프리터는 TSV 계층 구조 텍스트를 SVG Gantt 차트로 렌더링한다.
 섹션 편집 시 `#!Table`과 동일한 표 에디터가 열린다.
 
