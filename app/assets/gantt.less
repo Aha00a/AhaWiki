@@ -9,10 +9,38 @@
 
     .gantt-toolbar {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 4px;
+    }
+
+    .gantt-controls {
+        display: flex;
         align-items: center;
         gap: 4px;
-        margin-top: 4px;
+        flex: 0 0 auto;
+    }
+
+    .gantt-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 3px 12px;
+        min-width: 0;
+        color: var(--color-text);
+        font-size: 11px;
+        line-height: 1.5;
+        opacity: 0.78;
+
+        span {
+            white-space: nowrap;
+        }
+
+        b {
+            font-weight: 600;
+            opacity: 1;
+        }
     }
 
     .gantt-btn {

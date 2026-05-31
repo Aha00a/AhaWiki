@@ -216,6 +216,54 @@
         return fmtDate(node.start) + ' ~ ' + fmtDate(node.end) + '  ' + node.est + 'd';
     }
 
+    function collectStats(nodes) {
+        var stats = {
+            minDate: null,
+            maxDate: null,
+            taskCount: 0,
+            groupCount: 0,
+            totalCount: 0,
+            dependencyCount: 0
+        };
+
+        function visit(node) {
+            stats.totalCount++;
+            if (node.children.length) stats.groupCount++;
+            else stats.taskCount++;
+            if (node.afterRef) stats.dependencyCount++;
+
+            if (!stats.minDate || node.start < stats.minDate) stats.minDate = node.start;
+            if (!stats.maxDate || node.end > stats.maxDate) stats.maxDate = node.end;
+
+            node.children.forEach(visit);
+        }
+
+        nodes.forEach(visit);
+
+        if (stats.minDate && stats.maxDate) {
+            stats.calendarDays = diffDays(stats.minDate, stats.maxDate) + 1;
+            stats.businessDays = countBizDays(stats.minDate, stats.maxDate);
+        } else {
+            stats.calendarDays = 0;
+            stats.businessDays = 0;
+        }
+
+        return stats;
+    }
+
+    function buildSummaryHtml(stats) {
+        if (!stats || !stats.minDate || !stats.maxDate) return '';
+        return [
+            '<span>Period <b>' + fmtDate(stats.minDate) + ' ~ ' + fmtDate(stats.maxDate) + '</b></span>',
+            '<span>Total <b>' + stats.calendarDays + 'd</b></span>',
+            '<span>Biz <b>' + stats.businessDays + 'd</b></span>',
+            '<span>Tasks <b>' + stats.taskCount + '</b></span>',
+            '<span>Groups <b>' + stats.groupCount + '</b></span>',
+            '<span>Deps <b>' + stats.dependencyCount + '</b></span>',
+            '<span>Shown <b>' + stats.visibleCount + '/' + stats.totalCount + '</b></span>'
+        ].join('');
+    }
+
     function zoomPctFromDayW(dayW) {
         return Math.round(dayW / DAY_W_DEF * 100);
     }
@@ -499,9 +547,11 @@
         var labelMap = {};
         collectLabels(rootNodes, labelMap);
         calcDates(rootNodes, null, null, labelMap, defaultEst);
+        var stats = collectStats(rootNodes);
 
         var visible = [];
         flatten(rootNodes, visible, collapsedIds);
+        stats.visibleCount = visible.length;
 
         var minDate = visible.reduce(function (m, n) { return n.start < m ? n.start : m; }, visible[0].start);
         var maxDate = visible.reduce(function (m, n) { return n.end   > m ? n.end   : m; }, visible[0].end);
@@ -520,7 +570,7 @@
             '</div>'
         ].join('\n');
 
-        return { html: html, totalDays: totalDays };
+        return { html: html, totalDays: totalDays, stats: stats };
     }
 
     // ── 인스턴스 관리 ─────────────────────────────────────────────────────────
@@ -545,6 +595,8 @@
         var toolbar = document.createElement('div');
         toolbar.className = 'gantt-toolbar';
         toolbar.innerHTML = [
+            '<div class="gantt-summary"></div>',
+            '<div class="gantt-controls">',
             '<div class="gantt-btn-group">',
             '<button class="gantt-btn gantt-zoom-out" title="축소">−</button>',
             '<span class="gantt-zoom-label" title="현재 배율">100%</span>',
@@ -552,10 +604,12 @@
             '</div>',
             '<button class="gantt-btn gantt-zoom-100" title="기본 배율 (1일=1칸)">100%</button>',
             '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤">Fit</button>',
+            '</div>',
         ].join('');
         el.insertBefore(toolbar, container.nextSibling);
 
         var zoomLabel = toolbar.querySelector('.gantt-zoom-label');
+        var summaryEl = toolbar.querySelector('.gantt-summary');
 
         function updateZoomLabel() {
             if (zoomLabel) zoomLabel.textContent = zoomPctFromDayW(currentDayW) + '%';
@@ -566,6 +620,7 @@
             lastTotalDays = result.totalDays;
             container.innerHTML = result.html;
             updateZoomLabel();
+            if (summaryEl) summaryEl.innerHTML = buildSummaryHtml(result.stats);
 
             var hdrInner  = container.querySelector('.gantt-hdr-inner');
             var lblInner  = container.querySelector('.gantt-lbl-inner');
