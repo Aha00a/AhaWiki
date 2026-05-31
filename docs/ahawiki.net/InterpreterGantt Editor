@@ -1,0 +1,92 @@
+= InterpreterGantt Editor
+
+Gantt 블록 전용 인라인 에디터.
+
+== 배경
+
+기존에는 `#!gantt` 블록도 `#!table`과 동일한 TableEditor로 열렸다.
+Gantt 형식은 depth(들여쓰기), 날짜/ref 단일 슬롯, 소요일 등 Table과 다른 구조를 가지므로 전용 에디터가 필요하다.
+
+== 데이터 모델
+
+각 행은 4개 필드로 표현된다. 파싱 규칙은 [[InterpreterGantt]] 참조.
+
+[[[#!Table tsv 1 1
+필드	타입	설명
+depth	정수	들여쓰기 깊이. 탭 개수와 동일.
+name	문자열	작업명. `#라벨` 접미어 포함 가능 (예: `설계#design`).
+startOrRef	문자열 (선택)	`YYYY-MM-DD` 시작일 또는 선행 작업 레이블 (예: `design`, `#design`). 둘 중 하나만.
+est	정수 (선택)	소요 영업일수. 생략 시 defaultEst 적용.
+]]]
+
+== UI 구조
+
+=== 헤더 버튼
+
+[[[#!Table tsv 1
+버튼	동작
++ Row	현재 행 아래에 새 행 추가
+- Row	현재 행 삭제
+▶ Indent	현재 행 depth +1
+◀ Outdent	현재 행 depth -1 (0 이하로 내려가지 않음)
+]]]
+
+=== 그리드 컬럼
+
+[[[#!Table tsv 1 1
+컬럼	input type	비고
+depth	읽기전용 숫자	직접 편집 불가. Indent/Outdent 버튼 또는 단축키로만 변경.
+작업명#라벨	text	`이름` 또는 `이름#라벨` 형식
+시작일/ref	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). 비워 두면 생략.
+소요일	number	양의 정수. 비워 두면 생략.
+]]]
+
+== 직렬화 규칙
+
+그리드 행 → Gantt TSV 라인:
+
+ 1. `depth` 개수만큼 탭(`\t`)을 앞에 붙인다.
+ 2. `작업명#라벨` 값을 쓴다.
+ 3. `시작일/ref`가 비어 있지 않으면 `\t값`을 추가한다.
+ 4. `소요일`이 비어 있지 않으면 `\t값`을 추가한다.
+
+`시작일/ref`가 없고 `소요일`만 있는 경우에도 `\t소요일`만 붙인다.
+빈 중간 탭은 파싱 시 무시되므로 직렬화 시 중간에 빈 슬롯을 끼워 넣을 필요 없다.
+
+== 키보드 인터랙션
+
+[[[#!Table tsv 1 1
+키	위치	동작
+Tab	작업명 셀	depth +1 (Indent)
+Shift+Tab	작업명 셀	depth -1 (Outdent)
+Tab	그 외 셀	다음 셀로 포커스 이동
+Enter	임의 셀	다음 행 같은 컬럼으로 이동. 마지막 행이면 새 행 추가.
+ArrowUp / Down	임의 셀	상하 행 이동
+ArrowLeft / Right	셀 끝 / 시작에서만	좌우 셀 이동
+]]]
+
+== 감지 로직 변경
+
+기존 `detectTableBlock()`이 `#!table`과 `#!gantt`를 모두 처리하는 구조를 분리한다.
+
+ * `detectTableBlock()`: `#!table`만 감지 → TableEditor 열기
+ * `detectGanttBlock()`: `#!gantt`만 감지 → GanttEditor 열기
+ * 초기 로드 시 `#!gantt` 감지되면 GanttEditor 자동 열기
+ * `.toggleTableEditor` 버튼 클릭 시 블록 종류에 따라 분기
+
+== 구현 파일
+
+ * `public/js/Wiki/edit.page.js` — GanttEditor 로직 추가, `detectTableBlock()` 분리
+ * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor` UI 마크업 추가
+
+== TODO
+
+ * [ ] `detectGanttBlock()` 함수 분리 (`#!table` / `#!gantt` 감지 로직 분리)
+ * [ ] `#ganttInlineEditor` UI 마크업 추가 (edit.scala.html)
+ * [ ] `openInlineGanttEditor()` / `closeInlineGanttEditor()` 구현
+ * [ ] 그리드 렌더링: depth 읽기전용 컬럼 + 작업명/시작일-ref/소요일 input 3컬럼
+ * [ ] Indent/Outdent 버튼 동작
+ * [ ] Tab/Shift+Tab 단축키 (작업명 셀에서 depth 증감)
+ * [ ] 직렬화: 그리드 → Gantt TSV (`applyGanttBlockEditor()`)
+ * [ ] 120ms 디바운스 자동 미리보기 동기화
+ * [ ] 초기 로드 시 `#!gantt` 자동 감지 → GanttEditor 자동 열기
