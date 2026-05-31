@@ -998,6 +998,13 @@
 					margin-top: 0;
 					border-bottom: none;
 				}
+				> div, > div > div, > div > div > div {
+					div[class^="HeadingWrapper"] > p,
+					div[class^="HeadingWrapper"] > ol,
+					div[class^="HeadingWrapper"] > ul {
+						margin-left: 60mm;
+					}
+				}
 			}
 			.toc {
 				display: none;
@@ -1240,10 +1247,11 @@
 			h2 {
 				float: left;
 				clear: both;
-				width: 40mm;
+				width: 50mm;
 				border: none;
 				margin: 0;
 				padding-right: 3mm;
+				text-align: left;
 				word-break: keep-all;
 			}
 

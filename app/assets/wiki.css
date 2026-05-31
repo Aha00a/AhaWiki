@@ -2202,6 +2202,17 @@
   margin-top: 0;
   border-bottom: none;
 }
+.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > p,
+.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > p,
+.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > p,
+.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > ol,
+.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > ol,
+.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > ol,
+.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > ul,
+.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > ul,
+.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > ul {
+  margin-left: 60mm;
+}
 .AhaWiki .paperContent.contract .page .toc {
   display: none;
 }
@@ -2411,10 +2422,11 @@
 .AhaWiki .wikiContent .contract h2 {
   float: left;
   clear: both;
-  width: 40mm;
+  width: 50mm;
   border: none;
   margin: 0;
   padding-right: 3mm;
+  text-align: left;
   word-break: keep-all;
 }
 .AhaWiki .wikiContent .contract h3,
