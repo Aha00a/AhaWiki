@@ -2179,6 +2179,20 @@
 .AhaWiki .paperContent.landscape .page .pageFooter {
   width: 267mm;
 }
+.AhaWiki .paperContent .page.landscape {
+  width: 267mm;
+  height: 180mm;
+}
+.AhaWiki .paperContent .page.landscape .pageFooter {
+  width: 267mm;
+}
+.AhaWiki .paperContent.landscape .page.portrait {
+  width: 180mm;
+  height: 267mm;
+}
+.AhaWiki .paperContent.landscape .page.portrait .pageFooter {
+  width: 180mm;
+}
 .AhaWiki .paperContent.contract .page .pageContent h1,
 .AhaWiki .paperContent.contract .page .pageContent h2,
 .AhaWiki .paperContent.contract .page .pageContent h3,

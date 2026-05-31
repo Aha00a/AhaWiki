@@ -40,7 +40,27 @@ location.params = function(params, preventReload) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-    if (document.querySelector('.paperContent.landscape')) {
+    var hasMixed = document.querySelector('.paperContent .page.landscape, .paperContent .page.portrait');
+    var isLandscapeDoc = document.querySelector('.paperContent.landscape');
+    if (hasMixed) {
+        var style = document.createElement('style');
+        if (isLandscapeDoc) {
+            // 기본=가로, 세로 페이지만 named page 할당 → 가로 페이지는 default @page 사용
+            style.textContent = [
+                '@page { size: A4 landscape; }',
+                '@page portrait-page { size: A4 portrait; }',
+                '.paperContent.landscape .page.portrait { page: portrait-page; }',
+            ].join('\n');
+        } else {
+            // 기본=세로, 가로 페이지만 named page 할당 → 세로 페이지는 default @page 사용
+            style.textContent = [
+                '@page { size: A4 portrait; }',
+                '@page landscape-page { size: A4 landscape; }',
+                '.paperContent .page.landscape { page: landscape-page; }',
+            ].join('\n');
+        }
+        document.head.appendChild(style);
+    } else if (isLandscapeDoc) {
         var landscapeStyle = document.createElement('style');
         landscapeStyle.textContent = '@page { size: A4 landscape; }';
         document.head.appendChild(landscapeStyle);

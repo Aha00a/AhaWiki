@@ -98,6 +98,12 @@ test('highlights AhaMark Basic block and link syntax', () => {
     assert.deepEqual(tokensFor('----'), [
         { text: '----', style: 'ahamark-hr' },
     ]);
+    assert.deepEqual(tokensFor('#!var class landscape'), [
+        { text: '#!var class landscape', style: 'ahamark-interpreter-shebang' },
+    ]);
+    assert.deepEqual(tokensFor('  #!portrait'), [
+        { text: '  #!portrait', style: 'ahamark-interpreter-shebang' },
+    ]);
     assert.deepEqual(tokensFor('[Page Alias] http://aha00a.com'), [
         { text: '[Page Alias]', style: 'ahamark-link' },
         { text: 'http://aha00a.com', style: 'ahamark-link' },

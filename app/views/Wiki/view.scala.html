@@ -611,17 +611,25 @@
             $(window).on('beforeprint', function () {TocGeneratedContentToggle();});
             $(window).on('afterprint', function () {TocGeneratedContentToggle();});
 
-            $('.paperContent .page').each(function() {
-                var $page = $(this);
-                var $content = $page.find('.pageContent > div').first();
-                var $footer  = $page.find('.pageFooter').first();
-                if (!$content.length || !$footer.length) return;
-                var contentBottom = $content.offset().top + $content.outerHeight(true);
-                var footerTop     = $footer.offset().top;
-                if (contentBottom > footerTop) {
-                    $page.addClass('pageOverflow');
-                }
-            });
+            function checkPaperPageOverflow() {
+                $('.paperContent .page').each(function() {
+                    var $page = $(this);
+                    var $content = $page.find('.pageContent > div').first();
+                    var $footer  = $page.find('.pageFooter').first();
+                    if (!$content.length || !$footer.length) return;
+                    var contentBottom = $content.offset().top + $content.outerHeight(true);
+                    var footerTop     = $footer.offset().top;
+                    if (contentBottom > footerTop) {
+                        $page.addClass('pageOverflow');
+                    }
+                });
+            }
+            // 폰트 로드 완료 후 측정 (강력새로고침 시 폰트 미적용 상태에서 측정되는 타이밍 오류 방지)
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(checkPaperPageOverflow);
+            } else {
+                checkPaperPageOverflow();
+            }
         });
     </script>
 } {

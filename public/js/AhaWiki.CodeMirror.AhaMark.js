@@ -28,6 +28,8 @@
                             return 'ahamark-header';
                         if (stream.match(listLineRegex))
                             return 'ahamark-list';
+                        if (stream.match(/\s*#!.*$/))
+                            return 'ahamark-interpreter-shebang';
                         if (stream.match(/\s*\[\[\[#![^\]]*/)) {
                             state.inTripleInterpreter = true;
                             return 'ahamark-interpreter';

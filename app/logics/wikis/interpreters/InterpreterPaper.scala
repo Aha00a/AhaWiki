@@ -7,6 +7,9 @@ object InterpreterPaper extends TraitInterpreter {
 
   import models.tables.CalculatedLink
 
+  private val landscapeMarkerRe = """(?m)^\s*#!landscape[ \t]*$""".r
+  private val portraitMarkerRe  = """(?m)^\s*#!portrait[ \t]*$""".r
+
   //noinspection ZeroIndexToHead
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
@@ -45,9 +48,13 @@ object InterpreterPaper extends TraitInterpreter {
       val offset = lineOffset
       lineOffset += chunk.count(_ == '\n')
       eciv.variables("pageNo") = (index + 1).toString
-      val paddedResolved = "\n" * offset + eciv.applyVariables(chunk)
+      val isLandscape    = landscapeMarkerRe.findFirstIn(chunk).isDefined
+      val isPortrait     = portraitMarkerRe.findFirstIn(chunk).isDefined
+      val pageExtraClass = if (isLandscape) " landscape" else if (isPortrait) " portrait" else ""
+      val strippedChunk  = landscapeMarkerRe.replaceAllIn(portraitMarkerRe.replaceAllIn(chunk, ""), "")
+      val paddedResolved = "\n" * offset + eciv.applyVariables(strippedChunk)
       val rendered = InterpreterWiki.toHtmlString(paddedResolved)
-      s"""<div class="page">
+      s"""<div class="page$pageExtraClass">
          |  <!-- $index -->
          |  <div class="pageHeader">
          |    <div class="topLeft">${eciv.applyVariables(topLeftRaw)}</div>

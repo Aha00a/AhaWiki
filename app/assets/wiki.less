@@ -960,6 +960,38 @@
 			}
 		}
 
+		// 세로 문서 내 개별 페이지를 가로로
+		.page.landscape {
+			@a4LandscapeWidth: 297mm;
+			@a4LandscapeHeight: 210mm;
+			@a4LandscapePageWidth: @a4LandscapeWidth - 15mm - 15mm;
+			@a4LandscapePageHeight: @a4LandscapeHeight - 15mm - 15mm;
+
+			width: @a4LandscapePageWidth;
+			height: @a4LandscapePageHeight;
+
+			.pageFooter {
+				width: @a4LandscapePageWidth;
+			}
+		}
+
+		// 가로 문서 내 개별 페이지를 세로로
+		&.landscape .page.portrait {
+			@a4Width: 210mm;
+			@a4Height: 297mm;
+			@a4PaddingLeft: 15mm;
+			@a4PaddingRight: 15mm;
+			@a4PageWidth: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+			@a4PageHeight: @a4Height - 15mm - 15mm;
+
+			width: @a4PageWidth;
+			height: @a4PageHeight;
+
+			.pageFooter {
+				width: @a4PageWidth;
+			}
+		}
+
 		&.contract .page {
 			.pageContent {
 				h1, h2, h3, h4, h5, h6 {
@@ -1314,3 +1346,4 @@
 		}
 	}
 }
+
