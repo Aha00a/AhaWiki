@@ -928,6 +928,22 @@
 				}
 			}
 
+			&.pageOverflow {
+				outline: 2px solid red;
+				&::after {
+					content: '⚠ Content overflows the page';
+					position: absolute;
+					bottom: 0;
+					right: 0;
+					background: red;
+					color: white;
+					font-size: 11px;
+					padding: 2px 8px;
+					@media print { display: none; }
+				}
+				@media print { outline: none; }
+			}
+
 		}
 
 		&.landscape .page {

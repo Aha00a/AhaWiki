@@ -2149,6 +2149,29 @@
 .AhaWiki .paperContent .page .pageContent > div > div > div > .Macro.BlockMacro {
   margin-left: var(--wiki-indent-body, 30px);
 }
+.AhaWiki .paperContent .page.pageOverflow {
+  outline: 2px solid red;
+}
+.AhaWiki .paperContent .page.pageOverflow::after {
+  content: '⚠ Content overflows the page';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: red;
+  color: white;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+@media print {
+  .AhaWiki .paperContent .page.pageOverflow::after {
+    display: none;
+  }
+}
+@media print {
+  .AhaWiki .paperContent .page.pageOverflow {
+    outline: none;
+  }
+}
 .AhaWiki .paperContent.landscape .page {
   width: 267mm;
   height: 180mm;

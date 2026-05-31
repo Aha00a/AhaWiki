@@ -61,6 +61,17 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $previewPane.html(data);
                 mermaid.init();
                 adjustEditorLayoutHeight();
+                $previewPane.find('.paperContent .page').each(function() {
+                    var $page = $(this);
+                    var $content = $page.find('.pageContent > div').first();
+                    var $footer  = $page.find('.pageFooter').first();
+                    if (!$content.length || !$footer.length) return;
+                    var contentBottom = $content.offset().top + $content.outerHeight(true);
+                    var footerTop     = $footer.offset().top;
+                    if (contentBottom > footerTop) {
+                        $page.addClass('pageOverflow');
+                    }
+                });
             });
         }
 
