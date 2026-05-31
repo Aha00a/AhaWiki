@@ -177,9 +177,9 @@
     var LABEL_W    = 360;
     var DAYS_COL_W = 36;  // 소요일 컬럼 (우측 끝)
     var DAY_W_DEF  = 20;
-    var DAY_W_MIN  = 8;
-    var DAY_W_MAX  = 60;
-    var DAY_W_STEP = 4;
+    var ZOOM_MIN_PCT = 10;
+    var ZOOM_MAX_PCT = 500;
+    var GANTT_PADDING_DAYS = 7;
     var ROW_H      = 24;
     var HDR_H      = 46;
     var HDR_R1_Y   = 15;
@@ -214,6 +214,39 @@
 
     function infoStr(node) {
         return fmtDate(node.start) + ' ~ ' + fmtDate(node.end) + '  ' + node.est + 'd';
+    }
+
+    function zoomPctFromDayW(dayW) {
+        return Math.round(dayW / DAY_W_DEF * 100);
+    }
+
+    function dayWFromZoomPct(pct) {
+        return DAY_W_DEF * pct / 100;
+    }
+
+    function zoomLevels() {
+        var levels = [];
+        var pct;
+        for (pct = ZOOM_MIN_PCT; pct <= 100; pct += 10) levels.push(pct);
+        for (pct = 120; pct <= 200; pct += 20) levels.push(pct);
+        for (pct = 230; pct <= ZOOM_MAX_PCT; pct += 30) levels.push(pct);
+        return levels;
+    }
+
+    function nextZoomPct(pct) {
+        var levels = zoomLevels();
+        for (var i = 0; i < levels.length; i++) {
+            if (levels[i] > pct) return levels[i];
+        }
+        return ZOOM_MAX_PCT;
+    }
+
+    function prevZoomPct(pct) {
+        var levels = zoomLevels();
+        for (var i = levels.length - 1; i >= 0; i--) {
+            if (levels[i] < pct) return levels[i];
+        }
+        return ZOOM_MIN_PCT;
     }
 
     // ── SVG 빌더: Corner (좌상) ───────────────────────────────────────────────
@@ -472,8 +505,8 @@
 
         var minDate = visible.reduce(function (m, n) { return n.start < m ? n.start : m; }, visible[0].start);
         var maxDate = visible.reduce(function (m, n) { return n.end   > m ? n.end   : m; }, visible[0].end);
-        minDate = new Date(minDate); minDate.setDate(minDate.getDate() - 7);
-        maxDate = new Date(maxDate); maxDate.setDate(maxDate.getDate() + 7);
+        minDate = new Date(minDate); minDate.setDate(minDate.getDate() - GANTT_PADDING_DAYS);
+        maxDate = new Date(maxDate); maxDate.setDate(maxDate.getDate() + GANTT_PADDING_DAYS);
 
         var totalDays = diffDays(minDate, maxDate);
         var bodyH     = visible.length * ROW_H + 4;
@@ -514,17 +547,25 @@
         toolbar.innerHTML = [
             '<div class="gantt-btn-group">',
             '<button class="gantt-btn gantt-zoom-out" title="축소">−</button>',
-            '<button class="gantt-btn gantt-zoom-100" title="기본 배율 (1일=1칸)">100%</button>',
+            '<span class="gantt-zoom-label" title="현재 배율">100%</span>',
             '<button class="gantt-btn gantt-zoom-in"  title="확대">+</button>',
             '</div>',
-            '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤">맞춤</button>',
+            '<button class="gantt-btn gantt-zoom-100" title="기본 배율 (1일=1칸)">100%</button>',
+            '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤">Fit</button>',
         ].join('');
-        el.insertBefore(toolbar, container);
+        el.insertBefore(toolbar, container.nextSibling);
+
+        var zoomLabel = toolbar.querySelector('.gantt-zoom-label');
+
+        function updateZoomLabel() {
+            if (zoomLabel) zoomLabel.textContent = zoomPctFromDayW(currentDayW) + '%';
+        }
 
         function render() {
             var result = buildAll(rootNodes, collapsedIds, currentDayW, defaultEst);
             lastTotalDays = result.totalDays;
             container.innerHTML = result.html;
+            updateZoomLabel();
 
             var hdrInner  = container.querySelector('.gantt-hdr-inner');
             var lblInner  = container.querySelector('.gantt-lbl-inner');
@@ -532,10 +573,11 @@
             var lblSvg    = container.querySelector('.gantt-labels-svg');
 
             if (bodyCell) {
-                bodyCell.addEventListener('scroll', function () {
+                var syncScroll = function () {
                     if (hdrInner) hdrInner.style.transform = 'translateX(-' + bodyCell.scrollLeft + 'px)';
                     if (lblInner) lblInner.style.transform = 'translateY(-' + bodyCell.scrollTop  + 'px)';
-                });
+                };
+                bodyCell.addEventListener('scroll', syncScroll);
             }
 
             if (lblSvg) {
@@ -552,11 +594,11 @@
         }
 
         toolbar.querySelector('.gantt-zoom-in').addEventListener('click', function () {
-            currentDayW = Math.min(DAY_W_MAX, currentDayW + DAY_W_STEP);
+            currentDayW = dayWFromZoomPct(nextZoomPct(zoomPctFromDayW(currentDayW)));
             render();
         });
         toolbar.querySelector('.gantt-zoom-out').addEventListener('click', function () {
-            currentDayW = Math.max(DAY_W_MIN, currentDayW - DAY_W_STEP);
+            currentDayW = dayWFromZoomPct(prevZoomPct(zoomPctFromDayW(currentDayW)));
             render();
         });
         toolbar.querySelector('.gantt-zoom-100').addEventListener('click', function () {
@@ -567,7 +609,7 @@
             if (lastTotalDays > 0) {
                 var bodyCell = container.querySelector('.gantt-body-cell');
                 var cw = bodyCell ? bodyCell.clientWidth : (container.clientWidth - LABEL_W);
-                currentDayW = Math.max(DAY_W_MIN, Math.floor(cw / lastTotalDays));
+                currentDayW = Math.max(dayWFromZoomPct(ZOOM_MIN_PCT), Math.min(dayWFromZoomPct(ZOOM_MAX_PCT), Math.floor(cw / lastTotalDays)));
                 render();
             }
         });
