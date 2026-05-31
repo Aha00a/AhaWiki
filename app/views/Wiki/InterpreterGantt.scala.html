@@ -1,0 +1,6 @@
+@import models.ContextWikiPage
+@(id:String, content:String)(implicit wikiContext:ContextWikiPage)
+<div class="Interpreter InterpreterGantt" id="@id" data-page-name="@wikiContext.name">
+    <pre class="gantt-source">@content</pre>
+    <div class="gantt-container"></div>
+</div>

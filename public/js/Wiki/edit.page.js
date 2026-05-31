@@ -60,6 +60,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
                 mermaid.init();
+                if (window.AhaWiki && window.AhaWiki.Gantt) window.AhaWiki.Gantt.initAll($previewPane[0]);
                 adjustEditorLayoutHeight();
                 $previewPane.find('.paperContent .page').each(function() {
                     var $page = $(this);
@@ -130,7 +131,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (!lines.length)
                     return null;
                 const firstLine = (lines[0] || '').trim();
-                const inlineWrappedMatch = firstLine.match(/^\[\[\[#!table(?:\s+(.+))?$/i);
+                const inlineWrappedMatch = firstLine.match(/^\[\[\[#!(?:table|gantt)(?:\s+(.+))?$/i);
                 if (inlineWrappedMatch) {
                     const optionInline = (inlineWrappedMatch[1] || 'tsv').trim().toLowerCase();
                     const delimiterInline = optionInline.startsWith('csv') ? ',' : '\t';
@@ -145,7 +146,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const hasBlockWrapper = /^\[\[\[$/.test(firstLine);
                 const shebangLineIndex = hasBlockWrapper ? 1 : 0;
                 const shebang = (lines[shebangLineIndex] || '').trim();
-                const match = shebang.match(/^#!table(?:\s+(.+))?$/i);
+                const match = shebang.match(/^#!(?:table|gantt)(?:\s+(.+))?$/i);
                 if (!match)
                     return null;
                 const option = (match[1] || 'tsv').trim().toLowerCase();

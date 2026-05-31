@@ -1,0 +1,246 @@
+.InterpreterGantt {
+  overflow-x: auto;
+  font-family: inherit;
+}
+.InterpreterGantt .gantt-source {
+  display: none;
+}
+.InterpreterGantt .gantt-container {
+  line-height: 1;
+}
+.InterpreterGantt .gantt-toolbar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+.InterpreterGantt .gantt-btn {
+  padding: 2px 10px;
+  font-size: 13px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  line-height: 1.6;
+}
+.InterpreterGantt .gantt-btn:hover {
+  background: var(--color-border-subtle);
+}
+.InterpreterGantt .gantt-empty {
+  color: var(--color-text);
+  opacity: 0.5;
+  padding: 8px 0;
+}
+.InterpreterGantt .gantt-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  grid-template-rows: 46px minmax(80px, 65vh);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+.InterpreterGantt .gantt-corner-cell {
+  overflow: hidden;
+  border-right: 2px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+.InterpreterGantt .gantt-hdr-cell {
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-border);
+}
+.InterpreterGantt .gantt-lbl-cell {
+  overflow: hidden;
+  border-right: 2px solid var(--color-border);
+  min-height: 0;
+}
+.InterpreterGantt .gantt-body-cell {
+  overflow: auto;
+  min-height: 0;
+}
+.InterpreterGantt .gantt-hdr-inner,
+.InterpreterGantt .gantt-lbl-inner {
+  will-change: transform;
+}
+.InterpreterGantt .gantt-btn-group {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.InterpreterGantt .gantt-btn-group .gantt-btn {
+  border: none;
+  border-radius: 0;
+}
+.InterpreterGantt .gantt-btn-group .gantt-btn + .gantt-btn {
+  border-left: 1px solid var(--color-border);
+}
+.InterpreterGantt .gantt-svg {
+  display: block;
+  font-family: inherit;
+}
+.InterpreterGantt .gantt-bg {
+  fill: var(--color-bg);
+}
+.InterpreterGantt .gantt-label-bg {
+  fill: var(--color-bg);
+}
+.InterpreterGantt .gantt-header-bg {
+  fill: var(--color-bg);
+}
+.InterpreterGantt .gantt-corner-hdr-bg {
+  fill: var(--color-border-subtle);
+}
+.InterpreterGantt .gantt-corner-hdr-text {
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--color-text);
+  dominant-baseline: auto;
+  opacity: 0.75;
+}
+.InterpreterGantt .gantt-weekend {
+  fill: var(--color-border-subtle);
+  opacity: 0.5;
+}
+.InterpreterGantt .gantt-row-even {
+  fill: var(--color-bg);
+}
+.InterpreterGantt .gantt-row-odd {
+  fill: var(--color-border-subtle);
+  opacity: 0.35;
+}
+.InterpreterGantt .gantt-hdr-divider {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.InterpreterGantt .gantt-grid-week {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.InterpreterGantt .gantt-grid-month {
+  stroke: var(--color-border);
+  stroke-width: 1.5;
+  opacity: 0.8;
+}
+.InterpreterGantt .gantt-hdr-month {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--color-text);
+  dominant-baseline: auto;
+}
+.InterpreterGantt .gantt-hdr-day {
+  font-size: 10px;
+  fill: var(--color-text);
+  opacity: 0.7;
+  text-anchor: middle;
+  dominant-baseline: auto;
+}
+.InterpreterGantt .gantt-toggle {
+  cursor: pointer;
+}
+.InterpreterGantt .gantt-toggle .gantt-tri {
+  opacity: 0.55;
+}
+.InterpreterGantt .gantt-toggle .gantt-label {
+  opacity: 1;
+}
+.InterpreterGantt .gantt-toggle:hover .gantt-tri {
+  opacity: 1;
+}
+.InterpreterGantt .gantt-toggle:hover .gantt-label {
+  opacity: 0.75;
+}
+.InterpreterGantt .gantt-tri {
+  fill: var(--color-text);
+}
+.InterpreterGantt .gantt-leaf-dot {
+  fill: var(--color-text);
+  opacity: 0.25;
+}
+.InterpreterGantt .gantt-label {
+  font-size: 12px;
+  fill: var(--color-text);
+  dominant-baseline: auto;
+  pointer-events: none;
+}
+.InterpreterGantt .gantt-label-date {
+  font-size: 9px;
+  fill: var(--color-text);
+  opacity: 0.75;
+  dominant-baseline: auto;
+  pointer-events: none;
+}
+.InterpreterGantt .gantt-label-days {
+  font-size: 9px;
+  fill: var(--color-text);
+  opacity: 0.6;
+  dominant-baseline: auto;
+  pointer-events: none;
+}
+.InterpreterGantt .gantt-col-divider {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.InterpreterGantt .gantt-bar-leaf {
+  cursor: default;
+}
+.InterpreterGantt .gantt-bar-parent {
+  cursor: default;
+}
+.InterpreterGantt .gantt-bar-label {
+  font-size: 11px;
+  fill: #ffffff;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  pointer-events: none;
+}
+.InterpreterGantt .gantt-bar-outer-label {
+  font-size: 11px;
+  fill: var(--color-text);
+  dominant-baseline: auto;
+  pointer-events: none;
+  opacity: 0.7;
+}
+.InterpreterGantt .gantt-bar-start-label {
+  font-size: 10px;
+  fill: var(--color-text);
+  text-anchor: end;
+  dominant-baseline: auto;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.InterpreterGantt .gantt-today-line {
+  stroke: #e05a5a;
+  stroke-width: 2;
+  stroke-dasharray: 4 2;
+  opacity: 0.85;
+}
+.InterpreterGantt .gantt-today-label {
+  font-size: 10px;
+  fill: #e05a5a;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  font-weight: 600;
+}
+.InterpreterGantt .gantt-dep-line {
+  fill: none;
+  stroke-width: 1.5;
+  opacity: 0.55;
+}
+.InterpreterGantt .gantt-dep-arrow {
+  opacity: 0.55;
+}
+.InterpreterGantt .gantt-today-hdr {
+  fill: #e05a5a;
+  opacity: 0.15;
+}
+.InterpreterGantt .gantt-today-hdr-label {
+  font-size: 10px;
+  fill: #e05a5a;
+  text-anchor: middle;
+  dominant-baseline: auto;
+  font-weight: 700;
+}
+/*# sourceMappingURL=gantt.css.map */

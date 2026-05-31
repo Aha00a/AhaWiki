@@ -1,0 +1,265 @@
+@import "_mixins";
+
+.InterpreterGantt {
+    overflow-x: auto;
+    font-family: inherit;
+
+    .gantt-source { display: none; }
+    .gantt-container { line-height: 1; }
+
+    .gantt-toolbar {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 4px;
+    }
+
+    .gantt-btn {
+        padding: 2px 10px;
+        font-size: 13px;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        background: var(--color-bg);
+        color: var(--color-text);
+        cursor: pointer;
+        line-height: 1.6;
+
+        &:hover { background: var(--color-border-subtle); }
+    }
+
+    .gantt-empty {
+        color: var(--color-text);
+        opacity: 0.5;
+        padding: 8px 0;
+    }
+
+    // 4분면 Freeze 레이아웃
+    .gantt-layout {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        grid-template-rows: 46px minmax(80px, 65vh);
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+    }
+
+    .gantt-corner-cell {
+        overflow: hidden;
+        border-right: 2px solid var(--color-border);
+        border-bottom: 1px solid var(--color-border);
+        background: var(--color-bg);
+    }
+
+    .gantt-hdr-cell {
+        overflow: hidden;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .gantt-lbl-cell {
+        overflow: hidden;
+        border-right: 2px solid var(--color-border);
+        min-height: 0;
+    }
+
+    .gantt-body-cell {
+        overflow: auto;
+        min-height: 0;
+    }
+
+    .gantt-hdr-inner,
+    .gantt-lbl-inner {
+        will-change: transform;
+    }
+
+    // 줌 버튼 그룹
+    .gantt-btn-group {
+        display: flex;
+        border: 1px solid var(--color-border);
+        border-radius: 5px;
+        overflow: hidden;
+
+        .gantt-btn {
+            border: none;
+            border-radius: 0;
+
+            & + .gantt-btn {
+                border-left: 1px solid var(--color-border);
+            }
+        }
+    }
+
+    .gantt-svg {
+        display: block;
+        font-family: inherit;
+    }
+
+    .gantt-bg              { fill: var(--color-bg); }
+    .gantt-label-bg        { fill: var(--color-bg); }
+    .gantt-header-bg       { fill: var(--color-bg); }
+    .gantt-corner-hdr-bg   { fill: var(--color-border-subtle); }
+
+    .gantt-corner-hdr-text {
+        font-size: 11px;
+        font-weight: 600;
+        fill: var(--color-text);
+        dominant-baseline: auto;
+        opacity: 0.75;
+    }
+
+    .gantt-weekend    { fill: var(--color-border-subtle); opacity: 0.5; }
+    .gantt-row-even   { fill: var(--color-bg); }
+    .gantt-row-odd    { fill: var(--color-border-subtle); opacity: 0.35; }
+
+    .gantt-hdr-divider {
+        stroke: var(--color-border);
+        stroke-width: 1;
+    }
+
+    .gantt-grid-week {
+        stroke: var(--color-border);
+        stroke-width: 1;
+        opacity: 0.5;
+    }
+
+    .gantt-grid-month {
+        stroke: var(--color-border);
+        stroke-width: 1.5;
+        opacity: 0.8;
+    }
+
+    .gantt-hdr-month {
+        font-size: 12px;
+        font-weight: 600;
+        fill: var(--color-text);
+        dominant-baseline: auto;
+    }
+
+    .gantt-hdr-day {
+        font-size: 10px;
+        fill: var(--color-text);
+        opacity: 0.7;
+        text-anchor: middle;
+        dominant-baseline: auto;
+    }
+
+    // 접기/펴기 그룹 (<g> 요소)
+    .gantt-toggle {
+        cursor: pointer;
+
+        .gantt-tri   { opacity: 0.55; }
+        .gantt-label { opacity: 1; }
+
+        &:hover .gantt-tri   { opacity: 1; }
+        &:hover .gantt-label { opacity: 0.75; }
+    }
+
+    // SVG polygon 삼각형 아이콘
+    .gantt-tri {
+        fill: var(--color-text);
+    }
+
+    // Leaf 노드 점 인디케이터
+    .gantt-leaf-dot {
+        fill: var(--color-text);
+        opacity: 0.25;
+    }
+
+    .gantt-label {
+        font-size: 12px;
+        fill: var(--color-text);
+        dominant-baseline: auto;
+        pointer-events: none;
+    }
+
+    // Period 컬럼 날짜
+    .gantt-label-date {
+        font-size: 9px;
+        fill: var(--color-text);
+        opacity: 0.75;
+        dominant-baseline: auto;
+        pointer-events: none;
+    }
+
+    // Est 컬럼 소요일
+    .gantt-label-days {
+        font-size: 9px;
+        fill: var(--color-text);
+        opacity: 0.6;
+        dominant-baseline: auto;
+        pointer-events: none;
+    }
+
+    // 레이블 패널 컬럼 구분선
+    .gantt-col-divider {
+        stroke: var(--color-border);
+        stroke-width: 1;
+        opacity: 0.5;
+    }
+
+    .gantt-bar-leaf   { cursor: default; }
+    .gantt-bar-parent { cursor: default; }
+
+    .gantt-bar-label {
+        font-size: 11px;
+        fill: #ffffff;
+        text-anchor: middle;
+        dominant-baseline: auto;
+        pointer-events: none;
+    }
+
+    .gantt-bar-outer-label {
+        font-size: 11px;
+        fill: var(--color-text);
+        dominant-baseline: auto;
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .gantt-bar-start-label {
+        font-size: 10px;
+        fill: var(--color-text);
+        text-anchor: end;
+        dominant-baseline: auto;
+        pointer-events: none;
+        opacity: 0.5;
+    }
+
+    .gantt-today-line {
+        stroke: #e05a5a;
+        stroke-width: 2;
+        stroke-dasharray: 4 2;
+        opacity: 0.85;
+    }
+
+    .gantt-today-label {
+        font-size: 10px;
+        fill: #e05a5a;
+        text-anchor: middle;
+        dominant-baseline: auto;
+        font-weight: 600;
+    }
+
+    // 의존성 화살표
+    .gantt-dep-line {
+        fill: none;
+        stroke-width: 1.5;
+        opacity: 0.55;
+    }
+
+    .gantt-dep-arrow {
+        opacity: 0.55;
+    }
+
+    // 헤더 오늘 하이라이트
+    .gantt-today-hdr {
+        fill: #e05a5a;
+        opacity: 0.15;
+    }
+
+    .gantt-today-hdr-label {
+        font-size: 10px;
+        fill: #e05a5a;
+        text-anchor: middle;
+        dominant-baseline: auto;
+        font-weight: 700;
+    }
+}
