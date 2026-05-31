@@ -971,8 +971,13 @@ controllerComponents: ControllerComponents,
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
       val isPartialEditPreview = partialLineStart.isDefined && partialLineEnd.isDefined
       val hasPaperContent = body.contains("#!Paper")
+      val hasGanttContent = body.trim.toLowerCase.startsWith("#!gantt")
       val additionalInfo = if (isPartialEditPreview || hasPaperContent) "" else getAhaMarkAdditionalInfo(name)
-      Ok(s"""<div class="wikiContent preview"><div class="limitWidth">${Interpreters.toHtmlString(body + additionalInfo)}</div></div>""")
+      val contentHtml = if (hasGanttContent)
+        Interpreters.toHtmlString(body) + Interpreters.toHtmlString(additionalInfo)
+      else
+        Interpreters.toHtmlString(body + additionalInfo)
+      Ok(s"""<div class="wikiContent preview"><div class="limitWidth">$contentHtml</div></div>""")
     }
   }
 

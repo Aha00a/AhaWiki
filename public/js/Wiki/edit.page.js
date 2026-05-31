@@ -1,4 +1,4 @@
-const AhaWikiEditConfig = window.AhaWikiEditConfig || {};
+﻿const AhaWikiEditConfig = window.AhaWikiEditConfig || {};
 AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
         function adjustEditorLayoutHeight() {
@@ -50,10 +50,19 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
         function preview() {
             if (window.AhaWikiCodeMirrorEditor)
                 window.AhaWikiCodeMirrorEditor.save();
+            let previewText = $('textarea[name=text]').val();
+            if ($('#ganttInlineEditor').hasClass('visible')) {
+                const lines = previewText.split('\n');
+                const shebangLine = (lines[0] || '').trim();
+                if (/^#!gantt/i.test(shebangLine)) {
+                    const sectionIdx = lines.findIndex((l, i) => i > 0 && /^={1,6}[\s=]/.test(l.trim()));
+                    if (sectionIdx !== -1) previewText = lines.slice(0, sectionIdx).join('\n');
+                }
+            }
             $.post('/preview', {
                 csrfToken: $('[name=csrfToken]').val(),
                 name: AhaWikiEditConfig.pageName,
-                text: $('textarea[name=text]').val(),
+                text: previewText,
                 lineStart: $('input[name=lineStart]').val(),
                 lineEnd: $('input[name=lineEnd]').val()
             }, function (data, textStatus, jqXHR) {
@@ -125,13 +134,18 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             const $tableInlineOption = $('#tableInlineOption');
             let tableInlineAutoApplyTimer = null;
             let tableInlineCursor = { row: 0, col: 0 };
+            const $ganttInlineEditor = $('#ganttInlineEditor');
+            const $ganttInlineEditorGrid = $('#ganttInlineEditorGrid');
+            let ganttAutoApplyTimer = null;
+            let ganttCursor = { row: 0, col: 0 };
+            const GANTT_COL_NAME = 0, GANTT_COL_START = 1, GANTT_COL_EST = 2, GANTT_COL_COUNT = 3;
 
             function detectTableBlock(value) {
                 const lines = value.split('\n');
                 if (!lines.length)
                     return null;
                 const firstLine = (lines[0] || '').trim();
-                const inlineWrappedMatch = firstLine.match(/^\[\[\[#!(?:table|gantt)(?:\s+(.+))?$/i);
+                const inlineWrappedMatch = firstLine.match(/^\[\[\[#!table(?:\s+(.+))?$/i);
                 if (inlineWrappedMatch) {
                     const optionInline = (inlineWrappedMatch[1] || 'tsv').trim().toLowerCase();
                     const delimiterInline = optionInline.startsWith('csv') ? ',' : '\t';
@@ -146,7 +160,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const hasBlockWrapper = /^\[\[\[$/.test(firstLine);
                 const shebangLineIndex = hasBlockWrapper ? 1 : 0;
                 const shebang = (lines[shebangLineIndex] || '').trim();
-                const match = shebang.match(/^#!(?:table|gantt)(?:\s+(.+))?$/i);
+                const match = shebang.match(/^#!table(?:\s+(.+))?$/i);
                 if (!match)
                     return null;
                 const option = (match[1] || 'tsv').trim().toLowerCase();
@@ -159,6 +173,28 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     dataEndExclusiveLineIndex: hasClosingWrapper ? lines.length - 1 : lines.length
                 };
             }
+
+                function detectGanttBlock(value) {
+                    const lines = value.split('\n');
+                    if (!lines.length) return null;
+                    const firstLine = (lines[0] || '').trim();
+                    const inlineWrappedMatch = firstLine.match(/^\[\[\[#!gantt(?:\s+.*)?$/i);
+                    if (inlineWrappedMatch) {
+                        const closingIdx = lines.findIndex((l, i) => i > 0 && l.trim() === ']]]');
+                        return { dataStartLineIndex: 1, dataEndExclusiveLineIndex: closingIdx !== -1 ? closingIdx : lines.length };
+                    }
+                    const hasBlockWrapper = /^\[\[\[$/.test(firstLine);
+                    const shebangLineIndex = hasBlockWrapper ? 1 : 0;
+                    const shebang = (lines[shebangLineIndex] || '').trim();
+                    if (!/^#!gantt(?:\s+.*)?$/i.test(shebang)) return null;
+                    if (hasBlockWrapper) {
+                        const closingIdx = lines.findIndex((l, i) => i > shebangLineIndex && l.trim() === ']]]');
+                        return { dataStartLineIndex: shebangLineIndex + 1, dataEndExclusiveLineIndex: closingIdx !== -1 ? closingIdx : lines.length };
+                    }
+                    // #!gantt 전용 페이지: 섹션 헤더(==)를 데이터 끝으로 인식
+                    const sectionIdx = lines.findIndex((l, i) => i > shebangLineIndex && /^={1,6}[\s=]/.test(l.trim()));
+                    return { dataStartLineIndex: shebangLineIndex + 1, dataEndExclusiveLineIndex: sectionIdx !== -1 ? sectionIdx : lines.length };
+                }
 
             function parseCells(value, tableInfo) {
                 const lines = value.split('\n');
@@ -260,6 +296,135 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $('.toggleTableEditor').text('Switch to Table Editor');
             }
 
+            function parseGanttSource(src) {
+                const block = detectGanttBlock(src);
+                if (!block) return [];
+                return src.split('\n')
+                    .slice(block.dataStartLineIndex, block.dataEndExclusiveLineIndex)
+                    .map(line => {
+                        if (!line.trim()) return null;
+                        const cols = line.split('\t');
+                        let depth = 0, name = '', nameIdx = -1;
+                        for (let i = 0; i < cols.length; i++) {
+                            if (cols[i].trim() !== '') { depth = i; name = cols[i].trim(); nameIdx = i; break; }
+                        }
+                        if (nameIdx === -1) return null;
+                        const rest = [];
+                        for (let j = nameIdx + 1; j < cols.length; j++) {
+                            const v = cols[j].trim();
+                            if (v) rest.push(v);
+                        }
+                        let est = '', startOrRef = '';
+                        if (rest.length > 0 && /^\d+$/.test(rest[rest.length - 1])) est = rest.pop();
+                        if (rest.length > 0) startOrRef = rest[rest.length - 1];
+                        return { depth, name, startOrRef, est };
+                    })
+                    .filter(r => r !== null);
+            }
+
+            function renderGanttGrid(rows) {
+                if (!rows.length) rows = [{ depth: 0, name: '', startOrRef: '', est: '' }];
+                const html = rows.map((row, rIdx) => {
+                    const paddingLeft = row.depth * 20 + 6;
+                    const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}"></td>`;
+                    const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}"></td>`;
+                    const estTd = `<td><input class="ganttEstInput" type="number" min="1" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}"></td>`;
+                    return `<tr data-depth="${row.depth}">${nameTd}${startTd}${estTd}</tr>`;
+                }).join('');
+                $ganttInlineEditorGrid.html(html);
+                focusGanttCell(ganttCursor.row, ganttCursor.col, false);
+            }
+
+            function focusGanttCell(row, col, withFocus) {
+                const rowCount = $ganttInlineEditorGrid.find('tr').length;
+                if (!rowCount) return null;
+                const nextRow = Math.max(0, Math.min(row, rowCount - 1));
+                const nextCol = Math.max(0, Math.min(col, GANTT_COL_COUNT - 1));
+                ganttCursor = { row: nextRow, col: nextCol };
+                $ganttInlineEditorGrid.find('input').removeClass('tableInlineEditorCellActive');
+                const $target = $ganttInlineEditorGrid.find(`input[data-r="${nextRow}"][data-c="${nextCol}"]`);
+                $target.addClass('tableInlineEditorCellActive');
+                if (withFocus && $target.length) {
+                    $target.trigger('focus');
+                    const val = $target.val();
+                    if ($target[0].type !== 'number') $target[0].setSelectionRange(val.length, val.length);
+                }
+                return $target;
+            }
+
+            function ganttGridAsRows() {
+                const rows = [];
+                $ganttInlineEditorGrid.find('tr').each(function () {
+                    const depth = parseInt($(this).attr('data-depth'), 10) || 0;
+                    const name = $(this).find(`input[data-c="${GANTT_COL_NAME}"]`).val() || '';
+                    const startOrRef = $(this).find(`input[data-c="${GANTT_COL_START}"]`).val() || '';
+                    const est = $(this).find(`input[data-c="${GANTT_COL_EST}"]`).val() || '';
+                    rows.push({ depth, name, startOrRef, est });
+                });
+                return rows.length ? rows : [{ depth: 0, name: '', startOrRef: '', est: '' }];
+            }
+
+            function serializeGanttRow(row) {
+                let line = '\t'.repeat(row.depth) + row.name;
+                if (row.startOrRef) line += '\t' + row.startOrRef;
+                if (row.est) line += '\t' + row.est;
+                return line;
+            }
+
+            function rerenderGanttWithCursor(rows, row, col, withFocus) {
+                ganttCursor = { row, col };
+                renderGanttGrid(rows);
+                focusGanttCell(row, col, withFocus);
+                scheduleGanttAutoApply();
+            }
+
+            function applyGanttBlockEditor() {
+                const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+                const block = detectGanttBlock(src);
+                if (!block) return;
+                const lines = src.split('\n');
+                const dataLines = ganttGridAsRows().map(serializeGanttRow);
+                const before = lines.slice(0, block.dataStartLineIndex);
+                const after = lines.slice(block.dataEndExclusiveLineIndex);
+                const next = before.concat(dataLines, after).join('\n');
+                if (window.AhaWikiCodeMirrorEditor) {
+                    window.AhaWikiCodeMirrorEditor.setValue(next);
+                    window.AhaWikiCodeMirrorEditor.save();
+                } else {
+                    $textarea.val(next);
+                }
+                $textarea.trigger('input').trigger('change');
+            }
+
+            function scheduleGanttAutoApply() {
+                if (ganttAutoApplyTimer) { clearTimeout(ganttAutoApplyTimer); ganttAutoApplyTimer = null; }
+                ganttAutoApplyTimer = setTimeout(applyGanttBlockEditor, 120);
+            }
+
+            function openInlineGanttEditor() {
+                const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+                if (!detectGanttBlock(src)) return false;
+                ganttCursor = { row: 0, col: 0 };
+                renderGanttGrid(parseGanttSource(src));
+                $('#ganttEditorBar').hide();
+                $ganttInlineEditor.addClass('visible');
+                hideStandardEditor();
+                $('.toolbarTableOnly').hide();
+                $('.toggleTableEditor').text('Switch to Raw Editor');
+                return true;
+            }
+
+            function closeInlineGanttEditor() {
+                if (ganttAutoApplyTimer) { clearTimeout(ganttAutoApplyTimer); ganttAutoApplyTimer = null; }
+                applyGanttBlockEditor();
+                syncEditorToTextarea();
+                $ganttInlineEditor.removeClass('visible');
+                showStandardEditor();
+                $('.toolbarTableOnly').show();
+                $('.toggleTableEditor').text('Switch to Gantt Editor');
+                $('#ganttEditorBar').show();
+            }
+
             function applyTableBlockEditor() {
                 const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
                 const table = detectTableBlock(src);
@@ -302,7 +467,83 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     closeInlineTableEditor();
                     return false;
                 }
-                openInlineTableEditor();
+                if ($ganttInlineEditor.hasClass('visible')) {
+                    closeInlineGanttEditor();
+                    return false;
+                }
+                const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
+                if (detectGanttBlock(src)) {
+                    openInlineGanttEditor();
+                } else {
+                    openInlineTableEditor();
+                }
+                return false;
+            });
+            $ganttInlineEditor.on('input', 'input', scheduleGanttAutoApply);
+            $ganttInlineEditor.on('focus', 'input', function () {
+                ganttCursor = {
+                    row: parseInt($(this).attr('data-r'), 10) || 0,
+                    col: parseInt($(this).attr('data-c'), 10) || 0
+                };
+                focusGanttCell(ganttCursor.row, ganttCursor.col, false);
+            });
+            $ganttInlineEditor.on('keydown', 'input', function (e) {
+                const row = parseInt($(this).attr('data-r'), 10) || 0;
+                const col = parseInt($(this).attr('data-c'), 10) || 0;
+                if (e.key === 'Tab' && col === GANTT_COL_NAME) {
+                    e.preventDefault();
+                    const rows = ganttGridAsRows();
+                    rows[row].depth = e.shiftKey ? Math.max(0, rows[row].depth - 1) : rows[row].depth + 1;
+                    rerenderGanttWithCursor(rows, row, col, true);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const rowCount = $ganttInlineEditorGrid.find('tr').length;
+                    if (row >= rowCount - 1) {
+                        const rows = ganttGridAsRows();
+                        const currentDepth = rows[row] ? rows[row].depth : 0;
+                        rows.push({ depth: currentDepth, name: '', startOrRef: '', est: '' });
+                        rerenderGanttWithCursor(rows, row + 1, col, true);
+                    } else {
+                        focusGanttCell(row + 1, col, true);
+                    }
+                } else if (e.key === 'ArrowUp') { e.preventDefault(); focusGanttCell(row - 1, col, true); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); focusGanttCell(row + 1, col, true); }
+                else if (e.key === 'ArrowLeft' && this.selectionStart === 0 && this.selectionEnd === 0) { e.preventDefault(); focusGanttCell(row, col - 1, true); }
+                else if (e.key === 'ArrowRight' && this.selectionStart === this.value.length && this.selectionEnd === this.value.length) { e.preventDefault(); focusGanttCell(row, col + 1, true); }
+            });
+            $('#ganttAddRow').on('click', function () {
+                const rows = ganttGridAsRows();
+                const currentDepth = rows[ganttCursor.row] ? rows[ganttCursor.row].depth : 0;
+                rows.splice(ganttCursor.row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '' });
+                rerenderGanttWithCursor(rows, ganttCursor.row + 1, ganttCursor.col, true);
+                return false;
+            });
+            $('#ganttDeleteRow').on('click', function () {
+                const rows = ganttGridAsRows();
+                if (rows.length <= 1) return false;
+                rows.splice(ganttCursor.row, 1);
+                rerenderGanttWithCursor(rows, Math.max(0, ganttCursor.row - 1), ganttCursor.col, true);
+                return false;
+            });
+            $('#ganttIndent').on('click', function () {
+                const rows = ganttGridAsRows();
+                rows[ganttCursor.row].depth += 1;
+                rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
+                return false;
+            });
+            $('#ganttOutdent').on('click', function () {
+                const rows = ganttGridAsRows();
+                rows[ganttCursor.row].depth = Math.max(0, rows[ganttCursor.row].depth - 1);
+                rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
+                return false;
+            });
+            $('#ganttToggleRaw').on('click', function () {
+                closeInlineGanttEditor();
+                return false;
+            });
+            $('#openGanttEditor').on('click', function () {
+                $('#ganttEditorBar').hide();
+                openInlineGanttEditor();
                 return false;
             });
             $tableInlineEditor.on('input', 'input', scheduleInlineAutoApply);
@@ -1304,7 +1545,9 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             });
             preview();
             const initialSrc = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
-            if ($('input[name=lineStart]').length || detectTableBlock(initialSrc))
+            if (detectGanttBlock(initialSrc))
+                openInlineGanttEditor();
+            else if ($('input[name=lineStart]').length || detectTableBlock(initialSrc))
                 openInlineTableEditor();
         });
         function preventXss(html) {

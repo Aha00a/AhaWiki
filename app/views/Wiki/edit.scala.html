@@ -255,6 +255,15 @@
         }
         .tableInlineEditor { display: none; border: 1px solid var(--color-border); border-radius: 6px; margin-bottom: 8px; background: var(--color-surface); }
         .tableInlineEditor.visible { display: block; }
+        .ganttInlineEditor { display: none; border: 1px solid var(--color-border); border-radius: 6px; margin-bottom: 8px; background: var(--color-surface); }
+        .ganttInlineEditor.visible { display: block; }
+        .ganttEditorGrid { border-collapse: collapse; width: max-content; min-width: 100%; }
+        .ganttEditorGrid th { border: 1px solid var(--color-table-border); padding: 4px 8px; font-size: 11px; font-weight: 600; color: var(--color-text-subtle); background: var(--color-surface-alt); text-align: left; white-space: nowrap; }
+        .ganttEditorGrid td { border: 1px solid var(--color-table-border); padding: 0; }
+        .ganttEditorGrid input { width: 100%; border: 0; padding: 6px; font: inherit; box-sizing: border-box; background: var(--color-input-bg); color: var(--color-text); }
+        .ganttEditorGrid .ganttNameInput { min-width: 200px; }
+        .ganttEditorGrid .ganttStartOrRefInput { min-width: 120px; }
+        .ganttEditorGrid .ganttEstInput { min-width: 60px; width: 60px; }
         .tableInlineEditorHeader { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-bottom: 1px solid var(--color-border-subtle); background: var(--color-surface-alt); flex-wrap: wrap; }
         .tableInlineEditorHeader .tableInlineEditorButton {
             border: 1px solid var(--color-input-border);
@@ -504,6 +513,25 @@
                                     </div>
                                     <div class="tableInlineEditorBody">
                                         <table class="tableBlockEditorGrid"><tbody id="tableInlineEditorGrid"></tbody></table>
+                                    </div>
+                                </div>
+                                <div id="ganttEditorBar" style="display:none; margin-bottom:8px;">
+                                    <button id="openGanttEditor" class="tableInlineEditorButton" type="button">Switch to Gantt Editor</button>
+                                </div>
+                                <div id="ganttInlineEditor" class="ganttInlineEditor">
+                                    <div class="tableInlineEditorHeader">
+                                        <strong>Gantt</strong>
+                                        <button id="ganttAddRow" class="tableInlineEditorButton" type="button">+ Row</button>
+                                        <button id="ganttDeleteRow" class="tableInlineEditorButton" type="button">- Row</button>
+                                        <button id="ganttIndent" class="tableInlineEditorButton" type="button">▶ Indent</button>
+                                        <button id="ganttOutdent" class="tableInlineEditorButton" type="button">◀ Outdent</button>
+                                        <button id="ganttToggleRaw" class="tableInlineEditorButton" type="button" style="margin-left: auto;">Raw</button>
+                                    </div>
+                                    <div class="tableInlineEditorBody">
+                                        <table class="ganttEditorGrid">
+                                            <thead><tr><th>Task</th><th>Start / Ref</th><th>Est</th></tr></thead>
+                                            <tbody id="ganttInlineEditorGrid"></tbody>
+                                        </table>
                                     </div>
                                 </div>
                                 <textarea name="text" autofocus="autofocus">@initialEditorText</textarea>
