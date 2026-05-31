@@ -462,4 +462,7 @@
   padding: 1px 142px 5px 10px;
   overflow: hidden;
 }
+body > .Gantt > .wikiContent > .limitWidth > h1 {
+  margin-bottom: 25px;
+}
 /*# sourceMappingURL=interpreter.css.map */
