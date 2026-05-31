@@ -916,28 +916,6 @@
 			.pageContent {
 				.commonAhaWiki;
 				text-align: justify;
-				h1, h2, h3, h4, h5, h6 {
-					margin-top: 0;
-				}
-			}
-			.toc {
-				display: none;
-			}
-
-			.wikiTableSimpleScroll,
-			.wikiTableSimple {
-				box-shadow: none;
-				backdrop-filter: none;
-				-webkit-backdrop-filter: none;
-			}
-
-			.InterpreterRenderMetaWrapper.Table {
-				margin-left: 0;
-				.InterpreterRenderContent {
-					display: block;
-					border: none;
-					border-radius: 0;
-				}
 			}
 
 		}
@@ -956,9 +934,29 @@
 			}
 		}
 
-		&.contract .page .pageContent {
-			h1, h2, h3, h4, h5, h6 {
-				border-bottom: none;
+		&.contract .page {
+			.pageContent {
+				h1, h2, h3, h4, h5, h6 {
+					margin-top: 0;
+					border-bottom: none;
+				}
+			}
+			.toc {
+				display: none;
+			}
+			.wikiTableSimpleScroll,
+			.wikiTableSimple {
+				box-shadow: none;
+				backdrop-filter: none;
+				-webkit-backdrop-filter: none;
+			}
+			.InterpreterRenderMetaWrapper.Table {
+				margin-left: 0;
+				.InterpreterRenderContent {
+					display: block;
+					border: none;
+					border-radius: 0;
+				}
 			}
 		}
 

@@ -2113,31 +2113,6 @@
     padding-left: 0;
   }
 }
-.AhaWiki .paperContent .page .pageContent h1,
-.AhaWiki .paperContent .page .pageContent h2,
-.AhaWiki .paperContent .page .pageContent h3,
-.AhaWiki .paperContent .page .pageContent h4,
-.AhaWiki .paperContent .page .pageContent h5,
-.AhaWiki .paperContent .page .pageContent h6 {
-  margin-top: 0;
-}
-.AhaWiki .paperContent .page .toc {
-  display: none;
-}
-.AhaWiki .paperContent .page .wikiTableSimpleScroll,
-.AhaWiki .paperContent .page .wikiTableSimple {
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-.AhaWiki .paperContent .page .InterpreterRenderMetaWrapper.Table {
-  margin-left: 0;
-}
-.AhaWiki .paperContent .page .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent {
-  display: block;
-  border: none;
-  border-radius: 0;
-}
 .AhaWiki .paperContent.landscape .page {
   width: 267mm;
   height: 180mm;
@@ -2151,7 +2126,25 @@
 .AhaWiki .paperContent.contract .page .pageContent h4,
 .AhaWiki .paperContent.contract .page .pageContent h5,
 .AhaWiki .paperContent.contract .page .pageContent h6 {
+  margin-top: 0;
   border-bottom: none;
+}
+.AhaWiki .paperContent.contract .page .toc {
+  display: none;
+}
+.AhaWiki .paperContent.contract .page .wikiTableSimpleScroll,
+.AhaWiki .paperContent.contract .page .wikiTableSimple {
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.AhaWiki .paperContent.contract .page .InterpreterRenderMetaWrapper.Table {
+  margin-left: 0;
+}
+.AhaWiki .paperContent.contract .page .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent {
+  display: block;
+  border: none;
+  border-radius: 0;
 }
 .AhaWiki .paperContent + .paperAdditionalSection {
   background-color: var(--color-surface);
