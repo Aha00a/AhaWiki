@@ -590,6 +590,7 @@
         var collapsedIds  = {};
         var currentDayW   = DAY_W_DEF;
         var lastTotalDays = 0;
+        var lastStats     = null;
 
         // 툴바
         var toolbar = document.createElement('div');
@@ -604,6 +605,7 @@
             '</div>',
             '<button class="gantt-btn gantt-zoom-100" title="기본 배율 (1일=1칸)">100%</button>',
             '<button class="gantt-btn gantt-fit" title="화면 폭에 맞춤">Fit</button>',
+            '<button class="gantt-btn gantt-export-svg" title="SVG로 저장">SVG</button>',
             '</div>',
         ].join('');
         el.insertBefore(toolbar, container.nextSibling);
@@ -618,6 +620,7 @@
         function render() {
             var result = buildAll(rootNodes, collapsedIds, currentDayW, defaultEst);
             lastTotalDays = result.totalDays;
+            lastStats     = result.stats;
             container.innerHTML = result.html;
             updateZoomLabel();
             if (summaryEl) summaryEl.innerHTML = buildSummaryHtml(result.stats);
@@ -660,6 +663,9 @@
             currentDayW = DAY_W_DEF;
             render();
         });
+        toolbar.querySelector('.gantt-export-svg').addEventListener('click', function () {
+            exportSvg(container, lastStats);
+        });
         toolbar.querySelector('.gantt-fit').addEventListener('click', function () {
             if (lastTotalDays > 0) {
                 var bodyCell = container.querySelector('.gantt-body-cell');
@@ -670,6 +676,120 @@
         });
 
         render();
+    }
+
+    // ── SVG 내보내기 ──────────────────────────────────────────────────────────
+    function buildExportStyle(v) {
+        var t = v.text, bg = v.bg, bd = v.border, bs = v.borderSubtle;
+        return [
+            'text { font-family: sans-serif; }',
+            '.gantt-bg,.gantt-label-bg,.gantt-header-bg { fill:' + bg + '; }',
+            '.gantt-corner-hdr-bg { fill:' + bs + '; }',
+            '.gantt-weekend { fill:' + bs + '; opacity:0.5; }',
+            '.gantt-row-even { fill:' + bg + '; }',
+            '.gantt-row-odd { fill:' + bs + '; opacity:0.35; }',
+            '.gantt-hdr-divider { stroke:' + bd + '; stroke-width:1; }',
+            '.gantt-col-divider { stroke:' + bd + '; stroke-width:1; opacity:0.5; }',
+            '.gantt-grid-week { stroke:' + bd + '; stroke-width:1; opacity:0.5; fill:none; }',
+            '.gantt-grid-month { stroke:' + bd + '; stroke-width:1.5; opacity:0.8; fill:none; }',
+            '.gantt-hdr-month { font-size:12px; font-weight:600; fill:' + t + '; }',
+            '.gantt-hdr-day { font-size:10px; fill:' + t + '; opacity:0.7; text-anchor:middle; }',
+            '.gantt-corner-hdr-text { font-size:11px; font-weight:600; fill:' + t + '; opacity:0.75; }',
+            '.gantt-tri { fill:' + t + '; opacity:0.55; }',
+            '.gantt-leaf-dot { fill:' + t + '; opacity:0.25; }',
+            '.gantt-label { font-size:12px; fill:' + t + '; }',
+            '.gantt-label-date { font-size:9px; fill:' + t + '; opacity:0.75; }',
+            '.gantt-label-days { font-size:9px; fill:' + t + '; opacity:0.6; }',
+            '.gantt-bar-label { font-size:11px; fill:#fff; text-anchor:middle; }',
+            '.gantt-bar-outer-label { font-size:11px; fill:' + t + '; opacity:0.7; }',
+            '.gantt-bar-start-label { font-size:10px; fill:' + t + '; text-anchor:end; opacity:0.5; }',
+            '.gantt-today-line { stroke:#e05a5a; stroke-width:2; stroke-dasharray:4 2; opacity:0.85; fill:none; }',
+            '.gantt-today-hdr { fill:#e05a5a; opacity:0.15; }',
+            '.gantt-today-hdr-label { font-size:10px; fill:#e05a5a; text-anchor:middle; font-weight:700; }',
+            '.gantt-dep-line { fill:none; stroke-width:1.5; opacity:0.55; }',
+            '.gantt-dep-arrow { opacity:0.55; }',
+        ].join('\n');
+    }
+
+    var SUMMARY_ROW_H = 26;
+
+    function buildSummarySvg(stats, totalW, v) {
+        if (!stats || !stats.minDate) return '';
+        var items = [
+            'Period ' + fmtDate(stats.minDate) + ' ~ ' + fmtDate(stats.maxDate),
+            'Total ' + stats.calendarDays + 'd',
+            'Biz ' + stats.businessDays + 'd',
+            'Tasks ' + stats.taskCount,
+            'Groups ' + stats.groupCount,
+            'Deps ' + stats.dependencyCount,
+            'Shown ' + stats.visibleCount + '/' + stats.totalCount,
+        ];
+        var o = [];
+        o.push('<g>');
+        o.push('<rect width="' + totalW + '" height="' + SUMMARY_ROW_H + '" fill="' + v.borderSubtle + '" opacity="0.5"/>');
+        o.push('<line x1="0" y1="0" x2="' + totalW + '" y2="0" stroke="' + v.border + '" stroke-width="1"/>');
+        var x = 12;
+        items.forEach(function (item) {
+            var parts = item.split(' ');
+            var label = parts[0];
+            var value = parts.slice(1).join(' ');
+            o.push('<text x="' + x + '" y="17" font-family="sans-serif" font-size="10" fill="' + v.text + '" opacity="0.55">' + xmlEsc(label) + '</text>');
+            x += label.length * 6 + 2;
+            o.push('<text x="' + x + '" y="17" font-family="sans-serif" font-size="10" font-weight="600" fill="' + v.text + '">' + xmlEsc(value) + '</text>');
+            x += value.length * 7 + 16;
+        });
+        o.push('</g>');
+        return o.join('');
+    }
+
+    function exportSvg(container, stats) {
+        var cs = getComputedStyle(document.documentElement);
+        var v = {
+            bg:           cs.getPropertyValue('--color-bg').trim()            || '#ffffff',
+            text:         cs.getPropertyValue('--color-text').trim()          || '#1a1a1a',
+            border:       cs.getPropertyValue('--color-border').trim()        || '#d0d0d0',
+            borderSubtle: cs.getPropertyValue('--color-border-subtle').trim() || '#f0f0f0',
+        };
+
+        var cornerSvg = container.querySelector('.gantt-corner-cell svg');
+        var hdrSvg    = container.querySelector('.gantt-header-svg');
+        var lblSvg    = container.querySelector('.gantt-labels-svg');
+        var bodySvg   = container.querySelector('.gantt-body-svg');
+        if (!cornerSvg || !hdrSvg || !lblSvg || !bodySvg) return;
+
+        var lw = +cornerSvg.getAttribute('width');
+        var hh = +cornerSvg.getAttribute('height');
+        var bw = +hdrSvg.getAttribute('width');
+        var bh = +lblSvg.getAttribute('height');
+        var totalW = lw + bw;
+        var totalH = hh + bh + SUMMARY_ROW_H;
+
+        var chartH = hh + bh;
+        var out = [
+            '<?xml version="1.0" encoding="UTF-8"?>',
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + totalW + '" height="' + totalH + '">',
+            '<defs><style>' + buildExportStyle(v) + '</style></defs>',
+            '<g>' + cornerSvg.innerHTML + '</g>',
+            '<g transform="translate(' + lw + ',0)">' + hdrSvg.innerHTML + '</g>',
+            '<g transform="translate(0,' + hh + ')">' + lblSvg.innerHTML + '</g>',
+            '<g transform="translate(' + lw + ',' + hh + ')">' + bodySvg.innerHTML + '</g>',
+            '<g transform="translate(0,' + chartH + ')">' + buildSummarySvg(stats, totalW, v) + '</g>',
+            // 사분면 구분선 (CSS border를 SVG로 재현)
+            '<line x1="' + lw + '" y1="0" x2="' + lw + '" y2="' + chartH + '" stroke="' + v.border + '" stroke-width="2"/>',
+            '<line x1="0" y1="' + hh + '" x2="' + totalW + '" y2="' + hh + '" stroke="' + v.border + '" stroke-width="1"/>',
+            // 외곽 테두리
+            '<rect x="0" y="0" width="' + totalW + '" height="' + totalH + '" fill="none" stroke="' + v.border + '" stroke-width="1"/>',
+            '</svg>',
+        ].join('\n');
+
+        var blob = new Blob([out], { type: 'image/svg+xml;charset=utf-8' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
+        a.href = url; a.download = 'gantt.svg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     }
 
     // ── 공개 API ──────────────────────────────────────────────────────────────
