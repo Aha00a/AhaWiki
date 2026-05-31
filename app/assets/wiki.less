@@ -916,6 +916,16 @@
 			.pageContent {
 				.commonAhaWiki;
 				text-align: justify;
+				> div, > div > div, > div > div > div {
+					> p, > blockquote, > table, > .wikiTableSimpleScroll, > .math, > .error, > .info, > .Text, > .Vim {
+						margin-left: var(--wiki-indent-body, 30px);
+						box-sizing: border-box;
+						max-width: calc(100% - var(--wiki-indent-body, 30px));
+					}
+					> .Macro.BlockMacro {
+						margin-left: var(--wiki-indent-body, 30px);
+					}
+				}
 			}
 
 		}

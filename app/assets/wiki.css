@@ -2113,6 +2113,42 @@
     padding-left: 0;
   }
 }
+.AhaWiki .paperContent .page .pageContent > div > p,
+.AhaWiki .paperContent .page .pageContent > div > div > p,
+.AhaWiki .paperContent .page .pageContent > div > div > div > p,
+.AhaWiki .paperContent .page .pageContent > div > blockquote,
+.AhaWiki .paperContent .page .pageContent > div > div > blockquote,
+.AhaWiki .paperContent .page .pageContent > div > div > div > blockquote,
+.AhaWiki .paperContent .page .pageContent > div > table,
+.AhaWiki .paperContent .page .pageContent > div > div > table,
+.AhaWiki .paperContent .page .pageContent > div > div > div > table,
+.AhaWiki .paperContent .page .pageContent > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > div > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .wikiTableSimpleScroll,
+.AhaWiki .paperContent .page .pageContent > div > .math,
+.AhaWiki .paperContent .page .pageContent > div > div > .math,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .math,
+.AhaWiki .paperContent .page .pageContent > div > .error,
+.AhaWiki .paperContent .page .pageContent > div > div > .error,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .error,
+.AhaWiki .paperContent .page .pageContent > div > .info,
+.AhaWiki .paperContent .page .pageContent > div > div > .info,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .info,
+.AhaWiki .paperContent .page .pageContent > div > .Text,
+.AhaWiki .paperContent .page .pageContent > div > div > .Text,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .Text,
+.AhaWiki .paperContent .page .pageContent > div > .Vim,
+.AhaWiki .paperContent .page .pageContent > div > div > .Vim,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .Vim {
+  margin-left: var(--wiki-indent-body, 30px);
+  box-sizing: border-box;
+  max-width: calc(100% - var(--wiki-indent-body, 30px));
+}
+.AhaWiki .paperContent .page .pageContent > div > .Macro.BlockMacro,
+.AhaWiki .paperContent .page .pageContent > div > div > .Macro.BlockMacro,
+.AhaWiki .paperContent .page .pageContent > div > div > div > .Macro.BlockMacro {
+  margin-left: var(--wiki-indent-body, 30px);
+}
 .AhaWiki .paperContent.landscape .page {
   width: 267mm;
   height: 180mm;
