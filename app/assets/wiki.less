@@ -892,10 +892,11 @@
 
 			.pageHeader {
 				border-bottom: 1mm solid currentColor;
-
-				.documentId {
-					text-align:right;
-				}
+				display: flex;
+				align-items: baseline;
+				.topLeft   { flex: 1; }
+				.topCenter { flex: 1; text-align: center; }
+				.topRight  { flex: 1; text-align: right; }
 			}
 
 			.pageFooter {
@@ -905,10 +906,11 @@
 
 				border-top: 1mm solid currentColor;
 				padding-top: 3mm;
-
-				.pageNo {
-					float: right;
-				}
+				display: flex;
+				align-items: baseline;
+				.bottomLeft   { flex: 1; }
+				.bottomCenter { flex: 1; text-align: center; }
+				.bottomRight  { flex: 1; text-align: right; }
 			}
 
 			.pageContent {
@@ -916,7 +918,6 @@
 				text-align: justify;
 				h1, h2, h3, h4, h5, h6 {
 					margin-top: 0;
-					border-bottom: none;
 				}
 			}
 			.toc {
@@ -952,6 +953,12 @@
 
 			.pageFooter {
 				width: @a4LandscapePageWidth;
+			}
+		}
+
+		&.contract .page .pageContent {
+			h1, h2, h3, h4, h5, h6 {
+				border-bottom: none;
 			}
 		}
 

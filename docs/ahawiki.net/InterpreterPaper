@@ -4,8 +4,8 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
 == 기본 문법
  * Arguments
-  1. `cssClass` - optional. 루트 div에 추가할 CSS 클래스. 생략하면 `#!var class` 변수 값 사용.
-  1. `docId` - optional. 페이지 헤더 우측에 표시되는 문서 ID. 생략하면 `#!var docId` 변수 값 사용.
+  1. `class` - optional. 루트 div에 추가할 CSS 클래스. 생략하면 `#!var class` 변수 값 사용.
+  1. `docId` - optional. (deprecated) 페이지 헤더 우측(`topRight`)의 기본값. 생략하면 `#!var docId` 변수 값 사용.
 
 == 다중 페이지
 
@@ -17,7 +17,30 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 2페이지 내용
 ]]]
 
-각 페이지에는 헤더(문서 ID)·푸터(페이지 번호)가 자동으로 붙습니다.
+각 페이지에는 헤더·푸터가 자동으로 붙습니다.
+
+== 헤더·푸터 위치 변수
+
+각 페이지의 헤더/푸터는 6개 위치로 나뉩니다.
+
+[[[#!Table tsv 1 1
+위치	변수명	기본값
+헤더 좌	`topLeft`	(없음)
+헤더 중앙	`topCenter`	(없음)
+헤더 우	`topRight`	`docId` 값 (하위호환)
+푸터 좌	`bottomLeft`	(없음)
+푸터 중앙	`bottomCenter`	(없음)
+푸터 우	`bottomRight`	`{{pageNo}} / {{pageTotal}}`
+]]]
+
+ * `{{pageNo}}` : 현재 페이지 번호 (1부터 시작)
+ * `{{pageTotal}}` : 전체 페이지 수
+
+[[[
+#!var topLeft    비밀문서
+#!var topCenter  2026년 연간 보고서
+#!var bottomCenter {{pageNo}} / {{pageTotal}}
+]]]
 
 == 변수 시스템
 

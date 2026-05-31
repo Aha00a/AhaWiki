@@ -1574,8 +1574,18 @@
 }
 .AhaWiki .paperContent .page .pageHeader {
   border-bottom: 1mm solid currentColor;
+  display: flex;
+  align-items: baseline;
 }
-.AhaWiki .paperContent .page .pageHeader .documentId {
+.AhaWiki .paperContent .page .pageHeader .topLeft {
+  flex: 1;
+}
+.AhaWiki .paperContent .page .pageHeader .topCenter {
+  flex: 1;
+  text-align: center;
+}
+.AhaWiki .paperContent .page .pageHeader .topRight {
+  flex: 1;
   text-align: right;
 }
 .AhaWiki .paperContent .page .pageFooter {
@@ -1584,9 +1594,19 @@
   width: 180mm;
   border-top: 1mm solid currentColor;
   padding-top: 3mm;
+  display: flex;
+  align-items: baseline;
 }
-.AhaWiki .paperContent .page .pageFooter .pageNo {
-  float: right;
+.AhaWiki .paperContent .page .pageFooter .bottomLeft {
+  flex: 1;
+}
+.AhaWiki .paperContent .page .pageFooter .bottomCenter {
+  flex: 1;
+  text-align: center;
+}
+.AhaWiki .paperContent .page .pageFooter .bottomRight {
+  flex: 1;
+  text-align: right;
 }
 .AhaWiki .paperContent .page .pageContent {
   --wiki-indent-body: 30px;
@@ -2100,7 +2120,6 @@
 .AhaWiki .paperContent .page .pageContent h5,
 .AhaWiki .paperContent .page .pageContent h6 {
   margin-top: 0;
-  border-bottom: none;
 }
 .AhaWiki .paperContent .page .toc {
   display: none;
@@ -2125,6 +2144,14 @@
 }
 .AhaWiki .paperContent.landscape .page .pageFooter {
   width: 267mm;
+}
+.AhaWiki .paperContent.contract .page .pageContent h1,
+.AhaWiki .paperContent.contract .page .pageContent h2,
+.AhaWiki .paperContent.contract .page .pageContent h3,
+.AhaWiki .paperContent.contract .page .pageContent h4,
+.AhaWiki .paperContent.contract .page .pageContent h5,
+.AhaWiki .paperContent.contract .page .pageContent h6 {
+  border-bottom: none;
 }
 .AhaWiki .paperContent + .paperAdditionalSection {
   background-color: var(--color-surface);
