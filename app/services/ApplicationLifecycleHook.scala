@@ -74,7 +74,7 @@ class ApplicationLifecycleHook @Inject()(
           actorPageCalculator ! Calculate(site, pageName, i, missingPageNames.length)
         }
       } else {
-        logger.info(s"Calculate: no missing page names")
+        logger.info(s"\tCalculate: no missing page names")
         if(false) {
           val seq = ahaWikiCache.PageMeta.SeqPageLatestSummary.get().shuffle().take(2)
           seq.zipWithIndex.foreach { case (page, i) =>
