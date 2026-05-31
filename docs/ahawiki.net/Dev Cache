@@ -1,0 +1,181 @@
+= Dev Cache 캐싱 구조
+
+AhaWiki는 성능 최적화를 위해 여러 계층의 캐싱 메커니즘을 사용합니다.
+
+[[[#!Table tsv 1
+캐싱 메커니즘	유형	저장소	TTL / 주기	비고
+AhaWikiCache	분산 캐시	Redis / Memcached	항목별 상이	SWR + Single-Flight 패턴
+AhaWikiCacheMemoryDomainSite	인-메모리	ConcurrentHashMap	1시간 주기 갱신	도메인-사이트 매핑
+AhaWikiCacheMemoryApiLinks	인-메모리	ConcurrentHashMap	10분 주기 초기화	최대 2,000 항목
+AhaWikiCacheMemoryPermission	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 권한 목록
+AhaWikiCacheMemorySiteAdmin	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 관리자 목록
+CacheCrawler	DB 캐시	MySQL	180일 TTL	외부 URL 메타데이터
+InterpreterVim	파일 캐시	cache/Vim/	7일 주기 초기화	Vim 문법 강조 결과
+]]]
+
+== AhaWikiCache
+
+`app/logics/AhaWikiCache.scala`
+
+Play Framework의 `SyncCacheApi`를 사용하는 분산 캐시 계층입니다. Redis 또는 Memcached 백엔드를 지원합니다.
+
+=== 캐시 패턴
+
+==== Stale-While-Revalidate (SWR)
+
+TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값을 즉시 반환합니다. 그 사이 백그라운드에서 값을 갱신합니다. SWR 기간도 초과하면 실시간 계산 후 저장합니다.
+
+==== Single-Flight
+
+동일 캐시 키에 대한 동시 요청이 들어올 때 한 번만 계산합니다. `synchronized` 블록으로 구현합니다.
+
+=== 캐시 항목
+
+==== Header
+
+ * 캐시 키: `logics.AhaWikiCache$Header:{site.seq}`
+ * 저장 값: `.header` 페이지 렌더링 결과 (HTML 문자열)
+ * TTL: 개발 모드 1분, 프로덕션 1시간
+ * 무효화: `invalidateSiteCaches()` 호출 시
+
+==== Footer
+
+ * 캐시 키: `logics.AhaWikiCache$Footer:{site.seq}`
+ * 저장 값: `.footer` 페이지 렌더링 결과 (HTML 문자열)
+ * TTL: 개발 모드 1분, 프로덕션 1시간
+ * 무효화: `invalidateSiteCaches()` 호출 시
+
+==== Config
+
+ * 캐시 키: `logics.AhaWikiCache$Config:{site.seq}`
+ * 저장 값: `.config` 페이지 내용 (설정 저장소)
+ * TTL: 5분
+ * 무효화: `invalidateSiteCaches()` 호출 시
+
+==== UserProfileImageUrl
+
+ * 캐시 키: `logics.AhaWikiCache$UserProfileImageUrl:{site.seq}:{nickname}`
+ * 저장 값: 사용자 프로필 이미지 URL
+ * TTL: 개발 모드 1분, 프로덕션 10분
+
+==== PageMeta.SeqPageLatestSummary
+
+ * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageLatestSummary:{site.seq}`
+ * 저장 값: 페이지 메타 정보 목록 (최신 요약)
+ * TTL: 개발 모드 1~2분(랜덤), 프로덕션 5~30분(랜덤)
+ * 랜덤 TTL은 다수 사이트의 캐시가 동시에 만료되는 것을 방지합니다.
+ * 무효화: `invalidateSiteCaches()` 호출 시
+
+==== PageMeta.SeqPageName
+
+ * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageName:{site.seq}`
+ * 저장 값: 모든 페이지명 목록
+ * 무효화: `invalidateSiteCaches()` 호출 시
+
+=== invalidateSiteCaches
+
+다음 항목을 한번에 무효화합니다.
+
+ * `AhaWikiCacheMemoryDomainSite`
+ * `PageMeta.SeqPageLatestSummary`
+ * `PageMeta.SeqPageName`
+ * `Header`
+ * `Footer`
+ * `Config`
+
+== AhaWikiCacheMemoryDomainSite
+
+`app/logics/AhaWikiCacheMemoryDomainSite.scala`
+
+도메인 이름 → `Site` 객체 매핑을 인-메모리에 유지합니다. 모든 HTTP 요청마다 도메인으로 사이트를 조회하므로 DB 조회 없이 처리합니다.
+
+ * 초기화: 애플리케이션 시작 후 5초
+ * 주기적 갱신: 1시간마다 DB에서 재로드
+ * 스레드 안전: `@volatile` + `synchronized` 블록
+
+== AhaWikiCacheMemoryApiLinks
+
+`app/logics/AhaWikiCacheMemoryApiLinks.scala`
+
+페이지 간 링크 관계(인접 링크)를 캐싱합니다. 링크 계산은 비용이 크므로 결과를 재사용합니다.
+
+ * 캐시 키: `(siteSeq, pageName)`
+ * 저장 값: `Seq[CalculatedLink]`
+ * 최대 크기: 2,000 항목 (초과 시 절반 제거)
+ * 주기적 초기화: 10분마다 전체 삭제
+ * 수동 무효화: 페이지 저장 시 해당 페이지 항목만 삭제
+
+== AhaWikiCacheMemoryPermission
+
+`app/logics/AhaWikiCacheMemoryPermission.scala`
+
+사이트별 `Permission` 테이블 전체를 메모리에 유지합니다. 권한 판정은 모든 요청에서 수행되므로 DB 조회를 줄입니다.
+
+ * 캐시 키: `siteSeq`
+ * 저장 값: `Seq[Permission]`
+ * 주기적 초기화: 6시간마다 전체 삭제
+ * 수동 무효화: 권한 추가/수정/삭제 시 해당 사이트 항목 삭제
+
+== AhaWikiCacheMemorySiteAdmin
+
+`app/logics/AhaWikiCacheMemorySiteAdmin.scala`
+
+사이트별 관리자(`SiteAdmin`) 목록을 메모리에 유지합니다.
+
+ * 캐시 키: `siteSeq`
+ * 저장 값: `Set[Long]` (user.seq 집합)
+ * 주기적 초기화: 6시간마다 전체 삭제
+ * 수동 무효화: 사이트 관리자 추가/삭제 시 해당 사이트 항목 삭제
+
+== CacheCrawler
+
+`app/models/tables/CacheCrawler.scala`
+
+외부 URL의 제목, 이미지, 설명을 DB에 저장합니다. 동일 URL에 대한 반복 크롤링을 방지합니다.
+
+=== 상태 및 TTL
+
+[[[#!Table tsv 1
+상태	조건	처리
+Fresh	갱신 후 90일 이내	즉시 캐시 반환
+Stale	90일 초과 ~ 180일 이내	캐시 반환 후 백그라운드 재검증
+Expired	180일 초과	삭제 대상
+]]]
+
+=== 주기적 정리
+
+12시간마다 만료된(`Expired`) 항목을 DB에서 삭제합니다.
+
+== InterpreterVim
+
+`app/logics/wikis/interpreters/InterpreterVim.scala`
+
+Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 저장합니다. Vim 프로세스 실행 비용을 절감합니다.
+
+ * 캐시 위치: `cache/Vim/`
+ * 캐시 키: `MD5(colorscheme + 원본 코드)`
+ * 저장 파일: `{md5}.html` (최종 HTML)
+ * 주기적 정리: 7일마다 오래된 파일 삭제
+
+== AhaWikiCacheMemoryTrieMap
+
+`app/logics/AhaWikiCacheMemoryTrieMap.scala`
+
+위 메모리 캐시들의 기반 구조입니다. `ConcurrentHashMap`을 감싸며 최대 크기를 지원합니다.
+
+ * 최대 크기 초과 시 현재 항목의 절반을 제거합니다.
+ * 스레드 안전: `ConcurrentHashMap` 위임
+
+== 스케줄 요약
+
+`app/ApplicationLifecycleHook.scala`
+
+[[[#!Table tsv 1
+스케줄명	초기 지연	반복 간격	동작
+SiteDomainCacheRefresh	5초	1시간	도메인-사이트 캐시 전체 갱신
+ApiLinksCacheClear	10분	10분	링크 캐시 전체 삭제
+PermissionCacheClear	6시간	6시간	권한 캐시 전체 삭제
+SiteAdminCacheClear	6시간	6시간	관리자 캐시 전체 삭제
+CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
+CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
+]]]
