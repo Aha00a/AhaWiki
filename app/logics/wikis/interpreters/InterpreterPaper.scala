@@ -19,9 +19,9 @@ object InterpreterPaper extends TraitInterpreter {
     val bodyResolved  = eciv.applyVariables(bodyExtracted)
 
     // Step 2: 인수 우선, 없으면 변수에서 fallback
-    val cssClass = Option(pageContent.argument(0)).filter(_.nonEmpty)
+    val cssClass = pageContent.argument.lift(0).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("class", ""))
-    val docId = Option(pageContent.argument(1)).filter(_.nonEmpty)
+    val docId = pageContent.argument.lift(1).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("docId", ""))
 
     // Step 3: ---- 기준으로 split하되, 각 청크 앞에 \n × offset을 붙여 원본 줄 번호 보존
