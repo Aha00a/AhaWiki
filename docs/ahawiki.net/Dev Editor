@@ -32,19 +32,18 @@ CodeMirror 5를 사용하며 mode 이름은 `ahamark`이다.
  * macro: `[[Macro(...)]]`
  * tag/variable: `{{name}}`
  * date link: `[YYYY-MM-DD]`, `[YYYY-MM-DD YYYY-MM-DDTHH:mm:ss]`
- * inline style: bold, italic, bold italic, underline, strikeout
- * inline code: `` `code` ``, copyable code: `` ``code`` ``
+ * inline style: '''bold''', ''italic'', '''''bold italic''''', __underline__, ~~strikeout~~
+ * inline code: `inline` ``copyable code: ``
 
 Style class:
  * `ahamark-interpreter` - `[[[#!...]]]` interpreter block
  * `ahamark-interpreter-shebang` - `#!...` directive line
 
-`ahamark-interpreter-shebang`은 CodeMirror에서 `.cm-ahamark-interpreter-shebang` CSS class로 렌더링된다.
 
 == 입력 보조
 `AhaWiki.Editor`는 CodeMirror와 textarea 모두에 같은 입력 규칙을 적용한다.
 
- * 괄호/따옴표 자동 닫기: `()`, `{}`, `[]`, `""`, `''`, `` ` ``
+ * 괄호/따옴표 자동 닫기: `()`, `{}`, `[]`, `""`, `''`, `
  * 선택 영역이 있으면 opening character 입력 시 선택 영역을 감싼다.
  * `Backspace`는 비어 있는 matching pair를 함께 삭제한다.
  * `Enter`는 현재 줄이 list이면 list prefix를 다음 줄로 이어준다.
@@ -98,20 +97,6 @@ Source API:
 
 == Table Editor
 Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline table editor를 사용할 수 있다.
-
-지원 block 형태:
-[[[
-#!table tsv
-a	b
-]]]
-
-[[[
-[[[#!table csv
-a,b
-]]]
-]]]
-
-기능:
  * `tsv`, `csv`, `tsv 1`, `tsv 1 1`, `tsv 1 1 tablesorter` option 자동완성
  * option input으로 table shebang option 변경
  * row/column add/delete
