@@ -1,0 +1,176 @@
+= [Dev] Editor
+
+현재 위키 편집 화면의 기능과 구현 위치를 정리한다.
+
+== Entry Points
+ * `app/views/Wiki/edit.scala.html` - 편집 화면 마크업, 툴바, CodeMirror 스타일, `AhaWikiEditConfig`
+ * `public/js/Wiki/edit.page.js` - 편집 화면의 대부분의 클라이언트 동작
+ * `public/js/AhaWiki.Editor.js` - 입력 보조 규칙과 CodeMirror/textarea 공통 keydown 처리
+ * `public/js/AhaWiki.CodeMirror.AhaMark.js` - AhaMark용 CodeMirror mode
+ * `public/js/Wiki/edit.hotkeyAlt.js` - 편집 화면 `Alt` 단축키 dispatcher
+ * `public/js/Wiki/edit.divider.js` - editor/preview 컬럼 divider drag resize
+ * `public/js/AhaWiki.WikipediaToSchema.js` - Wikipedia InfoBox를 Schema 블록으로 변환
+
+== 화면 구성
+ * 왼쪽은 editor, 오른쪽은 preview로 구성한다.
+ * divider를 drag하면 왼쪽 editor column width를 조정한다.
+ * editor와 preview 높이는 viewport, toolbar, help, attachment list 높이를 반영해 자동 계산한다.
+ * preview pane은 editor column과 높이를 맞추고 자체 scroll 영역을 가진다.
+ * `Word Wrap` 체크박스는 CodeMirror의 `lineWrapping` 옵션을 토글한다.
+ * CodeMirror가 없으면 기본 textarea로 fallback한다.
+
+== CodeMirror / Syntax Highlight
+CodeMirror 5를 사용하며 mode 이름은 `ahamark`이다.
+
+현재 하이라이트 대상:
+ * heading: `=`, `==`, ..., `======`
+ * horizontal rule: `----`
+ * list marker: bullet, ordered list marker
+ * interpreter block: `[[[#!...]]]`와 블록 내부
+ * shebang directive line: `#!...`
+ * link: `[Page]`, `[Page Alias]`, URL
+ * macro: `[[Macro(...)]]`
+ * tag/variable: `{{name}}`
+ * date link: `[YYYY-MM-DD]`, `[YYYY-MM-DD YYYY-MM-DDTHH:mm:ss]`
+ * inline style: bold, italic, bold italic, underline, strikeout
+ * inline code: `` `code` ``, copyable code: `` ``code`` ``
+
+Style class:
+ * `ahamark-interpreter` - `[[[#!...]]]` interpreter block
+ * `ahamark-interpreter-shebang` - `#!...` directive line
+
+`ahamark-interpreter-shebang`은 CodeMirror에서 `.cm-ahamark-interpreter-shebang` CSS class로 렌더링된다.
+
+== 입력 보조
+`AhaWiki.Editor`는 CodeMirror와 textarea 모두에 같은 입력 규칙을 적용한다.
+
+ * 괄호/따옴표 자동 닫기: `()`, `{}`, `[]`, `""`, `''`, `` ` ``
+ * 선택 영역이 있으면 opening character 입력 시 선택 영역을 감싼다.
+ * `Backspace`는 비어 있는 matching pair를 함께 삭제한다.
+ * `Enter`는 현재 줄이 list이면 list prefix를 다음 줄로 이어준다.
+ * `Tab`은 list line에서는 indent/outdent, 일반 위치에서는 tab 문자를 삽입한다.
+ * `--[` 입력 흐름에서는 현재 날짜/시간 link를 만든다.
+ * `[[` / `[[[` 주변 입력은 interpreter/block wrapper 작성을 돕는다.
+ * IME 조합 중 key 값이 `Process`로 들어오는 경우를 보정한다.
+
+== 자동완성
+자동완성 popup은 CodeMirror cursor 위치 또는 textarea 위치 기준으로 표시한다.
+
+지원 context:
+ * `[[Ma` - macro name
+ * `[Pa` 또는 `["Pa` - page name
+ * `[[[#!Ta` - interpreter name
+ * `[[[#!table ts` - table option
+ * `[[[#!Schema Pe` - schema.org class
+ * `[[[#!Schema Person` 블록 내부 property line - schema.org property
+
+Source API:
+ * `GET /api/macroNames`
+ * `GET /api/interpreterNames`
+ * `GET /api/pageNames`
+ * `GET /api/schemaClassNames`
+ * `GET /api/schemaPropertyNames`
+
+동작:
+ * prefix match만 보여주며 최대 30개까지 표시한다.
+ * 정확히 일치하는 항목이 있으면 popup을 숨긴다.
+ * `ArrowUp` / `ArrowDown`으로 선택을 이동한다.
+ * `Enter` / `Tab`으로 선택 항목을 적용한다.
+ * `Escape`, blur, editor 외부 click/scroll에서 popup을 닫는다.
+ * macro 자동완성은 선택 시 `MacroName()`을 삽입하고 cursor를 괄호 안에 둔다.
+
+== Preview
+ * editor 변경 시 debounce 후 `POST /preview`로 미리보기를 갱신한다.
+ * debounce는 본문 길이에 따라 200ms에서 1000ms 사이로 clamp한다.
+ * preview 요청에는 `name`, `text`, `lineStart`, `lineEnd`를 함께 보낸다.
+ * 응답 HTML을 `.previewPane`에 넣은 뒤 Mermaid 초기화를 수행한다.
+ * Paper preview에서는 content가 footer를 침범하면 `.pageOverflow` class를 붙인다.
+ * cursor가 이동하면 preview의 `data-line-start` / `data-line-end`를 이용해 대응 위치로 scroll한다.
+ * 대응 preview node에는 `previewSyncBlink` animation을 적용한다.
+
+== Partial Edit
+편집 URL에 `lineStart`와 `lineEnd`가 있으면 해당 line range만 editor에 넣는다.
+
+ * 저장 시 서버에서 최신 본문에 partial body를 merge한다.
+ * preview와 scroll sync는 partial line offset을 반영한다.
+ * generated See Also 영역은 partial 저장 merge 전에 제거한다.
+ * partial edit 대상이 table block이면 Table Editor를 열 수 있다.
+
+== Table Editor
+Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline table editor를 사용할 수 있다.
+
+지원 block 형태:
+[[[
+#!table tsv
+a	b
+]]]
+
+[[[
+[[[#!table csv
+a,b
+]]]
+]]]
+
+기능:
+ * `tsv`, `csv`, `tsv 1`, `tsv 1 1`, `tsv 1 1 tablesorter` option 자동완성
+ * option input으로 table shebang option 변경
+ * row/column add/delete
+ * cell focus highlight
+ * arrow key로 cell 이동
+ * 입력 후 짧은 debounce로 raw text에 자동 반영
+
+주의:
+ * CSV 파싱은 현재 단순 delimiter split이다. quoted CSV field escaping은 처리하지 않는다.
+
+== Attachment
+편집 화면에서 현재 page의 attachment를 조회하고 관리한다.
+
+ * `GET /api/pageAttachments`로 기존 첨부 목록을 읽는다.
+ * file input 또는 drag/drop으로 `POST /api/uploadAttachment`에 multipart upload한다.
+ * clipboard image paste는 `POST /api/uploadClipboardImage`를 사용한다.
+ * 업로드 중 progress bar를 표시한다.
+ * 업로드 성공 시 `[[Attachment(...)]]` macro를 cursor 위치에 삽입한다.
+ * image attachment는 thumbnail로 표시하고, 그 외 파일은 icon으로 표시한다.
+ * attachment list의 insert button은 macro를 다시 삽입한다.
+ * delete button은 `POST /api/deleteAttachment`를 호출한다.
+ * `integrityStatus`가 `S3_ONLY`인 항목은 insert/delete action을 숨긴다.
+
+== Wikipedia InfoBox
+`InfoBox` 버튼은 Wikipedia page name을 입력받아 `en`, `ko` Wikipedia에서 infobox를 조회한다.
+
+ * 조회 결과는 schema.org property 형태로 변환한다.
+ * 변환 결과를 `[[[#!Schema ... ]]]` block으로 삽입한다.
+ * `# API URL`과 `sameAs` 값을 함께 넣는다.
+
+== 저장
+ * form은 ajax로 submit한다.
+ * `comment`는 필수 입력이다.
+ * submit 직전에 CodeMirror 내용을 textarea로 sync한다.
+ * `minorEdit` 체크박스를 지원한다.
+ * 관리자에게는 page permission mode control을 표시한다.
+ * reCAPTCHA site key가 있으면 token을 주기적으로 갱신해 함께 보낸다.
+ * `saveSenderId`를 hidden field에 넣어 WebSocket page update broadcast에서 자기 tab의 저장 알림을 제외한다.
+
+오류 처리:
+ * `403` - permission denied
+ * `409` - revision conflict
+ * `400 body == latestText` - 변경 없는 저장
+
+== Hotkeys
+편집 화면에서는 `Alt`와 다음 key 조합으로 toolbar action을 실행한다.
+
+ * `Alt W` - Word Wrap
+ * `Alt I` - InfoBox
+ * `Alt A` - Attach
+ * `Alt C` - revision comment input focus
+ * `Alt M` - Minor edit
+ * `Alt S` - Save
+ * `Alt R` - Rename
+ * `Alt T` - Delete
+
+== Related
+ * [HotKey]
+ * ["Dev Attachment"]
+ * ["Dev WebSocket"]
+ * [InterpreterTable]
+ * [InterpreterSchema]
