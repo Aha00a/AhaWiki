@@ -15,19 +15,24 @@
                     return false;
 
                 $.ajax({
-                    url: '@routes.Wiki.deleteLastRevision()',
-                    method: 'post',
-                    headers: {
-                        'Csrf-Token': '@play.filters.csrf.CSRF.getToken.map(_.value)'
-                    },
-                    data: {
-                        name: '@title'
-                    },
-                    success: function (data, textStatus, jqXHR) {
-                        location.reload();
-                    },
-                    error: function (jqXHR, textStatus, errorThrown) {
-                        debugger;
+                    url: '@routes.Api.csrf',
+                    success: function (csrfData) {
+                        $.ajax({
+                            url: '@routes.Wiki.deleteLastRevision()',
+                            method: 'post',
+                            headers: {
+                                'Csrf-Token': csrfData.value
+                            },
+                            data: {
+                                name: '@title'
+                            },
+                            success: function (data, textStatus, jqXHR) {
+                                location.reload();
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                alert('Delete failed: ' + jqXHR.status + ' ' + errorThrown);
+                            }
+                        });
                     }
                 });
                 return false;
