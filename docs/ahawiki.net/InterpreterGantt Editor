@@ -92,14 +92,3 @@ Gantt 미리보기 렌더링 후에는 `window.AhaWiki.Gantt.initAll()`을 호�
  * `public/js/Wiki/edit.page.js` — GanttEditor 로직, `detectGanttBlock()`, 직렬화, 자동 동기화
  * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor`/`#ganttEditorBar` UI 마크업과 인라인 스타일
 
-== TODO
-
- * [[CB(x)]] `detectGanttBlock()` 함수 분리 (`#!table` / `#!gantt` 감지 로직 분리)
- * [[CB(x)]] `#ganttInlineEditor` UI 마크업 추가 (edit.scala.html)
- * [[CB(x)]] `openInlineGanttEditor()` / `closeInlineGanttEditor()` 구현
- * [[CB(x)]] 그리드 렌더링: Task 셀 들여쓰기 + Start/Ref/Est input 3컬럼
- * [[CB(x)]] Indent/Outdent 버튼 동작
- * [[CB(x)]] Tab/Shift+Tab 단축키 (작업명 셀에서 depth 증감)
- * [[CB(x)]] 직렬화: 그리드 → Gantt TSV (`applyGanttBlockEditor()`)
- * [[CB(x)]] 120ms 디바운스 원문 반영 + 미리보기 동기화
- * [[CB(x)]] 초기 로드 시 `#!gantt` 자동 감지 → GanttEditor 자동 열기
