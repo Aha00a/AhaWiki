@@ -648,14 +648,14 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             }
 
             function focusAndSelectGanttRow(row, col, withFocus) {
+                selectSingleGanttRow(row);
                 focusGanttCell(row, col, withFocus);
-                selectSingleGanttRow(ganttCursor.row);
             }
 
             function focusAndSelectGanttRange(row, col, withFocus) {
                 const anchor = ganttLastClickedRow >= 0 ? ganttLastClickedRow : ganttCursor.row;
+                selectGanttRowRange(anchor, row);
                 focusGanttCell(row, col, withFocus);
-                selectGanttRowRange(anchor, ganttCursor.row);
             }
 
             function beginGanttRowPointerAction(row, col, e, withFocus) {
