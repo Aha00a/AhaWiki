@@ -141,7 +141,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             let ganttSelectedRows = new Set();
             let ganttLastClickedRow = -1;
             let ganttDragState = null;
-            const GANTT_COL_NAME = 0, GANTT_COL_START = 1, GANTT_COL_EST = 2, GANTT_COL_COUNT = 3;
+            const GANTT_COL_NAME = 0, GANTT_COL_START = 1, GANTT_COL_EST = 2, GANTT_COL_PROGRESS = 3, GANTT_COL_COUNT = 4;
 
             function detectTableBlock(value) {
                 const lines = value.split('\n');
@@ -317,16 +317,17 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                             const v = cols[j].trim();
                             if (v) rest.push(v);
                         }
-                        let est = '', startOrRef = '';
+                        let est = '', startOrRef = '', progress = '';
+                        if (rest.length > 0 && /^\d+%$/.test(rest[rest.length - 1])) progress = rest.pop().slice(0, -1);
                         if (rest.length > 0 && /^\d+$/.test(rest[rest.length - 1])) est = rest.pop();
                         if (rest.length > 0) startOrRef = rest[rest.length - 1];
-                        return { depth, name, startOrRef, est };
+                        return { depth, name, startOrRef, est, progress };
                     })
                     .filter(r => r !== null);
             }
 
             function renderGanttGrid(rows) {
-                if (!rows.length) rows = [{ depth: 0, name: '', startOrRef: '', est: '' }];
+                if (!rows.length) rows = [{ depth: 0, name: '', startOrRef: '', est: '', progress: '' }];
                 const html = rows.map((row, rIdx) => {
                     const paddingLeft = row.depth * 20 + 6;
                     const isSelected = ganttSelectedRows.has(rIdx);
@@ -334,7 +335,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}" placeholder="Task name"></td>`;
                     const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}" placeholder="YYYY-MM-DD or ref"></td>`;
                     const estTd = `<td><input class="ganttEstInput" type="number" min="0" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}" placeholder="days"></td>`;
-                    return `<tr data-r="${rIdx}" data-depth="${row.depth}"${isSelected ? ' class="ganttRowSelected"' : ''}>${rowNumTd}${nameTd}${startTd}${estTd}</tr>`;
+                    const progressTd = `<td><input class="ganttProgressInput" type="number" min="0" max="100" data-r="${rIdx}" data-c="${GANTT_COL_PROGRESS}" value="${$('<div>').text(row.progress).html()}" placeholder="%"></td>`;
+                    return `<tr data-r="${rIdx}" data-depth="${row.depth}"${isSelected ? ' class="ganttRowSelected"' : ''}>${rowNumTd}${nameTd}${startTd}${estTd}${progressTd}</tr>`;
                 }).join('');
                 $ganttInlineEditorGrid.html(html);
                 focusGanttCell(ganttCursor.row, ganttCursor.col, false);
@@ -385,15 +387,17 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     const name = $(this).find(`input[data-c="${GANTT_COL_NAME}"]`).val() || '';
                     const startOrRef = $(this).find(`input[data-c="${GANTT_COL_START}"]`).val() || '';
                     const est = $(this).find(`input[data-c="${GANTT_COL_EST}"]`).val() || '';
-                    rows.push({ depth, name, startOrRef, est });
+                    const progress = $(this).find(`input[data-c="${GANTT_COL_PROGRESS}"]`).val() || '';
+                    rows.push({ depth, name, startOrRef, est, progress });
                 });
-                return rows.length ? rows : [{ depth: 0, name: '', startOrRef: '', est: '' }];
+                return rows.length ? rows : [{ depth: 0, name: '', startOrRef: '', est: '', progress: '' }];
             }
 
             function serializeGanttRow(row) {
                 let line = '\t'.repeat(row.depth) + row.name;
                 if (row.startOrRef) line += '\t' + row.startOrRef;
                 if (row.est) line += '\t' + row.est;
+                if (row.progress) line += '\t' + row.progress + '%';
                 return line;
             }
 
@@ -665,7 +669,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     if (col === GANTT_COL_START) tryApplyRefSubstitution($(this));
                     const rows = ganttGridAsRows();
                     const currentDepth = rows[row] ? rows[row].depth : 0;
-                    rows.splice(row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '' });
+                    rows.splice(row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '', progress: '' });
                     rerenderGanttWithCursor(rows, row + 1, col, true);
                 } else if (e.key === 'Delete' && e.shiftKey) {
                     e.preventDefault();
@@ -684,7 +688,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             $('#ganttAddRow').on('click', function () {
                 const rows = ganttGridAsRows();
                 const currentDepth = rows[ganttCursor.row] ? rows[ganttCursor.row].depth : 0;
-                rows.splice(ganttCursor.row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '' });
+                rows.splice(ganttCursor.row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '', progress: '' });
                 rerenderGanttWithCursor(rows, ganttCursor.row + 1, ganttCursor.col, true);
                 return false;
             });

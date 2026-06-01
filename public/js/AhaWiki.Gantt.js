@@ -84,8 +84,11 @@
             if (v) rest.push(v);
         }
 
-        // 3) 오른쪽에서 스캔: est → (날짜 or 참조)
-        var est = null, startDate = null, afterRef = null;
+        // 3) 오른쪽에서 스캔: progress → est → (날짜 or 참조)
+        var est = null, startDate = null, afterRef = null, progress = null;
+        if (rest.length > 0 && /^\d+%$/.test(rest[rest.length - 1])) {
+            progress = Math.min(100, Math.max(0, parseInt(rest.pop(), 10)));
+        }
         if (rest.length > 0 && /^\d+$/.test(rest[rest.length - 1])) {
             est = parseInt(rest.pop(), 10);
         }
@@ -100,7 +103,7 @@
         var lm = name.match(/^([\s\S]*[^\s])#(\w+)$/);
         if (lm) { name = lm[1]; nodeLabel = lm[2]; }
 
-        return { depth: depth, name: name, label: nodeLabel, startDate: startDate, est: est, afterRef: afterRef };
+        return { depth: depth, name: name, label: nodeLabel, startDate: startDate, est: est, afterRef: afterRef, progress: progress };
     }
 
     function buildTree(rows) {
@@ -109,7 +112,7 @@
         rows.forEach(function (r) {
             var node = { id: 'g' + Math.random().toString(36).slice(2), depth: r.depth, name: r.name,
                 label: r.label, explicitStart: r.startDate, explicitEst: r.est, afterRef: r.afterRef,
-                children: [], collapsed: false };
+                progress: r.progress, children: [], collapsed: false };
             while (stack.length > 1 && stack[stack.length - 1].depth >= r.depth) stack.pop();
             stack[stack.length - 1].children.push(node);
             stack.push(node);
@@ -162,6 +165,14 @@
                 node.end   = node.children[node.children.length - 1].end;
                 node.est   = countBizDays(node.start, node.end);
                 cursor = node.end;
+                var hasAnyProgress = node.children.some(function(c) { return c.progress !== null; });
+                if (hasAnyProgress) {
+                    var totalEst = node.children.reduce(function(s, c) { return s + c.est; }, 0);
+                    var weightedSum = node.children.reduce(function(s, c) {
+                        return s + (c.progress !== null ? c.progress : 0) * c.est;
+                    }, 0);
+                    node.progress = totalEst > 0 ? Math.round(weightedSum / totalEst) : null;
+                }
             }
         });
     }
@@ -176,7 +187,8 @@
     // ── 상수 ──────────────────────────────────────────────────────────────────
     var LABEL_W    = 620;
     var ROWNUM_W   = 36;   // 행 번호 컬럼 (좌측 고정)
-    var DAYS_COL_W = 48;  // 소요일 컬럼 (우측 끝)
+    var DAYS_COL_W = 48;  // 소요일 컬럼
+    var PCT_COL_W  = 48;  // 진척률 컬럼 (우측 끝)
     var DAY_W_DEF  = 20;
     var ZOOM_MIN_PCT = 10;
     var ZOOM_MAX_PCT = 500;
@@ -224,13 +236,24 @@
             taskCount: 0,
             groupCount: 0,
             totalCount: 0,
-            dependencyCount: 0
+            dependencyCount: 0,
+            overallProgress: null
         };
+
+        var leafEstSum = 0, leafProgressSum = 0, hasAnyProgress = false;
 
         function visit(node) {
             stats.totalCount++;
-            if (node.children.length) stats.groupCount++;
-            else stats.taskCount++;
+            if (node.children.length) {
+                stats.groupCount++;
+            } else {
+                stats.taskCount++;
+                leafEstSum += node.est;
+                if (node.progress !== null) {
+                    hasAnyProgress = true;
+                    leafProgressSum += node.progress * node.est;
+                }
+            }
             if (node.afterRef) stats.dependencyCount++;
 
             if (!stats.minDate || node.start < stats.minDate) stats.minDate = node.start;
@@ -240,6 +263,10 @@
         }
 
         nodes.forEach(visit);
+
+        if (hasAnyProgress && leafEstSum > 0) {
+            stats.overallProgress = Math.round(leafProgressSum / leafEstSum);
+        }
 
         if (stats.minDate && stats.maxDate) {
             stats.calendarDays = diffDays(stats.minDate, stats.maxDate) + 1;
@@ -254,7 +281,7 @@
 
     function buildSummaryHtml(stats) {
         if (!stats || !stats.minDate || !stats.maxDate) return '';
-        return [
+        var parts = [
             '<span>Period <b>' + fmtDate(stats.minDate) + ' ~ ' + fmtDate(stats.maxDate) + '</b></span>',
             '<span>Total <b>' + stats.calendarDays + 'd</b></span>',
             '<span>Biz <b>' + stats.businessDays + 'd</b></span>',
@@ -262,7 +289,11 @@
             '<span>Groups <b>' + stats.groupCount + '</b></span>',
             '<span>Deps <b>' + stats.dependencyCount + '</b></span>',
             '<span>Shown <b>' + stats.visibleCount + '/' + stats.totalCount + '</b></span>'
-        ].join('');
+        ];
+        if (stats.overallProgress !== null) {
+            parts.push('<span>Progress <b>' + stats.overallProgress + '%</b></span>');
+        }
+        return parts.join('');
     }
 
     function zoomPctFromDayW(dayW) {
@@ -299,18 +330,20 @@
     }
 
     // ── SVG 빌더: Corner (좌상) ───────────────────────────────────────────────
-    var CORNER_SPLIT = 200; // Date + Days 컬럼 합계 너비 (오른쪽)
+    var CORNER_SPLIT = 248; // Period + Est + % 컬럼 합계 너비 (오른쪽)
 
     function buildCornerSvg() {
         var nameColW = LABEL_W - CORNER_SPLIT;
-        var daysX    = LABEL_W - DAYS_COL_W;
+        var daysX    = LABEL_W - PCT_COL_W - DAYS_COL_W;
+        var pctX     = LABEL_W - PCT_COL_W;
         var o = [];
         o.push('<svg class="gantt-svg" width="' + LABEL_W + '" height="' + HDR_H + '" xmlns="http://www.w3.org/2000/svg">');
         o.push('<rect width="100%" height="100%" class="gantt-corner-hdr-bg"/>');
-        // 세로 구분선: # | Task | Date | Days
+        // 세로 구분선: # | Task | Period | Est | %
         o.push('<line x1="' + ROWNUM_W + '" y1="0" x2="' + ROWNUM_W + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         o.push('<line x1="' + nameColW + '" y1="0" x2="' + nameColW + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         o.push('<line x1="' + daysX    + '" y1="0" x2="' + daysX    + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
+        o.push('<line x1="' + pctX     + '" y1="0" x2="' + pctX     + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         // 가로 구분선
         o.push('<line x1="0" y1="' + HDR_DIV_Y + '" x2="' + LABEL_W + '" y2="' + HDR_DIV_Y + '" class="gantt-hdr-divider"/>');
         // 컬럼 헤더
@@ -318,6 +351,7 @@
         o.push('<text x="' + (ROWNUM_W + 8) + '" y="' + HDR_R2_Y + '" text-anchor="start" class="gantt-corner-hdr-text">Task</text>');
         o.push('<text x="' + ((nameColW + daysX) / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">Period</text>');
         o.push('<text x="' + (daysX + DAYS_COL_W / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">Est</text>');
+        o.push('<text x="' + (pctX + PCT_COL_W / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">%</text>');
         o.push('</svg>');
         return o.join('');
     }
@@ -389,10 +423,12 @@
 
         // 컬럼 구분선
         var nameColW = LABEL_W - CORNER_SPLIT;
-        var daysColX = LABEL_W - DAYS_COL_W;
+        var daysColX = LABEL_W - PCT_COL_W - DAYS_COL_W;
+        var pctColX  = LABEL_W - PCT_COL_W;
         o.push('<line x1="' + ROWNUM_W + '" y1="0" x2="' + ROWNUM_W + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
         o.push('<line x1="' + nameColW + '" y1="0" x2="' + nameColW + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
         o.push('<line x1="' + daysColX + '" y1="0" x2="' + daysColX + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
+        o.push('<line x1="' + pctColX  + '" y1="0" x2="' + pctColX  + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
 
         o.push('<g clip-path="url(#' + clipId + ')">');
         visible.forEach(function (node, i) {
@@ -407,14 +443,16 @@
             o.push('<text x="' + (ROWNUM_W / 2) + '" y="' + ly + '" text-anchor="middle" font-size="15" class="gantt-rownum">' + (i + 1) + '</text>');
             o.push('<rect x="' + ROWNUM_W + '" y="' + y + '" width="3" height="' + ROW_H + '" fill="' + color + '"/>');
 
-            var daysX = LABEL_W - DAYS_COL_W;
+            var daysX = LABEL_W - PCT_COL_W - DAYS_COL_W;
+            var pctX  = LABEL_W - PCT_COL_W;
             var info =
                 '<text x="' + (daysX - 4) + '" y="' + ly + '" text-anchor="end" class="gantt-label-date">' +
                     fmtDate(node.start) + ' ~ ' + fmtDate(node.end) +
                 '</text>' +
-                '<text x="' + (LABEL_W - 4) + '" y="' + ly + '" text-anchor="end" class="gantt-label-days">' +
+                '<text x="' + (daysX + DAYS_COL_W / 2) + '" y="' + ly + '" text-anchor="middle" class="gantt-label-days">' +
                     node.est + 'd' +
-                '</text>';
+                '</text>' +
+                (node.progress !== null ? '<text x="' + (pctX + PCT_COL_W / 2) + '" y="' + ly + '" text-anchor="middle" class="gantt-label-progress">' + node.progress + '%</text>' : '');
 
             if (hasChld) {
                 var collapsed = !!collapsedIds[node.id];
@@ -518,14 +556,26 @@
                 xmlEsc(node.name) + ' ' + node.est + 'd</text>');
             if (isLeaf) {
                 var by = y + 5, bh = ROW_H - 10;
+                var baseOpacity = node.progress !== null ? '0.35' : '0.85';
                 o.push('<rect x="' + bx + '" y="' + by + '" width="' + bw + '" height="' + bh +
-                    '" rx="3" fill="' + color + '" class="gantt-bar-leaf" opacity="0.85"/>');
+                    '" rx="3" fill="' + color + '" class="gantt-bar-leaf" opacity="' + baseOpacity + '"/>');
+                if (node.progress !== null && node.progress > 0) {
+                    var pw = Math.max(1, Math.round(bw * node.progress / 100));
+                    o.push('<rect x="' + bx + '" y="' + by + '" width="' + pw + '" height="' + bh +
+                        '" rx="3" fill="' + color + '" class="gantt-bar-progress" opacity="0.9"/>');
+                }
                 if (bw > 40)
                     o.push('<text x="' + (bx + bw / 2) + '" y="' + (by + bh / 2 + 4) + '" class="gantt-bar-label">' + node.est + 'd</text>');
             } else {
                 var mby = y + ROW_H / 2 - 3, mbh = 6;
+                var parentBaseOp = node.progress !== null ? '0.2' : '0.45';
                 o.push('<rect x="' + bx + '" y="' + mby + '" width="' + bw + '" height="' + mbh +
-                    '" rx="2" fill="' + color + '" class="gantt-bar-parent" opacity="0.45"/>');
+                    '" rx="2" fill="' + color + '" class="gantt-bar-parent" opacity="' + parentBaseOp + '"/>');
+                if (node.progress !== null && node.progress > 0) {
+                    var ppw = Math.max(1, Math.round(bw * node.progress / 100));
+                    o.push('<rect x="' + bx + '" y="' + mby + '" width="' + ppw + '" height="' + mbh +
+                        '" rx="2" fill="' + color + '" class="gantt-bar-progress" opacity="0.8"/>');
+                }
                 o.push('<rect x="' + bx + '" y="' + (y + 6) + '" width="3" height="' + (ROW_H - 12) + '" fill="' + color + '" opacity="0.7"/>');
                 o.push('<rect x="' + (bx + bw - 3) + '" y="' + (y + 6) + '" width="3" height="' + (ROW_H - 12) + '" fill="' + color + '" opacity="0.7"/>');
             }
@@ -707,6 +757,8 @@
             '.gantt-label { font-size:16px; fill:' + t + '; }',
             '.gantt-label-date { font-size:13px; fill:' + t + '; opacity:0.75; }',
             '.gantt-label-days { font-size:13px; fill:' + t + '; opacity:0.6; }',
+            '.gantt-label-progress { font-size:13px; fill:' + t + '; opacity:0.65; font-weight:500; }',
+            '.gantt-bar-progress { cursor:default; }',
             '.gantt-bar-label { font-size:14px; fill:#fff; text-anchor:middle; }',
             '.gantt-bar-outer-label { font-size:14px; fill:' + t + '; opacity:0.7; }',
             '.gantt-bar-start-label { font-size:13px; fill:' + t + '; text-anchor:end; opacity:0.5; }',
@@ -732,6 +784,7 @@
             'Deps ' + stats.dependencyCount,
             'Shown ' + stats.visibleCount + '/' + stats.totalCount,
         ];
+        if (stats.overallProgress !== null) items.push('Progress ' + stats.overallProgress + '%');
         var o = [];
         o.push('<g>');
         o.push('<rect width="' + totalW + '" height="' + SUMMARY_ROW_H + '" fill="' + v.borderSubtle + '" opacity="0.5"/>');

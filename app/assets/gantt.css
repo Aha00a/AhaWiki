@@ -222,6 +222,17 @@
   dominant-baseline: auto;
   pointer-events: none;
 }
+.InterpreterGantt .gantt-label-progress {
+  font-size: 13px;
+  fill: var(--color-text);
+  opacity: 0.65;
+  dominant-baseline: auto;
+  pointer-events: none;
+  font-weight: 500;
+}
+.InterpreterGantt .gantt-bar-progress {
+  cursor: default;
+}
 .InterpreterGantt .gantt-col-divider {
   stroke: var(--color-border);
   stroke-width: 1;
