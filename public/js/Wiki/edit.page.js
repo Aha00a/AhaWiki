@@ -141,7 +141,13 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             let ganttSelectedRows = new Set();
             let ganttLastClickedRow = -1;
             let ganttDragState = null;
+            let ganttUndoStack = [];
+            let ganttRedoStack = [];
+            let ganttInputHistoryTimer = null;
+            let ganttInputSnapshot = null;
+            let ganttRestoringHistory = false;
             const GANTT_COL_NAME = 0, GANTT_COL_START = 1, GANTT_COL_EST = 2, GANTT_COL_PROGRESS = 3, GANTT_COL_COUNT = 4;
+            const GANTT_HISTORY_LIMIT = 100;
 
             function detectTableBlock(value) {
                 const lines = value.split('\n');
@@ -421,23 +427,193 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 return line;
             }
 
-            function rerenderGanttWithCursor(rows, row, col, withFocus) {
-                ganttSelectedRows = new Set();
-                ganttCursor = { row, col };
-                renderGanttGrid(rows);
-                focusGanttCell(row, col, withFocus);
-                scheduleGanttAutoApply();
+            function cloneGanttRows(rows) {
+                return rows.map(row => ({
+                    depth: parseInt(row.depth, 10) || 0,
+                    name: row.name || '',
+                    startOrRef: row.startOrRef || '',
+                    est: row.est || '',
+                    progress: row.progress || ''
+                }));
             }
 
-            function moveGanttRow(direction) {
-                const rows = ganttGridAsRows();
-                const fromIdx = ganttCursor.row;
-                const toIdx = fromIdx + direction;
-                if (toIdx < 0 || toIdx >= rows.length) return;
-                const tmp = rows[fromIdx];
-                rows[fromIdx] = rows[toIdx];
-                rows[toIdx] = tmp;
-                rerenderGanttWithCursor(rows, toIdx, ganttCursor.col, true);
+            function ganttRowsEqual(a, b) {
+                if (!a || !b || a.length !== b.length) return false;
+                for (let i = 0; i < a.length; i++) {
+                    if ((parseInt(a[i].depth, 10) || 0) !== (parseInt(b[i].depth, 10) || 0)) return false;
+                    if ((a[i].name || '') !== (b[i].name || '')) return false;
+                    if ((a[i].startOrRef || '') !== (b[i].startOrRef || '')) return false;
+                    if ((a[i].est || '') !== (b[i].est || '')) return false;
+                    if ((a[i].progress || '') !== (b[i].progress || '')) return false;
+                }
+                return true;
+            }
+
+            function cloneGanttSnapshot(snapshot) {
+                return {
+                    rows: cloneGanttRows(snapshot.rows),
+                    cursor: {
+                        row: snapshot.cursor ? snapshot.cursor.row : 0,
+                        col: snapshot.cursor ? snapshot.cursor.col : 0
+                    },
+                    selectedRows: (snapshot.selectedRows || []).slice(),
+                    lastClickedRow: typeof snapshot.lastClickedRow === 'number' ? snapshot.lastClickedRow : -1
+                };
+            }
+
+            function makeGanttSnapshot(rows) {
+                const snapshotRows = cloneGanttRows(rows || ganttGridAsRows());
+                const maxRow = Math.max(0, snapshotRows.length - 1);
+                return {
+                    rows: snapshotRows,
+                    cursor: {
+                        row: Math.max(0, Math.min(ganttCursor.row || 0, maxRow)),
+                        col: Math.max(0, Math.min(ganttCursor.col || 0, GANTT_COL_COUNT - 1))
+                    },
+                    selectedRows: Array.from(ganttSelectedRows)
+                        .filter(row => row >= 0 && row < snapshotRows.length)
+                        .sort((a, b) => a - b),
+                    lastClickedRow: ganttLastClickedRow
+                };
+            }
+
+            function hasPendingGanttInputChange() {
+                return !!ganttInputSnapshot
+                    && !ganttRestoringHistory
+                    && !ganttRowsEqual(ganttInputSnapshot.rows, ganttGridAsRows());
+            }
+
+            function updateGanttHistoryButtons() {
+                const hasPendingInputChange = hasPendingGanttInputChange();
+                $('#ganttUndo').prop('disabled', ganttUndoStack.length === 0 && !hasPendingInputChange);
+                $('#ganttRedo').prop('disabled', ganttRedoStack.length === 0 || hasPendingInputChange);
+            }
+
+            function pushGanttUndoSnapshot(snapshot) {
+                if (!snapshot) return;
+                const last = ganttUndoStack[ganttUndoStack.length - 1];
+                if (last && ganttRowsEqual(last.rows, snapshot.rows)) return;
+                ganttUndoStack.push(cloneGanttSnapshot(snapshot));
+                if (ganttUndoStack.length > GANTT_HISTORY_LIMIT) ganttUndoStack.shift();
+                ganttRedoStack = [];
+                updateGanttHistoryButtons();
+            }
+
+            function clearGanttInputHistoryTimer() {
+                if (ganttInputHistoryTimer) {
+                    clearTimeout(ganttInputHistoryTimer);
+                    ganttInputHistoryTimer = null;
+                }
+            }
+
+            function commitPendingGanttInputHistory() {
+                clearGanttInputHistoryTimer();
+                if (!ganttInputSnapshot || ganttRestoringHistory) return;
+                const currentRows = ganttGridAsRows();
+                if (!ganttRowsEqual(ganttInputSnapshot.rows, currentRows)) {
+                    pushGanttUndoSnapshot(ganttInputSnapshot);
+                    ganttInputSnapshot = makeGanttSnapshot(currentRows);
+                }
+            }
+
+            function scheduleGanttInputHistoryCommit() {
+                clearGanttInputHistoryTimer();
+                ganttInputHistoryTimer = setTimeout(commitPendingGanttInputHistory, 500);
+            }
+
+            function resetGanttHistory() {
+                clearGanttInputHistoryTimer();
+                ganttUndoStack = [];
+                ganttRedoStack = [];
+                ganttInputSnapshot = null;
+                updateGanttHistoryButtons();
+            }
+
+            function restoreGanttSnapshot(snapshot) {
+                if (!snapshot) return;
+                ganttRestoringHistory = true;
+                clearGanttInputHistoryTimer();
+                ganttSelectedRows = new Set(snapshot.selectedRows || []);
+                ganttLastClickedRow = typeof snapshot.lastClickedRow === 'number' ? snapshot.lastClickedRow : -1;
+                ganttCursor = {
+                    row: snapshot.cursor ? snapshot.cursor.row : 0,
+                    col: snapshot.cursor ? snapshot.cursor.col : 0
+                };
+                renderGanttGrid(cloneGanttRows(snapshot.rows));
+                focusGanttCell(ganttCursor.row, ganttCursor.col, true);
+                applyGanttBlockEditor();
+                ganttInputSnapshot = makeGanttSnapshot();
+                ganttRestoringHistory = false;
+                updateGanttHistoryButtons();
+            }
+
+            function undoGanttHistory() {
+                commitPendingGanttInputHistory();
+                if (!ganttUndoStack.length) return false;
+                const current = makeGanttSnapshot();
+                const previous = ganttUndoStack.pop();
+                if (!ganttRowsEqual(current.rows, previous.rows)) {
+                    ganttRedoStack.push(current);
+                    if (ganttRedoStack.length > GANTT_HISTORY_LIMIT) ganttRedoStack.shift();
+                }
+                restoreGanttSnapshot(previous);
+                return true;
+            }
+
+            function redoGanttHistory() {
+                commitPendingGanttInputHistory();
+                if (!ganttRedoStack.length) return false;
+                const current = makeGanttSnapshot();
+                const next = ganttRedoStack.pop();
+                if (!ganttRowsEqual(current.rows, next.rows)) {
+                    ganttUndoStack.push(current);
+                    if (ganttUndoStack.length > GANTT_HISTORY_LIMIT) ganttUndoStack.shift();
+                }
+                restoreGanttSnapshot(next);
+                return true;
+            }
+
+            function handleGanttHistoryShortcut(e) {
+                const key = (e.key || '').toLowerCase();
+                const commandKey = e.ctrlKey || e.metaKey;
+                if (!commandKey || e.altKey) return false;
+                if (key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    undoGanttHistory();
+                    return true;
+                }
+                if (key === 'y' || (key === 'z' && e.shiftKey)) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    redoGanttHistory();
+                    return true;
+                }
+                return false;
+            }
+
+            function pushGanttHistoryIfRowsChanged(beforeSnapshot, nextRows) {
+                if (!beforeSnapshot || ganttRestoringHistory) return false;
+                if (ganttRowsEqual(beforeSnapshot.rows, nextRows)) return false;
+                pushGanttUndoSnapshot(beforeSnapshot);
+                return true;
+            }
+
+            function rerenderGanttWithCursor(rows, row, col, withFocus) {
+                let beforeSnapshot = null;
+                if (!ganttRestoringHistory) {
+                    commitPendingGanttInputHistory();
+                    beforeSnapshot = makeGanttSnapshot();
+                }
+                const nextRow = Math.max(0, Math.min(row, Math.max(0, rows.length - 1)));
+                ganttSelectedRows = new Set([nextRow]);
+                ganttLastClickedRow = nextRow;
+                ganttCursor = { row: nextRow, col };
+                renderGanttGrid(rows);
+                focusGanttCell(nextRow, col, withFocus);
+                if (pushGanttHistoryIfRowsChanged(beforeSnapshot, rows)) {
+                    scheduleGanttAutoApply();
+                }
             }
 
             function updateGanttRowSelection() {
@@ -447,6 +623,101 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     $(this).toggleClass('ganttRowSelected', selected);
                     $(this).find('.ganttRowNum').toggleClass('ganttRowNumSelected', selected);
                 });
+            }
+
+            function selectSingleGanttRow(row) {
+                const rowCount = $ganttInlineEditorGrid.find('tr').length;
+                if (!rowCount) return;
+                const nextRow = Math.max(0, Math.min(row, rowCount - 1));
+                ganttSelectedRows = new Set([nextRow]);
+                ganttLastClickedRow = nextRow;
+                updateGanttRowSelection();
+            }
+
+            function selectGanttRowRange(anchorRow, row) {
+                const rowCount = $ganttInlineEditorGrid.find('tr').length;
+                if (!rowCount) return;
+                const anchor = Math.max(0, Math.min(anchorRow, rowCount - 1));
+                const nextRow = Math.max(0, Math.min(row, rowCount - 1));
+                const start = Math.min(anchor, nextRow);
+                const end = Math.max(anchor, nextRow);
+                ganttSelectedRows = new Set();
+                for (let i = start; i <= end; i++) ganttSelectedRows.add(i);
+                ganttLastClickedRow = anchor;
+                updateGanttRowSelection();
+            }
+
+            function focusAndSelectGanttRow(row, col, withFocus) {
+                focusGanttCell(row, col, withFocus);
+                selectSingleGanttRow(ganttCursor.row);
+            }
+
+            function focusAndSelectGanttRange(row, col, withFocus) {
+                const anchor = ganttLastClickedRow >= 0 ? ganttLastClickedRow : ganttCursor.row;
+                focusGanttCell(row, col, withFocus);
+                selectGanttRowRange(anchor, ganttCursor.row);
+            }
+
+            function beginGanttRowPointerAction(row, col, e, withFocus) {
+                if (ganttRestoringHistory) return;
+                const nextCol = Math.max(0, Math.min(col, GANTT_COL_COUNT - 1));
+                if (e.shiftKey && ganttLastClickedRow >= 0) {
+                    const anchor = ganttLastClickedRow;
+                    selectGanttRowRange(anchor, row);
+                    ganttDragState = { mode: 'select', startRow: anchor, currentRow: row, moved: false };
+                } else if (e.ctrlKey || e.metaKey) {
+                    if (ganttSelectedRows.has(row)) { ganttSelectedRows.delete(row); } else { ganttSelectedRows.add(row); }
+                    ganttLastClickedRow = row;
+                    ganttDragState = null;
+                    updateGanttRowSelection();
+                } else {
+                    const onSelected = ganttSelectedRows.has(row) && ganttSelectedRows.size > 0;
+                    ganttDragState = { mode: onSelected ? 'move' : 'select', startRow: row, currentRow: row, moved: false };
+                    if (onSelected) {
+                        ganttLastClickedRow = row;
+                    } else {
+                        selectSingleGanttRow(row);
+                    }
+                }
+                focusGanttCell(row, nextCol, withFocus);
+            }
+
+            function moveGanttRow(direction) {
+                commitPendingGanttInputHistory();
+                const rows = ganttGridAsRows();
+                if (!rows.length) return;
+                const cursorRow = Math.max(0, Math.min(ganttCursor.row, rows.length - 1));
+                let selectedIndices = Array.from(ganttSelectedRows)
+                    .filter(i => i >= 0 && i < rows.length)
+                    .sort((a, b) => a - b);
+                if (!ganttSelectedRows.has(cursorRow)) selectedIndices = [cursorRow];
+                if (!selectedIndices.length) return;
+                if (direction < 0 && selectedIndices[0] <= 0) return;
+                if (direction > 0 && selectedIndices[selectedIndices.length - 1] >= rows.length - 1) return;
+
+                const beforeSnapshot = makeGanttSnapshot();
+                const selectedSet = new Set(selectedIndices);
+                const selectedData = selectedIndices.map(i => rows[i]);
+                const remaining = rows.filter((_, i) => !selectedSet.has(i));
+                const cursorOffset = Math.max(0, selectedIndices.indexOf(cursorRow));
+                let insertIdx;
+                if (direction < 0) {
+                    insertIdx = selectedIndices[0] - 1;
+                } else {
+                    const targetIdx = selectedIndices[selectedIndices.length - 1] + 1;
+                    const removedBefore = selectedIndices.filter(i => i < targetIdx).length;
+                    insertIdx = Math.min(targetIdx - removedBefore + 1, remaining.length);
+                }
+                remaining.splice(insertIdx, 0, ...selectedData);
+                ganttSelectedRows = new Set();
+                for (let i = insertIdx; i < insertIdx + selectedData.length; i++) ganttSelectedRows.add(i);
+                ganttLastClickedRow = insertIdx + cursorOffset;
+                ganttCursor = { row: insertIdx + cursorOffset, col: ganttCursor.col };
+                renderGanttGrid(remaining);
+                focusGanttCell(ganttCursor.row, ganttCursor.col, true);
+                if (pushGanttHistoryIfRowsChanged(beforeSnapshot, remaining)) {
+                    scheduleGanttAutoApply();
+                }
             }
 
             function getGanttRowFromMouseY(clientY) {
@@ -507,6 +778,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             function openInlineGanttEditor() {
                 const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
                 if (!detectGanttBlock(src)) return false;
+                resetGanttHistory();
                 ganttCursor = { row: 0, col: 0 };
                 ganttSelectedRows = new Set();
                 ganttLastClickedRow = -1;
@@ -518,7 +790,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $('.toolbarTableOnly').hide();
                 $('.toggleTableEditor').text('Switch to Raw Editor');
                 $('.editHelp').hide();
-                focusGanttCell(0, 0, true);
+                focusAndSelectGanttRow(0, 0, true);
                 return true;
             }
 
@@ -526,6 +798,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (ganttAutoApplyTimer) { clearTimeout(ganttAutoApplyTimer); ganttAutoApplyTimer = null; }
                 applyGanttBlockEditor();
                 syncEditorToTextarea();
+                resetGanttHistory();
                 $ganttInlineEditor.removeClass('visible');
                 showStandardEditor();
                 $('.toolbarTableOnly').show();
@@ -598,35 +871,61 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $input.val(refName);
                 return true;
             }
-            $ganttInlineEditor.on('input', 'input', scheduleGanttAutoApply);
-            $ganttInlineEditor.on('blur', '.ganttStartOrRefInput', function () {
-                if (tryApplyRefSubstitution($(this))) scheduleGanttAutoApply();
+
+            function applyGanttRefSubstitutionWithHistory($input) {
+                commitPendingGanttInputHistory();
+                const beforeSnapshot = makeGanttSnapshot();
+                if (!tryApplyRefSubstitution($input)) return false;
+                if (pushGanttHistoryIfRowsChanged(beforeSnapshot, ganttGridAsRows())) {
+                    scheduleGanttAutoApply();
+                }
+                return true;
+            }
+
+            $ganttInlineEditor.on('keydown', function (e) {
+                handleGanttHistoryShortcut(e);
+            });
+            $(document).on('keydown.ganttHistory', function (e) {
+                if (!$ganttInlineEditor.hasClass('visible')) return;
+                if ($(e.target).closest('#ganttInlineEditor').length) return;
+                const target = e.target;
+                const tagName = target && target.tagName ? target.tagName.toLowerCase() : '';
+                if (tagName === 'input' || tagName === 'textarea' || (target && target.isContentEditable)) return;
+                handleGanttHistoryShortcut(e);
+            });
+            $ganttInlineEditor.on('beforeinput', 'input', function () {
+                if (!ganttRestoringHistory && !ganttInputSnapshot) ganttInputSnapshot = makeGanttSnapshot();
+            });
+            $ganttInlineEditor.on('input', 'input', function () {
+                if (ganttRestoringHistory) return;
+                if (!ganttInputSnapshot) ganttInputSnapshot = makeGanttSnapshot();
+                ganttRedoStack = [];
+                scheduleGanttInputHistoryCommit();
+                scheduleGanttAutoApply();
+                updateGanttHistoryButtons();
+            });
+            $ganttInlineEditor.on('blur', 'input', function () {
+                if (ganttRestoringHistory) return;
+                commitPendingGanttInputHistory();
+                if ($(this).hasClass('ganttStartOrRefInput')) {
+                    applyGanttRefSubstitutionWithHistory($(this));
+                }
+            });
+            $ganttInlineEditorGrid.on('mousedown', 'input', function (e) {
+                if (e.button !== 0) return;
+                const row = parseInt($(this).attr('data-r'), 10) || 0;
+                const col = parseInt($(this).attr('data-c'), 10) || 0;
+                beginGanttRowPointerAction(row, col, e, false);
             });
             $ganttInlineEditorGrid.on('mousedown', '.ganttRowNum', function (e) {
+                if (e.button !== 0) return;
                 const row = parseInt($(this).attr('data-r'), 10);
                 e.preventDefault();
-                if (e.shiftKey && ganttLastClickedRow >= 0) {
-                    const start = Math.min(ganttLastClickedRow, row);
-                    const end = Math.max(ganttLastClickedRow, row);
-                    ganttSelectedRows = new Set();
-                    for (let i = start; i <= end; i++) ganttSelectedRows.add(i);
-                    updateGanttRowSelection();
-                } else if (e.ctrlKey || e.metaKey) {
-                    if (ganttSelectedRows.has(row)) { ganttSelectedRows.delete(row); } else { ganttSelectedRows.add(row); }
-                    ganttLastClickedRow = row;
-                    updateGanttRowSelection();
-                } else {
-                    const onSelected = ganttSelectedRows.has(row) && ganttSelectedRows.size > 0;
-                    ganttDragState = { mode: onSelected ? 'move' : 'select', startRow: row, currentRow: row, moved: false };
-                    if (!onSelected) {
-                        ganttSelectedRows = new Set([row]);
-                        ganttLastClickedRow = row;
-                        updateGanttRowSelection();
-                    }
-                }
+                beginGanttRowPointerAction(row, ganttCursor.col, e, true);
             });
             $(document).on('mousemove.ganttDrag', function (e) {
                 if (!ganttDragState || !$ganttInlineEditor.hasClass('visible')) return;
+                e.preventDefault();
                 const targetRow = getGanttRowFromMouseY(e.clientY);
                 if (targetRow < 0 || targetRow === ganttDragState.currentRow) return;
                 ganttDragState.currentRow = targetRow;
@@ -649,24 +948,31 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 ganttDragState = null;
                 $ganttInlineEditorGrid.find('tr').removeClass('ganttRowDragOver');
                 if (state.mode === 'move' && state.moved) {
+                    commitPendingGanttInputHistory();
+                    const beforeSnapshot = makeGanttSnapshot();
                     const rows = ganttGridAsRows();
                     const selectedIndices = Array.from(ganttSelectedRows).sort((a, b) => a - b);
+                    if (selectedIndices.includes(state.currentRow)) {
+                        focusGanttCell(state.startRow, ganttCursor.col, true);
+                        return;
+                    }
                     const selectedData = selectedIndices.map(i => rows[i]);
                     const remaining = rows.filter((_, i) => !ganttSelectedRows.has(i));
+                    const cursorOffset = Math.max(0, selectedIndices.indexOf(state.startRow));
                     const removedBefore = selectedIndices.filter(i => i < state.currentRow).length;
                     const insertIdx = Math.min(state.currentRow - removedBefore + 1, remaining.length);
                     remaining.splice(insertIdx, 0, ...selectedData);
                     ganttSelectedRows = new Set();
                     for (let i = insertIdx; i < insertIdx + selectedData.length; i++) ganttSelectedRows.add(i);
-                    ganttLastClickedRow = insertIdx;
-                    ganttCursor = { row: insertIdx, col: ganttCursor.col };
+                    ganttLastClickedRow = insertIdx + cursorOffset;
+                    ganttCursor = { row: insertIdx + cursorOffset, col: ganttCursor.col };
                     renderGanttGrid(remaining);
-                    scheduleGanttAutoApply();
-                } else if (state.mode === 'move' && !state.moved) {
-                    if (ganttSelectedRows.size === 1 && ganttSelectedRows.has(state.startRow)) {
-                        ganttSelectedRows = new Set();
-                        updateGanttRowSelection();
+                    focusGanttCell(ganttCursor.row, ganttCursor.col, true);
+                    if (pushGanttHistoryIfRowsChanged(beforeSnapshot, remaining)) {
+                        scheduleGanttAutoApply();
                     }
+                } else if (state.mode === 'select' && state.moved) {
+                    focusGanttCell(state.currentRow, ganttCursor.col, true);
                 }
             });
             $ganttInlineEditor.on('focus', 'input', function () {
@@ -675,8 +981,10 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     col: parseInt($(this).attr('data-c'), 10) || 0
                 };
                 focusGanttCell(ganttCursor.row, ganttCursor.col, false);
+                if (!ganttRestoringHistory) ganttInputSnapshot = makeGanttSnapshot();
             });
             $ganttInlineEditor.on('keydown', 'input', function (e) {
+                if (handleGanttHistoryShortcut(e)) return;
                 const row = parseInt($(this).attr('data-r'), 10) || 0;
                 const col = parseInt($(this).attr('data-c'), 10) || 0;
                 if (e.key === 'Tab') {
@@ -686,7 +994,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     rerenderGanttWithCursor(rows, row, col, true);
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
-                    if (col === GANTT_COL_START) tryApplyRefSubstitution($(this));
+                    if (col === GANTT_COL_START) applyGanttRefSubstitutionWithHistory($(this));
                     const rows = ganttGridAsRows();
                     const currentDepth = rows[row] ? rows[row].depth : 0;
                     rows.splice(row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '', progress: '' });
@@ -700,8 +1008,10 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     }
                 } else if (e.key === 'ArrowUp' && e.altKey) { e.preventDefault(); moveGanttRow(-1); }
                 else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); moveGanttRow(1); }
-                else if (e.key === 'ArrowUp') { e.preventDefault(); focusGanttCell(row - 1, col, true); }
-                else if (e.key === 'ArrowDown') { e.preventDefault(); focusGanttCell(row + 1, col, true); }
+                else if (e.key === 'ArrowUp' && e.shiftKey) { e.preventDefault(); focusAndSelectGanttRange(row - 1, col, true); }
+                else if (e.key === 'ArrowDown' && e.shiftKey) { e.preventDefault(); focusAndSelectGanttRange(row + 1, col, true); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); focusAndSelectGanttRow(row - 1, col, true); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); focusAndSelectGanttRow(row + 1, col, true); }
                 else if (e.key === 'ArrowLeft' && (this.type === 'number' || (this.selectionStart === 0 && this.selectionEnd === 0))) { e.preventDefault(); focusGanttCell(row, col - 1, true); }
                 else if (e.key === 'ArrowRight' && (this.type === 'number' || (this.selectionStart === this.value.length && this.selectionEnd === this.value.length))) { e.preventDefault(); focusGanttCell(row, col + 1, true); }
             });
@@ -744,10 +1054,22 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                 const $startInput = $ganttInlineEditorGrid.find(`input[data-r="${ganttCursor.row}"][data-c="${GANTT_COL_START}"]`);
                 if ($startInput.length) {
+                    commitPendingGanttInputHistory();
+                    const beforeSnapshot = makeGanttSnapshot();
                     $startInput.val(dateStr);
-                    scheduleGanttAutoApply();
+                    if (pushGanttHistoryIfRowsChanged(beforeSnapshot, ganttGridAsRows())) {
+                        scheduleGanttAutoApply();
+                    }
                     focusGanttCell(ganttCursor.row, GANTT_COL_START, true);
                 }
+                return false;
+            });
+            $('#ganttUndo').on('click', function () {
+                undoGanttHistory();
+                return false;
+            });
+            $('#ganttRedo').on('click', function () {
+                redoGanttHistory();
                 return false;
             });
             $('#ganttToggleRaw').on('click', function () {
