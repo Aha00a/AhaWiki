@@ -344,11 +344,15 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
             function scrollPreviewToGanttRow(rowIdx) {
                 const taskName = ($ganttInlineEditorGrid.find(`input[data-r="${rowIdx}"][data-c="${GANTT_COL_NAME}"]`).val() || '').replace(/#\w+$/, '').trim();
-                if (!taskName) return;
                 const previewPane = document.querySelector('.previewPane');
                 if (!previewPane) return;
                 const bodyCell = previewPane.querySelector('.gantt-body-cell');
                 if (!bodyCell) return;
+                if (!taskName || taskName.startsWith('#!')) {
+                    // directive 행(#!var 등)은 preview에 표시되지 않으므로 간트 상단으로 리셋
+                    bodyCell.scrollTop = 0;
+                    return;
+                }
                 const labels = previewPane.querySelectorAll('.gantt-label');
                 const svgNS = 'http://www.w3.org/2000/svg';
                 for (let i = 0; i < labels.length; i++) {
@@ -1641,6 +1645,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             }
 
             function scrollPreviewToCurrentLine() {
+                if ($ganttInlineEditor.hasClass('visible')) return; // 간트 에디터 활성 중엔 scrollPreviewToGanttRow가 담당
                 const line = getCurrentEditorLine();
                 const previewPane = document.querySelector('.previewPane');
                 if (!previewPane)
