@@ -1,4 +1,4 @@
-= InterpreterGantt Editor
+= [InterpreterGantt] Editor
 
 Gantt 블록 전용 인라인 에디터.
 
@@ -9,7 +9,7 @@ Gantt 형식은 depth(들여쓰기), 날짜/ref 단일 슬롯, 소요일 등 Tab
 
 == 데이터 모델
 
-각 행은 4개 필드로 표현된다. 파싱 규칙은 [[InterpreterGantt]] 참조.
+각 행은 4개 필드로 표현된다. 파싱 규칙은 [InterpreterGantt] 참조.
 
 [[[#!Table tsv 1 1
 필드	타입	설명
