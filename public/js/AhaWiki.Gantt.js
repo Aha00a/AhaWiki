@@ -174,20 +174,21 @@
     }
 
     // ── 상수 ──────────────────────────────────────────────────────────────────
-    var LABEL_W    = 360;
-    var DAYS_COL_W = 36;  // 소요일 컬럼 (우측 끝)
+    var LABEL_W    = 620;
+    var ROWNUM_W   = 36;   // 행 번호 컬럼 (좌측 고정)
+    var DAYS_COL_W = 48;  // 소요일 컬럼 (우측 끝)
     var DAY_W_DEF  = 20;
     var ZOOM_MIN_PCT = 10;
     var ZOOM_MAX_PCT = 500;
     var GANTT_PADDING_DAYS = 7;
-    var ROW_H      = 24;
-    var HDR_H      = 46;
-    var HDR_R1_Y   = 15;
-    var HDR_DIV_Y  = 22;
-    var HDR_R2_Y   = 37;
-    var INDENT     = 16;
-    var TRI_W      = 8;
-    var TRI_OFFSET = 12;
+    var ROW_H      = 32;
+    var HDR_H      = 60;
+    var HDR_R1_Y   = 20;
+    var HDR_DIV_Y  = 29;
+    var HDR_R2_Y   = 48;
+    var INDENT     = 20;
+    var TRI_W      = 10;
+    var TRI_OFFSET = 16;
 
     var ROOT_COLORS = ['#4c8bf5','#e05a5a','#34a853','#fbbc04','#9c27b0','#00897b','#f57c00','#546e7a'];
 
@@ -298,7 +299,7 @@
     }
 
     // ── SVG 빌더: Corner (좌상) ───────────────────────────────────────────────
-    var CORNER_SPLIT = 155; // Date + Days 컬럼 합계 너비 (오른쪽)
+    var CORNER_SPLIT = 200; // Date + Days 컬럼 합계 너비 (오른쪽)
 
     function buildCornerSvg() {
         var nameColW = LABEL_W - CORNER_SPLIT;
@@ -306,13 +307,15 @@
         var o = [];
         o.push('<svg class="gantt-svg" width="' + LABEL_W + '" height="' + HDR_H + '" xmlns="http://www.w3.org/2000/svg">');
         o.push('<rect width="100%" height="100%" class="gantt-corner-hdr-bg"/>');
-        // 세로 구분선: Task | Date | Days
+        // 세로 구분선: # | Task | Date | Days
+        o.push('<line x1="' + ROWNUM_W + '" y1="0" x2="' + ROWNUM_W + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         o.push('<line x1="' + nameColW + '" y1="0" x2="' + nameColW + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         o.push('<line x1="' + daysX    + '" y1="0" x2="' + daysX    + '" y2="' + HDR_H + '" class="gantt-hdr-divider"/>');
         // 가로 구분선
         o.push('<line x1="0" y1="' + HDR_DIV_Y + '" x2="' + LABEL_W + '" y2="' + HDR_DIV_Y + '" class="gantt-hdr-divider"/>');
         // 컬럼 헤더
-        o.push('<text x="8" y="' + HDR_R2_Y + '" text-anchor="start" class="gantt-corner-hdr-text">Task</text>');
+        o.push('<text x="' + (ROWNUM_W / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">#</text>');
+        o.push('<text x="' + (ROWNUM_W + 8) + '" y="' + HDR_R2_Y + '" text-anchor="start" class="gantt-corner-hdr-text">Task</text>');
         o.push('<text x="' + ((nameColW + daysX) / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">Period</text>');
         o.push('<text x="' + (daysX + DAYS_COL_W / 2) + '" y="' + HDR_R2_Y + '" text-anchor="middle" class="gantt-corner-hdr-text">Est</text>');
         o.push('</svg>');
@@ -387,6 +390,7 @@
         // 컬럼 구분선
         var nameColW = LABEL_W - CORNER_SPLIT;
         var daysColX = LABEL_W - DAYS_COL_W;
+        o.push('<line x1="' + ROWNUM_W + '" y1="0" x2="' + ROWNUM_W + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
         o.push('<line x1="' + nameColW + '" y1="0" x2="' + nameColW + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
         o.push('<line x1="' + daysColX + '" y1="0" x2="' + daysColX + '" y2="' + bodyH + '" class="gantt-col-divider"/>');
 
@@ -397,9 +401,11 @@
             var hasChld = node.children.length > 0;
             var cy      = y + Math.round(ROW_H / 2);
             var ly      = y + ROW_H / 2 + 4;
-            var lx      = 8 + node.depth * INDENT;
+            var lx      = ROWNUM_W + 8 + node.depth * INDENT;
 
-            o.push('<rect x="0" y="' + y + '" width="3" height="' + ROW_H + '" fill="' + color + '"/>');
+            // 행 번호
+            o.push('<text x="' + (ROWNUM_W / 2) + '" y="' + ly + '" text-anchor="middle" font-size="15" class="gantt-rownum">' + (i + 1) + '</text>');
+            o.push('<rect x="' + ROWNUM_W + '" y="' + y + '" width="3" height="' + ROW_H + '" fill="' + color + '"/>');
 
             var daysX = LABEL_W - DAYS_COL_W;
             var info =
@@ -413,7 +419,7 @@
             if (hasChld) {
                 var collapsed = !!collapsedIds[node.id];
                 o.push('<g class="gantt-toggle" data-id="' + node.id + '">');
-                o.push('<rect x="3" y="' + y + '" width="' + (LABEL_W - 3) + '" height="' + ROW_H + '" fill="rgba(0,0,0,0.001)"/>');
+                o.push('<rect x="' + (ROWNUM_W + 3) + '" y="' + y + '" width="' + (LABEL_W - ROWNUM_W - 3) + '" height="' + ROW_H + '" fill="rgba(0,0,0,0.001)"/>');
                 o.push('<polygon points="' + triPoints(lx, cy, collapsed) + '" class="gantt-tri"/>');
                 o.push('<text x="' + (lx + TRI_OFFSET) + '" y="' + ly + '" class="gantt-label">' + xmlEsc(node.name) + '</text>');
                 o.push(info);
@@ -692,20 +698,22 @@
             '.gantt-col-divider { stroke:' + bd + '; stroke-width:1; opacity:0.5; }',
             '.gantt-grid-week { stroke:' + bd + '; stroke-width:1; opacity:0.5; fill:none; }',
             '.gantt-grid-month { stroke:' + bd + '; stroke-width:1.5; opacity:0.8; fill:none; }',
-            '.gantt-hdr-month { font-size:12px; font-weight:600; fill:' + t + '; }',
-            '.gantt-hdr-day { font-size:10px; fill:' + t + '; opacity:0.7; text-anchor:middle; }',
-            '.gantt-corner-hdr-text { font-size:11px; font-weight:600; fill:' + t + '; opacity:0.75; }',
+            '.gantt-hdr-month { font-size:16px; font-weight:600; fill:' + t + '; }',
+            '.gantt-hdr-day { font-size:14px; fill:' + t + '; opacity:0.7; text-anchor:middle; }',
+            '.gantt-corner-hdr-text { font-size:15px; font-weight:600; fill:' + t + '; opacity:0.75; }',
             '.gantt-tri { fill:' + t + '; opacity:0.55; }',
             '.gantt-leaf-dot { fill:' + t + '; opacity:0.25; }',
-            '.gantt-label { font-size:12px; fill:' + t + '; }',
-            '.gantt-label-date { font-size:9px; fill:' + t + '; opacity:0.75; }',
-            '.gantt-label-days { font-size:9px; fill:' + t + '; opacity:0.6; }',
-            '.gantt-bar-label { font-size:11px; fill:#fff; text-anchor:middle; }',
-            '.gantt-bar-outer-label { font-size:11px; fill:' + t + '; opacity:0.7; }',
-            '.gantt-bar-start-label { font-size:10px; fill:' + t + '; text-anchor:end; opacity:0.5; }',
+            '.gantt-rownum { font-size:15px; fill:' + t + '; opacity:0.45; }',
+            '.gantt-label { font-size:16px; fill:' + t + '; }',
+            '.gantt-label-date { font-size:13px; fill:' + t + '; opacity:0.75; }',
+            '.gantt-label-days { font-size:13px; fill:' + t + '; opacity:0.6; }',
+            '.gantt-bar-label { font-size:14px; fill:#fff; text-anchor:middle; }',
+            '.gantt-bar-outer-label { font-size:14px; fill:' + t + '; opacity:0.7; }',
+            '.gantt-bar-start-label { font-size:13px; fill:' + t + '; text-anchor:end; opacity:0.5; }',
             '.gantt-today-line { stroke:#e05a5a; stroke-width:2; stroke-dasharray:4 2; opacity:0.85; fill:none; }',
             '.gantt-today-hdr { fill:#e05a5a; opacity:0.15; }',
-            '.gantt-today-hdr-label { font-size:10px; fill:#e05a5a; text-anchor:middle; font-weight:700; }',
+            '.gantt-today-label { font-size:14px; fill:#e05a5a; text-anchor:middle; font-weight:600; }',
+            '.gantt-today-hdr-label { font-size:14px; fill:#e05a5a; text-anchor:middle; font-weight:700; }',
             '.gantt-dep-line { fill:none; stroke-width:1.5; opacity:0.55; }',
             '.gantt-dep-arrow { opacity:0.55; }',
         ].join('\n');
@@ -785,7 +793,15 @@
         var blob = new Blob([out], { type: 'image/svg+xml;charset=utf-8' });
         var url  = URL.createObjectURL(blob);
         var a    = document.createElement('a');
-        a.href = url; a.download = 'gantt.svg';
+        var pad2ex = function (n) { return n < 10 ? '0' + n : '' + n; };
+        var now = new Date();
+        var dateStr = now.getFullYear() + '' + pad2ex(now.getMonth() + 1) + '' + pad2ex(now.getDate());
+        var timeStr = pad2ex(now.getHours()) + '' + pad2ex(now.getMinutes()) + '' + pad2ex(now.getSeconds());
+        var sanitize = function (s) { return String(s || '').replace(/[/\\:*?"<>|]/g, '_').replace(/\s+/g, '_'); };
+        var siteName = sanitize(window.location.hostname);
+        var pageName = sanitize(decodeURIComponent(window.location.pathname.split('/').filter(Boolean).pop() || 'gantt'));
+        var filename = 'AhaWiki.' + siteName + '.' + pageName + '.' + dateStr + '.' + timeStr + '.svg';
+        a.href = url; a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

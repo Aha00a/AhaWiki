@@ -340,6 +340,24 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 focusGanttCell(ganttCursor.row, ganttCursor.col, false);
             }
 
+            function scrollPreviewToGanttRow(rowIdx) {
+                const taskName = ($ganttInlineEditorGrid.find(`input[data-r="${rowIdx}"][data-c="${GANTT_COL_NAME}"]`).val() || '').replace(/#\w+$/, '').trim();
+                if (!taskName) return;
+                const previewPane = document.querySelector('.previewPane');
+                if (!previewPane) return;
+                const bodyCell = previewPane.querySelector('.gantt-body-cell');
+                if (!bodyCell) return;
+                const labels = previewPane.querySelectorAll('.gantt-label');
+                for (let i = 0; i < labels.length; i++) {
+                    if (labels[i].textContent.trim() === taskName) {
+                        const y = parseFloat(labels[i].getAttribute('y') || '0');
+                        const rowTop = Math.max(0, y - 16);
+                        bodyCell.scrollTop = Math.max(0, rowTop - bodyCell.clientHeight / 2 + 12);
+                        break;
+                    }
+                }
+            }
+
             function focusGanttCell(row, col, withFocus) {
                 const rowCount = $ganttInlineEditorGrid.find('tr').length;
                 if (!rowCount) return null;
@@ -356,6 +374,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     const val = $target.val();
                     if ($target[0].type !== 'number') $target[0].setSelectionRange(val.length, val.length);
                 }
+                scrollPreviewToGanttRow(nextRow);
                 return $target;
             }
 
@@ -545,18 +564,19 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 }
                 return false;
             });
+            function tryApplyRefSubstitution($input) {
+                const val = ($input.val() || '').trim();
+                const match = val.match(/^#(\d+)$/);
+                if (!match) return false;
+                const refRowIdx = parseInt(match[1], 10) - 1;
+                const refName = ($ganttInlineEditorGrid.find(`input[data-r="${refRowIdx}"][data-c="${GANTT_COL_NAME}"]`).val() || '').replace(/#\w+$/, '').trim();
+                if (!refName) return false;
+                $input.val(refName);
+                return true;
+            }
             $ganttInlineEditor.on('input', 'input', scheduleGanttAutoApply);
             $ganttInlineEditor.on('blur', '.ganttStartOrRefInput', function () {
-                const val = $(this).val().trim();
-                const match = val.match(/^#(\d+)$/);
-                if (!match) return;
-                const refRowIdx = parseInt(match[1], 10) - 1;
-                const rows = ganttGridAsRows();
-                if (refRowIdx < 0 || refRowIdx >= rows.length) return;
-                const refName = rows[refRowIdx].name.trim();
-                if (!refName) return;
-                $(this).val(refName);
-                scheduleGanttAutoApply();
+                if (tryApplyRefSubstitution($(this))) scheduleGanttAutoApply();
             });
             $ganttInlineEditorGrid.on('mousedown', '.ganttRowNum', function (e) {
                 const row = parseInt($(this).attr('data-r'), 10);
@@ -642,6 +662,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     rerenderGanttWithCursor(rows, row, col, true);
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
+                    if (col === GANTT_COL_START) tryApplyRefSubstitution($(this));
                     const rows = ganttGridAsRows();
                     const currentDepth = rows[row] ? rows[row].depth : 0;
                     rows.splice(row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '' });

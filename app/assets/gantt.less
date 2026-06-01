@@ -1,6 +1,6 @@
 @import "_mixins";
 
-@ganttTodayColor: @ganttTodayColor;
+@ganttTodayColor: #e05a5a;
 
 .InterpreterGantt {
     overflow-x: auto;
@@ -67,8 +67,8 @@
     // 4분면 Freeze 레이아웃
     .gantt-layout {
         display: grid;
-        grid-template-columns: 360px 1fr;
-        grid-template-rows: 46px minmax(80px, 65vh);
+        grid-template-columns: 620px 1fr;
+        grid-template-rows: 60px minmax(80px, 65vh);
         overflow: hidden;
         border: 1px solid var(--color-border);
         border-radius: 6px;
@@ -142,7 +142,7 @@
     .gantt-corner-hdr-bg   { fill: var(--color-border-subtle); }
 
     .gantt-corner-hdr-text {
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
         fill: var(--color-text);
         dominant-baseline: auto;
@@ -171,14 +171,14 @@
     }
 
     .gantt-hdr-month {
-        font-size: 12px;
+        font-size: 16px;
         font-weight: 600;
         fill: var(--color-text);
         dominant-baseline: auto;
     }
 
     .gantt-hdr-day {
-        font-size: 10px;
+        font-size: 14px;
         fill: var(--color-text);
         opacity: 0.7;
         text-anchor: middle;
@@ -207,8 +207,16 @@
         opacity: 0.25;
     }
 
+    .gantt-rownum {
+        font-size: 15px;
+        fill: var(--color-text);
+        opacity: 0.45;
+        dominant-baseline: auto;
+        pointer-events: none;
+    }
+
     .gantt-label {
-        font-size: 12px;
+        font-size: 16px;
         fill: var(--color-text);
         dominant-baseline: auto;
         pointer-events: none;
@@ -216,7 +224,7 @@
 
     // Period 컬럼 날짜
     .gantt-label-date {
-        font-size: 9px;
+        font-size: 13px;
         fill: var(--color-text);
         opacity: 0.75;
         dominant-baseline: auto;
@@ -225,7 +233,7 @@
 
     // Est 컬럼 소요일
     .gantt-label-days {
-        font-size: 9px;
+        font-size: 13px;
         fill: var(--color-text);
         opacity: 0.6;
         dominant-baseline: auto;
@@ -243,7 +251,7 @@
     .gantt-bar-parent { cursor: default; }
 
     .gantt-bar-label {
-        font-size: 11px;
+        font-size: 14px;
         fill: #ffffff;
         text-anchor: middle;
         dominant-baseline: auto;
@@ -251,7 +259,7 @@
     }
 
     .gantt-bar-outer-label {
-        font-size: 11px;
+        font-size: 14px;
         fill: var(--color-text);
         dominant-baseline: auto;
         pointer-events: none;
@@ -259,7 +267,7 @@
     }
 
     .gantt-bar-start-label {
-        font-size: 10px;
+        font-size: 13px;
         fill: var(--color-text);
         text-anchor: end;
         dominant-baseline: auto;
@@ -275,7 +283,7 @@
     }
 
     .gantt-today-label {
-        font-size: 10px;
+        font-size: 14px;
         fill: @ganttTodayColor;
         text-anchor: middle;
         dominant-baseline: auto;
@@ -300,7 +308,7 @@
     }
 
     .gantt-today-hdr-label {
-        font-size: 10px;
+        font-size: 14px;
         fill: @ganttTodayColor;
         text-anchor: middle;
         dominant-baseline: auto;

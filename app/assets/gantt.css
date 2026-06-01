@@ -59,8 +59,8 @@
 }
 .InterpreterGantt .gantt-layout {
   display: grid;
-  grid-template-columns: 360px 1fr;
-  grid-template-rows: 46px minmax(80px, 65vh);
+  grid-template-columns: 620px 1fr;
+  grid-template-rows: 60px minmax(80px, 65vh);
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 6px;
@@ -129,7 +129,7 @@
   fill: var(--color-border-subtle);
 }
 .InterpreterGantt .gantt-corner-hdr-text {
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 600;
   fill: var(--color-text);
   dominant-baseline: auto;
@@ -161,13 +161,13 @@
   opacity: 0.8;
 }
 .InterpreterGantt .gantt-hdr-month {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   fill: var(--color-text);
   dominant-baseline: auto;
 }
 .InterpreterGantt .gantt-hdr-day {
-  font-size: 10px;
+  font-size: 14px;
   fill: var(--color-text);
   opacity: 0.7;
   text-anchor: middle;
@@ -195,21 +195,28 @@
   fill: var(--color-text);
   opacity: 0.25;
 }
+.InterpreterGantt .gantt-rownum {
+  font-size: 15px;
+  fill: var(--color-text);
+  opacity: 0.45;
+  dominant-baseline: auto;
+  pointer-events: none;
+}
 .InterpreterGantt .gantt-label {
-  font-size: 12px;
+  font-size: 16px;
   fill: var(--color-text);
   dominant-baseline: auto;
   pointer-events: none;
 }
 .InterpreterGantt .gantt-label-date {
-  font-size: 9px;
+  font-size: 13px;
   fill: var(--color-text);
   opacity: 0.75;
   dominant-baseline: auto;
   pointer-events: none;
 }
 .InterpreterGantt .gantt-label-days {
-  font-size: 9px;
+  font-size: 13px;
   fill: var(--color-text);
   opacity: 0.6;
   dominant-baseline: auto;
@@ -227,21 +234,21 @@
   cursor: default;
 }
 .InterpreterGantt .gantt-bar-label {
-  font-size: 11px;
+  font-size: 14px;
   fill: #ffffff;
   text-anchor: middle;
   dominant-baseline: auto;
   pointer-events: none;
 }
 .InterpreterGantt .gantt-bar-outer-label {
-  font-size: 11px;
+  font-size: 14px;
   fill: var(--color-text);
   dominant-baseline: auto;
   pointer-events: none;
   opacity: 0.7;
 }
 .InterpreterGantt .gantt-bar-start-label {
-  font-size: 10px;
+  font-size: 13px;
   fill: var(--color-text);
   text-anchor: end;
   dominant-baseline: auto;
@@ -255,7 +262,7 @@
   opacity: 0.85;
 }
 .InterpreterGantt .gantt-today-label {
-  font-size: 10px;
+  font-size: 14px;
   fill: #e05a5a;
   text-anchor: middle;
   dominant-baseline: auto;
@@ -274,7 +281,7 @@
   opacity: 0.15;
 }
 .InterpreterGantt .gantt-today-hdr-label {
-  font-size: 10px;
+  font-size: 14px;
   fill: #e05a5a;
   text-anchor: middle;
   dominant-baseline: auto;
