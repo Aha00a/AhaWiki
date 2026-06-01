@@ -479,7 +479,7 @@
   font-size: 11px;
   color: var(--color-muted);
   background: var(--color-surface-alt);
-  cursor: pointer;
+  cursor: grab;
   user-select: none;
   padding: 2px;
 }
@@ -510,6 +510,10 @@
 .ganttEditorGrid tbody tr.ganttRowSelected td {
   background: var(--color-flash-info-bg);
 }
+.ganttEditorGrid tbody tr.ganttRowSelected input,
+.ganttEditorGrid tbody tr.ganttRowSelected .ganttRowNum {
+  cursor: grab;
+}
 .ganttEditorGrid input {
   width: 100%;
   border: 0;
@@ -519,6 +523,7 @@
   box-sizing: border-box;
   background: inherit;
   color: var(--color-text);
+  cursor: cell;
 }
 .ganttEditorGrid input.tableInlineEditorCellActive {
   outline: 2px solid var(--color-focus-ring);
@@ -533,6 +538,16 @@
 .ganttEditorGrid .ganttEstInput::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+.ganttInlineEditor.ganttSelectingRows .ganttEditorGrid,
+.ganttInlineEditor.ganttSelectingRows .ganttEditorGrid * {
+  cursor: cell !important;
+  user-select: none;
+}
+.ganttInlineEditor.ganttMovingRows .ganttEditorGrid,
+.ganttInlineEditor.ganttMovingRows .ganttEditorGrid * {
+  cursor: grabbing !important;
+  user-select: none;
 }
 .tableInlineEditorHeader {
   display: flex;

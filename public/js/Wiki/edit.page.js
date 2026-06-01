@@ -658,6 +658,18 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 focusGanttCell(row, col, withFocus);
             }
 
+            function updateGanttDragCursorState() {
+                const isDragging = !!(ganttDragState && ganttDragState.moved);
+                $ganttInlineEditor
+                    .toggleClass('ganttSelectingRows', isDragging && ganttDragState.mode === 'select')
+                    .toggleClass('ganttMovingRows', isDragging && ganttDragState.mode === 'move');
+            }
+
+            function clearGanttDragState() {
+                ganttDragState = null;
+                updateGanttDragCursorState();
+            }
+
             function beginGanttRowPointerAction(row, col, e, withFocus) {
                 if (ganttRestoringHistory) return;
                 const nextCol = Math.max(0, Math.min(col, GANTT_COL_COUNT - 1));
@@ -668,7 +680,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 } else if (e.ctrlKey || e.metaKey) {
                     if (ganttSelectedRows.has(row)) { ganttSelectedRows.delete(row); } else { ganttSelectedRows.add(row); }
                     ganttLastClickedRow = row;
-                    ganttDragState = null;
+                    clearGanttDragState();
                     updateGanttRowSelection();
                 } else {
                     const onSelected = ganttSelectedRows.has(row) && ganttSelectedRows.size > 0;
@@ -782,7 +794,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 ganttCursor = { row: 0, col: 0 };
                 ganttSelectedRows = new Set();
                 ganttLastClickedRow = -1;
-                ganttDragState = null;
+                clearGanttDragState();
                 renderGanttGrid(parseGanttSource(src));
                 $('#ganttEditorBar').hide();
                 $ganttInlineEditor.addClass('visible');
@@ -930,6 +942,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (targetRow < 0 || targetRow === ganttDragState.currentRow) return;
                 ganttDragState.currentRow = targetRow;
                 ganttDragState.moved = true;
+                updateGanttDragCursorState();
                 if (ganttDragState.mode === 'select') {
                     const start = Math.min(ganttDragState.startRow, targetRow);
                     const end = Math.max(ganttDragState.startRow, targetRow);
@@ -945,7 +958,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             $(document).on('mouseup.ganttDrag', function () {
                 if (!ganttDragState) return;
                 const state = ganttDragState;
-                ganttDragState = null;
+                clearGanttDragState();
                 $ganttInlineEditorGrid.find('tr').removeClass('ganttRowDragOver');
                 if (state.mode === 'move' && state.moved) {
                     commitPendingGanttInputHistory();

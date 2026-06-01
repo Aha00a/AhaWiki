@@ -457,7 +457,7 @@
 		font-size: 11px;
 		color: var(--color-muted);
 		background: var(--color-surface-alt);
-		cursor: pointer;
+		cursor: grab;
 		user-select: none;
 		padding: 2px;
 
@@ -486,6 +486,8 @@
 		tr:nth-child(even) td { background: var(--color-table-row-alt-bg); }
 		tr.ganttRowCurrent td { background: var(--color-link-hover-bg); }
 		tr.ganttRowSelected td { background: var(--color-flash-info-bg); }
+		tr.ganttRowSelected input,
+		tr.ganttRowSelected .ganttRowNum { cursor: grab; }
 	}
 
 	input {
@@ -497,6 +499,7 @@
 		box-sizing: border-box;
 		background: inherit;
 		color: var(--color-text);
+		cursor: cell;
 
 		&.tableInlineEditorCellActive {
 			outline: 2px solid var(--color-focus-ring);
@@ -515,6 +518,18 @@
 			margin: 0;
 		}
 	}
+}
+
+.ganttInlineEditor.ganttSelectingRows .ganttEditorGrid,
+.ganttInlineEditor.ganttSelectingRows .ganttEditorGrid * {
+	cursor: cell !important;
+	user-select: none;
+}
+
+.ganttInlineEditor.ganttMovingRows .ganttEditorGrid,
+.ganttInlineEditor.ganttMovingRows .ganttEditorGrid * {
+	cursor: grabbing !important;
+	user-select: none;
 }
 
 .tableInlineEditorHeader {
