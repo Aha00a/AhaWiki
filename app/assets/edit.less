@@ -10,6 +10,11 @@
 			border: 1px solid var(--color-input-border);
 		}
 
+		.ganttEditorGrid input {
+			border: 0;
+			background: inherit;
+		}
+
 		input[type='checkbox'] {
 			accent-color: var(--color-focus-ring);
 		}
@@ -429,8 +434,8 @@
 
 .ganttEditorGrid {
 	border-collapse: collapse;
-	width: max-content;
-	min-width: 100%;
+	table-layout: fixed;
+	width: 100%;
 
 	th {
 		border: 1px solid var(--color-table-border);
@@ -441,6 +446,34 @@
 		background: var(--color-surface-alt);
 		text-align: left;
 		white-space: nowrap;
+
+		&:first-child { width: 32px; padding: 0; text-align: center; }
+		&:nth-child(3) { width: 160px; }
+		&:nth-child(4) { width: 60px; }
+	}
+
+	.ganttRowNum {
+		text-align: center;
+		font-size: 11px;
+		color: var(--color-muted);
+		background: var(--color-surface-alt);
+		cursor: pointer;
+		user-select: none;
+		padding: 2px;
+
+		&:hover {
+			background: var(--color-link-hover-bg);
+			color: var(--color-text);
+		}
+
+		&.ganttRowNumSelected {
+			background: var(--color-focus-ring);
+			color: #fff;
+		}
+	}
+
+	.ganttRowDragOver {
+		td { border-bottom: 2px solid var(--color-focus-ring); }
 	}
 
 	td {
@@ -448,26 +481,39 @@
 		padding: 0;
 	}
 
+	tbody {
+		tr:nth-child(odd) td { background: var(--color-bg); }
+		tr:nth-child(even) td { background: var(--color-table-row-alt-bg); }
+		tr.ganttRowCurrent td { background: var(--color-link-hover-bg); }
+		tr.ganttRowSelected td { background: var(--color-flash-info-bg); }
+	}
+
 	input {
 		width: 100%;
 		border: 0;
+		outline: none;
 		padding: 6px;
 		font: inherit;
 		box-sizing: border-box;
-		background: var(--color-input-bg);
+		background: inherit;
 		color: var(--color-text);
-	}
 
-	.ganttNameInput {
-		min-width: 200px;
-	}
-
-	.ganttStartOrRefInput {
-		min-width: 120px;
+		&.tableInlineEditorCellActive {
+			outline: 2px solid var(--color-focus-ring);
+			outline-offset: -2px;
+			background: var(--color-link-hover-bg);
+		}
 	}
 
 	.ganttEstInput {
-		min-width: 60px;
+		-moz-appearance: textfield;
+		appearance: textfield;
+
+		&::-webkit-outer-spin-button,
+		&::-webkit-inner-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
 	}
 }
 

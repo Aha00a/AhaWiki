@@ -138,6 +138,9 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             const $ganttInlineEditorGrid = $('#ganttInlineEditorGrid');
             let ganttAutoApplyTimer = null;
             let ganttCursor = { row: 0, col: 0 };
+            let ganttSelectedRows = new Set();
+            let ganttLastClickedRow = -1;
+            let ganttDragState = null;
             const GANTT_COL_NAME = 0, GANTT_COL_START = 1, GANTT_COL_EST = 2, GANTT_COL_COUNT = 3;
 
             function detectTableBlock(value) {
@@ -326,10 +329,12 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (!rows.length) rows = [{ depth: 0, name: '', startOrRef: '', est: '' }];
                 const html = rows.map((row, rIdx) => {
                     const paddingLeft = row.depth * 20 + 6;
-                    const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}"></td>`;
-                    const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}"></td>`;
-                    const estTd = `<td><input class="ganttEstInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}"></td>`;
-                    return `<tr data-depth="${row.depth}">${nameTd}${startTd}${estTd}</tr>`;
+                    const isSelected = ganttSelectedRows.has(rIdx);
+                    const rowNumTd = `<td class="ganttRowNum${isSelected ? ' ganttRowNumSelected' : ''}" data-r="${rIdx}">${rIdx + 1}</td>`;
+                    const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}" placeholder="Task name"></td>`;
+                    const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}" placeholder="YYYY-MM-DD or ref"></td>`;
+                    const estTd = `<td><input class="ganttEstInput" type="number" min="0" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}" placeholder="days"></td>`;
+                    return `<tr data-r="${rIdx}" data-depth="${row.depth}"${isSelected ? ' class="ganttRowSelected"' : ''}>${rowNumTd}${nameTd}${startTd}${estTd}</tr>`;
                 }).join('');
                 $ganttInlineEditorGrid.html(html);
                 focusGanttCell(ganttCursor.row, ganttCursor.col, false);
@@ -341,6 +346,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const nextRow = Math.max(0, Math.min(row, rowCount - 1));
                 const nextCol = Math.max(0, Math.min(col, GANTT_COL_COUNT - 1));
                 ganttCursor = { row: nextRow, col: nextCol };
+                $ganttInlineEditorGrid.find('tr').removeClass('ganttRowCurrent');
+                $ganttInlineEditorGrid.find(`tr[data-r="${nextRow}"]`).addClass('ganttRowCurrent');
                 $ganttInlineEditorGrid.find('input').removeClass('tableInlineEditorCellActive');
                 const $target = $ganttInlineEditorGrid.find(`input[data-r="${nextRow}"][data-c="${nextCol}"]`);
                 $target.addClass('tableInlineEditorCellActive');
@@ -372,10 +379,63 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             }
 
             function rerenderGanttWithCursor(rows, row, col, withFocus) {
+                ganttSelectedRows = new Set();
                 ganttCursor = { row, col };
                 renderGanttGrid(rows);
                 focusGanttCell(row, col, withFocus);
                 scheduleGanttAutoApply();
+            }
+
+            function moveGanttRow(direction) {
+                const rows = ganttGridAsRows();
+                const fromIdx = ganttCursor.row;
+                const toIdx = fromIdx + direction;
+                if (toIdx < 0 || toIdx >= rows.length) return;
+                const tmp = rows[fromIdx];
+                rows[fromIdx] = rows[toIdx];
+                rows[toIdx] = tmp;
+                rerenderGanttWithCursor(rows, toIdx, ganttCursor.col, true);
+            }
+
+            function updateGanttRowSelection() {
+                $ganttInlineEditorGrid.find('tr').each(function () {
+                    const r = parseInt($(this).attr('data-r'), 10);
+                    const selected = ganttSelectedRows.has(r);
+                    $(this).toggleClass('ganttRowSelected', selected);
+                    $(this).find('.ganttRowNum').toggleClass('ganttRowNumSelected', selected);
+                });
+            }
+
+            function getGanttRowFromMouseY(clientY) {
+                let result = -1;
+                $ganttInlineEditorGrid.find('tr').each(function () {
+                    const rect = this.getBoundingClientRect();
+                    if (clientY >= rect.top && clientY < rect.bottom) {
+                        result = parseInt($(this).attr('data-r'), 10);
+                        return false;
+                    }
+                });
+                return result;
+            }
+
+            function getChildrenEndIdx(rows, rowIdx) {
+                const depth = rows[rowIdx].depth;
+                let end = rowIdx + 1;
+                while (end < rows.length && rows[end].depth > depth) end++;
+                return end;
+            }
+
+            function indentGanttRow(rowIdx, rows) {
+                const prevDepth = rowIdx > 0 ? rows[rowIdx - 1].depth : -1;
+                if (rows[rowIdx].depth >= prevDepth + 1) return;
+                const childEnd = getChildrenEndIdx(rows, rowIdx);
+                for (let i = rowIdx; i < childEnd; i++) rows[i].depth += 1;
+            }
+
+            function outdentGanttRow(rowIdx, rows) {
+                if (rows[rowIdx].depth <= 0) return;
+                const childEnd = getChildrenEndIdx(rows, rowIdx);
+                for (let i = rowIdx; i < childEnd; i++) rows[i].depth = Math.max(0, rows[i].depth - 1);
             }
 
             function applyGanttBlockEditor() {
@@ -405,12 +465,17 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
                 if (!detectGanttBlock(src)) return false;
                 ganttCursor = { row: 0, col: 0 };
+                ganttSelectedRows = new Set();
+                ganttLastClickedRow = -1;
+                ganttDragState = null;
                 renderGanttGrid(parseGanttSource(src));
                 $('#ganttEditorBar').hide();
                 $ganttInlineEditor.addClass('visible');
                 hideStandardEditor();
                 $('.toolbarTableOnly').hide();
                 $('.toggleTableEditor').text('Switch to Raw Editor');
+                $('.editHelp').hide();
+                focusGanttCell(0, 0, true);
                 return true;
             }
 
@@ -422,6 +487,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 showStandardEditor();
                 $('.toolbarTableOnly').show();
                 $('.toggleTableEditor').text('Switch to Gantt Editor');
+                $('.editHelp').show();
                 $('#ganttEditorBar').show();
             }
 
@@ -480,6 +546,85 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 return false;
             });
             $ganttInlineEditor.on('input', 'input', scheduleGanttAutoApply);
+            $ganttInlineEditor.on('blur', '.ganttStartOrRefInput', function () {
+                const val = $(this).val().trim();
+                const match = val.match(/^#(\d+)$/);
+                if (!match) return;
+                const refRowIdx = parseInt(match[1], 10) - 1;
+                const rows = ganttGridAsRows();
+                if (refRowIdx < 0 || refRowIdx >= rows.length) return;
+                const refName = rows[refRowIdx].name.trim();
+                if (!refName) return;
+                $(this).val(refName);
+                scheduleGanttAutoApply();
+            });
+            $ganttInlineEditorGrid.on('mousedown', '.ganttRowNum', function (e) {
+                const row = parseInt($(this).attr('data-r'), 10);
+                e.preventDefault();
+                if (e.shiftKey && ganttLastClickedRow >= 0) {
+                    const start = Math.min(ganttLastClickedRow, row);
+                    const end = Math.max(ganttLastClickedRow, row);
+                    ganttSelectedRows = new Set();
+                    for (let i = start; i <= end; i++) ganttSelectedRows.add(i);
+                    updateGanttRowSelection();
+                } else if (e.ctrlKey || e.metaKey) {
+                    if (ganttSelectedRows.has(row)) { ganttSelectedRows.delete(row); } else { ganttSelectedRows.add(row); }
+                    ganttLastClickedRow = row;
+                    updateGanttRowSelection();
+                } else {
+                    const onSelected = ganttSelectedRows.has(row) && ganttSelectedRows.size > 0;
+                    ganttDragState = { mode: onSelected ? 'move' : 'select', startRow: row, currentRow: row, moved: false };
+                    if (!onSelected) {
+                        ganttSelectedRows = new Set([row]);
+                        ganttLastClickedRow = row;
+                        updateGanttRowSelection();
+                    }
+                }
+            });
+            $(document).on('mousemove.ganttDrag', function (e) {
+                if (!ganttDragState || !$ganttInlineEditor.hasClass('visible')) return;
+                const targetRow = getGanttRowFromMouseY(e.clientY);
+                if (targetRow < 0 || targetRow === ganttDragState.currentRow) return;
+                ganttDragState.currentRow = targetRow;
+                ganttDragState.moved = true;
+                if (ganttDragState.mode === 'select') {
+                    const start = Math.min(ganttDragState.startRow, targetRow);
+                    const end = Math.max(ganttDragState.startRow, targetRow);
+                    ganttSelectedRows = new Set();
+                    for (let i = start; i <= end; i++) ganttSelectedRows.add(i);
+                    ganttLastClickedRow = ganttDragState.startRow;
+                    updateGanttRowSelection();
+                } else if (ganttDragState.mode === 'move') {
+                    $ganttInlineEditorGrid.find('tr').removeClass('ganttRowDragOver');
+                    $ganttInlineEditorGrid.find(`tr[data-r="${targetRow}"]`).addClass('ganttRowDragOver');
+                }
+            });
+            $(document).on('mouseup.ganttDrag', function () {
+                if (!ganttDragState) return;
+                const state = ganttDragState;
+                ganttDragState = null;
+                $ganttInlineEditorGrid.find('tr').removeClass('ganttRowDragOver');
+                if (state.mode === 'move' && state.moved) {
+                    const rows = ganttGridAsRows();
+                    const selectedIndices = Array.from(ganttSelectedRows).sort((a, b) => a - b);
+                    const selectedData = selectedIndices.map(i => rows[i]);
+                    const remaining = rows.filter((_, i) => !ganttSelectedRows.has(i));
+                    const removedBefore = selectedIndices.filter(i => i < state.currentRow).length;
+                    const insertIdx = Math.min(state.currentRow - removedBefore + 1, remaining.length);
+                    remaining.splice(insertIdx, 0, ...selectedData);
+                    ganttSelectedRows = new Set();
+                    for (let i = insertIdx; i < insertIdx + selectedData.length; i++) ganttSelectedRows.add(i);
+                    ganttLastClickedRow = insertIdx;
+                    ganttCursor = { row: insertIdx, col: ganttCursor.col };
+                    renderGanttGrid(remaining);
+                    scheduleGanttAutoApply();
+                } else if (state.mode === 'move' && !state.moved) {
+                    if (ganttSelectedRows.size === 1 && ganttSelectedRows.has(state.startRow)) {
+                        ganttSelectedRows = new Set();
+                        updateGanttRowSelection();
+                    }
+                }
+            });
             $ganttInlineEditor.on('focus', 'input', function () {
                 ganttCursor = {
                     row: parseInt($(this).attr('data-r'), 10) || 0,
@@ -490,26 +635,30 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             $ganttInlineEditor.on('keydown', 'input', function (e) {
                 const row = parseInt($(this).attr('data-r'), 10) || 0;
                 const col = parseInt($(this).attr('data-c'), 10) || 0;
-                if (e.key === 'Tab' && col === GANTT_COL_NAME) {
+                if (e.key === 'Tab') {
                     e.preventDefault();
                     const rows = ganttGridAsRows();
-                    rows[row].depth = e.shiftKey ? Math.max(0, rows[row].depth - 1) : rows[row].depth + 1;
+                    if (e.shiftKey) { outdentGanttRow(row, rows); } else { indentGanttRow(row, rows); }
                     rerenderGanttWithCursor(rows, row, col, true);
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
-                    const rowCount = $ganttInlineEditorGrid.find('tr').length;
-                    if (row >= rowCount - 1) {
-                        const rows = ganttGridAsRows();
-                        const currentDepth = rows[row] ? rows[row].depth : 0;
-                        rows.push({ depth: currentDepth, name: '', startOrRef: '', est: '' });
-                        rerenderGanttWithCursor(rows, row + 1, col, true);
-                    } else {
-                        focusGanttCell(row + 1, col, true);
+                    const rows = ganttGridAsRows();
+                    const currentDepth = rows[row] ? rows[row].depth : 0;
+                    rows.splice(row + 1, 0, { depth: currentDepth, name: '', startOrRef: '', est: '' });
+                    rerenderGanttWithCursor(rows, row + 1, col, true);
+                } else if (e.key === 'Delete' && e.shiftKey) {
+                    e.preventDefault();
+                    const rows = ganttGridAsRows();
+                    if (rows.length > 1) {
+                        rows.splice(row, 1);
+                        rerenderGanttWithCursor(rows, Math.max(0, row - 1), col, true);
                     }
-                } else if (e.key === 'ArrowUp') { e.preventDefault(); focusGanttCell(row - 1, col, true); }
+                } else if (e.key === 'ArrowUp' && e.altKey) { e.preventDefault(); moveGanttRow(-1); }
+                else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); moveGanttRow(1); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); focusGanttCell(row - 1, col, true); }
                 else if (e.key === 'ArrowDown') { e.preventDefault(); focusGanttCell(row + 1, col, true); }
-                else if (e.key === 'ArrowLeft' && this.selectionStart === 0 && this.selectionEnd === 0) { e.preventDefault(); focusGanttCell(row, col - 1, true); }
-                else if (e.key === 'ArrowRight' && this.selectionStart === this.value.length && this.selectionEnd === this.value.length) { e.preventDefault(); focusGanttCell(row, col + 1, true); }
+                else if (e.key === 'ArrowLeft' && (this.type === 'number' || (this.selectionStart === 0 && this.selectionEnd === 0))) { e.preventDefault(); focusGanttCell(row, col - 1, true); }
+                else if (e.key === 'ArrowRight' && (this.type === 'number' || (this.selectionStart === this.value.length && this.selectionEnd === this.value.length))) { e.preventDefault(); focusGanttCell(row, col + 1, true); }
             });
             $('#ganttAddRow').on('click', function () {
                 const rows = ganttGridAsRows();
@@ -527,14 +676,33 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             });
             $('#ganttIndent').on('click', function () {
                 const rows = ganttGridAsRows();
-                rows[ganttCursor.row].depth += 1;
+                indentGanttRow(ganttCursor.row, rows);
                 rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
                 return false;
             });
             $('#ganttOutdent').on('click', function () {
                 const rows = ganttGridAsRows();
-                rows[ganttCursor.row].depth = Math.max(0, rows[ganttCursor.row].depth - 1);
+                outdentGanttRow(ganttCursor.row, rows);
                 rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
+                return false;
+            });
+            $('#ganttMoveUp').on('click', function () {
+                moveGanttRow(-1);
+                return false;
+            });
+            $('#ganttMoveDown').on('click', function () {
+                moveGanttRow(1);
+                return false;
+            });
+            $('#ganttTodayDate').on('click', function () {
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                const $startInput = $ganttInlineEditorGrid.find(`input[data-r="${ganttCursor.row}"][data-c="${GANTT_COL_START}"]`);
+                if ($startInput.length) {
+                    $startInput.val(dateStr);
+                    scheduleGanttAutoApply();
+                    focusGanttCell(ganttCursor.row, GANTT_COL_START, true);
+                }
                 return false;
             });
             $('#ganttToggleRaw').on('click', function () {

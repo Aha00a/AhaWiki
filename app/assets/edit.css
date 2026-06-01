@@ -5,6 +5,10 @@
   color: var(--color-text);
   border: 1px solid var(--color-input-border);
 }
+.AhaWiki .edit .ganttEditorGrid input {
+  border: 0;
+  background: inherit;
+}
 .AhaWiki .edit input[type='checkbox'] {
   accent-color: var(--color-focus-ring);
 }
@@ -446,8 +450,8 @@
 }
 .ganttEditorGrid {
   border-collapse: collapse;
-  width: max-content;
-  min-width: 100%;
+  table-layout: fixed;
+  width: 100%;
 }
 .ganttEditorGrid th {
   border: 1px solid var(--color-table-border);
@@ -459,27 +463,76 @@
   text-align: left;
   white-space: nowrap;
 }
+.ganttEditorGrid th:first-child {
+  width: 32px;
+  padding: 0;
+  text-align: center;
+}
+.ganttEditorGrid th:nth-child(3) {
+  width: 160px;
+}
+.ganttEditorGrid th:nth-child(4) {
+  width: 60px;
+}
+.ganttEditorGrid .ganttRowNum {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-muted);
+  background: var(--color-surface-alt);
+  cursor: pointer;
+  user-select: none;
+  padding: 2px;
+}
+.ganttEditorGrid .ganttRowNum:hover {
+  background: var(--color-link-hover-bg);
+  color: var(--color-text);
+}
+.ganttEditorGrid .ganttRowNum.ganttRowNumSelected {
+  background: var(--color-focus-ring);
+  color: #fff;
+}
+.ganttEditorGrid .ganttRowDragOver td {
+  border-bottom: 2px solid var(--color-focus-ring);
+}
 .ganttEditorGrid td {
   border: 1px solid var(--color-table-border);
   padding: 0;
 }
+.ganttEditorGrid tbody tr:nth-child(odd) td {
+  background: var(--color-bg);
+}
+.ganttEditorGrid tbody tr:nth-child(even) td {
+  background: var(--color-table-row-alt-bg);
+}
+.ganttEditorGrid tbody tr.ganttRowCurrent td {
+  background: var(--color-link-hover-bg);
+}
+.ganttEditorGrid tbody tr.ganttRowSelected td {
+  background: var(--color-flash-info-bg);
+}
 .ganttEditorGrid input {
   width: 100%;
   border: 0;
+  outline: none;
   padding: 6px;
   font: inherit;
   box-sizing: border-box;
-  background: var(--color-input-bg);
+  background: inherit;
   color: var(--color-text);
 }
-.ganttEditorGrid .ganttNameInput {
-  min-width: 200px;
-}
-.ganttEditorGrid .ganttStartOrRefInput {
-  min-width: 120px;
+.ganttEditorGrid input.tableInlineEditorCellActive {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
+  background: var(--color-link-hover-bg);
 }
 .ganttEditorGrid .ganttEstInput {
-  min-width: 60px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.ganttEditorGrid .ganttEstInput::-webkit-outer-spin-button,
+.ganttEditorGrid .ganttEstInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .tableInlineEditorHeader {
   display: flex;

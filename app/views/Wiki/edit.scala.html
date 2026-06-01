@@ -159,15 +159,18 @@
                                 <div id="ganttInlineEditor" class="ganttInlineEditor">
                                     <div class="tableInlineEditorHeader">
                                         <strong>Gantt</strong>
-                                        <button id="ganttAddRow" class="tableInlineEditorButton" type="button">+ Row</button>
-                                        <button id="ganttDeleteRow" class="tableInlineEditorButton" type="button">- Row</button>
-                                        <button id="ganttIndent" class="tableInlineEditorButton" type="button">▶ Indent</button>
-                                        <button id="ganttOutdent" class="tableInlineEditorButton" type="button">◀ Outdent</button>
-                                        <button id="ganttToggleRaw" class="tableInlineEditorButton" type="button">Raw</button>
+                                        <button id="ganttAddRow" class="tableInlineEditorButton" type="button" title="Add row (Enter)"><i class="fas fa-plus"></i></button>
+                                        <button id="ganttDeleteRow" class="tableInlineEditorButton" type="button" title="Delete row (Shift+Del)"><i class="fas fa-minus"></i></button>
+                                        <button id="ganttMoveUp" class="tableInlineEditorButton" type="button" title="Move row up (Alt+↑)"><i class="fas fa-arrow-up"></i></button>
+                                        <button id="ganttMoveDown" class="tableInlineEditorButton" type="button" title="Move row down (Alt+↓)"><i class="fas fa-arrow-down"></i></button>
+                                        <button id="ganttIndent" class="tableInlineEditorButton" type="button" title="Indent (Tab)"><i class="fas fa-indent"></i></button>
+                                        <button id="ganttOutdent" class="tableInlineEditorButton" type="button" title="Outdent (Shift+Tab)"><i class="fas fa-outdent"></i></button>
+                                        <button id="ganttTodayDate" class="tableInlineEditorButton" type="button" title="Insert today's date into Start field"><i class="fas fa-calendar-day"></i></button>
+                                        <button id="ganttToggleRaw" class="tableInlineEditorButton" type="button" title="Switch to raw editor"><i class="fas fa-code"></i></button>
                                     </div>
                                     <div class="tableInlineEditorBody">
                                         <table class="ganttEditorGrid">
-                                            <thead><tr><th>Task</th><th>Start / Ref</th><th>Est</th></tr></thead>
+                                            <thead><tr><th style="width:32px">#</th><th>Task</th><th style="width:160px">Start / Ref</th><th style="width:60px">Est</th></tr></thead>
                                             <tbody id="ganttInlineEditorGrid"></tbody>
                                         </table>
                                     </div>
