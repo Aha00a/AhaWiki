@@ -43,7 +43,7 @@ depth는 Indent/Outdent 버튼 또는 작업명 셀의 Tab/Shift+Tab 단축키�
 컬럼	input type	비고
 Task	text	`이름` 또는 `이름#라벨` 형식. depth에 따라 들여쓰기 표시.
 Start / Ref	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). 비워 두면 생략.
-Est	number	양의 정수. 비워 두면 생략.
+Est	text	양의 정수. 비워 두면 생략.
 ]]]
 
 == 직렬화 규칙
@@ -91,4 +91,3 @@ Gantt 미리보기 렌더링 후에는 `window.AhaWiki.Gantt.initAll()`을 호�
 
  * `public/js/Wiki/edit.page.js` — GanttEditor 로직, `detectGanttBlock()`, 직렬화, 자동 동기화
  * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor`/`#ganttEditorBar` UI 마크업과 인라인 스타일
-

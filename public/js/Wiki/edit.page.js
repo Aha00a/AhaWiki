@@ -328,7 +328,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     const paddingLeft = row.depth * 20 + 6;
                     const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}"></td>`;
                     const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}"></td>`;
-                    const estTd = `<td><input class="ganttEstInput" type="number" min="1" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}"></td>`;
+                    const estTd = `<td><input class="ganttEstInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}"></td>`;
                     return `<tr data-depth="${row.depth}">${nameTd}${startTd}${estTd}</tr>`;
                 }).join('');
                 $ganttInlineEditorGrid.html(html);
