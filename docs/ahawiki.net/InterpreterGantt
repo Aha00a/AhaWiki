@@ -1,7 +1,7 @@
 = [Interpreter]Gantt
 
 Gantt 인터프리터는 TSV 계층 구조 텍스트를 SVG Gantt 차트로 렌더링한다.
-섹션 편집 시 `#!gantt` 블록은 Gantt 전용 인라인 에디터(["InterpreterGantt Editor"])로 열린다.
+섹션 편집 시 `#!gantt` 블록은 ["InterpreterGantt Editor"]로 열린다.
 
 == 포맷
 
@@ -173,8 +173,3 @@ depth 0 항목 단위로 색상 그룹을 지정한다. 하위 노드는 같은 
  * `app/views/Wiki/edit.scala.html` — Gantt 전용 인라인 에디터 UI
  * `public/js/Wiki/edit.page.js` — GanttEditor 감지·편집·직렬화
 
-== TODO
-
- * [ ] 드래그로 시작일/소요일 변경
- * [ ] 공휴일 반영 옵션
- * [ ] 담당자(assignee) 컬럼
