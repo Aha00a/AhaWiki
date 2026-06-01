@@ -3,15 +3,19 @@
 } {
     <div class="wikiContent">
         <div class="limitWidth">
-            @action(false, null, null)
             <h1>@title</h1>
-            <p>@(message)</p>
-            @if(!wikiContext.requestWrapper.getUser) {
-                <a href="@(routes.Auth.login)">
-                    <i class="fas fa-right-to-bracket"></i>
-                    Login
-                </a>
-            }
+            <div class="errorPage">
+                <div class="errorPageIcon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <p class="errorPageMessage">@message</p>
+                @if(!wikiContext.requestWrapper.getUser) {
+                    <a href="@(routes.Auth.login)" class="errorPageLoginButton">
+                        <i class="fas fa-right-to-bracket"></i>
+                        Login
+                    </a>
+                }
+            </div>
         </div>
     </div>
 }

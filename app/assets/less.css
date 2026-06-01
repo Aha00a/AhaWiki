@@ -927,6 +927,64 @@ kbd.MacroKbd {
 #mainContent {
   outline: none;
 }
+.errorPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px;
+  gap: 16px;
+}
+.errorPage .errorPageIcon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  border: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.errorPage .errorPageIcon i {
+  font-size: 40px;
+  color: var(--color-muted);
+}
+.errorPage .errorPageTitle {
+  font-size: 1.75em;
+  font-weight: 700;
+  margin: 0;
+  border: none;
+  padding: 0;
+  color: var(--color-text);
+}
+.errorPage .errorPageMessage {
+  font-size: 1em;
+  color: var(--color-muted);
+  margin: 0;
+  max-width: 360px;
+  line-height: 1.6;
+}
+.errorPage .errorPageLoginButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 24px;
+  background: var(--color-link);
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1em;
+  text-decoration: none;
+  transition: opacity 160ms ease;
+}
+.errorPage .errorPageLoginButton:hover {
+  opacity: 0.85;
+  background: var(--color-link);
+  color: #fff;
+}
 .skipToContent {
   position: absolute;
   top: -100px;
