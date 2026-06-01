@@ -149,7 +149,7 @@
             } else if (parentStart) {
                 start = parentStart;
             } else {
-                start = toBusinessDay(new Date());
+                var _now = new Date(); _now.setHours(0, 0, 0, 0); start = toBusinessDay(_now);
             }
 
             if (node.children.length === 0) {
