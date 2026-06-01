@@ -5,6 +5,7 @@ Gantt 블록 전용 인라인 에디터.
 == 배경
 
 기존에는 `#!gantt` 블록도 `#!table`과 동일한 TableEditor로 열렸다.
+현재 구현은 `#!gantt`를 별도로 감지해 Gantt 전용 인라인 에디터로 연다.
 Gantt 형식은 depth(들여쓰기), 날짜/ref 단일 슬롯, 소요일 등 Table과 다른 구조를 가지므로 전용 에디터가 필요하다.
 
 == 데이터 모델
@@ -29,16 +30,20 @@ est	정수 (선택)	소요 영업일수. 생략 시 defaultEst 적용.
 - Row	현재 행 삭제
 ▶ Indent	현재 행 depth +1
 ◀ Outdent	현재 행 depth -1 (0 이하로 내려가지 않음)
+Raw	GanttEditor를 닫고 원문 에디터로 전환
 ]]]
 
 === 그리드 컬럼
 
+현재 UI는 depth를 별도 숫자 컬럼으로 노출하지 않는다.
+각 행의 depth는 row `data-depth` 값으로 보관하고, Task 입력칸의 왼쪽 padding으로 들여쓰기를 표시한다.
+depth는 Indent/Outdent 버튼 또는 작업명 셀의 Tab/Shift+Tab 단축키로만 변경한다.
+
 [[[#!Table tsv 1 1
 컬럼	input type	비고
-depth	읽기전용 숫자	직접 편집 불가. Indent/Outdent 버튼 또는 단축키로만 변경.
-작업명#라벨	text	`이름` 또는 `이름#라벨` 형식
-시작일/ref	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). 비워 두면 생략.
-소요일	number	양의 정수. 비워 두면 생략.
+Task	text	`이름` 또는 `이름#라벨` 형식. depth에 따라 들여쓰기 표시.
+Start / Ref	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). 비워 두면 생략.
+Est	number	양의 정수. 비워 두면 생략.
 ]]]
 
 == 직렬화 규칙
@@ -59,7 +64,7 @@ depth	읽기전용 숫자	직접 편집 불가. Indent/Outdent 버튼 또는 단
 키	위치	동작
 Tab	작업명 셀	depth +1 (Indent)
 Shift+Tab	작업명 셀	depth -1 (Outdent)
-Tab	그 외 셀	다음 셀로 포커스 이동
+Tab	그 외 셀	브라우저 기본 포커스 순서로 이동
 Enter	임의 셀	다음 행 같은 컬럼으로 이동. 마지막 행이면 새 행 추가.
 ArrowUp / Down	임의 셀	상하 행 이동
 ArrowLeft / Right	셀 끝 / 시작에서만	좌우 셀 이동
@@ -67,26 +72,34 @@ ArrowLeft / Right	셀 끝 / 시작에서만	좌우 셀 이동
 
 == 감지 로직 변경
 
-기존 `detectTableBlock()`이 `#!table`과 `#!gantt`를 모두 처리하는 구조를 분리한다.
+기존 `detectTableBlock()`이 `#!table`과 `#!gantt`를 모두 처리하던 구조를 분리했다.
 
  * `detectTableBlock()`: `#!table`만 감지 → TableEditor 열기
  * `detectGanttBlock()`: `#!gantt`만 감지 → GanttEditor 열기
- * 초기 로드 시 `#!gantt` 감지되면 GanttEditor 자동 열기
+ * `detectGanttBlock()`은 `[[[#!gantt ...]]]`, `[[[` + `#!gantt`, plain `#!gantt` 문서를 모두 처리
+ * plain `#!gantt` 문서는 다음 섹션 헤더(`=`, `==` 등)를 데이터 끝으로 본다
+ * 초기 로드 시 `#!gantt` 감지되면 TableEditor보다 먼저 GanttEditor 자동 열기
  * `.toggleTableEditor` 버튼 클릭 시 블록 종류에 따라 분기
+
+== 미리보기 동기화
+
+GanttEditor에서 input이 변경되면 120ms 디바운스로 `applyGanttBlockEditor()`를 실행한다.
+이 함수는 그리드 상태를 Gantt TSV로 직렬화해 원문 textarea/CodeMirror에 반영하고, 기존 preview debounce가 미리보기를 다시 렌더링한다.
+Gantt 미리보기 렌더링 후에는 `window.AhaWiki.Gantt.initAll()`을 호출해 SVG 차트를 초기화한다.
 
 == 구현 파일
 
- * `public/js/Wiki/edit.page.js` — GanttEditor 로직 추가, `detectTableBlock()` 분리
- * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor` UI 마크업 추가
+ * `public/js/Wiki/edit.page.js` — GanttEditor 로직, `detectGanttBlock()`, 직렬화, 자동 동기화
+ * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor`/`#ganttEditorBar` UI 마크업과 인라인 스타일
 
 == TODO
 
- * [ ] `detectGanttBlock()` 함수 분리 (`#!table` / `#!gantt` 감지 로직 분리)
- * [ ] `#ganttInlineEditor` UI 마크업 추가 (edit.scala.html)
- * [ ] `openInlineGanttEditor()` / `closeInlineGanttEditor()` 구현
- * [ ] 그리드 렌더링: depth 읽기전용 컬럼 + 작업명/시작일-ref/소요일 input 3컬럼
- * [ ] Indent/Outdent 버튼 동작
- * [ ] Tab/Shift+Tab 단축키 (작업명 셀에서 depth 증감)
- * [ ] 직렬화: 그리드 → Gantt TSV (`applyGanttBlockEditor()`)
- * [ ] 120ms 디바운스 자동 미리보기 동기화
- * [ ] 초기 로드 시 `#!gantt` 자동 감지 → GanttEditor 자동 열기
+ * [[CB(x)]] `detectGanttBlock()` 함수 분리 (`#!table` / `#!gantt` 감지 로직 분리)
+ * [[CB(x)]] `#ganttInlineEditor` UI 마크업 추가 (edit.scala.html)
+ * [[CB(x)]] `openInlineGanttEditor()` / `closeInlineGanttEditor()` 구현
+ * [[CB(x)]] 그리드 렌더링: Task 셀 들여쓰기 + Start/Ref/Est input 3컬럼
+ * [[CB(x)]] Indent/Outdent 버튼 동작
+ * [[CB(x)]] Tab/Shift+Tab 단축키 (작업명 셀에서 depth 증감)
+ * [[CB(x)]] 직렬화: 그리드 → Gantt TSV (`applyGanttBlockEditor()`)
+ * [[CB(x)]] 120ms 디바운스 원문 반영 + 미리보기 동기화
+ * [[CB(x)]] 초기 로드 시 `#!gantt` 자동 감지 → GanttEditor 자동 열기
