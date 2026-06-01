@@ -1,4 +1,4 @@
-= InterpreterGantt
+= [Interpreter]Gantt
 
 Gantt 인터프리터는 TSV 계층 구조 텍스트를 SVG Gantt 차트로 렌더링한다.
 섹션 편집 시 `#!gantt` 블록은 Gantt 전용 인라인 에디터(["InterpreterGantt Editor"])로 열린다.
