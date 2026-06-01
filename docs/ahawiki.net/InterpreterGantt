@@ -161,6 +161,8 @@ depth 0 항목 단위로 색상 그룹을 지정한다. 하위 노드는 같은 
  * Task + Start/Ref + Est 3컬럼 그리드로 구성된다.
  * depth는 별도 숫자 컬럼이 아니라 Task 셀 들여쓰기와 row `data-depth`로 표현한다.
  * Indent/Outdent 버튼 및 Tab/Shift+Tab 단축키로 depth 조절.
+ * 셀/행 번호 클릭과 드래그로 행 선택, 범위 선택, 선택 묶음 이동을 수행한다.
+ * Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z로 셀 편집·행 추가/삭제·이동·들여쓰기 변경을 Undo/Redo할 수 있다.
  * 편집 후 저장하면 Gantt TSV로 직렬화되어 위키 텍스트에 반영.
 
 == 구현 파일
@@ -171,5 +173,4 @@ depth 0 항목 단위로 색상 그룹을 지정한다. 하위 노드는 같은 
  * `app/assets/gantt.css` — 컴파일된 CSS
  * `public/js/AhaWiki.Gantt.js` — 파싱·렌더링·접기펴기·스크롤 동기화
  * `app/views/Wiki/edit.scala.html` — Gantt 전용 인라인 에디터 UI
- * `public/js/Wiki/edit.page.js` — GanttEditor 감지·편집·직렬화
-
+ * `public/js/Wiki/edit.page.js` — GanttEditor 감지·편집·직렬화·Undo/Redo

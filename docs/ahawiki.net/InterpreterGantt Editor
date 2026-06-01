@@ -30,6 +30,8 @@ progress	정수 (선택)	진척률 0~100. 직렬화 시 `숫자%` 형식으로 �
 ▶ (fa-indent)	Tab	현재 행 depth +1 (위 행의 depth+1 초과 불가, 자식 행 포함 이동)
 ◀ (fa-outdent)	Shift+Tab	현재 행 depth -1 (0 이하로 내려가지 않음, 자식 행 포함 이동)
 📅 (fa-calendar-day)	—	현재 행의 Start/Ref 칸에 오늘 날짜(YYYY-MM-DD) 입력
+↶ (fa-undo)	Ctrl+Z	마지막 Gantt 편집 작업 되돌리기
+↷ (fa-redo)	Ctrl+Y / Ctrl+Shift+Z	되돌린 Gantt 편집 작업 다시 적용
 </> (fa-code)	—	GanttEditor를 닫고 원문 에디터로 전환
 ]]]
 
@@ -41,7 +43,7 @@ depth는 Indent/Outdent 버튼 또는 Tab/Shift+Tab 단축키로 변경한다.
 
 [[[#!Table tsv 1 1
 컬럼	고정폭	input type	비고
-#	32px	(셀, 클릭 가능)	행 번호 (1부터 시작). 클릭하면 해당 행 선택.
+#	32px	(셀, 클릭 가능)	행 번호 (1부터 시작). 클릭/드래그 동작은 일반 셀과 동일.
 Task	나머지	text	`이름` 또는 `이름#라벨` 형식. depth에 따라 들여쓰기 표시.
 Start / Ref	160px	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). `#13` 입력 후 포커스아웃 시 13번 행의 이름으로 자동치환. 비워 두면 생략.
 Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
@@ -52,15 +54,19 @@ Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
 
 == 행 선택 및 드래그
 
-행 번호(#) 열을 이용해 행을 선택하거나 드래그로 순서를 변경한다.
+행 번호(#) 열과 일반 셀 모두 같은 행 선택/드래그 모델을 사용한다.
+마우스 클릭은 해당 셀에 포커스를 주고, 동시에 행 선택 상태를 갱신한다.
 
 === 행 선택
 
 [[[#!Table tsv 1 1
 동작	결과
-행 번호 클릭	해당 행 단일 선택 (이미 선택된 행 단독 클릭 시 선택 해제)
+선택되지 않은 행의 셀/행 번호 클릭	해당 행 단일 선택
+선택된 행의 셀/행 번호 클릭	기존 선택 유지, 클릭한 셀로 포커스 이동
 Ctrl+클릭	개별 행 토글 선택
 Shift+클릭	마지막 클릭 행~현재 행 범위 선택
+ArrowUp / ArrowDown	커서 이동 후 해당 행 단일 선택
+Shift+ArrowUp / Shift+ArrowDown	마지막 선택 기준점부터 커서 행까지 범위 선택
 ]]]
 
 선택된 행은 배경색(`--color-flash-info-bg`)으로 강조 표시된다.
@@ -69,9 +75,28 @@ Shift+클릭	마지막 클릭 행~현재 행 범위 선택
 
 [[[#!Table tsv 1 1
 조건	드래그 결과
-선택 없는 상태에서 행 번호 드래그	드래그 범위의 행들을 멀티선택
-선택된 행의 행 번호에서 드래그	선택된 행들을 드롭 위치 아래로 이동 (border 인디케이터 표시)
+선택되지 않은 행의 셀/행 번호에서 드래그	시작 행~현재 행 범위 선택
+선택된 행의 셀/행 번호에서 드래그	선택된 행들을 드롭 위치 아래로 이동 (border 인디케이터 표시)
+선택 묶음 내부로 드래그	순서 변경 없음
 ]]]
+
+드래그 이동 후에는 드래그를 시작한 행의 상대 위치로 커서와 포커스를 복원한다.
+따라서 이동 직후에도 Arrow/Alt+Arrow/Undo/Redo 키 조작을 이어서 사용할 수 있다.
+
+== Undo / Redo
+
+GanttEditor는 원문 CodeMirror history와 별도로 Gantt 전용 Undo/Redo 스택을 가진다.
+다음 작업은 Undo/Redo 대상이다.
+
+ * 셀 값 변경
+ * `#13` 같은 row ref 자동 치환
+ * 오늘 날짜 입력
+ * 행 추가/삭제
+ * 행 순서 이동(버튼, Alt+↑/↓, 드래그)
+ * Indent/Outdent
+
+셀 입력은 연속 입력을 너무 잘게 쪼개지 않도록 짧은 디바운스 단위와 blur 시점에 묶어서 기록한다.
+행 선택만 바뀌는 동작은 문서 내용 변경이 아니므로 Undo history에 넣지 않는다.
 
 == 직렬화 규칙
 
@@ -96,7 +121,11 @@ Enter	임의 셀	현재 행 아래에 새 행 삽입 (현재 depth 유지)
 Shift+Del	임의 셀	현재 행 삭제 (1행 이하일 때 무시)
 Alt+↑	임의 셀	현재 행을 한 칸 위로 이동
 Alt+↓	임의 셀	현재 행을 한 칸 아래로 이동
-ArrowUp / Down	임의 셀	상하 행 이동
+ArrowUp / Down	임의 셀	상하 행 이동 + 이동한 행 단일 선택
+Shift+ArrowUp / Down	임의 셀	상하 행 이동 + 범위 선택
+Alt+ArrowUp / Down	임의 셀	현재 커서 행이 선택 묶음 안에 있으면 선택된 행들을 함께 이동, 아니면 현재 행만 이동
+Ctrl+Z	임의 셀	Gantt 편집 Undo
+Ctrl+Y / Ctrl+Shift+Z	임의 셀	Gantt 편집 Redo
 ArrowLeft	셀 시작 / number 타입	좌측 셀로 이동
 ArrowRight	셀 끝 / number 타입	우측 셀로 이동
 ]]]
@@ -114,6 +143,9 @@ ArrowRight	셀 끝 / number 타입	우측 셀로 이동
 현재 활성 셀	outline `2px solid --color-focus-ring`
 선택된 행(복수)	행 전체 배경 `--color-flash-info-bg`, 행 번호 셀 `--color-focus-ring` 배경
 드래그 드롭 위치	대상 행 하단에 `2px solid --color-focus-ring` 선
+셀 hover/일반 셀	cursor `cell`
+행 번호/선택된 행	cursor `grab`
+선택된 행 이동 드래그 중	cursor `grabbing`
 ]]]
 
 == 기타 동작
@@ -121,6 +153,7 @@ ArrowRight	셀 끝 / number 타입	우측 셀로 이동
  * Gantt 에디터 진입 시 Wiki Formatting Help(`details.editHelp`)를 자동으로 숨기고, 에디터 종료 시 복원한다.
  * 에디터 진입 시 첫 행 첫 열(Task)에 자동 포커스한다.
  * input 변경 시 120ms 디바운스로 `applyGanttBlockEditor()`를 호출해 원문 textarea/CodeMirror에 즉시 반영한다.
+ * Gantt 에디터가 열려 있고 일반 input/textarea에 포커스가 없을 때도 document 레벨에서 Undo/Redo 단축키를 보조 처리한다.
 
 == 감지 로직
 
@@ -139,6 +172,7 @@ Gantt 미리보기 렌더링 후에는 `window.AhaWiki.Gantt.initAll()`을 호�
 
 == 구현 파일
 
- * `public/js/Wiki/edit.page.js` — GanttEditor 로직 전체 (`detectGanttBlock`, 직렬화, 키보드, 드래그, 행 선택, 자동 동기화)
- * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor` / `#ganttEditorBar` UI 마크업
- * `app/assets/edit.less` — `.ganttEditorGrid`, `.ganttRowNum`, `.ganttRowCurrent`, `.ganttRowSelected`, `.ganttRowDragOver` 스타일
+ * `public/js/Wiki/edit.page.js` — GanttEditor 로직 전체 (`detectGanttBlock`, 직렬화, 키보드, 드래그, 행 선택, Undo/Redo, 자동 동기화)
+ * `app/views/Wiki/edit.scala.html` — `#ganttInlineEditor` / `#ganttEditorBar` UI 마크업, Undo/Redo 버튼
+ * `app/assets/edit.less` — `.ganttEditorGrid`, `.ganttRowNum`, `.ganttRowCurrent`, `.ganttRowSelected`, `.ganttRowDragOver`, 드래그 커서 스타일
+ * `app/assets/edit.css` — 컴파일된 CSS
