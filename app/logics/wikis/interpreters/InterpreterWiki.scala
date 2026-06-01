@@ -267,8 +267,8 @@ object InterpreterWiki extends TraitInterpreter {
             """</div></div>""")
 
       val str = arrayBuffer.mkString("<div>", "\n", "</div>")
-      val injected = extractConvertInjectInterpreter.inject(
-        extractConvertInjectBackQuote.inject(
+      val injected = extractConvertInjectBackQuote.inject(
+        extractConvertInjectInterpreter.inject(
           extractConvertInjectMacro.inject(str)
         )
       )
