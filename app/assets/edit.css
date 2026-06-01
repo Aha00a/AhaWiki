@@ -148,6 +148,16 @@
 .flashMessage .toggleTableEditor {
   margin-left: 8px;
 }
+.flashMessage.warning {
+  color: var(--color-flash-warning-text);
+  background: var(--color-flash-warning-bg);
+  border: 1px solid var(--color-flash-warning-border);
+  border-radius: 6px;
+  padding: 10px;
+}
+.flashMessage.warning a {
+  color: var(--color-link);
+}
 #attachmentUploadInput {
   display: none;
 }
@@ -276,16 +286,6 @@
 .uploadDragOverlay.visible {
   display: flex;
 }
-.flashMessage.warning {
-  color: var(--color-flash-warning-text);
-  background: var(--color-flash-warning-bg);
-  border: 1px solid var(--color-flash-warning-border);
-  border-radius: 6px;
-  padding: 10px;
-}
-.flashMessage.warning a {
-  color: var(--color-link);
-}
 .CodeMirror {
   border: 1px solid var(--color-input-border);
   background: var(--color-input-bg);
@@ -349,7 +349,6 @@
 .cm-ahamark-copiable {
   border-radius: 5px;
   padding: 3px;
-  /*padding: 0 2px;*/
   font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
 .cm-ahamark-code {
@@ -431,16 +430,7 @@
   background: var(--color-input-bg);
   color: var(--color-text);
 }
-.tableInlineEditor {
-  display: none;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  background: var(--color-surface);
-}
-.tableInlineEditor.visible {
-  display: block;
-}
+.tableInlineEditor,
 .ganttInlineEditor {
   display: none;
   border: 1px solid var(--color-border);
@@ -448,6 +438,7 @@
   margin-bottom: 8px;
   background: var(--color-surface);
 }
+.tableInlineEditor.visible,
 .ganttInlineEditor.visible {
   display: block;
 }
