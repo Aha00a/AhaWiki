@@ -1,5 +1,7 @@
 @import "_mixins";
 
+@ganttTodayColor: @ganttTodayColor;
+
 .InterpreterGantt {
     overflow-x: auto;
     font-family: inherit;
@@ -266,7 +268,7 @@
     }
 
     .gantt-today-line {
-        stroke: #e05a5a;
+        stroke: @ganttTodayColor;
         stroke-width: 2;
         stroke-dasharray: 4 2;
         opacity: 0.85;
@@ -274,7 +276,7 @@
 
     .gantt-today-label {
         font-size: 10px;
-        fill: #e05a5a;
+        fill: @ganttTodayColor;
         text-anchor: middle;
         dominant-baseline: auto;
         font-weight: 600;
@@ -293,13 +295,13 @@
 
     // 헤더 오늘 하이라이트
     .gantt-today-hdr {
-        fill: #e05a5a;
+        fill: @ganttTodayColor;
         opacity: 0.15;
     }
 
     .gantt-today-hdr-label {
         font-size: 10px;
-        fill: #e05a5a;
+        fill: @ganttTodayColor;
         text-anchor: middle;
         dominant-baseline: auto;
         font-weight: 700;

@@ -1,0 +1,166 @@
+// Extracted from wiki.less — imported inside .AhaWiki { }
+
+.paperContent {
+	padding: 1mm;
+	@media screen {
+		background-color: var(--color-surface-alt);
+	}
+
+	.page {
+		@a4Width: 210mm;
+		@a4Height: 297mm;
+		@a4PaddingLeft: 15mm;
+		@a4PaddingTop: 15mm;
+		@a4PaddingRight: 15mm;
+		@a4PaddingBottom: 15mm;
+
+		width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+		height: @a4Height - @a4PaddingTop - @a4PaddingBottom;
+		page-break-after: always;
+		break-after: always;
+		&:last-of-type {
+			page-break-after: avoid;
+			break-after: avoid;
+		}
+		font-size: 13px;
+		position: relative;
+		@media screen {
+			margin: 10mm auto;
+			border: 1px solid var(--color-border);
+			.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
+			background-color: var(--color-surface);
+			color: var(--color-text);
+		}
+		padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
+
+		.pageHeader {
+			border-bottom: 1mm solid currentColor;
+			display: flex;
+			align-items: baseline;
+			.topLeft   { flex: 1; }
+			.topCenter { flex: 1; text-align: center; }
+			.topRight  { flex: 1; text-align: right; }
+		}
+
+		.pageFooter {
+			position: absolute;
+			bottom: @a4PaddingBottom;
+			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+			border-top: 1mm solid currentColor;
+			padding-top: 3mm;
+			display: flex;
+			align-items: baseline;
+			.bottomLeft   { flex: 1; }
+			.bottomCenter { flex: 1; text-align: center; }
+			.bottomRight  { flex: 1; text-align: right; }
+		}
+
+		.pageContent {
+			.commonAhaWiki;
+			text-align: justify;
+			> div, > div > div, > div > div > div {
+				> p, > blockquote, > table, > .wikiTableSimpleScroll, > .math, > .error, > .info, > .Text, > .Vim {
+					margin-left: var(--wiki-indent-body, 30px);
+					box-sizing: border-box;
+					max-width: calc(100% - var(--wiki-indent-body, 30px));
+				}
+				> .Macro.BlockMacro {
+					margin-left: var(--wiki-indent-body, 30px);
+				}
+			}
+		}
+
+		&.pageOverflow {
+			outline: 2px solid red;
+			&::after {
+				content: '⚠ Content overflows the page';
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				background: red;
+				color: white;
+				font-size: 11px;
+				padding: 2px 8px;
+				@media print { display: none; }
+			}
+			@media print { outline: none; }
+		}
+	}
+
+	// 가로 레이아웃: 컨테이너가 가로(.paperContent.landscape) 또는 개별 페이지가 가로(.page.landscape)
+	&.landscape .page,
+	.page.landscape {
+		@a4LandscapeWidth: 297mm;
+		@a4LandscapeHeight: 210mm;
+		@a4LandscapePageWidth: @a4LandscapeWidth - 15mm - 15mm;
+		@a4LandscapePageHeight: @a4LandscapeHeight - 15mm - 15mm;
+
+		width: @a4LandscapePageWidth;
+		height: @a4LandscapePageHeight;
+
+		.pageFooter {
+			width: @a4LandscapePageWidth;
+		}
+	}
+
+	// 가로 문서 내 개별 페이지를 세로로
+	&.landscape .page.portrait {
+		@a4Width: 210mm;
+		@a4Height: 297mm;
+		@a4PaddingLeft: 15mm;
+		@a4PaddingRight: 15mm;
+		@a4PageWidth: @a4Width - @a4PaddingLeft - @a4PaddingRight;
+		@a4PageHeight: @a4Height - 15mm - 15mm;
+
+		width: @a4PageWidth;
+		height: @a4PageHeight;
+
+		.pageFooter {
+			width: @a4PageWidth;
+		}
+	}
+
+	&.contract .page {
+		.pageContent {
+			h1 {
+				display: none;
+			}
+			h1, h2, h3, h4, h5, h6 {
+				margin-top: 0;
+				border-bottom: none;
+			}
+			> div, > div > div, > div > div > div {
+				div[class^="HeadingWrapper"] > p,
+				div[class^="HeadingWrapper"] > ol,
+				div[class^="HeadingWrapper"] > ul {
+					margin-left: 60mm;
+				}
+			}
+		}
+		.toc {
+			display: none;
+		}
+		.wikiTableSimpleScroll,
+		.wikiTableSimple {
+			box-shadow: none;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+		}
+		.InterpreterRenderMetaWrapper.Table {
+			margin-left: 0;
+			.InterpreterRenderContent {
+				display: block;
+				border: none;
+				border-radius: 0;
+			}
+		}
+	}
+
+	& + .paperAdditionalSection {
+		background-color: var(--color-surface);
+		padding: 10mm;
+		@media print {
+			display: none;
+		}
+	}
+}

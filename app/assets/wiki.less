@@ -1,4 +1,4 @@
-@import "_mixins";
+﻿@import "_mixins";
 
 .AhaWiki {
 	a {
@@ -14,9 +14,6 @@
 				scale: 0.75;
 				vertical-align: bottom;
 			}
-		}
-		&:link{
-
 		}
 		&:visited{
 			color: var(--color-link-visited);
@@ -181,25 +178,24 @@
 
 	.flash {
 		cursor: pointer;
+		.success, .error, .info, .warning {
+			padding: 10px;
+			border: 1px solid;
+		}
 		.success {
 			color: var(--color-flash-success-text);
 			background-color: var(--color-flash-success-bg);
-			border: 1px solid var(--color-flash-success-border);
-			padding: 10px;
+			border-color: var(--color-flash-success-border);
 		}
-
 		.error {
 			color: var(--color-flash-error-text);
 			background-color: var(--color-flash-error-bg);
-			border: 1px solid var(--color-flash-error-border);
-			padding: 10px;
+			border-color: var(--color-flash-error-border);
 		}
-
 		.info {
 			color: var(--color-flash-info-text);
 			background-color: var(--color-flash-info-bg);
-			border: 1px solid var(--color-flash-info-border);
-			padding: 10px;
+			border-color: var(--color-flash-info-border);
 		}
 
 		.permissionRestrictionFlash {
@@ -250,8 +246,7 @@
 		.warning {
 			color: var(--color-flash-warning-text);
 			background-color: var(--color-flash-warning-bg);
-			border: 1px solid var(--color-flash-warning-border);
-			padding: 10px;
+			border-color: var(--color-flash-warning-border);
 		}
 	}
 
@@ -353,12 +348,6 @@
 			word-break: break-all;
 			a {
 				color: var(--color-code-link);
-			    &:link {
-
-			    }
-				&:visited{
-
-				}
 			}
 
 			&.text {
@@ -856,299 +845,9 @@
 		}
 	}
 
-	.paperContent {
-		padding: 1mm;
-		@media screen {
-			background-color: var(--color-surface-alt);
-		}
+	@import "_paper";
 
-		.page {
-
-			@a4Width: 210mm;
-			@a4Height: 297mm;
-			@a4PaddingLeft: 15mm;
-			@a4PaddingTop: 15mm;
-			@a4PaddingRight: 15mm;
-			@a4PaddingBottom: 15mm;
-
-			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
-			height: @a4Height - @a4PaddingTop - @a4PaddingBottom;
-			page-break-after: always;
-			break-after: always;
-			&:last-of-type {
-				page-break-after: avoid;
-				break-after: avoid;
-			}
-			font-size: 13px;
-			position: relative;
-			@media screen {
-				margin: 10mm auto;
-				border: 1px solid var(--color-border);
-				.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
-				background-color: var(--color-surface);
-				color: var(--color-text);
-			}
-			padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
-
-			.pageHeader {
-				border-bottom: 1mm solid currentColor;
-				display: flex;
-				align-items: baseline;
-				.topLeft   { flex: 1; }
-				.topCenter { flex: 1; text-align: center; }
-				.topRight  { flex: 1; text-align: right; }
-			}
-
-			.pageFooter {
-				position: absolute;
-				bottom: @a4PaddingBottom;
-				width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
-
-				border-top: 1mm solid currentColor;
-				padding-top: 3mm;
-				display: flex;
-				align-items: baseline;
-				.bottomLeft   { flex: 1; }
-				.bottomCenter { flex: 1; text-align: center; }
-				.bottomRight  { flex: 1; text-align: right; }
-			}
-
-			.pageContent {
-				.commonAhaWiki;
-				text-align: justify;
-				> div, > div > div, > div > div > div {
-					> p, > blockquote, > table, > .wikiTableSimpleScroll, > .math, > .error, > .info, > .Text, > .Vim {
-						margin-left: var(--wiki-indent-body, 30px);
-						box-sizing: border-box;
-						max-width: calc(100% - var(--wiki-indent-body, 30px));
-					}
-					> .Macro.BlockMacro {
-						margin-left: var(--wiki-indent-body, 30px);
-					}
-				}
-			}
-
-			&.pageOverflow {
-				outline: 2px solid red;
-				&::after {
-					content: '⚠ Content overflows the page';
-					position: absolute;
-					bottom: 0;
-					right: 0;
-					background: red;
-					color: white;
-					font-size: 11px;
-					padding: 2px 8px;
-					@media print { display: none; }
-				}
-				@media print { outline: none; }
-			}
-
-		}
-
-		&.landscape .page {
-			@a4LandscapeWidth: 297mm;
-			@a4LandscapeHeight: 210mm;
-			@a4LandscapePageWidth: @a4LandscapeWidth - 15mm - 15mm;
-			@a4LandscapePageHeight: @a4LandscapeHeight - 15mm - 15mm;
-
-			width: @a4LandscapePageWidth;
-			height: @a4LandscapePageHeight;
-
-			.pageFooter {
-				width: @a4LandscapePageWidth;
-			}
-		}
-
-		// 세로 문서 내 개별 페이지를 가로로
-		.page.landscape {
-			@a4LandscapeWidth: 297mm;
-			@a4LandscapeHeight: 210mm;
-			@a4LandscapePageWidth: @a4LandscapeWidth - 15mm - 15mm;
-			@a4LandscapePageHeight: @a4LandscapeHeight - 15mm - 15mm;
-
-			width: @a4LandscapePageWidth;
-			height: @a4LandscapePageHeight;
-
-			.pageFooter {
-				width: @a4LandscapePageWidth;
-			}
-		}
-
-		// 가로 문서 내 개별 페이지를 세로로
-		&.landscape .page.portrait {
-			@a4Width: 210mm;
-			@a4Height: 297mm;
-			@a4PaddingLeft: 15mm;
-			@a4PaddingRight: 15mm;
-			@a4PageWidth: @a4Width - @a4PaddingLeft - @a4PaddingRight;
-			@a4PageHeight: @a4Height - 15mm - 15mm;
-
-			width: @a4PageWidth;
-			height: @a4PageHeight;
-
-			.pageFooter {
-				width: @a4PageWidth;
-			}
-		}
-
-		&.contract .page {
-			.pageContent {
-				h1 {
-					display: none;
-				}
-				h1, h2, h3, h4, h5, h6 {
-					margin-top: 0;
-					border-bottom: none;
-				}
-				> div, > div > div, > div > div > div {
-					div[class^="HeadingWrapper"] > p,
-					div[class^="HeadingWrapper"] > ol,
-					div[class^="HeadingWrapper"] > ul {
-						margin-left: 60mm;
-					}
-				}
-			}
-			.toc {
-				display: none;
-			}
-			.wikiTableSimpleScroll,
-			.wikiTableSimple {
-				box-shadow: none;
-				backdrop-filter: none;
-				-webkit-backdrop-filter: none;
-			}
-			.InterpreterRenderMetaWrapper.Table {
-				margin-left: 0;
-				.InterpreterRenderContent {
-					display: block;
-					border: none;
-					border-radius: 0;
-				}
-			}
-		}
-
-		& + .paperAdditionalSection {
-			background-color: var(--color-surface);
-			padding: 10mm;
-			@media print {
-				display: none;
-			}
-		}
-	}
-
-    .MacroCalendar.wikiTableSimple {
-        display: inline-table;
-        vertical-align: top;
-        margin: 0 20px 20px 0;
-		thead {
-			tr:first-of-type {
-				th {
-					background-color: var(--color-table-header-bg);
-					padding: 10px 10px;
-				}
-			}
-		}
-		td {
-			text-align: center;
-			width: 50px;
-			height: 50px;
-			padding: 0;
-		}
-	}
-
-	.wikiTableSimple() {
-		border-collapse: collapse;
-		border: 1px solid var(--color-table-border);
-		border-radius: 10px;
-		.boxShadow;
-		backdrop-filter: saturate(180%) blur(5px);
-		-webkit-backdrop-filter: saturate(180%) blur(5px);
-
-		th, td {
-			padding: 10px 12px;
-			border: 1px solid var(--color-table-border);
-			p:first-of-type {margin-top: 0;}
-			p:last-of-type {margin-bottom: 0;}
-		}
-		th {
-			background: var(--color-table-header-bg);
-			white-space: nowrap;
-		}
-		td {
-			> ol {
-				margin: 0;
-			}
-
-		}
-		tr {
-		}
-		tr:nth-child(even) td {
-			background: var(--color-table-row-alt-bg);
-		}
-		tr:hover td {
-			background: var(--color-table-row-hover-bg);
-		}
-	}
-	.wikiTableSimple {
-		.wikiTableSimple();
-	}
-	.wikiTableSimpleScroll {
-		max-width: 100%;
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-
-		> .wikiTableSimple {
-			margin-left: 0;
-		}
-	}
-	.tablesorter {
-		.tablesorter-header {
-			position: relative;
-			padding-right: 30px;
-			cursor: pointer;
-
-			&::after {
-				content: "";
-				position: absolute;
-				top: 50%;
-				right: 10px;
-				margin-top: -2px;
-				border-left: 4px solid transparent;
-				border-right: 4px solid transparent;
-				border-top: 5px solid var(--color-muted);
-				opacity: 0.75;
-			}
-		}
-		.tablesorter-headerAsc {
-			&::after {
-				border-top: 0;
-				border-bottom: 5px solid var(--color-link);
-			}
-		}
-		.tablesorter-headerDesc {
-			&::after {
-				border-top-color: var(--color-link);
-			}
-		}
-		thead {
-			td {
-				padding: 1px 4px 4px 4px;
-				input, select {
-					width: 100%;
-					height: 21px;
-					vertical-align: middle;
-					border: 1px solid var(--color-input-border);
-					border-radius: 4px;
-					background: var(--color-input-bg);
-					color: var(--color-text);
-				}
-			}
-		}
-		.filtered {
-			display: none;
-		}
-	}
+	@import "_wiki_table";
 
 	.wikiHistory {
 		table {
@@ -1163,16 +862,6 @@
 	button.tocToggle {
 		@media print {
 			display: none !important;
-		}
-	}
-
-	@media print {
-		.tablesorter .tablesorter-header {
-			padding-right: 0;
-			cursor: default;
-			&::after {
-				display: none;
-			}
 		}
 	}
 

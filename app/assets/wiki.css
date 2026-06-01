@@ -321,23 +321,27 @@
 .AhaWiki .flash {
   cursor: pointer;
 }
+.AhaWiki .flash .success,
+.AhaWiki .flash .error,
+.AhaWiki .flash .info,
+.AhaWiki .flash .warning {
+  padding: 10px;
+  border: 1px solid;
+}
 .AhaWiki .flash .success {
   color: var(--color-flash-success-text);
   background-color: var(--color-flash-success-bg);
-  border: 1px solid var(--color-flash-success-border);
-  padding: 10px;
+  border-color: var(--color-flash-success-border);
 }
 .AhaWiki .flash .error {
   color: var(--color-flash-error-text);
   background-color: var(--color-flash-error-bg);
-  border: 1px solid var(--color-flash-error-border);
-  padding: 10px;
+  border-color: var(--color-flash-error-border);
 }
 .AhaWiki .flash .info {
   color: var(--color-flash-info-text);
   background-color: var(--color-flash-info-bg);
-  border: 1px solid var(--color-flash-info-border);
-  padding: 10px;
+  border-color: var(--color-flash-info-border);
 }
 .AhaWiki .flash .permissionRestrictionFlash {
   line-height: 1.45;
@@ -378,8 +382,7 @@
 .AhaWiki .flash .warning {
   color: var(--color-flash-warning-text);
   background-color: var(--color-flash-warning-bg);
-  border: 1px solid var(--color-flash-warning-border);
-  padding: 10px;
+  border-color: var(--color-flash-warning-border);
 }
 .AhaWiki .commonAhaWiki {
   --wiki-indent-body: 30px;
@@ -830,24 +833,27 @@
 }
 .AhaWiki .commonAhaWiki .success {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-success-text);
   background-color: var(--color-flash-success-bg);
-  border: 1px solid var(--color-flash-success-border);
-  padding: 10px;
+  border-color: var(--color-flash-success-border);
 }
 .AhaWiki .commonAhaWiki .error {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-error-text);
   background-color: var(--color-flash-error-bg);
-  border: 1px solid var(--color-flash-error-border);
-  padding: 10px;
+  border-color: var(--color-flash-error-border);
 }
 .AhaWiki .commonAhaWiki .info {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-info-text);
   background-color: var(--color-flash-info-bg);
-  border: 1px solid var(--color-flash-info-border);
-  padding: 10px;
+  border-color: var(--color-flash-info-border);
 }
 .AhaWiki .commonAhaWiki .trivial {
   font-size: 0.7em;
@@ -1334,24 +1340,27 @@
 }
 .AhaWiki .wikiContent .success {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-success-text);
   background-color: var(--color-flash-success-bg);
-  border: 1px solid var(--color-flash-success-border);
-  padding: 10px;
+  border-color: var(--color-flash-success-border);
 }
 .AhaWiki .wikiContent .error {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-error-text);
   background-color: var(--color-flash-error-bg);
-  border: 1px solid var(--color-flash-error-border);
-  padding: 10px;
+  border-color: var(--color-flash-error-border);
 }
 .AhaWiki .wikiContent .info {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-info-text);
   background-color: var(--color-flash-info-bg);
-  border: 1px solid var(--color-flash-info-border);
-  padding: 10px;
+  border-color: var(--color-flash-info-border);
 }
 .AhaWiki .wikiContent .trivial {
   font-size: 0.7em;
@@ -2058,24 +2067,27 @@
 }
 .AhaWiki .paperContent .page .pageContent .success {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-success-text);
   background-color: var(--color-flash-success-bg);
-  border: 1px solid var(--color-flash-success-border);
-  padding: 10px;
+  border-color: var(--color-flash-success-border);
 }
 .AhaWiki .paperContent .page .pageContent .error {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-error-text);
   background-color: var(--color-flash-error-bg);
-  border: 1px solid var(--color-flash-error-border);
-  padding: 10px;
+  border-color: var(--color-flash-error-border);
 }
 .AhaWiki .paperContent .page .pageContent .info {
   overflow: hidden;
+  padding: 10px;
+  border: 1px solid;
   color: var(--color-flash-info-text);
   background-color: var(--color-flash-info-bg);
-  border: 1px solid var(--color-flash-info-border);
-  padding: 10px;
+  border-color: var(--color-flash-info-border);
 }
 .AhaWiki .paperContent .page .pageContent .trivial {
   font-size: 0.7em;
@@ -2172,17 +2184,12 @@
     outline: none;
   }
 }
-.AhaWiki .paperContent.landscape .page {
-  width: 267mm;
-  height: 180mm;
-}
-.AhaWiki .paperContent.landscape .page .pageFooter {
-  width: 267mm;
-}
+.AhaWiki .paperContent.landscape .page,
 .AhaWiki .paperContent .page.landscape {
   width: 267mm;
   height: 180mm;
 }
+.AhaWiki .paperContent.landscape .page .pageFooter,
 .AhaWiki .paperContent .page.landscape .pageFooter {
   width: 267mm;
 }
@@ -2339,6 +2346,15 @@
 .AhaWiki .tablesorter .filtered {
   display: none;
 }
+@media print {
+  .AhaWiki .tablesorter .tablesorter-header {
+    padding-right: 0;
+    cursor: default;
+  }
+  .AhaWiki .tablesorter .tablesorter-header::after {
+    display: none;
+  }
+}
 .AhaWiki .wikiHistory table {
   margin-top: 20px;
 }
@@ -2351,15 +2367,6 @@
   .AhaWiki .InterpreterRenderFoldToggle,
   .AhaWiki button.tocToggle {
     display: none !important;
-  }
-}
-@media print {
-  .AhaWiki .tablesorter .tablesorter-header {
-    padding-right: 0;
-    cursor: default;
-  }
-  .AhaWiki .tablesorter .tablesorter-header::after {
-    display: none;
   }
 }
 .AhaWiki .percentTotal {

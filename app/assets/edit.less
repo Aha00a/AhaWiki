@@ -19,11 +19,9 @@
 			background: var(--color-surface);
 			color: var(--color-text);
 			border: 1px solid var(--color-input-border);
-		}
-
-		input[type='submit']:hover,
-		button:hover {
-			background: var(--color-link-hover-bg);
+			&:hover {
+				background: var(--color-link-hover-bg);
+			}
 		}
 
 		> div.ui {
@@ -330,41 +328,19 @@
 }
 
 .cm-ahamark {
-	&-header {
-		color: var(--color-link);
-		font-weight: 700;
-	}
+	&-header, &-link { color: var(--color-link); }
+	&-header { font-weight: 700; }
+	&-link { text-decoration: underline; }
 
-	&-link {
-		color: var(--color-link);
-		text-decoration: underline;
-	}
+	&-bold, &-italic, &-bold-italic, &-underline, &-strikeout, &-interpreter { color: var(--color-focus-ring); }
+	&-bold, &-bold-italic { font-weight: 700; }
+	&-italic, &-bold-italic { font-style: italic; }
+	&-underline { text-decoration: underline; }
+	&-strikeout { text-decoration: line-through; }
+	&-interpreter { font-weight: 600; }
 
-	&-bold {
-		color: var(--color-focus-ring);
-		font-weight: 700;
-	}
-
-	&-italic {
-		color: var(--color-focus-ring);
-		font-style: italic;
-	}
-
-	&-bold-italic {
-		color: var(--color-focus-ring);
-		font-weight: 700;
-		font-style: italic;
-	}
-
-	&-underline {
-		color: var(--color-focus-ring);
-		text-decoration: underline;
-	}
-
-	&-strikeout {
-		color: var(--color-focus-ring);
-		text-decoration: line-through;
-	}
+	&-interpreter-shebang, &-date { color: var(--color-link-schema); }
+	&-interpreter-shebang { font-weight: 600; }
 
 	&-code,
 	&-copiable {
@@ -372,51 +348,21 @@
 		padding: 3px;
 		font-family: 'Ubuntu Mono', 'Consolas', monospace;
 	}
-
 	&-code {
 		border: 1px solid var(--color-code-border);
 		background-color: var(--color-code-bg);
 		color: var(--color-code-text);
 	}
-
 	&-copiable {
 		border: 1px solid var(--color-border);
 		background-color: var(--color-surface-alt);
 		color: var(--color-text);
 	}
 
-	&-list {
-		color: var(--color-text);
-		font-weight: normal;
-	}
-
-	&-hr {
-		color: var(--color-muted);
-		font-weight: 700;
-	}
-
-	&-macro {
-		color: var(--color-flash-warning-text);
-		font-weight: 600;
-	}
-
-	&-interpreter {
-		color: var(--color-focus-ring);
-		font-weight: 600;
-	}
-
-	&-interpreter-shebang {
-		color: var(--color-link-schema);
-		font-weight: 600;
-	}
-
-	&-tag {
-		color: var(--color-flash-error-text);
-	}
-
-	&-date {
-		color: var(--color-link-schema);
-	}
+	&-list { color: var(--color-text); font-weight: normal; }
+	&-hr { color: var(--color-muted); font-weight: 700; }
+	&-macro { color: var(--color-flash-warning-text); font-weight: 600; }
+	&-tag { color: var(--color-flash-error-text); }
 }
 
 .macroAutocomplete {

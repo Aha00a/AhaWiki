@@ -186,15 +186,12 @@ html.theme-ahawiki-light {
 		--color-kanban-text: ~"hsl(var(--hue), 11%, 91%)";
 		--color-kanban-primary: ~"hsl(var(--hue), 100%, 78%)";
 		--color-kanban-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
-	}
-
-	html.theme-ahawiki-dark {
 		color-scheme: dark;
-	}
 
-	html.theme-ahawiki-dark .blame {
-		table.tableLegend td { background-color: var(--blame-color-dark); }
-		table.wikiTableSimple.tableBlame td.lineRevision { background-color: var(--blame-color-dark); }
+		.blame {
+			table.tableLegend td { background-color: var(--blame-color-dark); }
+			table.wikiTableSimple.tableBlame td.lineRevision { background-color: var(--blame-color-dark); }
+		}
 	}
 }
 
