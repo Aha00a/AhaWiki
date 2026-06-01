@@ -104,14 +104,17 @@ Labels (세로 freeze)	Body: 간트 바 (가로+세로 스크롤)
 
 === 레이블 패널 컬럼 구조
 
-레이블 패널은 3컬럼으로 구성된다.
+레이블 패널은 4컬럼으로 구성된다.
 
-[[[#!Table tsv
-Task	Period	Est
-항목명 (들여쓰기, 색상 바, 토글 삼각형)	yyyy-mm-dd ~ yyyy-mm-dd	Nd
+[[[#!Table tsv 1 1
+컬럼	고정폭	내용
+#	36px	행 번호 (1부터 시작, 좌측 고정)
+Task	나머지	항목명 (depth에 따른 들여쓰기, 좌측 색상 바, 접기/펴기 삼각형)
+Period	—	`yyyy-mm-dd ~ yyyy-mm-dd`
+Est	48px	`Nd` 소요일
 ]]]
 
-코너 셀에 각 컬럼 헤더(Task / Period / Est)가 표시된다.
+코너 셀에 각 컬럼 헤더(`#` / Task / Period / Est)가 표시된다.
 
 === 차트 영역
 
@@ -137,7 +140,7 @@ depth 0 항목 단위로 색상 그룹을 지정한다. 하위 노드는 같은 
 
  * '''−''' / '''100%''' / '''+''': 일 단위 폭 축소·기본(20px/일)·확대.
  * '''맞춤''': Body 가로 폭에 전체 기간을 맞춤.
- * '''Download .SVG''': 현재 차트를 SVG 파일로 저장.
+ * '''Download .SVG''': 현재 차트를 SVG 파일로 저장. 파일명 형식: `AhaWiki.{hostname}.{pageName}.{YYYYMMDD}.{HHmmss}.svg`
 
 == 편집 (Section Edit)
 
