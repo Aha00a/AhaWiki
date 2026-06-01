@@ -298,4 +298,21 @@
   dominant-baseline: auto;
   font-weight: 700;
 }
+.InterpreterGantt rect.gantt-row-blink-overlay {
+  fill: var(--color-flash-info-bg);
+  fill-opacity: 0;
+  pointer-events: none;
+  animation: ganttRowBlinkAnimation 900ms ease-in-out 1 forwards;
+}
+@keyframes ganttRowBlinkAnimation {
+  0% {
+    fill-opacity: 0;
+  }
+  35% {
+    fill-opacity: 0.7;
+  }
+  100% {
+    fill-opacity: 0;
+  }
+}
 /*# sourceMappingURL=gantt.css.map */

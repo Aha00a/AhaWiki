@@ -350,11 +350,27 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const bodyCell = previewPane.querySelector('.gantt-body-cell');
                 if (!bodyCell) return;
                 const labels = previewPane.querySelectorAll('.gantt-label');
+                const svgNS = 'http://www.w3.org/2000/svg';
                 for (let i = 0; i < labels.length; i++) {
                     if (labels[i].textContent.trim() === taskName) {
                         const y = parseFloat(labels[i].getAttribute('y') || '0');
                         const rowTop = Math.max(0, y - 16);
                         bodyCell.scrollTop = Math.max(0, rowTop - bodyCell.clientHeight / 2 + 12);
+                        // ly = rowY + ROW_H/2 + 4 (ROW_H=32), so rowY = y - 20
+                        const rowY = y - 20;
+                        ['.gantt-labels-svg', '.gantt-body-svg'].forEach(function(sel) {
+                            const svg = previewPane.querySelector(sel);
+                            if (!svg) return;
+                            const prev = svg.querySelector('.gantt-row-blink-overlay');
+                            if (prev) prev.remove();
+                            const blinkRect = document.createElementNS(svgNS, 'rect');
+                            blinkRect.setAttribute('x', '0');
+                            blinkRect.setAttribute('y', String(rowY));
+                            blinkRect.setAttribute('width', '100%');
+                            blinkRect.setAttribute('height', '32');
+                            blinkRect.classList.add('gantt-row-blink-overlay');
+                            svg.appendChild(blinkRect);
+                        });
                         break;
                     }
                 }
