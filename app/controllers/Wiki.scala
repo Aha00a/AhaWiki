@@ -875,6 +875,7 @@ controllerComponents: ControllerComponents,
             wikiActors.pageCalculation ! Calculate(site, name)
             Ok("")
           } else {
+            logger.warn(s"deleteLastRevision forbidden: host=${request.host}, name=$name, user=${provider.getUser.map(u => s"${u.nickname}(${u.loginEmail.getOrElse("no-email")})").getOrElse("anonymous")}, remote=${request.remoteAddress}")
             Forbidden("")
           }
         case None =>
