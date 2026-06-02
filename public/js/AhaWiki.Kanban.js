@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (rootValue === 'true' || rootValue === 'false') {
             return parseBooleanDataAttribute(rootValue, true);
         }
-        var wikiContent = root.closest ? root.closest('.wikiContent') : null;
+        var wikiContent = root.closest ? root.closest('[data-wiki-writable]') : null;
         return parseBooleanDataAttribute(wikiContent ? wikiContent.getAttribute('data-wiki-writable') : null, true);
     };
 
@@ -1688,7 +1688,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return columnElement;
     };
 
-    kanbanInterpreters.forEach(function (root) {
+    var initKanban = function (root) {
+        if (!root || root.getAttribute('data-kanban-initialized') === 'true') {
+            return;
+        }
+        root.setAttribute('data-kanban-initialized', 'true');
         var pre = root.querySelector('pre[data-shebang]');
         var board = root.querySelector('.kanban-board');
         if (!pre || !board) {
@@ -3146,5 +3150,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-    });
+    };
+    kanbanInterpreters.forEach(initKanban);
+
+    var initAll = function (container) {
+        var scope = container || document;
+        Array.prototype.forEach.call(scope.querySelectorAll('.InterpreterKanban'), initKanban);
+    };
+
+    window.AhaWiki = window.AhaWiki || {};
+    window.AhaWiki.Kanban = { initAll: initAll };
 });

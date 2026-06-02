@@ -70,6 +70,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $previewPane.html(data);
                 mermaid.init();
                 if (window.AhaWiki && window.AhaWiki.Gantt) window.AhaWiki.Gantt.initAll($previewPane[0]);
+                if (window.AhaWiki && window.AhaWiki.Kanban) window.AhaWiki.Kanban.initAll($previewPane[0]);
                 adjustEditorLayoutHeight();
                 $previewPane.find('.paperContent .page').each(function() {
                     var $page = $(this);

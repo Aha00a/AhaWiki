@@ -973,8 +973,9 @@ controllerComponents: ControllerComponents,
       val isPartialEditPreview = partialLineStart.isDefined && partialLineEnd.isDefined
       val hasPaperContent = body.contains("#!Paper")
       val hasGanttContent = body.trim.toLowerCase.startsWith("#!gantt")
+      val hasKanbanContent = body.trim.toLowerCase.startsWith("#!kanban")
       val additionalInfo = if (isPartialEditPreview || hasPaperContent) "" else getAhaMarkAdditionalInfo(name)
-      val contentHtml = if (hasGanttContent)
+      val contentHtml = if (hasGanttContent || hasKanbanContent)
         Interpreters.toHtmlString(body) + Interpreters.toHtmlString(additionalInfo)
       else
         Interpreters.toHtmlString(body + additionalInfo)
