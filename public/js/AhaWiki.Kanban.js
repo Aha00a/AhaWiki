@@ -1363,6 +1363,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 item.classList.remove('kanban-card-drag-chosen', 'kanban-card-drag-placeholder');
             };
+            var setCardDragCursorState = function (active, doc) {
+                if (root && root.classList) {
+                    root.classList[active ? 'add' : 'remove']('kanban-card-dragging');
+                }
+                var targetDocument = doc || (root && root.ownerDocument ? root.ownerDocument : document);
+                if (targetDocument && targetDocument.body && targetDocument.body.classList) {
+                    targetDocument.body.classList[active ? 'add' : 'remove']('kanban-card-dragging-global');
+                }
+            };
             var restoreDraggedItem = function (item, fromList, oldIndex) {
                 var restoreItem = item || draggingItem;
                 var restoreFromList = fromList || draggingFromList;
@@ -1458,28 +1467,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return Array.prototype.indexOf.call(parent.children, child);
             };
 
-            var highlightedDropTarget = null;
-            var clearCardDropTargetHighlight = function () {
-                if (!highlightedDropTarget) {
-                    return;
-                }
-                highlightedDropTarget.style.removeProperty('outline');
-                highlightedDropTarget.style.removeProperty('background');
-                highlightedDropTarget = null;
-            };
-            var setCardDropTargetHighlight = function (targetList) {
-                if (!targetList) {
-                    clearCardDropTargetHighlight();
-                    return;
-                }
-                if (highlightedDropTarget && highlightedDropTarget !== targetList) {
-                    highlightedDropTarget.style.removeProperty('outline');
-                    highlightedDropTarget.style.removeProperty('background');
-                }
-                highlightedDropTarget = targetList;
-                highlightedDropTarget.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
-                highlightedDropTarget.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
-            };
+            var clearCardDropTargetHighlight = function () {};
+            var setCardDropTargetHighlight = function () {};
 
             var latestPointerForCardDrag = { x: null, y: null };
             var updateCardDragPointer = function (evt) {
@@ -1535,6 +1524,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     draggingFromList = evt.from;
                     draggingOldIndex = evt.oldIndex;
                     createCardDragOrigin(evt.item);
+                    setCardDragCursorState(true, doc);
                     window.addEventListener('keydown', handleDragEscape, true);
                     doc.addEventListener('keydown', handleDragEscape, true);
                     clearCardDropTargetHighlight();
@@ -1574,6 +1564,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearCardDropTargetHighlight();
                     clearCardDragOrigin();
                     clearCardDragItemClasses(evt.item);
+                    setCardDragCursorState(false, doc);
 
                     var pointerEvent = evt.originalEvent || null;
                     var clientX = pointerEvent && Number.isFinite(pointerEvent.clientX) ? pointerEvent.clientX : latestPointerForCardDrag.x;
@@ -3040,31 +3031,115 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         if (isWritable && window.Sortable) {
+            var listDragOriginClone = null;
+            var clearListDragOrigin = function () {
+                if (listDragOriginClone && listDragOriginClone.parentNode) {
+                    listDragOriginClone.parentNode.removeChild(listDragOriginClone);
+                }
+                listDragOriginClone = null;
+            };
+            var removeListDragClasses = function (item) {
+                if (!item || !item.classList) {
+                    return;
+                }
+                item.classList.remove('kanban-list-drag-chosen', 'kanban-list-drag-placeholder', 'kanban-list-drag-preview');
+            };
+            var clearListCloneAttributes = function (item) {
+                if (!item || !item.removeAttribute) {
+                    return;
+                }
+                item.removeAttribute('data-column-index');
+                item.removeAttribute('data-column-line-number');
+            };
+            var createListDragOrigin = function (item) {
+                clearListDragOrigin();
+                if (!item || !item.parentElement || typeof item.cloneNode !== 'function') {
+                    return;
+                }
+                listDragOriginClone = item.cloneNode(true);
+                clearListCloneAttributes(listDragOriginClone);
+                removeListDragClasses(listDragOriginClone);
+                listDragOriginClone.classList.add('kanban-list-drag-origin');
+                listDragOriginClone.setAttribute('aria-hidden', 'true');
+                listDragOriginClone.setAttribute('data-kanban-list-drag-origin', 'true');
+                item.parentElement.insertBefore(listDragOriginClone, item);
+            };
+            var setListDragCursorState = function (active) {
+                if (root && root.classList) {
+                    root.classList[active ? 'add' : 'remove']('kanban-list-dragging');
+                }
+                if (document && document.body && document.body.classList) {
+                    document.body.classList[active ? 'add' : 'remove']('kanban-list-dragging-global');
+                }
+            };
+            var getBoardColumnIndex = function (item) {
+                if (!item) {
+                    return -1;
+                }
+                var draggableColumns = Array.prototype.filter.call(board.children || [], function (candidate) {
+                    return candidate && candidate.classList && candidate.classList.contains('kanban-column') && !candidate.classList.contains('kanban-list-drag-origin');
+                });
+                return draggableColumns.indexOf(item);
+            };
+
             Sortable.create(board, {
-                draggable: '.kanban-column',
+                draggable: '.kanban-column:not(.kanban-list-drag-origin)',
                 animation: 120,
+                ghostClass: 'kanban-list-drag-placeholder',
+                chosenClass: 'kanban-list-drag-chosen',
+                dragClass: 'kanban-list-drag-placeholder',
+                forceFallback: true,
+                fallbackClass: 'kanban-list-drag-preview',
+                fallbackOnBody: true,
+                fallbackTolerance: 3,
+                onClone: function (evt) {
+                    var clone = evt && evt.clone ? evt.clone : null;
+                    if (!clone) {
+                        return;
+                    }
+                    clearListCloneAttributes(clone);
+                    removeListDragClasses(clone);
+                    if (clone.classList) {
+                        clone.classList.add('kanban-list-drag-preview');
+                    }
+                    clone.setAttribute('aria-hidden', 'true');
+                },
+                onStart: function (evt) {
+                    createListDragOrigin(evt.item);
+                    setListDragCursorState(true);
+                },
                 onMove: function () {
                     return true;
                 },
                 onEnd: function (evt) {
-                    if (evt.oldIndex === evt.newIndex || evt.oldIndex < 0 || evt.newIndex < 0) {
+                    var oldIndex = Number.isFinite(evt.oldDraggableIndex) ? evt.oldDraggableIndex : evt.oldIndex;
+                    clearListDragOrigin();
+                    removeListDragClasses(evt.item);
+                    setListDragCursorState(false);
+
+                    var newIndex = getBoardColumnIndex(evt.item);
+                    if (oldIndex === newIndex || oldIndex < 0 || newIndex < 0 || oldIndex >= columns.length || newIndex >= columns.length) {
                         return;
                     }
 
-                    var movedColumn = columns.splice(evt.oldIndex, 1)[0];
-                    columns.splice(evt.newIndex, 0, movedColumn);
+                    var movedColumn = columns.splice(oldIndex, 1)[0];
+                    if (!movedColumn) {
+                        renderColumns();
+                        return;
+                    }
+                    columns.splice(newIndex, 0, movedColumn);
                     normalizeLineNumbers();
                     renderColumns();
 
                     root.dispatchEvent(new CustomEvent('kanban:listMoved', {
                         detail: {
-                            oldIndex: evt.oldIndex,
-                            newIndex: evt.newIndex
+                            oldIndex: oldIndex,
+                            newIndex: newIndex
                         }
                     }));
 
                     enqueueMutation(function () {
-                        return persistColumns('list:move', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: movedColumn.title || '', fromOrder: String((evt.oldIndex || 0) + 1), toOrder: String((evt.newIndex || 0) + 1) }).catch(function (error) {
+                        return persistColumns('list:move', { eventPrefix: 'User:' + getCurrentAuthor(), listTitle: movedColumn.title || '', fromOrder: String((oldIndex || 0) + 1), toOrder: String((newIndex || 0) + 1) }).catch(function (error) {
                             console.error('[Kanban] failed to save list order', error);
                         });
                     });
