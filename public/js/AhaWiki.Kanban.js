@@ -1381,6 +1381,46 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 return nearest;
             };
+            var isPointInsideRect = function (clientX, clientY, rect) {
+                if (!rect || !Number.isFinite(clientX) || !Number.isFinite(clientY)) {
+                    return false;
+                }
+                var left = Number.isFinite(rect.left) ? rect.left : 0;
+                var top = Number.isFinite(rect.top) ? rect.top : 0;
+                var width = Number.isFinite(rect.width) ? rect.width : 0;
+                var height = Number.isFinite(rect.height) ? rect.height : 0;
+                var right = Number.isFinite(rect.right) ? rect.right : left + width;
+                var bottom = Number.isFinite(rect.bottom) ? rect.bottom : top + height;
+                return clientX >= left && clientX <= right && clientY >= top && clientY <= bottom;
+            };
+            var findCardDropListAtPoint = function (clientX, clientY) {
+                if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
+                    return null;
+                }
+                var columnsForDrop = root.querySelectorAll('.kanban-column');
+                var targetList = null;
+                Array.prototype.some.call(columnsForDrop, function (candidateColumn) {
+                    if (!candidateColumn) {
+                        return false;
+                    }
+                    var candidateList = candidateColumn.querySelector('.kanban-card-list');
+                    if (!candidateList) {
+                        return false;
+                    }
+                    if (!isPointInsideRect(clientX, clientY, candidateColumn.getBoundingClientRect())) {
+                        return false;
+                    }
+                    targetList = candidateList;
+                    return true;
+                });
+                return targetList;
+            };
+            var getChildIndex = function (parent, child) {
+                if (!parent || !child || !parent.children) {
+                    return -1;
+                }
+                return Array.prototype.indexOf.call(parent.children, child);
+            };
 
             var highlightedDropTarget = null;
             var clearCardDropTargetHighlight = function () {
@@ -1416,13 +1456,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (Number.isFinite(evt.clientY)) {
                     latestPointerForCardDrag.y = evt.clientY;
                 }
-                var nearestList = findNearestCardList(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                var activeDropList = findCardDropListAtPoint(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                var nearestList = activeDropList || findNearestCardList(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                if (!activeDropList) {
+                    restoreDraggedItem();
+                }
                 boardAutoScroll.update(evt, nearestList);
-                setCardDropTargetHighlight(nearestList);
+                setCardDropTargetHighlight(activeDropList);
             };
 
             cardSortable = Sortable.create(cardList, {
                 group: root.id || 'kanban-default',
+                draggable: '.kanban-card',
                 animation: 120,
                 onStart: function (evt) {
                     var doc = root && root.ownerDocument ? root.ownerDocument : document;
@@ -1448,7 +1493,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     var pointerEvent = evt && evt.originalEvent ? evt.originalEvent : null;
                     updateCardDragPointer(pointerEvent);
-                    var currentList = evt && evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list') ? evt.to : null;
+                    var currentList = findCardDropListAtPoint(latestPointerForCardDrag.x, latestPointerForCardDrag.y);
+                    if (!currentList && pointerEvent) {
+                        restoreDraggedItem();
+                        return false;
+                    }
                     if (currentList) {
                         boardAutoScroll.update(pointerEvent, currentList);
                         setCardDropTargetHighlight(currentList);
@@ -1465,20 +1514,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     boardAutoScroll.stop();
                     clearCardDropTargetHighlight();
 
-                    var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || !Number.isFinite(evt.newIndex);
-                    var droppedOutsideList = !(evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list'));
-                    if (droppedOutsideList && evt.item) {
-                        var pointerEvent = evt.originalEvent || null;
-                        var clientX = pointerEvent && Number.isFinite(pointerEvent.clientX) ? pointerEvent.clientX : latestPointerForCardDrag.x;
-                        var clientY = pointerEvent && Number.isFinite(pointerEvent.clientY) ? pointerEvent.clientY : latestPointerForCardDrag.y;
-                        var nearestList = findNearestCardList(clientX, clientY);
-                        if (nearestList) {
-                            nearestList.appendChild(evt.item);
-                            evt.to = nearestList;
-                            evt.newIndex = nearestList.children.length - 1;
-                            droppedOutsideList = false;
+                    var pointerEvent = evt.originalEvent || null;
+                    var clientX = pointerEvent && Number.isFinite(pointerEvent.clientX) ? pointerEvent.clientX : latestPointerForCardDrag.x;
+                    var clientY = pointerEvent && Number.isFinite(pointerEvent.clientY) ? pointerEvent.clientY : latestPointerForCardDrag.y;
+                    var hasFinalPointer = Number.isFinite(clientX) && Number.isFinite(clientY);
+                    var fallbackDropList = evt.to && evt.to.classList && evt.to.classList.contains('kanban-card-list') ? evt.to : null;
+                    var finalDropList = hasFinalPointer ? findCardDropListAtPoint(clientX, clientY) : fallbackDropList;
+                    var droppedOutsideList = !finalDropList;
+                    if (!droppedOutsideList && evt.item) {
+                        if (evt.item.parentElement !== finalDropList) {
+                            finalDropList.appendChild(evt.item);
                         }
+                        evt.to = finalDropList;
+                        evt.newIndex = getChildIndex(finalDropList, evt.item);
                     }
+                    var hasInvalidIndex = !Number.isFinite(evt.oldIndex) || evt.oldIndex < 0 || !Number.isFinite(evt.newIndex) || evt.newIndex < 0;
                     var returnedToSameSpot = evt.from === evt.to && evt.oldIndex === evt.newIndex;
                     if (dragCancelled || droppedOutsideList || hasInvalidIndex || returnedToSameSpot || !evt.to) {
                         restoreDraggedItem(evt.item, evt.from, evt.oldIndex);

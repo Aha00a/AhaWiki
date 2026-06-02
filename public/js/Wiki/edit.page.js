@@ -616,6 +616,28 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 }
             }
 
+            function rerenderGanttWithSelection(rows, selectedIndices, row, col, withFocus) {
+                let beforeSnapshot = null;
+                if (!ganttRestoringHistory) {
+                    commitPendingGanttInputHistory();
+                    beforeSnapshot = makeGanttSnapshot();
+                }
+                const nextRows = rows.length ? rows : [{ depth: 0, name: '', startOrRef: '', est: '', progress: '' }];
+                const nextRow = Math.max(0, Math.min(row, nextRows.length - 1));
+                const nextSelectedIndices = selectedIndices
+                    .filter(i => i >= 0 && i < nextRows.length)
+                    .sort((a, b) => a - b);
+                if (!nextSelectedIndices.length) nextSelectedIndices.push(nextRow);
+                ganttSelectedRows = new Set(nextSelectedIndices);
+                ganttLastClickedRow = nextSelectedIndices.includes(nextRow) ? nextRow : nextSelectedIndices[0];
+                ganttCursor = { row: nextRow, col };
+                renderGanttGrid(nextRows);
+                focusGanttCell(nextRow, col, withFocus);
+                if (pushGanttHistoryIfRowsChanged(beforeSnapshot, nextRows)) {
+                    scheduleGanttAutoApply();
+                }
+            }
+
             function updateGanttRowSelection() {
                 $ganttInlineEditorGrid.find('tr').each(function () {
                     const r = parseInt($(this).attr('data-r'), 10);
@@ -694,6 +716,26 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 focusGanttCell(row, nextCol, withFocus);
             }
 
+            function getGanttTargetRowIndices(rows) {
+                if (!rows.length) return [];
+                const cursorRow = Math.max(0, Math.min(ganttCursor.row, rows.length - 1));
+                const selectedIndices = Array.from(ganttSelectedRows)
+                    .filter(i => i >= 0 && i < rows.length)
+                    .sort((a, b) => a - b);
+                if (selectedIndices.length && selectedIndices.includes(cursorRow)) return selectedIndices;
+                return [cursorRow];
+            }
+
+            function getGanttTargetRootIndices(rows) {
+                const targetIndices = getGanttTargetRowIndices(rows);
+                const rootIndices = [];
+                targetIndices.forEach(function (rowIdx) {
+                    const alreadyCovered = rootIndices.some(rootIdx => rowIdx > rootIdx && rowIdx < getChildrenEndIdx(rows, rootIdx));
+                    if (!alreadyCovered) rootIndices.push(rowIdx);
+                });
+                return rootIndices;
+            }
+
             function moveGanttRow(direction) {
                 commitPendingGanttInputHistory();
                 const rows = ganttGridAsRows();
@@ -730,6 +772,35 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 if (pushGanttHistoryIfRowsChanged(beforeSnapshot, remaining)) {
                     scheduleGanttAutoApply();
                 }
+            }
+
+            function deleteGanttTargetRows(col, withFocus) {
+                const rows = ganttGridAsRows();
+                if (!rows.length) return;
+                if (rows.length <= 1) return;
+                const targetIndices = getGanttTargetRowIndices(rows);
+                if (!targetIndices.length) return;
+                const targetSet = new Set(targetIndices);
+                const remaining = rows.filter((_, i) => !targetSet.has(i));
+                const nextRows = remaining.length ? remaining : [{ depth: 0, name: '', startOrRef: '', est: '', progress: '' }];
+                const nextRow = Math.max(0, Math.min(targetIndices[0], nextRows.length - 1));
+                rerenderGanttWithSelection(nextRows, [nextRow], nextRow, col, withFocus);
+            }
+
+            function indentGanttTargetRows(col, withFocus) {
+                const rows = ganttGridAsRows();
+                const targetIndices = getGanttTargetRowIndices(rows);
+                const rootIndices = getGanttTargetRootIndices(rows);
+                rootIndices.forEach(rowIdx => indentGanttRow(rowIdx, rows));
+                rerenderGanttWithSelection(rows, targetIndices, ganttCursor.row, col, withFocus);
+            }
+
+            function outdentGanttTargetRows(col, withFocus) {
+                const rows = ganttGridAsRows();
+                const targetIndices = getGanttTargetRowIndices(rows);
+                const rootIndices = getGanttTargetRootIndices(rows);
+                rootIndices.forEach(rowIdx => outdentGanttRow(rowIdx, rows));
+                rerenderGanttWithSelection(rows, targetIndices, ganttCursor.row, col, withFocus);
             }
 
             function getGanttRowFromMouseY(clientY) {
@@ -1002,9 +1073,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const col = parseInt($(this).attr('data-c'), 10) || 0;
                 if (e.key === 'Tab') {
                     e.preventDefault();
-                    const rows = ganttGridAsRows();
-                    if (e.shiftKey) { outdentGanttRow(row, rows); } else { indentGanttRow(row, rows); }
-                    rerenderGanttWithCursor(rows, row, col, true);
+                    if (e.shiftKey) { outdentGanttTargetRows(col, true); } else { indentGanttTargetRows(col, true); }
                 } else if (e.key === 'Enter') {
                     e.preventDefault();
                     if (col === GANTT_COL_START) applyGanttRefSubstitutionWithHistory($(this));
@@ -1014,11 +1083,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     rerenderGanttWithCursor(rows, row + 1, col, true);
                 } else if (e.key === 'Delete' && e.shiftKey) {
                     e.preventDefault();
-                    const rows = ganttGridAsRows();
-                    if (rows.length > 1) {
-                        rows.splice(row, 1);
-                        rerenderGanttWithCursor(rows, Math.max(0, row - 1), col, true);
-                    }
+                    deleteGanttTargetRows(col, true);
                 } else if (e.key === 'ArrowUp' && e.altKey) { e.preventDefault(); moveGanttRow(-1); }
                 else if (e.key === 'ArrowDown' && e.altKey) { e.preventDefault(); moveGanttRow(1); }
                 else if (e.key === 'ArrowUp' && e.shiftKey) { e.preventDefault(); focusAndSelectGanttRange(row - 1, col, true); }
@@ -1036,22 +1101,15 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 return false;
             });
             $('#ganttDeleteRow').on('click', function () {
-                const rows = ganttGridAsRows();
-                if (rows.length <= 1) return false;
-                rows.splice(ganttCursor.row, 1);
-                rerenderGanttWithCursor(rows, Math.max(0, ganttCursor.row - 1), ganttCursor.col, true);
+                deleteGanttTargetRows(ganttCursor.col, true);
                 return false;
             });
             $('#ganttIndent').on('click', function () {
-                const rows = ganttGridAsRows();
-                indentGanttRow(ganttCursor.row, rows);
-                rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
+                indentGanttTargetRows(ganttCursor.col, true);
                 return false;
             });
             $('#ganttOutdent').on('click', function () {
-                const rows = ganttGridAsRows();
-                outdentGanttRow(ganttCursor.row, rows);
-                rerenderGanttWithCursor(rows, ganttCursor.row, ganttCursor.col, true);
+                outdentGanttTargetRows(ganttCursor.col, true);
                 return false;
             });
             $('#ganttMoveUp').on('click', function () {

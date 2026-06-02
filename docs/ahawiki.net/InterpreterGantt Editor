@@ -24,11 +24,11 @@ progress	정수 (선택)	진척률 0~100. 직렬화 시 `숫자%` 형식으로 �
 [[[#!Table tsv 1 1
 버튼 (아이콘)	단축키	동작
 + (fa-plus)	Enter	현재 행 아래에 새 행 추가 (현재 행과 같은 depth)
-- (fa-minus)	Shift+Del	현재 행 삭제 (1행 이하일 때 삭제 불가)
-↑ (fa-arrow-up)	Alt+↑	현재 행을 한 칸 위로 이동
-↓ (fa-arrow-down)	Alt+↓	현재 행을 한 칸 아래로 이동
-▶ (fa-indent)	Tab	현재 행 depth +1 (위 행의 depth+1 초과 불가, 자식 행 포함 이동)
-◀ (fa-outdent)	Shift+Tab	현재 행 depth -1 (0 이하로 내려가지 않음, 자식 행 포함 이동)
+- (fa-minus)	Shift+Del	대상 행 삭제 (1행 이하일 때 삭제 불가)
+↑ (fa-arrow-up)	Alt+↑	대상 행을 한 칸 위로 이동
+↓ (fa-arrow-down)	Alt+↓	대상 행을 한 칸 아래로 이동
+▶ (fa-indent)	Tab	대상 행 depth +1 (위 행의 depth+1 초과 불가, 자식 행 포함 이동)
+◀ (fa-outdent)	Shift+Tab	대상 행 depth -1 (0 이하로 내려가지 않음, 자식 행 포함 이동)
 📅 (fa-calendar-day)	—	현재 행의 Start/Ref 칸에 오늘 날짜(YYYY-MM-DD) 입력
 ↶ (fa-undo)	Ctrl+Z	마지막 Gantt 편집 작업 되돌리기
 ↷ (fa-redo)	Ctrl+Y / Ctrl+Shift+Z	되돌린 Gantt 편집 작업 다시 적용
@@ -56,6 +56,8 @@ Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
 
 행 번호(#) 열과 일반 셀 모두 같은 행 선택/드래그 모델을 사용한다.
 마우스 클릭은 해당 셀에 포커스를 주고, 동시에 행 선택 상태를 갱신한다.
+행 단위 작업의 대상 행은 커서 행이 선택 묶음 안에 있으면 선택된 행 전체이고, 아니면 현재 커서 행 하나다.
+행 추가와 셀 값 변경(오늘 날짜, ref 치환)은 현재 커서/셀만 대상으로 한다.
 
 === 행 선택
 
@@ -115,12 +117,12 @@ GanttEditor는 원문 CodeMirror history와 별도로 Gantt 전용 Undo/Redo 스
 
 [[[#!Table tsv 1 1
 키	위치	동작
-Tab	임의 셀	depth +1 (Indent). 위 행의 depth+1 초과 불가. 자식 행 포함.
-Shift+Tab	임의 셀	depth -1 (Outdent). 0 이하 불가. 자식 행 포함.
+Tab	임의 셀	대상 행 depth +1 (Indent). 위 행의 depth+1 초과 불가. 자식 행 포함.
+Shift+Tab	임의 셀	대상 행 depth -1 (Outdent). 0 이하 불가. 자식 행 포함.
 Enter	임의 셀	현재 행 아래에 새 행 삽입 (현재 depth 유지)
-Shift+Del	임의 셀	현재 행 삭제 (1행 이하일 때 무시)
-Alt+↑	임의 셀	현재 행을 한 칸 위로 이동
-Alt+↓	임의 셀	현재 행을 한 칸 아래로 이동
+Shift+Del	임의 셀	대상 행 삭제 (1행 이하일 때 무시)
+Alt+↑	임의 셀	대상 행을 한 칸 위로 이동
+Alt+↓	임의 셀	대상 행을 한 칸 아래로 이동
 ArrowUp / Down	임의 셀	상하 행 이동 + 이동한 행 단일 선택
 Shift+ArrowUp / Down	임의 셀	상하 행 이동 + 범위 선택
 Alt+ArrowUp / Down	임의 셀	현재 커서 행이 선택 묶음 안에 있으면 선택된 행들을 함께 이동, 아니면 현재 행만 이동
@@ -133,7 +135,7 @@ ArrowRight	셀 끝 / number 타입	우측 셀로 이동
 === 인덴트 제약
 
  * 인덴트 시 위 행의 `depth + 1`을 초과할 수 없다. (위 행이 없으면 depth 0 고정)
- * 인덴트/아웃덴트 시 현재 행보다 depth가 큰 연속된 자식 행들도 함께 이동한다.
+ * 인덴트/아웃덴트 시 대상 행보다 depth가 큰 연속된 자식 행들도 함께 이동한다.
 
 == 시각적 강조
 

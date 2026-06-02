@@ -41,7 +41,7 @@
 		font-weight: 700;
 	}
 
-	.kanban-add-list-wrapper { flex: 0 0 300px; min-width: 260px; }
+	.kanban-add-list-wrapper { flex: 0 0 300px; min-width: 260px; align-self: flex-start; }
 	.kanban-add-list-button {
 		width: 100%; padding: 10px 12px; text-align: left;
 		border: 1px solid var(--kanban-border); border-radius: 8px;
@@ -56,6 +56,8 @@
 	.kanban-column {
 		min-width: 260px;
 		max-width: 340px;
+		min-height: 280px;
+		align-self: stretch;
 		background: var(--kanban-column-bg);
 		border: 1px solid var(--kanban-border);
 		border-radius: 8px;
@@ -84,7 +86,7 @@
 	}
 	.kanban-column-title-editor { flex:1 1 auto; min-width:0; box-sizing:border-box; border:1px solid var(--kanban-border); border-radius:6px; padding:6px 8px; margin-right:8px; background: var(--color-input-bg); color: var(--kanban-text); }
 
-	.kanban-card-list { min-height:20px; flex:1 1 auto; overflow-y:auto; display:flex; flex-direction:column; gap:8px; }
+	.kanban-card-list { min-height:120px; flex:1 1 auto; overflow-y:auto; display:flex; flex-direction:column; gap:8px; box-sizing:border-box; border-radius:8px; }
 
 	.kanban-card {
 		background: var(--kanban-card-bg);
@@ -152,7 +154,7 @@
 	@media (max-width: 767px) {
 		.kanban-board-ready { flex-direction: column; gap:12px; padding:10px; min-height: 280px; }
 		.kanban-add-list-wrapper { width:100%; min-width:0; }
-		.kanban-column { width:100%; max-width:none; min-width:0; }
+		.kanban-column { width:100%; max-width:none; min-width:0; min-height:220px; }
 		.kanban-card { max-width:100%; }
 	}
 }
