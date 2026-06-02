@@ -1330,7 +1330,39 @@ document.addEventListener('DOMContentLoaded', function () {
             var draggingItem = null;
             var draggingFromList = null;
             var draggingOldIndex = -1;
+            var draggingOriginClone = null;
             var cardSortable = null;
+            var clearCardDragOrigin = function () {
+                if (draggingOriginClone && draggingOriginClone.parentNode) {
+                    draggingOriginClone.parentNode.removeChild(draggingOriginClone);
+                }
+                draggingOriginClone = null;
+            };
+            var createCardDragOrigin = function (item) {
+                clearCardDragOrigin();
+                if (!item || !item.parentElement || typeof item.cloneNode !== 'function') {
+                    return;
+                }
+                draggingOriginClone = item.cloneNode(true);
+                draggingOriginClone.id = '';
+                if (draggingOriginClone.removeAttribute) {
+                    draggingOriginClone.removeAttribute('id');
+                    draggingOriginClone.removeAttribute('data-line-number');
+                }
+                if (draggingOriginClone.classList) {
+                    draggingOriginClone.classList.remove('kanban-card-drag-chosen', 'kanban-card-drag-placeholder', 'kanban-card-drag-preview');
+                }
+                draggingOriginClone.classList.add('kanban-card-drag-origin');
+                draggingOriginClone.setAttribute('aria-hidden', 'true');
+                draggingOriginClone.setAttribute('data-kanban-drag-origin', 'true');
+                item.parentElement.insertBefore(draggingOriginClone, item);
+            };
+            var clearCardDragItemClasses = function (item) {
+                if (!item || !item.classList) {
+                    return;
+                }
+                item.classList.remove('kanban-card-drag-chosen', 'kanban-card-drag-placeholder');
+            };
             var restoreDraggedItem = function (item, fromList, oldIndex) {
                 var restoreItem = item || draggingItem;
                 var restoreFromList = fromList || draggingFromList;
@@ -1339,6 +1371,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
                 var children = restoreFromList.children;
+                if (draggingOriginClone && draggingOriginClone.parentElement === restoreFromList && children[restoreOldIndex] === draggingOriginClone) {
+                    restoreFromList.insertBefore(restoreItem, draggingOriginClone.nextSibling || draggingOriginClone.nextElementSibling || null);
+                    return;
+                }
                 if (restoreOldIndex >= children.length) {
                     restoreFromList.appendChild(restoreItem);
                     return;
@@ -1467,8 +1503,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
             cardSortable = Sortable.create(cardList, {
                 group: root.id || 'kanban-default',
-                draggable: '.kanban-card',
+                draggable: '.kanban-card:not(.kanban-card-drag-origin)',
                 animation: 120,
+                ghostClass: 'kanban-card-drag-placeholder',
+                chosenClass: 'kanban-card-drag-chosen',
+                dragClass: 'kanban-card-drag-placeholder',
+                forceFallback: true,
+                fallbackClass: 'kanban-card-drag-preview',
+                fallbackOnBody: true,
+                fallbackTolerance: 3,
+                onClone: function (evt) {
+                    var clone = evt && evt.clone ? evt.clone : null;
+                    if (!clone) {
+                        return;
+                    }
+                    clone.id = '';
+                    if (clone.removeAttribute) {
+                        clone.removeAttribute('id');
+                        clone.removeAttribute('data-line-number');
+                    }
+                    if (clone.classList) {
+                        clone.classList.add('kanban-card-drag-preview');
+                    }
+                    clone.setAttribute('aria-hidden', 'true');
+                },
                 onStart: function (evt) {
                     var doc = root && root.ownerDocument ? root.ownerDocument : document;
                     draggingCard = true;
@@ -1476,6 +1534,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     draggingItem = evt.item;
                     draggingFromList = evt.from;
                     draggingOldIndex = evt.oldIndex;
+                    createCardDragOrigin(evt.item);
                     window.addEventListener('keydown', handleDragEscape, true);
                     doc.addEventListener('keydown', handleDragEscape, true);
                     clearCardDropTargetHighlight();
@@ -1513,6 +1572,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     doc.removeEventListener('dragover', updateCardDragPointer, true);
                     boardAutoScroll.stop();
                     clearCardDropTargetHighlight();
+                    clearCardDragOrigin();
+                    clearCardDragItemClasses(evt.item);
 
                     var pointerEvent = evt.originalEvent || null;
                     var clientX = pointerEvent && Number.isFinite(pointerEvent.clientX) ? pointerEvent.clientX : latestPointerForCardDrag.x;

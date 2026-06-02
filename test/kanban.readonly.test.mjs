@@ -68,6 +68,13 @@ class Element {
     }
   }
 
+  removeAttribute(name) {
+    this.attributes.delete(name);
+    if (name === 'id') {
+      this.id = '';
+    }
+  }
+
   getAttribute(name) {
     return this.attributes.has(name) ? this.attributes.get(name) : null;
   }
@@ -112,6 +119,21 @@ class Element {
       child.parentNode = null;
     }
     return child;
+  }
+
+  cloneNode(deep = false) {
+    const clone = new Element(this.tagName);
+    clone.className = this.className;
+    clone.classList.syncFromClassName();
+    clone.id = this.id;
+    clone.textContent = this.textContent;
+    clone.innerHTML = this.innerHTML;
+    clone.rect = this.rect ? { ...this.rect } : null;
+    this.attributes.forEach((value, key) => clone.setAttribute(key, value));
+    if (deep) {
+      this.children.forEach((child) => clone.appendChild(child.cloneNode(true)));
+    }
+    return clone;
   }
 
   addEventListener(type, handler) {
@@ -249,7 +271,8 @@ const boot = ({ writable, content } = {}) => {
     window: {
       location: { hash: '', pathname: '/w/Page', search: '' },
       history: { pushState: () => {} },
-      requestAnimationFrame: (cb) => cb(),
+      requestAnimationFrame: () => 1,
+      cancelAnimationFrame: () => {},
       addEventListener: () => {},
       removeEventListener: () => {},
       Sortable: {
@@ -333,6 +356,81 @@ test('writable Kanban keeps mutation controls and Sortable instances', () => {
   assert.equal(board.querySelectorAll('.kanban-icon-button').length, 1);
   assert.equal(board.classList.contains('kanban-draggable'), true);
   assert.equal(sortableCreateCount, 2);
+});
+
+test('card Sortable uses Trello-like drag preview classes', () => {
+  const { board, sortableCreates } = boot({ writable: true });
+  const list = board.querySelector('.kanban-card-list');
+  const cardSortable = sortableCreates.find((entry) => entry.element === list);
+
+  assert.ok(cardSortable);
+  assert.equal(cardSortable.options.draggable, '.kanban-card:not(.kanban-card-drag-origin)');
+  assert.equal(cardSortable.options.ghostClass, 'kanban-card-drag-placeholder');
+  assert.equal(cardSortable.options.chosenClass, 'kanban-card-drag-chosen');
+  assert.equal(cardSortable.options.dragClass, 'kanban-card-drag-placeholder');
+  assert.equal(cardSortable.options.forceFallback, true);
+  assert.equal(cardSortable.options.fallbackClass, 'kanban-card-drag-preview');
+  assert.equal(cardSortable.options.fallbackOnBody, true);
+
+  const previewClone = list.querySelector('.kanban-card').cloneNode(true);
+  cardSortable.options.onClone({ clone: previewClone });
+  assert.equal(previewClone.id, '');
+  assert.equal(previewClone.getAttribute('data-line-number'), null);
+  assert.equal(previewClone.getAttribute('aria-hidden'), 'true');
+  assert.equal(previewClone.classList.contains('kanban-card-drag-preview'), true);
+});
+
+test('card drag keeps an origin clone only while dragging', () => {
+  const { board, sortableCreates } = boot({ writable: true });
+  const columns = board.querySelectorAll('.kanban-column');
+  const lists = board.querySelectorAll('.kanban-card-list');
+  setColumnRects(columns);
+
+  const dragged = lists[0].querySelectorAll('.kanban-card')[0];
+  dragged.classList.add('kanban-card-drag-placeholder', 'kanban-card-drag-chosen');
+  const sourceSortable = sortableCreates.find((entry) => entry.element === lists[0]);
+  sourceSortable.options.onStart({
+    item: dragged,
+    from: lists[0],
+    oldIndex: 1,
+    originalEvent: { clientX: 50, clientY: 180 }
+  });
+
+  const originClone = lists[0].querySelector('.kanban-card-drag-origin');
+  assert.ok(originClone);
+  assert.equal(originClone.id, '');
+  assert.equal(originClone.getAttribute('aria-hidden'), 'true');
+  assert.equal(originClone.parentElement, lists[0]);
+  assert.equal(originClone.classList.contains('kanban-card-drag-origin'), true);
+  assert.equal(originClone.classList.contains('kanban-card-drag-placeholder'), false);
+  assert.equal(originClone.classList.contains('kanban-card-drag-chosen'), false);
+  assert.equal(lists[0].children.indexOf(originClone), 1);
+  assert.equal(lists[0].children.indexOf(dragged), 2);
+
+  sourceSortable.options.onMove({
+    item: dragged,
+    from: lists[0],
+    to: lists[0],
+    oldIndex: 1,
+    newIndex: 2,
+    originalEvent: { clientX: -50, clientY: -50 }
+  });
+
+  assert.equal(lists[0].children.indexOf(originClone), 1);
+  assert.equal(lists[0].children.indexOf(dragged), 2);
+
+  sourceSortable.options.onEnd({
+    item: dragged,
+    from: lists[0],
+    to: lists[0],
+    oldIndex: 1,
+    newIndex: 1,
+    originalEvent: { clientX: 50, clientY: 180 }
+  });
+
+  assert.equal(board.querySelectorAll('.kanban-card-drag-origin').length, 0);
+  assert.equal(dragged.classList.contains('kanban-card-drag-placeholder'), false);
+  assert.equal(dragged.classList.contains('kanban-card-drag-chosen'), false);
 });
 
 test('card drag outside expanded drop targets cancels stale list move', () => {
