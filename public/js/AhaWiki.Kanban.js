@@ -161,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'card:delete': return `Kanban - ${eventPrefix} - Card Delete - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))}`;
             case 'card:comment:add': return `Kanban - ${eventPrefix} - Card Comment Add - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'))}`;
             case 'card:property:update': return `Kanban - ${eventPrefix} - Card Property Update - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40)} - ${serializePropertyValueForRevision(actionMeta && actionMeta.value)}`;
+            case 'card:description:update': return `Kanban - ${eventPrefix} - Card Description Update - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${truncateRevisionText(getActionMetaValue(actionMeta, 'descriptionPreview'), 60) || '(removed)'}`;
         }
         return `Kanban - ${actionType || 'Save'}`;
     };
@@ -824,10 +825,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 propertyKey = '';
                 return;
             }
-            var cardSectionMatch = line.match(/^=====\s+(Property|Activity)\s*$/);
+            var cardSectionMatch = line.match(/^=====\s+(Description|Property|Activity)\s*$/);
             if (cardSectionMatch && currentCard) {
                 cardSection = cardSectionMatch[1];
                 propertyKey = '';
+                return;
+            }
+
+            if (cardSection === 'Description' && currentCard) {
+                currentCard.description = currentCard.description || [];
+                currentCard.description.push(line);
                 return;
             }
 
@@ -883,6 +890,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     id: cardHeading.id,
                     classNames: cardHeading.classNames,
                     lineNumber: interpreterStartLine + lineIndex,
+                    description: [],
                     comments: [],
                     properties: {}
                 };
@@ -1166,6 +1174,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cardMeta.appendChild(cardIdText);
 
             var cardStat = document.createElement('div');
+            cardStat.className = 'kanban-card-stats';
             card.commentCountElement = document.createElement('span');
             card.attachmentCountElement = document.createElement('span');
             card.attachmentCountElement.className = 'kanban-card-stat';
@@ -1730,6 +1739,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                     var attrSuffix = attrs.length > 0 ? ' ' + attrs.join('') : '';
                     lines.push('==== ' + (card.text || '') + ' ====' + attrSuffix);
+                    if (card.description && card.description.length > 0) {
+                        lines.push('===== Description');
+                        card.description.forEach(function (descLine) { lines.push(descLine); });
+                    }
                     lines.push('===== Property');
                     Object.keys(card.properties || {}).forEach(function (key) {
                         var values = card.properties[key] || [];
@@ -2418,6 +2431,111 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
+            var descriptionTitle = document.createElement('div');
+            descriptionTitle.innerHTML = '<i class="fas fa-align-left" aria-hidden="true"></i> Description';
+            descriptionTitle.className = 'kanban-modal-section-title';
+
+            var getDescriptionText = function () {
+                return (card.description || []).join('\n');
+            };
+
+            var descriptionDisplay = document.createElement('div');
+            descriptionDisplay.className = 'kanban-description-display';
+
+            var descriptionEditorWrap = document.createElement('div');
+            descriptionEditorWrap.className = 'kanban-description-editor-wrap kanban-hidden';
+
+            var descriptionTextarea = document.createElement('textarea');
+            descriptionTextarea.className = 'kanban-description-textarea';
+            descriptionTextarea.placeholder = 'Add a description...';
+
+            var descriptionEditorActions = document.createElement('div');
+            descriptionEditorActions.className = 'kanban-description-action-bar';
+
+            var descriptionSaveButton = document.createElement('button');
+            descriptionSaveButton.type = 'button';
+            descriptionSaveButton.innerHTML = '<i class="fas fa-save" aria-hidden="true"></i> Save Description';
+            descriptionSaveButton.className = 'kanban-description-save-btn';
+
+            var descriptionCancelButton = document.createElement('button');
+            descriptionCancelButton.type = 'button';
+            descriptionCancelButton.textContent = 'Cancel';
+            descriptionCancelButton.className = 'kanban-description-cancel-btn';
+
+            descriptionEditorActions.appendChild(descriptionSaveButton);
+            descriptionEditorActions.appendChild(descriptionCancelButton);
+            descriptionEditorWrap.appendChild(descriptionTextarea);
+            descriptionEditorWrap.appendChild(descriptionEditorActions);
+
+            var renderDescriptionDisplay = function () {
+                var text = getDescriptionText();
+                if (text) {
+                    descriptionDisplay.textContent = text;
+                    requestRenderInlineComment(pageName, text).then(function (html) {
+                        if (html) { descriptionDisplay.innerHTML = html; }
+                    }).catch(function () {});
+                    descriptionDisplay.classList.remove('kanban-description-placeholder');
+                } else {
+                    descriptionDisplay.textContent = isWritable ? 'Add a description...' : '';
+                    if (isWritable) {
+                        descriptionDisplay.classList.add('kanban-description-placeholder');
+                    }
+                }
+            };
+            renderDescriptionDisplay();
+
+            var openDescriptionEditor = function () {
+                descriptionTextarea.value = getDescriptionText();
+                descriptionDisplay.classList.add('kanban-hidden');
+                descriptionEditorWrap.classList.remove('kanban-hidden');
+                descriptionTextarea.focus();
+            };
+
+            var closeDescriptionEditor = function () {
+                descriptionEditorWrap.classList.add('kanban-hidden');
+                descriptionDisplay.classList.remove('kanban-hidden');
+            };
+
+            var submitDescriptionEditor = function () {
+                var newText = (descriptionTextarea.value || '').trimEnd();
+                var currentText = getDescriptionText();
+                closeDescriptionEditor();
+                if (newText === currentText) { return; }
+                card.description = newText ? newText.split('\n') : [];
+                var descriptionPreview = newText
+                    ? truncateRevisionText((newText.split('\n')[0] || '').trim(), 60) || '(updated)'
+                    : '(removed)';
+                var actionMeta = {
+                    eventPrefix: 'User:' + getCurrentAuthor(),
+                    cardId: card.id || '',
+                    cardTitle: card.text || '',
+                    descriptionPreview: descriptionPreview
+                };
+                prependCardActivity(card, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:description:update', actionMeta))]);
+                updateCardCommentCount(card);
+                renderDescriptionDisplay();
+                renderComments();
+                enqueueMutation(function () {
+                    return persistColumns('card:description:update', actionMeta).catch(function (error) {
+                        console.error('[Kanban] failed to save description', error);
+                    });
+                });
+            };
+
+            if (isWritable) {
+                descriptionDisplay.style.cursor = 'pointer';
+                descriptionDisplay.title = 'Click to edit description';
+                descriptionDisplay.addEventListener('click', openDescriptionEditor);
+                descriptionSaveButton.addEventListener('click', submitDescriptionEditor);
+                descriptionCancelButton.addEventListener('click', closeDescriptionEditor);
+                descriptionTextarea.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Escape') {
+                        evt.preventDefault();
+                        closeDescriptionEditor();
+                    }
+                });
+            }
+
             var textarea = document.createElement('textarea');
             textarea.placeholder = 'Write a comment...';
             textarea.rows = 3;
@@ -2450,8 +2568,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var renderProperties = function () {
                 propertyList.innerHTML = '';
-                var propertyEntries = Object.keys(card.properties || {}).filter(function (key) {
-                    var value = card.properties[key];
+                var propertyKeys = Object.keys(card.properties || {});
+                if (isWritable && propertyKeys.indexOf('DueDate') < 0) {
+                    propertyKeys.push('DueDate');
+                }
+                var propertyEntries = propertyKeys.filter(function (key) {
+                    if (isWritable && key === 'DueDate') { return true; }
+                    var value = (card.properties || {})[key];
                     if (Array.isArray(value)) {
                         return value.length > 0;
                     }
@@ -2475,13 +2598,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 propertyEntries.forEach(function (key) {
-                    var values = card.properties[key];
+                    var values = (card.properties || {})[key];
                     var row = document.createElement('div');
                     row.className = 'kanban-property-row';
 
                     var label = document.createElement('div');
                     label.textContent = key;
                     label.className = 'kanban-property-key';
+
+                    if (isWritable && key === 'DueDate') {
+                        var dueDates = (card.properties && card.properties.DueDate) || [];
+                        dueDateInput.value = dueDates.length > 0 ? String(dueDates[0]).replace(/^\[|\]$/g, '') : '';
+                        var dueDateValueCell = document.createElement('div');
+                        dueDateValueCell.className = 'kanban-duedate-inline';
+                        dueDateValueCell.appendChild(dueDateInput);
+                        dueDateValueCell.appendChild(dueDateSaveButton);
+                        row.appendChild(label);
+                        row.appendChild(dueDateValueCell);
+                        propertyList.appendChild(row);
+                        return;
+                    }
+
                     if (Array.isArray(values)) {
                         row.appendChild(label);
                         var attachmentGrid = null;
@@ -2599,8 +2736,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     propertyList.appendChild(row);
                 });
-                var dueDates = (card.properties && card.properties.DueDate) || [];
-                dueDateInput.value = dueDates.length > 0 ? String(dueDates[0]).replace(/^\[|\]$/g, '') : '';
             };
 
             var submitDueDate = function () {
@@ -2977,11 +3112,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 dueDateEditor.appendChild(dueDateInput);
                 dueDateEditor.appendChild(dueDateSaveButton);
             }
+            modal.appendChild(descriptionTitle);
+            modal.appendChild(descriptionDisplay);
+            if (isWritable) {
+                modal.appendChild(descriptionEditorWrap);
+            }
             modal.appendChild(propertyTitle);
             modal.appendChild(propertyList);
-            if (isWritable) {
-                modal.appendChild(dueDateEditor);
-            }
             modal.appendChild(commentsTitle);
             if (isWritable) {
                 modal.appendChild(textarea);
