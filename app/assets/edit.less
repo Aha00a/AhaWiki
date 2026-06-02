@@ -628,34 +628,99 @@
 
 .pagePermissionControl {
 	margin: 0 0 8px;
-	padding: 10px 12px;
+	padding: 8px 10px;
 	border: 1px solid var(--color-border);
 	border-radius: 6px;
 	background: var(--color-surface-alt);
 	color: var(--color-text);
 	font-size: 12px;
-	display: flex;
-	gap: 8px 12px;
-	align-items: center;
-	flex-wrap: wrap;
+}
 
-	label {
-		font-weight: 700;
+.pagePermissionCompact {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.AhaWiki .edit .pagePermissionToggle {
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--color-muted-strong);
+	cursor: pointer;
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+
+	&:hover {
+		background: var(--color-link-hover-bg);
 	}
 
+	i {
+		font-size: 11px;
+		line-height: 1;
+	}
+}
+
+.pagePermissionModeLabel {
+	font-weight: 700;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+	flex: 0 0 auto;
+}
+
+.pagePermissionControl {
 	select {
 		max-width: 180px;
-		margin-left: 4px;
+		margin-left: 0;
 		background: var(--color-input-bg);
 		color: var(--color-text);
 		border: 1px solid var(--color-input-border);
 	}
 }
 
+.pagePermissionCompactSeparator {
+	color: var(--color-muted-strong);
+	flex: 0 0 auto;
+}
+
+.pagePermissionCompactSummary {
+	color: var(--color-muted-strong);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1 1 auto;
+}
+
+.pagePermissionCompactItem {
+	strong {
+		color: var(--color-muted-strong);
+	}
+
+	& + &::before {
+		content: "; ";
+		font-weight: 400;
+	}
+}
+
+.pagePermissionExpanded {
+	.pagePermissionCompactSeparator,
+	.pagePermissionCompactSummary {
+		display: none;
+	}
+}
+
 .pagePermissionSummary {
 	color: var(--color-muted-strong);
-	margin: 0;
-	flex-basis: 100%;
+	margin: 8px 0 0 28px;
 	display: grid;
 	grid-template-columns: max-content minmax(0, 1fr);
 	gap: 4px 10px;
@@ -679,6 +744,21 @@
 		dd {
 			margin-bottom: 6px;
 		}
+	}
+
+	&[hidden] {
+		display: none;
+	}
+}
+
+@media (max-width: 720px) {
+	.pagePermissionCompact {
+		flex-wrap: wrap;
+	}
+
+	.pagePermissionCompactSummary {
+		flex-basis: 100%;
+		margin-left: 28px;
 	}
 }
 @keyframes previewSyncBlinkAnimation {

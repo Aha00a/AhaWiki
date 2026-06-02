@@ -100,18 +100,31 @@
                             <input type="file" id="attachmentUploadInput" multiple />
                             @if(canManagePagePermission) {
                                 <div class="pagePermissionControl">
-                                    <label>
-                                        Page permission
-                                        <select name="pagePermissionMode">
-                                            @if(!isNewPage) {
-                                                <option value="keep" @permissionSelected("keep")>Keep current</option>
-                                            }
-                                            <option value="general" @permissionSelected("general")>General</option>
-                                            <option value="privateRead" @permissionSelected("privateRead")>Only me can read</option>
-                                            <option value="privateWrite" @permissionSelected("privateWrite")>Only me can edit</option>
-                                        </select>
-                                    </label>
-                                    <dl class="pagePermissionSummary">
+                                    <div class="pagePermissionCompact">
+                                        <button type="button" class="pagePermissionToggle" aria-expanded="false" aria-controls="pagePermissionDetails" aria-label="Show page permission details" title="Show page permission details">
+                                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                                        </button>
+                                        <label class="pagePermissionModeLabel">
+                                            <span>Page Permission:</span>
+                                            <select name="pagePermissionMode">
+                                                @if(!isNewPage) {
+                                                    <option value="keep" @permissionSelected("keep")>Keep Current</option>
+                                                }
+                                                <option value="general" @permissionSelected("general")>General</option>
+                                                <option value="privateRead" @permissionSelected("privateRead")>Only me can read</option>
+                                                <option value="privateWrite" @permissionSelected("privateWrite")>Only me can edit</option>
+                                            </select>
+                                        </label>
+                                        @if(pagePermissionSummary.nonEmpty) {
+                                            <span class="pagePermissionCompactSeparator" aria-hidden="true">:</span>
+                                            <span class="pagePermissionCompactSummary">
+                                                @pagePermissionSummary.map { case (label, value) =>
+                                                    <span class="pagePermissionCompactItem"><strong>@label</strong>: @value</span>
+                                                }
+                                            </span>
+                                        }
+                                    </div>
+                                    <dl id="pagePermissionDetails" class="pagePermissionSummary" hidden>
                                         @pagePermissionSummary.map { case (label, value) =>
                                             <dt>@label</dt>
                                             <dd>@value</dd>

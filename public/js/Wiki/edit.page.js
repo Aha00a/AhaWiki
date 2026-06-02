@@ -85,6 +85,36 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             });
         }
 
+        function initPagePermissionControls() {
+            $('.pagePermissionControl').each(function () {
+                const $control = $(this);
+                const $toggle = $control.find('.pagePermissionToggle').first();
+                const $details = $control.find('.pagePermissionSummary').first();
+                const $icon = $toggle.find('i').first();
+                if (!$toggle.length || !$details.length)
+                    return;
+
+                function setExpanded(expanded) {
+                    const label = expanded ? 'Hide page permission details' : 'Show page permission details';
+                    $toggle
+                        .attr('aria-expanded', expanded ? 'true' : 'false')
+                        .attr('aria-label', label)
+                        .attr('title', label);
+                    $icon
+                        .toggleClass('fa-chevron-down', expanded)
+                        .toggleClass('fa-chevron-right', !expanded);
+                    $details.prop('hidden', !expanded);
+                    $control.toggleClass('pagePermissionExpanded', expanded);
+                    setTimeout(adjustEditorLayoutHeight, 0);
+                }
+
+                $toggle.on('click', function () {
+                    setExpanded($toggle.attr('aria-expanded') !== 'true');
+                });
+                setExpanded($toggle.attr('aria-expanded') === 'true');
+            });
+        }
+
         var timer;
         $(function(){
             const $editHelp = $('.editHelp');
@@ -98,6 +128,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 });
                 openAttributeObserver.observe(editHelpElement, { attributes: true, attributeFilter: ['open'] });
             }
+            initPagePermissionControls();
             $(window).on('resize', adjustEditorLayoutHeight);
             adjustEditorLayoutHeight();
 
