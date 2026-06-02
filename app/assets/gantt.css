@@ -252,7 +252,7 @@
   pointer-events: none;
 }
 .InterpreterGantt .gantt-bar-outer-label {
-  font-size: 14px;
+  font-size: 13px;
   fill: var(--color-text);
   dominant-baseline: auto;
   pointer-events: none;

@@ -109,10 +109,10 @@
     function buildTree(rows) {
         var root = { depth: -1, name: '__root__', children: [] };
         var stack = [root];
-        rows.forEach(function (r) {
+        rows.forEach(function (r, i) {
             var node = { id: 'g' + Math.random().toString(36).slice(2), depth: r.depth, name: r.name,
                 label: r.label, explicitStart: r.startDate, explicitEst: r.est, afterRef: r.afterRef,
-                progress: r.progress, children: [], collapsed: false };
+                progress: r.progress, rowNum: i + 1, children: [], collapsed: false };
             while (stack.length > 1 && stack[stack.length - 1].depth >= r.depth) stack.pop();
             stack[stack.length - 1].children.push(node);
             stack.push(node);
@@ -440,7 +440,7 @@
             var lx      = ROWNUM_W + 8 + node.depth * INDENT;
 
             // 행 번호
-            o.push('<text x="' + (ROWNUM_W / 2) + '" y="' + ly + '" text-anchor="middle" font-size="15" class="gantt-rownum">' + (i + 1) + '</text>');
+            o.push('<text x="' + (ROWNUM_W / 2) + '" y="' + ly + '" text-anchor="middle" font-size="15" class="gantt-rownum">' + node.rowNum + '</text>');
             o.push('<rect x="' + ROWNUM_W + '" y="' + y + '" width="3" height="' + ROW_H + '" fill="' + color + '"/>');
 
             var daysX = LABEL_W - PCT_COL_W - DAYS_COL_W;
@@ -553,7 +553,7 @@
             var startLabel = fmtDate(node.start);
             o.push('<text x="' + (bx - 4) + '" y="' + labelY + '" class="gantt-bar-start-label">' + startLabel + '</text>');
             o.push('<text x="' + (bx + bw + 4) + '" y="' + labelY + '" class="gantt-bar-outer-label">' +
-                xmlEsc(node.name) + ' ' + node.est + 'd</text>');
+                xmlEsc(node.name) + ' (' + node.est + 'd)</text>');
             if (isLeaf) {
                 var by = y + 5, bh = ROW_H - 10;
                 var baseOpacity = node.progress !== null ? '0.35' : '0.85';
@@ -760,7 +760,7 @@
             '.gantt-label-progress { font-size:13px; fill:' + t + '; opacity:0.65; font-weight:500; }',
             '.gantt-bar-progress { cursor:default; }',
             '.gantt-bar-label { font-size:14px; fill:#fff; text-anchor:middle; }',
-            '.gantt-bar-outer-label { font-size:14px; fill:' + t + '; opacity:0.7; }',
+            '.gantt-bar-outer-label { font-size:13px; fill:' + t + '; opacity:0.7; }',
             '.gantt-bar-start-label { font-size:13px; fill:' + t + '; text-anchor:end; opacity:0.5; }',
             '.gantt-today-line { stroke:#e05a5a; stroke-width:2; stroke-dasharray:4 2; opacity:0.85; fill:none; }',
             '.gantt-today-hdr { fill:#e05a5a; opacity:0.15; }',
