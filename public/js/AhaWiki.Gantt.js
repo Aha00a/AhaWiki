@@ -226,7 +226,7 @@
     }
 
     function infoStr(node) {
-        return fmtDate(node.start) + ' ~ ' + fmtDate(node.end) + '  ' + node.est + 'd';
+        return fmtDate(node.start) + '/' + fmtDate(node.end) + '  ' + node.est + 'd';
     }
 
     function collectStats(nodes) {
@@ -282,7 +282,7 @@
     function buildSummaryHtml(stats) {
         if (!stats || !stats.minDate || !stats.maxDate) return '';
         var parts = [
-            '<span>Period <b>' + fmtDate(stats.minDate) + ' ~ ' + fmtDate(stats.maxDate) + '</b></span>',
+            '<span>Period <b>' + fmtDate(stats.minDate) + '/' + fmtDate(stats.maxDate) + '</b></span>',
             '<span>Total <b>' + stats.calendarDays + 'd</b></span>',
             '<span>Biz <b>' + stats.businessDays + 'd</b></span>',
             '<span>Tasks <b>' + stats.taskCount + '</b></span>',
@@ -447,9 +447,9 @@
             var pctX  = LABEL_W - PCT_COL_W;
             var info =
                 '<text x="' + (daysX - 4) + '" y="' + ly + '" text-anchor="end" class="gantt-label-date">' +
-                    fmtDate(node.start) + ' ~ ' + fmtDate(node.end) +
+                    fmtDate(node.start) + '/' + fmtDate(node.end) +
                 '</text>' +
-                '<text x="' + (daysX + DAYS_COL_W / 2) + '" y="' + ly + '" text-anchor="middle" class="gantt-label-days">' +
+                '<text x="' + (daysX + DAYS_COL_W - 4) + '" y="' + ly + '" text-anchor="end" class="gantt-label-days">' +
                     node.est + 'd' +
                 '</text>' +
                 (node.progress !== null ? '<text x="' + (pctX + PCT_COL_W / 2) + '" y="' + ly + '" text-anchor="middle" class="gantt-label-progress">' + node.progress + '%</text>' : '');
@@ -776,7 +776,7 @@
     function buildSummarySvg(stats, totalW, v) {
         if (!stats || !stats.minDate) return '';
         var items = [
-            'Period ' + fmtDate(stats.minDate) + ' ~ ' + fmtDate(stats.maxDate),
+            'Period ' + fmtDate(stats.minDate) + '/' + fmtDate(stats.maxDate),
             'Total ' + stats.calendarDays + 'd',
             'Biz ' + stats.businessDays + 'd',
             'Tasks ' + stats.taskCount,
