@@ -19,27 +19,11 @@ progress	정수 (선택)	진척률 0~100. 직렬화 시 `숫자%` 형식으로 �
 
 == UI 구조
 
-=== 툴바 버튼
-
-[[[#!Table tsv 1 1
-버튼 (아이콘)	단축키	동작
-+ (fa-plus)	Enter	현재 행 아래에 새 행 추가 (현재 행과 같은 depth)
-- (fa-minus)	Shift+Del	대상 행 삭제 (1행 이하일 때 삭제 불가)
-↑ (fa-arrow-up)	Alt+↑	대상 행을 한 칸 위로 이동
-↓ (fa-arrow-down)	Alt+↓	대상 행을 한 칸 아래로 이동
-▶ (fa-indent)	Tab	대상 행 depth +1 (위 행의 depth+1 초과 불가, 자식 행 포함 이동)
-◀ (fa-outdent)	Shift+Tab	대상 행 depth -1 (0 이하로 내려가지 않음, 자식 행 포함 이동)
-📅 (fa-calendar-day)	—	현재 행의 Start/Ref 칸에 오늘 날짜(YYYY-MM-DD) 입력
-↶ (fa-undo)	Ctrl+Z	마지막 Gantt 편집 작업 되돌리기
-↷ (fa-redo)	Ctrl+Y / Ctrl+Shift+Z	되돌린 Gantt 편집 작업 다시 적용
-</> (fa-code)	—	GanttEditor를 닫고 원문 에디터로 전환
-]]]
-
 === 그리드 컬럼
 
 현재 UI는 depth를 별도 숫자 컬럼으로 노출하지 않는다.
 각 행의 depth는 row `data-depth` 값으로 보관하고, Task 입력칸의 왼쪽 padding으로 들여쓰기를 표시한다.
-depth는 Indent/Outdent 버튼 또는 Tab/Shift+Tab 단축키로 변경한다.
+depth는 Indent/Outdent 버튼 또는 [[Kbd(Tab)]] / [[Kbd(Shift Tab)]] 단축키로 변경한다.
 
 [[[#!Table tsv 1 1
 컬럼	고정폭	input type	비고
@@ -52,12 +36,34 @@ Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
 
 테이블은 `table-layout: fixed`로 컬럼 너비가 고정되며, 홀수/짝수 행 배경색을 다르게 표시한다.
 
+== 툴바 / 키보드 인터랙션
+
+툴바 버튼과 단축키는 같은 명령을 실행한다.
+행 단위 명령의 대상 행은 커서 행이 선택 묶음 안에 있으면 선택된 행 전체이고, 아니면 현재 커서 행 하나다.
+행 추가와 셀 값 변경(오늘 날짜, ref 치환)은 현재 커서/셀만 대상으로 한다.
+
+[[[#!Table tsv 1 1
+명령	툴바 버튼	키보드	위치/대상	동작
+행 추가	+ (fa-plus)	[[Kbd(Enter)]]	임의 셀	현재 행 아래에 새 행 삽입 (현재 depth 유지)
+행 삭제	- (fa-minus)	[[Kbd(Shift Delete)]]	대상 행	대상 행 삭제 (1행 이하일 때 무시)
+위로 이동	↑ (fa-arrow-up)	[[Kbd(Alt ArrowUp)]]	대상 행	대상 행을 한 칸 위로 이동
+아래로 이동	↓ (fa-arrow-down)	[[Kbd(Alt ArrowDown)]]	대상 행	대상 행을 한 칸 아래로 이동
+들여쓰기	▶ (fa-indent)	[[Kbd(Tab)]]	대상 행	대상 행 depth +1 (위 행의 depth+1 초과 불가, 자식 행 포함)
+내어쓰기	◀ (fa-outdent)	[[Kbd(Shift Tab)]]	대상 행	대상 행 depth -1 (0 이하 불가, 자식 행 포함)
+오늘 날짜 입력	📅 (fa-calendar-day)	—	현재 행 Start/Ref 셀	오늘 날짜(YYYY-MM-DD) 입력
+Undo	↶ (fa-undo)	[[Kbd(Ctrl Z)]]	임의 셀 / GanttEditor 포커스	마지막 Gantt 편집 작업 되돌리기
+Redo	↷ (fa-redo)	[[Kbd(Ctrl Y)]] / [[Kbd(Ctrl Shift Z)]]	임의 셀 / GanttEditor 포커스	되돌린 Gantt 편집 작업 다시 적용
+원문 전환	</> (fa-code)	—	GanttEditor	GanttEditor를 닫고 원문 에디터로 전환
+상하 커서 이동	—	[[Kbd(ArrowUp)]] / [[Kbd(ArrowDown)]]	임의 셀	상하 행 이동 + 이동한 행 단일 선택
+범위 선택	—	[[Kbd(Shift ArrowUp)]] / [[Kbd(Shift ArrowDown)]]	임의 셀	마지막 선택 기준점부터 커서 행까지 범위 선택
+좌우 셀 이동	—	[[Kbd(ArrowLeft)]]	셀 시작 / number 타입	좌측 셀로 이동
+좌우 셀 이동	—	[[Kbd(ArrowRight)]]	셀 끝 / number 타입	우측 셀로 이동
+]]]
+
 == 행 선택 및 드래그
 
 행 번호(#) 열과 일반 셀 모두 같은 행 선택/드래그 모델을 사용한다.
 마우스 클릭은 해당 셀에 포커스를 주고, 동시에 행 선택 상태를 갱신한다.
-행 단위 작업의 대상 행은 커서 행이 선택 묶음 안에 있으면 선택된 행 전체이고, 아니면 현재 커서 행 하나다.
-행 추가와 셀 값 변경(오늘 날짜, ref 치환)은 현재 커서/셀만 대상으로 한다.
 
 === 행 선택
 
@@ -65,10 +71,10 @@ Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
 동작	결과
 선택되지 않은 행의 셀/행 번호 클릭	해당 행 단일 선택
 선택된 행의 셀/행 번호 클릭	기존 선택 유지, 클릭한 셀로 포커스 이동
-Ctrl+클릭	개별 행 토글 선택
-Shift+클릭	마지막 클릭 행~현재 행 범위 선택
-ArrowUp / ArrowDown	커서 이동 후 해당 행 단일 선택
-Shift+ArrowUp / Shift+ArrowDown	마지막 선택 기준점부터 커서 행까지 범위 선택
+[[Kbd(Ctrl)]] + 클릭	개별 행 토글 선택
+[[Kbd(Shift)]] + 클릭	마지막 클릭 행~현재 행 범위 선택
+[[Kbd(ArrowUp)]] / [[Kbd(ArrowDown)]]	커서 이동 후 해당 행 단일 선택
+[[Kbd(Shift ArrowUp)]] / [[Kbd(Shift ArrowDown)]]	마지막 선택 기준점부터 커서 행까지 범위 선택
 ]]]
 
 선택된 행은 배경색(`--color-flash-info-bg`)으로 강조 표시된다.
@@ -83,7 +89,7 @@ Shift+ArrowUp / Shift+ArrowDown	마지막 선택 기준점부터 커서 행까�
 ]]]
 
 드래그 이동 후에는 드래그를 시작한 행의 상대 위치로 커서와 포커스를 복원한다.
-따라서 이동 직후에도 Arrow/Alt+Arrow/Undo/Redo 키 조작을 이어서 사용할 수 있다.
+따라서 이동 직후에도 [[Kbd(ArrowUp)]] / [[Kbd(ArrowDown)]], [[Kbd(Alt ArrowUp)]] / [[Kbd(Alt ArrowDown)]], [[Kbd(Ctrl Z)]] / [[Kbd(Ctrl Y)]] 키 조작을 이어서 사용할 수 있다.
 
 == Undo / Redo
 
@@ -94,7 +100,7 @@ GanttEditor는 원문 CodeMirror history와 별도로 Gantt 전용 Undo/Redo 스
  * `#13` 같은 row ref 자동 치환
  * 오늘 날짜 입력
  * 행 추가/삭제
- * 행 순서 이동(버튼, Alt+↑/↓, 드래그)
+ * 행 순서 이동(버튼, [[Kbd(Alt ArrowUp)]] / [[Kbd(Alt ArrowDown)]], 드래그)
  * Indent/Outdent
 
 셀 입력은 연속 입력을 너무 잘게 쪼개지 않도록 짧은 디바운스 단위와 blur 시점에 묶어서 기록한다.
@@ -113,26 +119,7 @@ GanttEditor는 원문 CodeMirror history와 별도로 Gantt 전용 Undo/Redo 스
 `시작일/ref`가 없고 `소요일`만 있는 경우에도 `\t소요일`만 붙인다.
 빈 중간 탭은 파싱 시 무시되므로 직렬화 시 중간에 빈 슬롯을 끼워 넣을 필요 없다.
 
-== 키보드 인터랙션
-
-[[[#!Table tsv 1 1
-키	위치	동작
-Tab	임의 셀	대상 행 depth +1 (Indent). 위 행의 depth+1 초과 불가. 자식 행 포함.
-Shift+Tab	임의 셀	대상 행 depth -1 (Outdent). 0 이하 불가. 자식 행 포함.
-Enter	임의 셀	현재 행 아래에 새 행 삽입 (현재 depth 유지)
-Shift+Del	임의 셀	대상 행 삭제 (1행 이하일 때 무시)
-Alt+↑	임의 셀	대상 행을 한 칸 위로 이동
-Alt+↓	임의 셀	대상 행을 한 칸 아래로 이동
-ArrowUp / Down	임의 셀	상하 행 이동 + 이동한 행 단일 선택
-Shift+ArrowUp / Down	임의 셀	상하 행 이동 + 범위 선택
-Alt+ArrowUp / Down	임의 셀	현재 커서 행이 선택 묶음 안에 있으면 선택된 행들을 함께 이동, 아니면 현재 행만 이동
-Ctrl+Z	임의 셀	Gantt 편집 Undo
-Ctrl+Y / Ctrl+Shift+Z	임의 셀	Gantt 편집 Redo
-ArrowLeft	셀 시작 / number 타입	좌측 셀로 이동
-ArrowRight	셀 끝 / number 타입	우측 셀로 이동
-]]]
-
-=== 인덴트 제약
+== 인덴트 제약
 
  * 인덴트 시 위 행의 `depth + 1`을 초과할 수 없다. (위 행이 없으면 depth 0 고정)
  * 인덴트/아웃덴트 시 대상 행보다 depth가 큰 연속된 자식 행들도 함께 이동한다.
@@ -155,7 +142,7 @@ ArrowRight	셀 끝 / number 타입	우측 셀로 이동
  * Gantt 에디터 진입 시 Wiki Formatting Help(`details.editHelp`)를 자동으로 숨기고, 에디터 종료 시 복원한다.
  * 에디터 진입 시 첫 행 첫 열(Task)에 자동 포커스한다.
  * input 변경 시 120ms 디바운스로 `applyGanttBlockEditor()`를 호출해 원문 textarea/CodeMirror에 즉시 반영한다.
- * Gantt 에디터가 열려 있고 일반 input/textarea에 포커스가 없을 때도 document 레벨에서 Undo/Redo 단축키를 보조 처리한다.
+ * Gantt 에디터가 열려 있고 일반 input/textarea에 포커스가 없을 때도 document 레벨에서 [[Kbd(Ctrl Z)]] / [[Kbd(Ctrl Y)]] / [[Kbd(Ctrl Shift Z)]] 단축키를 보조 처리한다.
 
 == 감지 로직
 
