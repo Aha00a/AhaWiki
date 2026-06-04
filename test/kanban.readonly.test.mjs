@@ -53,12 +53,39 @@ class Element {
       removeProperty: (name) => { delete this.style.values[name]; }
     };
     this.classList = new ClassList(this);
-    this.className = '';
+    this._className = '';
+    Object.defineProperty(this, 'className', {
+      get: () => this._className,
+      set: (value) => {
+        this._className = String(value || '');
+        this.applyLayoutDefaults();
+      }
+    });
     this.id = '';
     this.textContent = '';
     this.innerHTML = '';
     this.eventListeners = {};
     this.rect = null;
+    this.scrollLeft = 0;
+    this.scrollTop = 0;
+    this.scrollWidth = 100;
+    this.scrollHeight = 100;
+    this.clientWidth = 100;
+    this.clientHeight = 100;
+    this.scrollIntoViewCalls = [];
+    this.className = '';
+  }
+
+  applyLayoutDefaults() {
+    const names = String(this._className || '').split(/\s+/);
+    if (names.includes('kanban-card-list')) {
+      this.clientHeight = 160;
+      this.scrollHeight = 720;
+    }
+    if (names.includes('kanban-card')) {
+      this.clientHeight = 56;
+      this.scrollHeight = 56;
+    }
   }
 
   setAttribute(name, value) {
@@ -181,7 +208,9 @@ class Element {
     return null;
   }
 
-  scrollIntoView() {}
+  scrollIntoView(options) {
+    this.scrollIntoViewCalls.push(options || {});
+  }
   focus() {}
   select() {}
   get previousElementSibling() {
@@ -197,7 +226,43 @@ class Element {
     return index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
   }
   getBoundingClientRect() {
-    const rect = this.rect || { left: 0, top: 0, width: 100, height: 100 };
+    let rect = this.rect;
+    if (!rect && this.classList.contains('kanban-board')) {
+      rect = { left: 0, top: 0, width: this.clientWidth, height: this.clientHeight };
+    }
+    if (!rect && this.classList.contains('kanban-column')) {
+      const board = this.parentElement;
+      const boardRect = board ? board.getBoundingClientRect() : { left: 0, top: 0 };
+      const index = Number(this.getAttribute('data-column-index')) || 0;
+      rect = {
+        left: boardRect.left + (index * 320) - (board ? board.scrollLeft : 0),
+        top: boardRect.top,
+        width: 300,
+        height: 360
+      };
+    }
+    if (!rect && this.classList.contains('kanban-card-list')) {
+      const columnRect = this.parentElement ? this.parentElement.getBoundingClientRect() : { left: 0, top: 0 };
+      rect = {
+        left: columnRect.left + 12,
+        top: columnRect.top + 48,
+        width: 276,
+        height: this.clientHeight
+      };
+    }
+    if (!rect && this.classList.contains('kanban-card')) {
+      const list = this.parentElement;
+      const listRect = list ? list.getBoundingClientRect() : { left: 0, top: 0 };
+      const cards = list ? list.children.filter((child) => child.classList.contains('kanban-card')) : [];
+      const index = Math.max(0, cards.indexOf(this));
+      rect = {
+        left: listRect.left,
+        top: listRect.top + (index * 72) - (list ? list.scrollTop : 0),
+        width: 276,
+        height: 56
+      };
+    }
+    rect = rect || { left: 0, top: 0, width: 100, height: 100 };
     const left = Number.isFinite(rect.left) ? rect.left : 0;
     const top = Number.isFinite(rect.top) ? rect.top : 0;
     const width = Number.isFinite(rect.width) ? rect.width : 0;
@@ -225,13 +290,17 @@ const matches = (element, selector) => {
   if (selector === 'pre[data-shebang]') {
     return element.tagName === 'PRE' && element.getAttribute('data-shebang') !== null;
   }
+  if (selector === '[data-wiki-writable]') {
+    return element.getAttribute('data-wiki-writable') !== null;
+  }
   return false;
 };
 
-const boot = ({ writable, content } = {}) => {
+const boot = ({ writable, content, hash = '' } = {}) => {
   let onReady = null;
   let sortableCreateCount = 0;
   let fetchCalls = 0;
+  const copiedTexts = [];
   const sortableCreates = [];
   const root = new Element('div');
   root.classList.add('InterpreterKanban');
@@ -253,6 +322,10 @@ const boot = ({ writable, content } = {}) => {
   ].join('\n');
   const board = new Element('div');
   board.classList.add('kanban-board');
+  board.clientWidth = 240;
+  board.scrollWidth = 1040;
+  board.clientHeight = 360;
+  board.scrollHeight = 360;
   root.appendChild(pre);
   root.appendChild(board);
   const revisionLink = new Element('a');
@@ -269,8 +342,31 @@ const boot = ({ writable, content } = {}) => {
 
   const sandbox = {
     window: {
-      location: { hash: '', pathname: '/w/Page', search: '' },
-      history: { pushState: () => {} },
+      location: {
+        origin: 'https://example.test',
+        href: 'https://example.test/w/Page' + hash,
+        hash,
+        pathname: '/w/Page',
+        search: ''
+      },
+      history: {
+        pushState: () => {},
+        replaceState: (_a, _b, url) => {
+          const [pathAndSearch, nextHash = ''] = String(url).split('#');
+          const queryIndex = pathAndSearch.indexOf('?');
+          sandbox.window.location.pathname = queryIndex >= 0 ? pathAndSearch.slice(0, queryIndex) : pathAndSearch;
+          sandbox.window.location.search = queryIndex >= 0 ? pathAndSearch.slice(queryIndex) : '';
+          sandbox.window.location.hash = nextHash ? '#' + nextHash : '';
+          sandbox.window.location.href = sandbox.window.location.origin + sandbox.window.location.pathname + sandbox.window.location.search + sandbox.window.location.hash;
+        }
+      },
+      navigator: {
+        clipboard: {
+          writeText: async (text) => {
+            copiedTexts.push(text);
+          }
+        }
+      },
       requestAnimationFrame: () => 1,
       cancelAnimationFrame: () => {},
       addEventListener: () => {},
@@ -303,10 +399,10 @@ const boot = ({ writable, content } = {}) => {
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox);
   if (onReady) onReady();
-  return { root, board, body: documentObj.body, sortableCreateCount, sortableCreates, getFetchCalls: () => fetchCalls };
+  return { root, board, body: documentObj.body, copiedTexts, sortableCreateCount, sortableCreates, getFetchCalls: () => fetchCalls };
 };
 
-const cardIds = (list) => list.querySelectorAll('.kanban-card').map((card) => card.id);
+const cardIds = (list) => list.querySelectorAll('.kanban-card').map((card) => card.getAttribute('data-card-id'));
 
 const setColumnRects = (columns) => {
   columns.forEach((column, index) => {
@@ -334,6 +430,26 @@ const threeListContent = [
   '===== Activity'
 ].join('\n');
 
+const longThirdListContent = [
+  '=== List 1',
+  '==== One ==== #c1',
+  '===== Property',
+  '===== Activity',
+  '=== List 2',
+  '==== Two ==== #c2',
+  '===== Property',
+  '===== Activity',
+  '=== List 3',
+  '==== Three 1 ==== #c3a',
+  '==== Three 2 ==== #c3b',
+  '==== Three 3 ==== #c3c',
+  '==== Three 4 ==== #c3d',
+  '==== Three 5 ==== #c3e',
+  '==== Target ==== #c-target',
+  '===== Property',
+  '===== Activity'
+].join('\n');
+
 test('read-only Kanban hides mutation controls and does not create Sortable instances', () => {
   const { root, board, sortableCreateCount } = boot({ writable: false });
 
@@ -356,6 +472,46 @@ test('writable Kanban keeps mutation controls and Sortable instances', () => {
   assert.equal(board.querySelectorAll('.kanban-icon-button').length, 1);
   assert.equal(board.classList.contains('kanban-draggable'), true);
   assert.equal(sortableCreateCount, 2);
+});
+
+test('card id click copies the card URL without following the hash link', async () => {
+  const { board, body, copiedTexts } = boot({ writable: true });
+  const card = board.querySelector('.kanban-card');
+
+  card.dispatchEvent({ type: 'click' });
+
+  const cardIdLabel = body.querySelector('.kanban-modal-card-id');
+  let prevented = false;
+  let stopped = false;
+  cardIdLabel.dispatchEvent({
+    type: 'click',
+    preventDefault: () => { prevented = true; },
+    stopPropagation: () => { stopped = true; }
+  });
+  for (let i = 0; i < 5; i += 1) {
+    await Promise.resolve();
+  }
+
+  assert.equal(prevented, true);
+  assert.equal(stopped, true);
+  assert.deepEqual(copiedTexts, ['https://example.test/w/Page#c1']);
+  const feedback = body.querySelector('.kanban-card-copy-feedback');
+  assert.equal(feedback.textContent, 'Copied');
+  assert.equal(feedback.classList.contains('kanban-hidden'), false);
+});
+
+test('initial card hash scrolls inside the Kanban board and card list', () => {
+  const { root, board, body } = boot({ writable: true, content: longThirdListContent, hash: '#c-target' });
+  const columns = board.querySelectorAll('.kanban-column');
+  const targetList = columns[2].querySelector('.kanban-card-list');
+  const targetCard = targetList.querySelectorAll('.kanban-card').find((card) => card.getAttribute('data-card-id') === 'c-target');
+  const overlay = body.querySelector('.kanban-card-detail-overlay');
+
+  assert.equal(root.scrollIntoViewCalls.length, 0);
+  assert.equal(targetCard.id, '');
+  assert.ok(board.scrollLeft > 0);
+  assert.ok(targetList.scrollTop > 0);
+  assert.equal(overlay.getAttribute('data-card-id'), 'c-target');
 });
 
 test('card Sortable uses Trello-like drag preview classes', () => {

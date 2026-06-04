@@ -1,33 +1,92 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
     var getHashCardId = function () {
-        return (window.location.hash || '').replace(/^#/, '').trim();
+        var rawHash = (window.location.hash || '').replace(/^#/, '').trim();
+        try {
+            return decodeURIComponent(rawHash);
+        } catch (error) {
+            return rawHash;
+        }
+    };
+    var replaceCurrentUrl = function (url) {
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', url);
+            return;
+        }
+        if (window.location && window.location.replace) {
+            window.location.replace(url);
+        }
     };
     var setHashCardId = function (cardId) {
         if (!cardId) {
             return;
         }
-        var nextHash = '#' + cardId;
-        if (window.location.hash === nextHash) {
+        if (getHashCardId() === cardId) {
             return;
         }
-        if (window.history && window.history.pushState) {
-            window.history.pushState(null, '', nextHash);
-            return;
-        }
-        window.location.hash = cardId;
+        var nextHash = '#' + encodeURIComponent(cardId);
+        replaceCurrentUrl(window.location.pathname + window.location.search + nextHash);
     };
     var clearHashCardId = function (cardId) {
         var currentHash = getHashCardId();
         if (!currentHash || (cardId && currentHash !== cardId)) {
             return;
         }
-        var baseUrl = window.location.pathname + window.location.search;
-        if (window.history && window.history.pushState) {
-            window.history.pushState(null, '', baseUrl);
-            return;
+        replaceCurrentUrl(window.location.pathname + window.location.search);
+    };
+    var getCurrentPageUrl = function () {
+        var path = window.location.pathname + window.location.search;
+        if (window.location.origin) {
+            return window.location.origin + path;
         }
-        window.location.hash = '';
+        var href = String(window.location.href || '');
+        if (href) {
+            return href.replace(/#.*$/, '');
+        }
+        return path;
+    };
+    var buildCardUrl = function (cardId) {
+        if (!cardId) {
+            return getCurrentPageUrl();
+        }
+        return getCurrentPageUrl() + '#' + encodeURIComponent(cardId);
+    };
+    var fallbackCopyTextToClipboard = function (text) {
+        if (!document.body || !document.createElement || !document.execCommand) {
+            return Promise.resolve(false);
+        }
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', 'readonly');
+        textarea.style.position = 'fixed';
+        textarea.style.top = '-9999px';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        var copied = false;
+        try {
+            copied = document.execCommand('copy');
+        } catch (error) {
+            copied = false;
+        }
+        if (textarea.parentNode) {
+            textarea.parentNode.removeChild(textarea);
+        }
+        return Promise.resolve(copied);
+    };
+    var copyTextToClipboard = function (text) {
+        if (!text) {
+            return Promise.resolve(false);
+        }
+        if (window.navigator && window.navigator.clipboard && window.navigator.clipboard.writeText) {
+            return window.navigator.clipboard.writeText(text).then(function () {
+                return true;
+            }).catch(function () {
+                return fallbackCopyTextToClipboard(text);
+            });
+        }
+        return fallbackCopyTextToClipboard(text);
     };
     var parseBooleanDataAttribute = function (value, fallback) {
         if (value === 'true') {
@@ -175,6 +234,8 @@ document.addEventListener('DOMContentLoaded', function () {
             getHashCardId: getHashCardId,
             setHashCardId: setHashCardId,
             clearHashCardId: clearHashCardId,
+            buildCardUrl: buildCardUrl,
+            copyTextToClipboard: copyTextToClipboard,
             isKanbanRootWritable: isKanbanRootWritable,
             requestSaveKanban: requestSaveKanban
         });
@@ -1151,7 +1212,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var cardElement = document.createElement('div');
             cardElement.className = 'kanban-card';
             if (card.id) {
-                cardElement.id = card.id;
+                cardElement.setAttribute('data-card-id', card.id);
             }
             (card.classNames || []).forEach(function (className) {
                 if (className) {
@@ -2175,19 +2236,62 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         rerenderColumns = renderColumns;
 
-        var scrollToKanbanForHashCard = function () {
-            var rawHash = window.location.hash || '';
-            if (!rawHash || rawHash.length <= 1) {
+        var findRenderedCardById = function (cardId) {
+            if (!cardId) {
+                return null;
+            }
+            var cards = board.querySelectorAll('.kanban-card');
+            for (var i = 0; i < cards.length; i += 1) {
+                if ((cards[i].getAttribute('data-card-id') || '') === cardId) {
+                    return cards[i];
+                }
+            }
+            return null;
+        };
+        var adjustScrollToReveal = function (container, target, axis, padding) {
+            if (!container || !target) {
                 return;
             }
-
-            var hashId = rawHash.slice(1);
-            var targetCard = board.querySelector('.kanban-card[id="' + CSS.escape(hashId) + '"]');
-            if (!targetCard) {
+            var containerSize = axis === 'x' ? container.clientWidth : container.clientHeight;
+            var containerScrollSize = axis === 'x' ? container.scrollWidth : container.scrollHeight;
+            if (!Number.isFinite(containerSize) || !Number.isFinite(containerScrollSize) || containerScrollSize <= containerSize) {
                 return;
             }
+            var containerRect = container.getBoundingClientRect();
+            var targetRect = target.getBoundingClientRect();
+            var containerStart = axis === 'x' ? containerRect.left : containerRect.top;
+            var containerEnd = axis === 'x' ? containerRect.right : containerRect.bottom;
+            var targetStart = axis === 'x' ? targetRect.left : targetRect.top;
+            var targetEnd = axis === 'x' ? targetRect.right : targetRect.bottom;
+            var currentScroll = axis === 'x' ? container.scrollLeft : container.scrollTop;
+            var delta = 0;
 
-            root.scrollIntoView({ block: 'start' });
+            padding = Number.isFinite(padding) ? padding : 0;
+            if (targetStart < containerStart + padding) {
+                delta = targetStart - containerStart - padding;
+            } else if (targetEnd > containerEnd - padding) {
+                delta = targetEnd - containerEnd + padding;
+            }
+
+            if (delta === 0) {
+                return;
+            }
+            var nextScroll = Math.max(0, currentScroll + delta);
+            if (axis === 'x') {
+                container.scrollLeft = nextScroll;
+            } else {
+                container.scrollTop = nextScroll;
+            }
+        };
+        var scrollKanbanToCard = function (cardElement) {
+            if (!cardElement) {
+                return;
+            }
+            var targetColumn = cardElement.closest ? cardElement.closest('.kanban-column') : null;
+            var targetList = cardElement.closest ? cardElement.closest('.kanban-card-list') : null;
+
+            adjustScrollToReveal(board, targetColumn || cardElement, 'x', 14);
+            adjustScrollToReveal(targetList, cardElement, 'y', 8);
         };
 
         var getCardInsertLineStart = function (columnIndex) {
@@ -2281,7 +2385,6 @@ document.addEventListener('DOMContentLoaded', function () {
             board.appendChild(addListWrapper);
         }
         renderColumns();
-        window.requestAnimationFrame(scrollToKanbanForHashCard);
 
         openCardDetail = function (card) {
             if (!card) {
@@ -2331,15 +2434,52 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var cardIdLabel = document.createElement('a');
             var cardId = (card.id || '').trim();
+            var cardUrl = buildCardUrl(cardId);
             if (cardId) {
-                cardIdLabel.href = window.location.pathname + window.location.search + '#' + encodeURIComponent(cardId);
+                cardIdLabel.href = cardUrl;
                 cardIdLabel.textContent = cardId;
             } else {
                 cardIdLabel.href = '#';
                 cardIdLabel.textContent = '-';
             }
             cardIdLabel.className = 'kanban-modal-card-id';
-            cardIdLabel.title = 'Copy/share this link to reopen this card popup';
+            cardIdLabel.title = cardId ? 'Copy card URL' : '';
+            var cardIdCopyFeedback = document.createElement('span');
+            cardIdCopyFeedback.className = 'kanban-card-copy-feedback kanban-hidden';
+            cardIdCopyFeedback.setAttribute('aria-live', 'polite');
+            var cardIdCopyFeedbackTimer = null;
+            var showCardIdCopyFeedback = function (message) {
+                cardIdCopyFeedback.textContent = message;
+                cardIdCopyFeedback.classList.remove('kanban-hidden');
+                if (cardIdCopyFeedbackTimer && window.clearTimeout) {
+                    window.clearTimeout(cardIdCopyFeedbackTimer);
+                }
+                if (window.setTimeout) {
+                    cardIdCopyFeedbackTimer = window.setTimeout(function () {
+                        cardIdCopyFeedback.classList.add('kanban-hidden');
+                        cardIdCopyFeedback.textContent = '';
+                        cardIdCopyFeedbackTimer = null;
+                    }, 1200);
+                }
+            };
+            cardIdLabel.addEventListener('click', function (evt) {
+                evt.preventDefault();
+                if (evt.stopPropagation) {
+                    evt.stopPropagation();
+                }
+                if (!cardId) {
+                    return;
+                }
+                copyTextToClipboard(cardUrl).then(function (copied) {
+                    cardIdLabel.title = copied ? 'Copied card URL' : 'Copy failed';
+                    showCardIdCopyFeedback(copied ? 'Copied' : 'Copy failed');
+                    if (window.setTimeout) {
+                        window.setTimeout(function () {
+                            cardIdLabel.title = 'Copy card URL';
+                        }, 1200);
+                    }
+                });
+            });
 
             var titleWrap = document.createElement('div');
             titleWrap.className = 'kanban-modal-title-wrap';
@@ -2348,6 +2488,7 @@ document.addEventListener('DOMContentLoaded', function () {
             titleDisplay.className = 'kanban-modal-title-display';
             titleDisplay.appendChild(title);
             titleDisplay.appendChild(cardIdLabel);
+            titleDisplay.appendChild(cardIdCopyFeedback);
 
             var titleEditorWrap = document.createElement('div');
             titleEditorWrap.className = 'kanban-modal-title-editor-wrap kanban-hidden';
@@ -3147,7 +3288,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!targetCard) {
                 return false;
             }
-            root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollKanbanToCard(findRenderedCardById(cardId));
             openCardDetail(targetCard);
             return true;
         };
@@ -3155,21 +3296,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (initialHashCardId) {
             openCardDetailById(initialHashCardId);
         }
-
-        window.addEventListener('hashchange', function () {
-            var hashCardId = getHashCardId();
-            var openedOverlay = getOpenedCardOverlay();
-            var openedCardId = openedOverlay ? (openedOverlay.getAttribute('data-card-id') || '') : '';
-
-            if (!hashCardId) {
-                closeOpenedCardOverlay();
-                return;
-            }
-            if (openedCardId === hashCardId) {
-                return;
-            }
-            openCardDetailById(hashCardId);
-        });
 
         if (isWritable && window.Sortable) {
             var listDragOriginClone = null;

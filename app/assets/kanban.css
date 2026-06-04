@@ -201,6 +201,10 @@
   gap: 8px;
   box-sizing: border-box;
   border-radius: 8px;
+  max-height: min(70vh, 720px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
 }
 .InterpreterKanban .kanban-card {
   background: var(--kanban-card-bg);
@@ -773,6 +777,16 @@ body.kanban-list-dragging-global * {
 .kanban-modal-card-id:hover {
   background: var(--kanban-primary);
   color: var(--color-adjacent-hud-action-active-text);
+}
+.kanban-card-copy-feedback {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--kanban-primary);
+  color: var(--color-adjacent-hud-action-active-text);
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 .kanban-modal-header-actions {
   display: flex;
