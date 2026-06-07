@@ -4,11 +4,8 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.Using
 import models.ContextWikiPage
 import models.PageContent
-import models.tables.Config
 import models.tables.CalculatedLink
-import models.tables.Site
 import play.api.Logging
-import play.api.db.Database
 
 import java.io.File
 import java.nio.charset.CodingErrorAction
@@ -18,6 +15,7 @@ import scala.sys.process._
 
 object InterpreterVim extends TraitInterpreter with Logging {
 
+  private val ColorScheme = "ron"
 
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
@@ -71,13 +69,7 @@ object InterpreterVim extends TraitInterpreter with Logging {
     if(parser.isError) {
       "Error!"
     } else {
-      implicit val database: Database = wikiContext.database
-      implicit val site: Site = wikiContext.site
-      val (colorscheme, debug) = database.withConnection { implicit connection =>
-        val colorscheme = Config.Query.InterpreterVim.colorScheme()
-        val debug = Config.Query.InterpreterVim.debug()
-        (colorscheme, debug)
-      }
+      val colorscheme = ColorScheme
 
       val md5 = MessageDigest.getInstance("MD5").digest((colorscheme + raw).getBytes).map("%02x".format(_)).mkString
       val cacheDir: File = getCacheDir
@@ -116,12 +108,6 @@ object InterpreterVim extends TraitInterpreter with Logging {
         } else {
           val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines().toSeq)
           cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
-        }
-
-        if(debug) {
-          cacheFileHtmlRaw.delete()
-          cacheFileSh.delete()
-          cacheFileText.delete()
         }
       }
 

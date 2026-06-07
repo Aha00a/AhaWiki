@@ -337,6 +337,73 @@
 				padding: 1px 142px 5px 10px;
 				overflow: hidden;
 			}
+
+			html.theme-ahawiki-light & {
+				--vim-ron-light-bg: #f7fbff;
+				--vim-ron-light-text: #102a43;
+				--vim-ron-light-comment: #3f6f2a;
+				--vim-ron-light-constant: #006d8f;
+				--vim-ron-light-identifier: #075985;
+				--vim-ron-light-statement: #1d4ed8;
+				--vim-ron-light-preproc: #9d174d;
+				--vim-ron-light-type: #047857;
+				--vim-ron-light-special: #a16207;
+				--vim-ron-light-underlined: #0f766e;
+				--vim-ron-light-todo-bg: #fef3c7;
+				--vim-ron-light-todo-text: #92400e;
+				--vim-ron-light-error-bg: #fee2e2;
+				--vim-ron-light-error-text: #991b1b;
+				--vim-ron-light-warning-bg: #dcfce7;
+				--vim-ron-light-warning-text: #166534;
+				--vim-ron-light-search-bg: #fde68a;
+				--vim-ron-light-search-text: #111827;
+				--vim-ron-light-incsearch-bg: #bfdbfe;
+				--vim-ron-light-incsearch-text: #1e3a8a;
+
+				pre {
+					background-color: var(--vim-ron-light-bg);
+					color: var(--vim-ron-light-text);
+				}
+
+				pre .Comment { color: var(--vim-ron-light-comment); font-weight: normal; }
+				pre .Constant { color: var(--vim-ron-light-constant); font-weight: bold; }
+				pre .Identifier { color: var(--vim-ron-light-identifier); font-weight: normal; }
+				pre .Statement { color: var(--vim-ron-light-statement); font-weight: 600; }
+				pre .PreProc { color: var(--vim-ron-light-preproc); font-weight: 600; }
+				pre .Type { color: var(--vim-ron-light-type); font-weight: bold; }
+				pre .Special { color: var(--vim-ron-light-special); font-weight: 600; }
+				pre .Underlined { color: var(--vim-ron-light-underlined); text-decoration: underline; }
+				pre .Todo {
+					background-color: var(--vim-ron-light-todo-bg);
+					color: var(--vim-ron-light-todo-text);
+					font-weight: bold;
+				}
+				pre .Error {
+					background-color: var(--vim-ron-light-error-bg);
+					color: var(--vim-ron-light-error-text);
+					font-weight: bold;
+				}
+				pre .ErrorMsg {
+					background-color: var(--vim-ron-light-error-bg);
+					color: var(--vim-ron-light-error-text);
+					font-weight: bold;
+				}
+				pre .WarningMsg {
+					background-color: var(--vim-ron-light-warning-bg);
+					color: var(--vim-ron-light-warning-text);
+					font-weight: bold;
+				}
+				pre .Search {
+					background-color: var(--vim-ron-light-search-bg);
+					color: var(--vim-ron-light-search-text);
+					font-weight: bold;
+				}
+				pre .IncSearch {
+					background-color: var(--vim-ron-light-incsearch-bg);
+					color: var(--vim-ron-light-incsearch-text);
+					font-weight: bold;
+				}
+			}
 		}
 	}
 }

@@ -12,3 +12,68 @@ class C {
 [[[#!WikiSyntaxPreview Vim sql
 SELECT 'Hello, sql!' FROM table
 ]]]
+
+== 테마
+
+=== Vim colorscheme
+
+`InterpreterVim`은 light/dark 테마와 관계없이 Vim colorscheme `ron`을 공통으로 사용한다.
+Admin에서 별도 colorscheme 설정을 제공하지 않는다.
+
+ * `ron`은 dark 코드 블록으로 보기 좋다.
+ * AhaWiki dark 테마에서는 Vim 2html이 생성한 `ron` 스타일을 그대로 사용한다.
+ * AhaWiki light 테마에서는 `ron`이 만든 주요 token class를 CSS로 덮어써 밝은 코드 블록으로 표시한다.
+ * 사이트 전체 테마와 Vim colorscheme 설정을 분리한다.
+
+=== 동적 테마 전환 방식
+
+브라우저에서 AhaWiki 테마를 light/dark로 스위치할 때 `InterpreterVim`을 다시 서버 렌더링하지 않는다.
+Vim 하이라이트 CSS는 `ron` 기준으로 유지한다.
+light 테마에서는 `html.theme-ahawiki-light .AhaWiki .Interpreter.Vim pre ...` selector로 주요 token 색을 덮어쓴다.
+
+테마 토글은 이미 문서 루트의 `html.theme-ahawiki-light` / `html.theme-ahawiki-dark` class를 바꾸므로, 주변 UI 스타일은 CSS cascade로 즉시 바뀐다.
+별도 Ajax 재요청이나 `ahawiki:themeChanged` JavaScript 핸들러는 필요하지 않다.
+
+=== Light override token
+
+light 테마 override는 `ron` 원본의 색상 의도를 밝은 배경용으로 낮춘다.
+
+ * `Normal`: cyan on black 의 인상을 차분한 blue-black on pale cyan 배경으로 변환
+ * `Comment`: green 계열
+ * `Constant`, `Identifier`: cyan 계열
+ * `Statement`: lightblue 계열
+ * `PreProc`: pink 계열
+ * `Type`: seagreen 계열
+ * `Special`: yellow 계열
+
+우선 덮어쓰는 token:
+
+ * `Comment`
+ * `Constant`
+ * `Identifier`
+ * `Statement`
+ * `PreProc`
+ * `Type`
+ * `Special`
+ * `Underlined`
+ * `Todo`
+ * `Error`
+ * `ErrorMsg`
+ * `WarningMsg`
+ * `Search`
+ * `IncSearch`
+
+=== 캐시
+
+캐시 키에는 다음 값을 포함한다.
+
+ * colorscheme `ron`
+ * 원본 Vim 블록 raw text
+
+Admin 설정이 없으므로 colorscheme 변경에 따른 캐시 무효화는 고려하지 않는다.
+
+=== 구현 메모
+
+`InterpreterKanban`은 CSS custom properties를 통해 전역 AhaWiki 테마를 따라간다.
+`InterpreterVim`은 Vim 2html이 생성한 CSS를 캐시하는 구조이므로, Vim colorscheme은 `ron`으로 고정하고 light 테마 보정만 AhaWiki CSS에서 처리한다.
+`Config.Query.InterpreterVim` 설정은 사용하지 않는다.

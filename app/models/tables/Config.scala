@@ -45,11 +45,6 @@ object Config extends Logging{
       (ste.getClassName.replace(getClass.getName, "") + ste.getMethodName).replaceAll("\\$", ".")
     }
 
-    object InterpreterVim {
-      def colorScheme()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "ron")
-      def debug()(implicit connection: Connection, site: Site): Boolean = Config.getOrElse(fqn, default = false)
-    }
-
     // TODO
     object google {
       object AdSense {
