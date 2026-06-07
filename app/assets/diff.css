@@ -1,4 +1,17 @@
 .AhaWiki .diff .unifiedDiff {
   display: none;
 }
+.AhaWiki .diff .d2h-diff-table {
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  line-height: 20px;
+}
+.AhaWiki .diff .d2h-diff-table tr,
+.AhaWiki .diff .d2h-diff-table td,
+.AhaWiki .diff .d2h-code-line,
+.AhaWiki .diff .d2h-code-side-line,
+.AhaWiki .diff .d2h-code-line-ctn,
+.AhaWiki .diff .d2h-code-linenumber,
+.AhaWiki .diff .d2h-code-side-linenumber {
+  line-height: 20px;
+}
 /*# sourceMappingURL=diff.css.map */
