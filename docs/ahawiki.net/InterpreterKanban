@@ -82,3 +82,60 @@ InterpreterKanban은 일반 위키 페이지와 같은 쓰기 권한 정책을 �
 한 페이지에 여러 Kanban interpreter가 있을 수 있으므로 read-only 상태와 mutation 방어는 interpreter root별로 처리한다.
 signed read URL로 페이지를 조회하는 경우에도 쓰기 권한이 없으면 read-only로 동작해야 한다.
 
+== TODO
+
+=== 카드 관계 Property
+
+같은 `InterpreterKanban` 블록 안의 카드 관계를 Property로 표현한다.
+관계 대상은 페이지명을 저장하지 않고 카드 ID hash만 저장한다.
+
+예:
+
+{{{
+===== Property
+ * BlockedBy
+  * [#card-api-spec API spec 확정]
+ * ParentCard: [#card-login-epic Login Epic]
+ * RelatedCard
+  * [#card-design-review Design review]
+}}}
+
+ * 저장값은 `[#cardId]` 또는 `[#cardId label]` 형식을 사용한다.
+ * 실제 식별자는 `cardId`이고, label은 원문 가독성을 위한 보조 정보로만 사용한다.
+ * 관계 해석 범위는 같은 `InterpreterKanban` 블록 내부로 제한한다.
+ * `BlockedBy`, `ParentCard`, `RelatedCard`를 직접 저장한다.
+ * `Blocks`, `SubCards`는 저장하지 않고 `BlockedBy`, `ParentCard`를 역방향으로 스캔해서 계산 표시한다.
+
+=== 카드 관계 UI
+
+카드 상세 모달의 Property 영역에 관계 편집 UI를 추가한다.
+
+ * 관계 Property별로 현재 연결된 카드를 카드 칩으로 표시한다.
+ * 칩에는 최신 카드 제목과 짧은 카드 ID를 표시한다.
+ * 칩 클릭 시 `openCardDetailById(cardId)`로 대상 카드 모달을 연다.
+ * 연결 추가는 카드 선택 UI와 수동 ID 입력을 모두 지원한다.
+ * 카드 선택 UI는 같은 보드의 카드 목록을 검색/필터링해서 선택한다.
+ * 수동 입력은 `#cardId`, `cardId`, `[#cardId]`, `[#cardId label]`을 받아 내부 저장 형식으로 정규화한다.
+ * 존재하지 않는 카드 ID는 저장 전 경고하거나, 저장은 허용하되 unresolved 상태로 표시한다.
+ * 현재 카드 자신을 관계 대상으로 선택하지 못하게 한다.
+ * 관계 삭제 버튼을 제공하고, 삭제 시 `card:property:update`로 저장한다.
+
+=== Assignee UI
+
+`Assignee`는 기존 Property 형식을 유지하되 카드 상세 모달에서 직접 편집할 수 있게 한다.
+
+예:
+
+{{{
+===== Property
+ * Assignee
+  * [User:Aha00a]
+  * [User:Alice]
+}}}
+
+ * Assignee는 복수 값을 허용한다.
+ * 입력값은 `User:Aha00a`, `[User:Aha00a]`, `Aha00a`를 받아 `[User:Aha00a]`로 정규화한다.
+ * 현재 Assignee는 사용자 칩으로 표시한다.
+ * 사용자 검색/선택 UI를 우선 제공하고, 수동 입력도 허용한다.
+ * Assignee 변경은 `card:property:update`로 저장하고 Activity에 기록한다.
+ * 카드 목록에는 Assignee 요약을 작은 칩 또는 아이콘으로 표시한다.
