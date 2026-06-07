@@ -795,6 +795,187 @@ document.addEventListener('DOMContentLoaded', function () {
         return '["' + safePageName + '#' + safeCardId + '" ' + safePageName + '#' + safeCardName + ']';
     };
 
+    var CARD_RELATION_PROPERTY_KEYS = ['BlockedBy', 'ParentCard', 'RelatedCard'];
+    var DERIVED_CARD_RELATION_PROPERTIES = [
+        { key: 'Blocks', sourceKey: 'BlockedBy' },
+        { key: 'SubCards', sourceKey: 'ParentCard' }
+    ];
+
+    var isCardRelationProperty = function (key) {
+        return CARD_RELATION_PROPERTY_KEYS.indexOf(key) >= 0;
+    };
+
+    var sanitizePropertyLabel = function (value) {
+        return String(value || '').replace(/\r?\n/g, ' ').replace(/\]/g, '').trim();
+    };
+
+    var normalizeCardIdToken = function (value) {
+        var token = String(value || '').trim().replace(/^#/, '');
+        if (!token || /[#.\s\[\]]/.test(token)) {
+            return '';
+        }
+        return token;
+    };
+
+    var parseCardReferenceValue = function (value) {
+        var raw = String(value || '').trim();
+        var matched;
+        if (!raw) {
+            return null;
+        }
+        matched = raw.match(/^\[\s*#([^#.\s\[\]]+)(?:\s+([^\]]+))?\s*\]$/);
+        if (matched) {
+            return {
+                id: normalizeCardIdToken(matched[1]),
+                label: sanitizePropertyLabel(matched[2] || '')
+            };
+        }
+        matched = raw.match(/^\[\s*"#([^#.\s\[\]"]+)"(?:\s+([^\]]+))?\s*\]$/);
+        if (matched) {
+            return {
+                id: normalizeCardIdToken(matched[1]),
+                label: sanitizePropertyLabel(matched[2] || '')
+            };
+        }
+        matched = raw.match(/^#?([^#.\s\[\]]+)$/);
+        if (matched) {
+            return {
+                id: normalizeCardIdToken(matched[1]),
+                label: ''
+            };
+        }
+        return null;
+    };
+
+    var buildCardReferenceValue = function (cardId, label) {
+        var safeCardId = normalizeCardIdToken(cardId);
+        var safeLabel = sanitizePropertyLabel(label);
+        if (!safeCardId) {
+            return '';
+        }
+        return safeLabel ? '[#' + safeCardId + ' ' + safeLabel + ']' : '[#' + safeCardId + ']';
+    };
+
+    var normalizeCardReferenceValue = function (value, fallbackLabel) {
+        var parsed = parseCardReferenceValue(value);
+        if (!parsed || !parsed.id) {
+            return '';
+        }
+        return buildCardReferenceValue(parsed.id, parsed.label || fallbackLabel || '');
+    };
+
+    var parseAssigneeValue = function (value) {
+        var raw = String(value || '').trim();
+        var matched;
+        if (!raw) {
+            return null;
+        }
+        matched = raw.match(/^\[User:([^\]]+)\]$/);
+        if (matched) {
+            return { name: matched[1].trim() };
+        }
+        matched = raw.match(/^User:(.+)$/);
+        if (matched) {
+            return { name: matched[1].trim() };
+        }
+        matched = raw.match(/^\[([^\]]+)\]$/);
+        if (matched) {
+            return parseAssigneeValue(matched[1]);
+        }
+        return { name: raw };
+    };
+
+    var normalizeAssigneeValue = function (value) {
+        var parsed = parseAssigneeValue(value);
+        if (!parsed || !parsed.name) {
+            return '';
+        }
+        return toUserLinkMarkup(parsed.name);
+    };
+
+    var getAssigneeName = function (value) {
+        var parsed = parseAssigneeValue(value);
+        return parsed && parsed.name ? parsed.name : '';
+    };
+
+    var getCardPropertyValues = function (card, key) {
+        var raw = card && card.properties ? card.properties[key] : [];
+        if (Array.isArray(raw)) {
+            return raw.map(function (value) { return String(value || '').trim(); }).filter(Boolean);
+        }
+        var text = String(raw || '').trim();
+        return text ? [text] : [];
+    };
+
+    var buildCardIndex = function (columns) {
+        var byId = {};
+        var cards = [];
+        (columns || []).forEach(function (column, columnIndex) {
+            (column.cards || []).forEach(function (card, cardIndex) {
+                var id = card && card.id ? String(card.id).trim() : '';
+                if (!id) {
+                    return;
+                }
+                var entry = {
+                    id: id,
+                    card: card,
+                    column: column,
+                    columnIndex: columnIndex,
+                    cardIndex: cardIndex
+                };
+                byId[id] = entry;
+                cards.push(entry);
+            });
+        });
+        return { byId: byId, cards: cards };
+    };
+
+    var getCardAssigneeNames = function (card) {
+        return getCardPropertyValues(card, 'Assignee')
+            .map(getAssigneeName)
+            .filter(Boolean);
+    };
+
+    var computeDerivedCardRelationValues = function (columns, targetCard) {
+        var targetId = targetCard && targetCard.id ? String(targetCard.id).trim() : '';
+        var derived = {
+            Blocks: [],
+            SubCards: []
+        };
+        if (!targetId) {
+            return derived;
+        }
+        (columns || []).forEach(function (column) {
+            (column.cards || []).forEach(function (candidate) {
+                if (!candidate || candidate === targetCard || !candidate.id) {
+                    return;
+                }
+                DERIVED_CARD_RELATION_PROPERTIES.forEach(function (definition) {
+                    getCardPropertyValues(candidate, definition.sourceKey).forEach(function (value) {
+                        var parsed = parseCardReferenceValue(value);
+                        if (parsed && parsed.id === targetId) {
+                            derived[definition.key].push(buildCardReferenceValue(candidate.id, candidate.text || ''));
+                        }
+                    });
+                });
+            });
+        });
+        return derived;
+    };
+
+    if (typeof window !== 'undefined') {
+        window.__AhaWikiKanbanTestHooks = Object.assign({}, window.__AhaWikiKanbanTestHooks || {}, {
+            parseCardReferenceValue: parseCardReferenceValue,
+            buildCardReferenceValue: buildCardReferenceValue,
+            normalizeCardReferenceValue: normalizeCardReferenceValue,
+            parseAssigneeValue: parseAssigneeValue,
+            normalizeAssigneeValue: normalizeAssigneeValue,
+            getAssigneeName: getAssigneeName,
+            buildCardIndex: buildCardIndex,
+            computeDerivedCardRelationValues: computeDerivedCardRelationValues
+        });
+    }
+
     var prependCardActivity = function (card, details) {
         var entry = buildCommentEntry(details);
         card.comments = card.comments || [];
@@ -1249,8 +1430,21 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 dueDateElement.style.display = 'none';
             }
+            var assigneeNames = getCardAssigneeNames(card);
+            var assigneeElement = document.createElement('span');
+            assigneeElement.className = 'kanban-card-stat kanban-card-assignees';
+            if (assigneeNames.length > 0) {
+                var visibleAssignees = assigneeNames.slice(0, 2).join(', ');
+                var hiddenAssigneeCount = assigneeNames.length - 2;
+                assigneeElement.innerHTML = '<i class="fas fa-user" aria-hidden="true"></i> ';
+                assigneeElement.appendChild(document.createTextNode(visibleAssignees + (hiddenAssigneeCount > 0 ? ' +' + hiddenAssigneeCount : '')));
+                assigneeElement.title = assigneeNames.join(', ');
+            } else {
+                assigneeElement.style.display = 'none';
+            }
             cardStat.appendChild(card.attachmentCountElement);
             cardStat.appendChild(card.commentCountElement);
+            cardStat.appendChild(assigneeElement);
             cardStat.appendChild(dueDateElement);
             cardMeta.appendChild(cardStat);
 
@@ -2707,39 +2901,431 @@ document.addEventListener('DOMContentLoaded', function () {
             dueDateSaveButton.textContent = 'Save DueDate';
             dueDateSaveButton.className = 'kanban-duedate-save-btn';
 
+            var getModalPropertyValues = function (key) {
+                return getCardPropertyValues(card, key);
+            };
+
+            var arePropertyValuesEqual = function (left, right) {
+                if (left.length !== right.length) {
+                    return false;
+                }
+                for (var i = 0; i < left.length; i += 1) {
+                    if (left[i] !== right[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            var getAssigneeSuggestions = function () {
+                var seen = {};
+                var suggestions = [];
+                var addName = function (name) {
+                    var safeName = String(name || '').trim();
+                    var key = safeName.toLowerCase();
+                    if (!safeName || seen[key]) {
+                        return;
+                    }
+                    seen[key] = true;
+                    suggestions.push(safeName);
+                };
+                addName(getCurrentAuthor());
+                (columns || []).forEach(function (column) {
+                    (column.cards || []).forEach(function (targetCard) {
+                        getCardAssigneeNames(targetCard).forEach(addName);
+                    });
+                });
+                return suggestions.sort(function (a, b) { return a.localeCompare(b); });
+            };
+
+            var setCardPropertyValues = function (property, nextValues) {
+                var normalizedValues = (nextValues || []).map(function (value) {
+                    return String(value || '').trim();
+                }).filter(Boolean);
+                var previousValues = getModalPropertyValues(property);
+                if (arePropertyValuesEqual(previousValues, normalizedValues)) {
+                    return false;
+                }
+
+                card.properties = card.properties || {};
+                if (normalizedValues.length > 0) {
+                    card.properties[property] = normalizedValues;
+                } else {
+                    delete card.properties[property];
+                }
+
+                var actionMeta = {
+                    eventPrefix: 'User:' + getCurrentAuthor(),
+                    cardId: card.id || '',
+                    cardTitle: card.text || '',
+                    property: property,
+                    value: normalizedValues
+                };
+                prependCardActivity(card, [extractActivityDetailFromRevisionComment(buildKanbanSaveComment('card:property:update', actionMeta))]);
+                updateCardCommentCount(card);
+                renderColumns();
+                renderProperties();
+                renderComments();
+                enqueueMutation(function () {
+                    return persistColumns('card:property:update', actionMeta).catch(function (error) {
+                        console.error('[Kanban] failed to save card property', error);
+                    });
+                });
+                return true;
+            };
+
+            var renderInlineMarkupInto = function (target, markup) {
+                target.textContent = markup;
+                requestRenderInlineComment(pageName, markup).then(function (html) {
+                    if (html) {
+                        target.innerHTML = html;
+                        clampRenderedInlineImages(target);
+                    }
+                }).catch(function (error) {
+                    console.error('[Kanban] failed to render property value', error);
+                });
+            };
+
+            var appendPropertyEmpty = function (container, text) {
+                var empty = document.createElement('div');
+                empty.className = 'kanban-property-empty';
+                empty.textContent = text || 'None';
+                container.appendChild(empty);
+            };
+
+            var createRelationChip = function (property, value, derived) {
+                var parsed = parseCardReferenceValue(value);
+                var cardIndex = buildCardIndex(columns);
+                var entry = parsed && parsed.id ? cardIndex.byId[parsed.id] : null;
+                var chip = document.createElement('span');
+                chip.className = 'kanban-property-chip kanban-relation-chip';
+                if (!entry) {
+                    chip.classList.add('kanban-property-chip-unresolved');
+                }
+
+                var main = document.createElement('button');
+                main.type = 'button';
+                main.className = 'kanban-property-chip-main';
+                main.disabled = !entry;
+                main.title = entry ? 'Open related card' : 'Card not found in this board';
+
+                var title = document.createElement('span');
+                title.className = 'kanban-property-chip-title';
+                title.textContent = entry ? (entry.card.text || parsed.id) : ((parsed && (parsed.label || parsed.id)) || String(value || '').trim());
+                main.appendChild(title);
+
+                if (parsed && parsed.id) {
+                    var id = document.createElement('span');
+                    id.className = 'kanban-property-chip-id';
+                    id.textContent = '#' + parsed.id;
+                    main.appendChild(id);
+                }
+
+                if (entry) {
+                    main.addEventListener('click', function (evt) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        openCardDetailById(parsed.id);
+                    });
+                }
+                chip.appendChild(main);
+
+                if (isWritable && !derived && property) {
+                    var remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'kanban-property-chip-remove';
+                    remove.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+                    remove.title = 'Remove relation';
+                    remove.addEventListener('click', function (evt) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        var nextValues = getModalPropertyValues(property).filter(function (candidate) {
+                            var candidateParsed = parseCardReferenceValue(candidate);
+                            if (candidateParsed && parsed) {
+                                return candidateParsed.id !== parsed.id;
+                            }
+                            return candidate !== value;
+                        });
+                        setCardPropertyValues(property, nextValues);
+                    });
+                    chip.appendChild(remove);
+                }
+                return chip;
+            };
+
+            var createAssigneeChip = function (value) {
+                var normalizedValue = normalizeAssigneeValue(value);
+                var assigneeName = getAssigneeName(normalizedValue);
+                var chip = document.createElement('span');
+                chip.className = 'kanban-property-chip kanban-assignee-chip';
+
+                var main = document.createElement('span');
+                main.className = 'kanban-property-chip-main';
+                if (normalizedValue) {
+                    renderInlineMarkupInto(main, normalizedValue);
+                } else {
+                    main.textContent = value || '';
+                }
+                chip.appendChild(main);
+
+                if (isWritable && assigneeName) {
+                    var remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.className = 'kanban-property-chip-remove';
+                    remove.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+                    remove.title = 'Remove assignee';
+                    remove.addEventListener('click', function (evt) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        var nextValues = getModalPropertyValues('Assignee').filter(function (candidate) {
+                            return getAssigneeName(candidate).toLowerCase() !== assigneeName.toLowerCase();
+                        });
+                        setCardPropertyValues('Assignee', nextValues);
+                    });
+                    chip.appendChild(remove);
+                }
+                return chip;
+            };
+
+            var appendRelationEditor = function (container, property, currentValues) {
+                if (!isWritable) {
+                    return;
+                }
+                var cardIndex = buildCardIndex(columns);
+                var currentIds = {};
+                (currentValues || []).forEach(function (value) {
+                    var parsed = parseCardReferenceValue(value);
+                    if (parsed && parsed.id) {
+                        currentIds[parsed.id] = true;
+                    }
+                });
+
+                var editor = document.createElement('div');
+                editor.className = 'kanban-property-editor kanban-relation-editor';
+
+                var select = document.createElement('select');
+                select.className = 'kanban-property-select';
+                var placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Select card...';
+                select.appendChild(placeholder);
+                cardIndex.cards.forEach(function (entry) {
+                    if (!entry || !entry.id || entry.id === card.id || currentIds[entry.id]) {
+                        return;
+                    }
+                    var option = document.createElement('option');
+                    option.value = entry.id;
+                    option.textContent = (entry.column && entry.column.title ? entry.column.title + ' / ' : '') + (entry.card.text || entry.id) + ' (#' + entry.id + ')';
+                    select.appendChild(option);
+                });
+
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'kanban-property-input';
+                input.placeholder = '#cardId or [#cardId label]';
+
+                var add = document.createElement('button');
+                add.type = 'button';
+                add.className = 'kanban-property-add-btn';
+                add.textContent = 'Add';
+
+                var submit = function () {
+                    var raw = (input.value || '').trim() || (select.value || '').trim();
+                    var parsed = parseCardReferenceValue(raw);
+                    var targetEntry = parsed && parsed.id ? cardIndex.byId[parsed.id] : null;
+                    var normalizedValue;
+                    if (!parsed || !parsed.id) {
+                        input.focus();
+                        return;
+                    }
+                    if (parsed.id === card.id) {
+                        showAlert('A card cannot reference itself.');
+                        return;
+                    }
+                    if (!targetEntry) {
+                        var shouldKeepUnresolved = window.confirm ? window.confirm('Card #' + parsed.id + ' was not found in this board. Save unresolved relation?') : true;
+                        if (!shouldKeepUnresolved) {
+                            return;
+                        }
+                    }
+                    if (currentIds[parsed.id]) {
+                        input.value = '';
+                        select.value = '';
+                        return;
+                    }
+                    normalizedValue = buildCardReferenceValue(parsed.id, parsed.label || (targetEntry && targetEntry.card ? targetEntry.card.text : ''));
+                    setCardPropertyValues(property, getModalPropertyValues(property).concat([normalizedValue]));
+                };
+
+                add.addEventListener('click', submit);
+                input.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter') {
+                        evt.preventDefault();
+                        submit();
+                    }
+                });
+
+                editor.appendChild(select);
+                editor.appendChild(input);
+                editor.appendChild(add);
+                container.appendChild(editor);
+            };
+
+            var appendAssigneeEditor = function (container) {
+                if (!isWritable) {
+                    return;
+                }
+                var editor = document.createElement('div');
+                editor.className = 'kanban-property-editor kanban-assignee-editor';
+
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'kanban-property-input';
+                input.placeholder = 'User nickname or [User:Name]';
+
+                var datalist = document.createElement('datalist');
+                datalist.id = 'kanban-assignee-options-' + generateCardId();
+                getAssigneeSuggestions().forEach(function (name) {
+                    var option = document.createElement('option');
+                    option.value = name;
+                    datalist.appendChild(option);
+                });
+                input.setAttribute('list', datalist.id);
+
+                var add = document.createElement('button');
+                add.type = 'button';
+                add.className = 'kanban-property-add-btn';
+                add.textContent = 'Add';
+
+                var submit = function () {
+                    var normalizedValue = normalizeAssigneeValue(input.value || '');
+                    var assigneeName = getAssigneeName(normalizedValue);
+                    var existingNames = getModalPropertyValues('Assignee').map(function (value) {
+                        return getAssigneeName(value).toLowerCase();
+                    });
+                    if (!normalizedValue || !assigneeName) {
+                        input.focus();
+                        return;
+                    }
+                    if (existingNames.indexOf(assigneeName.toLowerCase()) >= 0) {
+                        input.value = '';
+                        return;
+                    }
+                    setCardPropertyValues('Assignee', getModalPropertyValues('Assignee').concat([normalizedValue]));
+                };
+
+                add.addEventListener('click', submit);
+                input.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter') {
+                        evt.preventDefault();
+                        submit();
+                    }
+                });
+
+                editor.appendChild(input);
+                editor.appendChild(datalist);
+                editor.appendChild(add);
+                container.appendChild(editor);
+            };
+
+            var renderRelationPropertyRow = function (row, label, key, values, derived) {
+                row.classList.add('kanban-relation-row');
+                if (derived) {
+                    row.classList.add('kanban-property-row-derived');
+                }
+                row.appendChild(label);
+
+                var valueCell = document.createElement('div');
+                valueCell.className = 'kanban-property-value kanban-property-composite';
+
+                var chipList = document.createElement('div');
+                chipList.className = 'kanban-property-chip-list';
+                (values || []).forEach(function (value) {
+                    chipList.appendChild(createRelationChip(derived ? '' : key, value, derived));
+                });
+                if (chipList.children.length === 0) {
+                    appendPropertyEmpty(chipList, 'No cards linked');
+                }
+                valueCell.appendChild(chipList);
+                if (!derived) {
+                    appendRelationEditor(valueCell, key, values || []);
+                }
+                row.appendChild(valueCell);
+            };
+
+            var renderAssigneePropertyRow = function (row, label, values) {
+                row.appendChild(label);
+
+                var valueCell = document.createElement('div');
+                valueCell.className = 'kanban-property-value kanban-property-composite';
+
+                var chipList = document.createElement('div');
+                chipList.className = 'kanban-property-chip-list';
+                (values || []).forEach(function (value) {
+                    var normalizedValue = normalizeAssigneeValue(value);
+                    if (normalizedValue) {
+                        chipList.appendChild(createAssigneeChip(normalizedValue));
+                    }
+                });
+                if (chipList.children.length === 0) {
+                    appendPropertyEmpty(chipList, 'No assignees');
+                }
+                valueCell.appendChild(chipList);
+                appendAssigneeEditor(valueCell);
+                row.appendChild(valueCell);
+            };
+
             var renderProperties = function () {
                 propertyList.innerHTML = '';
                 var propertyKeys = Object.keys(card.properties || {});
-                if (isWritable && propertyKeys.indexOf('DueDate') < 0) {
-                    propertyKeys.push('DueDate');
+                var ensurePropertyKey = function (key) {
+                    if (propertyKeys.indexOf(key) < 0) {
+                        propertyKeys.push(key);
+                    }
+                };
+                var propertySortRank = {
+                    Creator: 0,
+                    Assignee: 10,
+                    DueDate: 20,
+                    BlockedBy: 30,
+                    ParentCard: 31,
+                    RelatedCard: 32,
+                    Attachment: 90
+                };
+                if (isWritable) {
+                    ensurePropertyKey('Assignee');
+                    ensurePropertyKey('DueDate');
+                    CARD_RELATION_PROPERTY_KEYS.forEach(ensurePropertyKey);
                 }
+                var derivedRelations = computeDerivedCardRelationValues(columns, card);
                 var propertyEntries = propertyKeys.filter(function (key) {
-                    if (isWritable && key === 'DueDate') { return true; }
+                    if (isWritable && (key === 'DueDate' || key === 'Assignee' || isCardRelationProperty(key))) { return true; }
                     var value = (card.properties || {})[key];
                     if (Array.isArray(value)) {
                         return value.length > 0;
                     }
                     return value !== undefined && value !== null && String(value).trim() !== '';
                 }).sort(function (a, b) {
-                    if (a === 'Creator') {
-                        return -1;
-                    }
-                    if (b === 'Creator') {
-                        return 1;
+                    var rankA = Object.prototype.hasOwnProperty.call(propertySortRank, a) ? propertySortRank[a] : 50;
+                    var rankB = Object.prototype.hasOwnProperty.call(propertySortRank, b) ? propertySortRank[b] : 50;
+                    if (rankA !== rankB) {
+                        return rankA - rankB;
                     }
                     return a.localeCompare(b);
                 });
-                if (propertyEntries.length === 0) {
+                var hasDerivedRelations = DERIVED_CARD_RELATION_PROPERTIES.some(function (definition) {
+                    return (derivedRelations[definition.key] || []).length > 0;
+                });
+                if (propertyEntries.length === 0 && !hasDerivedRelations) {
                     var empty = document.createElement('div');
                     empty.textContent = 'No properties';
-                    empty.style.color = 'var(--kanban-muted)';
-                    empty.style.fontSize = '13px';
+                    empty.className = 'kanban-property-empty';
                     propertyList.appendChild(empty);
                     return;
                 }
 
                 propertyEntries.forEach(function (key) {
-                    var values = (card.properties || {})[key];
+                    var values = getModalPropertyValues(key);
                     var row = document.createElement('div');
                     row.className = 'kanban-property-row';
 
@@ -2747,8 +3333,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     label.textContent = key;
                     label.className = 'kanban-property-key';
 
+                    if (key === 'Assignee') {
+                        renderAssigneePropertyRow(row, label, values);
+                        propertyList.appendChild(row);
+                        return;
+                    }
+
+                    if (isCardRelationProperty(key)) {
+                        renderRelationPropertyRow(row, label, key, values, false);
+                        propertyList.appendChild(row);
+                        return;
+                    }
+
                     if (isWritable && key === 'DueDate') {
-                        var dueDates = (card.properties && card.properties.DueDate) || [];
+                        var dueDates = getModalPropertyValues('DueDate');
                         dueDateInput.value = dueDates.length > 0 ? String(dueDates[0]).replace(/^\[|\]$/g, '') : '';
                         var dueDateValueCell = document.createElement('div');
                         dueDateValueCell.className = 'kanban-duedate-inline';
@@ -2832,17 +3430,19 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                             }
 
-                            requestRenderInlineComment(pageName, displayValue).then(function (html) {
-                                if (html) {
-                                    valueRow.innerHTML = html;
-                                    clampRenderedInlineImages(valueRow);
-                                    if (key === 'Attachment') {
+                            if (key === 'Attachment') {
+                                requestRenderInlineComment(pageName, displayValue).then(function (html) {
+                                    if (html) {
+                                        valueRow.innerHTML = html;
+                                        clampRenderedInlineImages(valueRow);
                                         enhanceAttachmentPropertyPreview(attachmentGrid || valueRow);
                                     }
-                                }
-                            }).catch(function (error) {
-                                console.error('[Kanban] failed to render property value', error);
-                            });
+                                }).catch(function (error) {
+                                    console.error('[Kanban] failed to render property value', error);
+                                });
+                            } else {
+                                renderInlineMarkupInto(valueRow, displayValue);
+                            }
                         });
                     } else {
                         row.style.display = 'flex';
@@ -2863,18 +3463,21 @@ document.addEventListener('DOMContentLoaded', function () {
                         valueRow.style.wordBreak = 'break-word';
                         row.appendChild(valueRow);
 
-                        requestRenderInlineComment(pageName, displayValue).then(function (html) {
-                            if (html) {
-                                valueRow.innerHTML = html;
-                                    clampRenderedInlineImages(valueRow);
-                                if (key === 'Attachment') {
-                                    enhanceAttachmentPropertyPreview(valueRow);
-                                }
-                            }
-                        }).catch(function (error) {
-                            console.error('[Kanban] failed to render property value', error);
-                        });
+                        renderInlineMarkupInto(valueRow, displayValue);
                     }
+                    propertyList.appendChild(row);
+                });
+                DERIVED_CARD_RELATION_PROPERTIES.forEach(function (definition) {
+                    var values = derivedRelations[definition.key] || [];
+                    if (values.length === 0) {
+                        return;
+                    }
+                    var row = document.createElement('div');
+                    row.className = 'kanban-property-row';
+                    var label = document.createElement('div');
+                    label.textContent = definition.key;
+                    label.className = 'kanban-property-key';
+                    renderRelationPropertyRow(row, label, definition.key, values, true);
                     propertyList.appendChild(row);
                 });
             };

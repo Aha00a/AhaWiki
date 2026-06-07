@@ -43,6 +43,9 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * `Creator` (1)
  * `DueDate` (1)
  * `Assignee` (n)
+ * `BlockedBy` (n)
+ * `ParentCard` (n)
+ * `RelatedCard` (n)
  * `Attachment` (n)
 
 == 카드 모달
@@ -51,6 +54,9 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * 카드 닫기 시 해당 hash를 제거한다.
  * `#<cardId>`로 직접 진입하면 해당 카드 모달을 자동으로 열고 보드 위치로 이동한다.
  * 존재하지 않는 `#<cardId>`는 오류 없이 일반 보드 화면을 유지한다.
+ * Property 영역에서 `DueDate`, `Assignee`, 카드 관계를 직접 편집할 수 있다.
+ * 카드 관계 칩 클릭 시 대상 카드 모달을 연다.
+ * 카드 목록에는 Assignee 요약이 표시된다.
 
 == 리비전 코멘트
 
@@ -82,7 +88,7 @@ InterpreterKanban은 일반 위키 페이지와 같은 쓰기 권한 정책을 �
 한 페이지에 여러 Kanban interpreter가 있을 수 있으므로 read-only 상태와 mutation 방어는 interpreter root별로 처리한다.
 signed read URL로 페이지를 조회하는 경우에도 쓰기 권한이 없으면 read-only로 동작해야 한다.
 
-== TODO
+== 카드 관계 및 Assignee
 
 === 카드 관계 Property
 
@@ -108,7 +114,7 @@ signed read URL로 페이지를 조회하는 경우에도 쓰기 권한이 없�
 
 === 카드 관계 UI
 
-카드 상세 모달의 Property 영역에 관계 편집 UI를 추가한다.
+카드 상세 모달의 Property 영역에서 관계 편집 UI를 제공한다.
 
  * 관계 Property별로 현재 연결된 카드를 카드 칩으로 표시한다.
  * 칩에는 최신 카드 제목과 짧은 카드 ID를 표시한다.
@@ -136,6 +142,6 @@ signed read URL로 페이지를 조회하는 경우에도 쓰기 권한이 없�
  * Assignee는 복수 값을 허용한다.
  * 입력값은 `User:Aha00a`, `[User:Aha00a]`, `Aha00a`를 받아 `[User:Aha00a]`로 정규화한다.
  * 현재 Assignee는 사용자 칩으로 표시한다.
- * 사용자 검색/선택 UI를 우선 제공하고, 수동 입력도 허용한다.
+ * 현재 사용자와 같은 보드에 등장한 Assignee를 입력 후보로 제공하고, 수동 입력도 허용한다.
  * Assignee 변경은 `card:property:update`로 저장하고 Activity에 기록한다.
  * 카드 목록에는 Assignee 요약을 작은 칩 또는 아이콘으로 표시한다.
