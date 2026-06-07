@@ -3,6 +3,16 @@
 `Vim` 뒤에 언어 이름을 적으면 해당 언어로 코드를 강조합니다.
 예: `#!Vim java`, `#!Vim sql`
 
+== Example
+
+[[[#!WikiSyntaxPreview Vim javascript
+[...Array(1000).keys()].slice(1).filter(i => i % 3 == 0 || i % 5 == 0).reduce((a, b) => a + b)
+]]]
+
+[[[#!WikiSyntaxPreview Vim scala
+(1 to 999).filter(n => n % 3 == 0 || n % 5 == 0).sum
+]]]
+
 [[[#!WikiSyntaxPreview Vim java
 class C {
     private String s = "Hello, java!";
@@ -12,6 +22,22 @@ class C {
 [[[#!WikiSyntaxPreview Vim sql
 SELECT 'Hello, sql!' FROM table
 ]]]
+
+[[[#!WikiSyntaxPreview Vim perl
+my $sum = 0;
+$sum += $_ for(grep {$_ % 3 == 0 or $_ % 5 == 0} (1..999));
+print $sum;
+]]]
+
+[[[#!WikiSyntaxPreview Vim perl
+print eval join '+', grep {$_ % 3 == 0 or $_ % 5 == 0} (1..999);
+]]]
+
+[[[#!WikiSyntaxPreview Vim python
+reduce(lambda a, b: a + b, filter(lambda i: i % 3 == 0 or i % 5 == 0, range(1, 1000)))
+]]]
+
+
 
 == 테마
 
