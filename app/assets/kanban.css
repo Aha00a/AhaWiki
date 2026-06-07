@@ -388,6 +388,9 @@
   color: var(--kanban-text);
   cursor: pointer;
 }
+.InterpreterKanban .kanban-add-card-button.kanban-hidden {
+  display: none;
+}
 .InterpreterKanban .kanban-card-textarea {
   width: 100%;
   box-sizing: border-box;

@@ -1709,6 +1709,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (evt.key === 'Enter' && !evt.shiftKey) {
                 evt.preventDefault();
                 submitCard();
+                return;
+            }
+            if (evt.key === 'Escape' || evt.key === 'Esc') {
+                evt.preventDefault();
+                closeCardEditor();
             }
         });
         }

@@ -264,7 +264,9 @@
 	}
 
 	.kanban-card-composer { margin-top:10px; }
-	.kanban-add-card-button { display:block; width:100%; padding:10px; text-align:left; border:none; border-radius:8px; background:transparent; color:var(--kanban-text); cursor:pointer; }
+	.kanban-add-card-button { display:block; width:100%; padding:10px; text-align:left; border:none; border-radius:8px; background:transparent; color:var(--kanban-text); cursor:pointer;
+		&.kanban-hidden { display:none; }
+	}
 	.kanban-card-textarea { width:100%; box-sizing:border-box; border:1px solid var(--kanban-border); border-radius:8px; padding:8px; resize:vertical; background: var(--color-input-bg); color: var(--kanban-text); }
 	.kanban-inline-actions { margin-top:8px; display:flex; align-items:center; gap:8px; }
 	.kanban-primary-button { border:none; border-radius:6px; padding:8px 12px; background:var(--kanban-primary); color:var(--color-adjacent-hud-action-active-text); cursor:pointer; }
