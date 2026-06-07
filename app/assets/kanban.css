@@ -319,6 +319,46 @@
   color: var(--color-flash-warning-text);
   font-weight: 600;
 }
+.InterpreterKanban .kanban-card-relations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.InterpreterKanban .kanban-card-relation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--kanban-border);
+  background: var(--color-surface-alt);
+  color: var(--kanban-muted);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.InterpreterKanban .kanban-card-relation-badge--blockedby {
+  border-color: var(--color-flash-error-border);
+  background: var(--color-flash-error-bg);
+  color: var(--color-flash-error-text);
+}
+.InterpreterKanban .kanban-card-relation-badge--blocks {
+  border-color: var(--color-flash-warning-border);
+  background: var(--color-flash-warning-bg);
+  color: var(--color-flash-warning-text);
+}
+.InterpreterKanban .kanban-card-relation-badge--parent,
+.InterpreterKanban .kanban-card-relation-badge--subcards {
+  border-color: var(--kanban-primary);
+  color: var(--kanban-primary);
+  background: transparent;
+}
+.InterpreterKanban .kanban-card-relation-badge--related {
+  border-color: var(--kanban-border);
+  color: var(--kanban-muted);
+}
 .InterpreterKanban .kanban-card-assignees {
   display: inline-flex;
   align-items: center;

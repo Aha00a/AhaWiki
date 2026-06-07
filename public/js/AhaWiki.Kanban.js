@@ -1520,7 +1520,38 @@ document.addEventListener('DOMContentLoaded', function () {
             cardMeta.appendChild(assigneeElement);
             cardMeta.appendChild(cardStat);
 
+            var cardRelDefs = [
+                { key: 'BlockedBy', label: 'Blocked by', icon: 'fa-ban', css: 'blockedby' },
+                { key: 'ParentCard', label: 'Parent', icon: 'fa-level-up-alt', css: 'parent' },
+                { key: 'RelatedCard', label: 'Related', icon: 'fa-link', css: 'related' }
+            ];
+            var cardDerivedRelDefs = [
+                { key: 'Blocks', label: 'Blocks', icon: 'fa-ban', css: 'blocks' },
+                { key: 'SubCards', label: 'Sub-cards', icon: 'fa-level-down-alt', css: 'subcards' }
+            ];
+            var cardDerivedRelData = computeDerivedCardRelationValues(columns, card);
+            var relBadges = [];
+            cardRelDefs.forEach(function (def) {
+                var count = getCardPropertyValues(card, def.key).length;
+                if (count > 0) { relBadges.push({ def: def, count: count }); }
+            });
+            cardDerivedRelDefs.forEach(function (def) {
+                var count = (cardDerivedRelData[def.key] || []).length;
+                if (count > 0) { relBadges.push({ def: def, count: count }); }
+            });
             cardElement.appendChild(cardText);
+            if (relBadges.length > 0) {
+                var cardRelations = document.createElement('div');
+                cardRelations.className = 'kanban-card-relations';
+                relBadges.forEach(function (item) {
+                    var badge = document.createElement('span');
+                    badge.className = 'kanban-card-relation-badge kanban-card-relation-badge--' + item.def.css;
+                    badge.innerHTML = '<i class="fas ' + item.def.icon + '" aria-hidden="true"></i> ' + item.def.label + (item.count > 1 ? ' ' + item.count : '');
+                    badge.title = item.def.label + ': ' + item.count + ' card' + (item.count > 1 ? 's' : '');
+                    cardRelations.appendChild(badge);
+                });
+                cardElement.appendChild(cardRelations);
+            }
             cardElement.appendChild(cardMeta);
             cardElement.addEventListener('click', function () {
                 openCardDetail(card);
