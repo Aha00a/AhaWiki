@@ -45,7 +45,7 @@ object Config extends Logging{
       (ste.getClassName.replace(getClass.getName, "") + ste.getMethodName).replaceAll("\\$", ".")
     }
 
-    // TODO
+    // no use of this. But I want to keep this for the future use.
     object google {
       object AdSense {
         def adClient()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
