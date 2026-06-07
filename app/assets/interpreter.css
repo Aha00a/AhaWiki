@@ -550,7 +550,8 @@ html.theme-ahawiki-light .AhaWiki .Interpreter.Vim pre .IncSearch {
   color: var(--vim-ron-light-incsearch-text);
   font-weight: bold;
 }
-body > .Gantt > .wikiContent > .limitWidth > h1 {
+body > .Gantt > .wikiContent > .limitWidth > h1,
+body > .Kanban > .wikiContent > .limitWidth > h1 {
   margin-bottom: 25px;
 }
 /*# sourceMappingURL=interpreter.css.map */
