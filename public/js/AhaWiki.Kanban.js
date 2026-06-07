@@ -936,6 +936,91 @@ document.addEventListener('DOMContentLoaded', function () {
             .filter(Boolean);
     };
 
+    var assigneeProfileImageUrlCache = {};
+
+    var decodeHtmlAttribute = function (value) {
+        return String(value || '')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+    };
+
+    var extractUserProfileImageUrlFromHtml = function (html) {
+        var raw = String(html || '');
+        var imageTags = raw.match(/<img\b[^>]*>/gi) || [];
+        var srcMatch;
+        for (var i = 0; i < imageTags.length; i += 1) {
+            if (!/\buserInlineProfileImage\b/.test(imageTags[i])) {
+                continue;
+            }
+            srcMatch = imageTags[i].match(/\bsrc=["']([^"']+)["']/i);
+            if (srcMatch) {
+                return decodeHtmlAttribute(srcMatch[1]);
+            }
+        }
+        return '';
+    };
+
+    var getAssigneeProfileImageUrl = function (pageName, assigneeName) {
+        var normalizedAssignee = normalizeAssigneeValue(assigneeName);
+        var cacheKey = normalizedAssignee || String(assigneeName || '').trim();
+        if (!cacheKey) {
+            return Promise.resolve('');
+        }
+        if (Object.prototype.hasOwnProperty.call(assigneeProfileImageUrlCache, cacheKey)) {
+            return assigneeProfileImageUrlCache[cacheKey];
+        }
+        assigneeProfileImageUrlCache[cacheKey] = requestRenderInlineComment(pageName, normalizedAssignee)
+            .then(extractUserProfileImageUrlFromHtml)
+            .catch(function () { return ''; });
+        return assigneeProfileImageUrlCache[cacheKey];
+    };
+
+    var getAssigneeInitial = function (assigneeName) {
+        var safeName = String(assigneeName || '').trim();
+        return safeName ? safeName.slice(0, 1).toUpperCase() : '?';
+    };
+
+    var renderCardAssigneeAvatars = function (pageName, container, assigneeNames) {
+        var visibleNames = (assigneeNames || []).filter(Boolean).slice(0, 4);
+        var hiddenCount = Math.max(0, (assigneeNames || []).length - visibleNames.length);
+        container.innerHTML = '';
+        container.title = (assigneeNames || []).join(', ');
+        if (visibleNames.length === 0) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = '';
+        visibleNames.forEach(function (assigneeName) {
+            var avatar = document.createElement('span');
+            avatar.className = 'kanban-card-assignee-avatar';
+            avatar.title = assigneeName;
+            avatar.textContent = getAssigneeInitial(assigneeName);
+            container.appendChild(avatar);
+
+            getAssigneeProfileImageUrl(pageName, assigneeName).then(function (imageUrl) {
+                if (!imageUrl) {
+                    return;
+                }
+                avatar.innerHTML = '';
+                var image = document.createElement('img');
+                image.src = imageUrl;
+                image.alt = assigneeName;
+                image.className = 'kanban-card-assignee-avatar-image';
+                avatar.appendChild(image);
+            });
+        });
+        if (hiddenCount > 0) {
+            var more = document.createElement('span');
+            more.className = 'kanban-card-assignee-avatar kanban-card-assignee-more';
+            more.title = (assigneeNames || []).slice(visibleNames.length).join(', ');
+            more.textContent = '+' + hiddenCount;
+            container.appendChild(more);
+        }
+    };
+
     var computeDerivedCardRelationValues = function (columns, targetCard) {
         var targetId = targetCard && targetCard.id ? String(targetCard.id).trim() : '';
         var derived = {
@@ -1410,11 +1495,6 @@ document.addEventListener('DOMContentLoaded', function () {
             var cardMeta = document.createElement('div');
             cardMeta.className = 'kanban-card-meta';
 
-            var cardIdText = document.createElement('div');
-            cardIdText.className = 'kanban-card-id';
-            cardIdText.textContent = card.id || '-';
-            cardMeta.appendChild(cardIdText);
-
             var cardStat = document.createElement('div');
             cardStat.className = 'kanban-card-stats';
             card.commentCountElement = document.createElement('span');
@@ -1433,19 +1513,11 @@ document.addEventListener('DOMContentLoaded', function () {
             var assigneeNames = getCardAssigneeNames(card);
             var assigneeElement = document.createElement('span');
             assigneeElement.className = 'kanban-card-stat kanban-card-assignees';
-            if (assigneeNames.length > 0) {
-                var visibleAssignees = assigneeNames.slice(0, 2).join(', ');
-                var hiddenAssigneeCount = assigneeNames.length - 2;
-                assigneeElement.innerHTML = '<i class="fas fa-user" aria-hidden="true"></i> ';
-                assigneeElement.appendChild(document.createTextNode(visibleAssignees + (hiddenAssigneeCount > 0 ? ' +' + hiddenAssigneeCount : '')));
-                assigneeElement.title = assigneeNames.join(', ');
-            } else {
-                assigneeElement.style.display = 'none';
-            }
+            renderCardAssigneeAvatars(pageName, assigneeElement, assigneeNames);
             cardStat.appendChild(card.attachmentCountElement);
             cardStat.appendChild(card.commentCountElement);
-            cardStat.appendChild(assigneeElement);
             cardStat.appendChild(dueDateElement);
+            cardMeta.appendChild(assigneeElement);
             cardMeta.appendChild(cardStat);
 
             cardElement.appendChild(cardText);
@@ -3109,14 +3181,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 placeholder.value = '';
                 placeholder.textContent = 'Select card...';
                 select.appendChild(placeholder);
-                cardIndex.cards.forEach(function (entry) {
-                    if (!entry || !entry.id || entry.id === card.id || currentIds[entry.id]) {
-                        return;
+                (columns || []).forEach(function (column) {
+                    var group = document.createElement('optgroup');
+                    var hasOptions = false;
+                    group.label = column && column.title ? column.title : 'Untitled';
+                    (column && column.cards || []).forEach(function (targetCard) {
+                        if (!targetCard || !targetCard.id || targetCard.id === card.id || currentIds[targetCard.id]) {
+                            return;
+                        }
+                        var option = document.createElement('option');
+                        option.value = targetCard.id;
+                        option.textContent = targetCard.text || targetCard.id;
+                        option.title = '#' + targetCard.id;
+                        group.appendChild(option);
+                        hasOptions = true;
+                    });
+                    if (hasOptions) {
+                        select.appendChild(group);
                     }
-                    var option = document.createElement('option');
-                    option.value = entry.id;
-                    option.textContent = (entry.column && entry.column.title ? entry.column.title + ' / ' : '') + (entry.card.text || entry.id) + ' (#' + entry.id + ')';
-                    select.appendChild(option);
                 });
 
                 var input = document.createElement('input');

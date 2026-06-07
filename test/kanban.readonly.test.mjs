@@ -450,6 +450,30 @@ const longThirdListContent = [
   '===== Activity'
 ].join('\n');
 
+const assigneeContent = [
+  '=== ToDo',
+  '==== Card ==== #c1',
+  '===== Property',
+  ' * Assignee',
+  '  * [User:Alice]',
+  '  * [User:Bob]',
+  '===== Activity'
+].join('\n');
+
+const relationSelectContent = [
+  '=== Backlog',
+  '==== Current ==== #current',
+  '===== Property',
+  '===== Activity',
+  '==== Blocker ==== #blocker',
+  '===== Property',
+  '===== Activity',
+  '=== Done',
+  '==== Done Card ==== #done-card',
+  '===== Property',
+  '===== Activity'
+].join('\n');
+
 test('read-only Kanban hides mutation controls and does not create Sortable instances', () => {
   const { root, board, sortableCreateCount } = boot({ writable: false });
 
@@ -472,6 +496,21 @@ test('writable Kanban keeps mutation controls and Sortable instances', () => {
   assert.equal(board.querySelectorAll('.kanban-icon-button').length, 1);
   assert.equal(board.classList.contains('kanban-draggable'), true);
   assert.equal(sortableCreateCount, 2);
+});
+
+test('card surface shows assignee avatars where the card id used to be', () => {
+  const { board } = boot({ writable: true, content: assigneeContent });
+  const card = board.querySelector('.kanban-card');
+  const meta = card.querySelector('.kanban-card-meta');
+  const assignees = card.querySelector('.kanban-card-assignees');
+  const avatars = assignees.querySelectorAll('.kanban-card-assignee-avatar');
+
+  assert.equal(card.querySelector('.kanban-card-id'), null);
+  assert.equal(meta.children[0], assignees);
+  assert.equal(meta.children[1].classList.contains('kanban-card-stats'), true);
+  assert.equal(assignees.title, 'Alice, Bob');
+  assert.equal(avatars.length, 2);
+  assert.deepEqual(avatars.map((avatar) => avatar.textContent), ['A', 'B']);
 });
 
 test('card id click copies the card URL without following the hash link', async () => {
@@ -498,6 +537,24 @@ test('card id click copies the card URL without following the hash link', async 
   const feedback = body.querySelector('.kanban-card-copy-feedback');
   assert.equal(feedback.textContent, 'Copied');
   assert.equal(feedback.classList.contains('kanban-hidden'), false);
+});
+
+test('relation card select groups options by list and shows card names only', () => {
+  const { board, body } = boot({ writable: true, content: relationSelectContent });
+  const card = board.querySelector('.kanban-card');
+
+  card.dispatchEvent({ type: 'click' });
+
+  const relationSelect = body.querySelector('.kanban-property-select');
+  const groups = relationSelect.children.slice(1);
+
+  assert.equal(relationSelect.children[0].tagName, 'OPTION');
+  assert.deepEqual(groups.map((group) => group.tagName), ['OPTGROUP', 'OPTGROUP']);
+  assert.deepEqual(groups.map((group) => group.label), ['Backlog', 'Done']);
+  assert.deepEqual(groups[0].children.map((option) => option.textContent), ['Blocker']);
+  assert.deepEqual(groups[1].children.map((option) => option.textContent), ['Done Card']);
+  assert.equal(groups[0].children[0].value, 'blocker');
+  assert.equal(groups[0].children[0].title, '#blocker');
 });
 
 test('initial card hash scrolls inside the Kanban board and card list', () => {
