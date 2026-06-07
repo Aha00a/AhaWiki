@@ -183,12 +183,22 @@
 	.kanban-card-drag-chosen { cursor: grabbing; }
 
 	.kanban-card-text {
-		margin-bottom: 6px; color:var(--kanban-text); font-weight:600;
+		color:var(--kanban-text); font-weight:600;
 		font-size:13px; line-height:1.45;
 		overflow-wrap:anywhere; word-break:break-word;
 	}
+	.kanban-card-footer {
+		// invisible when empty — meta collapses to 0 height, no space wasted
+	}
+	.kanban-card-footer--has-content {
+		margin-top: 8px;
+		padding-top: 8px;
+		border-top: 1px solid var(--kanban-border);
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
 	.kanban-card-meta {
-		min-height: 38px;
 		font-size:11px; color:var(--kanban-muted); display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:nowrap;
 	}
 	.kanban-card-id {
@@ -208,7 +218,6 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 4px;
-		margin-bottom: 6px;
 	}
 	.kanban-card-relation-badge {
 		display: inline-flex;
@@ -348,8 +357,15 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	overflow-wrap:anywhere; word-break:break-word;
 }
 .kanban-list-drag-preview .kanban-card-meta {
-	min-height: 38px;
 	font-size:11px; color:var(--color-kanban-muted); display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:nowrap;
+}
+.kanban-list-drag-preview .kanban-card-footer--has-content {
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-kanban-border);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 .kanban-list-drag-preview .kanban-card-id {
 	margin-bottom:0; color:var(--color-kanban-muted); font-size:10px;
@@ -399,7 +415,6 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	word-break: break-word;
 }
 .kanban-card-drag-preview .kanban-card-meta {
-	min-height: 38px;
 	font-size: 11px;
 	color: var(--color-kanban-muted, #6b778c);
 	display: flex;
@@ -407,6 +422,14 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	align-items: center;
 	justify-content: space-between;
 	flex-wrap: nowrap;
+}
+.kanban-card-drag-preview .kanban-card-footer--has-content {
+	margin-top: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--color-kanban-border, #dfe1e6);
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
 }
 .kanban-card-drag-preview .kanban-card-id {
 	margin-bottom: 0;
@@ -648,6 +671,28 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 }
 .kanban-property-composite { display:flex; flex-direction:column; gap:8px; }
 .kanban-property-row-derived .kanban-property-key { color:var(--kanban-primary); }
+
+// Relation row key-based colors (overrides the generic derived color above)
+.kanban-relation-row[data-relation-key="BlockedBy"] .kanban-property-key { color: var(--color-flash-error-text); }
+.kanban-relation-row[data-relation-key="BlockedBy"] .kanban-relation-chip {
+	border-color: var(--color-flash-error-border);
+	background: var(--color-flash-error-bg);
+	color: var(--color-flash-error-text);
+}
+.kanban-relation-row[data-relation-key="Blocks"] .kanban-property-key { color: var(--color-flash-warning-text); }
+.kanban-relation-row[data-relation-key="Blocks"] .kanban-relation-chip {
+	border-color: var(--color-flash-warning-border);
+	background: var(--color-flash-warning-bg);
+	color: var(--color-flash-warning-text);
+}
+.kanban-relation-row[data-relation-key="ParentCard"] .kanban-property-key,
+.kanban-relation-row[data-relation-key="SubCards"] .kanban-property-key { color: var(--kanban-primary); }
+.kanban-relation-row[data-relation-key="ParentCard"] .kanban-relation-chip,
+.kanban-relation-row[data-relation-key="SubCards"] .kanban-relation-chip {
+	border-color: var(--kanban-primary);
+	color: var(--kanban-primary);
+}
+.kanban-relation-row[data-relation-key="RelatedCard"] .kanban-property-key { color: var(--kanban-muted); }
 .kanban-property-empty {
 	color:var(--kanban-muted);
 	font-size:12px;

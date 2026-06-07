@@ -1102,6 +1102,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 card.attachmentCountElement.innerHTML = '';
             }
         }
+        if (card.footerElement) {
+            var commentCount = (card.comments || []).length;
+            var attachmentCount = getCardAttachmentCount(card);
+            if (commentCount > 0 || attachmentCount > 0) {
+                card.footerElement.classList.add('kanban-card-footer--has-content');
+            }
+        }
     };
     var parseKanbanText = function (text, interpreterStartLine) {
         var parseCardHeading = function (line) {
@@ -1539,7 +1546,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 var count = (cardDerivedRelData[def.key] || []).length;
                 if (count > 0) { relBadges.push({ def: def, count: count }); }
             });
-            cardElement.appendChild(cardText);
+
+            var hasFooterContent = relBadges.length > 0 ||
+                assigneeNames.length > 0 ||
+                getCardAttachmentCount(card) > 0 ||
+                (card.comments || []).length > 0 ||
+                Boolean(dueDateText);
+            var cardFooter = document.createElement('div');
+            cardFooter.className = 'kanban-card-footer';
+            if (hasFooterContent) {
+                cardFooter.classList.add('kanban-card-footer--has-content');
+            }
+            card.footerElement = cardFooter;
+
             if (relBadges.length > 0) {
                 var cardRelations = document.createElement('div');
                 cardRelations.className = 'kanban-card-relations';
@@ -1550,9 +1569,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     badge.title = item.def.label + ': ' + item.count + ' card' + (item.count > 1 ? 's' : '');
                     cardRelations.appendChild(badge);
                 });
-                cardElement.appendChild(cardRelations);
+                cardFooter.appendChild(cardRelations);
             }
-            cardElement.appendChild(cardMeta);
+            cardFooter.appendChild(cardMeta);
+
+            cardElement.appendChild(cardText);
+            cardElement.appendChild(cardFooter);
             cardElement.addEventListener('click', function () {
                 openCardDetail(card);
             });
@@ -3343,6 +3365,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             var renderRelationPropertyRow = function (row, label, key, values, derived) {
                 row.classList.add('kanban-relation-row');
+                if (key) {
+                    row.setAttribute('data-relation-key', key);
+                }
                 if (derived) {
                     row.classList.add('kanban-property-row-derived');
                 }

@@ -67,7 +67,34 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * 관계 해석 범위는 같은 `InterpreterKanban` 블록 내부로 제한한다.
  * `BlockedBy`, `ParentCard`, `RelatedCard`를 직접 저장한다.
  * `Blocks`, `SubCards`는 저장하지 않고 `BlockedBy`, `ParentCard`를 역방향으로 스캔해서 계산 표시한다.
- * 카드 상세 모달에서는 관계 Property별로 현재 연결된 카드를 카드 칩으로 표시한다.
+
+=== 카드 표면 관계 배지
+
+보드 뷰의 카드 표면에 관계가 있는 경우 관계 배지를 표시한다.
+
+ * 직접 저장 관계: `BlockedBy`, `ParentCard`, `RelatedCard`
+ * 파생 계산 관계: `Blocks`, `SubCards`
+ * 관계가 없는 카드는 배지 영역을 표시하지 않는다.
+ * 관계가 2개 이상인 경우 배지에 개수를 함께 표시한다.
+ * 배지와 카드 하단 메타(담당자·통계)는 `kanban-card-footer` 안에 묶여, 내용이 있을 때만 구분선과 함께 표시된다.
+ * 내용이 없는 카드(관계·담당자·댓글·첨부·기한 모두 없음)는 footer 영역이 렌더링되지 않아 불필요한 여백이 생기지 않는다.
+
+=== 관계 색상 체계
+
+카드 표면 배지와 카드 상세 모달의 관계 Property 행에 동일한 색상 체계를 적용한다.
+
+|| 관계 타입 || 색상 ||
+|| `BlockedBy` || 빨간색 (error) ||
+|| `Blocks` (파생) || 주황색 (warning) ||
+|| `ParentCard` || 파란색 (primary) ||
+|| `SubCards` (파생) || 파란색 (primary) ||
+|| `RelatedCard` || 회색 (muted) ||
+
+카드 상세 모달에서는 관계 Property 행의 라벨과 카드 칩 테두리·배경에 위 색상을 적용한다.
+
+=== 카드 상세 모달 관계 표시
+
+ * 관계 Property별로 현재 연결된 카드를 카드 칩으로 표시한다.
  * 칩에는 최신 카드 제목과 짧은 카드 ID를 표시한다.
  * 칩 클릭 시 `openCardDetailById(cardId)`로 대상 카드 모달을 연다.
  * 연결 추가는 카드 선택 UI와 수동 ID 입력을 모두 지원한다.
