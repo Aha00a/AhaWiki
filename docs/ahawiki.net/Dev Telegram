@@ -26,16 +26,19 @@ AhaWiki {
 == 알림 이벤트 및 메시지 형식
 [[[#!Table tsv 1 1
 이벤트	이모지	메시지 예시
-페이지 신규 생성	🆕	🆕 [PageName] by 닉네임\n코멘트(있을 때만)\nURL
-페이지 수정	✏️	✏️ [PageName] r5 by 닉네임\n코멘트(있을 때만)\nURL
-페이지 삭제	🗑️	🗑️ [PageName] 삭제 by 닉네임\nURL
-마지막 리비전 삭제	⏪	⏪ [PageName] r5 삭제 by 닉네임\nURL
-페이지 rename	📝	📝 [OldName] → [NewName] by 닉네임\nURL
-파일 첨부 업로드	📎	📎 [PageName] filename.pdf by 닉네임\nURL
-파일 첨부 삭제	🗑️📎	🗑️📎 [PageName] filename.pdf by 닉네임\nURL
-클립보드 이미지 붙여넣기	🖼️	🖼️ [PageName] 이미지 붙여넣기 by 닉네임\nURL
-Google Spreadsheet 동기화	🔄	🔄 [PageName] Google Spreadsheet 동기화 by 닉네임\nURL
+페이지 신규 생성	🆕	🆕 **PageName** created by 닉네임\n코멘트(있을 때만)\nURL
+페이지 수정	✏️	✏️ **PageName** r5 edited by 닉네임\n코멘트(있을 때만)\nURL
+페이지 삭제	🗑️	🗑️ **PageName** deleted by 닉네임\nURL
+마지막 리비전 삭제	⏪	⏪ **PageName** r5 revision deleted by 닉네임\nURL
+페이지 rename	📝	📝 **OldName** → **NewName** renamed by 닉네임\nURL
+파일 첨부 업로드	📎	📎 **PageName** filename.pdf attached by 닉네임\nURL
+파일 첨부 삭제	🗑️📎	🗑️📎 **PageName** filename.pdf attachment deleted by 닉네임\nURL
+클립보드 이미지 붙여넣기	🖼️	🖼️ **PageName** image pasted by 닉네임\nURL
+Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네임\nURL
 ]]]
+
+ * 페이지명은 HTML bold (`<b>`)로 강조, `parse_mode=HTML` 사용
+ * 페이지명·닉네임·파일명 등 동적 값은 HTML 특수문자(`&`, `<`, `>`) 이스케이프 처리
 
  * 모든 알림은 `disable_notification: true` 로 전송 (무음)
  * URL은 수정된 페이지의 직접 링크
