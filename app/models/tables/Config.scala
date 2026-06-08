@@ -46,7 +46,7 @@ object Config extends Logging{
     }
 
     // no use of this. But I want to keep this for the future use.
-    object google {
+    object Google {
       object AdSense {
         def adClient()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
         def adsTxtContent()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
