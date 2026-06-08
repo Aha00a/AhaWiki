@@ -163,7 +163,8 @@
  * 큐 크기는 `Source.queue[String](32, OverflowStrategy.dropHead)`이므로 소비 지연 시 오래된 outbound 메시지가 버려질 수 있습니다.
   * 커서 위치 스트림 특성상 최신 상태 우선 정책으로 해석 가능합니다.
  * 읽기 권한은 소켓 연결 시점에 검사되며, 연결 후 권한 변경에 대한 즉시 강제 종료 로직은 별도로 보이지 않습니다.
- * Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 alert을 표시한 뒤 페이지를 강제 새로고침하고, 그 외 저장 실패(status != 2xx)도 alert으로 즉시 안내합니다.
+ * Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 최신 revision을 재조회 후 최대 3회 자동 재시도하고, 모두 실패 시 non-blocking 토스트를 표시합니다 (페이지 강제 새로고침 없음).
+ * `page.updated` 이벤트를 칸반 실시간 동기화에 활용합니다 — 자세한 내용은 [[Dev Kanban Realtime]] 참조.
 
 == 페이지 새로고침 알림 상세 (`page.updated`)
 
@@ -183,22 +184,48 @@
 
 `Wiki/view` 페이지의 WebSocket `onmessage`에서 `page.updated` 이벤트를 처리합니다.
 
+==== 공통 처리 (모든 페이지)
+
  * 토스트 메시지: `${editorNickname} updated this page. Would you like to refresh?`
- * 액션 버튼: `Refresh`
- * 버튼 클릭 시 `window.location.reload()` 실행
+ * 액션 버튼: `Refresh` → 클릭 시 `window.location.reload()` 실행
+
+==== 추가 처리: `wiki:page.updated` DOM CustomEvent 발행
+
+`page.updated` 수신 후 `document.dispatchEvent(new CustomEvent('wiki:page.updated', { detail: { pageName, revision, editorNickname } }))` 를 발행합니다.
+이를 통해 페이지에 임베드된 컴포넌트(예: Kanban)가 자신의 업데이트 로직을 독립적으로 구독할 수 있습니다.
+
+==== Kanban 페이지에서의 추가 동작
+
+`AhaWiki.Kanban.js`가 `wiki:page.updated` 이벤트를 수신하면 보드를 자동으로 갱신합니다.
+
+ 1. 500ms debounce 후 `GET /w/{page}?action=raw` 으로 최신 원문 fetch
+ 2. 칸반 블록 위치 재계산 → `parseKanbanText`
+ 3. 3-way 병합(base / local / server) 적용 → `rerenderColumns`
+ 4. 사용자 입력 보호: 뮤테이션 대기 중이면 완료 후 재적용, 모달 열린 카드는 로컬 버전 유지
+
+자세한 내용: [[Dev Kanban Realtime]]
 
 === 중복 알림 방지
 
  * 동일 `revision`에 대해서는 토스트를 1회만 표시
  * 이미 떠 있는 토스트의 중복 표시 방지
 
-=== 동작 시나리오
+=== 동작 시나리오 (일반 위키 페이지)
 
  1. 사용자 A와 B가 같은 페이지를 열어둡니다.
  2. A가 페이지를 저장합니다.
  3. 서버가 `page.updated` 이벤트를 페이지 room에 전송합니다.
  4. B 화면에서 새로고침 안내 토스트가 표시됩니다.
  5. B가 `Refresh`를 누르면 페이지가 새로고침되어 최신 revision을 확인할 수 있습니다.
+
+=== 동작 시나리오 (Kanban 페이지)
+
+ 1. 사용자 A와 B가 같은 Kanban 페이지를 열어둡니다.
+ 2. A가 카드를 추가·이동·수정합니다.
+ 3. 서버가 `page.updated` 이벤트를 전송합니다.
+ 4. B의 `view.scala.html`이 `wiki:page.updated` DOM CustomEvent를 발행합니다.
+ 5. B의 `AhaWiki.Kanban.js`가 이벤트를 수신 → 원문 fetch → 병합 → 보드 자동 갱신.
+ 6. B는 새로고침 없이 A의 변경이 보드에 반영됨을 확인합니다.
 
 === 운영 확인 항목
 

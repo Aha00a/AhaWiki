@@ -141,6 +141,119 @@ document.addEventListener('DOMContentLoaded', function () {
             alert(message);
         }
     };
+    var showKanbanConflictToast = function () {
+        try {
+            var body = typeof document !== 'undefined' && document.body;
+            if (!body) { return; }
+            if (document.querySelector && document.querySelector('.kanban-conflict-toast')) { return; }
+            var toast = document.createElement('div');
+            toast.className = 'kanban-conflict-toast';
+            toast.setAttribute('role', 'alert');
+            var msg = document.createElement('span');
+            msg.className = 'kanban-conflict-toast-message';
+            msg.textContent = 'Page was modified by another session. Changes could not be saved. Reload to see the latest version.';
+            var closeBtn = document.createElement('button');
+            closeBtn.type = 'button';
+            closeBtn.className = 'kanban-conflict-toast-close';
+            closeBtn.setAttribute('aria-label', 'Close');
+            closeBtn.textContent = '×';
+            var timer;
+            var remove = function () {
+                clearTimeout(timer);
+                if (toast.parentNode) { toast.parentNode.removeChild(toast); }
+            };
+            closeBtn.addEventListener('click', remove);
+            toast.appendChild(msg);
+            toast.appendChild(closeBtn);
+            body.appendChild(toast);
+            timer = setTimeout(remove, 15000);
+        } catch (e) {
+            // fail silently in test/non-DOM environments
+        }
+    };
+    var cloneCardData = function (card) {
+        if (!card) { return null; }
+        try {
+            return {
+                id: card.id || '',
+                text: card.text || '',
+                classNames: (card.classNames || []).slice(),
+                lineNumber: card.lineNumber || 0,
+                description: JSON.parse(JSON.stringify(card.description || [])),
+                comments: JSON.parse(JSON.stringify(card.comments || [])),
+                properties: JSON.parse(JSON.stringify(card.properties || {}))
+            };
+        } catch (e) {
+            return { id: card.id || '', text: card.text || '', classNames: [], lineNumber: 0, description: [], comments: [], properties: {} };
+        }
+    };
+    var deepCloneColumns = function (cols) {
+        return (cols || []).map(function (col) {
+            return {
+                title: col.title || '',
+                lineNumber: col.lineNumber || 0,
+                cards: (col.cards || []).map(cloneCardData).filter(Boolean)
+            };
+        });
+    };
+    var cardDataEqual = function (a, b) {
+        // comments(Activity)는 항상 별도 병합하므로 여기서 비교하지 않음
+        if (!a || !b) { return a === b; }
+        if (a.id !== b.id || a.text !== b.text) { return false; }
+        try {
+            return JSON.stringify([a.classNames || [], a.description || [], a.properties || {}]) ===
+                   JSON.stringify([b.classNames || [], b.description || [], b.properties || {}]);
+        } catch (e) { return false; }
+    };
+    var mergeComments = function (serverComments, localComments) {
+        // server와 local 댓글을 header 기준으로 유니온 병합 (순서: server 우선, 이후 local-only)
+        var seen = Object.create(null);
+        var result = [];
+        (serverComments || []).forEach(function (c) {
+            if (c && c.header && !seen[c.header]) { seen[c.header] = true; result.push(c); }
+        });
+        (localComments || []).forEach(function (c) {
+            if (c && c.header && !seen[c.header]) { seen[c.header] = true; result.push(c); }
+        });
+        return result;
+    };
+    var findKanbanBlockInRaw = function (rawText, hintLineStart) {
+        var lines = (rawText || '').split(/\r?\n/);
+        var blocks = [];
+        var i, j;
+        for (i = 0; i < lines.length; i++) {
+            var trimmed = (lines[i] || '').trim();
+            var isWholePageShebang = (i === 0) && /^#!kanban(\s|$)/i.test(trimmed);
+            var isEmbeddedShebang = /^\[\[\[#!kanban(\s|$)/i.test(trimmed);
+            if (!isWholePageShebang && !isEmbeddedShebang) { continue; }
+            var contentStart1 = i + 2;
+            var blockEnd1 = lines.length + 1;
+            for (j = i + 1; j < lines.length; j++) {
+                if (/^\]\]\]/.test(lines[j])) { blockEnd1 = j + 1; break; }
+            }
+            blocks.push({
+                interpreterLineStart: contentStart1,
+                lineEnd: blockEnd1,
+                contentText: lines.slice(contentStart1 - 1, blockEnd1 - 1).join('\n')
+            });
+            i = blockEnd1 - 2;
+        }
+        var k;
+        for (k = 0; k < blocks.length; k++) {
+            if (hintLineStart >= blocks[k].interpreterLineStart && hintLineStart < blocks[k].lineEnd) {
+                return blocks[k];
+            }
+        }
+        if (blocks.length > 0) {
+            var closest = blocks[0], closestDist = Math.abs(blocks[0].interpreterLineStart - hintLineStart);
+            for (k = 1; k < blocks.length; k++) {
+                var d = Math.abs(blocks[k].interpreterLineStart - hintLineStart);
+                if (d < closestDist) { closest = blocks[k]; closestDist = d; }
+            }
+            return closest;
+        }
+        return null;
+    };
     var getLineCountForText = function (value) {
         if (!value) {
             return 0;
@@ -627,9 +740,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }).then(function (response) {
                     if (!response.ok) {
                         if (response.status === 409) {
-                            alert('This page has been modified. Refreshing to the latest version.');
-                            window.location.reload();
-                            throw new Error('Conflict: reloading due to stale revision.');
+                            if (attempt < 3) {
+                                return fetchLatestRevision(pageName).then(function (latestRevision) {
+                                    setCurrentRevision(latestRevision);
+                                    return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt + 1);
+                                });
+                            }
+                            showKanbanConflictToast();
+                            throw new Error('Conflict: save failed after retries.');
                         }
                         showAlert('Failed to save. (status=' + response.status + ')');
                         throw new Error('Failed to save kanban. status=' + response.status);
@@ -1574,6 +1692,19 @@ document.addEventListener('DOMContentLoaded', function () {
             cardFooter.appendChild(cardMeta);
 
             cardElement.appendChild(cardText);
+            if (card.__remoteConflict || card.__remoteUpdate) {
+                var remoteBadge = document.createElement('div');
+                remoteBadge.className = card.__remoteConflict
+                    ? 'kanban-card-remote-badge kanban-card-remote-badge--conflict'
+                    : 'kanban-card-remote-badge kanban-card-remote-badge--update';
+                remoteBadge.title = card.__remoteConflict
+                    ? 'Updated by another user — server version applied'
+                    : 'You are editing this card — remote update pending';
+                remoteBadge.innerHTML = card.__remoteConflict
+                    ? '<i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Updated by another user'
+                    : '<i class="fas fa-sync-alt" aria-hidden="true"></i> Remote update pending';
+                cardElement.appendChild(remoteBadge);
+            }
             cardElement.appendChild(cardFooter);
             cardElement.addEventListener('click', function () {
                 openCardDetail(card);
@@ -2100,6 +2231,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var hasShebang = Boolean(pre.getAttribute('data-shebang'));
         var interpreterStartLine = Math.max(1, metaLineStart + (hasShebang ? 1 : 0));
         var columns = parseKanbanText(pre.textContent || '', interpreterStartLine);
+        var baseColumns = deepCloneColumns(columns);
         var interpreterLineEnd = Number(metaWrapper ? metaWrapper.getAttribute('data-line-end') : 1) || 1;
         var currentKanbanLineCount = getLineCountForText(pre.textContent || '');
         root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
@@ -2109,6 +2241,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         var rerenderColumns = function () {};
         var mutationQueue = Promise.resolve();
+        var pendingMutationCount = 0;
+        var pendingRemoteRevision = 0;
         var serializeColumns = function () {
             return columns.map(function (column) {
                 var lines = ['=== ' + (column.title || '')];
@@ -2178,6 +2312,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     currentKanbanLineCount = replacementLineCount;
                     root.setAttribute('data-kanban-line-count', String(replacementLineCount));
                     pre.textContent = content;
+                    columns.forEach(function (column) {
+                        (column.cards || []).forEach(function (card) {
+                            delete card.__remoteConflict;
+                            delete card.__remoteUpdate;
+                        });
+                    });
+                    baseColumns = deepCloneColumns(columns);
                     return result;
                 });
         };
@@ -2185,12 +2326,21 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isWritable) {
                 return Promise.reject(new Error('Kanban is read-only.'));
             }
+            pendingMutationCount++;
             mutationQueue = mutationQueue
                 .then(function () {
                     return executor();
                 })
                 .catch(function (error) {
                     console.error('[Kanban] queued mutation failed', error);
+                })
+                .then(function () {
+                    pendingMutationCount = Math.max(0, pendingMutationCount - 1);
+                    if (pendingMutationCount === 0 && pendingRemoteRevision > 0) {
+                        var r = pendingRemoteRevision;
+                        pendingRemoteRevision = 0;
+                        applyRemoteKanbanUpdate(r);
+                    }
                 });
             return mutationQueue;
         };
@@ -2560,6 +2710,132 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         rerenderColumns = renderColumns;
 
+        var applyRemoteKanbanUpdate = function (revision) {
+            if (!pageName) { return; }
+            fetch('/w/' + encodeURIComponent(pageName) + '?action=raw', { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) { throw new Error('fetch raw failed: ' + response.status); }
+                    return response.text();
+                })
+                .then(function (rawText) {
+                    var block = findKanbanBlockInRaw(rawText, interpreterStartLine);
+                    if (!block) {
+                        console.warn('[Kanban] remote update: kanban block not found');
+                        return;
+                    }
+                    var serverColumns = parseKanbanText(block.contentText, block.interpreterLineStart);
+                    var activeOverlay = getOpenedCardOverlay();
+                    var activeCardId = activeOverlay ? (activeOverlay.getAttribute('data-card-id') || '') : '';
+                    var baseIdx = buildCardIndex(baseColumns);
+                    var localIdx = buildCardIndex(columns);
+                    var serverIdx = buildCardIndex(serverColumns);
+
+                    var merged = deepCloneColumns(serverColumns);
+                    var conflictCardIds = [];
+                    var activeCardServerEntry = null;
+
+                    // Re-insert locally-added cards not yet on server
+                    localIdx.cards.forEach(function (entry) {
+                        if (!serverIdx.byId[entry.id] && !baseIdx.byId[entry.id]) {
+                            if (merged[entry.columnIndex]) {
+                                merged[entry.columnIndex].cards.push(cloneCardData(entry.card));
+                            }
+                        }
+                    });
+
+                    // 3-way merge for cards present in server
+                    serverIdx.cards.forEach(function (serverEntry) {
+                        var id = serverEntry.id;
+                        var localEntry = localIdx.byId[id];
+                        var baseEntry = baseIdx.byId[id];
+                        if (!localEntry) { return; }
+                        // comments는 별도 union 병합하므로 데이터 필드(제목·설명·속성)만 비교
+                        var localDataChanged = !baseEntry || !cardDataEqual(localEntry.card, baseEntry.card);
+                        var serverDataChanged = !baseEntry || !cardDataEqual(serverEntry.card, baseEntry.card);
+                        var mergedCol = merged[serverEntry.columnIndex];
+                        if (!mergedCol) { return; }
+                        var mergedCardIdx = -1;
+                        for (var ci = 0; ci < mergedCol.cards.length; ci++) {
+                            if (mergedCol.cards[ci].id === id) { mergedCardIdx = ci; break; }
+                        }
+                        if (mergedCardIdx < 0) { return; }
+
+                        if (id === activeCardId) {
+                            // 모달에서 열린 카드: 동일 객체 참조 유지
+                            // title/description/properties 업데이트는 modal의 handleRemoteCardUpdate가 처리
+                            localEntry.card.comments = mergeComments(serverEntry.card.comments, localEntry.card.comments);
+                            mergedCol.cards[mergedCardIdx] = localEntry.card;
+                            activeCardServerEntry = serverEntry;
+                            return;
+                        }
+
+                        // 데이터 필드 병합
+                        if (localDataChanged && serverDataChanged) {
+                            mergedCol.cards[mergedCardIdx].__remoteConflict = true;
+                            conflictCardIds.push(id);
+                        } else if (localDataChanged && !serverDataChanged) {
+                            mergedCol.cards[mergedCardIdx] = cloneCardData(localEntry.card);
+                        }
+
+                        // 댓글 union 병합: server ∪ local (header 기준 중복 제거)
+                        mergedCol.cards[mergedCardIdx].comments = mergeComments(
+                            mergedCol.cards[mergedCardIdx].comments,
+                            localEntry.card.comments
+                        );
+                    });
+
+                    columns = merged;
+                    interpreterStartLine = block.interpreterLineStart;
+                    currentKanbanLineCount = getLineCountForText(block.contentText);
+                    root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
+                    if (metaWrapper) {
+                        metaWrapper.setAttribute('data-line-start', String(block.interpreterLineStart - (hasShebang ? 1 : 0)));
+                        metaWrapper.setAttribute('data-line-end', String(block.lineEnd));
+                    }
+                    pre.textContent = block.contentText;
+                    setCurrentRevision(revision);
+                    normalizeLineNumbers();
+                    rerenderColumns();
+
+                    // 모달에 카드 업데이트 이벤트 전달 (title/description/properties를 모달이 직접 처리)
+                    if (activeCardId && activeCardServerEntry) {
+                        try {
+                            root.dispatchEvent(new CustomEvent('kanban:card.remoteupdated', {
+                                detail: { cardId: activeCardId, serverCard: activeCardServerEntry.card }
+                            }));
+                        } catch (e) {}
+                    }
+
+                    if (conflictCardIds.length > 0) {
+                        console.info('[Kanban] remote update applied with ' + conflictCardIds.length + ' conflict(s) — server wins', conflictCardIds);
+                    } else {
+                        console.info('[Kanban] remote update applied cleanly', { revision: revision });
+                    }
+                    try {
+                        document.dispatchEvent(new CustomEvent('wiki:kanban.synced', {
+                            detail: { pageName: pageName, revision: revision }
+                        }));
+                    } catch (e) { /* ignore */ }
+                })
+                .catch(function (error) {
+                    console.warn('[Kanban] remote update failed', error);
+                });
+        };
+
+        var remoteUpdateDebounceTimer = null;
+        var currentCardUpdateHandler = null;
+        var handleRemotePageUpdated = function (revision) {
+            if (remoteUpdateDebounceTimer) { clearTimeout(remoteUpdateDebounceTimer); }
+            remoteUpdateDebounceTimer = setTimeout(function () {
+                remoteUpdateDebounceTimer = null;
+                if (pendingMutationCount > 0) {
+                    pendingRemoteRevision = Math.max(pendingRemoteRevision, revision);
+                    return;
+                }
+                applyRemoteKanbanUpdate(revision);
+            }, 500);
+        };
+
         var findRenderedCardById = function (cardId) {
             if (!cardId) {
                 return null;
@@ -2710,11 +2986,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         renderColumns();
 
+        document.addEventListener('wiki:page.updated', function (evt) {
+            var detail = evt && evt.detail;
+            if (!detail || detail.pageName !== pageName) { return; }
+            handleRemotePageUpdated(detail.revision);
+        });
+
         openCardDetail = function (card) {
             if (!card) {
                 return;
             }
             var pageName = root.getAttribute('data-page-name') || '';
+            if (currentCardUpdateHandler) {
+                root.removeEventListener('kanban:card.remoteupdated', currentCardUpdateHandler);
+                currentCardUpdateHandler = null;
+            }
             closeOpenedCardOverlay();
             setHashCardId(card.id || '');
             var overlay = document.createElement('div');
@@ -3948,6 +4234,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 renderColumns();
+                cleanupCardListener();
                 closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
 
@@ -3971,11 +4258,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
             }
+            var cleanupCardListener = function () {
+                if (currentCardUpdateHandler) {
+                    root.removeEventListener('kanban:card.remoteupdated', currentCardUpdateHandler);
+                    currentCardUpdateHandler = null;
+                }
+            };
             overlay.addEventListener('click', function () {
+                cleanupCardListener();
                 closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
             });
             closeButton.addEventListener('click', function () {
+                cleanupCardListener();
                 closeOpenedCardOverlay();
                 clearHashCardId(card.id || '');
             });
@@ -4016,6 +4311,71 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(overlay);
             renderProperties();
             renderComments();
+
+            // 원격 업데이트 핸들러: 편집 중 여부에 따라 각 필드를 선택적으로 in-place 갱신
+            var handleRemoteCardUpdate = function (evt) {
+                var detail = evt && evt.detail;
+                if (!detail || detail.cardId !== (card.id || '')) { return; }
+                var serverCard = detail.serverCard;
+                if (!serverCard) { return; }
+
+                var titleEditing = !titleEditorWrap.classList.contains('kanban-hidden');
+                var descEditing = !descriptionEditorWrap.classList.contains('kanban-hidden');
+                var propFocused = Boolean(modal.querySelector &&
+                    modal.querySelector('.kanban-property-input:focus, .kanban-duedate-input:focus, .kanban-property-select:focus'));
+                var needsBanner = false;
+
+                // 제목
+                if (serverCard.text && serverCard.text !== card.text) {
+                    if (!titleEditing) {
+                        card.text = serverCard.text;
+                        title.textContent = serverCard.text;
+                        titleEditor.value = serverCard.text;
+                    } else { needsBanner = true; }
+                }
+
+                // 설명
+                var serverDescText = (serverCard.description || []).join('\n');
+                if (serverDescText !== getDescriptionText()) {
+                    if (!descEditing) {
+                        card.description = (serverCard.description || []).slice();
+                        renderDescriptionDisplay();
+                    } else { needsBanner = true; }
+                }
+
+                // 속성 (이미 저장된 값이므로 입력 포커스 없으면 즉시 반영)
+                try {
+                    var spJson = JSON.stringify(serverCard.properties || {});
+                    if (spJson !== JSON.stringify(card.properties || {})) {
+                        if (!propFocused) {
+                            card.properties = JSON.parse(spJson);
+                            renderProperties();
+                        } else { needsBanner = true; }
+                    }
+                } catch (e) {}
+
+                // classNames
+                card.classNames = (serverCard.classNames || []).slice();
+
+                // 댓글 섹션 재렌더링 (comments는 merge 완료 상태)
+                renderComments();
+                rerenderColumns();
+
+                // 배너 관리
+                var existingBanner = overlay.querySelector('.kanban-modal-remote-update-banner');
+                if (needsBanner) {
+                    if (!existingBanner) {
+                        var remoteBanner = document.createElement('div');
+                        remoteBanner.className = 'kanban-modal-remote-update-banner';
+                        remoteBanner.textContent = 'This card was updated by another user while you are editing. Your unsaved edits may conflict.';
+                        modal.insertBefore(remoteBanner, modal.firstChild);
+                    }
+                } else if (existingBanner && existingBanner.parentNode) {
+                    existingBanner.parentNode.removeChild(existingBanner);
+                }
+            };
+            currentCardUpdateHandler = handleRemoteCardUpdate;
+            root.addEventListener('kanban:card.remoteupdated', handleRemoteCardUpdate);
         };
         openCardDetailById = function (cardId) {
             if (!cardId) {

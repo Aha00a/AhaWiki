@@ -42,48 +42,64 @@ const boot = ({ revision = 1, fetchImpl }) => {
   return { hooks: sandbox.window.__AhaWikiKanbanTestHooks, revisionNode, alerts, getReloadCount: () => reloadCount };
 };
 
-test('409 발생 시 사용자에게 알리고 최신 페이지로 새로고침', async () => {
-  let postCount = 0;
-  const fetchImpl = async (url) => {
+test('409 발생 시 최신 리비전 조회 후 자동 재시도하여 성공', async () => {
+  let saveCount = 0;
+  let revisionFetchCount = 0;
+  const seenRevisions = [];
+  const fetchImpl = async (url, options) => {
+    if (url.startsWith('/api/pageRevision/')) {
+      revisionFetchCount++;
+      return { ok: true, json: async () => ({ revision: 11 }) };
+    }
     if (url === '/api/csrf') return { ok: true, json: async () => ({ value: 'token' }) };
     if (url.startsWith('/w/')) {
-      postCount += 1;
+      saveCount++;
+      const params = new URLSearchParams(options.body);
+      seenRevisions.push(Number(params.get('revision')));
+      if (saveCount === 1) return { ok: false, status: 409 };
+      return { ok: true, status: 200 };
+    }
+    throw new Error(`unexpected url: ${url}`);
+  };
+
+  const { hooks, revisionNode, alerts, getReloadCount } = boot({ revision: 10, fetchImpl });
+  await hooks.requestSaveKanban('Page', 100, 120, 'A\nB', 'card:move', {}, 0);
+
+  assert.equal(saveCount, 2);
+  assert.equal(revisionFetchCount, 1);
+  assert.deepEqual(seenRevisions, [10, 11]);
+  assert.deepEqual(alerts, []);
+  assert.equal(getReloadCount(), 0);
+  assert.equal(Number(revisionNode.textContent), 12);
+});
+
+test('409 반복 발생 시 최대 재시도 후 reload/alert 없이 에러', async () => {
+  let saveCount = 0;
+  let revisionFetchCount = 0;
+  const fetchImpl = async (url) => {
+    if (url.startsWith('/api/pageRevision/')) {
+      revisionFetchCount++;
+      return { ok: true, json: async () => ({ revision: 20 }) };
+    }
+    if (url === '/api/csrf') return { ok: true, json: async () => ({ value: 'token' }) };
+    if (url.startsWith('/w/')) {
+      saveCount++;
       return { ok: false, status: 409 };
     }
     throw new Error(`unexpected url: ${url}`);
   };
 
   const { hooks, revisionNode, alerts, getReloadCount } = boot({ revision: 10, fetchImpl });
-
   await assert.rejects(
-    () => hooks.requestSaveKanban('Page', 100, 120, 'A\nB', 'card:move', {}, 0),
-    /Conflict: reloading due to stale revision/
+    () => hooks.requestSaveKanban('Page', 100, 120, 'content', 'card:move', {}, 0),
+    /Conflict: save failed after retries/
   );
-  assert.equal(postCount, 1);
-  assert.deepEqual(alerts, ['This page has been modified. Refreshing to the latest version.']);
-  assert.equal(getReloadCount(), 1);
-  assert.equal(Number(revisionNode.textContent), 10);
-});
 
-test('409 발생 시 최신 리비전 자동 재조회/재시도 없이 실패', async () => {
-  let postCount = 0;
-  let revisionFetchCount = 0;
-  const fetchImpl = async (url) => {
-    if (url.startsWith('/api/pageRevision/')) {
-      revisionFetchCount += 1;
-      return { ok: true, json: async () => ({ revision: 8 }) };
-    }
-    if (url === '/api/csrf') return { ok: true, json: async () => ({ value: 'token' }) };
-    if (url.startsWith('/w/')) { postCount += 1; return { ok: false, status: 409 }; }
-    throw new Error(`unexpected url: ${url}`);
-  };
-
-  const { hooks, revisionNode, getReloadCount } = boot({ revision: 3, fetchImpl });
-  await assert.rejects(() => hooks.requestSaveKanban('Page', 1, 1, 'X', 'card:move', {}, 0), /Conflict: reloading due to stale revision/);
-  assert.equal(postCount, 1);
-  assert.equal(revisionFetchCount, 0);
-  assert.equal(getReloadCount(), 1);
-  assert.equal(Number(revisionNode.textContent), 3);
+  assert.equal(saveCount, 4);
+  assert.equal(revisionFetchCount, 3);
+  assert.deepEqual(alerts, []);
+  assert.equal(getReloadCount(), 0);
+  assert.equal(Number(revisionNode.textContent), 20);
 });
 
 test('현재 리비전이 0이면 저장 전 최신 리비전 먼저 동기화', async () => {

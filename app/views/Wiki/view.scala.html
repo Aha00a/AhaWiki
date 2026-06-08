@@ -145,6 +145,11 @@
                 var saveSenderId = null;
                 var lastPageUpdatedRevision = null;
                 var pageUpdateToast = null;
+                var kanbanSyncedRevisions = {};
+                document.addEventListener('wiki:kanban.synced', function (evt) {
+                    var d = evt && evt.detail;
+                    if (d && Number.isFinite(d.revision)) { kanbanSyncedRevisions[d.revision] = true; }
+                });
 
                 function readCookie(name) {
                     var escaped = String(name || '').replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
@@ -334,11 +339,28 @@
                                 if (!revision || revision === lastPageUpdatedRevision) return;
                                 lastPageUpdatedRevision = revision;
                                 var editorNickname = data.editorNickname ? String(data.editorNickname) : 'Someone';
-                                var message = 'This page has been updated. Would you like to refresh?';
-                                if (editorNickname) {
-                                    message = editorNickname + ' updated this page. Would you like to refresh?';
+                                var message = editorNickname + ' updated this page. Would you like to refresh?';
+                                var hasKanban = Boolean(document.querySelector('.InterpreterKanban'));
+                                if (hasKanban) {
+                                    // Kanban이 자동 동기화를 처리함 — 실패 시에만 토스트 표시
+                                    var toastRevision = revision;
+                                    setTimeout(function () {
+                                        if (!kanbanSyncedRevisions[toastRevision]) {
+                                            showPageUpdateToast(message);
+                                        }
+                                    }, 2000);
+                                } else {
+                                    showPageUpdateToast(message);
                                 }
-                                showPageUpdateToast(message);
+                                try {
+                                    document.dispatchEvent(new CustomEvent('wiki:page.updated', {
+                                        detail: {
+                                            pageName: data.pageName || '',
+                                            revision: revision,
+                                            editorNickname: editorNickname
+                                        }
+                                    }));
+                                } catch (e) { /* ignore in environments without CustomEvent */ }
                             }
                         } catch (e) {
                             console.log('websocket parse error', e);
