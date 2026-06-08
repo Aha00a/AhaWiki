@@ -54,5 +54,10 @@ class ApplicationConf @Inject()(configuration: Configuration) {
         def bucket(): String = configuration.getOptional[String](fqn).getOrElse("")
       }
     }
+
+    object telegram {
+      def botToken(): String = configuration.getOptional[String](fqn).getOrElse("")
+      def chatId(): String = configuration.getOptional[String](fqn).getOrElse("")
+    }
   }
 }
