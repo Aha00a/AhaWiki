@@ -242,12 +242,14 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
 
 카드 표면 배지와 카드 상세 모달의 관계 Property 행에 동일한 색상 체계를 적용한다.
 
-|| 관계 타입 || 색상 ||
-|| `BlockedBy` || 빨간색 (error) ||
-|| `Blocks` (파생) || 주황색 (warning) ||
-|| `ParentCard` || 파란색 (primary) ||
-|| `SubCards` (파생) || 파란색 (primary) ||
-|| `RelatedCard` || 회색 (muted) ||
+[[[#!Table tsv 1
+관계 타입	색상
+BlockedBy	빨간색 (error)
+Blocks (파생)	주황색 (warning)
+ParentCard	파란색 (primary)
+SubCards (파생)	파란색 (primary)
+RelatedCard	회색 (muted)
+]]]
 
 카드 상세 모달에서는 관계 Property 행의 라벨과 카드 칩 테두리·배경에 위 색상을 적용한다.
 

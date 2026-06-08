@@ -306,6 +306,11 @@
                     socket.onopen = function () {
                         saveSenderId = getOrCreateSaveSenderId();
                         socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
+                        try {
+                            document.dispatchEvent(new CustomEvent('wiki:ws.connected', {
+                                detail: { pageName: '@{title}' }
+                            }));
+                        } catch (e) {}
                         heartbeatTimer = setInterval(function () {
                             if (!socket || socket.readyState !== WebSocket.OPEN) return;
                             socket.send(JSON.stringify({ type: 'cursor.ping' }));

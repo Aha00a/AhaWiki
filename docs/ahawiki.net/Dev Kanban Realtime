@@ -5,10 +5,12 @@ Trello처럼 다른 탭/사용자의 변경이 페이지 새로고침 없이 칸
 
 == 구현 파일 목록
 
-|| 파일 || 변경 내용 ||
-|| `app/views/Wiki/view.scala.html` || `page.updated` 수신 시 `wiki:page.updated` DOM CustomEvent 발행 ||
-|| `public/js/AhaWiki.Kanban.js` || 유틸리티 함수 5개 + `initKanban` 내부 실시간 동기화 로직 ||
-|| `app/assets/kanban.less` || conflict 배지·모달 배너 스타일 ||
+[[[#!Table tsv 1
+파일	변경 내용
+app/views/Wiki/view.scala.html	page.updated 수신 시 wiki:page.updated DOM CustomEvent 발행
+public/js/AhaWiki.Kanban.js	유틸리티 함수 5개 + initKanban 내부 실시간 동기화 로직 전체
+app/assets/kanban.less	conflict 배지·모달 배너 스타일
+]]]
 
 == 전체 흐름
 
@@ -30,11 +32,14 @@ Tab B 저장 성공
 
 == 주요 상태 변수 (`initKanban` 클로저)
 
-|| 변수 || 초기값 || 역할 ||
-|| `baseColumns` || `deepCloneColumns(columns)` || 3-way 병합의 base. 저장 성공마다 갱신 ||
-|| `pendingMutationCount` || `0` || 현재 큐에 대기 중인 뮤테이션 수 ||
-|| `pendingRemoteRevision` || `0` || 뮤테이션 대기 중 받은 원격 업데이트 revision ||
-|| `remoteUpdateDebounceTimer` || `null` || 500ms debounce 타이머 ||
+[[[#!Table tsv 1
+변수	초기값	역할
+baseColumns	deepCloneColumns(columns)	3-way 병합의 base. 저장 성공마다 갱신
+pendingMutationCount	0	현재 큐에 대기 중인 뮤테이션 수
+pendingRemoteRevision	0	뮤테이션 대기 중 받은 원격 업데이트 revision
+remoteUpdateDebounceTimer	null	500ms debounce 타이머
+currentCardUpdateHandler	null	현재 열린 모달의 kanban:card.remoteupdated 핸들러 참조
+]]]
 
 == 유틸리티 함수 (DOMContentLoaded 클로저 레벨)
 
@@ -143,9 +148,11 @@ sync 실패 또는 timeout 시에는 기존 토스트를 표시한다.
 
 카드 `__remoteConflict` 또는 `__remoteUpdate` 플래그가 set 된 경우 카드 표면에 배지를 렌더링한다.
 
-|| 클래스 || 조건 || 색상 || 텍스트 ||
-|| `kanban-card-remote-badge--conflict` || `card.__remoteConflict` || 노란색 (warning) || "Updated by another user" ||
-|| `kanban-card-remote-badge--update` || `card.__remoteUpdate` || 파란색 (info) || "Remote update pending" ||
+[[[#!Table tsv 1
+클래스	조건	색상	텍스트
+kanban-card-remote-badge--conflict	card.__remoteConflict	노란색 (warning)	Updated by another user
+kanban-card-remote-badge--update	card.__remoteUpdate	파란색 (info)	Remote update pending
+]]]
 
 저장 성공(`persistColumns.then`) 시 모든 카드의 `__remoteConflict`·`__remoteUpdate`를 삭제하고 `baseColumns`를 갱신한다.
 
@@ -191,9 +198,9 @@ mutationQueue = mutationQueue
 
 == 미해결 과제
 
- * WS 재연결 시 누락된 `page.updated` 보완 — 재연결 성공 이벤트에서 `applyRemoteKanbanUpdate` 1회 실행 필요
  * 모달 열린 채 원격에서 카드 삭제 — 배지 표시 없이 닫을 때까지 카드가 유지됨, 저장 시 카드 재추가
  * 대용량 페이지 성능 — `action=raw` 전체 텍스트 fetch. 장기적으로 칸반 블록만 반환하는 API 추가 검토
+ * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 
 == 관련 문서
 

@@ -298,6 +298,14 @@
 			margin-bottom: 3px;
 		}
 		&.Text {
+			// wiki.less의 전역 pre는 --color-code-bg (light=dark, dark=light)를 사용하므로
+			// InterpreterText는 테마와 같은 방향의 변수로 덮어씀
+			pre {
+				background-color: var(--color-surface-alt);
+				color: var(--color-text);
+				border: 1px solid var(--color-border);
+				border-radius: 5px;
+			}
 		}
 
 		&.Vim {

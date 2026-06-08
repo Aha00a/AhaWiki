@@ -2992,6 +2992,17 @@ document.addEventListener('DOMContentLoaded', function () {
             handleRemotePageUpdated(detail.revision);
         });
 
+        document.addEventListener('wiki:ws.connected', function (evt) {
+            var detail = evt && evt.detail;
+            if (!detail || detail.pageName !== pageName) { return; }
+            // WS 재연결 시 누락된 변경이 있을 수 있으므로 최신 revision 확인 후 동기화
+            fetchLatestRevision(pageName).then(function (latestRevision) {
+                if (latestRevision > getCurrentRevision()) {
+                    handleRemotePageUpdated(latestRevision);
+                }
+            }).catch(function () {});
+        });
+
         openCardDetail = function (card) {
             if (!card) {
                 return;
