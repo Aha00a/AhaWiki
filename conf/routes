@@ -62,6 +62,8 @@ POST          /api/Admin/Favicon                     controllers.Api.adminUpload
 DELETE        /api/Admin/Favicon                     controllers.Api.adminDeleteSiteFavicon
 GET           /api/Admin/SiteTheme                   controllers.Api.adminSiteTheme
 PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdateSiteTheme
+GET           /api/Admin/Site/:seq/Telegram          controllers.Api.adminSiteTelegram(seq: Long)
+PUT           /api/Admin/Site/:seq/Telegram          controllers.Api.adminUpdateSiteTelegram(seq: Long)
 GET           /api/Admin/PermissionAudit             controllers.Api.adminPermissionAudit
 GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
 GET           /api/Admin/Site/:seq/PageMetaList      controllers.Api.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")

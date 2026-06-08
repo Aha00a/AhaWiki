@@ -26,10 +26,9 @@ class TelegramLogic @Inject()(
   private def commentLine(comment: String): String =
     if (comment.nonEmpty) s"\n${h(comment)}" else ""
 
-  private def send(host: String, message: String): Unit = {
+  private def sendTo(chatId: String, message: String): Unit = {
     val botToken = applicationConf.AhaWiki.telegram.botToken()
-    val chatId   = applicationConf.AhaWiki.telegram.chatId()
-    if (botToken.isEmpty || chatId.isEmpty) return
+    if (botToken.isEmpty) return
 
     wsClient
       .url(s"https://api.telegram.org/bot$botToken/sendMessage")
@@ -41,36 +40,42 @@ class TelegramLogic @Inject()(
       ))
       .foreach { response =>
         if (response.status != 200)
-          logger.warn(s"TelegramLogic.send failed: status=${response.status} body=${response.body.take(200)}")
+          logger.warn(s"TelegramLogic.sendTo chatId=$chatId failed: status=${response.status} body=${response.body.take(200)}")
       }
+  }
+
+  private def send(message: String, siteChatId: Option[String]): Unit = {
+    val globalChatId = applicationConf.AhaWiki.telegram.chatId()
+    val chatIds = (Seq(globalChatId) ++ siteChatId).map(_.trim).filter(_.nonEmpty).distinct
+    chatIds.foreach(sendTo(_, message))
   }
 
   // ── 이벤트별 알림 ──────────────────────────────────────────
 
-  def notifyPageCreated(host: String, pageName: String, nickname: String, comment: String): Unit =
-    send(host, s"🆕 ${b(pageName)} created by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}")
+  def notifyPageCreated(host: String, pageName: String, nickname: String, comment: String, siteChatId: Option[String] = None): Unit =
+    send(s"🆕 ${b(pageName)} created by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyPageEdited(host: String, pageName: String, revision: Long, nickname: String, comment: String): Unit =
-    send(host, s"✏️ ${b(pageName)} r$revision edited by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}")
+  def notifyPageEdited(host: String, pageName: String, revision: Long, nickname: String, comment: String, siteChatId: Option[String] = None): Unit =
+    send(s"✏️ ${b(pageName)} r$revision edited by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyPageDeleted(host: String, pageName: String, nickname: String): Unit =
-    send(host, s"🗑️ ${b(pageName)} deleted by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifyPageDeleted(host: String, pageName: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"🗑️ ${b(pageName)} deleted by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyLastRevisionDeleted(host: String, pageName: String, revision: Long, nickname: String): Unit =
-    send(host, s"⏪ ${b(pageName)} r$revision revision deleted by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifyLastRevisionDeleted(host: String, pageName: String, revision: Long, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"⏪ ${b(pageName)} r$revision revision deleted by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyPageRenamed(host: String, oldName: String, newName: String, nickname: String): Unit =
-    send(host, s"📝 ${b(oldName)} → ${b(newName)} renamed by ${h(nickname)}\n${pageUrl(host, newName)}")
+  def notifyPageRenamed(host: String, oldName: String, newName: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"📝 ${b(oldName)} → ${b(newName)} renamed by ${h(nickname)}\n${pageUrl(host, newName)}", siteChatId)
 
-  def notifyAttachmentUploaded(host: String, pageName: String, filename: String, nickname: String): Unit =
-    send(host, s"📎 ${b(pageName)} ${h(filename)} attached by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifyAttachmentUploaded(host: String, pageName: String, filename: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"📎 ${b(pageName)} ${h(filename)} attached by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyAttachmentDeleted(host: String, pageName: String, filename: String, nickname: String): Unit =
-    send(host, s"🗑️📎 ${b(pageName)} ${h(filename)} attachment deleted by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifyAttachmentDeleted(host: String, pageName: String, filename: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"🗑️📎 ${b(pageName)} ${h(filename)} attachment deleted by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifyClipboardImageUploaded(host: String, pageName: String, nickname: String): Unit =
-    send(host, s"🖼️ ${b(pageName)} image pasted by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifyClipboardImageUploaded(host: String, pageName: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"🖼️ ${b(pageName)} image pasted by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 
-  def notifySpreadsheetSynced(host: String, pageName: String, nickname: String): Unit =
-    send(host, s"🔄 ${b(pageName)} spreadsheet synced by ${h(nickname)}\n${pageUrl(host, pageName)}")
+  def notifySpreadsheetSynced(host: String, pageName: String, nickname: String, siteChatId: Option[String] = None): Unit =
+    send(s"🔄 ${b(pageName)} spreadsheet synced by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
 }

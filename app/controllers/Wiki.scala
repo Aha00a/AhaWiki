@@ -134,6 +134,9 @@ controllerComponents: ControllerComponents,
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
 
+  private def siteTelegramChatId(implicit connection: java.sql.Connection, site: models.tables.Site): Option[String] =
+    models.tables.Config.Query.Telegram.chatId()
+
   private val pagePermissionModeKeep = "keep"
   private val pagePermissionModeGeneral = "general"
   private val pagePermissionModePrivateRead = "privateRead"
@@ -765,9 +768,9 @@ controllerComponents: ControllerComponents,
               val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
               if (bodyChanged) {
                 if (latestPage.isEmpty)
-                  telegramLogic.notifyPageCreated(request.host, name, editorNickname, comment)
+                  telegramLogic.notifyPageCreated(request.host, name, editorNickname, comment, siteTelegramChatId)
                 else
-                  telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, comment)
+                  telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, comment, siteTelegramChatId)
               }
               val pageUpdatedPayload = Json.obj(
                 "type" -> "page.updated",
@@ -855,7 +858,7 @@ controllerComponents: ControllerComponents,
                 throw new RuntimeException(error)
               case Right(_) =>
                 Page.deleteWithRelatedData(name)
-                telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"))
+                telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
                 Ok("")
             }
           } else {
@@ -881,7 +884,7 @@ controllerComponents: ControllerComponents,
 
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
             wikiActors.pageCalculation ! Calculate(site, name)
-            telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"))
+            telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
             Ok("")
           } else {
             logger.warn(s"deleteLastRevision forbidden: host=${request.host}, name=$name, user=${provider.getUser.map(u => s"${u.nickname}(${u.loginEmail.getOrElse("no-email")})").getOrElse("anonymous")}, remote=${request.remoteAddress}")
@@ -929,7 +932,7 @@ controllerComponents: ControllerComponents,
             val body = extractConvertApplyInterpreterRefresh.inject(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
             if (pageContent.content != body) {
               PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, body)
-              telegramLogic.notifySpreadsheetSynced(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"))
+              telegramLogic.notifySpreadsheetSynced(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
               Ok("")
             } else {
               Ok("NotChanged")
@@ -959,7 +962,7 @@ controllerComponents: ControllerComponents,
             Page.rename(name, newName)
             PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
             wikiActors.pageCalculation ! Calculate(site, newName)
-            telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"))
+            telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
             Ok("")
           } else {
             Forbidden("")
@@ -1050,7 +1053,7 @@ controllerComponents: ControllerComponents,
                   }
 
                   val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"))
+                  telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
                   Ok(Json.obj(
                     "objectKey" -> objectKey,
                     "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
@@ -1150,7 +1153,7 @@ controllerComponents: ControllerComponents,
                       amazonS3.deleteObject(bucket, resolvedObjectKey)
                       Attachment.markDeleted(resolvedObjectKey)
                       val attachFilename = resolvedObjectKey.split("/").lastOption.getOrElse(resolvedObjectKey)
-                      telegramLogic.notifyAttachmentDeleted(request.host, pageName, attachFilename, provider.getUser.map(_.nickname).getOrElse("Guest"))
+                      telegramLogic.notifyAttachmentDeleted(request.host, pageName, attachFilename, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
                       Ok(Json.obj("ok" -> true, "objectKey" -> resolvedObjectKey))
                     } catch {
                       case error: Throwable =>
@@ -1218,7 +1221,7 @@ controllerComponents: ControllerComponents,
                       }
 
                       val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                      telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"))
+                      telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
                       Ok(Json.obj(
                         "objectKey" -> objectKey,
                         "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",

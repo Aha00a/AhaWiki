@@ -2,6 +2,7 @@ import {useCallback, useState} from "react";
 import {fetchJson, fetchCsrfToken, logError} from "../api.js";
 
 const DEFAULT_THEME = {defaultHue: ""};
+const DEFAULT_TELEGRAM = {chatId: ""};
 
 export function useSiteConfigData(siteSeq) {
     const [faviconUrl, setFaviconUrl] = useState("/public/favicon.png");
@@ -10,6 +11,8 @@ export function useSiteConfigData(siteSeq) {
     const [deletingFavicon, setDeletingFavicon] = useState(false);
     const [siteTheme, setSiteTheme] = useState(DEFAULT_THEME);
     const [savingTheme, setSavingTheme] = useState(false);
+    const [telegram, setTelegram] = useState(DEFAULT_TELEGRAM);
+    const [savingTelegram, setSavingTelegram] = useState(false);
     const [error, setError] = useState("");
 
     const loadFavicon = useCallback(async () => {
@@ -80,5 +83,30 @@ export function useSiteConfigData(siteSeq) {
         finally { setSavingTheme(false); }
     }, [siteSeq]);
 
-    return {faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme};
+    const loadTelegram = useCallback(async () => {
+        if (!siteSeq) { setTelegram(DEFAULT_TELEGRAM); return; }
+        try {
+            const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`);
+            setTelegram({chatId: data?.chatId ?? ""});
+        } catch (err) { logError("telegram:load:error", err); setError(err.message); }
+    }, [siteSeq]);
+
+    const saveTelegram = useCallback(async (telegramData) => {
+        if (!siteSeq) return;
+        setSavingTelegram(true);
+        setError("");
+        try {
+            const csrfToken = await fetchCsrfToken();
+            const payload = new URLSearchParams();
+            payload.set("chatId", telegramData.chatId ?? "");
+            payload.set(csrfToken.name, csrfToken.value);
+            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, {method: "PUT", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
+            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
+            const data = await response.json();
+            setTelegram({chatId: data?.chatId ?? ""});
+        } catch (err) { logError("telegram:save:error", err); setError(err.message); }
+        finally { setSavingTelegram(false); }
+    }, [siteSeq]);
+
+    return {faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram};
 }

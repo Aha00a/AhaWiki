@@ -15,13 +15,14 @@ export default function SiteConfigPage() {
             publicListedOrder: site?.publicListedOrder == null ? "" : String(site.publicListedOrder),
         });
     }, [site]);
-    const {faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme} = useSiteConfigData(siteSeq);
+    const {faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram} = useSiteConfigData(siteSeq);
     const [faviconFile, setFaviconFile] = useState(null);
 
     useEffect(() => {
         if (!siteSeq) return;
         loadFavicon();
         loadTheme();
+        loadTelegram();
     }, [siteSeq]);
 
     const selectedSiteDomainsText = (site?.domains ?? []).join(", ") || "-";
@@ -118,6 +119,32 @@ export default function SiteConfigPage() {
                         await loadTheme();
                     }}>Reset</Button>
                 </Group>
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md">
+                    <Title order={3}>Telegram</Title>
+                    <Badge color="cyan" variant="light">알림</Badge>
+                </Group>
+                <Text size="sm" c="dimmed" mb="md">
+                    페이지 생성·수정·삭제·첨부 등 변경 이벤트를 수신할 Telegram Chat ID를 설정합니다.
+                    Bot Token은 서버 전역 설정(<code>application.conf</code>)에서 관리합니다.
+                </Text>
+                <Stack gap="sm">
+                    <TextInput
+                        label="Chat ID"
+                        placeholder="-100xxxxxxxxxx"
+                        description="비우면 이 사이트 알림 비활성화."
+                        value={telegram.chatId}
+                        onChange={(e) => setTelegram({chatId: e.currentTarget.value})}
+                        disabled={!siteSeq}
+                        style={{maxWidth: 320}}
+                    />
+                    <Group>
+                        <Button variant="filled" color="cyan" loading={savingTelegram} disabled={!siteSeq} onClick={async () => { await saveTelegram(telegram); await loadTelegram(); }}>Save</Button>
+                        <Button variant="light" disabled={!siteSeq} onClick={() => loadTelegram()}>Refresh</Button>
+                        <Button color="red" variant="light" loading={savingTelegram} disabled={!siteSeq || !telegram.chatId} onClick={async () => { await saveTelegram({chatId: ""}); await loadTelegram(); }}>Clear</Button>
+                    </Group>
+                </Stack>
             </Card>
         </>
     );

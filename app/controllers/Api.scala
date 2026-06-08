@@ -657,6 +657,47 @@ class Api @Inject()(
     }
   }
 
+  def adminSiteTelegram(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isSiteAdmin(seq)) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            val chatId = Config.Query.Telegram.chatId().getOrElse("")
+            Ok(Json.obj(
+              "siteSeq" -> Json.fromLong(site.seq),
+              "chatId"  -> Json.fromString(chatId),
+            ))
+          }
+      }
+    }
+  }
+
+  def adminUpdateSiteTelegram(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isSiteAdmin(seq)) {
+      Forbidden("Access denied.")
+    } else {
+      SiteLogic.get(seq)(database) match {
+        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+        case Some(site) =>
+          val body   = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+          val chatId = body.get("chatId").flatMap(_.headOption).map(_.trim).getOrElse("")
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            Config.Query.Telegram.saveChatId(chatId)
+            Ok(Json.obj(
+              "ok"      -> Json.fromBoolean(true),
+              "siteSeq" -> Json.fromLong(site.seq),
+              "chatId"  -> Json.fromString(chatId),
+            ))
+          }
+      }
+    }
+  }
+
   def adminUpdateSiteTheme: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)

@@ -52,5 +52,14 @@ object Config extends Logging{
         def adsTxtContent()(implicit connection: Connection, site: Site): String = Config.getOrElse(fqn, "")
       }
     }
+
+    object Telegram {
+      private val key = "Telegram.chatId"
+      def chatId()(implicit connection: Connection, site: Site): Option[String] =
+        Config.select(key).map(_.v.trim).filter(_.nonEmpty)
+      def saveChatId(v: String)(implicit connection: Connection, site: Site): Unit =
+        if (v.trim.nonEmpty) Config.upsert(key, v.trim)
+        else                 Config.delete(key)
+    }
   }
 }

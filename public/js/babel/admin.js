@@ -722,6 +722,7 @@ import { Anchor as Anchor4, Badge as Badge10, Button as Button6, Card as Card7, 
 // app/assets/js/admin/hooks/useSiteConfigData.js
 import { useCallback as useCallback6, useState as useState12 } from "react";
 var DEFAULT_THEME = { defaultHue: "" };
+var DEFAULT_TELEGRAM = { chatId: "" };
 function useSiteConfigData(siteSeq) {
   const [faviconUrl, setFaviconUrl] = useState12("/public/favicon.png");
   const [faviconObjectKey, setFaviconObjectKey] = useState12("");
@@ -729,6 +730,8 @@ function useSiteConfigData(siteSeq) {
   const [deletingFavicon, setDeletingFavicon] = useState12(false);
   const [siteTheme, setSiteTheme] = useState12(DEFAULT_THEME);
   const [savingTheme, setSavingTheme] = useState12(false);
+  const [telegram, setTelegram] = useState12(DEFAULT_TELEGRAM);
+  const [savingTelegram, setSavingTelegram] = useState12(false);
   const [error, setError] = useState12("");
   const loadFavicon = useCallback6(async () => {
     if (!siteSeq) {
@@ -827,7 +830,43 @@ function useSiteConfigData(siteSeq) {
       setSavingTheme(false);
     }
   }, [siteSeq]);
-  return { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme };
+  const loadTelegram = useCallback6(async () => {
+    if (!siteSeq) {
+      setTelegram(DEFAULT_TELEGRAM);
+      return;
+    }
+    try {
+      const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`);
+      setTelegram({ chatId: data?.chatId ?? "" });
+    } catch (err) {
+      logError("telegram:load:error", err);
+      setError(err.message);
+    }
+  }, [siteSeq]);
+  const saveTelegram = useCallback6(async (telegramData) => {
+    if (!siteSeq) return;
+    setSavingTelegram(true);
+    setError("");
+    try {
+      const csrfToken = await fetchCsrfToken();
+      const payload = new URLSearchParams();
+      payload.set("chatId", telegramData.chatId ?? "");
+      payload.set(csrfToken.name, csrfToken.value);
+      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
+      if (!response.ok) {
+        const p = await response.json().catch(() => null);
+        throw new Error(p?.error || `HTTP ${response.status}`);
+      }
+      const data = await response.json();
+      setTelegram({ chatId: data?.chatId ?? "" });
+    } catch (err) {
+      logError("telegram:save:error", err);
+      setError(err.message);
+    } finally {
+      setSavingTelegram(false);
+    }
+  }, [siteSeq]);
+  return { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram };
 }
 
 // app/assets/js/admin/pages/SiteConfigPage.jsx
@@ -842,12 +881,13 @@ function SiteConfigPage() {
       publicListedOrder: site?.publicListedOrder == null ? "" : String(site.publicListedOrder)
     });
   }, [site]);
-  const { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme } = useSiteConfigData(siteSeq);
+  const { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram } = useSiteConfigData(siteSeq);
   const [faviconFile, setFaviconFile] = useState13(null);
   useEffect9(() => {
     if (!siteSeq) return;
     loadFavicon();
     loadTheme();
+    loadTelegram();
   }, [siteSeq]);
   const selectedSiteDomainsText = (site?.domains ?? []).join(", ") || "-";
   return /* @__PURE__ */ React15.createElement(React15.Fragment, null, /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React15.createElement(Title8, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React15.createElement(Badge10, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React15.createElement(Stack7, { gap: "sm" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 2 }, /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React15.createElement(Text11, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", size: "xs", onClick: () => navigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React15.createElement(Group11, { align: "end", mt: "sm" }, /* @__PURE__ */ React15.createElement(TextInput2, { label: "Abbr", value: siteMetaForm.abbr, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, abbr: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(TextInput2, { label: "Main Domain", value: siteMetaForm.mainDomain, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, mainDomain: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(TextInput2, { label: "Public Listed Order", type: "number", min: "0", step: "0.01", placeholder: "empty means hidden", value: siteMetaForm.publicListedOrder, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !site || !siteMetaForm.abbr.trim(), loading: savingSiteMeta, onClick: () => saveSiteMeta(siteMetaForm) }, "Save site meta")), siteMetaError ? /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "red" }, siteMetaError) : null)), /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Favicon"), /* @__PURE__ */ React15.createElement(Badge10, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React15.createElement(Text11, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Group11, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 6 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React15.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React15.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React15.createElement(Stack7, { gap: 8 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React15.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React15.createElement(Group11, null, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
@@ -878,7 +918,24 @@ function SiteConfigPage() {
     setSiteTheme(empty);
     await saveTheme(empty);
     await loadTheme();
-  } }, "Reset"))));
+  } }, "Reset"))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Telegram"), /* @__PURE__ */ React15.createElement(Badge10, { color: "cyan", variant: "light" }, "\uC54C\uB9BC")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uD398\uC774\uC9C0 \uC0DD\uC131\xB7\uC218\uC815\xB7\uC0AD\uC81C\xB7\uCCA8\uBD80 \uB4F1 \uBCC0\uACBD \uC774\uBCA4\uD2B8\uB97C \uC218\uC2E0\uD560 Telegram Chat ID\uB97C \uC124\uC815\uD569\uB2C8\uB2E4. Bot Token\uC740 \uC11C\uBC84 \uC804\uC5ED \uC124\uC815(", /* @__PURE__ */ React15.createElement("code", null, "application.conf"), ")\uC5D0\uC11C \uAD00\uB9AC\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React15.createElement(Stack7, { gap: "sm" }, /* @__PURE__ */ React15.createElement(
+    TextInput2,
+    {
+      label: "Chat ID",
+      placeholder: "-100xxxxxxxxxx",
+      description: "\uBE44\uC6B0\uBA74 \uC774 \uC0AC\uC774\uD2B8 \uC54C\uB9BC \uBE44\uD65C\uC131\uD654.",
+      value: telegram.chatId,
+      onChange: (e) => setTelegram({ chatId: e.currentTarget.value }),
+      disabled: !siteSeq,
+      style: { maxWidth: 320 }
+    }
+  ), /* @__PURE__ */ React15.createElement(Group11, null, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "cyan", loading: savingTelegram, disabled: !siteSeq, onClick: async () => {
+    await saveTelegram(telegram);
+    await loadTelegram();
+  } }, "Save"), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !siteSeq, onClick: () => loadTelegram() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button6, { color: "red", variant: "light", loading: savingTelegram, disabled: !siteSeq || !telegram.chatId, onClick: async () => {
+    await saveTelegram({ chatId: "" });
+    await loadTelegram();
+  } }, "Clear")))));
 }
 
 // app/assets/js/admin/pages/SiteCachePage.jsx
@@ -1523,9 +1580,9 @@ function S3BrowserPage() {
     if (sortBy !== col) return /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sort", style: { opacity: 0.3, marginLeft: 4 } });
     return /* @__PURE__ */ React21.createElement("i", { className: `fas fa-sort-${sortDir === "asc" ? "up" : "down"}`, style: { marginLeft: 4 } });
   };
-  return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button12, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button12, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button12, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
+  return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React21.createElement(Badge16, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React21.createElement(Text17, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Button12, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React21.createElement(Button12, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React21.createElement(Button12, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React21.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React21.createElement(Table4.Thead, null, /* @__PURE__ */ React21.createElement(Table4.Tr, null, /* @__PURE__ */ React21.createElement(Table4.Th, { style: { width: 36 } }, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
     setSelectedS3Keys(e.currentTarget.checked ? loadedFileRows.map((r) => r.path) : []);
-  } })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { cursor: "pointer" }, onClick: () => handleSort("key") }, "Key", /* @__PURE__ */ React21.createElement(SortIcon, { col: "key" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "right", cursor: "pointer" }, onClick: () => handleSort("size") }, "Size(bytes)", /* @__PURE__ */ React21.createElement(SortIcon, { col: "size" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center", cursor: "pointer" }, onClick: () => handleSort("lastModified") }, "Last Modified", /* @__PURE__ */ React21.createElement(SortIcon, { col: "lastModified" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { textAlign: "center" } }, "Action"))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map((row) => {
+  } })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { cursor: "pointer" }, onClick: () => handleSort("key") }, "Key", /* @__PURE__ */ React21.createElement(SortIcon, { col: "key" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { width: 140, textAlign: "right", cursor: "pointer" }, onClick: () => handleSort("size") }, "Size(bytes)", /* @__PURE__ */ React21.createElement(SortIcon, { col: "size" })), /* @__PURE__ */ React21.createElement(Table4.Th, { style: { width: 180, textAlign: "center", cursor: "pointer" }, onClick: () => handleSort("lastModified") }, "Last Modified", /* @__PURE__ */ React21.createElement(SortIcon, { col: "lastModified" })))), /* @__PURE__ */ React21.createElement(Table4.Tbody, null, rows.map((row) => {
     const { depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, itemLastModified, parentPercent, meta } = row;
     if (isLoadingRow) {
       return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, { colSpan: 5 }, /* @__PURE__ */ React21.createElement("div", { style: { paddingLeft: `${depth * 22 + 28}px` } }, /* @__PURE__ */ React21.createElement("i", { className: "fas fa-spinner fa-spin", "aria-hidden": "true" }), " \uB85C\uB529 \uC911...")));
@@ -1538,7 +1595,7 @@ function S3BrowserPage() {
     return /* @__PURE__ */ React21.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("input", { type: "checkbox", disabled: !isFile, checked, onChange: (e) => {
       if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, path]);
       else setSelectedS3Keys((prev) => prev.filter((k) => k !== path));
-    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0 } }, name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center", opacity: sizeIncomplete ? 0.4 : 1 } }, showLastModified ? formatDateTimeInClientTimezone(itemLastModified) : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center" } }, isFile ? /* @__PURE__ */ React21.createElement(Button12, { size: "xs", variant: "light", onClick: () => downloadS3Object(path), leftSection: /* @__PURE__ */ React21.createElement("i", { className: "fas fa-download", "aria-hidden": "true" }) }, "\uB2E4\uC6B4\uB85C\uB4DC") : "-"));
+    } })), /* @__PURE__ */ React21.createElement(Table4.Td, null, /* @__PURE__ */ React21.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React21.createElement(Button12, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React21.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React21.createElement("span", null, /* @__PURE__ */ React21.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React21.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0, cursor: isFile ? "pointer" : void 0 }, onClick: isFile ? () => downloadS3Object(path) : void 0 }, name))), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React21.createElement(Table4.Td, { style: { textAlign: "center", opacity: sizeIncomplete ? 0.4 : 1 } }, showLastModified ? formatDateTimeInClientTimezone(itemLastModified) : "-"));
   }))));
 }
 
