@@ -1,10 +1,9 @@
-﻿= InterpreterKanban
+= InterpreterKanban
 
 Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
 보기 화면에서는 보드 UI로 편집하고, 저장 시 Kanban 블록을 다시 위키 텍스트로 직렬화한다.
 
-== 문법
-
+== Example
 [[[#!Kanban
 === Info
 ==== 작업 제목 ==== #cardid123
@@ -147,6 +146,7 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
   * ["#cmq4ajlewxrxne2" #아침설거지] added
 ]]]
 
+== Syntax
  * `=== 리스트명`: 컬럼
  * `==== 카드 제목 ==== #cardId`: 카드
  * `===== Description`: 카드 설명 (선택, 여러 줄, Activity에 밀리지 않음)

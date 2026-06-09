@@ -1,4 +1,5 @@
-= [Dev] Kanban 실시간 동기화
+= [Dev] Kanban Realtime
+실시간 동기화
 
 Trello처럼 다른 탭/사용자의 변경이 페이지 새로고침 없이 칸반 보드에 즉시 반영되는 기능.
 서버 변경 없이 기존 WebSocket + `action=raw` 엔드포인트를 재활용한다.
@@ -180,9 +181,9 @@ mutationQueue = mutationQueue
  * 전체 페이지 칸반: `rawText`의 첫 줄이 `#!Kanban` 으로 시작하면 해당 블록으로 인식
  * 임베드 칸반: `[[[#!Kanban` 으로 시작하는 줄을 탐지하고, 다음 `]]]` 까지를 블록으로 인식
  * 반환값:
-  ** `interpreterLineStart`: 칸반 본문 시작 1-indexed 줄 번호 (`#!Kanban` 바로 다음 줄)
-  ** `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (전체 페이지 칸반은 `lines.length+1`, 임베드는 `]]]` 줄 번호)
-  ** `contentText`: 파싱 대상 칸반 본문 텍스트
+  * `interpreterLineStart`: 칸반 본문 시작 1-indexed 줄 번호 (`#!Kanban` 바로 다음 줄)
+  * `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (전체 페이지 칸반은 `lines.length+1`, 임베드는 `]]]` 줄 번호)
+  * `contentText`: 파싱 대상 칸반 본문 텍스트
 
 == `interpreterStartLine` 갱신
 
@@ -203,6 +204,5 @@ mutationQueue = mutationQueue
  * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 
 == 관련 문서
-
- * [[Dev WebSocket]] — 기존 WebSocket 인프라 (PageCursorHub, saveSenderId, page.updated 상세)
- * [[InterpreterKanban]] — 칸반 문법 및 저장 포맷
+ * ["Dev WebSocket"] — 기존 WebSocket 인프라 (PageCursorHub, saveSenderId, page.updated 상세)
+ * [InterpreterKanban] — 칸반 문법 및 저장 포맷
