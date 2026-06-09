@@ -520,9 +520,14 @@ controllerComponents: ControllerComponents,
     val lineStart = request.getQueryString("lineStart").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
     val lineEnd = request.getQueryString("lineEnd").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
 
+    // URL의 줄 번호는 directives가 제거된 content 기준이므로 raw content에서 슬라이싱할 때 directive 줄 수만큼 보정
+    val numDirectiveLines = models.PageContent(pageContent).directives.length
+    val adjustedLineStart = lineStart.map(_ + numDirectiveLines)
+    val adjustedLineEnd = lineEnd.map(_ + numDirectiveLines)
+
     val partialRange = for {
-      start <- lineStart
-      end <- lineEnd
+      start <- adjustedLineStart
+      end <- adjustedLineEnd
       if end >= start
     } yield (start, end)
 
