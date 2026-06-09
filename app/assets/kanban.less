@@ -293,10 +293,15 @@
 	}
 
 	@media (max-width: 767px) {
-		.kanban-board-ready { flex-direction: column; gap:12px; padding:10px; min-height: 280px; }
-		.kanban-add-list-wrapper { width:100%; min-width:0; }
-		.kanban-column { width:100%; max-width:none; min-width:0; }
+		// Trello-style: 탭 바 + 단일 컬럼 뷰 (JS로 활성 컬럼만 표시)
+		.kanban-board-ready { overflow:hidden; gap:0; padding:0; min-height:0; background:transparent; border-radius:0; }
+		.kanban-add-list-wrapper { display:none; }
+		.kanban-add-list-wrapper.kanban-mobile-add-open { display:block; }
+		.kanban-column { width:100%; max-width:100%; min-width:0; border-radius:0; }
 		.kanban-card { max-width:100%; }
+		.kanban-card-list { max-height:60vh; max-height:60dvh; }
+		.kanban-icon-button { min-width:36px; min-height:36px; padding:0 6px; }
+		.kanban-add-card-button { min-height:44px; }
 	}
 }
 
@@ -916,6 +921,87 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	border: 1px solid var(--color-flash-warning-border, #fcd34d);
 	border-radius: 6px; padding: 8px 12px;
 	font-size: 12px; font-weight: 500; margin-bottom: 12px;
+}
+
+// ─── Mobile: bottom-sheet modal ────────────────────────────────────────────────
+@media (max-width: 767px) {
+	.kanban-card-detail-overlay { align-items: flex-end; }
+	.kanban-modal {
+		width: 100vw !important;
+		max-width: 100vw !important;
+		max-height: 90vh !important;
+		max-height: 90dvh !important;
+		border-radius: 16px 16px 0 0 !important;
+	}
+	.kanban-modal-header { border-radius: 16px 16px 0 0; }
+	.kanban-modal-btn-delete, .kanban-modal-btn-close { width:40px; height:40px; }
+}
+
+// ─── Mobile Kanban tab bar (isTouchPrimary 시 JS가 삽입) ────────────────────────
+.kanban-mobile-tabs {
+	display: flex;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: none;
+	background: var(--color-kanban-column-bg);
+	border: 1px solid var(--color-kanban-border);
+	border-bottom: 2px solid var(--color-kanban-border);
+	border-radius: 8px 8px 0 0;
+	&::-webkit-scrollbar { display: none; }
+}
+.kanban-mobile-tab {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 14px;
+	border: none;
+	border-bottom: 3px solid transparent;
+	margin-bottom: -2px;
+	background: transparent;
+	color: var(--color-kanban-muted);
+	font-weight: 600;
+	font-size: 13px;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: color 120ms ease, border-color 120ms ease;
+	&--active {
+		color: var(--color-kanban-primary);
+		border-bottom-color: var(--color-kanban-primary);
+	}
+}
+.kanban-mobile-tab-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 18px;
+	height: 18px;
+	padding: 0 5px;
+	border-radius: 9px;
+	background: var(--color-kanban-border);
+	color: var(--color-kanban-muted);
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1;
+	.kanban-mobile-tab--active & {
+		background: var(--color-kanban-primary);
+		color: var(--color-adjacent-hud-action-active-text);
+	}
+}
+.kanban-mobile-tab-add {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 16px;
+	border: none;
+	border-left: 1px solid var(--color-kanban-border);
+	background: transparent;
+	color: var(--color-kanban-muted);
+	font-size: 14px;
+	cursor: pointer;
+	margin-left: auto;
+	&:hover { color: var(--color-kanban-primary); }
 }
 
 // ─── Conflict toast (appended to body on 409 retry exhaustion) ────────────────
