@@ -2015,6 +2015,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 fallbackClass: 'kanban-card-drag-preview',
                 fallbackOnBody: true,
                 fallbackTolerance: 3,
+                emptyInsertThreshold: 20,
                 onClone: function (evt) {
                     var clone = evt && evt.clone ? evt.clone : null;
                     if (!clone) {

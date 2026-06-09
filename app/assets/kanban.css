@@ -205,6 +205,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 2px;
+  min-height: 40px;
 }
 .InterpreterKanban .kanban-card {
   background: var(--kanban-card-bg);
