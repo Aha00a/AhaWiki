@@ -3211,8 +3211,13 @@ document.addEventListener('DOMContentLoaded', function () {
             descriptionCancelButton.textContent = 'Cancel';
             descriptionCancelButton.className = 'kanban-description-cancel-btn';
 
+            var descriptionShortcutHint = document.createElement('span');
+            descriptionShortcutHint.className = 'kanban-comment-hint';
+            descriptionShortcutHint.textContent = 'Ctrl+Enter to save · Esc to cancel';
+
             descriptionEditorActions.appendChild(descriptionSaveButton);
             descriptionEditorActions.appendChild(descriptionCancelButton);
+            descriptionEditorActions.appendChild(descriptionShortcutHint);
             descriptionEditorWrap.appendChild(descriptionTextarea);
             descriptionEditorWrap.appendChild(descriptionEditorActions);
 
@@ -3278,6 +3283,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 descriptionSaveButton.addEventListener('click', submitDescriptionEditor);
                 descriptionCancelButton.addEventListener('click', closeDescriptionEditor);
                 descriptionTextarea.addEventListener('keydown', function (evt) {
+                    if (evt.key === 'Enter' && (evt.ctrlKey || evt.metaKey)) {
+                        evt.preventDefault();
+                        submitDescriptionEditor();
+                        return;
+                    }
                     if (evt.key === 'Escape') {
                         evt.preventDefault();
                         closeDescriptionEditor();
@@ -3543,56 +3553,79 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
 
-                var input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'kanban-property-input';
-                input.placeholder = '#cardId or [#cardId label]';
-
-                var add = document.createElement('button');
-                add.type = 'button';
-                add.className = 'kanban-property-add-btn';
-                add.textContent = 'Add';
-
-                var submit = function () {
-                    var raw = (input.value || '').trim() || (select.value || '').trim();
+                select.addEventListener('change', function () {
+                    var raw = (select.value || '').trim();
                     var parsed = parseCardReferenceValue(raw);
                     var targetEntry = parsed && parsed.id ? cardIndex.byId[parsed.id] : null;
                     var normalizedValue;
                     if (!parsed || !parsed.id) {
-                        input.focus();
                         return;
                     }
                     if (parsed.id === card.id) {
                         showAlert('A card cannot reference itself.');
+                        select.value = '';
                         return;
                     }
                     if (!targetEntry) {
                         var shouldKeepUnresolved = window.confirm ? window.confirm('Card #' + parsed.id + ' was not found in this board. Save unresolved relation?') : true;
                         if (!shouldKeepUnresolved) {
+                            select.value = '';
                             return;
                         }
                     }
                     if (currentIds[parsed.id]) {
-                        input.value = '';
                         select.value = '';
                         return;
                     }
                     normalizedValue = buildCardReferenceValue(parsed.id, parsed.label || (targetEntry && targetEntry.card ? targetEntry.card.text : ''));
                     setCardPropertyValues(property, getModalPropertyValues(property).concat([normalizedValue]));
-                };
-
-                add.addEventListener('click', submit);
-                input.addEventListener('keydown', function (evt) {
-                    if (evt.key === 'Enter') {
-                        evt.preventDefault();
-                        submit();
-                    }
                 });
 
                 editor.appendChild(select);
-                editor.appendChild(input);
-                editor.appendChild(add);
                 container.appendChild(editor);
+            };
+
+            var buildAssigneeSelect = function () {
+                var select = document.createElement('select');
+                select.className = 'kanban-property-select';
+
+                var placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = 'Select assignee...';
+                select.appendChild(placeholder);
+
+                var existingNames = getModalPropertyValues('Assignee').map(function (value) {
+                    return getAssigneeName(value).toLowerCase();
+                });
+
+                getAssigneeSuggestions().forEach(function (name) {
+                    if (existingNames.indexOf(name.toLowerCase()) >= 0) {
+                        return;
+                    }
+                    var option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+
+                select.addEventListener('change', function () {
+                    var name = (select.value || '').trim();
+                    if (!name) {
+                        return;
+                    }
+                    var normalizedValue = normalizeAssigneeValue(name);
+                    var assigneeName = getAssigneeName(normalizedValue);
+                    var currentNames = getModalPropertyValues('Assignee').map(function (value) {
+                        return getAssigneeName(value).toLowerCase();
+                    });
+                    if (!normalizedValue || !assigneeName || currentNames.indexOf(assigneeName.toLowerCase()) >= 0) {
+                        select.value = '';
+                        return;
+                    }
+                    setCardPropertyValues('Assignee', getModalPropertyValues('Assignee').concat([normalizedValue]));
+                });
+
+                return select;
             };
 
             var appendAssigneeEditor = function (container) {
@@ -3601,54 +3634,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 var editor = document.createElement('div');
                 editor.className = 'kanban-property-editor kanban-assignee-editor';
-
-                var input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'kanban-property-input';
-                input.placeholder = 'User nickname or [User:Name]';
-
-                var datalist = document.createElement('datalist');
-                datalist.id = 'kanban-assignee-options-' + generateCardId();
-                getAssigneeSuggestions().forEach(function (name) {
-                    var option = document.createElement('option');
-                    option.value = name;
-                    datalist.appendChild(option);
-                });
-                input.setAttribute('list', datalist.id);
-
-                var add = document.createElement('button');
-                add.type = 'button';
-                add.className = 'kanban-property-add-btn';
-                add.textContent = 'Add';
-
-                var submit = function () {
-                    var normalizedValue = normalizeAssigneeValue(input.value || '');
-                    var assigneeName = getAssigneeName(normalizedValue);
-                    var existingNames = getModalPropertyValues('Assignee').map(function (value) {
-                        return getAssigneeName(value).toLowerCase();
-                    });
-                    if (!normalizedValue || !assigneeName) {
-                        input.focus();
-                        return;
-                    }
-                    if (existingNames.indexOf(assigneeName.toLowerCase()) >= 0) {
-                        input.value = '';
-                        return;
-                    }
-                    setCardPropertyValues('Assignee', getModalPropertyValues('Assignee').concat([normalizedValue]));
-                };
-
-                add.addEventListener('click', submit);
-                input.addEventListener('keydown', function (evt) {
-                    if (evt.key === 'Enter') {
-                        evt.preventDefault();
-                        submit();
-                    }
-                });
-
-                editor.appendChild(input);
-                editor.appendChild(datalist);
-                editor.appendChild(add);
+                editor.appendChild(buildAssigneeSelect());
                 container.appendChild(editor);
             };
 
@@ -3670,10 +3656,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 (values || []).forEach(function (value) {
                     chipList.appendChild(createRelationChip(derived ? '' : key, value, derived));
                 });
-                if (chipList.children.length === 0) {
-                    appendPropertyEmpty(chipList, 'No cards linked');
+                if (chipList.children.length > 0) {
+                    valueCell.appendChild(chipList);
                 }
-                valueCell.appendChild(chipList);
                 if (!derived) {
                     appendRelationEditor(valueCell, key, values || []);
                 }
@@ -3694,10 +3679,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         chipList.appendChild(createAssigneeChip(normalizedValue));
                     }
                 });
-                if (chipList.children.length === 0) {
-                    appendPropertyEmpty(chipList, 'No assignees');
+                if (chipList.children.length > 0) {
+                    valueCell.appendChild(chipList);
                 }
-                valueCell.appendChild(chipList);
                 appendAssigneeEditor(valueCell);
                 row.appendChild(valueCell);
             };
@@ -4203,7 +4187,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 });
                 textarea.addEventListener('keydown', function (evt) {
-                    if ((evt.altKey || evt.ctrlKey) && evt.key === 'Enter') {
+                    if ((evt.ctrlKey || evt.metaKey) && evt.key === 'Enter') {
                         evt.preventDefault();
                         submit.click();
                     }
@@ -4286,7 +4270,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 titleEditorWrap.appendChild(titleSaveButton);
                 actionBar.appendChild(submit);
                 var submitHint = document.createElement('span');
-                submitHint.textContent = 'Ctrl+Enter / Alt+Enter';
+                submitHint.textContent = 'Ctrl+Enter to submit';
                 submitHint.className = 'kanban-comment-hint';
                 actionBar.appendChild(submitHint);
                 dueDateEditor.appendChild(dueDateInput);
