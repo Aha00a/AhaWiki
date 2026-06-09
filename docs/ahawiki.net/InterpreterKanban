@@ -1,4 +1,4 @@
-= InterpreterKanban
+﻿= InterpreterKanban
 
 Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
 보기 화면에서는 보드 UI로 편집하고, 저장 시 Kanban 블록을 다시 위키 텍스트로 직렬화한다.
@@ -17,7 +17,7 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * Attachment: [[Attachment(path/to/file.png)]]
 ===== Activity
  * [User:Aha00a] [2026-05-04]T10:36:17
-  * Moved from '''Done''' to '''Info'''
+  * ["#cardid123" #작업 제목] moved - '''Done''' to '''Info'''
 === ToDo
 ==== 점심 설거지 ==== #cmq4akx08r020y2
 ===== Property
@@ -26,9 +26,9 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ak09d89cnyp 점심에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:29:15Z
-  * Card Property Update - ["#cmq4akx08r020y2" #점심 설거지] - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
+  * ["#cmq4akx08r020y2" #점심 설거지] updated - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:27Z
-  * Card Add - ["#cmq4akx08r020y2" #점심 설거지]
+  * ["#cmq4akx08r020y2" #점심 설거지] added
 === Pending
 ==== 점심 식사 ==== #cmq4aksurw4h9b6
 ===== Property
@@ -37,11 +37,11 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ak09d89cnyp 점심에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:30:17Z
-  * Card Move - ["#cmq4aksurw4h9b6" #점심 식사] - '''ToDo''' to '''Pending'''
+  * ["#cmq4aksurw4h9b6" #점심 식사] moved - '''ToDo''' to '''Pending'''
  * [User:Aha00a] [2026-06-07]T21:29:10Z
-  * Card Property Update - ["#cmq4aksurw4h9b6" #점심 식사] - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
+  * ["#cmq4aksurw4h9b6" #점심 식사] updated - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:22Z
-  * Card Add - ["#cmq4aksurw4h9b6" #점심 식사]
+  * ["#cmq4aksurw4h9b6" #점심 식사] added
 === Doing
 ==== 점심에 할일 ==== #cmq4ak09d89cnyp
 ===== Property
@@ -50,13 +50,13 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * BlockedBy: [#cmq4aiz5lnvvyen 일어나기]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:29:36Z
-  * Card Move - ["#cmq4ak09d89cnyp" #점심에 할일] - '''ToDo''' to '''Doing'''
+  * ["#cmq4ak09d89cnyp" #점심에 할일] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:29:28Z
-  * Card Property Update - ["#cmq4ak09d89cnyp" #점심에 할일] - BlockedBy - [#cmq4aiz5lnvvyen 일어나기]
+  * ["#cmq4ak09d89cnyp" #점심에 할일] updated - BlockedBy - [#cmq4aiz5lnvvyen 일어나기]
  * [User:Aha00a] [2026-06-07]T21:25:54Z
-  * Card Rename - ["#cmq4ak09d89cnyp" #점심에할일] to ["#cmq4ak09d89cnyp" #점심에 할일]
+  * ["#cmq4ak09d89cnyp" #점심에 할일] renamed - '''점심에할일'''
  * [User:Aha00a] [2026-06-07]T21:25:45Z
-  * Card Add - ["#cmq4ak09d89cnyp" #점심에할일]
+  * ["#cmq4ak09d89cnyp" #점심에할일] added
 ==== 점심밥 차리기 ==== #cmq4akmkpy6chrx
 ===== Property
  * Creator: [User:Aha00a]
@@ -64,11 +64,11 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ak09d89cnyp 점심에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:29:57Z
-  * Card Move - ["#cmq4akmkpy6chrx" #점심밥 차리기] - '''ToDo''' to '''Doing'''
+  * ["#cmq4akmkpy6chrx" #점심밥 차리기] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:29:04Z
-  * Card Property Update - ["#cmq4akmkpy6chrx" #점심밥 차리기] - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
+  * ["#cmq4akmkpy6chrx" #점심밥 차리기] updated - ParentCard - [#cmq4ak09d89cnyp 점심에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:14Z
-  * Card Add - ["#cmq4akmkpy6chrx" #점심밥 차리기]
+  * ["#cmq4akmkpy6chrx" #점심밥 차리기] added
 === Done
 ==== 일어나기 ==== #cmq4aiz5lnvvyen
 ===== Property
@@ -76,9 +76,9 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * dateCreated: [2026-06-07]T21:24:57Z
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:28:07Z
-  * Card Move - ["#cmq4aiz5lnvvyen" #일어나기] - '''ToDo''' to '''Done'''
+  * ["#cmq4aiz5lnvvyen" #일어나기] moved - '''ToDo''' to '''Done'''
  * [User:Aha00a] [2026-06-07]T21:24:57Z
-  * Card Add - ["#cmq4aiz5lnvvyen" #일어나기]
+  * ["#cmq4aiz5lnvvyen" #일어나기] added
 ==== 아침에 할일 ==== #cmq4ajpa7tig43b
 ===== Property
  * Creator: [User:Aha00a]
@@ -86,15 +86,15 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * BlockedBy: [#cmq4aiz5lnvvyen 일어나기]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:28:38Z
-  * Card Move - ["#cmq4ajpa7tig43b" #아침에 할일] - '''Doing''' to '''Done'''
+  * ["#cmq4ajpa7tig43b" #아침에 할일] moved - '''Doing''' to '''Done'''
  * [User:Aha00a] [2026-06-07]T21:28:15Z
-  * Card Property Update - ["#cmq4ajpa7tig43b" #아침에 할일] - BlockedBy - [#cmq4aiz5lnvvyen 일어나기]
+  * ["#cmq4ajpa7tig43b" #아침에 할일] updated - BlockedBy - [#cmq4aiz5lnvvyen 일어나기]
  * [User:Aha00a] [2026-06-07]T21:27:31Z
-  * Card Move - ["#cmq4ajpa7tig43b" #아침에 할일] - '''ToDo''' to '''Doing'''
+  * ["#cmq4ajpa7tig43b" #아침에 할일] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:25:50Z
-  * Card Rename - ["#cmq4ajpa7tig43b" #아침에할일] to ["#cmq4ajpa7tig43b" #아침에 할일]
+  * ["#cmq4ajpa7tig43b" #아침에 할일] renamed - '''아침에할일'''
  * [User:Aha00a] [2026-06-07]T21:25:30Z
-  * Card Add - ["#cmq4ajpa7tig43b" #아침에할일]
+  * ["#cmq4ajpa7tig43b" #아침에할일] added
 ==== 아침밥 차리기 ==== #cmq4aj3iyvga6ec
 ===== Property
  * Creator: [User:Aha00a]
@@ -102,17 +102,17 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ajpa7tig43b 아침에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:28:43Z
-  * Card Move - ["#cmq4aj3iyvga6ec" #아침밥 차리기] - '''Doing''' to '''Done'''
+  * ["#cmq4aj3iyvga6ec" #아침밥 차리기] moved - '''Doing''' to '''Done'''
  * [User:Aha00a] [2026-06-07]T21:27:39Z
-  * Card Move - ["#cmq4aj3iyvga6ec" #아침밥 차리기] - '''ToDo''' to '''Doing'''
+  * ["#cmq4aj3iyvga6ec" #아침밥 차리기] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:26:56Z
-  * Card Property Update - ["#cmq4aj3iyvga6ec" #아침밥 차리기] - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
+  * ["#cmq4aj3iyvga6ec" #아침밥 차리기] updated - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:34Z
-  * Card Rename - ["#cmq4aj3iyvga6ec" #아침밥차리기] to ["#cmq4aj3iyvga6ec" #아침밥 차리기]
+  * ["#cmq4aj3iyvga6ec" #아침밥 차리기] renamed - '''아침밥차리기'''
  * [User:Aha00a] [2026-06-07]T21:25:08Z
-  * Card Rename - ["#cmq4aj3iyvga6ec" #밥차리기] to ["#cmq4aj3iyvga6ec" #아침밥차리기]
+  * ["#cmq4aj3iyvga6ec" #아침밥차리기] renamed - '''밥차리기'''
  * [User:Aha00a] [2026-06-07]T21:25:02Z
-  * Card Add - ["#cmq4aj3iyvga6ec" #밥차리기]
+  * ["#cmq4aj3iyvga6ec" #밥차리기] added
 ==== 아침 식사 ==== #cmq4ajesg43bp1g
 ===== Property
  * Creator: [User:Aha00a]
@@ -120,15 +120,15 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ajpa7tig43b 아침에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:28:45Z
-  * Card Move - ["#cmq4ajesg43bp1g" #아침 식사] - '''Doing''' to '''Done'''
+  * ["#cmq4ajesg43bp1g" #아침 식사] moved - '''Doing''' to '''Done'''
  * [User:Aha00a] [2026-06-07]T21:27:42Z
-  * Card Move - ["#cmq4ajesg43bp1g" #아침 식사] - '''ToDo''' to '''Doing'''
+  * ["#cmq4ajesg43bp1g" #아침 식사] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:27:13Z
-  * Card Property Update - ["#cmq4ajesg43bp1g" #아침 식사] - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
+  * ["#cmq4ajesg43bp1g" #아침 식사] updated - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:45Z
-  * Card Rename - ["#cmq4ajesg43bp1g" #아침식사] to ["#cmq4ajesg43bp1g" #아침 식사]
+  * ["#cmq4ajesg43bp1g" #아침 식사] renamed - '''아침식사'''
  * [User:Aha00a] [2026-06-07]T21:25:17Z
-  * Card Add - ["#cmq4ajesg43bp1g" #아침식사]
+  * ["#cmq4ajesg43bp1g" #아침식사] added
 ==== 아침 설거지 ==== #cmq4ajlewxrxne2
 ===== Property
  * Creator: [User:Aha00a]
@@ -136,15 +136,15 @@ Kanban 인터프리터는 위키 텍스트를 단일 원본으로 사용한다.
  * ParentCard: [#cmq4ajpa7tig43b 아침에 할일]
 ===== Activity
  * [User:Aha00a] [2026-06-07]T21:28:48Z
-  * Card Move - ["#cmq4ajlewxrxne2" #아침 설거지] - '''Doing''' to '''Done'''
+  * ["#cmq4ajlewxrxne2" #아침 설거지] moved - '''Doing''' to '''Done'''
  * [User:Aha00a] [2026-06-07]T21:27:44Z
-  * Card Move - ["#cmq4ajlewxrxne2" #아침 설거지] - '''ToDo''' to '''Doing'''
+  * ["#cmq4ajlewxrxne2" #아침 설거지] moved - '''ToDo''' to '''Doing'''
  * [User:Aha00a] [2026-06-07]T21:27:24Z
-  * Card Property Update - ["#cmq4ajlewxrxne2" #아침 설거지] - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
+  * ["#cmq4ajlewxrxne2" #아침 설거지] updated - ParentCard - [#cmq4ajpa7tig43b 아침에 할일]
  * [User:Aha00a] [2026-06-07]T21:26:39Z
-  * Card Rename - ["#cmq4ajlewxrxne2" #아침설거지] to ["#cmq4ajlewxrxne2" #아침 설거지]
+  * ["#cmq4ajlewxrxne2" #아침 설거지] renamed - '''아침설거지'''
  * [User:Aha00a] [2026-06-07]T21:25:25Z
-  * Card Add - ["#cmq4ajlewxrxne2" #아침설거지]
+  * ["#cmq4ajlewxrxne2" #아침설거지] added
 ]]]
 
  * `=== 리스트명`: 컬럼
@@ -294,12 +294,16 @@ RelatedCard	회색 (muted)
 
 == 리비전 코멘트
 
- * 공통 접두어: `Kanban - <EventPrefix> - ...`
+형식: `Kanban - [주체] 동사과거형 - Detail`
+
+ * 카드 이벤트: 카드링크가 주체. ex) `Kanban - ["Kanban#cardId" Kanban#할일] moved - '''ToDo''' to '''Done'''`
+ * 리스트 이벤트: 리스트명(bold)이 주체. ex) `Kanban - '''ToDo''' added`
  * 지원 액션:
   * `list:add`, `list:rename`, `list:move`, `list:delete`
   * `card:add`, `card:rename`, `card:move`, `card:delete`
   * `card:comment:add`, `card:property:update`, `card:description:update`
  * `card:comment:add`는 코멘트 첫 줄 기준 최대 80자만 기록한다.
+ * `card:rename`의 Detail은 이전 제목(fromTitle). 카드링크 자체가 새 제목을 담고 있으므로 redundancy 없이 변경 내역을 표현한다.
  * `card:delete`는 카드가 삭제되므로 Activity에는 별도로 기록하지 않는다.
 
 == Read Only

@@ -303,37 +303,26 @@ document.addEventListener('DOMContentLoaded', function () {
         return text.slice(0, limit) + '...';
     };
 
-    var normalizeEventPrefixForRevisionComment = function (eventPrefix) {
-        var raw = String(eventPrefix || '').trim();
-        if (!raw) { return ''; }
-        if (/^\[[^\]]+\]$/.test(raw)) { return raw; }
-        return '[' + raw + ']';
-    };
-
     var buildKanbanSaveComment = function (actionType, actionMeta) {
-        var eventPrefix = normalizeEventPrefixForRevisionComment(getActionMetaValue(actionMeta, 'eventPrefix'));
-        if (!eventPrefix) {
-            return `Kanban - ${actionType || 'Save'}`;
-        }
         var pageName = getActionMetaValue(actionMeta, 'pageName');
         var cardId = getActionMetaValue(actionMeta, 'cardId');
         var cardTitle = getActionMetaValue(actionMeta, 'cardTitle');
         switch (actionType) {
-            case 'list:add': return `Kanban - ${eventPrefix} - List Add - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}'''`;
-            case 'list:rename': return `Kanban - ${eventPrefix} - List Rename - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)}''' to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60)}'''`;
-            case 'list:move': return `Kanban - ${eventPrefix} - List Move - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}''' Order - ${getActionMetaValue(actionMeta, 'fromOrder')} to ${getActionMetaValue(actionMeta, 'toOrder')}`;
-            case 'list:delete': return `Kanban - ${eventPrefix} - List Delete - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}'''`;
-            case 'card:add': return `Kanban - ${eventPrefix} - Card Add - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))}`;
-            case 'card:rename': return `Kanban - ${eventPrefix} - Card Rename - ${buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60))} to ${buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60))}`;
+            case 'list:add': return `Kanban - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}''' added`;
+            case 'list:rename': return `Kanban - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)}''' renamed to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60)}'''`;
+            case 'list:move': return `Kanban - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}''' moved - ${getActionMetaValue(actionMeta, 'fromOrder')} to ${getActionMetaValue(actionMeta, 'toOrder')}`;
+            case 'list:delete': return `Kanban - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'listTitle'), 60)}''' deleted`;
+            case 'card:add': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} added`;
+            case 'card:rename': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(getActionMetaValue(actionMeta, 'toTitle'), 60))} renamed - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromTitle'), 60)}'''`;
             case 'card:move':
                 if (truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60) && truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60) !== truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)) {
-                    return `Kanban - ${eventPrefix} - Card Move - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60)}''' to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)}'''`;
+                    return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} moved - '''${truncateRevisionText(getActionMetaValue(actionMeta, 'fromList'), 60)}''' to '''${truncateRevisionText(getActionMetaValue(actionMeta, 'toList'), 60)}'''`;
                 }
-                return `Kanban - ${eventPrefix} - Card Move - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} Order - '''${getActionMetaValue(actionMeta, 'fromOrder')}''' to '''${getActionMetaValue(actionMeta, 'toOrder')}'''`;
-            case 'card:delete': return `Kanban - ${eventPrefix} - Card Delete - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))}`;
-            case 'card:comment:add': return `Kanban - ${eventPrefix} - Card Comment Add - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'))}`;
-            case 'card:property:update': return `Kanban - ${eventPrefix} - Card Property Update - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40)} - ${serializePropertyValueForRevision(actionMeta && actionMeta.value)}`;
-            case 'card:description:update': return `Kanban - ${eventPrefix} - Card Description Update - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} - ${truncateRevisionText(getActionMetaValue(actionMeta, 'descriptionPreview'), 60) || '(removed)'}`;
+                return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} moved - ${getActionMetaValue(actionMeta, 'fromOrder')} to ${getActionMetaValue(actionMeta, 'toOrder')}`;
+            case 'card:delete': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} deleted`;
+            case 'card:comment:add': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} commented - ${shortenCardCommentForRevision(getActionMetaValue(actionMeta, 'comment'))}`;
+            case 'card:property:update': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} updated - ${truncateRevisionText(getActionMetaValue(actionMeta, 'property'), 40)} - ${serializePropertyValueForRevision(actionMeta && actionMeta.value)}`;
+            case 'card:description:update': return `Kanban - ${buildCardLinkText(pageName, cardId, truncateRevisionText(cardTitle, 60))} updated - ${truncateRevisionText(getActionMetaValue(actionMeta, 'descriptionPreview'), 60) || '(removed)'}`;
         }
         return `Kanban - ${actionType || 'Save'}`;
     };
@@ -359,9 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var marker = ' - ';
         var first = raw.indexOf(marker);
         if (first < 0) { return raw; }
-        var second = raw.indexOf(marker, first + marker.length);
-        if (second < 0) { return raw; }
-        return raw.slice(second + marker.length).trim();
+        return raw.slice(first + marker.length).trim();
     };
 
     var requestUploadClipboardImage = function (pageName, dataUrl) {
