@@ -65,12 +65,12 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
 
       if (scala.util.Random.nextInt(500) == 0) cleanupStaleEntries()
 
-      val json: String = syncCacheApi.get[String](cacheKey) match {
-        case Some(cachedJson) =>
-          staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
-          cachedJson
-        case None =>
-          try {
+      val json: String = try {
+        syncCacheApi.get[String](cacheKey) match {
+          case Some(cachedJson) =>
+            staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
+            cachedJson
+          case None =>
             withSingleFlight(cacheKey) {
               syncCacheApi.get[String](cacheKey).getOrElse {
                 val freshJson = wrapOrElse().toJson
@@ -79,15 +79,15 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
                 freshJson
               }
             }
-          } catch {
-            case e: Exception =>
-              Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
-                case Some(staleJson) =>
-                  logger.warn(s"Cache\tError\t${cacheKey}\tServing stale cache", e)
-                  staleJson
-                case None =>
-                  throw e
-              }
+        }
+      } catch {
+        case e: Exception =>
+          Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
+            case Some(staleJson) =>
+              logger.warn(s"Cache\tError\t${cacheKey}\tServing stale cache", e)
+              staleJson
+            case None =>
+              throw e
           }
       }
 
