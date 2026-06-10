@@ -1,5 +1,4 @@
 = [Macro]Attachment
-[Macro]
 
 S3에 업로드된 파일을 페이지에 첨부합니다.
 이미지 파일(png, jpg, gif 등)은 `<img>` 태그로, 그 외 파일은 다운로드 링크로 렌더링합니다.

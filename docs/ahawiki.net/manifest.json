@@ -1,7 +1,7 @@
 {
   "source": "https://ahawiki.net/w/PageList",
-  "downloadedAt": "2026-06-09T21:27:53.127Z",
-  "count": 75,
+  "downloadedAt": "2026-06-10T06:33:26.700Z",
+  "count": 99,
   "pages": [
     {
       "name": "aha00a@gmail.com",
@@ -28,10 +28,46 @@
       "bytes": 1462
     },
     {
+      "name": "MacroYears",
+      "rawUrl": "https://ahawiki.net/w/MacroYears?action=raw",
+      "fileName": "MacroYears",
+      "bytes": 310
+    },
+    {
+      "name": "MacroWikiStatistics",
+      "rawUrl": "https://ahawiki.net/w/MacroWikiStatistics?action=raw",
+      "fileName": "MacroWikiStatistics",
+      "bytes": 191
+    },
+    {
+      "name": "MacroWeekdayName",
+      "rawUrl": "https://ahawiki.net/w/MacroWeekdayName?action=raw",
+      "fileName": "MacroWeekdayName",
+      "bytes": 291
+    },
+    {
+      "name": "MacroUptime",
+      "rawUrl": "https://ahawiki.net/w/MacroUptime?action=raw",
+      "fileName": "MacroUptime",
+      "bytes": 239
+    },
+    {
+      "name": "MacroTwinPages",
+      "rawUrl": "https://ahawiki.net/w/MacroTwinPages?action=raw",
+      "fileName": "MacroTwinPages",
+      "bytes": 415
+    },
+    {
       "name": "MacroTrivial",
       "rawUrl": "https://ahawiki.net/w/MacroTrivial?action=raw",
       "fileName": "MacroTrivial",
       "bytes": 314
+    },
+    {
+      "name": "MacroTitleIndex",
+      "rawUrl": "https://ahawiki.net/w/MacroTitleIndex?action=raw",
+      "fileName": "MacroTitleIndex",
+      "bytes": 319
     },
     {
       "name": "MacroThemes",
@@ -52,10 +88,22 @@
       "bytes": 42
     },
     {
+      "name": "MacroSiteName",
+      "rawUrl": "https://ahawiki.net/w/MacroSiteName?action=raw",
+      "fileName": "MacroSiteName",
+      "bytes": 186
+    },
+    {
+      "name": "MacroSimilarPages",
+      "rawUrl": "https://ahawiki.net/w/MacroSimilarPages?action=raw",
+      "fileName": "MacroSimilarPages",
+      "bytes": 492
+    },
+    {
       "name": "MacroSet",
       "rawUrl": "https://ahawiki.net/w/MacroSet?action=raw",
       "fileName": "MacroSet",
-      "bytes": 20
+      "bytes": 28
     },
     {
       "name": "MacroRuby",
@@ -64,10 +112,64 @@
       "bytes": 352
     },
     {
+      "name": "MacroRecentChanges",
+      "rawUrl": "https://ahawiki.net/w/MacroRecentChanges?action=raw",
+      "fileName": "MacroRecentChanges",
+      "bytes": 250
+    },
+    {
       "name": "MacroPeriod",
       "rawUrl": "https://ahawiki.net/w/MacroPeriod?action=raw",
       "fileName": "MacroPeriod",
       "bytes": 547
+    },
+    {
+      "name": "MacroPageMap",
+      "rawUrl": "https://ahawiki.net/w/MacroPageMap?action=raw",
+      "fileName": "MacroPageMap",
+      "bytes": 349
+    },
+    {
+      "name": "MacroPageList",
+      "rawUrl": "https://ahawiki.net/w/MacroPageList?action=raw",
+      "fileName": "MacroPageList",
+      "bytes": 420
+    },
+    {
+      "name": "MacroPageCount",
+      "rawUrl": "https://ahawiki.net/w/MacroPageCount?action=raw",
+      "fileName": "MacroPageCount",
+      "bytes": 237
+    },
+    {
+      "name": "MacroNavigationYearMonth",
+      "rawUrl": "https://ahawiki.net/w/MacroNavigationYearMonth?action=raw",
+      "fileName": "MacroNavigationYearMonth",
+      "bytes": 396
+    },
+    {
+      "name": "MacroNavigationYear",
+      "rawUrl": "https://ahawiki.net/w/MacroNavigationYear?action=raw",
+      "fileName": "MacroNavigationYear",
+      "bytes": 369
+    },
+    {
+      "name": "MacroNavigation",
+      "rawUrl": "https://ahawiki.net/w/MacroNavigation?action=raw",
+      "fileName": "MacroNavigation",
+      "bytes": 380
+    },
+    {
+      "name": "MacroMonthName",
+      "rawUrl": "https://ahawiki.net/w/MacroMonthName?action=raw",
+      "fileName": "MacroMonthName",
+      "bytes": 314
+    },
+    {
+      "name": "MacroLinkDate",
+      "rawUrl": "https://ahawiki.net/w/MacroLinkDate?action=raw",
+      "fileName": "MacroLinkDate",
+      "bytes": 565
     },
     {
       "name": "MacroKbd",
@@ -80,6 +182,12 @@
       "rawUrl": "https://ahawiki.net/w/MacroInfo?action=raw",
       "fileName": "MacroInfo",
       "bytes": 24
+    },
+    {
+      "name": "MacroIncludeDays",
+      "rawUrl": "https://ahawiki.net/w/MacroIncludeDays?action=raw",
+      "fileName": "MacroIncludeDays",
+      "bytes": 532
     },
     {
       "name": "MacroInclude",
@@ -124,6 +232,12 @@
       "bytes": 428
     },
     {
+      "name": "MacroDayHeader",
+      "rawUrl": "https://ahawiki.net/w/MacroDayHeader?action=raw",
+      "fileName": "MacroDayHeader",
+      "bytes": 551
+    },
+    {
       "name": "MacroCopyable",
       "rawUrl": "https://ahawiki.net/w/MacroCopyable?action=raw",
       "fileName": "MacroCopyable",
@@ -142,10 +256,28 @@
       "bytes": 1760
     },
     {
+      "name": "MacroCalendar",
+      "rawUrl": "https://ahawiki.net/w/MacroCalendar?action=raw",
+      "fileName": "MacroCalendar",
+      "bytes": 626
+    },
+    {
       "name": "MacroBr",
       "rawUrl": "https://ahawiki.net/w/MacroBr?action=raw",
       "fileName": "MacroBr",
       "bytes": 246
+    },
+    {
+      "name": "MacroBacklinks",
+      "rawUrl": "https://ahawiki.net/w/MacroBacklinks?action=raw",
+      "fileName": "MacroBacklinks",
+      "bytes": 311
+    },
+    {
+      "name": "MacroAttachment",
+      "rawUrl": "https://ahawiki.net/w/MacroAttachment?action=raw",
+      "fileName": "MacroAttachment",
+      "bytes": 713
     },
     {
       "name": "MacroAhaWikiSiteList",
@@ -154,10 +286,22 @@
       "bytes": 1342
     },
     {
+      "name": "MacroAdjacentPages",
+      "rawUrl": "https://ahawiki.net/w/MacroAdjacentPages?action=raw",
+      "fileName": "MacroAdjacentPages",
+      "bytes": 319
+    },
+    {
       "name": "Macro",
       "rawUrl": "https://ahawiki.net/w/Macro?action=raw",
       "fileName": "Macro",
-      "bytes": 1311
+      "bytes": 2660
+    },
+    {
+      "name": "InterpreterWiki",
+      "rawUrl": "https://ahawiki.net/w/InterpreterWiki?action=raw",
+      "fileName": "InterpreterWiki",
+      "bytes": 406
     },
     {
       "name": "InterpreterVim",
@@ -271,7 +415,7 @@
       "name": "Interpreter",
       "rawUrl": "https://ahawiki.net/w/Interpreter?action=raw",
       "fileName": "Interpreter",
-      "bytes": 1204
+      "bytes": 1352
     },
     {
       "name": "HotKey",
@@ -283,7 +427,7 @@
       "name": "GettingStarted",
       "rawUrl": "https://ahawiki.net/w/GettingStarted?action=raw",
       "fileName": "GettingStarted",
-      "bytes": 4292
+      "bytes": 2707
     },
     {
       "name": "FrontPage",
@@ -295,7 +439,7 @@
       "name": "Features",
       "rawUrl": "https://ahawiki.net/w/Features?action=raw",
       "fileName": "Features",
-      "bytes": 446
+      "bytes": 323
     },
     {
       "name": "ExampleText",

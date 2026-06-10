@@ -1,6 +1,4 @@
 = [Macro]WeekdayName
-[Macro]
-
 날짜(`YYYY-MM-DD`)에 해당하는 요일 이름을 현재 로케일로 출력합니다.
 
 == 사용법

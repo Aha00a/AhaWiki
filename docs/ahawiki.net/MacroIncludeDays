@@ -1,5 +1,4 @@
 = [Macro]IncludeDays
-[Macro]
 
 특정 연월(YYYY-MM)에 해당하는 일별 페이지(`YYYY-MM-DD`)의 내용을 순서대로 포함합니다.
 일기/다이어리 월간 요약 페이지에 활용합니다.
