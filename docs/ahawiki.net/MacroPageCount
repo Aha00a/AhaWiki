@@ -1,0 +1,11 @@
+= [Macro]PageCount
+이 위키의 총 페이지 수를 숫자로 출력합니다.
+
+== 사용법
+`[[PageCount]]`
+
+인자 없이 사용합니다.
+열람 권한이 있는 페이지 수만 반영됩니다.
+
+== 관련
+ * [MacroWikiStatistics]

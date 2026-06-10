@@ -16,12 +16,7 @@
   * MacroHtml
   * InterpreterHtml
 
-== Interpreters - Selectable wiki syntax
- * InterpreterWiki
- * InterpreterPage
- * InterpreterText
- * InterpreterHtml
- * InterpreterMarkdown
+== [Interpreter]
 
 == Administration
  * User-customizable interface - by edit [.header], [.footer]

@@ -1,0 +1,14 @@
+= [Macro]AdjacentPages
+[Macro]
+
+현재 페이지와 직접 연결된 페이지들의 링크 관계를 방향 그래프로 시각화합니다.
+D3.js 기반 인터랙티브 그래프로 렌더링됩니다.
+
+== 사용법
+`[[AdjacentPages]]`
+
+인자 없이 사용합니다.
+
+== 관련
+ * [MacroPageMap]
+ * [MacroBacklinks]

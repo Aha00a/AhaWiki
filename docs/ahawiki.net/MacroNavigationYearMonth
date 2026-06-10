@@ -1,0 +1,12 @@
+= [Macro]NavigationYearMonth
+연월 페이지(`YYYY-MM`)에서 전후 연월 링크 박스를 표시합니다.
+
+== 사용법
+`[[NavigationYearMonth]]` - 현재 페이지 이름을 YYYY-MM으로 파싱
+`[[NavigationYearMonth(2024-01)]]` - 특정 연월
+
+현재 연월 기준 앞뒤 3개월 링크를 `rightInfoBox` 박스로 출력합니다.
+
+== 관련
+ * [MacroNavigationYear]
+ * [MacroCalendar]

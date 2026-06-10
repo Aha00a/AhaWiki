@@ -1,0 +1,10 @@
+= [Macro]RecentChanges
+최근 변경된 페이지 목록을 표시합니다.
+
+== 사용법
+`[[RecentChanges]]` - 기본 개수로 표시
+`[[RecentChanges(50)]]` - 최대 50개 표시 (1~1000 범위)
+
+== 관련
+ * [MacroPageList]
+ * [MacroNavigation]

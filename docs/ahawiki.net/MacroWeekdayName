@@ -1,0 +1,12 @@
+= [Macro]WeekdayName
+[Macro]
+
+날짜(`YYYY-MM-DD`)에 해당하는 요일 이름을 현재 로케일로 출력합니다.
+
+== 사용법
+`[[WeekdayName]]` - 현재 페이지 이름을 YYYY-MM-DD로 파싱
+`[[WeekdayName(2024-01-15)]]` - 특정 날짜
+
+== 관련
+ * [MacroMonthName]
+ * [MacroDayHeader]

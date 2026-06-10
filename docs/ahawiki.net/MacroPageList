@@ -1,0 +1,16 @@
+= [Macro]PageList
+[Macro]
+
+이 위키의 모든 페이지를 이름, 수정일시, 크기, 리비전 번호가 포함된 표로 보여줍니다.
+
+== 사용법
+`[[PageList]]`
+
+인자 없이 사용합니다.
+열람 권한이 있는 페이지만 표시됩니다.
+표는 `tablesorter` 클래스가 적용되어 열 클릭으로 정렬할 수 있습니다.
+
+== 관련
+ * [MacroTitleIndex]
+ * [MacroRecentChanges]
+ * [MacroNavigation]

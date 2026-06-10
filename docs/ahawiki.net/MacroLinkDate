@@ -1,0 +1,17 @@
+= [Macro]LinkDate
+[Macro]
+
+날짜(`YYYY-MM-DD`)에 대한 다양한 날짜 링크 모음을 표시합니다.
+전후 날짜 탐색 링크와 날짜의 여러 형태(전체, 연월+일, 연+월일, 연+월+일) 링크를 함께 보여줍니다.
+
+== 사용법
+`[[LinkDate]]` - 현재 페이지 이름을 YYYY-MM-DD로 파싱
+`[[LinkDate(2024-01-15)]]` - 특정 날짜
+
+날짜 페이지 상단에 배치하면 날짜 간 탐색과 관련 날짜 보기에 유용합니다.
+
+== 관련
+ * [MacroDayHeader]
+ * [MacroCalendar]
+ * [MacroNavigationYear]
+ * [MacroNavigationYearMonth]

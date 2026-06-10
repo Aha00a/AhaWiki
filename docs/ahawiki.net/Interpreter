@@ -8,6 +8,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
 문서 전체에 적용하려면 문서 첫 줄에 `#!Markdown`처럼 적습니다.
 
 == List
+ 1. [InterpreterWiki] - AhaMark 기본 위키 문법 (default)
  1. [InterpreterComment] - 렌더링하지 않는 주석
  1. [InterpreterFold] - 접고 펼칠 수 있는 영역
  1. [InterpreterGantt] - 간트차트
@@ -24,6 +25,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
  1. [InterpreterTable] - TSV/CSV 표
  1. [InterpreterText] - 일반 텍스트
  1. [InterpreterVim] - 코드 syntax highlight
+ 1. [InterpreterWikiSyntaxPreview] - 미리보기용 인터프리터 (내부 사용)
 
 == Related Pages
  * ["Interpreter Examples"]

@@ -1,0 +1,13 @@
+= [Macro]TwinPages
+Sister Wiki(자매 위키)에서 현재 페이지와 동일한 이름의 페이지가 있는 경우 링크 목록을 표시합니다.
+
+== 사용법
+`[[TwinPages]]` - 현재 페이지 기준
+`[[TwinPages(PageName)]]` - 특정 페이지 이름 기준
+
+열람 권한이 없는 Sister Wiki 페이지는 제외됩니다.
+
+== 관련
+ * [MacroSimilarPages]
+ * [MacroAhaWikiSiteList]
+ * [Dev SisterWiki]

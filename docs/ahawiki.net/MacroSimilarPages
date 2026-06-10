@@ -1,0 +1,13 @@
+= [Macro]SimilarPages
+현재 페이지와 내용이 유사한 페이지들을 코사인 유사도로 계산하여 목록으로 보여줍니다.
+같은 위키 내 유사 페이지와 Sister Wiki의 유사 페이지를 함께 표시합니다.
+
+== 사용법
+`[[SimilarPages]]` - 현재 페이지 기준
+`[[SimilarPages(PageName)]]` - 특정 페이지 기준
+
+각 항목은 유사도 퍼센트와 공통 주요 단어를 함께 표시합니다.
+
+== 관련
+ * [MacroTwinPages]
+ * [MacroBacklinks]

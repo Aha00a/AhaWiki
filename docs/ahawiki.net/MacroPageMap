@@ -1,0 +1,13 @@
+= [Macro]PageMap
+이 위키의 모든 페이지 간 링크 관계를 방향 그래프로 시각화합니다.
+D3.js 기반 인터랙티브 그래프로 렌더링됩니다.
+
+== 사용법
+`[[PageMap]]`
+
+인자 없이 사용합니다.
+권한이 있는 페이지 간의 링크만 표시됩니다.
+
+== 관련
+ * [MacroAdjacentPages]
+ * [InterpreterGraph]

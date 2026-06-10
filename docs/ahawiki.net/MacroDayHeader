@@ -1,0 +1,16 @@
+= [Macro]DayHeader
+[Macro]
+
+날짜 페이지(`YYYY-MM-DD`)에서 날짜 네비게이션 링크와 제목을 출력합니다.
+[MacroLinkDate]와 함께 날짜 페이지 상단에 배치하는 것을 권장합니다.
+
+== 사용법
+`[[DayHeader]]` - 현재 페이지 이름을 YYYY-MM-DD로 파싱
+
+독립 날짜 페이지(`2024-01-15`)에서는 연월 링크와 요일이 포함된 h1 제목을 출력합니다.
+[MacroIncludeDays]로 포함된 경우에는 h2 제목만 출력합니다.
+
+== 관련
+ * [MacroLinkDate]
+ * [MacroIncludeDays]
+ * [MacroWeekdayName]

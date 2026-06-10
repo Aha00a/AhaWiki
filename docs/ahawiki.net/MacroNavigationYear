@@ -1,0 +1,12 @@
+= [Macro]NavigationYear
+연도 페이지(`YYYY`)에서 전후 연도 링크 박스를 표시합니다.
+
+== 사용법
+`[[NavigationYear]]` - 현재 페이지 이름을 YYYY로 파싱
+`[[NavigationYear(2024)]]` - 특정 연도
+
+현재 연도 기준 앞뒤 10년 링크를 `rightInfoBox` 박스로 출력합니다.
+
+== 관련
+ * [MacroNavigationYearMonth]
+ * [MacroYears]

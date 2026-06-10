@@ -1,0 +1,11 @@
+= [Macro]WikiStatistics
+이 위키의 통계 정보를 표시합니다.
+
+== 사용법
+`[[WikiStatistics]]`
+
+인자 없이 사용합니다.
+
+== 관련
+ * [MacroPageCount]
+ * [MacroNavigation]

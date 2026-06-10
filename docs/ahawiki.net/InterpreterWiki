@@ -1,0 +1,16 @@
+= [Interpreter]Wiki
+[AhaMark] 기본 위키 문법 인터프리터입니다. `#!` Shebang을 지정하지 않으면 이 인터프리터가 적용됩니다.
+
+블록(`[[[...]]]`) 안에서 Shebang이 없으면 `Text`가 기본으로 적용됩니다.
+
+[[[#!WikiSyntaxPreview
+= 제목
+== 섹션
+ * 목록 항목
+ 1. 순서 있는 목록
+]]]
+
+== 관련
+ * [AhaMark]
+ * [AhaMark Basic]
+ * [Interpreter]

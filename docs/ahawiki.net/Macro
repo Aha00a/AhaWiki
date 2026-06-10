@@ -11,25 +11,66 @@
  * 안내: [[Info(간단한 안내 메시지)]]
 ]]]
 
-== List
- 1. [MacroAhaWikiSiteList]
+== 서식/텍스트
  1. [MacroBr] - 강제 줄바꿈
- 1. [MacroCheckBox] - 체크박스
+ 1. [MacroKbd] - 키보드 키 표시
+ 1. [MacroRuby] - 루비 주석 표시
+ 1. [MacroTrivial] - 덜 중요한 텍스트
  1. [MacroColorCode] - 색상 코드 미리보기
  1. [MacroCopyable] - 복사 버튼이 있는 텍스트
+ 1. [MacroHtml] - HTML 조각 출력
+
+== 미디어/파일
+ 1. [MacroImage] - 이미지 삽입
+ 1. [MacroAttachment] - S3 파일 첨부
  1. [MacroEmbed] - YouTube 임베드
+
+== 페이지 삽입
+ 1. [MacroInclude] - 다른 페이지 포함
+ 1. [MacroIncludeDays] - 특정 월의 일별 페이지 포함
+
+== 날짜/시간
+ 1. [MacroPeriod] - 날짜 간격 계산
+ 1. [MacroCalendar] - 달력 보기
+ 1. [MacroDayHeader] - 날짜 페이지 헤더
+ 1. [MacroLinkDate] - 날짜 관련 링크 모음
+ 1. [MacroWeekdayName] - 요일 이름
+ 1. [MacroMonthName] - 월 이름
+ 1. [MacroNavigationYear] - 연도 탐색 박스
+ 1. [MacroNavigationYearMonth] - 연월 탐색 박스
+ 1. [MacroYears] - 위키에 링크된 연도 목록
+
+== 페이지 목록/탐색
+ 1. [MacroNavigation] - 탐색 메뉴 링크
+ 1. [MacroPageList] - 전체 페이지 목록 표
+ 1. [MacroTitleIndex] - 가나다/ABC 순 제목 색인
+ 1. [MacroRecentChanges] - 최근 변경 목록
+ 1. [MacroWikiStatistics] - 위키 통계
+ 1. [MacroPageCount] - 전체 페이지 수
+ 1. [MacroPageMap] - 전체 페이지 링크 그래프
+ 1. [MacroAdjacentPages] - 현재 페이지 연결 그래프
+
+== 역링크/연관 페이지
+ 1. [MacroBacklinks] - 현재 페이지로의 역링크
+ 1. [MacroTwinPages] - Sister Wiki의 동명 페이지
+ 1. [MacroSimilarPages] - 유사 페이지 (코사인 유사도)
+ 1. [MacroAhaWikiSiteList] - AhaWiki 사이트 목록
+
+== 변수
  1. [MacroGetMacroSet] - 문서 안 임시 변수
   a. [MacroGet]
   a. [MacroSet]
- 1. [MacroHtml] - HTML 조각 출력
- 1. [MacroImage] - 이미지 삽입
- 1. [MacroInclude] - 다른 페이지 포함
- 1. [MacroKbd] - 키보드 키 표시
- 1. [MacroPeriod] - 날짜 간격 계산
- 1. [MacroRuby] - 루비 주석 표시
+
+== 폼/입력
+ 1. [MacroCheckBox] - 체크박스
+
+== 상태 메시지
  1. [MacroSuccessMacroErrorMacroInfo] - 상태 메시지 상자
   a. [MacroSuccess]
   a. [MacroError]
   a. [MacroInfo]
- 1. [MacroThemes] - theme token preview and table
- 1. [MacroTrivial] - 덜 중요한 텍스트
+
+== 시스템 정보
+ 1. [MacroSiteName] - 사이트 이름 출력
+ 1. [MacroUptime] - 서버 업타임
+ 1. [MacroThemes] - 테마 토큰 미리보기

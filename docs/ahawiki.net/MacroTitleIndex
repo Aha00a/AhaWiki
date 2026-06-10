@@ -1,0 +1,12 @@
+= [Macro]TitleIndex
+이 위키의 모든 페이지를 첫 글자(가나다/ABC/숫자 등)로 분류하여 알파벳 색인 형태로 보여줍니다.
+
+== 사용법
+`[[TitleIndex]]`
+
+인자 없이 사용합니다.
+열람 권한이 있는 페이지만 표시됩니다.
+
+== 관련
+ * [MacroPageList]
+ * [MacroNavigation]

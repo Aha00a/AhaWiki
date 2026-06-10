@@ -1,0 +1,11 @@
+= [Macro]Navigation
+[Macro]
+
+위키의 주요 탐색 페이지 링크 모음을 출력합니다.
+RecentChanges, TitleIndex, PageList, PageMap, WikiStatistics, Schema 링크를 쉼표로 구분하여 나열합니다.
+
+== 사용법
+`[[Navigation]]`
+
+인자 없이 사용합니다.
+각 페이지가 실제로 존재하거나 기본 제공 페이지인 경우에만 링크가 표시됩니다.
