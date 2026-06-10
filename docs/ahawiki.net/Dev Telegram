@@ -36,7 +36,7 @@ DB의 `Config` 테이블에 키 `Telegram.chatId`로 해당 사이트의 Chat ID
 [[[#!Table tsv 1 1
 이벤트	이모지	메시지 예시
 페이지 신규 생성	🆕	🆕 **PageName** created by 닉네임\n코멘트(있을 때만)\nURL
-페이지 수정	✏️	✏️ **PageName** r5 edited by 닉네임\n코멘트(있을 때만)\nURL
+페이지 수정	✏️	✏️ **PageName** r5 edited by 닉네임\n코멘트(있을 때만)\ndiff URL
 페이지 삭제	🗑️	🗑️ **PageName** deleted by 닉네임\nURL
 마지막 리비전 삭제	⏪	⏪ **PageName** r5 revision deleted by 닉네임\nURL
 페이지 rename	📝	📝 **OldName** → **NewName** renamed by 닉네임\nURL
@@ -49,7 +49,7 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
  * 페이지명은 HTML bold (`<b>`)로 강조, `parse_mode=HTML` 사용
  * 페이지명·닉네임·파일명 등 동적 값은 HTML 특수문자(`&`, `<`, `>`) 이스케이프 처리
  * 모든 알림은 `disable_notification: true` 로 전송 (무음)
- * URL은 수정된 페이지의 직접 링크
+ * 페이지 수정 이벤트의 URL은 해당 리비전의 diff 링크 (`?action=diff&after=r번호`), 나머지는 페이지 직접 링크
 
 == 구현
  * `app/logics/ApplicationConf.scala` — `AhaWiki.telegram.botToken()` / `chatId()` 설정 읽기
@@ -60,12 +60,15 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
  * `app/logics/TelegramLogic.scala` — 알림 전송 전담 클래스 (`@Singleton`, DI)
   * `sendTo(chatId, message)` — 단일 chatId로 Telegram API 호출 (비동기 fire-and-forget)
   * `send(message, siteChatId)` — 전역 chatId + 사이트별 chatId를 deduplicate하여 `sendTo` 호출
-  * `pageUrl` / `h` / `b` / `commentLine` — 내부 유틸
+  * `pageUrl` / `diffUrl` / `h` / `b` / `commentLine` — 내부 유틸 (`diffUrl`은 `pageUrl + ?action=diff&after=revision`)
   * 이벤트별 public 메서드 — 모두 `siteChatId: Option[String] = None` 파라미터 보유
  * `app/controllers/Wiki.scala`
   * `TelegramLogic` 주입
   * `siteTelegramChatId(implicit connection, site)` — `Config.Query.Telegram.chatId()`로 사이트별 chatId 조회
   * 각 액션 핸들러(`save`, `delete`, `deleteLastRevision`, `rename`, `uploadAttachment`, `deleteAttachment`, `uploadClipboardImage`, `syncGoogleSpreadsheet`)에서 성공 시 `siteTelegramChatId`를 함께 전달
+ * `app/controllers/Diary.scala`
+  * `TelegramLogic` 주입
+  * `write` 핸들러: 신규 페이지면 `notifyPageCreated`, 기존 페이지 append면 `notifyPageEdited` 호출
  * `app/controllers/Api.scala`
   * `GET /api/Admin/Site/:seq/Telegram` — chatId 조회
   * `PUT /api/Admin/Site/:seq/Telegram` — chatId 저장 (`Config.Query.Telegram.saveChatId`)

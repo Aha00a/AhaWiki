@@ -6,6 +6,7 @@ import com.aha00a.play.Implicits._
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
+import logics.TelegramLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
@@ -28,6 +29,7 @@ class Diary @Inject()(implicit val
                        wikiActors: WikiActors,
                       applicationConf: ApplicationConf,
                       ahaWikiCache: AhaWikiCache,
+                      telegramLogic: TelegramLogic,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
                      ) extends BaseController {
@@ -51,7 +53,14 @@ class Diary @Inject()(implicit val
           else
             s"$latestText\n * $q"
 
-        PageLogic.insert(name, latestRevision + 1, LocalDateTime.now(), "add item", isMinorEdit = false, body)
+        val nextRevision = latestRevision + 1
+        PageLogic.insert(name, nextRevision, LocalDateTime.now(), "add item", isMinorEdit = false, body)
+        val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
+        val siteChatId = models.tables.Config.Query.Telegram.chatId()
+        if (latestText.isEmpty)
+          telegramLogic.notifyPageCreated(request.host, name, editorNickname, "add item", siteChatId)
+        else
+          telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, "add item", siteChatId)
         implicit val tupleDatabaseSite: (Database, Site) = (database, site)
         ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
         Redirect(routes.Wiki.view(name)).flashing("success" -> "saved.")

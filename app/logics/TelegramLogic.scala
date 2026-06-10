@@ -18,6 +18,9 @@ class TelegramLogic @Inject()(
   private def pageUrl(host: String, pageName: String): String =
     s"https://$host/w/${URLEncoder.encode(pageName, "UTF-8").replace("+", "%20")}"
 
+  private def diffUrl(host: String, pageName: String, revision: Long): String =
+    s"${pageUrl(host, pageName)}?action=diff&after=$revision"
+
   private def h(s: String): String =
     s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -56,7 +59,7 @@ class TelegramLogic @Inject()(
     send(s"🆕 ${b(pageName)} created by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}", siteChatId)
 
   def notifyPageEdited(host: String, pageName: String, revision: Long, nickname: String, comment: String, siteChatId: Option[String] = None): Unit =
-    send(s"✏️ ${b(pageName)} r$revision edited by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}", siteChatId)
+    send(s"✏️ ${b(pageName)} r$revision edited by ${h(nickname)}${commentLine(comment)}\n${diffUrl(host, pageName, revision)}", siteChatId)
 
   def notifyPageDeleted(host: String, pageName: String, nickname: String, siteChatId: Option[String] = None): Unit =
     send(s"🗑️ ${b(pageName)} deleted by ${h(nickname)}\n${pageUrl(host, pageName)}", siteChatId)
