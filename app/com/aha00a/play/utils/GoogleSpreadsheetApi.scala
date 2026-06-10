@@ -15,10 +15,13 @@ object GoogleSpreadsheetApi {
     implicit
     wSClient: WSClient,
     executionContext: ExecutionContext
-  ): Future[Seq[Seq[String]]] = wSClient
-      .url(s"https://sheets.googleapis.com/v4/spreadsheets/$id/values/'$sheetName'!A1:Z1000")
+  ): Future[Seq[Seq[String]]] = {
+    val range = if (sheetName.isEmpty) "A1:Z1000" else s"'${sheetName.replace("'", "''")}'!A1:Z1000"
+    wSClient
+      .url(s"https://sheets.googleapis.com/v4/spreadsheets/$id/values/$range")
       .withQueryStringParameters("key" -> key)
       .withRequestTimeout(60 seconds)
       .get()
       .map(r => (r.json \ "values").as[Seq[Seq[String]]])
+  }
 }

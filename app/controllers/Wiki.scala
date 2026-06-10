@@ -901,7 +901,7 @@ controllerComponents: ControllerComponents,
     }
   }
 
-  val regexGoogleSpreadsheetUrl: Regex = """https://docs.google.com/spreadsheets/d/([^/]+)(/(edit(#gid=0)?)?)?""".r
+  val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
 
   def padColumns[T](matrix: Seq[Seq[T]], default: T): Seq[Seq[T]] = {
     val maxLength = matrix.map(_.length).max
@@ -918,25 +918,44 @@ controllerComponents: ControllerComponents,
           implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
           val pageContent = PageContent(page.content)
           if (WikiPermission().isWritable(pageName, pageContent)) {
-            val extractConvertApplyInterpreterRefresh = new ExtractConvertInjectInterpreterCustom(s => {
-              val pageContentChunk = PageContent(s)
-              if (url == pageContentChunk.argument.getOrElse(0, "") && sheetName == pageContentChunk.argument.getOrElse(1, "")) {
+            def fetchTsv(id: String): String = {
+              val googleSheetsApiKey = applicationConf.AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
+              val spreadsheet = Await.result(GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName), 5 seconds)
+              SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))
+            }
+            // Case 1: embedded [[[#!Map url sheetName\ncontent]]] form
+            val extractor = new ExtractConvertInjectInterpreterCustom(s => {
+              val chunk = PageContent(s)
+              if (url == chunk.argument.getOrElse(0, "") && sheetName == chunk.argument.getOrElse(1, "")) {
                 url match {
-                  case regexGoogleSpreadsheetUrl(id, _, _, _) =>
-                    val googleSheetsApiKey = applicationConf.AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-                    val futureSpreadsheet: Future[Seq[Seq[String]]] = GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName)
-                    val spreadsheet: Seq[Seq[String]] = Await.result(futureSpreadsheet, 5 seconds)
-                    s"[[[#!Map $url $sheetName\n${SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))}]]]"
-                  case _ =>
-                    s
+                  case regexGoogleSpreadsheetUrl(id) =>
+                  val mapHeader = if (sheetName.nonEmpty) s"#!Map $url $sheetName" else s"#!Map $url"
+                  s"[[[$mapHeader\n${fetchTsv(id)}]]]"
+                  case _ => s
                 }
               } else {
                 s
               }
             })
-            val body = extractConvertApplyInterpreterRefresh.inject(extractConvertApplyInterpreterRefresh.extract(pageContent.content))
-            if (pageContent.content != body) {
-              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, body)
+            val updatedBodyContent = extractor.inject(extractor.extract(pageContent.content))
+            val newPageBody = if (updatedBodyContent != pageContent.content) {
+              // embedded form updated — reconstruct full page preserving page-level directives
+              if (pageContent.directives.isEmpty) updatedBodyContent
+              else pageContent.directives.map("#!" + _).mkString("\n") + "\n" + updatedBodyContent
+            } else if (pageContent.interpreter.contains("Map") &&
+                       url == pageContent.argument.getOrElse(0, "") &&
+                       sheetName == pageContent.argument.getOrElse(1, "")) {
+              // Case 2: page-level #!Map directive form
+              url match {
+                case regexGoogleSpreadsheetUrl(id) =>
+                  pageContent.directives.map("#!" + _).mkString("\n") + "\n" + fetchTsv(id)
+                case _ => page.content
+              }
+            } else {
+              page.content
+            }
+            if (page.content != newPageBody) {
+              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, newPageBody)
               telegramLogic.notifySpreadsheetSynced(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
               Ok("")
             } else {

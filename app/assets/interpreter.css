@@ -27,6 +27,12 @@
   border-radius: 2px;
   box-shadow: rgba(0, 0, 0, 0.3) 0 1px 4px -1px;
   padding: 9px 12px;
+  color: #333;
+}
+.AhaWiki .interpreterMap > .mapArea > .poi a,
+.AhaWiki .interpreterMap > .mapArea > .sheetLink a,
+.AhaWiki .interpreterMap > .mapArea > .refreshLink a {
+  color: #333;
 }
 .AhaWiki .interpreterMap > .mapArea > .poi {
   top: 10px;
