@@ -561,20 +561,32 @@ nav.topNavbar .themeOption.themeAhaWikiDark i {
 }
 @media (max-width: 767px) {
   nav.topNavbar > .wrap {
+    flex-wrap: nowrap;
     padding: 10px 12px;
+  }
+  nav.topNavbar a.homeLink {
+    flex: 1 1 auto;
+    max-width: none;
   }
   nav.topNavbar .navDrawerToggle {
     display: inline-flex;
-    margin-left: auto;
+    flex: 0 0 auto;
+    margin-left: 0;
+    order: 3;
   }
   nav.topNavbar .groupMenu {
     display: none;
   }
   nav.topNavbar .themePickerInline {
-    margin-left: 0;
+    flex: 0 0 auto;
+    margin-left: auto;
+    order: 2;
+  }
+  nav.topNavbar .themePickerInline .widthToggle {
+    display: none;
   }
   nav.topNavbar .actionAuth {
-    margin-left: 0;
+    display: none;
   }
   nav.topNavbar .mobileFlatMenu {
     display: none;

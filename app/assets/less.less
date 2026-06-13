@@ -504,11 +504,28 @@ nav.topNavbar {
 	}
 
 	@media (max-width: 767px) {
-		> .wrap { padding: 10px 12px; }
-		.navDrawerToggle { display: inline-flex; margin-left: auto; }
+		> .wrap {
+			flex-wrap: nowrap;
+			padding: 10px 12px;
+		}
+		a.homeLink {
+			flex: 1 1 auto;
+			max-width: none;
+		}
+		.navDrawerToggle {
+			display: inline-flex;
+			flex: 0 0 auto;
+			margin-left: 0;
+			order: 3;
+		}
 		.groupMenu { display: none; }
-		.themePickerInline { margin-left: 0; }
-		.actionAuth { margin-left: 0; }
+		.themePickerInline {
+			flex: 0 0 auto;
+			margin-left: auto;
+			order: 2;
+		}
+		.themePickerInline .widthToggle { display: none; }
+		.actionAuth { display: none; }
 		.mobileFlatMenu {
 			display: none;
 			position: absolute;
