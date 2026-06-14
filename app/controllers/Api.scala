@@ -1084,41 +1084,54 @@ class Api @Inject()(
   }
 
   def change(name: String, includeMinorEdit: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
-    // TODO: improve check permission
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
 
       case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
-      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String)
+      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean)
 
       implicit val provider: RequestWrapper = RequestWrapper()
       val wikiPermission = WikiPermission()
       val boundedLimit = limit.max(1).min(1000)
+      val batchSize = boundedLimit.max(100).min(1000)
 
-      val rows = SQL"""
-        SELECT
-          P.name,
-          P.revision,
-          DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
-          U.nickname,
-          U.profileImageUrl,
-          P.remoteAddress,
-          P.comment,
-          P.isMinorEdit,
-          P.content
-        FROM Page P
-        LEFT JOIN User U ON U.seq = P.user
-        WHERE P.site = ${site.seq}
-          AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
-        ORDER BY P.dateTime DESC
-        LIMIT $boundedLimit
-      """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")).map {
-        case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ content =>
-          ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, content)
-      }.*)
+      def selectRows(offset: Int): List[ChangeSourceRow] = {
+        SQL"""
+          SELECT
+            P.name,
+            P.revision,
+            DATE_FORMAT(P.dateTime, '%Y-%m-%d %H:%i:%s') AS date_time,
+            U.nickname,
+            U.profileImageUrl,
+            P.remoteAddress,
+            P.comment,
+            P.isMinorEdit
+          FROM Page P
+          LEFT JOIN User U ON U.seq = P.user
+          WHERE P.site = ${site.seq}
+            AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
+          ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
+          LIMIT $batchSize OFFSET $offset
+        """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
+          case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit =>
+            ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit)
+        }.*)
+      }
 
-      val readableRows = rows.filter(row => wikiPermission.isReadable(row.name, PageContent(row.content))).map { row =>
+      @scala.annotation.tailrec
+      def collectReadableRows(offset: Int, acc: List[ChangeSourceRow]): List[ChangeSourceRow] = {
+        if (acc.size >= boundedLimit) {
+          acc.take(boundedLimit)
+        } else {
+          val rows = selectRows(offset)
+          val readableRows = rows.filter(row => wikiPermission.isReadable(row.name))
+          val next = acc ++ readableRows
+          if (rows.size < batchSize) next.take(boundedLimit) else collectReadableRows(offset + rows.size, next)
+        }
+      }
+
+      val readableRows = collectReadableRows(0, List.empty).map { row =>
         ChangeRow(
           name = row.name,
           revision = row.revision,
