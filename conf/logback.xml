@@ -17,10 +17,16 @@
   </appender>
 
   <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>20</discardingThreshold>
+    <neverBlock>true</neverBlock>
     <appender-ref ref="FILE" />
   </appender>
 
   <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>1024</queueSize>
+    <discardingThreshold>20</discardingThreshold>
+    <neverBlock>true</neverBlock>
     <appender-ref ref="STDOUT" />
   </appender>
 

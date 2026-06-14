@@ -42,6 +42,9 @@ class ApplicationLifecycleHook @Inject()(
   executionContext: ExecutionContext,
   cacheFileCleanupService: CacheFileCleanupService
 ) extends Logging {
+  private val schedulerExecutionContext: ExecutionContext =
+    actorSystem.dispatchers.lookup("ahawiki-scheduler-dispatcher")
+
   logger.info("OnApplicationStarting")
 
   applicationLifecycle.addStopHook { () =>
@@ -50,7 +53,7 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   def scheduleWithDynamicDelay(name: String, initialDelay: FiniteDuration, nextDelay: () => FiniteDuration, job: () => Unit): Unit = {
-    SchedulerUtil.scheduleWithDynamicDelay(name, initialDelay, nextDelay, job)
+    SchedulerUtil.scheduleWithDynamicDelay(name, initialDelay, nextDelay, job)(actorSystem, schedulerExecutionContext)
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.

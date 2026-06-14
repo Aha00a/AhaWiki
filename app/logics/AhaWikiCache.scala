@@ -30,12 +30,25 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   private case class CachedJson(value: String, cachedAtEpochMs: Long)
 
   private val staleMaxMs: Long = 12 * 3600 * 1000L  // 12시간 이상 된 stale 엔트리 제거
+  private val staleMaxEntries: Int = 1000
 
   private def cleanupStaleEntries(): Unit = {
     val cutoff = System.currentTimeMillis() - staleMaxMs
     val iter   = staleEntries.entrySet().iterator()
     while (iter.hasNext) {
       if (iter.next().getValue.cachedAtEpochMs < cutoff) iter.remove()
+    }
+  }
+
+  private def rememberStaleEntry(cacheKey: String, json: String): Unit = {
+    staleEntries.put(cacheKey, CachedJson(json, System.currentTimeMillis()))
+    if (staleEntries.size() > staleMaxEntries) {
+      cleanupStaleEntries()
+      val iter = staleEntries.entrySet().iterator()
+      while (staleEntries.size() > staleMaxEntries && iter.hasNext) {
+        iter.next()
+        iter.remove()
+      }
     }
   }
 
@@ -68,14 +81,14 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       val json: String = try {
         syncCacheApi.get[String](cacheKey) match {
           case Some(cachedJson) =>
-            staleEntries.put(cacheKey, CachedJson(cachedJson, System.currentTimeMillis()))
+            rememberStaleEntry(cacheKey, cachedJson)
             cachedJson
           case None =>
             withSingleFlight(cacheKey) {
               syncCacheApi.get[String](cacheKey).getOrElse {
                 val freshJson = wrapOrElse().toJson
                 syncCacheApi.set(cacheKey, freshJson, durationExpire)
-                staleEntries.put(cacheKey, CachedJson(freshJson, System.currentTimeMillis()))
+                rememberStaleEntry(cacheKey, freshJson)
                 freshJson
               }
             }

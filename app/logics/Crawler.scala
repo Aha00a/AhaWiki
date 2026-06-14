@@ -43,7 +43,13 @@ class Crawler(document: Document) {
 object Crawler {
   def fromUrl(url: String)(implicit logger: Logger): Crawler = {
     logger.info(s"Crawler\t$url")
-    new Crawler(Jsoup.connect(url).userAgent("crawler.aha00a.com").get())
+    new Crawler(
+      Jsoup.connect(url)
+        .userAgent("crawler.aha00a.com")
+        .timeout(5000)
+        .maxBodySize(1024 * 1024)
+        .get()
+    )
   }
 
   def fromHtml(html: String) = new Crawler(Jsoup.parse(html))

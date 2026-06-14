@@ -45,10 +45,17 @@ class FilterAccessLog @Inject()(
 ) extends Filter with Logging {
   private val accessLogSampleRate = applicationConf.AhaWiki.accessLog.sampleRate().max(0.0).min(1.0)
 
-  private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, url: String, userAgent: String): Unit =
-    logger.info(Seq(f"${duration}%,12dms", method.padRight(7), status, remoteAddress.padRight(15), url, userAgent).mkString("\t"))
+  private def logRequest(method: String, status: Int, duration: Long, remoteAddress: String, uri: String, url: String, userAgent: String): Unit = {
+    if (shouldLogAccessLog(status, uri)) {
+      logger.info(Seq(f"${duration}%,12dms", method.padRight(7), status, remoteAddress.padRight(15), url, userAgent).mkString("\t"))
+    }
+  }
 
-  private def shouldSkipAccessLogUri(uri: String): Boolean = uri.startsWith("/public/")
+  private def shouldSkipAccessLogUri(uri: String): Boolean =
+    uri.startsWith("/public/") || uri.startsWith("/assets/")
+
+  private def shouldLogAccessLog(status: Int, uri: String): Boolean =
+    !shouldSkipAccessLogUri(uri) && (status >= 400 || Random.nextDouble() <= accessLogSampleRate)
 
   private def shouldInsertAccessLog(status: Int): Boolean =
     if (300 <= status && status < 400) false
@@ -80,7 +87,7 @@ class FilterAccessLog @Inject()(
     logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
     after((Random.nextInt(maxExtraMin * 60) + 60).seconds, actorSystem.scheduler)({
       val duration = (System.currentTimeMillis - startTime).toInt
-      logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
+      logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, rh.uri, url, rh.userAgent.getOrElse(""))
       if (!shouldSkipAccessLogUri(rh.uri)) onLog(duration)
       Future(Results.Forbidden)
     })
@@ -92,8 +99,8 @@ class FilterAccessLog @Inject()(
     val url = s"${rh.scheme}://${rh.host}${rh.uri}"
     val duration = (System.currentTimeMillis - startTime).toInt
     logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
-    logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, url, rh.userAgent.getOrElse(""))
-    onLog(duration)
+    logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, rh.uri, url, rh.userAgent.getOrElse(""))
+    if (!shouldSkipAccessLogUri(rh.uri)) onLog(duration)
     Future.successful(Results.Forbidden)
   }
 
@@ -134,7 +141,7 @@ class FilterAccessLog @Inject()(
     } else {
       nextFilter(requestHeader).map { result =>
         val duration = (System.currentTimeMillis - startTime).toInt
-        logRequest(rh.method, result.header.status, duration, remoteAddress, url, rh.userAgent.getOrElse(""))
+        logRequest(rh.method, result.header.status, duration, remoteAddress, uri, url, rh.userAgent.getOrElse(""))
         if (shouldSkipAccessLogUri(uri))
           logger.debug(s"Skip AccessLog insert: uri=$uri")
         else if (shouldInsertAccessLog(result.header.status))
