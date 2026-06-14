@@ -5,8 +5,6 @@ import models.ContextSite
 import models.tables.Config
 import models.tables.Site
 
-// TODO: fix to use models.tables.Config
-
 object AhaWikiConfig {
 
   def apply()(implicit contextSite: ContextSite) = new AhaWikiConfig()

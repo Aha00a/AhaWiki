@@ -4,10 +4,9 @@ import anorm.SQL
 import anorm.SqlParser.long
 import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
-import com.aha00a.tests.unit.{BlameUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
+import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
 import logics.AhaWikiCache
 import logics.ApplicationConf
-import logics.Crawler
 import logics.PermissionLogic
 import logics.SiteLogic
 import logics.wikis.interpreters.InterpreterSchema
@@ -43,8 +42,6 @@ class Test @Inject()(implicit val
 
   val testUtil = new TestUtil(x => logger.error(x.toString))
 
-  import testUtil.assertEquals
-
   def unit: Action[AnyContent] = Action { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
@@ -67,7 +64,7 @@ class Test @Inject()(implicit val
     PermissionLogicUnit.run(testUtil)
     WikiPermissionUnit.run(testUtil)
     InterpreterWikiUnit.run(testUtil)
-    apiCrawlerUnit()
+    CrawlerUnit.run(testUtil)
 
     val fileAbsolute = new File(".").getAbsoluteFile
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
@@ -75,40 +72,6 @@ class Test @Inject()(implicit val
     val percent = free / total * 100
     val message: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
     if(percent < 5) InsufficientStorage(message) else Ok(message)
-  }
-
-
-  // TODO: extract to CrawlerUnit.run
-  private def apiCrawlerUnit() = {
-    {
-      val crawler = Crawler.fromHtml(
-        """<html>
-          |<head>
-          |  <title>title</title>
-          |</head>
-          |<body>body</body>
-          |</html>
-        """.stripMargin)
-      assertEquals(crawler.title, "title")
-      assertEquals(crawler.description, "body")
-      assertEquals(crawler.image, "")
-    }
-    {
-      val crawler = Crawler.fromHtml(
-        """<html>
-          |<head>
-          |  <title>title</title>
-          |  <meta property="og:title" content="ogTitle">
-          |  <meta property="og:description" content="ogDescription">
-          |  <meta property="og:image" content="ogImage">
-          |</head>
-          |<body>body</body>
-          |</html>
-        """.stripMargin)
-      assertEquals(crawler.title, "ogTitle")
-      assertEquals(crawler.description, "ogDescription")
-      assertEquals(crawler.image, "ogImage")
-    }
   }
 
 
