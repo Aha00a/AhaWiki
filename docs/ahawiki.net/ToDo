@@ -49,13 +49,6 @@ Bot을 만들어볼까 싶다. 문법 변화나 기타 노가다로 고쳐야 �
  1. 문법이 변하면 history를 포함하여 migration을 하는 방안과
  1. 렌더러를 버전관리를 해서 datetime을 통해서 그 시점으로 interpreting하는 방법이 있겠다.
 진짜 쓸데없는거로 고민하는 거 같긴 한데.. 뭐 이런게 내 취미라고 해두자. --[2020-01-08]
-
-
-=== Feed
-[schema:Article]의 하위항목이 많다. [schema:BlogPosting]도 있고.. 지금 rss feed가 별 의미가 없는데, 적용해 봐도 괜찮을듯. 또한 [MacroSchema]로 하위분류에 대한 목록 표시 또한 구현해야 한다. --[2019-01-05]
-
-
-
 === InterpreterMap
 현재 `InterpreterMap`에 너무 많은 기능이 들어있다.
  1. 데이터를 보관
@@ -179,4 +172,3 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * c1
   * c2
 ]]]
-

@@ -20,7 +20,3 @@
 
 == Administration
  * User-customizable interface - by edit [.header], [.footer]
-
-
-== Feed
- * Atom - `/feed.atom`

@@ -101,9 +101,6 @@ DELETE        /api/Admin/CrawlerCache                controllers.ApiCrawler.admi
 POST          /api/Admin/CrawlerCache/Refresh        controllers.ApiCrawler.adminRefresh(url:String)
 
 
-GET           /feed                                  controllers.Feed.index
-GET           /feed.atom                             controllers.Feed.atom
-
 GET           /hc                                    controllers.Test.unit
 GET           /test/unit                             controllers.Test.unit
 GET           /test/dbtest                           controllers.Test.dbtest
