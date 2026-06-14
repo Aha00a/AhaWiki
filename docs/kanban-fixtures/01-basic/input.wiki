@@ -1,7 +1,0 @@
-=== ToDo
-==== 첫 카드 ==== #card01
-===== Property
- * Creator: [User:Aha00a]
-===== Activity
- * [User:Aha00a] [2026-05-01]T10:00:00Z
-  * Created card
