@@ -101,10 +101,9 @@ DELETE        /api/Admin/CrawlerCache                controllers.ApiCrawler.admi
 POST          /api/Admin/CrawlerCache/Refresh        controllers.ApiCrawler.adminRefresh(url:String)
 
 
-GET           /hc                                    controllers.Test.hc
-GET           /test/unit                             controllers.Test.unit
-GET           /test/gradient                         controllers.Test.gradient
+GET           /hc                                    controllers.Health.hc
 
+GET           /dev/gradient                          controllers.Dev.gradient
 GET           /dev/deleteVimCache                    controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path

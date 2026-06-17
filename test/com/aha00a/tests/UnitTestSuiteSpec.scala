@@ -60,7 +60,7 @@ class UnitTestSuiteSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Before
   }
 
   private implicit lazy val request: Request[AnyContent] =
-    FakeRequest("GET", "/test/unit").withHeaders("Host" -> "localhost")
+    FakeRequest("GET", "/").withHeaders("Host" -> "localhost")
 
   private implicit lazy val database: Database = app.injector.instanceOf[Database]
   private implicit lazy val wikiActors: WikiActors = WikiActors(null, null)
