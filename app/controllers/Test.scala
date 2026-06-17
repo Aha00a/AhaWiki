@@ -15,6 +15,7 @@ import play.api.mvc._
 
 import java.io.File
 import javax.inject.Inject
+import scala.util.control.NonFatal
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -25,7 +26,7 @@ class Test @Inject()(implicit val
                      ahaWikiCache: AhaWikiCache
                     ) extends BaseController with Logging {
 
-  val testUtil = new TestUtil(x => logger.error(x.toString))
+  private val testUtil = new TestUtil(x => logger.error(x.toString))
 
   private def devOnly(block: Request[AnyContent] => Result): Action[AnyContent] = Action { implicit request =>
     if (environment.mode == Mode.Dev) block(request) else NotFound
@@ -41,34 +42,46 @@ class Test @Inject()(implicit val
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
     val message: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
-    if(percent < 5) InsufficientStorage(message) else Ok(message)
+    if (percent < 5) InsufficientStorage(message) else Ok(message)
   }
 
   def unit: Action[AnyContent] = devOnly { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
-    InterpreterBlockUnit.run(testUtil)
-    HeadingNumberUnit.run(testUtil)
-    InterpreterVimUnit.run(testUtil)
-    WikiMacrosUnit.run(testUtil)
-    MacroPeriodUnit.run(testUtil)
-    UrlDetectorUnit.run(testUtil)
-    SchemaOrgUnit.run(testUtil)
-    TraitInterpreterUnit.run(testUtil)
-    SignedReadUrlLogicUnit.run(testUtil)
-    InterpreterMarkdownUnit.run(testUtil)
-    JsonUnit.run(testUtil)
-    InterpreterSchemaUnit.run(testUtil)
-    PermissionUnit.run(testUtil)
-    BlameUnit.run(testUtil)
-    PageContentUnit.run(testUtil)
-    PermissionLogicUnit.run(testUtil)
-    WikiPermissionUnit.run(testUtil)
-    InterpreterWikiUnit.run(testUtil)
-    CrawlerUnit.run(testUtil)
+    val unitTests: Seq[(String, () => Unit)] = Seq(
+      "InterpreterBlockUnit" -> (() => InterpreterBlockUnit.run(testUtil)),
+      "HeadingNumberUnit" -> (() => HeadingNumberUnit.run(testUtil)),
+      "InterpreterVimUnit" -> (() => InterpreterVimUnit.run(testUtil)),
+      "WikiMacrosUnit" -> (() => WikiMacrosUnit.run(testUtil)),
+      "MacroPeriodUnit" -> (() => MacroPeriodUnit.run(testUtil)),
+      "UrlDetectorUnit" -> (() => UrlDetectorUnit.run(testUtil)),
+      "SchemaOrgUnit" -> (() => SchemaOrgUnit.run(testUtil)),
+      "TraitInterpreterUnit" -> (() => TraitInterpreterUnit.run(testUtil)),
+      "SignedReadUrlLogicUnit" -> (() => SignedReadUrlLogicUnit.run(testUtil)),
+      "InterpreterMarkdownUnit" -> (() => InterpreterMarkdownUnit.run(testUtil)),
+      "JsonUnit" -> (() => JsonUnit.run(testUtil)),
+      "InterpreterSchemaUnit" -> (() => InterpreterSchemaUnit.run(testUtil)),
+      "PermissionUnit" -> (() => PermissionUnit.run(testUtil)),
+      "BlameUnit" -> (() => BlameUnit.run(testUtil)),
+      "PageContentUnit" -> (() => PageContentUnit.run(testUtil)),
+      "PermissionLogicUnit" -> (() => PermissionLogicUnit.run(testUtil)),
+      "WikiPermissionUnit" -> (() => WikiPermissionUnit.run(testUtil)),
+      "InterpreterWikiUnit" -> (() => InterpreterWikiUnit.run(testUtil)),
+      "CrawlerUnit" -> (() => CrawlerUnit.run(testUtil)),
+    )
 
-    Ok("Ok")
+    unitTests.foreach { case (name, run) =>
+      try {
+        run()
+      } catch {
+        case NonFatal(e) =>
+          logger.error(s"Unit test failed: $name", e)
+          throw e
+      }
+    }
+
+    Ok(s"Ok (${unitTests.size} tests)")
   }
 
 
