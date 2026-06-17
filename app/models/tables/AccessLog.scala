@@ -27,7 +27,7 @@ object AccessLog extends Logging {
     method: String,
     scheme: String,
     host: String,
-    uri: String, // TODO: rename to path
+    path: String,
     remoteAddress: String,
     userAgent: String,
     status: Int,
@@ -37,7 +37,7 @@ object AccessLog extends Logging {
         INSERT INTO AccessLog
                 (site, user, ipDeny, method, scheme, host, uri, remoteAddress, userAgent, status, durationMilli)
             VALUES
-                ($site, $user, $ipDeny, $method, $scheme, $host, $uri, $remoteAddress, $userAgent, $status, $durationMilli)
+                ($site, $user, $ipDeny, $method, $scheme, $host, $path, $remoteAddress, $userAgent, $status, $durationMilli)
     """.executeInsert()
   }
 

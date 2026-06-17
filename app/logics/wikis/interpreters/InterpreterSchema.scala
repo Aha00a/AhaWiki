@@ -35,7 +35,6 @@ object InterpreterSchema extends TraitInterpreter {
     val schemaClass: String = pageContent.argument.headOption.getOrElse("")
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty).filterNot(_.startsWith("#"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-// TODO:    ParseResult(schemaClass, mergeFields(seqSeqField))
     ParseResult(schemaClass, seqSeqField)
   }
 
@@ -228,7 +227,7 @@ object InterpreterSchema extends TraitInterpreter {
       <dl vocab="https://schema.org/" typeof={parseResult.schemaClass}>
         <h5 class="schemaClassTitle">
           {if (parseResult.schemaClass.isNullOrEmpty) {
-            <div class="error">TODO: Specify Schema Class</div>
+            <div class="error">Schema class is required.</div>
           } else {
             scala.xml.XML.loadString(logics.CalculatedSchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
           }

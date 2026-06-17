@@ -9,6 +9,7 @@ import com.aha00a.commons.utils.RangeUtil
 import logics.wikis.interpreters.Interpreters
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 
 object MacroNavigationYearMonth extends TraitMacro {
   override def isBlock: Boolean = true
@@ -24,9 +25,9 @@ object MacroNavigationYearMonth extends TraitMacro {
   }
 
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
-    case "" | null => extractLink(wikiContext.name)
-    case DateTimeUtil.regexYearDashMonth(_, _) => MacroLinkDate.extractLink(body)
+  override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = body match {
+    case "" | null => toSeqLink(wikiContext.name)
+    case DateTimeUtil.regexYearDashMonth(_, _) => MacroLinkDate.toSeqLink(body)
     case _ => Seq()
   }
 }

@@ -357,7 +357,7 @@ object InterpreterWiki extends TraitInterpreter {
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[CalculatedLink]](pageContent) {
     override def process(): Seq[CalculatedLink] = {
       val seqLinkInterpreter: Seq[CalculatedLink] = extractConvertInjectInterpreter.extractLink().toList
-      val seqLinkMacro: Seq[CalculatedLink] = extractConvertInjectMacro.extractLink().map(AhaMarkLink(_).toLink(wikiContext.name)).toList
+      val seqLinkMacro: Seq[CalculatedLink] = extractConvertInjectMacro.toSeqLink().toList
       val seqLinkWikiText: Seq[CalculatedLink] = InterpreterWiki.extractLinkMarkup(chunkMacroExtracted).map(_.toLink(wikiContext.name)).filterNot(_.dst.startsWith("[")).toList
       seqLinkInterpreter ++ seqLinkMacro ++ seqLinkWikiText
     }

@@ -3,6 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 
 import java.time.DayOfWeek
 import java.time.YearMonth
@@ -52,10 +53,13 @@ object MacroCalendar extends TraitMacro {
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 
+  override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    toCalculatedLinks(linkDestinations(body))
+
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
-    case "" | null => extractLink(wikiContext.name)
-    case "-" => extractLink(wikiContext.name + ",-")
+  private def linkDestinations(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
+    case "" | null => linkDestinations(wikiContext.name)
+    case "-" => linkDestinations(wikiContext.name + ",-")
     case regexYear(y) => (1 to 12).map(m => f"$y-$m%02d")
     case regexYearDashMonth(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()

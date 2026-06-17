@@ -3,6 +3,7 @@ package logics.wikis
 import logics.wikis.interpreters.InterpreterWiki
 import logics.wikis.macros._
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 
 import scala.collection.mutable
 import scala.util.matching.Regex
@@ -133,10 +134,10 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
     }
   }
 
-  def extractLink()(implicit wikiContext: ContextWikiPage): Seq[String] = {
+  def toSeqLink()(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     arrayBuffer.map(_._2).flatMap {
       case regex(name, argument) => ExtractConvertInjectMacro.mapMacros.get(name)
-        .map(_.extractLink(argument))
+        .map(_.toSeqLink(argument))
         .getOrElse(Seq())
       case _ => Seq()
     }.toSeq

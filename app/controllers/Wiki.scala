@@ -15,7 +15,7 @@ import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
 import logics._
-import logics.wikis.ExtractConvertInjectInterpreterCustom
+import logics.wikis.ExtractConvertInject
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.WikiPermissionDetail
@@ -924,7 +924,7 @@ controllerComponents: ControllerComponents,
               SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))
             }
             // Case 1: embedded [[[#!Map url sheetName\ncontent]]] form
-            val extractor = new ExtractConvertInjectInterpreterCustom(s => {
+            val extractor = ExtractConvertInject.markedBlocks(s => {
               val chunk = PageContent(s)
               if (url == chunk.argument.getOrElse(0, "") && sheetName == chunk.argument.getOrElse(1, "")) {
                 url match {

@@ -6,6 +6,14 @@ import models.ContextWikiPage
 import scala.collection.GenTraversableOnce
 import scala.collection.mutable.ArrayBuffer
 
+object ExtractConvertInject {
+  def markedBlocks(converter: String => String): ExtractConvertInject =
+    new ExtractConvertInject {
+      override def extract(s: String): String = extractByMarkers(s)
+      override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = converter(s)
+    }
+}
+
 trait ExtractConvertInject {
   val arrayBuffer = new ArrayBuffer[(String, String)]()
 

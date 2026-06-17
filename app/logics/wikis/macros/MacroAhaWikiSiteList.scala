@@ -4,6 +4,7 @@ import com.aha00a.commons.Implicits._
 import logics.ApplicationConf
 import models.ContextWikiPage
 import models.tables.Config
+import models.tables.CalculatedLink
 import models.tables.Site
 
 object MacroAhaWikiSiteList extends TraitMacro {
@@ -18,10 +19,10 @@ object MacroAhaWikiSiteList extends TraitMacro {
       render(sites, faviconUrlsFor(sites, wikiContext.applicationConf))
     }
 
-  override def extractLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[String] =
-    wikiContext.database.withConnection { implicit connection =>
+  override def toSeqLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    toCalculatedLinks(wikiContext.database.withConnection { implicit connection =>
       Site.selectPublicListed().map(siteUrl)
-    }
+    })
 
   private[macros] def render(sites: Seq[Site]): String =
     render(sites, Map.empty)

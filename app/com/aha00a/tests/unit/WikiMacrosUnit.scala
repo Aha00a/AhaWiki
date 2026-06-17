@@ -12,8 +12,8 @@ object WikiMacrosUnit {
     val dummy = "dummy"
     assertEquals(MacroBr.toHtmlString(empty), "<br/>")
     assertEquals(MacroBr.toHtmlString(dummy), "<br/>")
-    assertEquals(MacroBr.extractLink(empty), Seq())
-    assertEquals(MacroBr.extractLink(dummy), Seq())
+    assertEquals(MacroBr.toSeqLink(empty), Seq())
+    assertEquals(MacroBr.toSeqLink(dummy), Seq())
     assertEquals(MacroCalendar.name, "Calendar")
     assertEquals(MacroWeekdayName.name, "WeekdayName")
     assertEquals(MacroColorCode.toHtmlString(empty), "")

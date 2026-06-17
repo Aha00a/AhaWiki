@@ -5,6 +5,7 @@ import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 import models.PageContent
 import models.RequestWrapper
+import models.tables.CalculatedLink
 import models.tables.Site
 
 import java.sql.Connection
@@ -28,5 +29,6 @@ object MacroInclude extends TraitMacro {
     }
   }
 
-  override def extractLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[String] = Seq(argument)
+  override def toSeqLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    toCalculatedLinks(Seq(argument))
 }

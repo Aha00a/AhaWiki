@@ -24,11 +24,21 @@ import models.tables.PageMeta
 import play.api.Logger
 import play.api.db.Database
 
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.sql.Connection
 import java.time.LocalDateTime
 import scala.collection.immutable
+import scala.util.matching.Regex
 
 object PageLogic {
+  private val percentEncodedRegex: Regex = """(?:%[0-9A-Fa-f]{2})+""".r
+
+  private[wikis] def decodePercentEncodedText(text: String): String =
+    percentEncodedRegex.replaceAllIn(text, m =>
+      Regex.quoteReplacement(URLDecoder.decode(m.matched, StandardCharsets.UTF_8.name()))
+    )
+
 
   private val regexMacroImage = """(?is)\[\[Image\((.*?)\)]]""".r
   private val regexMacroAttachment = """(?is)\[\[Attachment\((.*?)\)]]""".r
@@ -137,8 +147,7 @@ object PageLogic {
       val text = Interpreters.toText(page.content)
       CalculatedTermFrequency.delete(name)
       if (!text.isNullOrEmpty) {
-        val seqWord = text
-          .replaceAll("""%[0-9A-F][0-9A-F]""", " ") // TODO: URL decode
+        val seqWord = decodePercentEncodedText(text)
           .replaceAll("""([a-z])([A-Z])""", "$1 $2")
           .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
           .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")

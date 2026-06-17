@@ -3,6 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.utils.DateTimeUtil
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 
 object MacroDayHeader extends TraitMacro {
   override def isBlock: Boolean = true
@@ -29,9 +30,9 @@ object MacroDayHeader extends TraitMacro {
   }
 
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
-    case "" | null => extractLink(wikiContext.name)
-    case DateTimeUtil.regexIsoLocalDate(_, _, _) => MacroLinkDate.extractLink(body)
+  override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = body match {
+    case "" | null => toSeqLink(wikiContext.name)
+    case DateTimeUtil.regexIsoLocalDate(_, _, _) => MacroLinkDate.toSeqLink(body)
     case _ => Seq()
   }
 }

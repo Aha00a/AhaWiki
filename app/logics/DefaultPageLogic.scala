@@ -31,8 +31,6 @@ object DefaultPageLogic {
 
   def getOption(title: String)(implicit wikiContext: ContextWikiPage, connection: Connection): LazyOption[String] = {
     import com.aha00a.commons.utils.DateTimeUtil
-    import logics.wikis.interpreters.ahaMark.AhaMarkLink
-    import logics.wikis.macros.MacroMonthName
     import models.tables.Site
 
     implicit val site: Site = wikiContext.site
@@ -58,134 +56,31 @@ object DefaultPageLogic {
         )
 
       case DateTimeUtil.regexDashDashMonthDashDay(mm, dd) =>
-        // TODO: extract macro
-        val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
-
-        val r = <table class="month wikiTableSimple">
-          <thead>
-            <tr>
-              <th colspan="31">
-                {MacroMonthName.toHtmlString(s"--$mm")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {(1 to lastDay).grouped(5).map(t =>
-              <tr>
-                {t.map(Some(_)).padTo(5, None).map(d =>
-                <td>
-                  {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
-                </td>
-              )}
-              </tr>
-            )}
-            </tr>
-          </tbody>
-        </table>
         lazySome(
           s"""= $mm-$dd
              |[--$mm $mm]-[----$dd $dd]
              |[[[#!Html
-             |${r.toString()}
+             |${renderMonthDaysTable(mm)}
              |]]]
              |""".stripMargin
         )
 
       case DateTimeUtil.regexDashDashMonth(mm) =>
-        // TODO: extract macro
-        val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
-
-        val r = <table class="month wikiTableSimple">
-          <thead>
-            <tr>
-              <th colspan="31">
-                {MacroMonthName.toHtmlString(s"--$mm")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {(1 to lastDay).grouped(5).map(t =>
-              <tr>
-                {t.map(Some(_)).padTo(5, None).map(d =>
-                <td>
-                  {d.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
-                </td>
-              )}
-              </tr>
-            )}
-            </tr>
-          </tbody>
-        </table>
         lazySome(
           s"""= [[MonthName]]
              |[[[#!Html
-             |${r.toString()}
+             |${renderMonthDaysTable(mm)}
              |]]]
              |""".stripMargin
         )
 
-      //          case regexDashDashDashDay(mm) =>
-      //            Ok(mm) // TODO
-
       case "schema:Schema" =>
-        // TODO: extract macro
-        val listSchemaOrg = models.tables.CalculatedSchemaOrg.selectWhereProp("")
-        val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-        val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
-
-        lazySome(
-          s"""= Schema
-             |${listSchemaOrgWithPermission.size} page(s).
-             |${CalculatedSchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
-             |""".stripMargin
-        )
+        lazySome(schemaIndexPageContent)
 
       case regexSchemaColon(schema) =>
-        // TODO: extract macro
-        val optionSchemaType = CalculatedSchemaOrg.mapAll.get(schema)
-        optionSchemaType match {
-          case Some(schemaType) =>
-            import models.tables.CalculatedSchemaOrg
-            lazySome(
-              if(schema(0).isUpper) {
-                val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereCls(schema)
-                val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-                s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
-                   |[[[#!Markdown
-                   |${schemaType.comment.replaceAll("\\\\n", "\n")}
-                   |]]]
-                   |[https://schema.org/${schemaType.id}]
-                   |== Pages
-                   |<Columns count="3" gap="16" minWidth="220">
-                   |${listSchemaOrgWithPermission.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
-                   |</Columns>
-                   |""".stripMargin
-              } else {
-                val listSchemaOrg: List[CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereProp(schema)
-                val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
-                s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
-                   |[[[#!Markdown
-                   |${schemaType.comment.replaceAll("\\\\n", "\n")}
-                   |]]]
-                   |[https://schema.org/${schemaType.id}]
-                   |${listSchemaOrgWithPermission.groupBy(_.cls).transform((_, v) => v.groupBy(_.value)).toSeq.sortBy(_._1).map(t =>
-                  s"""== ["schema:${t._1}" ${EnglishCaseConverter.pascalCase2TitleCase(t._1)}]
-                     |${t._2.toSeq.sortBy(_._1).map(t2 =>
-                    s"""=== ["${t2._1}" ${t2._1}]
-                       |<Columns count="3" gap="16" minWidth="220">
-                       |${t2._2.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
-                       |</Columns>
-                       |""".stripMargin).mkString("\n")}
-                     |""".stripMargin).mkString("\n")}
-                   |""".stripMargin
-              }
-            )
-
-          case _ =>
-            lazyNone
-
+        CalculatedSchemaOrg.mapAll.get(schema) match {
+          case Some(schemaType) => lazySome(schemaPageContent(schema, schemaType))
+          case None => lazyNone
         }
 
       case _ =>
@@ -196,5 +91,95 @@ object DefaultPageLogic {
           lazyNone
         }
     }
+  }
+
+  private def renderMonthDaysTable(mm: String)(implicit wikiContext: ContextWikiPage): String = {
+    import com.aha00a.commons.utils.DateTimeUtil
+    import logics.wikis.interpreters.ahaMark.AhaMarkLink
+    import logics.wikis.macros.MacroMonthName
+
+    val lastDay: Int = DateTimeUtil.getLastDay(mm.toInt)
+    val table = <table class="month wikiTableSimple">
+      <thead>
+        <tr>
+          <th colspan="31">
+            {MacroMonthName.toHtmlString(s"--$mm")}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {(1 to lastDay).grouped(5).map(days =>
+          <tr>
+            {days.map(Some(_)).padTo(5, None).map(day =>
+            <td>
+              {day.map(d => scala.xml.XML.loadString(AhaMarkLink(f"--$mm-$d%02d", f"$d%02d").toHtmlString())).getOrElse("")}
+            </td>
+          )}
+          </tr>
+        )}
+        </tr>
+      </tbody>
+    </table>
+
+    table.toString()
+  }
+
+  private def schemaIndexPageContent(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
+    implicit val site: models.tables.Site = wikiContext.site
+    val listSchemaOrg = models.tables.CalculatedSchemaOrg.selectWhereProp("")
+    val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
+    val mapSchemaOrg = listSchemaOrgWithPermission.groupBy(_.cls)
+
+    s"""= Schema
+       |${listSchemaOrgWithPermission.size} page(s).
+       |${CalculatedSchemaOrg.renderExistingPages(mapSchemaOrg.view.mapValues(s => s.map(_.page)).toMap)}
+       |""".stripMargin
+  }
+
+  private def schemaPageContent(schema: String, schemaType: CalculatedSchemaOrg.SchemaType)(implicit wikiContext: ContextWikiPage, connection: Connection): String =
+    if(schema(0).isUpper) schemaClassPageContent(schema, schemaType)
+    else schemaPropertyPageContent(schema, schemaType)
+
+  private def schemaClassPageContent(schema: String, schemaType: CalculatedSchemaOrg.SchemaType)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
+    implicit val site: models.tables.Site = wikiContext.site
+    val listSchemaOrg: List[models.tables.CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereCls(schema)
+    val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
+
+    s"""= ${EnglishCaseConverter.pascalCase2TitleCase(schemaType.id)}
+       |[[[#!Markdown
+       |${schemaType.comment.replaceAll("\\\\n", "\n")}
+       |]]]
+       |[https://schema.org/${schemaType.id}]
+       |== Pages
+       |<Columns count="3" gap="16" minWidth="220">
+       |${listSchemaOrgWithPermission.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
+       |</Columns>
+       |""".stripMargin
+  }
+
+  private def schemaPropertyPageContent(schema: String, schemaType: CalculatedSchemaOrg.SchemaType)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
+    implicit val site: models.tables.Site = wikiContext.site
+    val listSchemaOrg: List[models.tables.CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereProp(schema)
+    val listSchemaOrgWithPermission = listSchemaOrg.filter(s => wikiContext.setPageNameByPermission.contains(s.page))
+    val groupedByClassAndValue = listSchemaOrgWithPermission.groupBy(_.cls).transform((_, v) => v.groupBy(_.value))
+
+    s"""= ${EnglishCaseConverter.camelCase2TitleCase(schemaType.id)}
+       |[[[#!Markdown
+       |${schemaType.comment.replaceAll("\\\\n", "\n")}
+       |]]]
+       |[https://schema.org/${schemaType.id}]
+       |${groupedByClassAndValue.toSeq.sortBy(_._1).map { case (cls, byValue) =>
+      s"""== ["schema:$cls" ${EnglishCaseConverter.pascalCase2TitleCase(cls)}]
+         |${byValue.toSeq.sortBy(_._1).map { case (value, pages) =>
+        s"""=== ["$value" $value]
+           |<Columns count="3" gap="16" minWidth="220">
+           |${pages.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
+           |</Columns>
+           |""".stripMargin
+      }.mkString("\n")}
+         |""".stripMargin
+    }.mkString("\n")}
+       |""".stripMargin
   }
 }

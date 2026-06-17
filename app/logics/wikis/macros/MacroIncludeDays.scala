@@ -3,6 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 import models.tables.Site
 import play.api.db.Database
 
@@ -46,10 +47,13 @@ object MacroIncludeDays extends TraitMacro {
     case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
   }
 
+  override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    toCalculatedLinks(linkDestinations(body))
+
   @scala.annotation.tailrec
-  override def extractLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
-    case "" | null => extractLink(wikiContext.name)
-    case "-" => extractLink(wikiContext.name + ",-")
+  private def linkDestinations(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
+    case "" | null => linkDestinations(wikiContext.name)
+    case "-" => linkDestinations(wikiContext.name + ",-")
     case regex(y, m) => (1 to YearMonth.of(y.toInt, m.toInt).lengthOfMonth()).map(d => f"$y-${m.toInt}%02d-$d%02d")
     case _ => Seq()
   }

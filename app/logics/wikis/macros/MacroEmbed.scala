@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
 import models.ContextWikiPage
+import models.tables.CalculatedLink
 
 object MacroEmbed extends TraitMacro {
   override def isBlock: Boolean = true
@@ -13,5 +14,6 @@ object MacroEmbed extends TraitMacro {
       .getOrElse(MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]"))
   }
 
-  override def extractLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[String] = Seq(argument)
+  override def toSeqLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    toCalculatedLinks(Seq(argument))
 }

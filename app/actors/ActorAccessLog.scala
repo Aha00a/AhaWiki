@@ -16,7 +16,7 @@ object ActorAccessLog {
     method: String,
     scheme: String,
     host: String,
-    uri: String,
+    path: String,
     remoteAddress: String,
     userAgent: String,
     status: Int,
@@ -50,7 +50,7 @@ class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.acto
   private def insertAccessLogIfSiteFound(insert: Insert)(implicit connection: Connection): Option[Long] = {
     if (insert.site.isNotFound) {
       logger.warn(
-        s"Skip AccessLog insert: site not found for host=${insert.host}, uri=${insert.uri}, remoteAddress=${insert.remoteAddress}"
+        s"Skip AccessLog insert: site not found for host=${insert.host}, path=${insert.path}, remoteAddress=${insert.remoteAddress}"
       )
       None
     } else {
@@ -61,7 +61,7 @@ class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.acto
         insert.method,
         insert.scheme,
         insert.host,
-        insert.uri,
+        insert.path,
         insert.remoteAddress,
         insert.userAgent,
         insert.status,
@@ -76,7 +76,7 @@ class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.acto
     } catch {
       case t: Throwable =>
         logger.error(
-          s"Async AccessLog write failed: $label ${insert.method} ${insert.status} ${insert.host}${insert.uri} ${insert.remoteAddress}",
+          s"Async AccessLog write failed: $label ${insert.method} ${insert.status} ${insert.host}${insert.path} ${insert.remoteAddress}",
           t,
         )
     }
