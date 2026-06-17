@@ -1,8 +1,6 @@
 package controllers
-import org.apache.pekko.actor.ActorSystem
 import anorm.SQL
 import anorm.SqlParser.scalar
-import com.aha00a.commons.Implicits._
 import com.aha00a.tests.TestUtil
 import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
 import logics.AhaWikiCache
@@ -10,31 +8,22 @@ import logics.ApplicationConf
 import logics.SiteLogic
 import models._
 import models.tables.Site
-import play.api.{Configuration, Environment, Mode}
+import play.api.{Environment, Mode}
 import play.api.Logging
 import play.api.db.Database
-import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import java.io.File
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
-                     actorSystem: ActorSystem,
                      database: Database,
                      environment: Environment,
                      wikiActors: WikiActors,
                      applicationConf: ApplicationConf,
-                     configuration: Configuration,
-                     ahaWikiCache: AhaWikiCache,
-                     wsClient: WSClient,
-                     executionContext: ExecutionContext
+                     ahaWikiCache: AhaWikiCache
                     ) extends BaseController with Logging {
-  import io.circe.syntax._
-
-  def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
 
   val testUtil = new TestUtil(x => logger.error(x.toString))
 
