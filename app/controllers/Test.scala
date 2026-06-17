@@ -10,7 +10,7 @@ import logics.ApplicationConf
 import logics.SiteLogic
 import models._
 import models.tables.Site
-import play.api.{Configuration, Environment}
+import play.api.{Configuration, Environment, Mode}
 import play.api.Logging
 import play.api.db.Database
 import play.api.libs.ws.WSClient
@@ -38,6 +38,10 @@ class Test @Inject()(implicit val
 
   val testUtil = new TestUtil(x => logger.error(x.toString))
 
+  private def devOnly(block: Request[AnyContent] => Result): Action[AnyContent] = Action { implicit request =>
+    if (environment.mode == Mode.Dev) block(request) else NotFound
+  }
+
   def hc: Action[AnyContent] = Action {
     database.withConnection { implicit connection =>
       SQL("SELECT 1").as(scalar[Int].single)
@@ -51,7 +55,7 @@ class Test @Inject()(implicit val
     if(percent < 5) InsufficientStorage(message) else Ok(message)
   }
 
-  def unit: Action[AnyContent] = Action { implicit request =>
+  def unit: Action[AnyContent] = devOnly { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
@@ -79,7 +83,7 @@ class Test @Inject()(implicit val
   }
 
 
-  def gradient: Action[AnyContent] = Action { implicit request =>
+  def gradient: Action[AnyContent] = devOnly { implicit request =>
     import models.tables.Site
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextSite: ContextSite = ContextSite()
