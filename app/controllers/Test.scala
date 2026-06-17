@@ -2,7 +2,7 @@ package controllers
 import anorm.SQL
 import anorm.SqlParser.scalar
 import com.aha00a.tests.TestUtil
-import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
+import com.aha00a.tests.UnitTestSuite
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
@@ -11,11 +11,11 @@ import models.tables.Site
 import play.api.{Environment, Mode}
 import play.api.Logging
 import play.api.db.Database
+import play.api.libs.json.Json
 import play.api.mvc._
 
 import java.io.File
 import javax.inject.Inject
-import scala.util.control.NonFatal
 
 class Test @Inject()(implicit val
                      controllerComponents: ControllerComponents,
@@ -32,6 +32,9 @@ class Test @Inject()(implicit val
     if (environment.mode == Mode.Dev) block(request) else NotFound
   }
 
+  private def elapsedMillisSince(startedAtNanos: Long): Long =
+    (System.nanoTime() - startedAtNanos) / 1000000
+
   def hc: Action[AnyContent] = Action {
     database.withConnection { implicit connection =>
       SQL("SELECT 1").as(scalar[Int].single)
@@ -41,47 +44,42 @@ class Test @Inject()(implicit val
     val total = fileAbsolute.getTotalSpace / 1024.0 / 1024
     val free = fileAbsolute.getFreeSpace / 1024.0 / 1024
     val percent = free / total * 100
-    val message: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
-    if (percent < 5) InsufficientStorage(message) else Ok(message)
+    val logMessage: String = f"${free}%,.0f MiB / ${total}%,.0f MiB = $percent%.2f%% free"
+    if (percent < 5) {
+      logger.error(s"Health check failed: low disk space: $logMessage")
+      InsufficientStorage("LOW_DISK_SPACE")
+    } else {
+      Ok("OK")
+    }
   }
 
   def unit: Action[AnyContent] = devOnly { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("UnitTest")
 
-    val unitTests: Seq[(String, () => Unit)] = Seq(
-      "InterpreterBlockUnit" -> (() => InterpreterBlockUnit.run(testUtil)),
-      "HeadingNumberUnit" -> (() => HeadingNumberUnit.run(testUtil)),
-      "InterpreterVimUnit" -> (() => InterpreterVimUnit.run(testUtil)),
-      "WikiMacrosUnit" -> (() => WikiMacrosUnit.run(testUtil)),
-      "MacroPeriodUnit" -> (() => MacroPeriodUnit.run(testUtil)),
-      "UrlDetectorUnit" -> (() => UrlDetectorUnit.run(testUtil)),
-      "SchemaOrgUnit" -> (() => SchemaOrgUnit.run(testUtil)),
-      "TraitInterpreterUnit" -> (() => TraitInterpreterUnit.run(testUtil)),
-      "SignedReadUrlLogicUnit" -> (() => SignedReadUrlLogicUnit.run(testUtil)),
-      "InterpreterMarkdownUnit" -> (() => InterpreterMarkdownUnit.run(testUtil)),
-      "JsonUnit" -> (() => JsonUnit.run(testUtil)),
-      "InterpreterSchemaUnit" -> (() => InterpreterSchemaUnit.run(testUtil)),
-      "PermissionUnit" -> (() => PermissionUnit.run(testUtil)),
-      "BlameUnit" -> (() => BlameUnit.run(testUtil)),
-      "PageContentUnit" -> (() => PageContentUnit.run(testUtil)),
-      "PermissionLogicUnit" -> (() => PermissionLogicUnit.run(testUtil)),
-      "WikiPermissionUnit" -> (() => WikiPermissionUnit.run(testUtil)),
-      "InterpreterWikiUnit" -> (() => InterpreterWikiUnit.run(testUtil)),
-      "CrawlerUnit" -> (() => CrawlerUnit.run(testUtil)),
+    val startedAtNanos = System.nanoTime()
+    val results = UnitTestSuite.runAll(testUtil) { (name, e) =>
+      logger.error(s"Unit test failed: $name", e)
+    }
+    val failures = results.filterNot(_.passed)
+    val payload = Json.obj(
+      "passed" -> failures.isEmpty,
+      "count" -> Json.obj(
+        "total" -> results.size,
+        "passed" -> (results.size - failures.size),
+        "failed" -> failures.size,
+      ),
+      "durationMs" -> elapsedMillisSince(startedAtNanos),
+      "results" -> results.map { result =>
+        Json.obj(
+          "name" -> result.name,
+          "passed" -> result.passed,
+          "durationMs" -> result.durationMs,
+        ) ++ result.error.map(error => Json.obj("error" -> error)).getOrElse(Json.obj())
+      },
     )
 
-    unitTests.foreach { case (name, run) =>
-      try {
-        run()
-      } catch {
-        case NonFatal(e) =>
-          logger.error(s"Unit test failed: $name", e)
-          throw e
-      }
-    }
-
-    Ok(s"Ok (${unitTests.size} tests)")
+    if (failures.isEmpty) Ok(payload).as(JSON) else InternalServerError(payload).as(JSON)
   }
 
 
