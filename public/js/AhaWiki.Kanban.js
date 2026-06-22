@@ -896,6 +896,27 @@ document.addEventListener('DOMContentLoaded', function () {
         return String(text || '').replace(/\[\[Br\]\]/g, '\n');
     };
 
+    var isKanbanSystemActivityDetail = function (detailLine) {
+        var raw = restoreCommentNewlines(detailLine).trim();
+        if (!raw) {
+            return false;
+        }
+        if (/^Card\s+(?:Add|Move|Rename|Delete|Property Update|Description Update)\s+-\s+/i.test(raw)) {
+            return true;
+        }
+        return /^\["[^"]*#[^"]*"\s+[^\]]+\]\s+(?:added|renamed|moved|deleted|updated)\b/i.test(raw);
+    };
+
+    var isUserActivityComment = function (entry) {
+        var details = entry && Array.isArray(entry.details) ? entry.details : [];
+        if (details.length === 0) {
+            return false;
+        }
+        return details.some(function (detailLine) {
+            return !isKanbanSystemActivityDetail(detailLine);
+        });
+    };
+
     var buildCommentEntry = function (details) {
         var nowIso = getNowIsoWithoutMillis();
         var author = getCurrentAuthor();
@@ -907,6 +928,12 @@ document.addEventListener('DOMContentLoaded', function () {
             details: escapedDetails
         };
     };
+    if (typeof window !== 'undefined') {
+        window.__AhaWikiKanbanTestHooks = Object.assign({}, window.__AhaWikiKanbanTestHooks || {}, {
+            isKanbanSystemActivityDetail: isKanbanSystemActivityDetail,
+            isUserActivityComment: isUserActivityComment
+        });
+    }
     var buildCardLinkText = function (pageName, cardId, cardName) {
         var safePageName = (pageName || '').trim();
         var safeCardName = (cardName || '').trim();
@@ -4066,6 +4093,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     var row = document.createElement('div');
                     row.className = 'kanban-activity-row';
+                    if (isUserActivityComment(entry)) {
+                        row.classList.add('kanban-activity-row--comment');
+                    }
 
                     var header = document.createElement('div');
                     header.className = 'kanban-activity-header';
