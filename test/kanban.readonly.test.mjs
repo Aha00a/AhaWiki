@@ -296,7 +296,7 @@ const matches = (element, selector) => {
   return false;
 };
 
-const boot = ({ writable, content, hash = '' } = {}) => {
+const boot = ({ writable, content, hash = '', currentUserNickname = '' } = {}) => {
   let onReady = null;
   let sortableCreateCount = 0;
   let fetchCalls = 0;
@@ -371,6 +371,7 @@ const boot = ({ writable, content, hash = '' } = {}) => {
       cancelAnimationFrame: () => {},
       addEventListener: () => {},
       removeEventListener: () => {},
+      AhaWikiCurrentUserNickname: currentUserNickname,
       Sortable: {
         create: (element, options) => {
           sortableCreateCount += 1;
@@ -460,6 +461,20 @@ const assigneeContent = [
   '===== Activity'
 ].join('\n');
 
+const assigneeHighlightContent = [
+  '=== ToDo',
+  '==== Assigned ==== #assigned',
+  '===== Property',
+  ' * Assignee',
+  '  * [User:Aha00a]',
+  '===== Activity',
+  '==== Created ==== #created',
+  '===== Property',
+  ' * Creator',
+  '  * [User:Aha00a]',
+  '===== Activity'
+].join('\n');
+
 const relationSelectContent = [
   '=== Backlog',
   '==== Current ==== #current',
@@ -511,6 +526,15 @@ test('card surface shows assignee avatars where the card id used to be', () => {
   assert.equal(assignees.title, 'Alice, Bob');
   assert.equal(avatars.length, 2);
   assert.deepEqual(avatars.map((avatar) => avatar.textContent), ['A', 'B']);
+});
+
+test('card surface highlights cards assigned to the current user only', () => {
+  const { board } = boot({ writable: true, content: assigneeHighlightContent, currentUserNickname: 'Aha00a' });
+  const assigned = board.querySelectorAll('.kanban-card').find((card) => card.getAttribute('data-card-id') === 'assigned');
+  const created = board.querySelectorAll('.kanban-card').find((card) => card.getAttribute('data-card-id') === 'created');
+
+  assert.equal(assigned.classList.contains('kanban-card-assigned-to-me'), true);
+  assert.equal(created.classList.contains('kanban-card-assigned-to-me'), false);
 });
 
 test('card id click copies the card URL without following the hash link', async () => {

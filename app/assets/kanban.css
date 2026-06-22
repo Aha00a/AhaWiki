@@ -224,6 +224,10 @@
   box-shadow: var(--kanban-shadow);
   border-color: var(--kanban-primary);
 }
+.InterpreterKanban .kanban-card.kanban-card-assigned-to-me {
+  border-color: var(--kanban-primary);
+  box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.16), var(--kanban-shadow);
+}
 .InterpreterKanban .kanban-card-drag-origin {
   opacity: 0.52;
   filter: blur(0.4px) saturate(0.94);

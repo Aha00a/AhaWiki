@@ -1,6 +1,21 @@
 document.addEventListener('DOMContentLoaded', function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
-    var kanbanMobileMediaQuery = window.matchMedia('(max-width: 767px)');
+    var getKanbanMobileMediaQuery = function () {
+        if (window.matchMedia) {
+            return window.matchMedia('(max-width: 767px)');
+        }
+        return { matches: false, addEventListener: function () {}, removeEventListener: function () {} };
+    };
+    var addMediaQueryChangeListener = function (mediaQuery, handler) {
+        if (mediaQuery.addEventListener) {
+            mediaQuery.addEventListener('change', handler);
+            return;
+        }
+        if (mediaQuery.addListener) {
+            mediaQuery.addListener(handler);
+        }
+    };
+    var kanbanMobileMediaQuery = getKanbanMobileMediaQuery();
     var isTouchPrimary = kanbanMobileMediaQuery.matches;
     var getHashCardId = function () {
         var rawHash = (window.location.hash || '').replace(/^#/, '').trim();
@@ -1043,6 +1058,16 @@ document.addEventListener('DOMContentLoaded', function () {
             .filter(Boolean);
     };
 
+    var isAssignedToCurrentUser = function (assigneeNames) {
+        var currentUser = String((typeof window !== 'undefined' && window.AhaWikiCurrentUserNickname) || '').trim().toLowerCase();
+        if (!currentUser) {
+            return false;
+        }
+        return (assigneeNames || []).some(function (assigneeName) {
+            return String(assigneeName || '').trim().toLowerCase() === currentUser;
+        });
+    };
+
     var assigneeProfileImageUrlCache = {};
 
     var decodeHtmlAttribute = function (value) {
@@ -1625,6 +1650,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 dueDateElement.style.display = 'none';
             }
             var assigneeNames = getCardAssigneeNames(card);
+            if (isAssignedToCurrentUser(assigneeNames)) {
+                cardElement.classList.add('kanban-card-assigned-to-me');
+            }
             var assigneeElement = document.createElement('span');
             assigneeElement.className = 'kanban-card-stat kanban-card-assignees';
             renderCardAssigneeAvatars(pageName, assigneeElement, assigneeNames);
@@ -3059,7 +3087,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }, { passive: true });
         }
 
-        kanbanMobileMediaQuery.addEventListener('change', function (e) {
+        addMediaQueryChangeListener(kanbanMobileMediaQuery, function (e) {
             isTouchPrimary = e.matches;
             if (!e.matches) {
                 if (mobileTabsEl && mobileTabsEl.parentNode) {
