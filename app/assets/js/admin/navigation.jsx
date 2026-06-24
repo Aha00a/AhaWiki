@@ -52,6 +52,7 @@ export default function Navigation({me, onNavigate}) {
         {href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired"},
         {href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider"},
         {href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open"},
+        {href: "/Admin/ApiKeys", label: "API Keys", key: "api-keys", iconClassName: "fas fa-key"},
     ], []);
 
     if (!me) {

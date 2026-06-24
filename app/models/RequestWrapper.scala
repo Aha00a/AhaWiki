@@ -28,6 +28,16 @@ object RequestWrapper {
     override def host: String = requestHeader.host
   }
 
+  def forUser(user: User.SessionUser)(implicit requestHeader: RequestHeader): RequestWrapper = new RequestWrapper {
+    override def getUser: Option[User.SessionUser] = Some(user)
+    override def getUserProfileImageUrl: Option[String] = None
+    override def locale: Locale = requestHeader.locale
+    override def getQueryString(key: String): Option[String] = requestHeader.getQueryString(key)
+    override val remoteAddress: String = requestHeader.remoteAddressWithXRealIp
+    override def flashGet(key: String): Option[String] = requestHeader.flash.get(key)
+    override def host: String = requestHeader.host
+  }
+
   def empty: RequestWrapper = new RequestWrapper {
     override def getUser: Option[User.SessionUser] = None
     override def getUserProfileImageUrl: Option[String] = None

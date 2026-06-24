@@ -32,19 +32,19 @@ API Key를 통한 편집임을 `viaApi` 플래그로 표시한다.
 
 == Scope
 
- * [ ] 1. Data Model을 추가한다.
- * [ ] 2. API Key 인증 로직을 구현한다.
- * [ ] 3. Bot 전용 API endpoint를 구현한다.
- * [ ] 4. Account Settings UI에 API Key 관리 화면을 추가한다.
- * [ ] 5. Admin UI에 전체 API Key 조회/폐기 화면을 추가한다.
- * [ ] 6. API 명세 문서(`docs/ahawiki.net/BotApi`)를 작성한다.
- * [ ] 7. 테스트를 추가한다.
+ * [x] 1. Data Model을 추가한다.
+ * [x] 2. API Key 인증 로직을 구현한다.
+ * [x] 3. Bot 전용 API endpoint를 구현한다.
+ * [x] 4. Account Settings UI에 API Key 관리 화면을 추가한다.
+ * [x] 5. Admin UI에 전체 API Key 조회/폐기 화면을 추가한다.
+ * [x] 6. API 명세 문서(`docs/ahawiki.net/BotApi`)를 작성한다.
+ * [x] 7. 테스트를 추가한다.
 
 == Data Model
 
- * [ ] 1. `UserApiKey` 테이블을 추가한다.
+ * [x] 1. `UserApiKey` 테이블을 추가한다.
   * `seq BIGINT AUTO_INCREMENT PRIMARY KEY`
-  * `user BIGINT NOT NULL` — `User.seq` FK
+  * `user INT NOT NULL` — `User.seq` FK
   * `keyHash VARCHAR(64) NOT NULL UNIQUE` — SHA-256 hex
   * `dateInserted DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`
   * `dateLastUsed DATETIME NULL` — 마지막 사용 시각. 관리 화면에서 미사용/장기 미사용 키를 판단하는 데 사용한다.
@@ -54,7 +54,7 @@ API Key를 통한 편집임을 `viaApi` 플래그로 표시한다.
   * `FOREIGN KEY (user) REFERENCES User(seq)`
   * `keyHash UNIQUE`가 조회 인덱스 역할을 하므로 별도 `INDEX (keyHash)`는 만들지 않는다.
   * `INDEX (user, dateRevoked)` — 사용자별 유효 키 목록 조회
- * [ ] 2. `Page` 테이블에 `viaApi` 컬럼을 추가한다.
+ * [x] 2. `Page` 테이블에 `viaApi` 컬럼을 추가한다.
   * evolution SQL: `ALTER TABLE Page ADD COLUMN viaApi BOOLEAN NOT NULL DEFAULT FALSE AFTER isMinorEdit;`
   * API Key 인증으로 저장된 revision에만 `TRUE`로 기록한다.
   * `Page`, `PageWithoutContent` case class에 `viaApi: Boolean` 필드를 추가한다.
@@ -64,34 +64,36 @@ API Key를 통한 편집임을 `viaApi` 플래그로 표시한다.
 
 == Authentication
 
- * [ ] 1. `SessionLogic`에 API Key 인증 helper를 추가한다.
+ * [x] 1. `SessionLogic`에 API Key 인증 helper를 추가한다.
   * `def getApiKeyUser(request: RequestHeader)(implicit db: Database): Option[User.SessionUser]`
   * `Authorization: Bearer <key>` 헤더에서 raw key를 추출한다.
   * SHA-256으로 hash하고 `UserApiKey` 테이블에서 조회한다.
   * `dateRevoked IS NULL` 조건으로 유효한 키만 허용한다.
   * 인증 성공 시 `dateLastUsed`를 갱신한다. 매 요청마다 쓰기 부하가 부담되면 캐시/간격 제한을 별도로 둔다.
- * [ ] 2. `viaApi` 여부를 판단하는 flag를 request context에서 전달한다.
+ * [x] 2. `viaApi` 여부를 판단하는 flag를 request context에서 전달한다.
   * API Key 인증 성공 시 `viaApi = true`를 함께 반환한다.
   * 세션 인증이면 `viaApi = false`다.
- * [ ] 3. Bot API 전용 `RequestWrapper`를 만든다.
+ * [x] 3. Bot API 전용 `RequestWrapper`를 만든다.
   * 기존 권한 체크는 `SessionLogic.getUser`가 아니라 `RequestWrapper.getUser`를 통해 동작한다.
   * Bot API에서 API Key 인증 사용자를 담은 `RequestWrapper`를 `ContextWikiPage`/`WikiPermission`에 전달해야 한다.
   * 이 처리가 빠지면 API Key 인증은 성공해도 권한 계산은 익명 사용자처럼 동작할 수 있다.
 
 == Bot API Endpoints
 
- * [ ] 0. 실제 저장 로직을 `PageLogic.savePage`로 추출한다.
+ * [x] 0. 실제 저장 로직을 `PageLogic.insert`의 `viaApi` 인자로 연결한다.
   * 기존 `Wiki.save`의 저장 핵심 로직을 `PageLogic`으로 분리한다.
   * `Wiki.save`(세션 + CSRF + reCAPTCHA)와 `BotApi.savePage`(Bearer + JSON) 양쪽에서 호출한다.
   * 인증 방식과 저장 로직이 섞이지 않게 한다.
   * 공유 저장 로직에는 revision 충돌 검사, 권한 검사, partial edit 병합 여부, `Page.insert`, cache invalidate, page calculation enqueue를 포함한다.
   * Telegram 알림과 websocket broadcast는 Bot 저장에도 보낼지 정책을 정하고, 보내는 경우 기존 저장과 동일한 payload에 `viaApi`를 포함한다.
- * [ ] 1. 페이지 읽기 API를 추가한다.
+  * 현재 1차 구현은 `PageLogic.savePage` 추출 대신 Bot API에서 검증 후 `PageLogic.insert(..., viaApi = true)`를 호출한다.
+  * Telegram 알림과 websocket broadcast는 아직 Bot 저장 경로에 붙이지 않았다.
+ * [x] 1. 페이지 읽기 API를 추가한다.
   * `GET /api/bot/page/*name`
   * `Authorization: Bearer <key>` 헤더로 인증한다.
   * 기존 `WikiPermission.isReadable` 체크를 적용한다.
   * 응답: `{ name, revision, content, dateTime }`
- * [ ] 2. 페이지 저장 API를 추가한다.
+ * [x] 2. 페이지 저장 API를 추가한다.
   * `POST /api/bot/page/*name`
   * `Authorization: Bearer <key>` 헤더로 인증한다.
   * 요청 body: `{ revision, text, comment, minorEdit? }`
@@ -104,124 +106,130 @@ API Key를 통한 편집임을 `viaApi` 플래그로 표시한다.
 
 == Routes
 
- * [ ] 1. Bot API route를 추가한다.
+ * [x] 1. Bot API route를 추가한다.
   * `GET /api/bot/page/*name controllers.BotApi.getPage(name)`
   * `POST /api/bot/page/*name controllers.BotApi.savePage(name)`
- * [ ] 2. Account API route를 추가한다.
+ * [x] 2. Account API route를 추가한다.
   * `GET /api/account/ApiKeys controllers.Api.accountApiKeys`
   * `POST /api/account/ApiKeys controllers.Api.accountCreateApiKey`
   * `DELETE /api/account/ApiKeys/:seq controllers.Api.accountRevokeApiKey(seq: Long)`
- * [ ] 3. Admin API route를 추가한다.
+ * [x] 3. Admin API route를 추가한다.
   * `GET /api/Admin/ApiKeys controllers.Api.adminApiKeys`
   * `DELETE /api/Admin/ApiKeys/:seq controllers.Api.adminRevokeApiKey(seq: Long)`
 
 == Account Settings UI
 
- * [ ] 1. Account Settings 화면에 API Key 섹션을 추가한다.
+ * [x] 1. Account Settings 화면에 API Key 섹션을 추가한다.
   * 내 API Key 목록 (label, dateInserted, 유효/폐기 상태) 표시
   * API Key 발급 form: label 입력
   * 발급 직후 plain text key를 한 번만 표시하고 복사 안내
   * Key 폐기(revoke) 버튼
- * [ ] 2. 발급된 plain text key 표시 UX를 신중하게 처리한다.
+ * [x] 2. 발급된 plain text key 표시 UX를 신중하게 처리한다.
   * 발급 응답에만 plain text key를 포함한다.
   * 이후 목록 조회에서는 plain text key를 반환하지 않는다.
   * UI에 "이 키는 지금만 표시됩니다. 복사해 두세요." 안내를 표시한다.
 
 == Admin UI
 
- * [ ] 1. Admin SPA에 전체 API Key 목록 화면을 추가한다.
+ * [x] 1. Admin SPA에 전체 API Key 목록 화면을 추가한다.
   * 경로: `/Admin/ApiKeys`
   * 전체 Key 목록 (user nickname, label, dateInserted, 유효/폐기 상태) 표시
   * 강제 폐기 버튼
 
 == History UI
 
- * [ ] 1. 히스토리 화면에서 `viaApi = TRUE`인 revision을 표시한다.
+ * [x] 1. 히스토리 화면에서 `viaApi = TRUE`인 revision을 표시한다.
   * 편집자 이름 옆에 `[Bot]` 배지를 표시한다.
   * RecentChanges에도 동일하게 적용한다.
   * `Api.change` 응답과 `Api.adminRecentChanges` 응답에 `viaApi`를 포함한다.
   * `views/Wiki/history.scala.html`의 table에 Bot 여부 컬럼 또는 배지를 추가한다.
- * [ ] 2. `viaApi` 필터를 히스토리 목록에 추가한다. (선택적)
+ * [x] 2. `viaApi` 필터를 히스토리 목록에 추가한다. (선택적)
   * `isMinorEdit` 필터처럼 Bot 편집 포함/제외 토글
 
 == Security
 
- * [ ] 1. API Key는 DB에 plain text로 저장하지 않는다.
+ * [x] 1. API Key는 DB에 plain text로 저장하지 않는다.
   * 생성 시 `java.security.MessageDigest("SHA-256")`으로 hash한다.
   * 요청마다 수신된 raw key를 hash해서 비교한다.
   * 패스워드와 달리 API Key는 SecureRandom으로 생성된 고엔트로피 값이므로 SHA-256으로 충분하다.
   * bcrypt/Argon2는 저엔트로피 패스워드 방어용 slow hash이며 API Key에 쓰면 요청마다 불필요한 지연이 생긴다.
- * [ ] 2. API Key는 충분한 엔트로피를 가져야 한다.
+ * [x] 2. API Key는 충분한 엔트로피를 가져야 한다.
   * `java.security.SecureRandom`으로 32바이트(256비트)를 생성한다.
   * Base64 URL-safe encoding으로 사용자에게 전달한다. (예: `ahawiki_<43chars>`)
- * [ ] 3. Rate limiting은 1차 구현에서 하지 않는다.
+ * [x] 3. Rate limiting은 1차 구현에서 하지 않는다.
   * 별도 API Key 단위 rate limit은 1차 구현에서 하지 않는다.
   * 현재 전역 `FilterAccessLog`의 IP rate limit은 Bot API에도 적용된다.
   * 남용 징후가 생기면 API Key 단위 rate limit을 별도 TODO로 추가한다.
- * [ ] 4. CSRF 정책을 명시한다.
+ * [x] 4. CSRF 정책을 명시한다.
   * 브라우저 세션 기반 API는 기존처럼 CSRF를 유지한다.
   * `POST /api/bot/page/*name`은 쿠키 세션이 아니라 Bearer API Key 인증을 쓰므로 CSRF token 없이 호출 가능해야 한다.
   * 전역 `CSRFFilter`에서 `/api/bot/` 경로를 예외 처리하거나, Play가 권장하는 action-level bypass 방식을 적용한다.
 
 == Tests
 
- * [ ] 1. API Key 인증 테스트를 추가한다.
-  * 유효한 키로 인증 성공
-  * 폐기된 키로 인증 실패
-  * 존재하지 않는 키로 인증 실패
- * [ ] 2. 페이지 읽기 API 테스트를 추가한다.
-  * Bot 키로 읽기 성공
-  * 읽기 권한 없는 페이지에서 403 반환
- * [ ] 3. 페이지 저장 API 테스트를 추가한다.
-  * Bot 키로 저장 성공, `viaApi = TRUE`로 기록됨
-  * revision 충돌 시 409 반환
-  * 쓰기 권한 없는 페이지에서 403 반환
-  * reCAPTCHA 없이 저장 가능
-  * CSRF token 없이 Bearer 인증만으로 저장 가능
- * [ ] 4. Account API 테스트를 추가한다.
-  * 로그인 사용자만 발급 가능
-  * 폐기 후 해당 키로 인증 실패
- * [ ] 5. 기존 Page 모델 테스트/수동 schema를 갱신한다.
+ * [x] 1. API Key 인증 테스트를 추가한다.
+  * [x] 유효한 키로 인증 성공
+  * [x] 폐기된 키로 인증 실패
+  * [x] 존재하지 않는 키로 인증 실패
+ * [x] 2. 페이지 읽기 API 테스트를 추가한다.
+  * [x] Bot 키로 읽기 성공
+  * [x] 읽기 권한 없는 페이지에서 403 반환
+ * [x] 3. 페이지 저장 API 기본 테스트를 추가한다.
+  * [x] Bot 키로 저장 성공, `viaApi = TRUE`로 기록됨
+  * [x] revision 충돌 시 409 반환
+ * [x] 4. 페이지 저장 API 권한/보안 테스트를 보강한다.
+  * [x] 쓰기 권한 없는 페이지에서 403 반환
+  * [x] reCAPTCHA 없이 저장 가능
+  * [x] CSRF token 없이 Bearer 인증만으로 저장 가능
+ * [x] 5. Account API 테스트를 추가한다.
+  * [x] 로그인 사용자만 발급 가능
+  * [x] 폐기 후 해당 키로 인증 실패
+ * [x] 6. 기존 Page 모델 테스트/수동 schema를 갱신한다.
   * `Page` 생성/조회 테스트에서 `viaApi` 기본값이 `false`인지 확인한다.
   * `UnitTestSuiteSpec`의 수동 `Page` schema에 `viaApi` 컬럼을 추가한다.
+ * [x] 7. `BotApiSpec`을 추가한다.
+  * API Key hash 저장, revoke 후 인증 실패, 권한 403, Account API, Bot 읽기, Bot 저장, 409 conflict를 검증한다.
+ * [x] 8. `BotApiFilterSpec`을 추가한다.
+  * 실제 `Filters` 체인에서 `/api/bot/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증한다.
 
 == API Specification Document
 
 AI가 API를 호출할 때 명세 문서를 직접 읽어 파라미터, 응답 형식, 에러 코드를 파악한다.
 `docs/ahawiki.net/BotApi` 문서를 만들어 아래 내용을 포함한다.
 
- * [ ] 1. 인증 방법을 설명한다.
+ * [x] 1. 인증 방법을 설명한다.
   * API Key 발급 위치: Account Settings → API Keys
   * 헤더 형식: `Authorization: Bearer <key>`
   * 키 유출 시 Account Settings에서 즉시 폐기
- * [ ] 2. 각 endpoint를 curl 예시와 함께 명세한다.
+ * [x] 2. 각 endpoint를 curl 예시와 함께 명세한다.
   * curl 예시는 AI가 가장 잘 이해하는 형식이다.
   * 요청 파라미터, 응답 JSON 필드, 에러 코드(401/403/404/409)를 포함한다.
   * `GET /api/bot/page/*name` — 페이지 읽기
   * `POST /api/bot/page/*name` — 페이지 저장
   * `GET /api/pageRevision/:pageName` — 현재 revision 조회 (저장 전 선행 호출)
- * [ ] 3. 저장 flow를 순서대로 설명한다.
+ * [x] 3. 저장 flow를 순서대로 설명한다.
   * AI가 페이지를 수정할 때 따라야 할 단계를 명시한다.
   * (1) `GET /api/pageRevision/:pageName`으로 현재 revision 조회
   * (2) `GET /api/bot/page/*name`으로 현재 내용 조회
   * (3) 내용 수정 후 `POST /api/bot/page/*name`에 revision과 함께 저장
   * (4) 409 Conflict 시 최신 내용을 다시 읽어 재시도
- * [ ] 4. 에러 코드 목록을 표 형식으로 정리한다.
+ * [x] 4. 에러 코드 목록을 표 형식으로 정리한다.
   * `400 Bad Request` — 파라미터 오류 (revision 누락 등)
   * `401 Unauthorized` — API Key 없거나 유효하지 않음
   * `403 Forbidden` — 권한 없음
   * `404 Not Found` — 존재하지 않는 페이지
   * `409 Conflict` — revision 불일치 (다른 편집이 먼저 저장됨)
- * [ ] 5. Bot API의 CSRF/reCAPTCHA 차이를 명확히 쓴다.
+ * [x] 5. Bot API의 CSRF/reCAPTCHA 차이를 명확히 쓴다.
   * Bot API는 Bearer 인증을 사용하므로 CSRF token이 필요 없다.
   * Bot API는 reCAPTCHA를 요구하지 않는다.
   * 일반 웹 편집(`POST /w/*nameEncoded`)은 기존처럼 CSRF와 reCAPTCHA 정책을 따른다.
 
 == Deployment Checks
 
- * [ ] 1. DB evolution을 적용한다.
+ * [x] 1. DB evolution을 적용한다.
   * `UserApiKey` 테이블 생성
   * `Page.viaApi` 컬럼 추가
- * [ ] 2. 기존 `Page` 레코드의 `viaApi` 기본값이 FALSE인지 확인한다.
+ * [x] 2. 기존 `Page` 레코드의 `viaApi` 기본값이 FALSE인지 확인한다.
  * [ ] 3. Account Settings에서 API Key 발급 flow를 staging에서 확인한다.
+  * 화면 구현은 완료. 실제 staging 동작 확인은 별도 수행한다.
  * [ ] 4. Claude Code에서 실제 API 호출 테스트를 수행한다.

@@ -4,12 +4,18 @@
         $(function(){
             $('[name=before]').eq(1).click();
             $('[name=after]').eq(0).click();
-            var updateMinorEditRows = function () {
+            var updateHistoryRows = function () {
                 var showMinorEdit = $('#showMinorEdit').is(':checked');
-                $('.historyRowMinorEdit').toggle(showMinorEdit);
+                var showBotEdit = $('#showBotEdit').is(':checked');
+                $('.historyRow').each(function () {
+                    var $row = $(this);
+                    var isMinorEdit = $row.data('minor-edit') === true;
+                    var isBotEdit = $row.data('via-api') === true;
+                    $row.toggle((showMinorEdit || !isMinorEdit) && (showBotEdit || !isBotEdit));
+                });
             };
-            $('#showMinorEdit').change(updateMinorEditRows);
-            updateMinorEditRows();
+            $('#showMinorEdit, #showBotEdit').change(updateHistoryRows);
+            updateHistoryRows();
             $('.buttonDeleteLastRevision').click(function () {
                 if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
                     return false;
@@ -46,6 +52,7 @@
             <button class="buttonDeleteLastRevision">Delete Last Revision</button>
             <form rel="nofollow">
                 <label><input type="checkbox" id="showMinorEdit"/> Show MinorEdit</label>
+                <label><input type="checkbox" id="showBotEdit" checked/> Show BotEdit</label>
                 <input type="hidden" name="action" value="diff"/>
                 <table class="wikiTableSimple">
                     <tr>
@@ -55,10 +62,11 @@
                         <th>Nickname</th>
                         <th>IP</th>
                         <th>Minor</th>
+                        <th>Bot</th>
                         <th>Comment</th>
                     </tr>
                     @for(history <- listHistory) {
-                        <tr class="@if(history.isMinorEdit){historyRowMinorEdit}">
+                        <tr class="historyRow" data-minor-edit="@history.isMinorEdit" data-via-api="@history.viaApi">
                             <td><input type="radio" name="before" value="@(history.revision)"/></td>
                             <td><input type="radio" name="after" value="@(history.revision)"/></td>
                             <td>
@@ -68,6 +76,7 @@
                             <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td>@if(history.isMinorEdit){Y}else{N}</td>
+                            <td>@if(history.viaApi){Y}else{N}</td>
                             <td>@Html(logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(history.comment))</td>
                         </tr>
                     }

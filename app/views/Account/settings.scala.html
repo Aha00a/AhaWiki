@@ -137,6 +137,83 @@
             background: #f6f8fc;
             text-decoration: none;
         }
+        .accountSettings .apiKeyForm {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 14px;
+        }
+        .accountSettings .apiKeyForm label {
+            display: grid;
+            gap: 6px;
+            color: #4b5563;
+            font-size: 0.92em;
+        }
+        .accountSettings .apiKeyForm input {
+            min-height: 36px;
+            padding: 7px 9px;
+            border: 1px solid #cfd6e3;
+            border-radius: 6px;
+            font: inherit;
+        }
+        .accountSettings .apiKeyTableWrap {
+            overflow-x: auto;
+        }
+        .accountSettings .apiKeyTable {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92em;
+        }
+        .accountSettings .apiKeyTable th,
+        .accountSettings .apiKeyTable td {
+            padding: 9px 8px;
+            border-bottom: 1px solid #edf0f4;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .accountSettings .apiKeyTable th {
+            color: #566173;
+            font-size: 0.82em;
+            text-transform: uppercase;
+        }
+        .accountSettings .apiKeySecret {
+            display: none;
+            margin: 12px 0 14px;
+            padding: 12px;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            background: #eff6ff;
+        }
+        .accountSettings .apiKeySecret code {
+            display: block;
+            margin-top: 8px;
+            padding: 9px;
+            background: #fff;
+            border: 1px solid #dbeafe;
+            border-radius: 4px;
+            overflow-wrap: anywhere;
+        }
+        .accountSettings .apiKeyMessage {
+            min-height: 20px;
+            color: #596579;
+            font-size: 0.9em;
+        }
+        .accountSettings .accountDangerButton,
+        .accountSettings .accountPlainButton {
+            min-height: 32px;
+            padding: 6px 10px;
+            border: 1px solid #cfd6e3;
+            border-radius: 6px;
+            background: #fff;
+            cursor: pointer;
+            font: inherit;
+        }
+        .accountSettings .accountDangerButton {
+            border-color: #fecaca;
+            color: #b91c1c;
+            background: #fff5f5;
+        }
         @@media (max-width: 767px) {
             .accountSettings .accountHero,
             .accountSettings .accountGrid,
@@ -146,8 +223,142 @@
             .accountSettings .accountEmailList li {
                 grid-template-columns: 1fr;
             }
+            .accountSettings .apiKeyForm {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const root = document.querySelector(".accountApiKeys");
+            if (!root) return;
+
+            const tbody = root.querySelector("[data-api-key-list]");
+            const message = root.querySelector("[data-api-key-message]");
+            const secret = root.querySelector("[data-api-key-secret]");
+            const secretCode = root.querySelector("[data-api-key-secret-code]");
+            const form = root.querySelector("[data-api-key-form]");
+            const labelInput = root.querySelector("[data-api-key-label]");
+            const copyButton = root.querySelector("[data-api-key-copy]");
+            let lastCreatedKey = "";
+
+            function setMessage(text, isError) {
+                message.textContent = text || "";
+                message.style.color = isError ? "#b91c1c" : "#596579";
+            }
+
+            function formatDate(value) {
+                if (!value) return "-";
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return value;
+                return date.toLocaleString();
+            }
+
+            async function csrfToken() {
+                const response = await fetch("/api/csrf", {credentials: "same-origin"});
+                if (!response.ok) throw new Error("CSRF HTTP " + response.status);
+                const token = await response.json();
+                return {name: token && token.name ? token.name : "csrfToken", value: token && token.value ? token.value : ""};
+            }
+
+            async function loadApiKeys() {
+                setMessage("Loading API keys...");
+                const response = await fetch("/api/account/ApiKeys", {credentials: "same-origin"});
+                if (!response.ok) throw new Error("HTTP " + response.status);
+                const rows = await response.json();
+                tbody.innerHTML = "";
+                if (!Array.isArray(rows) || rows.length === 0) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = '<td colspan="6">No API keys.</td>';
+                    tbody.appendChild(tr);
+                    setMessage("");
+                    return;
+                }
+                rows.forEach(function (row) {
+                    const tr = document.createElement("tr");
+                    const revokeCell = row.revoked ? "-" : '<button type="button" class="accountDangerButton" data-revoke="' + row.seq + '">Revoke</button>';
+                    tr.innerHTML =
+                        "<td>" + escapeHtml(row.label || "") + "</td>" +
+                        "<td><code>" + escapeHtml(row.keyPrefix || "") + "</code></td>" +
+                        "<td>" + formatDate(row.dateInserted) + "</td>" +
+                        "<td>" + formatDate(row.dateLastUsed) + "</td>" +
+                        "<td>" + (row.revoked ? "Revoked" : "Active") + "</td>" +
+                        "<td>" + revokeCell + "</td>";
+                    tbody.appendChild(tr);
+                });
+                setMessage("");
+            }
+
+            function escapeHtml(value) {
+                return String(value)
+                    .replaceAll("&", "&amp;")
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;")
+                    .replaceAll('"', "&quot;")
+                    .replaceAll("'", "&#039;");
+            }
+
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault();
+                const label = labelInput.value.trim();
+                if (!label) {
+                    setMessage("Label is required.", true);
+                    return;
+                }
+                try {
+                    const csrf = await csrfToken();
+                    const response = await fetch("/api/account/ApiKeys", {
+                        method: "POST",
+                        credentials: "same-origin",
+                        headers: {"Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value},
+                        body: JSON.stringify({label})
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+                    lastCreatedKey = data.key || "";
+                    secret.style.display = lastCreatedKey ? "block" : "none";
+                    secretCode.textContent = lastCreatedKey;
+                    labelInput.value = "";
+                    setMessage("API key created.");
+                    await loadApiKeys();
+                } catch (error) {
+                    setMessage(error.message, true);
+                }
+            });
+
+            tbody.addEventListener("click", async function (event) {
+                const button = event.target.closest("[data-revoke]");
+                if (!button) return;
+                if (!confirm("Revoke this API key?")) return;
+                try {
+                    const csrf = await csrfToken();
+                    const response = await fetch("/api/account/ApiKeys/" + encodeURIComponent(button.getAttribute("data-revoke")), {
+                        method: "DELETE",
+                        credentials: "same-origin",
+                        headers: {"Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value}
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+                    setMessage("API key revoked.");
+                    await loadApiKeys();
+                } catch (error) {
+                    setMessage(error.message, true);
+                }
+            });
+
+            copyButton.addEventListener("click", async function () {
+                if (!lastCreatedKey) return;
+                try {
+                    await navigator.clipboard.writeText(lastCreatedKey);
+                    setMessage("API key copied.");
+                } catch (error) {
+                    setMessage("Copy failed. Select the key manually.", true);
+                }
+            });
+
+            loadApiKeys().catch(function (error) { setMessage(error.message, true); });
+        });
+    </script>
 } {
     <div class="wikiContent accountSettings">
         <div class="limitWidth">
@@ -207,6 +418,40 @@
                             Connect Google Account
                         </a>
                     </p>
+                </section>
+
+                <section class="accountPanel accountApiKeys">
+                    <h2>API Keys</h2>
+                    <form class="apiKeyForm" data-api-key-form>
+                        <label>
+                            Label
+                            <input type="text" data-api-key-label maxlength="255" placeholder="Claude Code Local"/>
+                        </label>
+                        <button type="submit" class="accountPlainButton">Create</button>
+                    </form>
+                    <div class="apiKeySecret" data-api-key-secret>
+                        <strong>This key is shown only once.</strong>
+                        <button type="button" class="accountPlainButton" data-api-key-copy style="float: right;">Copy</button>
+                        <code data-api-key-secret-code></code>
+                    </div>
+                    <div class="apiKeyTableWrap">
+                        <table class="apiKeyTable">
+                            <thead>
+                                <tr>
+                                    <th>Label</th>
+                                    <th>Key</th>
+                                    <th>Created</th>
+                                    <th>Last Used</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody data-api-key-list>
+                                <tr><td colspan="6">Loading API keys...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="apiKeyMessage" data-api-key-message></div>
                 </section>
             </div>
         </div>

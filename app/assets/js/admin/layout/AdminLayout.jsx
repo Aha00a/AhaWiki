@@ -20,6 +20,7 @@ function pageTitleFromPath(pathname) {
     if (/\/RecentChange/.test(pathname)) return "RecentChanges";
     if (/\/S3/.test(pathname)) return "S3 Browser";
     if (/\/CrawlerCache/.test(pathname)) return "Crawler Cache";
+    if (/\/ApiKeys/.test(pathname)) return "API Keys";
     return "Dashboard";
 }
 

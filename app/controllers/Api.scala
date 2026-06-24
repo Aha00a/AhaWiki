@@ -47,6 +47,8 @@ import models.tables.Site
 import models.tables.Config
 import models.tables.Permission
 import models.tables.SiteAdmin
+import models.tables.User
+import models.tables.UserApiKey
 import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
@@ -219,6 +221,26 @@ class Api @Inject()(
       if (isSiteAdmin(site.seq)) Right(site)
       else Left(Forbidden("Access denied."))
     }
+  }
+
+  private def apiKeyJson(apiKey: UserApiKey, user: Option[User] = None): Json = Json.obj(
+    "seq" -> Json.fromLong(apiKey.seq),
+    "user" -> Json.fromLong(apiKey.user),
+    "userNickname" -> user.map(u => Json.fromString(u.nickname)).getOrElse(Json.Null),
+    "keyPrefix" -> Json.fromString(apiKey.keyPrefix),
+    "label" -> Json.fromString(apiKey.label),
+    "dateInserted" -> Json.fromString(apiKey.dateInserted.toString),
+    "dateLastUsed" -> apiKey.dateLastUsed.map(v => Json.fromString(v.toString)).getOrElse(Json.Null),
+    "dateRevoked" -> apiKey.dateRevoked.map(v => Json.fromString(v.toString)).getOrElse(Json.Null),
+    "revoked" -> Json.fromBoolean(apiKey.dateRevoked.nonEmpty),
+  )
+
+  private def apiKeyLabelFromRequest(request: Request[AnyContent]): String = {
+    request.body.asJson
+      .flatMap(json => (json \ "label").asOpt[String])
+      .orElse(request.body.asFormUrlEncoded.flatMap(_.get("label").flatMap(_.headOption)))
+      .map(_.trim)
+      .getOrElse("")
   }
 
 
@@ -1033,6 +1055,7 @@ class Api @Inject()(
           remoteAddress: String,
           comment: String,
           isMinorEdit: Boolean,
+          viaApi: Boolean,
         )
 
         val limit = request.getQueryString("n")
@@ -1051,7 +1074,8 @@ class Api @Inject()(
             U.nickname,
             P.remoteAddress,
             P.comment,
-            P.isMinorEdit
+            P.isMinorEdit,
+            P.viaApi
           FROM Page P
           INNER JOIN Site S ON S.seq = P.site
           LEFT JOIN (
@@ -1062,8 +1086,8 @@ class Api @Inject()(
           LEFT JOIN User U ON U.seq = P.user
           ORDER BY P.dateTime DESC
           LIMIT $limit
-        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
-          case siteSeq ~ siteName ~ siteDomain ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit =>
+        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
+          case siteSeq ~ siteName ~ siteDomain ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi =>
             AdminRecentChange(
               siteSeq = siteSeq,
               siteName = siteName,
@@ -1075,6 +1099,7 @@ class Api @Inject()(
               remoteAddress = remoteAddress,
               comment = comment,
               isMinorEdit = isMinorEdit,
+              viaApi = viaApi,
             )
         }.*)
 
@@ -1088,8 +1113,8 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
 
-      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean)
-      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean)
+      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean, viaApi: Boolean)
+      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean)
 
       implicit val provider: RequestWrapper = RequestWrapper()
       val wikiPermission = WikiPermission()
@@ -1106,16 +1131,17 @@ class Api @Inject()(
             U.profileImageUrl,
             P.remoteAddress,
             P.comment,
-            P.isMinorEdit
+            P.isMinorEdit,
+            P.viaApi
           FROM Page P
           LEFT JOIN User U ON U.seq = P.user
           WHERE P.site = ${site.seq}
             AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
           ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
           LIMIT $batchSize OFFSET $offset
-        """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")).map {
-          case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit =>
-            ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit)
+        """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
+          case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi =>
+            ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, viaApi)
         }.*)
       }
 
@@ -1142,6 +1168,7 @@ class Api @Inject()(
           comment = row.comment,
           commentInlineHtml = InterpreterWiki.inlineToHtmlString(row.comment),
           isMinorEdit = row.isMinorEdit,
+          viaApi = row.viaApi,
         )
       }
 
@@ -1391,6 +1418,74 @@ class Api @Inject()(
                 NotFound(Map("error" -> "No page exists in site cache.").asJson.toString()).as(JSON)
               }
           }
+      }
+    }
+  }
+
+  def accountApiKeys: Action[AnyContent] = Action { implicit request =>
+    SessionLogic.getUser(request) match {
+      case None =>
+        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+      case Some(user) =>
+        database.withConnection { implicit connection =>
+          Ok(Json.fromValues(UserApiKey.selectByUser(user.seq).map(apiKey => apiKeyJson(apiKey))))
+        }
+    }
+  }
+
+  def accountCreateApiKey: Action[AnyContent] = Action { implicit request =>
+    SessionLogic.getUser(request) match {
+      case None =>
+        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+      case Some(user) =>
+        val label = apiKeyLabelFromRequest(request)
+        if (label.isEmpty) {
+          BadRequest(Json.obj("error" -> Json.fromString("label is required.")).toString()).as(JSON)
+        } else if (label.length > 255) {
+          BadRequest(Json.obj("error" -> Json.fromString("label is too long.")).toString()).as(JSON)
+        } else {
+          database.withConnection { implicit connection =>
+            val created = UserApiKey.insert(user.seq, label)
+            Ok(apiKeyJson(created.row).deepMerge(Json.obj("key" -> Json.fromString(created.rawKey))))
+          }
+        }
+    }
+  }
+
+  def accountRevokeApiKey(seq: Long): Action[AnyContent] = Action { implicit request =>
+    SessionLogic.getUser(request) match {
+      case None =>
+        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+      case Some(user) =>
+        database.withConnection { implicit connection =>
+          val updated = UserApiKey.revokeByUser(seq, user.seq)
+          if (updated == 0) NotFound(Json.obj("error" -> Json.fromString("API key not found.")).toString()).as(JSON)
+          else Ok(Json.obj("ok" -> Json.fromBoolean(true), "seq" -> Json.fromLong(seq)))
+        }
+    }
+  }
+
+  def adminApiKeys: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        val rows = UserApiKey.selectAll().map { apiKey =>
+          apiKeyJson(apiKey, User.selectBySeq(apiKey.user))
+        }
+        Ok(Json.fromValues(rows))
+      }
+    }
+  }
+
+  def adminRevokeApiKey(seq: Long): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      Forbidden("Access denied.")
+    } else {
+      database.withConnection { implicit connection =>
+        val updated = UserApiKey.revoke(seq)
+        if (updated == 0) NotFound(Json.obj("error" -> Json.fromString("API key not found.")).toString()).as(JSON)
+        else Ok(Json.obj("ok" -> Json.fromBoolean(true), "seq" -> Json.fromLong(seq)))
       }
     }
   }

@@ -1,0 +1,208 @@
+= BotApi
+
+AhaWiki 페이지를 외부 도구나 AI 에이전트가 API Key로 읽고 저장하기 위한 API입니다.
+
+Bot API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사용합니다.
+Bot API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
+
+== 현재 구현 범위
+
+ * API Key 발급/조회/폐기 API
+ * Admin의 전체 API Key 조회/강제 폐기 API
+ * API Key 인증 사용자로 페이지 읽기
+ * API Key 인증 사용자로 페이지 저장
+ * 저장된 revision에 `viaApi = true` 기록
+ * History, RecentChanges API 응답에 `viaApi` 포함
+ * Account Settings의 API Key 관리 UI
+ * Admin의 전체 API Key 조회/강제 폐기 UI
+
+아직 Bot 저장 API는 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+
+== 인증
+
+Bot API 호출에는 아래 헤더를 넣습니다.
+
+{{{
+Authorization: Bearer ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+}}}
+
+API Key는 생성 응답에서 한 번만 plain text로 반환됩니다.
+이후 목록 조회에서는 `keyPrefix`만 볼 수 있고 원본 key는 다시 조회할 수 없습니다.
+키가 유출되면 Account API 또는 Admin API로 폐기해야 합니다.
+
+== API Key 관리
+
+=== 내 API Key 목록
+
+{{{
+curl -b cookies.txt https://ahawiki.net/api/account/ApiKeys
+}}}
+
+응답:
+
+{{{
+[
+  {
+    "seq": 1,
+    "user": 1,
+    "userNickname": null,
+    "keyPrefix": "ahawiki_abcd123",
+    "label": "Claude Code Local",
+    "dateInserted": "2026-06-24T10:00:00",
+    "dateLastUsed": null,
+    "dateRevoked": null,
+    "revoked": false
+  }
+]
+}}}
+
+이 API는 로그인 세션이 필요합니다.
+
+=== API Key 생성
+
+{{{
+curl -X POST https://ahawiki.net/api/account/ApiKeys \
+  -b cookies.txt \
+  -H "Content-Type: application/json" \
+  -H "Csrf-Token: <csrf-token>" \
+  -d '{"label":"Claude Code Local"}'
+}}}
+
+응답:
+
+{{{
+{
+  "seq": 1,
+  "user": 1,
+  "userNickname": null,
+  "keyPrefix": "ahawiki_abcd123",
+  "label": "Claude Code Local",
+  "dateInserted": "2026-06-24T10:00:00",
+  "dateLastUsed": null,
+  "dateRevoked": null,
+  "revoked": false,
+  "key": "ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+}}}
+
+`key` 필드는 생성 응답에만 포함됩니다.
+
+=== API Key 폐기
+
+{{{
+curl -X DELETE https://ahawiki.net/api/account/ApiKeys/1 \
+  -b cookies.txt \
+  -H "Csrf-Token: <csrf-token>"
+}}}
+
+응답:
+
+{{{
+{
+  "ok": true,
+  "seq": 1
+}
+}}}
+
+== Admin API Key 관리
+
+=== 전체 API Key 목록
+
+{{{
+curl -b cookies.txt https://ahawiki.net/api/Admin/ApiKeys
+}}}
+
+Admin만 호출할 수 있습니다.
+응답에는 `userNickname`이 포함됩니다.
+
+=== API Key 강제 폐기
+
+{{{
+curl -X DELETE https://ahawiki.net/api/Admin/ApiKeys/1 \
+  -b cookies.txt \
+  -H "Csrf-Token: <csrf-token>"
+}}}
+
+Admin만 호출할 수 있습니다.
+
+== 페이지 읽기
+
+{{{
+curl https://ahawiki.net/api/bot/page/FrontPage \
+  -H "Authorization: Bearer <api-key>"
+}}}
+
+응답:
+
+{{{
+{
+  "name": "FrontPage",
+  "revision": 12,
+  "content": "= FrontPage\n...",
+  "dateTime": "2026-06-24T10:00:00",
+  "viaApi": false
+}
+}}}
+
+권한은 API Key 소유자의 기존 `WikiPermission`을 따릅니다.
+읽기 권한이 없으면 `403 Forbidden`을 반환합니다.
+
+== 페이지 저장
+
+{{{
+curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
+  -H "Authorization: Bearer <api-key>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "revision": 12,
+    "text": "= FrontPage\nupdated content",
+    "comment": "Update by bot",
+    "minorEdit": false
+  }'
+}}}
+
+요청 필드:
+
+ * `revision` — 저장 기준 revision. 최신 revision과 다르면 저장하지 않습니다.
+ * `text` — 저장할 전체 페이지 본문.
+ * `comment` — 저장 comment. 생략하면 빈 문자열입니다.
+ * `minorEdit` — minor edit 여부. 생략하면 `false`입니다.
+
+응답:
+
+{{{
+{
+  "name": "FrontPage",
+  "revision": 13,
+  "dateTime": "2026-06-24T10:01:00"
+}
+}}}
+
+저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다.
+저장 후 PageMeta 목록 cache를 무효화하고 page calculation을 enqueue합니다.
+`.footer`, `.config` 저장 시 해당 cache도 무효화합니다.
+
+현재 Bot 저장 API는 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+
+== 저장 Flow
+
+AI 에이전트는 아래 순서로 저장합니다.
+
+ 1. `GET /api/pageRevision/:pageName`으로 현재 revision을 확인합니다.
+ 2. `GET /api/bot/page/*name`으로 현재 본문을 읽습니다.
+ 3. 본문을 수정합니다.
+ 4. `POST /api/bot/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
+ 5. `409 Conflict`가 오면 최신 본문을 다시 읽고 변경 내용을 병합한 뒤 재시도합니다.
+
+== 에러 코드
+
+|| 코드 || 의미 ||
+|| `400 Bad Request` || JSON body 없음, `revision` 누락, `text` 누락, 본문 변경 없음 ||
+|| `401 Unauthorized` || API Key 없음 또는 유효하지 않음 ||
+|| `403 Forbidden` || API Key 소유자에게 읽기/쓰기 권한 없음 ||
+|| `404 Not Found` || 읽으려는 페이지가 없음 ||
+|| `409 Conflict` || 요청 revision이 최신 revision과 다름 ||
+
+== 관련
+
+ * [ToDo ApiKey]

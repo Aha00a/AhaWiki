@@ -46,8 +46,15 @@ GET           /Admin/*path                           controllers.Admin.spa(path)
 
 GET           /api/me                                controllers.Api.me
 GET           /api/csrf                              controllers.Api.csrf
+GET           /api/bot/page/*nameEncoded             controllers.BotApi.getPage(nameEncoded: String)
+POST          /api/bot/page/*nameEncoded             controllers.BotApi.savePage(nameEncoded: String)
+GET           /api/account/ApiKeys                   controllers.Api.accountApiKeys
+POST          /api/account/ApiKeys                   controllers.Api.accountCreateApiKey
+DELETE        /api/account/ApiKeys/:seq              controllers.Api.accountRevokeApiKey(seq: Long)
 GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
+GET           /api/Admin/ApiKeys                     controllers.Api.adminApiKeys
+DELETE        /api/Admin/ApiKeys/:seq                controllers.Api.adminRevokeApiKey(seq: Long)
 GET           /api/Admin/Sites                       controllers.Api.adminSites
 PUT           /api/Admin/Site/:seq                   controllers.Api.adminUpdateSite(seq: Long)
 GET           /api/Admin/Users                       controllers.Api.adminUsers

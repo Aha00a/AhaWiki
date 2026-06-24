@@ -18,8 +18,8 @@ import java.time.LocalDateTime
 import scala.collection.immutable
 import scala.util.matching.Regex
 
-case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean) extends WithDateTime
+case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String, viaApi: Boolean = false) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean = false) extends WithDateTime
 
 case class SearchResult(name: String, dateTime: LocalDateTime, content: String) {
 
@@ -48,8 +48,8 @@ object Page {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
-  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content")
-  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit")
+  private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi")
+  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")
   private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
@@ -67,7 +67,7 @@ object Page {
   def selectLastRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress, comment, isMinorEdit, content
+SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name = $name
@@ -81,7 +81,7 @@ SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress
   def selectLastRevision(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[Page] = {
     //language=sql
     SQL"""
-SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress, comment, isMinorEdit, content
+SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE P.site = ${site.seq} AND P.name IN ($seqName)
@@ -99,7 +99,7 @@ SELECT P.name, P.revision, dateTime, U.nickname AS nickname, user, remoteAddress
   def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, isMinorEdit, content
+SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -113,7 +113,7 @@ SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comme
   def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, isMinorEdit, content
+SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name AND revision = $revision
@@ -125,7 +125,7 @@ SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comme
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, isMinorEdit
+SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -138,7 +138,7 @@ SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comme
   def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection, site: Site): T = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comment, isMinorEdit, content
+SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     WHERE site = ${site.seq} AND name = $name
@@ -152,8 +152,8 @@ SELECT name, revision, dateTime, U.nickname nickname, user, remoteAddress, comme
     //language=sql
     SQL"""
 INSERT INTO Page
-    (site, name, revision, dateTime, user, remoteAddress, comment, isMinorEdit, content) values
-    (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.user.map(_.toString).getOrElse(null)}, ${p.remoteAddress}, ${p.comment}, ${p.isMinorEdit}, ${p.content})
+    (site, name, revision, dateTime, `user`, remoteAddress, comment, isMinorEdit, viaApi, content) values
+    (${site.seq}, ${p.name}, ${p.revision}, ${p.dateTime}, ${p.user.map(_.toString).getOrElse(null)}, ${p.remoteAddress}, ${p.comment}, ${p.isMinorEdit}, ${p.viaApi}, ${p.content})
     """.executeInsert()
   }
 

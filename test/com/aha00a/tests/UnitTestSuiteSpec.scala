@@ -108,6 +108,7 @@ class UnitTestSuiteSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Before
             remoteAddress VARCHAR(255) NOT NULL DEFAULT '',
             comment VARCHAR(255) NOT NULL DEFAULT '',
             isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
+            viaApi BOOLEAN NOT NULL DEFAULT FALSE,
             content CLOB NOT NULL,
             PRIMARY KEY (site, name, revision)
           )

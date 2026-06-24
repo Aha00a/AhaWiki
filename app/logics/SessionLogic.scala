@@ -1,6 +1,9 @@
 package logics
 
 import models.tables.User
+import models.tables.UserApiKey
+import models.tables.UserEmail
+import play.api.db.Database
 import play.api.mvc.Request
 import play.api.mvc.RequestHeader
 import play.api.mvc.Session
@@ -22,6 +25,28 @@ object SessionLogic {
       nickname = nickname,
       loginEmail = request.session.get(sessionKeyLoginEmail).orElse(request.session.get(sessionKeyLegacyEmail)).filter(_.nonEmpty),
     )
+  }
+
+  def getApiKeyUser(request: RequestHeader)(implicit database: Database): Option[User.SessionUser] = {
+    val rawKey = request.headers
+      .get("Authorization")
+      .map(_.trim)
+      .collect {
+        case value if value.regionMatches(true, 0, "Bearer ", 0, "Bearer ".length) =>
+          value.drop("Bearer ".length).trim
+      }
+      .filter(_.nonEmpty)
+
+    rawKey.flatMap { key =>
+      database.withConnection { implicit connection =>
+        UserApiKey.selectByHash(UserApiKey.hash(key)).flatMap { apiKey =>
+          UserApiKey.touchLastUsed(apiKey.seq)
+          User.selectBySeq(apiKey.user).map { user =>
+            user.toSessionUser(UserEmail.selectPrimaryEmailByUser(user.seq))
+          }
+        }
+      }
+    }
   }
 
   def getUserProfileImageUrl(request: RequestHeader): Option[String] =
