@@ -4,7 +4,7 @@ import actors.ActorPageCalculator.Calculate
 import anorm.SqlParser._
 import anorm._
 import com.aha00a.play.Implicits.RichRequest
-import com.aha00a.play.AnormSqlParser.localDateTime
+import com.aha00a.play.AnormSqlParser.{localDateTime, optionLong}
 import io.circe.Json
 import io.circe.syntax._
 import logics.AhaWikiCache
@@ -18,6 +18,7 @@ import models.ContextWikiPage
 import models.PageContent
 import models.RequestWrapper
 import models.WikiActors
+import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
 import models.tables.User
@@ -29,7 +30,8 @@ import java.net.URLDecoder
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import javax.inject._
-import scala.util.Try
+import scala.jdk.CollectionConverters._
+import scala.util.{Failure, Success, Try}
 
 class BotApi @Inject()(
   implicit val
@@ -50,6 +52,78 @@ class BotApi @Inject()(
       .digest(text.getBytes("UTF-8"))
       .map(byte => f"${byte & 0xff}%02x")
       .mkString
+
+  private def isS3Configured: Boolean =
+    Seq(
+      applicationConf.AhaWiki.aws.AWS_REGION(),
+      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+      applicationConf.AhaWiki.aws.s3.bucket(),
+    ).forall(_.trim.nonEmpty)
+
+  private def buildAmazonS3Client(): com.amazonaws.services.s3.AmazonS3 = {
+    import com.amazonaws.auth.AWSStaticCredentialsProvider
+    import com.amazonaws.auth.BasicAWSCredentials
+    import com.amazonaws.services.s3.AmazonS3ClientBuilder
+    val credentials = new BasicAWSCredentials(
+      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
+      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
+    )
+    AmazonS3ClientBuilder.standard
+      .withCredentials(new AWSStaticCredentialsProvider(credentials))
+      .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
+      .build()
+  }
+
+  private def sanitizeAttachmentPathSegment(v: String): String = {
+    val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
+    if (sanitized.nonEmpty) sanitized else "_"
+  }
+
+  private def listPageAttachmentObjectKeysFromS3(siteSeq: Long, pageName: String): Seq[String] = {
+    if (!isS3Configured) {
+      Seq.empty
+    } else {
+      val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+      val prefix = s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/"
+      val request = new com.amazonaws.services.s3.model.ListObjectsV2Request()
+        .withBucketName(bucket)
+        .withPrefix(prefix)
+        .withMaxKeys(200)
+      val result = buildAmazonS3Client().listObjectsV2(request)
+      result.getObjectSummaries.asScala.toSeq
+        .map(_.getKey)
+        .filter(key => key != null && key.nonEmpty && !key.endsWith("/"))
+    }
+  }
+
+  private def deletePageAttachments(siteSeq: Long, pageName: String)(implicit connection: java.sql.Connection): Either[String, Unit] = {
+    val objectKeysFromDb = Attachment.selectObjectKeysByPage(siteSeq, pageName)
+    val objectKeysFromS3 = listPageAttachmentObjectKeysFromS3(siteSeq, pageName)
+    val objectKeys = (objectKeysFromDb ++ objectKeysFromS3).map(_.trim).filter(_.nonEmpty).distinct
+
+    val failedObjectKeys =
+      if (!isS3Configured) {
+        Seq.empty
+      } else {
+        val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+        val amazonS3 = buildAmazonS3Client()
+        objectKeys.flatMap { objectKey =>
+          Try(amazonS3.deleteObject(bucket, objectKey)) match {
+            case Success(_) => None
+            case Failure(error) =>
+              logger.error(s"deletePageAttachments failed. pageName=$pageName objectKey=$objectKey", error)
+              Some(objectKey)
+          }
+        }
+      }
+    if (failedObjectKeys.nonEmpty) {
+      Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
+    } else {
+      objectKeys.foreach(Attachment.markDeleted)
+      Right(())
+    }
+  }
 
   private def unauthorized: Result =
     Unauthorized(Json.obj("error" -> Json.fromString("API key is required or invalid.")).toString()).as(JSON)
@@ -89,7 +163,7 @@ class BotApi @Inject()(
         AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
       ORDER BY P.name ASC
       LIMIT $boundedLimit
-    """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ get[Option[Long]]("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi")).map {
+    """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi")).map {
       case name ~ revision ~ dateTime ~ nickname ~ user ~ remoteAddress ~ comment ~ isMinorEdit ~ content ~ viaApi =>
         Page(name, revision, dateTime, nickname, user, remoteAddress, comment, isMinorEdit, content, viaApi)
     }.*)
@@ -143,18 +217,22 @@ class BotApi @Inject()(
     }
   }
 
-  def changes(prefix: String, since: String, afterRevision: Long, includeMinorEdit: Int, includeViaApi: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
+  def changes(name: String, prefix: String, since: String, afterRevision: Long, includeMinorEdit: Int, includeViaApi: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
     withApiUser(request) { user =>
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
         implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
         val wikiPermission = WikiPermission()
+        val nameTrimmed = name.trim
         val prefixTrimmed = prefix.trim
         val prefixLike = s"$prefixTrimmed%"
-        val sinceOptEither = if (since.trim.isEmpty) Right(None) else Try(LocalDateTime.parse(since.trim)).toEither.map(Some(_))
+        val sinceOptEither: Either[Throwable, Option[LocalDateTime]] =
+          if (since.trim.isEmpty) Right(None) else Try(LocalDateTime.parse(since.trim)).toEither.map(Some(_))
         if (sinceOptEither.isLeft) {
           BadRequest(Json.obj("error" -> Json.fromString("since must be an ISO-8601 local date-time.")).toString()).as(JSON)
+        } else if (afterRevision > 0 && nameTrimmed.isEmpty) {
+          BadRequest(Json.obj("error" -> Json.fromString("afterRevision requires name because revisions are page-local.")).toString()).as(JSON)
         } else {
           val sinceOpt = sinceOptEither.toOption.flatten
           val sinceValue = sinceOpt.getOrElse(LocalDateTime.of(1970, 1, 1, 0, 0))
@@ -168,6 +246,7 @@ class BotApi @Inject()(
               SELECT P.name, P.revision, P.dateTime, P.comment, P.isMinorEdit, P.viaApi
               FROM Page P
               WHERE P.site = ${site.seq}
+                AND ($nameTrimmed = '' OR P.name = $nameTrimmed)
                 AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
                 AND (${sinceOpt.isEmpty} OR P.dateTime >= $sinceValue)
                 AND ($afterRevision <= 0 OR P.revision > $afterRevision)
@@ -381,14 +460,20 @@ class BotApi @Inject()(
                 case (Some(page), Some(_)) =>
                   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
                   ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-                  Page.deleteWithRelatedData(name)
-                  wikiActors.pageCalculation ! Calculate(site, name)
+                  deletePageAttachments(site.seq, name) match {
+                    case Left(error) =>
+                      logger.error(error)
+                      InternalServerError(Json.obj("error" -> Json.fromString("Attachment delete failed.")).toString()).as(JSON)
+                    case Right(_) =>
+                      Page.deleteWithRelatedData(name)
+                      wikiActors.pageCalculation ! Calculate(site, name)
 
-                  Ok(Json.obj(
-                    "ok" -> Json.fromBoolean(true),
-                    "name" -> Json.fromString(name),
-                    "deletedRevision" -> Json.fromLong(page.revision),
-                  ))
+                      Ok(Json.obj(
+                        "ok" -> Json.fromBoolean(true),
+                        "name" -> Json.fromString(name),
+                        "deletedRevision" -> Json.fromLong(page.revision),
+                      ))
+                  }
               }
             }
           }

@@ -48,7 +48,7 @@ GET           /api/me                                controllers.Api.me
 GET           /api/csrf                              controllers.Api.csrf
 GET           /api/bot/pages                         controllers.BotApi.listPages(prefix: String ?= "", limit: Int ?= 5000)
 POST          /api/bot/pages/metadata                controllers.BotApi.pageMetadata()
-GET           /api/bot/changes                       controllers.BotApi.changes(prefix: String ?= "", since: String ?= "", afterRevision: Long ?= 0, includeMinorEdit: Int ?= 1, includeViaApi: Int ?= 1, limit: Int ?= 100)
+GET           /api/bot/changes                       controllers.BotApi.changes(name: String ?= "", prefix: String ?= "", since: String ?= "", afterRevision: Long ?= 0, includeMinorEdit: Int ?= 1, includeViaApi: Int ?= 1, limit: Int ?= 100)
 POST          /api/bot/rename                        controllers.BotApi.renamePage()
 GET           /api/bot/page/*nameEncoded             controllers.BotApi.getPage(nameEncoded: String)
 POST          /api/bot/page/*nameEncoded             controllers.BotApi.savePage(nameEncoded: String)

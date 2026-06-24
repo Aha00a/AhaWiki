@@ -22,6 +22,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
+import java.time.LocalDateTime
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
@@ -192,7 +193,7 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
             page VARCHAR(255) NOT NULL,
             cls VARCHAR(255) NOT NULL DEFAULT '',
             prop VARCHAR(255) NOT NULL DEFAULT '',
-            value VARCHAR(255) NOT NULL DEFAULT ''
+            `value` VARCHAR(255) NOT NULL DEFAULT ''
           )
         """,
         """
@@ -207,6 +208,28 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
             dateRevoked DATETIME NULL,
             PRIMARY KEY (seq),
             UNIQUE (keyHash)
+          )
+        """,
+        """
+          CREATE TABLE Attachment (
+            seq BIGINT NOT NULL AUTO_INCREMENT,
+            site BIGINT NOT NULL,
+            pageName VARCHAR(255) NOT NULL,
+            user BIGINT NULL,
+            uploaderEmail VARCHAR(255) NULL,
+            originalFilename VARCHAR(255) NOT NULL,
+            storedFilename VARCHAR(255) NOT NULL,
+            bucket VARCHAR(255) NOT NULL,
+            objectKey VARCHAR(512) NOT NULL,
+            contentType VARCHAR(255) NOT NULL,
+            fileSize BIGINT NOT NULL,
+            status VARCHAR(32) NOT NULL,
+            etag VARCHAR(255) NULL,
+            dateInserted DATETIME DEFAULT NOW() NOT NULL,
+            dateUpdated DATETIME NULL,
+            dateUploaded DATETIME NULL,
+            dateDeleted DATETIME NULL,
+            PRIMARY KEY (seq)
           )
         """,
         "CREATE INDEX UserApiKey_user_dateRevoked_index ON UserApiKey (`user`, dateRevoked)",
@@ -235,9 +258,16 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
     AhaWikiCacheMemoryPermission.clear()
   }
 
-  private def insertPage(name: String, revision: Long, content: String, viaApi: Boolean = false): Unit =
+  private def insertPage(
+    name: String,
+    revision: Long,
+    content: String,
+    viaApi: Boolean = false,
+    isMinorEdit: Boolean = false,
+    dateTime: LocalDateTime = LocalDateTime.now(),
+  ): Unit =
     db.withConnection { implicit connection =>
-      Page.insert(Page(name, revision, java.time.LocalDateTime.now(), None, Some(1), "127.0.0.1", "", isMinorEdit = false, content, viaApi))
+      Page.insert(Page(name, revision, dateTime, None, Some(1), "127.0.0.1", "", isMinorEdit, content, viaApi))
     }
 
   private def botRequest(method: String, url: String, key: String) =
@@ -366,6 +396,52 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       changes.map(change => (change \ "name").as[String]) must contain("BotChangeWeb")
       changes.map(change => (change \ "name").as[String]) must not contain "BotChangeApi"
     }
+
+    "filter by since and minor edit flag" in {
+      val created = createApiKey()
+      insertPage("BotChangeOld", 1, "= BotChangeOld\ncontent", dateTime = LocalDateTime.parse("2026-06-24T09:00:00"))
+      insertPage("BotChangeMajor", 1, "= BotChangeMajor\ncontent", dateTime = LocalDateTime.parse("2026-06-24T11:00:00"))
+      insertPage("BotChangeMinor", 1, "= BotChangeMinor\ncontent", isMinorEdit = true, dateTime = LocalDateTime.parse("2026-06-24T12:00:00"))
+
+      val result = route(app, botRequest(GET, "/api/bot/changes?prefix=BotChange&since=2026-06-24T10:00:00&includeMinorEdit=0", created.rawKey)).get
+
+      status(result) mustBe OK
+      val names = (contentAsJson(result) \ "changes").as[Seq[play.api.libs.json.JsValue]].map(change => (change \ "name").as[String])
+      names must contain("BotChangeMajor")
+      names must not contain "BotChangeOld"
+      names must not contain "BotChangeMinor"
+    }
+
+    "reject afterRevision without an exact page name" in {
+      val created = createApiKey()
+
+      val result = route(app, botRequest(GET, "/api/bot/changes?prefix=BotChange&afterRevision=1", created.rawKey)).get
+
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "error").as[String] must include("afterRevision requires name")
+    }
+
+    "apply afterRevision only to an exact page name" in {
+      val created = createApiKey()
+      insertPage("BotChangeOne", 1, "= BotChangeOne\nold")
+      insertPage("BotChangeOne", 2, "= BotChangeOne\nnew")
+      insertPage("BotChangeTwo", 1, "= BotChangeTwo\ncontent")
+
+      val result = route(app, botRequest(GET, "/api/bot/changes?name=BotChangeOne&afterRevision=1", created.rawKey)).get
+
+      status(result) mustBe OK
+      val changes = (contentAsJson(result) \ "changes").as[Seq[play.api.libs.json.JsValue]]
+      changes.map(change => (change \ "name").as[String]) mustBe Seq("BotChangeOne")
+      changes.map(change => (change \ "revision").as[Long]) mustBe Seq(2)
+    }
+
+    "reject invalid since values" in {
+      val created = createApiKey()
+
+      val result = route(app, botRequest(GET, "/api/bot/changes?since=not-a-date", created.rawKey)).get
+
+      status(result) mustBe BAD_REQUEST
+    }
   }
 
   "POST /api/bot/page/:name" should {
@@ -464,9 +540,17 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
   }
 
   "DELETE /api/bot/page/:name" should {
-    "delete a page when revision and confirm are provided" in {
+    "delete a page and mark related attachments deleted when revision and confirm are provided" in {
       val created = createApiKey()
       insertPage("BotDelete", 1, "= BotDelete\nold")
+      db.withConnection { implicit connection =>
+        SQL"""
+          INSERT INTO Attachment
+            (site, pageName, originalFilename, storedFilename, bucket, objectKey, contentType, fileSize, status)
+          VALUES
+            (1, 'BotDelete', 'a.png', 'a.png', 'test-bucket', 'Attachment/1/BotDelete/a.png', 'image/png', 10, 'Uploaded')
+        """.executeUpdate()
+      }
 
       val request = botRequest(DELETE, "/api/bot/page/BotDelete", created.rawKey)
         .withJsonBody(Json.obj(
@@ -481,6 +565,9 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
       db.withConnection { implicit connection =>
         Page.selectLastRevision("BotDelete") mustBe None
+        val deletedCount = SQL"SELECT COUNT(*) cnt FROM Attachment WHERE pageName = 'BotDelete' AND status = 'Deleted' AND dateDeleted IS NOT NULL"
+          .as(anorm.SqlParser.long("cnt").single)
+        deletedCount mustBe 1
       }
     }
 

@@ -5,25 +5,30 @@ API Key 기반 Bot API 구현은 완료했다.
 
 == 남은 작업
 
- * [ ] 1. Account Settings에서 API Key 발급 flow를 staging에서 확인한다.
+ * [[CB(x)]] 1. Account Settings에서 API Key 발급 flow를 staging에서 확인한다.
   * API Key 생성
   * 생성 직후 plain text key 1회 표시와 복사
   * 목록에서 `keyPrefix`, label, 사용/폐기 상태 표시
   * 폐기 후 같은 key로 Bot API 호출 시 `401 Unauthorized`
- * [ ] 2. 자동화 도구에서 실제 API 호출 테스트를 수행한다.
+ * [[CB(x)]] 2. 자동화 도구에서 실제 API 호출 테스트를 수행한다.
   * `GET /api/bot/page/*name`으로 페이지 읽기
   * `POST /api/bot/page/*name`으로 페이지 저장
   * revision 충돌 시 `409 Conflict`
   * 권한 없는 페이지에서 `403 Forbidden`
- * [ ] 3. AhaWikiDoc sync에 필요한 Bot API를 보강한다.
+ * [[CB(x)]] 3. AhaWikiDoc sync에 필요한 Bot API를 보강한다.
   * [[CB(x)]] 페이지 목록/메타 API: `name`, `revision`, `dateTime`, `isMinorEdit`, `viaApi`, content hash를 반환
   * [[CB(x)]] 최근 변경 API: Bot API 인증으로 page prefix, timestamp, revision 기준 필터 지원
   * [[CB(x)]] batch metadata API: 여러 page name의 `revision`, `dateTime`, hash를 한 번에 조회
   * [[CB(x)]] 이름변경 API: local file rename을 원격 page rename으로 반영
   * [[CB(x)]] 삭제 API: local file delete를 원격 page delete로 반영하되 revision 확인과 명시적 확인 절차를 둠
-  * [ ] sbt 테스트 환경에서 `BotApiSpec` 검증
-  * [ ] sync manifest 전략: `lastSyncedRevision`/`lastSyncedAt` 또는 local manifest 갱신 방식 결정
+  * [[CB(x)]] sync manifest 전략: 서버에 별도 state를 저장하지 않고 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록
   * 구현 위치: `conf/routes`, `app/controllers/BotApi.scala`, `test/com/aha00a/controllers/BotApiSpec.scala`, `BotApi`
+ * [[CB(x)]] 4. `BotApiSpec`를 실행한다.
+  * `sbt.bat "testOnly com.aha00a.controllers.BotApiSpec"`에서 18개 테스트 통과.
+ * [[CB(x)]] 5. 검토 결과를 반영해 Bot API sync 안전성을 보강한다.
+  * [[CB(x)]] `/api/bot/changes`의 `afterRevision`이 전체 sync cursor로 오용되지 않도록 제한하고 문서화한다.
+  * [[CB(x)]] Bot 삭제 API가 웹 삭제와 같은 첨부파일 정리 정책을 갖도록 보강한다.
+  * [[CB(x)]] `changes`의 `since`, `afterRevision`, `includeMinorEdit`, invalid `since` 테스트를 보강한다.
 
 == 완료/기준 문서
 

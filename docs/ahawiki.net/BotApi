@@ -282,6 +282,7 @@ curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
 
 삭제는 되돌리기 어려운 작업이므로 `confirm: true`가 필요합니다.
 요청 revision이 최신 revision과 다르면 `409 Conflict`를 반환합니다.
+삭제 성공 시 페이지에 연결된 첨부파일도 웹 삭제와 같은 정책으로 삭제 처리합니다.
 
 == 최근 변경 조회
 
@@ -292,12 +293,16 @@ curl "https://ahawiki.net/api/bot/changes?prefix=ToDo&since=2026-06-24T00:00:00&
 
 query parameter:
 
+ * `name` — 특정 page name만 조회. `afterRevision`을 사용할 때 필요합니다.
  * `prefix` — page name prefix 필터
  * `since` — ISO-8601 local date-time 이후 변경만 조회
- * `afterRevision` — revision 번호 초과 변경만 조회
+ * `afterRevision` — `name`으로 지정한 단일 페이지에서 해당 revision 초과 변경만 조회
  * `includeMinorEdit` — `0`이면 minor edit 제외, 기본값은 `1`
  * `includeViaApi` — `0`이면 Bot API 저장 제외, 기본값은 `1`
  * `limit` — 최대 행 수, 기본값은 `100`
+
+`revision`은 페이지별 번호이므로 `afterRevision`은 전체 sync cursor로 사용할 수 없습니다.
+전체 동기화는 `since`와 페이지별 metadata 비교를 함께 사용합니다.
 
 응답:
 
@@ -315,6 +320,18 @@ query parameter:
   ]
 }
 }}}
+
+== AhaWikiDoc sync 권장 방식
+
+문서 동기화 도구는 서버에 별도 sync state를 저장하지 않고 local manifest를 갱신하는 방식을 권장합니다.
+
+ 1. `GET /api/bot/pages`로 원격 페이지의 `revision`, `dateTime`, `contentHash`를 조회합니다.
+ 2. local manifest의 마지막 동기화 시각 또는 page별 revision과 비교합니다.
+ 3. 변경 후보만 `GET /api/bot/page/*name`으로 본문을 내려받아 local file과 비교합니다.
+ 4. local에서 검토/커밋된 문서가 원격보다 최신이면 `POST /api/bot/page/*name`으로 저장합니다.
+ 5. 원격이 최신이면 local file을 갱신합니다.
+ 6. 양쪽이 모두 바뀐 경우 자동 덮어쓰기를 하지 말고 병합하거나 사용자에게 확인합니다.
+ 7. 저장/가져오기 완료 후 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록합니다.
 
 == 변경 이력 표시와 필터
 
