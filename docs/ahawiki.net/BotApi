@@ -50,7 +50,7 @@ curl -b cookies.txt https://ahawiki.net/api/account/ApiKeys
     "user": 1,
     "userNickname": null,
     "keyPrefix": "ahawiki_abcd123",
-    "label": "Claude Code Local",
+    "label": "Codex Local",
     "dateInserted": "2026-06-24T10:00:00",
     "dateLastUsed": null,
     "dateRevoked": null,
@@ -68,7 +68,7 @@ curl -X POST https://ahawiki.net/api/account/ApiKeys \
   -b cookies.txt \
   -H "Content-Type: application/json" \
   -H "Csrf-Token: <csrf-token>" \
-  -d '{"label":"Claude Code Local"}'
+  -d '{"label":"Codex Local"}'
 }}}
 
 응답:
@@ -79,7 +79,7 @@ curl -X POST https://ahawiki.net/api/account/ApiKeys \
   "user": 1,
   "userNickname": null,
   "keyPrefix": "ahawiki_abcd123",
-  "label": "Claude Code Local",
+  "label": "Codex Local",
   "dateInserted": "2026-06-24T10:00:00",
   "dateLastUsed": null,
   "dateRevoked": null,
