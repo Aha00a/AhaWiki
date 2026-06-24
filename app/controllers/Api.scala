@@ -1108,7 +1108,7 @@ class Api @Inject()(
     }
   }
 
-  def change(name: String, includeMinorEdit: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
+  def change(name: String, includeMinorEdit: Int, includeViaApi: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
@@ -1137,6 +1137,7 @@ class Api @Inject()(
           LEFT JOIN User U ON U.seq = P.user
           WHERE P.site = ${site.seq}
             AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
+            AND (${includeViaApi == 1} OR P.viaApi = false)
           ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
           LIMIT $batchSize OFFSET $offset
         """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {

@@ -145,6 +145,11 @@ API Key를 통한 편집임을 `viaApi` 플래그로 표시한다.
   * `views/Wiki/history.scala.html`의 table에 Bot 여부 컬럼 또는 배지를 추가한다.
  * [x] 2. `viaApi` 필터를 히스토리 목록에 추가한다. (선택적)
   * `isMinorEdit` 필터처럼 Bot 편집 포함/제외 토글
+ * [x] 3. RecentChanges에도 `viaApi` 표시와 필터를 추가한다.
+  * `RecentChanges` 매크로에 Include bot edits 토글과 BotEdit 컬럼을 추가한다.
+  * `/api/change`에 `includeViaApi` 파라미터를 추가한다.
+  * Admin Recent Changes 페이지에 Bot edit 포함/제외 토글과 Bot 컬럼을 추가한다.
+  * Admin Dashboard의 Recent Changes 요약 표에도 Bot 컬럼을 추가한다.
 
 == Security
 

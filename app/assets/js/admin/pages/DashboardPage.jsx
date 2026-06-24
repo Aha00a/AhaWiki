@@ -90,11 +90,11 @@ export default function DashboardPage() {
             </Card>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md"><Title order={3}>Recent Changes (All Sites)</Title><Badge color="violet" variant="light">{recentChanges.length}</Badge></Group>
-                {makeTable(["When", "Site", "Page", "Revision", "Editor", "Comment"], recentChanges.map((row) => {
+                {makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment"], recentChanges.map((row) => {
                     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
                     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", row.comment || "-"];
+                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-"];
                 }))}
             </Card>
         </Stack>

@@ -95,7 +95,7 @@ GET           /api/schemaPropertyNames               controllers.Api.schemaPrope
 GET           /api/pagePreview/*nameEncoded          controllers.Api.pagePreview(nameEncoded)
 GET           /api/links/*nameEncoded                controllers.Api.links(nameEncoded)
 GET           /api/statistics                        controllers.Api.statistics()
-GET           /api/change                            controllers.Api.change(name: String ?= "", includeMinorEdit: Int ?= 0, limit: Int ?= 100)
+GET           /api/change                            controllers.Api.change(name: String ?= "", includeMinorEdit: Int ?= 0, includeViaApi: Int ?= 1, limit: Int ?= 100)
 POST          /api/uploadClipboardImage              controllers.Wiki.uploadClipboardImage()
 POST          /api/uploadAttachment                  controllers.Wiki.uploadAttachment()
 GET           /api/pageAttachments                   controllers.Wiki.pageAttachments()

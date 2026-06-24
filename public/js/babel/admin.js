@@ -424,11 +424,11 @@ function DashboardPage() {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
     return [index + 1, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName, row.viewCount, row.lastViewedAt];
-  }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "violet", variant: "light" }, recentChanges.length)), makeTable(["When", "Site", "Page", "Revision", "Editor", "Comment"], recentChanges.map((row) => {
+  }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "violet", variant: "light" }, recentChanges.length)), makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment"], recentChanges.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", row.comment || "-"];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-"];
   }))));
 }
 
@@ -1215,7 +1215,7 @@ function SiteAdminsPage() {
 
 // app/assets/js/admin/pages/RecentChangesPage.jsx
 import React19, { useEffect as useEffect13, useMemo as useMemo5, useState as useState20 } from "react";
-import { Anchor as Anchor5, Badge as Badge14, Button as Button10, Card as Card9, Group as Group15, Text as Text15, TextInput as TextInput5, Title as Title10 } from "@mantine/core";
+import { Anchor as Anchor5, Badge as Badge14, Button as Button10, Card as Card9, Group as Group15, Switch, Text as Text15, TextInput as TextInput5, Title as Title10 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useRecentChangesData.js
 import { useCallback as useCallback10, useState as useState19 } from "react";
@@ -1249,22 +1249,27 @@ function useRecentChangesData() {
 function RecentChangesPage() {
   const { loading, recentChanges, sites, loadRecentChanges, loadSites } = useRecentChangesData();
   const [limitInput, setLimitInput] = useState20("50");
+  const [showBotEdits, setShowBotEdits] = useState20(true);
   useEffect13(() => {
     loadSites();
     loadRecentChanges(50);
   }, []);
   const siteDomainBySeq = useMemo5(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
-  return /* @__PURE__ */ React19.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title10, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React19.createElement(Badge14, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React19.createElement(Button10, { variant: "filled", onClick: () => {
+  const visibleRecentChanges = useMemo5(
+    () => recentChanges.filter((row) => showBotEdits || !row.viaApi),
+    [recentChanges, showBotEdits]
+  );
+  return /* @__PURE__ */ React19.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title10, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React19.createElement(Badge14, { color: "violet", variant: "light" }, visibleRecentChanges.length, " rows")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React19.createElement(Switch, { label: "Bot edit \uD3EC\uD568", checked: showBotEdits, onChange: (e) => setShowBotEdits(e.currentTarget.checked) }), /* @__PURE__ */ React19.createElement(Button10, { variant: "filled", onClick: () => {
     const parsed = Number.parseInt(limitInput, 10);
     const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
     setLimitInput(String(n));
     loadRecentChanges(n);
-  } }, "\uC870\uD68C")), makeTable(["When", "Site", "Page", "Revision", "Editor", "Comment", "IP"], recentChanges.map((row) => {
+  } }, "\uC870\uD68C")), makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment", "IP"], visibleRecentChanges.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
     const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.comment || "-", row.remoteAddress];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-", row.remoteAddress];
   })));
 }
 

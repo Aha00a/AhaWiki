@@ -20,6 +20,10 @@
                     <input type="checkbox" name="includeMinorEdit">
                     <span>Include minor edits</span>
                 </label>
+                <label class="macro-recent-changes-form-control is-checkbox">
+                    <input type="checkbox" name="includeViaApi" checked>
+                    <span>Include bot edits</span>
+                </label>
                 <button type="submit">Load</button>
             </div>
         </form>
@@ -36,6 +40,7 @@
                             <th>RemoteAddress</th>
                             <th>Comment</th>
                             <th>MinorEdit</th>
+                            <th>BotEdit</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -101,6 +106,9 @@
                         var hasMinorEdit = group.rows.some(function (row) { return !!row.isMinorEdit; });
                         var allMinorEdit = group.rows.length > 0 && group.rows.every(function (row) { return !!row.isMinorEdit; });
                         var minorEditMark = allMinorEdit ? "○" : (hasMinorEdit ? "△" : "");
+                        var hasBotEdit = group.rows.some(function (row) { return !!row.viaApi; });
+                        var allBotEdit = group.rows.length > 0 && group.rows.every(function (row) { return !!row.viaApi; });
+                        var botEditMark = allBotEdit ? "○" : (hasBotEdit ? "△" : "");
                         var authorHtml = firstRow.nickname
                             ? "<span class='userInlineProfile'>" +
                                 (firstRow.profileImageUrl ? "<img src='" + esc(firstRow.profileImageUrl) + "' alt='" + esc(firstRow.nickname) + "' class='userInlineProfileImage'/>" : "") +
@@ -109,8 +117,9 @@
                             : esc(firstRow.remoteAddressMasked);
                         var commentsHtml = "<ol>" + group.rows.map(function (row) {
                             var rowMinorPrefix = row.isMinorEdit ? "[minor] " : "";
+                            var rowBotPrefix = row.viaApi ? "[bot] " : "";
                             var commentInlineHtml = row.commentInlineHtml || esc(row.comment || "");
-                            return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + commentInlineHtml + "</li>";
+                            return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + rowBotPrefix + commentInlineHtml + "</li>";
                         }).join("") + "</ol>";
                         var dateTimeText = group.rows.length === 1
                             ? esc(firstRow.dateTime)
@@ -126,6 +135,7 @@
                                 "<td>" + esc(firstRow.remoteAddressMasked || "") + "</td>" +
                                 "<td>" + commentsHtml + "</td>" +
                                 "<td>" + esc(minorEditMark) + "</td>" +
+                                "<td>" + esc(botEditMark) + "</td>" +
                                 "</tr>";
                     }).join("");
 
@@ -137,14 +147,14 @@
                     status.classList.toggle("is-loading", !!isLoading);
                 }
 
-                function load(container, includeMinorEdit, limit) {
+                function load(container, includeMinorEdit, includeViaApi, limit) {
                     var status = container.querySelector('.macro-recent-changes-status');
                     var table = container.querySelector('.macro-recent-changes-table');
                     status.textContent = "Loading recent changes...";
                     status.style.display = "";
                     table.style.display = "none";
                     setLoading(status, true);
-                    fetch("/api/change?name=" + encodeURIComponent("@wikiContext.name") + "&includeMinorEdit=" + includeMinorEdit + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
+                    fetch("/api/change?name=" + encodeURIComponent("@wikiContext.name") + "&includeMinorEdit=" + includeMinorEdit + "&includeViaApi=" + includeViaApi + "&limit=" + encodeURIComponent(limit), {credentials: "same-origin"})
                             .then(function (res) {
                                 if (!res.ok) throw new Error("HTTP " + res.status);
                                 return res.json();
@@ -165,15 +175,19 @@
                     form.addEventListener("submit", function (event) {
                         event.preventDefault();
                         var includeMinorEdit = form.includeMinorEdit && form.includeMinorEdit.checked ? "1" : "0";
+                        var includeViaApi = form.includeViaApi && form.includeViaApi.checked ? "1" : "0";
                         var rawLimit = form.limit && form.limit.value ? form.limit.value : "100";
-                        load(container, includeMinorEdit, rawLimit);
+                        load(container, includeMinorEdit, includeViaApi, rawLimit);
                     });
-                    if (form.includeMinorEdit) {
-                        form.includeMinorEdit.addEventListener("change", function () {
+                    if (form.includeMinorEdit || form.includeViaApi) {
+                        var reloadOnFilterChange = function () {
                             var includeMinorEdit = form.includeMinorEdit.checked ? "1" : "0";
+                            var includeViaApi = form.includeViaApi.checked ? "1" : "0";
                             var rawLimit = form.limit && form.limit.value ? form.limit.value : "100";
-                            load(container, includeMinorEdit, rawLimit);
-                        });
+                            load(container, includeMinorEdit, includeViaApi, rawLimit);
+                        };
+                        if (form.includeMinorEdit) form.includeMinorEdit.addEventListener("change", reloadOnFilterChange);
+                        if (form.includeViaApi) form.includeViaApi.addEventListener("change", reloadOnFilterChange);
                     }
 
                     var loadButton = form.querySelector('button[type="submit"]');
