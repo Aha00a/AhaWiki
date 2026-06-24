@@ -1,0 +1,130 @@
+= [Dev] ApiKey
+
+AI(Claude Code 등)가 AhaWiki 페이지를 직접 수정할 수 있도록 사용자 개인 API Key 인증을 추가했다.
+
+세션 쿠키와 reCAPTCHA 없이 `Authorization: Bearer <key>` 헤더로 페이지를 읽고 저장할 수 있는 API를 제공한다.
+페이지 히스토리에는 편집자가 기존 사용자로 기록되며, API Key를 통한 편집은 `Page.viaApi = TRUE`로 표시한다.
+
+== 설계 결정
+
+ * API Key는 기존 사용자 계정에 직접 연결한다. Bot 전용 계정을 별도로 만들지 않는다.
+ * API Key로 저장한 revision은 `Page.viaApi = TRUE`로 기록한다.
+ * API Key 원문은 DB에 저장하지 않고 SHA-256 hash만 저장한다. 원문 key는 생성 응답에서 한 번만 보여준다.
+ * Bot API는 Bearer 인증을 사용하므로 CSRF token과 reCAPTCHA를 요구하지 않는다.
+ * Bot API의 읽기/쓰기 권한은 기존 `WikiPermission` 규칙과 key 소유자 사용자의 권한을 그대로 따른다.
+ * API Key 관리는 사용자가 Account Settings에서 직접 한다. Admin은 전체 key 조회와 강제 폐기만 할 수 있다.
+
+== Data Model
+
+=== UserApiKey
+
+`UserApiKey` 테이블은 사용자별 API Key 메타데이터와 hash를 저장한다.
+
+ * `seq BIGINT AUTO_INCREMENT PRIMARY KEY`
+ * `user INT NOT NULL` — `User.seq` FK
+ * `keyHash VARCHAR(64) NOT NULL UNIQUE` — SHA-256 hex
+ * `keyPrefix VARCHAR(32) NOT NULL` — 목록에서 key를 식별하기 위한 prefix
+ * `label VARCHAR(255) NOT NULL`
+ * `dateInserted DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`
+ * `dateLastUsed DATETIME NULL`
+ * `dateRevoked DATETIME NULL`
+ * `INDEX (user, dateRevoked)` — 사용자별 key 목록 조회
+
+`keyHash UNIQUE`가 인증 조회 인덱스 역할을 하므로 별도 `INDEX (keyHash)`는 만들지 않는다.
+
+=== Page.viaApi
+
+`Page` 테이블에 `viaApi BOOLEAN NOT NULL DEFAULT FALSE` 컬럼을 추가했다.
+
+ * 일반 웹 편집은 기본값 `FALSE`다.
+ * Bot API 저장만 `TRUE`로 기록한다.
+ * `Page`, `PageWithoutContent`, row parser, history 조회, insert SQL에 모두 `viaApi`를 포함한다.
+ * `PageLogic.insert`는 `viaApi: Boolean = false` 기본값을 받고, Bot API 저장 시 `true`를 전달한다.
+
+== 인증과 권한
+
+`SessionLogic.getApiKeyUser(request)`가 `Authorization: Bearer <key>` 헤더를 읽고 raw key를 SHA-256으로 hash한 뒤 `UserApiKey`에서 활성 key를 조회한다.
+
+인증 성공 시:
+
+ * `dateLastUsed`를 갱신한다.
+ * key 소유자의 `User.SessionUser`를 만든다.
+ * primary email을 함께 담아 기존 email 기반 permission과 호환한다.
+
+Bot API에서는 `RequestWrapper.forUser(user)`로 인증 사용자를 `ContextWikiPage`와 `WikiPermission`에 전달한다.
+이 처리가 없으면 인증은 성공해도 권한 계산이 익명 사용자 기준으로 동작할 수 있다.
+
+== API와 UI
+
+=== Bot API
+
+Bot API 명세는 [BotApi]에 둔다.
+
+ * `GET /api/bot/page/*nameEncoded`
+ * `POST /api/bot/page/*nameEncoded`
+
+저장 API는 JSON body의 `revision`, `text`, `comment`, `minorEdit`를 사용한다.
+revision이 최신과 다르면 `409 Conflict`를 반환한다.
+
+현재 Bot 저장 API는 `PageLogic.insert(..., viaApi = true)`, cache invalidate, page calculation enqueue까지만 수행한다.
+웹 편집의 websocket broadcast와 Telegram 알림은 아직 보내지 않는다.
+
+=== Account Settings
+
+Account Settings에 API Key 관리 섹션을 추가했다.
+
+ * 내 API Key 목록
+ * label 기반 key 생성
+ * 생성 직후 plain text key 1회 표시와 복사 버튼
+ * key 폐기 버튼
+
+목록 조회에서는 plain text key를 반환하지 않고 `keyPrefix`만 보여준다.
+
+=== Admin UI
+
+Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
+
+ * 전체 API Key 목록
+ * user nickname, label, key prefix, 생성일, 마지막 사용일, 폐기 상태
+ * Admin 강제 폐기
+
+== 변경 이력 표시
+
+`viaApi`는 사용자가 자동화 편집을 구분할 수 있도록 여러 화면과 API에 노출한다.
+
+ * `Api.change` 응답에 `viaApi` 포함
+ * `Api.adminRecentChanges` 응답에 `viaApi` 포함
+ * Wiki history 화면에 Bot 컬럼과 `Show BotEdit` 필터 추가
+ * `RecentChanges` 매크로에 `Include bot edits` 토글과 BotEdit 컬럼 추가
+ * `/api/change`에 `includeViaApi` 파라미터 추가
+ * Admin Recent Changes 페이지에 Bot edit 포함/제외 토글과 Bot 컬럼 추가
+ * Admin Dashboard의 Recent Changes 요약 표에 Bot 컬럼 추가
+
+== Security
+
+ * API Key는 `SecureRandom`으로 32 bytes를 생성하고 Base64 URL-safe 문자열로 표시한다. 형식은 `ahawiki_<token>`이다.
+ * DB에는 raw key를 저장하지 않는다.
+ * 고엔트로피 API Key이므로 SHA-256 hash로 비교한다. bcrypt/Argon2 같은 slow hash는 요청마다 불필요한 지연을 만든다.
+ * Bot API는 `/api/bot/` 경로에서 CSRF filter를 우회한다.
+ * 브라우저 세션 기반 Account/Admin API는 기존 CSRF 정책을 유지한다.
+ * 별도 API Key 단위 rate limit은 1차 구현에 포함하지 않았다. 현재 전역 IP rate limit은 Bot API에도 적용된다.
+
+== Tests
+
+ * `BotApiSpec`
+  * API Key hash 저장
+  * 유효 key 인증 성공
+  * 폐기 key와 존재하지 않는 key 인증 실패
+  * 읽기/쓰기 권한 403
+  * Bot 읽기
+  * Bot 저장과 `viaApi = TRUE`
+  * revision 충돌 `409 Conflict`
+  * Account API 생성/목록/폐기
+ * `BotApiFilterSpec`
+  * 실제 `Filters` 체인에서 `/api/bot/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증
+ * `UnitTestSuiteSpec`
+  * 테스트용 수동 `Page` schema에 `viaApi` 컬럼 추가
+
+== 운영 확인
+
+남은 운영 확인 작업은 [ToDo ApiKey]에 둔다.

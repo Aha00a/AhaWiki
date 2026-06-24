@@ -32,6 +32,9 @@ API Key는 생성 응답에서 한 번만 plain text로 반환됩니다.
 
 == API Key 관리
 
+사용자는 Account Settings의 API Keys 섹션에서 key를 생성하고 폐기할 수 있습니다.
+Admin은 `/Admin/ApiKeys`에서 전체 key 목록을 조회하고 강제 폐기할 수 있습니다.
+
 === 내 API Key 목록
 
 {{{
@@ -184,6 +187,16 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
 
 현재 Bot 저장 API는 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
 
+== 변경 이력 표시와 필터
+
+API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
+
+ * History 화면에는 Bot 컬럼과 `Show BotEdit` 필터가 있습니다.
+ * `RecentChanges` 매크로에는 `Include bot edits` 토글과 BotEdit 컬럼이 있습니다.
+ * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `1`입니다.
+ * Admin Recent Changes 화면에는 Bot edit 포함/제외 토글과 Bot 컬럼이 있습니다.
+ * Admin Dashboard의 Recent Changes 요약 표에도 Bot 컬럼이 표시됩니다.
+
 == 저장 Flow
 
 AI 에이전트는 아래 순서로 저장합니다.
@@ -205,4 +218,5 @@ AI 에이전트는 아래 순서로 저장합니다.
 
 == 관련
 
+ * [Dev ApiKey]
  * [ToDo ApiKey]
