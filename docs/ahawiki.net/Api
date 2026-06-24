@@ -6,10 +6,10 @@ AhaWiki API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사�
 AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
 현재 읽기/쓰기 endpoint path는 호환성 때문에 `/api/bot/` prefix를 유지합니다.
 
-== 현재 구현 범위
+== 지원 기능
 
- * API Key 발급/조회/폐기 API
- * Admin의 전체 API Key 조회/강제 폐기 API
+ * API Key 발급/조회/폐기
+ * Admin의 전체 API Key 조회/강제 폐기
  * API Key 인증 사용자로 페이지 읽기
  * API Key 인증 사용자로 페이지 저장
  * API Key 인증 사용자로 페이지 목록/메타 조회
@@ -20,7 +20,9 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * Account Settings의 API Key 관리 UI
  * Admin의 전체 API Key 조회/강제 폐기 UI
 
-아직 API 저장은 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+== 제한사항
+
+ * API 저장은 웹 편집과 알림/실시간 반영 동작이 일부 다를 수 있습니다.
 
 == 인증
 
@@ -245,10 +247,7 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
 }}}
 
 저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다.
-저장 후 PageMeta 목록 cache를 무효화하고 page calculation을 enqueue합니다.
-`.footer`, `.config` 저장 시 해당 cache도 무효화합니다.
-
-현재 API 저장은 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+알림/실시간 반영 동작은 웹 편집과 일부 다를 수 있습니다.
 
 == 페이지 이름변경
 

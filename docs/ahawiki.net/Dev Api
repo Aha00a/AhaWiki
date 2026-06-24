@@ -86,6 +86,7 @@ AhaWikiDoc sync를 위해 AhaWiki API를 보강했다.
  * 이름변경 API는 revision 확인 후 기존 페이지를 rename하고, 기존 이름에는 `viaApi = true` redirect page를 만든다.
  * 삭제 API는 revision과 `confirm: true`를 요구하며, 웹 삭제와 같은 정책으로 첨부파일도 삭제 처리한다.
  * sync state는 서버에 저장하지 않고 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록하는 방식을 권장한다.
+ * 문서 rename sync는 delete+create가 아니라 `POST /api/bot/rename`으로 기존 page history를 보존한다.
 
 === Account Settings
 
@@ -148,7 +149,11 @@ Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
  * `UnitTestSuiteSpec`
   * 테스트용 수동 `Page` schema에 `viaApi` 컬럼 추가
 
-== 완료 결과
+== 검증
 
-API Key 기반 AhaWiki API 구현과 AhaWikiDoc sync 지원 작업은 완료했다.
-`sbt.bat "testOnly com.aha00a.controllers.BotApiSpec"`에서 18개 테스트가 통과했다.
+관련 테스트:
+
+ * `sbt.bat "testOnly com.aha00a.controllers.BotApiSpec"`
+ * `sbt.bat "testOnly com.aha00a.controllers.BotApiFilterSpec"`
+
+마지막 확인 시 `BotApiSpec` 18개 테스트가 통과했다.
