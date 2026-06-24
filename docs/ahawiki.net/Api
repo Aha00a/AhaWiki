@@ -1,9 +1,10 @@
-= BotApi
+= Api
 
-AhaWiki 페이지를 외부 자동화 도구가 API Key로 읽고 저장하기 위한 API입니다.
+AhaWiki 페이지를 외부 사용자, 자동화 도구, AI 에이전트가 API Key로 읽고 저장하기 위한 API입니다.
 
-Bot API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사용합니다.
-Bot API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
+AhaWiki API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사용합니다.
+AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
+현재 읽기/쓰기 endpoint path는 호환성 때문에 `/api/bot/` prefix를 유지합니다.
 
 == 현재 구현 범위
 
@@ -19,11 +20,11 @@ Bot API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * Account Settings의 API Key 관리 UI
  * Admin의 전체 API Key 조회/강제 폐기 UI
 
-아직 Bot 저장 API는 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+아직 API 저장은 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
 
 == 인증
 
-Bot API 호출에는 아래 헤더를 넣습니다.
+AhaWiki API 호출에는 아래 헤더를 넣습니다.
 
 {{{
 Authorization: Bearer ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -189,7 +190,7 @@ curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
 curl -X POST https://ahawiki.net/api/bot/pages/metadata \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"names":["BotApi","Dev ApiKey","MissingPage"]}'
+  -d '{"names":["Api","Dev Api","MissingPage"]}'
 }}}
 
 응답:
@@ -198,7 +199,7 @@ curl -X POST https://ahawiki.net/api/bot/pages/metadata \
 {
   "pages": [
     {
-      "name": "BotApi",
+      "name": "Api",
       "revision": 1,
       "dateTime": "2026-06-24T22:20:29",
       "isMinorEdit": false,
@@ -221,7 +222,7 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
   -d '{
     "revision": 12,
     "text": "= FrontPage\nupdated content",
-    "comment": "Update by bot",
+    "comment": "Update via API",
     "minorEdit": false
   }'
 }}}
@@ -247,7 +248,7 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
 저장 후 PageMeta 목록 cache를 무효화하고 page calculation을 enqueue합니다.
 `.footer`, `.config` 저장 시 해당 cache도 무효화합니다.
 
-현재 Bot 저장 API는 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
+현재 API 저장은 웹 편집의 websocket broadcast와 Telegram 알림까지는 보내지 않습니다.
 
 == 페이지 이름변경
 
@@ -259,7 +260,7 @@ curl -X POST https://ahawiki.net/api/bot/rename \
     "name": "OldPage",
     "newName": "NewPage",
     "revision": 3,
-    "comment": "Rename by bot"
+    "comment": "Rename via API"
   }'
 }}}
 
@@ -298,7 +299,7 @@ query parameter:
  * `since` — ISO-8601 local date-time 이후 변경만 조회
  * `afterRevision` — `name`으로 지정한 단일 페이지에서 해당 revision 초과 변경만 조회
  * `includeMinorEdit` — `0`이면 minor edit 제외, 기본값은 `1`
- * `includeViaApi` — `0`이면 Bot API 저장 제외, 기본값은 `1`
+ * `includeViaApi` — `0`이면 API Key 저장 제외, 기본값은 `1`
  * `limit` — 최대 행 수, 기본값은 `100`
 
 `revision`은 페이지별 번호이므로 `afterRevision`은 전체 sync cursor로 사용할 수 없습니다.
@@ -310,10 +311,10 @@ query parameter:
 {
   "changes": [
     {
-      "name": "BotApi",
+      "name": "Api",
       "revision": 2,
       "dateTime": "2026-06-24T22:00:00",
-      "comment": "AhaWikiDoc sync BotApi",
+      "comment": "AhaWikiDoc sync Api",
       "isMinorEdit": false,
       "viaApi": true
     }
@@ -355,15 +356,15 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 
 == AI 자동화 프롬프트 예시
 
-아래 프롬프트를 AI 코딩 에이전트나 자동화 도구에 전달하면 AhaWiki Bot API로 페이지를 읽고 수정하게 할 수 있습니다.
+아래 프롬프트를 AI 코딩 에이전트나 자동화 도구에 전달하면 AhaWiki API로 페이지를 읽고 수정하게 할 수 있습니다.
 `<api-key>`, `<page-name>`, `<task>`는 실제 값으로 바꿉니다.
 
 {{{
 너는 AhaWiki 문서를 수정하는 자동화 에이전트다.
 
 인증:
-- 모든 Bot API 요청에 `Authorization: Bearer <api-key>` 헤더를 넣어라.
-- CSRF token, session cookie, reCAPTCHA는 Bot API에 필요 없다.
+- 모든 AhaWiki API 요청에 `Authorization: Bearer <api-key>` 헤더를 넣어라.
+- CSRF token, session cookie, reCAPTCHA는 AhaWiki API에 필요 없다.
 - API Key를 로그, 문서 본문, 저장 comment에 노출하지 마라.
 
 대상:
@@ -412,4 +413,4 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 
 == 관련
 
- * [Dev ApiKey]
+ * [Dev Api]
