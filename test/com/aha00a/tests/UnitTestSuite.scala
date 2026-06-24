@@ -1,6 +1,6 @@
 package com.aha00a.tests
 
-import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, WikiMacrosUnit, WikiPermissionUnit}
+import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, UserNicknamePolicyUnit, WikiMacrosUnit, WikiPermissionUnit}
 import models.ContextWikiPage
 import play.api.mvc.{AnyContent, Request}
 
@@ -25,6 +25,7 @@ object UnitTestSuite {
     UnitTestCase("JsonUnit", () => JsonUnit.run(testUtil)),
     UnitTestCase("InterpreterSchemaUnit", () => InterpreterSchemaUnit.run(testUtil)),
     UnitTestCase("PermissionUnit", () => PermissionUnit.run(testUtil)),
+    UnitTestCase("UserNicknamePolicyUnit", () => UserNicknamePolicyUnit.run(testUtil)),
     UnitTestCase("BlameUnit", () => BlameUnit.run(testUtil)),
     UnitTestCase("PageContentUnit", () => PageContentUnit.run(testUtil)),
     UnitTestCase("PermissionLogicUnit", () => PermissionLogicUnit.run(testUtil)),
