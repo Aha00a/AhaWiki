@@ -2,7 +2,7 @@
 --
 -- Host: ahawiki.net    Database: wiki_aha00a_com_dev
 -- ------------------------------------------------------
--- Server version	8.0.45-0ubuntu0.22.04.1
+-- Server version	8.0.46-0ubuntu0.22.04.3
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -144,6 +144,7 @@ CREATE TABLE `CalculatedLink` (
   `dst` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `alias` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`site`,`src`,`dst`,`alias`),
+  KEY `CalculatedLink_site_dst_src_alias_index` (`site`,`dst`,`src`,`alias`),
   CONSTRAINT `fkLinkSite` FOREIGN KEY (`site`, `src`) REFERENCES `Page` (`site`, `name`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -162,6 +163,7 @@ CREATE TABLE `CalculatedSchemaOrg` (
   `prop` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   PRIMARY KEY (`site`,`page`,`cls`,`prop`,`value`),
+  KEY `CalculatedSchemaOrg_site_value_page_index` (`site`,`value`,`page`),
   CONSTRAINT `fkTermFrequencyPage` FOREIGN KEY (`site`, `page`) REFERENCES `Page` (`site`, `name`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -410,7 +412,7 @@ CREATE TABLE `User` (
   `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `nickname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `profileImageUrl` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `profileImageUrl` varchar(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `dateNicknameChanged` datetime DEFAULT NULL,
   PRIMARY KEY (`seq`),
   UNIQUE KEY `User_nickname_lower_uindex` (`nickname`)
