@@ -8,8 +8,6 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
 
 == 지원 기능
 
- * API Key 발급/조회/폐기
- * Admin의 전체 API Key 조회/강제 폐기
  * API Key 인증 사용자로 페이지 읽기
  * API Key 인증 사용자로 페이지 저장
  * API Key 인증 사용자로 페이지 목록/메타 조회
@@ -17,8 +15,6 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * API Key 인증 사용자로 페이지 이름변경/삭제
  * 저장된 revision에 `viaApi = true` 기록
  * History, RecentChanges API 응답에 `viaApi` 포함
- * Account Settings의 API Key 관리 UI
- * Admin의 전체 API Key 조회/강제 폐기 UI
 
 == 제한사항
 
@@ -32,107 +28,13 @@ AhaWiki API 호출에는 아래 헤더를 넣습니다.
 Authorization: Bearer ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 }}}
 
-API Key는 생성 응답에서 한 번만 plain text로 반환됩니다.
+API Key는 생성 화면에서 한 번만 plain text로 표시됩니다.
 이후 목록 조회에서는 `keyPrefix`만 볼 수 있고 원본 key는 다시 조회할 수 없습니다.
-키가 유출되면 Account API 또는 Admin API로 폐기해야 합니다.
+API Key는 Account Settings의 API Keys 섹션에서 생성하고 폐기할 수 있습니다.
+키가 유출되면 Account Settings에서 폐기해야 합니다.
 
-== API Key 관리
-
-사용자는 Account Settings의 API Keys 섹션에서 key를 생성하고 폐기할 수 있습니다.
-Admin은 `/Admin/ApiKeys`에서 전체 key 목록을 조회하고 강제 폐기할 수 있습니다.
-
-=== 내 API Key 목록
-
-{{{
-curl -b cookies.txt https://ahawiki.net/api/account/ApiKeys
-}}}
-
-응답:
-
-{{{
-[
-  {
-    "seq": 1,
-    "user": 1,
-    "userNickname": null,
-    "keyPrefix": "ahawiki_abcd123",
-    "label": "Automation Tool",
-    "dateInserted": "2026-06-24T10:00:00",
-    "dateLastUsed": null,
-    "dateRevoked": null,
-    "revoked": false
-  }
-]
-}}}
-
-이 API는 로그인 세션이 필요합니다.
-
-=== API Key 생성
-
-{{{
-curl -X POST https://ahawiki.net/api/account/ApiKeys \
-  -b cookies.txt \
-  -H "Content-Type: application/json" \
-  -H "Csrf-Token: <csrf-token>" \
-  -d '{"label":"Automation Tool"}'
-}}}
-
-응답:
-
-{{{
-{
-  "seq": 1,
-  "user": 1,
-  "userNickname": null,
-  "keyPrefix": "ahawiki_abcd123",
-  "label": "Automation Tool",
-  "dateInserted": "2026-06-24T10:00:00",
-  "dateLastUsed": null,
-  "dateRevoked": null,
-  "revoked": false,
-  "key": "ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-}
-}}}
-
-`key` 필드는 생성 응답에만 포함됩니다.
-
-=== API Key 폐기
-
-{{{
-curl -X DELETE https://ahawiki.net/api/account/ApiKeys/1 \
-  -b cookies.txt \
-  -H "Csrf-Token: <csrf-token>"
-}}}
-
-응답:
-
-{{{
-{
-  "ok": true,
-  "seq": 1
-}
-}}}
-
-== Admin API Key 관리
-
-=== 전체 API Key 목록
-
-{{{
-curl -b cookies.txt https://ahawiki.net/api/Admin/ApiKeys
-}}}
-
-Admin만 호출할 수 있습니다.
-응답에는 `userNickname`이 포함됩니다.
-
-=== API Key 강제 폐기
-
-{{{
-curl -X DELETE https://ahawiki.net/api/Admin/ApiKeys/1 \
-  -b cookies.txt \
-  -H "Csrf-Token: <csrf-token>"
-}}}
-
-Admin만 호출할 수 있습니다.
+이 문서는 `Authorization: Bearer <api-key>`로 호출하는 API만 다룹니다.
+브라우저 세션과 CSRF token이 필요한 Account/Admin API는 공개 API로 다루지 않습니다.
 
 == 페이지 읽기
 

@@ -99,6 +99,15 @@ Account Settings에 API Key 관리 섹션을 추가했다.
 
 목록 조회에서는 plain text key를 반환하지 않고 `keyPrefix`만 보여준다.
 
+세션 기반 내부 API:
+
+ * `GET /api/account/ApiKeys`
+ * `POST /api/account/ApiKeys`
+ * `DELETE /api/account/ApiKeys/:seq`
+
+이 API는 로그인 세션과 CSRF token이 필요하다.
+`POST` 응답에만 plain text `key`를 포함하고, 이후 조회에서는 `keyPrefix`만 반환한다.
+
 === Admin UI
 
 Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
@@ -106,6 +115,13 @@ Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
  * 전체 API Key 목록
  * user nickname, label, key prefix, 생성일, 마지막 사용일, 폐기 상태
  * Admin 강제 폐기
+
+세션 기반 내부 Admin API:
+
+ * `GET /api/Admin/ApiKeys`
+ * `DELETE /api/Admin/ApiKeys/:seq`
+
+Admin 권한과 CSRF token이 필요하다.
 
 == 변경 이력 표시
 
