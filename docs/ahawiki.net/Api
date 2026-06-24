@@ -24,9 +24,9 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
 
 AhaWiki API 호출에는 아래 헤더를 넣습니다.
 
-{{{
+[[[#!Vim text
 Authorization: Bearer ahawiki_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-}}}
+]]]
 
 API Key는 생성 화면에서 한 번만 plain text로 표시됩니다.
 이후 목록 조회에서는 `keyPrefix`만 볼 수 있고 원본 key는 다시 조회할 수 없습니다.
@@ -38,14 +38,14 @@ API Key는 Account Settings의 API Keys 섹션에서 생성하고 폐기할 수 
 
 == 페이지 읽기
 
-{{{
+[[[#!Vim sh
 curl https://ahawiki.net/api/bot/page/FrontPage \
   -H "Authorization: Bearer <api-key>"
-}}}
+]]]
 
 응답:
 
-{{{
+[[[#!Vim json
 {
   "name": "FrontPage",
   "revision": 12,
@@ -55,21 +55,21 @@ curl https://ahawiki.net/api/bot/page/FrontPage \
   "viaApi": false,
   "contentHash": "sha256:..."
 }
-}}}
+]]]
 
 권한은 API Key 소유자의 기존 `WikiPermission`을 따릅니다.
 읽기 권한이 없으면 `403 Forbidden`을 반환합니다.
 
 == 페이지 목록/메타 조회
 
-{{{
+[[[#!Vim sh
 curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
   -H "Authorization: Bearer <api-key>"
-}}}
+]]]
 
 응답:
 
-{{{
+[[[#!Vim json
 {
   "pages": [
     {
@@ -83,23 +83,23 @@ curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
     }
   ]
 }
-}}}
+]]]
 
 `contentHash`는 전체 본문을 내려받지 않고 local/remote 차이를 빠르게 비교하기 위한 SHA-256 hash입니다.
 응답은 API Key 소유자가 읽을 수 있는 페이지로 제한됩니다.
 
 == Batch 페이지 메타 조회
 
-{{{
+[[[#!Vim sh
 curl -X POST https://ahawiki.net/api/bot/pages/metadata \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
   -d '{"names":["Api","Dev Api","MissingPage"]}'
-}}}
+]]]
 
 응답:
 
-{{{
+[[[#!Vim json
 {
   "pages": [
     {
@@ -115,11 +115,11 @@ curl -X POST https://ahawiki.net/api/bot/pages/metadata \
   "missing": ["MissingPage"],
   "forbidden": []
 }
-}}}
+]]]
 
 == 페이지 저장
 
-{{{
+[[[#!Vim sh
 curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
@@ -129,7 +129,7 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
     "comment": "Update via API",
     "minorEdit": false
   }'
-}}}
+]]]
 
 요청 필드:
 
@@ -140,20 +140,20 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
 
 응답:
 
-{{{
+[[[#!Vim json
 {
   "name": "FrontPage",
   "revision": 13,
   "dateTime": "2026-06-24T10:01:00"
 }
-}}}
+]]]
 
 저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다.
 알림/실시간 반영 동작은 웹 편집과 일부 다를 수 있습니다.
 
 == 페이지 이름변경
 
-{{{
+[[[#!Vim sh
 curl -X POST https://ahawiki.net/api/bot/rename \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
@@ -163,7 +163,7 @@ curl -X POST https://ahawiki.net/api/bot/rename \
     "revision": 3,
     "comment": "Rename via API"
   }'
-}}}
+]]]
 
 요청 revision이 최신 revision과 다르면 `409 Conflict`를 반환합니다.
 대상 페이지가 이미 있으면 `409 Conflict`를 반환합니다.
@@ -172,7 +172,7 @@ redirect revision은 `viaApi = true`로 기록됩니다.
 
 == 페이지 삭제
 
-{{{
+[[[#!Vim sh
 curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
@@ -180,7 +180,7 @@ curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
     "revision": 3,
     "confirm": true
   }'
-}}}
+]]]
 
 삭제는 되돌리기 어려운 작업이므로 `confirm: true`가 필요합니다.
 요청 revision이 최신 revision과 다르면 `409 Conflict`를 반환합니다.
@@ -188,10 +188,10 @@ curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
 
 == 최근 변경 조회
 
-{{{
+[[[#!Vim sh
 curl "https://ahawiki.net/api/bot/changes?prefix=ToDo&since=2026-06-24T00:00:00&limit=100" \
   -H "Authorization: Bearer <api-key>"
-}}}
+]]]
 
 query parameter:
 
@@ -208,7 +208,7 @@ query parameter:
 
 응답:
 
-{{{
+[[[#!Vim json
 {
   "changes": [
     {
@@ -221,7 +221,7 @@ query parameter:
     }
   ]
 }
-}}}
+]]]
 
 == AhaWikiDoc sync 권장 방식
 
@@ -260,7 +260,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 아래 프롬프트를 AI 코딩 에이전트나 자동화 도구에 전달하면 AhaWiki API로 페이지를 읽고 수정하게 할 수 있습니다.
 `<api-key>`, `<page-name>`, `<task>`는 실제 값으로 바꿉니다.
 
-{{{
+[[[#!Vim text
 너는 AhaWiki 문서를 수정하는 자동화 에이전트다.
 
 인증:
@@ -301,7 +301,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 완료 보고:
 - 저장 성공 시 새 revision을 보고한다.
 - 저장하지 못하면 HTTP status와 원인을 보고한다.
-}}}
+]]]
 
 == 에러 코드
 
