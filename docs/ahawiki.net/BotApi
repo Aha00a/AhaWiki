@@ -207,6 +207,54 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
  4. `POST /api/bot/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
  5. `409 Conflict`가 오면 최신 본문을 다시 읽고 변경 내용을 병합한 뒤 재시도합니다.
 
+== AI 자동화 프롬프트 예시
+
+아래 프롬프트를 AI 코딩 에이전트나 자동화 도구에 전달하면 AhaWiki Bot API로 페이지를 읽고 수정하게 할 수 있습니다.
+`<api-key>`, `<page-name>`, `<task>`는 실제 값으로 바꿉니다.
+
+{{{
+너는 AhaWiki 문서를 수정하는 자동화 에이전트다.
+
+인증:
+- 모든 Bot API 요청에 `Authorization: Bearer <api-key>` 헤더를 넣어라.
+- CSRF token, session cookie, reCAPTCHA는 Bot API에 필요 없다.
+- API Key를 로그, 문서 본문, 저장 comment에 노출하지 마라.
+
+대상:
+- Base URL: https://ahawiki.net
+- Page: <page-name>
+- 작업: <task>
+
+읽기:
+1. `GET https://ahawiki.net/api/bot/page/<url-encoded-page-name>`를 호출한다.
+2. 응답의 `revision`과 `content`를 저장한다.
+3. `403`이면 권한 없음으로 중단하고, `404`이면 페이지 없음으로 보고한다.
+
+수정:
+1. 기존 `content`를 기준으로 필요한 부분만 바꾼 전체 본문을 만든다.
+2. 관련 없는 내용, 포맷, 줄바꿈은 가능한 유지한다.
+3. 저장 comment는 사람이 이해할 수 있게 짧게 쓴다.
+4. 사소한 포맷/오타 수정이면 `minorEdit: true`, 의미 있는 내용 변경이면 `minorEdit: false`로 보낸다.
+
+저장:
+`POST https://ahawiki.net/api/bot/page/<url-encoded-page-name>`에 아래 JSON을 보낸다.
+
+{
+  "revision": <읽은 revision>,
+  "text": "<수정된 전체 본문>",
+  "comment": "<저장 comment>",
+  "minorEdit": false
+}
+
+충돌 처리:
+- `409 Conflict`가 오면 최신 페이지를 다시 읽고 내 변경사항을 최신 본문에 병합한 뒤 한 번 더 저장한다.
+- 병합이 애매하면 저장하지 말고 충돌 내용을 보고한다.
+
+완료 보고:
+- 저장 성공 시 새 revision을 보고한다.
+- 저장하지 못하면 HTTP status와 원인을 보고한다.
+}}}
+
 == 에러 코드
 
 || 코드 || 의미 ||
