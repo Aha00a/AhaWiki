@@ -15,10 +15,6 @@ API Key 기반 Bot API 구현은 완료했다.
   * `POST /api/bot/page/*name`으로 페이지 저장
   * revision 충돌 시 `409 Conflict`
   * 권한 없는 페이지에서 `403 Forbidden`
- * [[CB]] 3. Bot 저장 시 websocket broadcast와 Telegram 알림을 보낼지 정책을 결정한다.
-  * 현재 Bot 저장 API는 page 저장, cache invalidate, page calculation enqueue까지만 수행한다.
-  * 웹 편집과 동일한 알림을 보낼 경우 payload에 `viaApi`를 포함해야 한다.
-
 == 완료/기준 문서
 
  * [[CB(x)]] 구현 설계와 완료 내역: [Dev ApiKey]
@@ -26,3 +22,6 @@ API Key 기반 Bot API 구현은 완료했다.
  * [[CB(x)]] Account Settings API Key UI의 light/dark theme 적용과 자동화 도구 placeholder 정리
  * [[CB(x)]] Account Settings를 위키 문서형 레이아웃과 `wikiTableSimple` 테이블 스타일로 정리
  * [[CB(x)]] Account Settings와 권한 없음 Login 버튼의 색상/글꼴 크기를 사이트 기본 톤에 맞춤
+ * [[CB(x)]] Bot 저장 시 websocket broadcast와 Telegram 알림은 보내지 않는다.
+  * Bot 저장 API는 page 저장, cache invalidate, page calculation enqueue까지만 수행한다.
+  * Telegram 알림은 `minorEdit`와 `viaApi` 저장을 제외한다.

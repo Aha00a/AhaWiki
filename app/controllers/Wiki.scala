@@ -66,6 +66,11 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 
+object Wiki {
+  private[controllers] def shouldNotifyTelegramForPageSave(isMinorEdit: Boolean, viaApi: Boolean): Boolean =
+    !isMinorEdit && !viaApi
+}
+
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
                      actorSystem: ActorSystem,
@@ -771,7 +776,8 @@ controllerComponents: ControllerComponents,
               }
 
               val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
-              if (bodyChanged) {
+              val shouldNotifyTelegram = bodyChanged && Wiki.shouldNotifyTelegramForPageSave(isMinorEdit = isMinorEdit, viaApi = false)
+              if (shouldNotifyTelegram) {
                 if (latestPage.isEmpty)
                   telegramLogic.notifyPageCreated(request.host, name, editorNickname, comment, siteTelegramChatId)
                 else

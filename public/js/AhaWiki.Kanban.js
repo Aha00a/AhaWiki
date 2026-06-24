@@ -343,6 +343,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return `Kanban - ${actionType || 'Save'}`;
     };
+    var isKanbanSaveMinorEdit = function (actionType, actionMeta) {
+        switch (actionType) {
+            case 'list:move':
+                return true;
+            case 'card:move': {
+                var fromList = getActionMetaValue(actionMeta, 'fromList');
+                var toList = getActionMetaValue(actionMeta, 'toList');
+                return !fromList || !toList || fromList === toList;
+            }
+        }
+        return false;
+    };
     if (typeof window !== 'undefined') {
         window.__AhaWikiKanbanTestHooks = Object.assign({}, window.__AhaWikiKanbanTestHooks || {}, {
             getActionMetaValue: getActionMetaValue,
@@ -350,6 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
             serializePropertyValueForRevision: serializePropertyValueForRevision,
             truncateRevisionText: truncateRevisionText,
             buildKanbanSaveComment: buildKanbanSaveComment,
+            isKanbanSaveMinorEdit: isKanbanSaveMinorEdit,
             getHashCardId: getHashCardId,
             setHashCardId: setHashCardId,
             clearHashCardId: clearHashCardId,
@@ -727,7 +740,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.set('revision', String(getCurrentRevision()));
                 params.set('text', content || '');
                 params.set('comment', comment);
-                params.set('minorEdit', 'false');
+                params.set('minorEdit', isKanbanSaveMinorEdit(actionType, actionMetaWithPageName) ? 'true' : 'false');
                 params.set('recaptcha', '');
                 params.set('lineStart', String(lineStart));
                 params.set('lineEnd', String(lineEnd));
