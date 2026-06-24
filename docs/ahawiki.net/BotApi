@@ -189,7 +189,7 @@ curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
 curl -X POST https://ahawiki.net/api/bot/pages/metadata \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"names":["BotApi","ToDo ApiKey","MissingPage"]}'
+  -d '{"names":["BotApi","Dev ApiKey","MissingPage"]}'
 }}}
 
 응답:
@@ -310,10 +310,10 @@ query parameter:
 {
   "changes": [
     {
-      "name": "ToDo ApiKey",
+      "name": "BotApi",
       "revision": 2,
       "dateTime": "2026-06-24T22:00:00",
-      "comment": "Upload ToDo ApiKey documentation",
+      "comment": "AhaWikiDoc sync BotApi",
       "isMinorEdit": false,
       "viaApi": true
     }
@@ -413,4 +413,3 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 == 관련
 
  * [Dev ApiKey]
- * [ToDo ApiKey]

@@ -62,12 +62,30 @@ Bot API 명세는 [BotApi]에 둔다.
 
  * `GET /api/bot/page/*nameEncoded`
  * `POST /api/bot/page/*nameEncoded`
+ * `GET /api/bot/pages`
+ * `POST /api/bot/pages/metadata`
+ * `GET /api/bot/changes`
+ * `POST /api/bot/rename`
+ * `DELETE /api/bot/page/*nameEncoded`
 
 저장 API는 JSON body의 `revision`, `text`, `comment`, `minorEdit`를 사용한다.
 revision이 최신과 다르면 `409 Conflict`를 반환한다.
 
 현재 Bot 저장 API는 `PageLogic.insert(..., viaApi = true)`, cache invalidate, page calculation enqueue까지만 수행한다.
-웹 편집의 websocket broadcast와 Telegram 알림은 아직 보내지 않는다.
+웹 편집의 websocket broadcast와 Telegram 알림은 보내지 않는다.
+Telegram 알림은 `minorEdit`와 `viaApi` 저장을 제외한다.
+
+=== AhaWikiDoc Sync 지원
+
+AhaWikiDoc sync를 위해 Bot API를 보강했다.
+
+ * 페이지 목록/메타 API는 `name`, `revision`, `dateTime`, `isMinorEdit`, `viaApi`, `contentHash`를 반환한다.
+ * Batch metadata API는 여러 page name의 `revision`, `dateTime`, hash를 한 번에 조회한다.
+ * 최근 변경 API는 Bot API 인증으로 page prefix, timestamp, page별 revision 기준 필터를 지원한다.
+ * `afterRevision`은 페이지별 revision이므로 `name`으로 단일 페이지를 지정한 경우에만 허용한다.
+ * 이름변경 API는 revision 확인 후 기존 페이지를 rename하고, 기존 이름에는 `viaApi = true` redirect page를 만든다.
+ * 삭제 API는 revision과 `confirm: true`를 요구하며, 웹 삭제와 같은 정책으로 첨부파일도 삭제 처리한다.
+ * sync state는 서버에 저장하지 않고 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록하는 방식을 권장한다.
 
 === Account Settings
 
@@ -119,12 +137,18 @@ Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
   * Bot 읽기
   * Bot 저장과 `viaApi = TRUE`
   * revision 충돌 `409 Conflict`
+  * 페이지 목록/메타 조회
+  * 최근 변경의 `since`, `includeMinorEdit`, `includeViaApi`, invalid `since` 검증
+  * `afterRevision`을 단일 페이지에만 허용하는 정책 검증
+  * Bot 이름변경과 redirect 생성
+  * Bot 삭제와 첨부파일 삭제 표시
   * Account API 생성/목록/폐기
  * `BotApiFilterSpec`
   * 실제 `Filters` 체인에서 `/api/bot/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증
  * `UnitTestSuiteSpec`
   * 테스트용 수동 `Page` schema에 `viaApi` 컬럼 추가
 
-== 운영 확인
+== 완료 결과
 
-남은 운영 확인 작업은 [ToDo ApiKey]에 둔다.
+API Key 기반 Bot API 구현과 AhaWikiDoc sync 지원 작업은 완료했다.
+`sbt.bat "testOnly com.aha00a.controllers.BotApiSpec"`에서 18개 테스트가 통과했다.
