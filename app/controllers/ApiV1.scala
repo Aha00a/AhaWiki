@@ -33,7 +33,7 @@ import javax.inject._
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
-class BotApi @Inject()(
+class ApiV1 @Inject()(
   implicit val
   controllerComponents: ControllerComponents,
   database: Database,

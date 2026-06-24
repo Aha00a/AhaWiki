@@ -60,13 +60,13 @@ AhaWiki API에서는 `RequestWrapper.forUser(user)`로 인증 사용자를 `Cont
 
 외부 사용 설명서는 [Api]에 둔다.
 
- * `GET /api/bot/page/*nameEncoded`
- * `POST /api/bot/page/*nameEncoded`
- * `GET /api/bot/pages`
- * `POST /api/bot/pages/metadata`
- * `GET /api/bot/changes`
- * `POST /api/bot/rename`
- * `DELETE /api/bot/page/*nameEncoded`
+ * `GET /api/v1/page/*nameEncoded`
+ * `POST /api/v1/page/*nameEncoded`
+ * `GET /api/v1/pages`
+ * `POST /api/v1/pages/metadata`
+ * `GET /api/v1/changes`
+ * `POST /api/v1/rename`
+ * `DELETE /api/v1/page/*nameEncoded`
 
 저장 API는 JSON body의 `revision`, `text`, `comment`, `minorEdit`를 사용한다.
 revision이 최신과 다르면 `409 Conflict`를 반환한다.
@@ -86,7 +86,7 @@ AhaWikiDoc sync를 위해 AhaWiki API를 보강했다.
  * 이름변경 API는 revision 확인 후 기존 페이지를 rename하고, 기존 이름에는 `viaApi = true` redirect page를 만든다.
  * 삭제 API는 revision과 `confirm: true`를 요구하며, 웹 삭제와 같은 정책으로 첨부파일도 삭제 처리한다.
  * sync state는 서버에 저장하지 않고 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록하는 방식을 권장한다.
- * 문서 rename sync는 delete+create가 아니라 `POST /api/bot/rename`으로 기존 page history를 보존한다.
+ * 문서 rename sync는 delete+create가 아니라 `POST /api/v1/rename`으로 기존 page history를 보존한다.
 
 === Account Settings
 
@@ -140,13 +140,13 @@ Admin 권한과 CSRF token이 필요하다.
  * API Key는 `SecureRandom`으로 32 bytes를 생성하고 Base64 URL-safe 문자열로 표시한다. 형식은 `ahawiki_<token>`이다.
  * DB에는 raw key를 저장하지 않는다.
  * 고엔트로피 API Key이므로 SHA-256 hash로 비교한다. bcrypt/Argon2 같은 slow hash는 요청마다 불필요한 지연을 만든다.
- * AhaWiki API는 호환성 경로인 `/api/bot/`에서 CSRF filter를 우회한다.
+ * AhaWiki API는 `/api/v1/` 경로에서 CSRF filter를 우회한다.
  * 브라우저 세션 기반 Account/Admin API는 기존 CSRF 정책을 유지한다.
  * 별도 API Key 단위 rate limit은 1차 구현에 포함하지 않았다. 현재 전역 IP rate limit은 AhaWiki API에도 적용된다.
 
 == Tests
 
- * `BotApiSpec`
+ * `ApiV1Spec`
   * API Key hash 저장
   * 유효 key 인증 성공
   * 폐기 key와 존재하지 않는 key 인증 실패
@@ -160,8 +160,8 @@ Admin 권한과 CSRF token이 필요하다.
   * API 이름변경과 redirect 생성
   * API 삭제와 첨부파일 삭제 표시
   * Account API 생성/목록/폐기
- * `BotApiFilterSpec`
-  * 실제 `Filters` 체인에서 `/api/bot/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증
+ * `ApiV1FilterSpec`
+  * 실제 `Filters` 체인에서 `/api/v1/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증
  * `UnitTestSuiteSpec`
   * 테스트용 수동 `Page` schema에 `viaApi` 컬럼 추가
 
@@ -169,7 +169,7 @@ Admin 권한과 CSRF token이 필요하다.
 
 관련 테스트:
 
- * `sbt.bat "testOnly com.aha00a.controllers.BotApiSpec"`
- * `sbt.bat "testOnly com.aha00a.controllers.BotApiFilterSpec"`
+ * `sbt.bat "testOnly com.aha00a.controllers.ApiV1Spec"`
+ * `sbt.bat "testOnly com.aha00a.controllers.ApiV1FilterSpec"`
 
-마지막 확인 시 `BotApiSpec` 18개 테스트가 통과했다.
+마지막 확인 시 `ApiV1Spec` 18개 테스트가 통과했다.

@@ -24,7 +24,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-class BotApiFilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
+class ApiV1FilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
 
   private val dbName = s"bot_api_filter_${java.util.UUID.randomUUID().toString.replace("-", "")}"
   private val actorSystem = ActorSystem(s"$dbName-actors")
@@ -190,24 +190,24 @@ class BotApiFilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
     super.afterAll()
   }
 
-  "POST /api/bot/page/:name through Filters" should {
+  "POST /api/v1/page/:name through Filters" should {
     "bypass CSRF and save with Bearer authentication only" in {
       val created = createApiKey()
       db.withConnection { implicit connection =>
-        Page.insert(Page("BotCsrf", 1, java.time.LocalDateTime.now(), None, Some(1), "127.0.0.1", "", isMinorEdit = false, "= BotCsrf\nold"))
+        Page.insert(Page("ApiCsrf", 1, java.time.LocalDateTime.now(), None, Some(1), "127.0.0.1", "", isMinorEdit = false, "= ApiCsrf\nold"))
       }
 
-      val result = route(app, FakeRequest(POST, "/api/bot/page/BotCsrf")
+      val result = route(app, FakeRequest(POST, "/api/v1/page/ApiCsrf")
         .withHeaders(HOST -> "localhost", AUTHORIZATION -> s"Bearer ${created.rawKey}")
         .withJsonBody(Json.obj(
           "revision" -> 1,
-          "text" -> "= BotCsrf\nnew",
+          "text" -> "= ApiCsrf\nnew",
         ))).get
 
       status(result) mustBe OK
 
       db.withConnection { implicit connection =>
-        val page = Page.selectLastRevision("BotCsrf").get
+        val page = Page.selectLastRevision("ApiCsrf").get
         page.revision mustBe 2
         page.viaApi mustBe true
       }

@@ -27,7 +27,7 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
-class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
+class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
 
   private val dbName = s"bot_api_${java.util.UUID.randomUUID().toString.replace("-", "")}"
   private val actorSystem = ActorSystem(s"$dbName-actors")
@@ -270,7 +270,7 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       Page.insert(Page(name, revision, dateTime, None, Some(1), "127.0.0.1", "", isMinorEdit, content, viaApi))
     }
 
-  private def botRequest(method: String, url: String, key: String) =
+  private def apiV1Request(method: String, url: String, key: String) =
     FakeRequest(method, url).withHeaders(HOST -> "localhost", AUTHORIZATION -> s"Bearer $key")
 
   private def loginRequest(method: String, url: String) =
@@ -301,30 +301,30 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       created.row.keyHash mustBe UserApiKey.hash(created.rawKey)
       created.row.keyHash must not include created.rawKey
 
-      val authenticated = route(app, botRequest(GET, "/api/bot/page/Missing", created.rawKey)).get
+      val authenticated = route(app, apiV1Request(GET, "/api/v1/page/Missing", created.rawKey)).get
       status(authenticated) mustBe NOT_FOUND
 
       db.withConnection { implicit connection =>
         UserApiKey.revoke(created.row.seq)
       }
 
-      val revoked = route(app, botRequest(GET, "/api/bot/page/Missing", created.rawKey)).get
+      val revoked = route(app, apiV1Request(GET, "/api/v1/page/Missing", created.rawKey)).get
       status(revoked) mustBe UNAUTHORIZED
 
-      val missing = route(app, botRequest(GET, "/api/bot/page/Missing", "ahawiki_missing")).get
+      val missing = route(app, apiV1Request(GET, "/api/v1/page/Missing", "ahawiki_missing")).get
       status(missing) mustBe UNAUTHORIZED
     }
   }
 
-  "GET /api/bot/page/:name" should {
+  "GET /api/v1/page/:name" should {
     "return page content for a valid API key user" in {
       val created = createApiKey()
-      insertPage("BotRead", 1, "= BotRead\ncontent")
+      insertPage("ApiRead", 1, "= ApiRead\ncontent")
 
-      val result = route(app, botRequest(GET, "/api/bot/page/BotRead", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/page/ApiRead", created.rawKey)).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "name").as[String] mustBe "BotRead"
+      (contentAsJson(result) \ "name").as[String] mustBe "ApiRead"
       (contentAsJson(result) \ "revision").as[Long] mustBe 1
       (contentAsJson(result) \ "content").as[String] must include("content")
       (contentAsJson(result) \ "viaApi").as[Boolean] mustBe false
@@ -332,12 +332,12 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
     "return 403 when the API key user does not have read permission" in {
       val created = createApiKey()
-      insertPage("BotReadForbidden", 1, "= BotReadForbidden\ncontent")
+      insertPage("ApiReadForbidden", 1, "= ApiReadForbidden\ncontent")
 
       try {
         replaceLoginPermission(0)
 
-        val result = route(app, botRequest(GET, "/api/bot/page/BotReadForbidden", created.rawKey)).get
+        val result = route(app, apiV1Request(GET, "/api/v1/page/ApiReadForbidden", created.rawKey)).get
 
         status(result) mustBe FORBIDDEN
       } finally {
@@ -346,17 +346,17 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
     }
   }
 
-  "GET /api/bot/pages" should {
+  "GET /api/v1/pages" should {
     "return readable page metadata with content hashes" in {
       val created = createApiKey()
-      insertPage("BotListA", 1, "= BotListA\ncontent")
-      insertPage("BotListB", 1, "= BotListB\ncontent")
+      insertPage("ApiListA", 1, "= ApiListA\ncontent")
+      insertPage("ApiListB", 1, "= ApiListB\ncontent")
 
-      val result = route(app, botRequest(GET, "/api/bot/pages?prefix=BotList", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/pages?prefix=ApiList", created.rawKey)).get
 
       status(result) mustBe OK
       val pages = (contentAsJson(result) \ "pages").as[Seq[play.api.libs.json.JsValue]]
-      pages.map(page => (page \ "name").as[String]) must contain allOf("BotListA", "BotListB")
+      pages.map(page => (page \ "name").as[String]) must contain allOf("ApiListA", "ApiListB")
       pages.foreach { page =>
         (page \ "contentHash").as[String] must startWith("sha256:")
         (page \ "content").asOpt[String] mustBe None
@@ -365,57 +365,57 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
     }
   }
 
-  "POST /api/bot/pages/metadata" should {
+  "POST /api/v1/pages/metadata" should {
     "return metadata for requested pages and report missing pages" in {
       val created = createApiKey()
-      insertPage("BotMetaA", 1, "= BotMetaA\ncontent")
+      insertPage("ApiMetaA", 1, "= ApiMetaA\ncontent")
 
-      val request = botRequest(POST, "/api/bot/pages/metadata", created.rawKey)
-        .withJsonBody(Json.obj("names" -> Json.arr("BotMetaA", "BotMetaMissing")))
+      val request = apiV1Request(POST, "/api/v1/pages/metadata", created.rawKey)
+        .withJsonBody(Json.obj("names" -> Json.arr("ApiMetaA", "ApiMetaMissing")))
 
       val result = route(app, request).get
 
       status(result) mustBe OK
       val body = contentAsJson(result)
       val pages = (body \ "pages").as[Seq[play.api.libs.json.JsValue]]
-      pages.map(page => (page \ "name").as[String]) mustBe Seq("BotMetaA")
-      (body \ "missing").as[Seq[String]] mustBe Seq("BotMetaMissing")
+      pages.map(page => (page \ "name").as[String]) mustBe Seq("ApiMetaA")
+      (body \ "missing").as[Seq[String]] mustBe Seq("ApiMetaMissing")
     }
   }
 
-  "GET /api/bot/changes" should {
+  "GET /api/v1/changes" should {
     "return readable changes filtered by prefix and viaApi flag" in {
       val created = createApiKey()
-      insertPage("BotChangeWeb", 1, "= BotChangeWeb\ncontent", viaApi = false)
-      insertPage("BotChangeApi", 1, "= BotChangeApi\ncontent", viaApi = true)
+      insertPage("ApiChangeWeb", 1, "= ApiChangeWeb\ncontent", viaApi = false)
+      insertPage("ApiChangeViaApi", 1, "= ApiChangeViaApi\ncontent", viaApi = true)
 
-      val result = route(app, botRequest(GET, "/api/bot/changes?prefix=BotChange&includeViaApi=0", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/changes?prefix=ApiChange&includeViaApi=0", created.rawKey)).get
 
       status(result) mustBe OK
       val changes = (contentAsJson(result) \ "changes").as[Seq[play.api.libs.json.JsValue]]
-      changes.map(change => (change \ "name").as[String]) must contain("BotChangeWeb")
-      changes.map(change => (change \ "name").as[String]) must not contain "BotChangeApi"
+      changes.map(change => (change \ "name").as[String]) must contain("ApiChangeWeb")
+      changes.map(change => (change \ "name").as[String]) must not contain "ApiChangeViaApi"
     }
 
     "filter by since and minor edit flag" in {
       val created = createApiKey()
-      insertPage("BotChangeOld", 1, "= BotChangeOld\ncontent", dateTime = LocalDateTime.parse("2026-06-24T09:00:00"))
-      insertPage("BotChangeMajor", 1, "= BotChangeMajor\ncontent", dateTime = LocalDateTime.parse("2026-06-24T11:00:00"))
-      insertPage("BotChangeMinor", 1, "= BotChangeMinor\ncontent", isMinorEdit = true, dateTime = LocalDateTime.parse("2026-06-24T12:00:00"))
+      insertPage("ApiChangeOld", 1, "= ApiChangeOld\ncontent", dateTime = LocalDateTime.parse("2026-06-24T09:00:00"))
+      insertPage("ApiChangeMajor", 1, "= ApiChangeMajor\ncontent", dateTime = LocalDateTime.parse("2026-06-24T11:00:00"))
+      insertPage("ApiChangeMinor", 1, "= ApiChangeMinor\ncontent", isMinorEdit = true, dateTime = LocalDateTime.parse("2026-06-24T12:00:00"))
 
-      val result = route(app, botRequest(GET, "/api/bot/changes?prefix=BotChange&since=2026-06-24T10:00:00&includeMinorEdit=0", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/changes?prefix=ApiChange&since=2026-06-24T10:00:00&includeMinorEdit=0", created.rawKey)).get
 
       status(result) mustBe OK
       val names = (contentAsJson(result) \ "changes").as[Seq[play.api.libs.json.JsValue]].map(change => (change \ "name").as[String])
-      names must contain("BotChangeMajor")
-      names must not contain "BotChangeOld"
-      names must not contain "BotChangeMinor"
+      names must contain("ApiChangeMajor")
+      names must not contain "ApiChangeOld"
+      names must not contain "ApiChangeMinor"
     }
 
     "reject afterRevision without an exact page name" in {
       val created = createApiKey()
 
-      val result = route(app, botRequest(GET, "/api/bot/changes?prefix=BotChange&afterRevision=1", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/changes?prefix=ApiChange&afterRevision=1", created.rawKey)).get
 
       status(result) mustBe BAD_REQUEST
       (contentAsJson(result) \ "error").as[String] must include("afterRevision requires name")
@@ -423,36 +423,36 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
     "apply afterRevision only to an exact page name" in {
       val created = createApiKey()
-      insertPage("BotChangeOne", 1, "= BotChangeOne\nold")
-      insertPage("BotChangeOne", 2, "= BotChangeOne\nnew")
-      insertPage("BotChangeTwo", 1, "= BotChangeTwo\ncontent")
+      insertPage("ApiChangeOne", 1, "= ApiChangeOne\nold")
+      insertPage("ApiChangeOne", 2, "= ApiChangeOne\nnew")
+      insertPage("ApiChangeTwo", 1, "= ApiChangeTwo\ncontent")
 
-      val result = route(app, botRequest(GET, "/api/bot/changes?name=BotChangeOne&afterRevision=1", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/changes?name=ApiChangeOne&afterRevision=1", created.rawKey)).get
 
       status(result) mustBe OK
       val changes = (contentAsJson(result) \ "changes").as[Seq[play.api.libs.json.JsValue]]
-      changes.map(change => (change \ "name").as[String]) mustBe Seq("BotChangeOne")
+      changes.map(change => (change \ "name").as[String]) mustBe Seq("ApiChangeOne")
       changes.map(change => (change \ "revision").as[Long]) mustBe Seq(2)
     }
 
     "reject invalid since values" in {
       val created = createApiKey()
 
-      val result = route(app, botRequest(GET, "/api/bot/changes?since=not-a-date", created.rawKey)).get
+      val result = route(app, apiV1Request(GET, "/api/v1/changes?since=not-a-date", created.rawKey)).get
 
       status(result) mustBe BAD_REQUEST
     }
   }
 
-  "POST /api/bot/page/:name" should {
+  "POST /api/v1/page/:name" should {
     "save a new revision with viaApi true" in {
       val created = createApiKey()
-      insertPage("BotSave", 1, "= BotSave\nold")
+      insertPage("ApiSave", 1, "= ApiSave\nold")
 
-      val request = botRequest(POST, "/api/bot/page/BotSave", created.rawKey)
+      val request = apiV1Request(POST, "/api/v1/page/ApiSave", created.rawKey)
         .withJsonBody(Json.obj(
           "revision" -> 1,
-          "text" -> "= BotSave\nnew",
+          "text" -> "= ApiSave\nnew",
           "comment" -> "bot update",
           "minorEdit" -> true,
         ))
@@ -463,7 +463,7 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       (contentAsJson(result) \ "revision").as[Long] mustBe 2
 
       db.withConnection { implicit connection =>
-        val page = Page.selectLastRevision("BotSave").get
+        val page = Page.selectLastRevision("ApiSave").get
         page.revision mustBe 2
         page.content must include("new")
         page.comment mustBe "bot update"
@@ -474,12 +474,12 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
     "return 409 when request revision is stale" in {
       val created = createApiKey()
-      insertPage("BotConflict", 1, "= BotConflict\nold")
+      insertPage("ApiConflict", 1, "= ApiConflict\nold")
 
-      val request = botRequest(POST, "/api/bot/page/BotConflict", created.rawKey)
+      val request = apiV1Request(POST, "/api/v1/page/ApiConflict", created.rawKey)
         .withJsonBody(Json.obj(
           "revision" -> 0,
-          "text" -> "= BotConflict\nnew",
+          "text" -> "= ApiConflict\nnew",
         ))
 
       val result = route(app, request).get
@@ -490,15 +490,15 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
     "return 403 when the API key user does not have write permission" in {
       val created = createApiKey()
-      insertPage("BotWriteForbidden", 1, "= BotWriteForbidden\nold")
+      insertPage("ApiWriteForbidden", 1, "= ApiWriteForbidden\nold")
 
       try {
         replaceLoginPermission(1)
 
-        val request = botRequest(POST, "/api/bot/page/BotWriteForbidden", created.rawKey)
+        val request = apiV1Request(POST, "/api/v1/page/ApiWriteForbidden", created.rawKey)
           .withJsonBody(Json.obj(
             "revision" -> 1,
-            "text" -> "= BotWriteForbidden\nnew",
+            "text" -> "= ApiWriteForbidden\nnew",
           ))
 
         val result = route(app, request).get
@@ -510,49 +510,49 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
     }
   }
 
-  "POST /api/bot/rename" should {
+  "POST /api/v1/rename" should {
     "rename a page and create an API-marked redirect at the old name" in {
       val created = createApiKey()
-      insertPage("BotRename", 1, "= BotRename\nold")
+      insertPage("ApiRename", 1, "= ApiRename\nold")
 
-      val request = botRequest(POST, "/api/bot/rename", created.rawKey)
+      val request = apiV1Request(POST, "/api/v1/rename", created.rawKey)
         .withJsonBody(Json.obj(
-          "name" -> "BotRename",
-          "newName" -> "BotRenamed",
+          "name" -> "ApiRename",
+          "newName" -> "ApiRenamed",
           "revision" -> 1,
-          "comment" -> "bot rename",
+          "comment" -> "api rename",
         ))
 
       val result = route(app, request).get
 
       status(result) mustBe OK
-      (contentAsJson(result) \ "newName").as[String] mustBe "BotRenamed"
+      (contentAsJson(result) \ "newName").as[String] mustBe "ApiRenamed"
 
       db.withConnection { implicit connection =>
-        val renamed = Page.selectLastRevision("BotRenamed").get
+        val renamed = Page.selectLastRevision("ApiRenamed").get
         renamed.content must include("old")
-        val redirect = Page.selectLastRevision("BotRename").get
-        redirect.content mustBe "#!redirect BotRenamed"
-        redirect.comment mustBe "bot rename"
+        val redirect = Page.selectLastRevision("ApiRename").get
+        redirect.content mustBe "#!redirect ApiRenamed"
+        redirect.comment mustBe "api rename"
         redirect.viaApi mustBe true
       }
     }
   }
 
-  "DELETE /api/bot/page/:name" should {
+  "DELETE /api/v1/page/:name" should {
     "delete a page and mark related attachments deleted when revision and confirm are provided" in {
       val created = createApiKey()
-      insertPage("BotDelete", 1, "= BotDelete\nold")
+      insertPage("ApiDelete", 1, "= ApiDelete\nold")
       db.withConnection { implicit connection =>
         SQL"""
           INSERT INTO Attachment
             (site, pageName, originalFilename, storedFilename, bucket, objectKey, contentType, fileSize, status)
           VALUES
-            (1, 'BotDelete', 'a.png', 'a.png', 'test-bucket', 'Attachment/1/BotDelete/a.png', 'image/png', 10, 'Uploaded')
+            (1, 'ApiDelete', 'a.png', 'a.png', 'test-bucket', 'Attachment/1/ApiDelete/a.png', 'image/png', 10, 'Uploaded')
         """.executeUpdate()
       }
 
-      val request = botRequest(DELETE, "/api/bot/page/BotDelete", created.rawKey)
+      val request = apiV1Request(DELETE, "/api/v1/page/ApiDelete", created.rawKey)
         .withJsonBody(Json.obj(
           "revision" -> 1,
           "confirm" -> true,
@@ -564,8 +564,8 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       (contentAsJson(result) \ "ok").as[Boolean] mustBe true
 
       db.withConnection { implicit connection =>
-        Page.selectLastRevision("BotDelete") mustBe None
-        val deletedCount = SQL"SELECT COUNT(*) cnt FROM Attachment WHERE pageName = 'BotDelete' AND status = 'Deleted' AND dateDeleted IS NOT NULL"
+        Page.selectLastRevision("ApiDelete") mustBe None
+        val deletedCount = SQL"SELECT COUNT(*) cnt FROM Attachment WHERE pageName = 'ApiDelete' AND status = 'Deleted' AND dateDeleted IS NOT NULL"
           .as(anorm.SqlParser.long("cnt").single)
         deletedCount mustBe 1
       }
@@ -573,9 +573,9 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
 
     "require explicit confirmation" in {
       val created = createApiKey()
-      insertPage("BotDeleteNoConfirm", 1, "= BotDeleteNoConfirm\nold")
+      insertPage("ApiDeleteNoConfirm", 1, "= ApiDeleteNoConfirm\nold")
 
-      val request = botRequest(DELETE, "/api/bot/page/BotDeleteNoConfirm", created.rawKey)
+      val request = apiV1Request(DELETE, "/api/v1/page/ApiDeleteNoConfirm", created.rawKey)
         .withJsonBody(Json.obj("revision" -> 1))
 
       val result = route(app, request).get
@@ -610,14 +610,14 @@ class BotApiSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAl
       keys.exists(key => (key \ "seq").as[Long] == seq) mustBe true
       keys.find(key => (key \ "seq").as[Long] == seq).flatMap(key => (key \ "key").asOpt[String]) mustBe None
 
-      val beforeRevoke = route(app, botRequest(GET, "/api/bot/page/Missing", rawKey)).get
+      val beforeRevoke = route(app, apiV1Request(GET, "/api/v1/page/Missing", rawKey)).get
       status(beforeRevoke) mustBe NOT_FOUND
 
       val revokeResult = route(app, loginRequest(DELETE, s"/api/account/ApiKeys/$seq")).get
       status(revokeResult) mustBe OK
       (contentAsJson(revokeResult) \ "ok").as[Boolean] mustBe true
 
-      val afterRevoke = route(app, botRequest(GET, "/api/bot/page/Missing", rawKey)).get
+      val afterRevoke = route(app, apiV1Request(GET, "/api/v1/page/Missing", rawKey)).get
       status(afterRevoke) mustBe UNAUTHORIZED
     }
   }

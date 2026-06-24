@@ -7,17 +7,17 @@ import play.api.mvc.RequestHeader
 import play.filters.csrf.CSRFFilter
 
 class Filters @Inject() (csrfFilter: CSRFFilter, accessLog: FilterAccessLog) extends HttpFilters {
-  private def isBotApiRequest(request: RequestHeader): Boolean =
-    request.path.startsWith("/api/bot/")
+  private def isApiV1Request(request: RequestHeader): Boolean =
+    request.path.startsWith("/api/v1/")
 
-  private val csrfExceptBotApi: EssentialFilter = new EssentialFilter {
+  private val csrfExceptApiV1: EssentialFilter = new EssentialFilter {
     override def apply(next: EssentialAction): EssentialAction = {
       EssentialAction { request =>
-        if (isBotApiRequest(request)) next(request)
+        if (isApiV1Request(request)) next(request)
         else csrfFilter(next)(request)
       }
     }
   }
 
-  def filters: Seq[EssentialFilter] = Seq(csrfExceptBotApi, accessLog)
+  def filters: Seq[EssentialFilter] = Seq(csrfExceptApiV1, accessLog)
 }

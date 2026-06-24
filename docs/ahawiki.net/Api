@@ -4,7 +4,7 @@ AhaWiki 페이지를 외부 사용자, 자동화 도구, AI 에이전트가 API 
 
 AhaWiki API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사용합니다.
 AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
-현재 읽기/쓰기 endpoint path는 호환성 때문에 `/api/bot/` prefix를 유지합니다.
+읽기/쓰기 endpoint path는 `/api/v1/` prefix를 사용합니다.
 
 == 지원 기능
 
@@ -39,7 +39,7 @@ API Key는 Account Settings의 API Keys 섹션에서 생성하고 폐기할 수 
 == 페이지 읽기
 
 [[[#!Vim sh
-curl https://ahawiki.net/api/bot/page/FrontPage \
+curl https://ahawiki.net/api/v1/page/FrontPage \
   -H "Authorization: Bearer <api-key>"
 ]]]
 
@@ -63,7 +63,7 @@ curl https://ahawiki.net/api/bot/page/FrontPage \
 == 페이지 목록/메타 조회
 
 [[[#!Vim sh
-curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
+curl "https://ahawiki.net/api/v1/pages?prefix=ToDo&limit=100" \
   -H "Authorization: Bearer <api-key>"
 ]]]
 
@@ -91,7 +91,7 @@ curl "https://ahawiki.net/api/bot/pages?prefix=ToDo&limit=100" \
 == Batch 페이지 메타 조회
 
 [[[#!Vim sh
-curl -X POST https://ahawiki.net/api/bot/pages/metadata \
+curl -X POST https://ahawiki.net/api/v1/pages/metadata \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
   -d '{"names":["Api","Dev Api","MissingPage"]}'
@@ -120,7 +120,7 @@ curl -X POST https://ahawiki.net/api/bot/pages/metadata \
 == 페이지 저장
 
 [[[#!Vim sh
-curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
+curl -X POST https://ahawiki.net/api/v1/page/FrontPage \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -154,7 +154,7 @@ curl -X POST https://ahawiki.net/api/bot/page/FrontPage \
 == 페이지 이름변경
 
 [[[#!Vim sh
-curl -X POST https://ahawiki.net/api/bot/rename \
+curl -X POST https://ahawiki.net/api/v1/rename \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -173,7 +173,7 @@ redirect revision은 `viaApi = true`로 기록됩니다.
 == 페이지 삭제
 
 [[[#!Vim sh
-curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
+curl -X DELETE https://ahawiki.net/api/v1/page/OldPage \
   -H "Authorization: Bearer <api-key>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -189,7 +189,7 @@ curl -X DELETE https://ahawiki.net/api/bot/page/OldPage \
 == 최근 변경 조회
 
 [[[#!Vim sh
-curl "https://ahawiki.net/api/bot/changes?prefix=ToDo&since=2026-06-24T00:00:00&limit=100" \
+curl "https://ahawiki.net/api/v1/changes?prefix=ToDo&since=2026-06-24T00:00:00&limit=100" \
   -H "Authorization: Bearer <api-key>"
 ]]]
 
@@ -227,10 +227,10 @@ query parameter:
 
 문서 동기화 도구는 서버에 별도 sync state를 저장하지 않고 local manifest를 갱신하는 방식을 권장합니다.
 
- 1. `GET /api/bot/pages`로 원격 페이지의 `revision`, `dateTime`, `contentHash`를 조회합니다.
+ 1. `GET /api/v1/pages`로 원격 페이지의 `revision`, `dateTime`, `contentHash`를 조회합니다.
  2. local manifest의 마지막 동기화 시각 또는 page별 revision과 비교합니다.
- 3. 변경 후보만 `GET /api/bot/page/*name`으로 본문을 내려받아 local file과 비교합니다.
- 4. local에서 검토/커밋된 문서가 원격보다 최신이면 `POST /api/bot/page/*name`으로 저장합니다.
+ 3. 변경 후보만 `GET /api/v1/page/*name`으로 본문을 내려받아 local file과 비교합니다.
+ 4. local에서 검토/커밋된 문서가 원격보다 최신이면 `POST /api/v1/page/*name`으로 저장합니다.
  5. 원격이 최신이면 local file을 갱신합니다.
  6. 양쪽이 모두 바뀐 경우 자동 덮어쓰기를 하지 말고 병합하거나 사용자에게 확인합니다.
  7. 저장/가져오기 완료 후 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록합니다.
@@ -250,9 +250,9 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 자동화 도구는 아래 순서로 저장합니다.
 
  1. `GET /api/pageRevision/:pageName`으로 현재 revision을 확인합니다.
- 2. `GET /api/bot/page/*name`으로 현재 본문을 읽습니다.
+ 2. `GET /api/v1/page/*name`으로 현재 본문을 읽습니다.
  3. 본문을 수정합니다.
- 4. `POST /api/bot/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
+ 4. `POST /api/v1/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
  5. `409 Conflict`가 오면 최신 본문을 다시 읽고 변경 내용을 병합한 뒤 재시도합니다.
 
 == AI 자동화 프롬프트 예시
@@ -274,7 +274,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 - 작업: <task>
 
 읽기:
-1. `GET https://ahawiki.net/api/bot/page/<url-encoded-page-name>`를 호출한다.
+1. `GET https://ahawiki.net/api/v1/page/<url-encoded-page-name>`를 호출한다.
 2. 응답의 `revision`과 `content`를 저장한다.
 3. `403`이면 권한 없음으로 중단하고, `404`이면 페이지 없음으로 보고한다.
 
@@ -285,7 +285,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 4. 사소한 포맷/오타 수정이면 `minorEdit: true`, 의미 있는 내용 변경이면 `minorEdit: false`로 보낸다.
 
 저장:
-`POST https://ahawiki.net/api/bot/page/<url-encoded-page-name>`에 아래 JSON을 보낸다.
+`POST https://ahawiki.net/api/v1/page/<url-encoded-page-name>`에 아래 JSON을 보낸다.
 
 {
   "revision": <읽은 revision>,
