@@ -1,6 +1,6 @@
 = BotApi
 
-AhaWiki 페이지를 외부 도구나 AI 에이전트가 API Key로 읽고 저장하기 위한 API입니다.
+AhaWiki 페이지를 외부 자동화 도구가 API Key로 읽고 저장하기 위한 API입니다.
 
 Bot API는 세션 쿠키 대신 `Authorization: Bearer <key>` 헤더를 사용합니다.
 Bot API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
@@ -50,7 +50,7 @@ curl -b cookies.txt https://ahawiki.net/api/account/ApiKeys
     "user": 1,
     "userNickname": null,
     "keyPrefix": "ahawiki_abcd123",
-    "label": "Codex Local",
+    "label": "Automation Tool",
     "dateInserted": "2026-06-24T10:00:00",
     "dateLastUsed": null,
     "dateRevoked": null,
@@ -68,7 +68,7 @@ curl -X POST https://ahawiki.net/api/account/ApiKeys \
   -b cookies.txt \
   -H "Content-Type: application/json" \
   -H "Csrf-Token: <csrf-token>" \
-  -d '{"label":"Codex Local"}'
+  -d '{"label":"Automation Tool"}'
 }}}
 
 응답:
@@ -79,7 +79,7 @@ curl -X POST https://ahawiki.net/api/account/ApiKeys \
   "user": 1,
   "userNickname": null,
   "keyPrefix": "ahawiki_abcd123",
-  "label": "Codex Local",
+  "label": "Automation Tool",
   "dateInserted": "2026-06-24T10:00:00",
   "dateLastUsed": null,
   "dateRevoked": null,
@@ -199,7 +199,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 
 == 저장 Flow
 
-AI 에이전트는 아래 순서로 저장합니다.
+자동화 도구는 아래 순서로 저장합니다.
 
  1. `GET /api/pageRevision/:pageName`으로 현재 revision을 확인합니다.
  2. `GET /api/bot/page/*name`으로 현재 본문을 읽습니다.

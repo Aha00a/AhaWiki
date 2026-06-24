@@ -1,6 +1,6 @@
 = [Dev] ApiKey
 
-AI 클라이언트(Codex, CLI 스크립트, 자동화 도구 등)가 AhaWiki 페이지를 직접 수정할 수 있도록 사용자 개인 API Key 인증을 추가했다.
+외부 자동화 도구가 AhaWiki 페이지를 직접 수정할 수 있도록 사용자 개인 API Key 인증을 추가했다.
 
 세션 쿠키와 reCAPTCHA 없이 `Authorization: Bearer <key>` 헤더로 페이지를 읽고 저장할 수 있는 API를 제공한다.
 페이지 히스토리에는 편집자가 기존 사용자로 기록되며, API Key를 통한 편집은 `Page.viaApi = TRUE`로 표시한다.

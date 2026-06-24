@@ -11,9 +11,9 @@
             align-items: center;
             margin: 18px 0 24px;
             padding: 18px;
-            border: 1px solid #d9dde7;
+            border: 1px solid var(--color-border);
             border-radius: 8px;
-            background: #f8fafc;
+            background: var(--color-surface-alt);
         }
         .accountSettings .accountIdentity {
             display: flex;
@@ -30,8 +30,8 @@
             align-items: center;
             justify-content: center;
             flex: 0 0 auto;
-            background: #e7ecf4;
-            color: #586174;
+            background: var(--color-muted);
+            color: var(--color-surface);
             font-size: 24px;
         }
         .accountSettings .accountIdentity h1 {
@@ -45,7 +45,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px 14px;
-            color: #546071;
+            color: var(--color-muted-strong);
             font-size: 0.95em;
         }
         .accountSettings .accountMetrics {
@@ -56,19 +56,19 @@
         .accountSettings .accountMetric {
             min-width: 120px;
             padding: 10px 12px;
-            border: 1px solid #e1e5ed;
+            border: 1px solid var(--color-border-subtle);
             border-radius: 6px;
-            background: #fff;
+            background: var(--color-surface);
         }
         .accountSettings .accountMetricLabel {
             display: block;
-            color: #6a7280;
+            color: var(--color-muted);
             font-size: 0.82em;
         }
         .accountSettings .accountMetricValue {
             display: block;
             margin-top: 4px;
-            color: #1f2937;
+            color: var(--color-text);
             font-size: 1.25em;
             font-weight: 700;
         }
@@ -79,9 +79,10 @@
             align-items: start;
         }
         .accountSettings .accountPanel {
-            border: 1px solid #d9dde7;
+            border: 1px solid var(--color-border);
             border-radius: 8px;
-            background: #fff;
+            background: var(--color-surface);
+            color: var(--color-text);
             padding: 16px;
         }
         .accountSettings .accountPanel h2 {
@@ -100,7 +101,7 @@
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 8px 14px;
             padding: 12px 0;
-            border-bottom: 1px solid #edf0f4;
+            border-bottom: 1px solid var(--color-border-subtle);
         }
         .accountSettings .accountEmailList li:last-child {
             border-bottom: 0;
@@ -114,14 +115,15 @@
             height: 22px;
             padding: 0 8px;
             border-radius: 999px;
-            background: #e8f1ff;
-            color: #174a91;
+            border: 1px solid var(--color-flash-info-border);
+            background: var(--color-flash-info-bg);
+            color: var(--color-flash-info-text);
             font-size: 0.82em;
             font-weight: 700;
         }
         .accountSettings .accountEmailDate {
             grid-column: 1 / -1;
-            color: #6a7280;
+            color: var(--color-muted);
             font-size: 0.9em;
         }
         .accountSettings .accountActionRow {
@@ -132,10 +134,14 @@
             align-items: center;
             gap: 8px;
             padding: 8px 12px;
-            border: 1px solid #c8d2e2;
+            border: 1px solid var(--color-input-border);
             border-radius: 6px;
-            background: #f6f8fc;
+            background: var(--color-input-bg);
+            color: var(--color-text);
             text-decoration: none;
+        }
+        .accountSettings .accountActionPrimary:hover {
+            background: var(--color-link-hover-bg);
         }
         .accountSettings .apiKeyForm {
             display: grid;
@@ -147,14 +153,16 @@
         .accountSettings .apiKeyForm label {
             display: grid;
             gap: 6px;
-            color: #4b5563;
+            color: var(--color-muted-strong);
             font-size: 0.92em;
         }
         .accountSettings .apiKeyForm input {
             min-height: 36px;
             padding: 7px 9px;
-            border: 1px solid #cfd6e3;
+            border: 1px solid var(--color-input-border);
             border-radius: 6px;
+            background: var(--color-input-bg);
+            color: var(--color-text);
             font: inherit;
         }
         .accountSettings .apiKeyTableWrap {
@@ -168,12 +176,12 @@
         .accountSettings .apiKeyTable th,
         .accountSettings .apiKeyTable td {
             padding: 9px 8px;
-            border-bottom: 1px solid #edf0f4;
+            border-bottom: 1px solid var(--color-border-subtle);
             text-align: left;
             vertical-align: middle;
         }
         .accountSettings .apiKeyTable th {
-            color: #566173;
+            color: var(--color-muted-strong);
             font-size: 0.82em;
             text-transform: uppercase;
         }
@@ -181,38 +189,47 @@
             display: none;
             margin: 12px 0 14px;
             padding: 12px;
-            border: 1px solid #bfdbfe;
+            border: 1px solid var(--color-flash-info-border);
             border-radius: 6px;
-            background: #eff6ff;
+            background: var(--color-flash-info-bg);
+            color: var(--color-flash-info-text);
         }
         .accountSettings .apiKeySecret code {
             display: block;
             margin-top: 8px;
             padding: 9px;
-            background: #fff;
-            border: 1px solid #dbeafe;
+            background: var(--color-code-bg);
+            border: 1px solid var(--color-code-border);
             border-radius: 4px;
+            color: var(--color-code-text);
             overflow-wrap: anywhere;
         }
         .accountSettings .apiKeyMessage {
             min-height: 20px;
-            color: #596579;
+            color: var(--color-muted);
             font-size: 0.9em;
+        }
+        .accountSettings .apiKeyMessage.isError {
+            color: var(--color-flash-error-text);
         }
         .accountSettings .accountDangerButton,
         .accountSettings .accountPlainButton {
             min-height: 32px;
             padding: 6px 10px;
-            border: 1px solid #cfd6e3;
+            border: 1px solid var(--color-input-border);
             border-radius: 6px;
-            background: #fff;
+            background: var(--color-input-bg);
+            color: var(--color-text);
             cursor: pointer;
             font: inherit;
         }
+        .accountSettings .accountPlainButton:hover {
+            background: var(--color-link-hover-bg);
+        }
         .accountSettings .accountDangerButton {
-            border-color: #fecaca;
-            color: #b91c1c;
-            background: #fff5f5;
+            border-color: var(--color-flash-error-border);
+            color: var(--color-flash-error-text);
+            background: var(--color-flash-error-bg);
         }
         @@media (max-width: 767px) {
             .accountSettings .accountHero,
@@ -244,7 +261,7 @@
 
             function setMessage(text, isError) {
                 message.textContent = text || "";
-                message.style.color = isError ? "#b91c1c" : "#596579";
+                message.classList.toggle("isError", !!isError);
             }
 
             function formatDate(value) {
@@ -425,7 +442,7 @@
                     <form class="apiKeyForm" data-api-key-form>
                         <label>
                             Label
-                            <input type="text" data-api-key-label maxlength="255" placeholder="Claude Code Local"/>
+                            <input type="text" data-api-key-label maxlength="255" placeholder="Automation Tool"/>
                         </label>
                         <button type="submit" class="accountPlainButton">Create</button>
                     </form>

@@ -10,7 +10,7 @@ API Key 기반 Bot API 구현은 완료했다.
   * 생성 직후 plain text key 1회 표시와 복사
   * 목록에서 `keyPrefix`, label, 사용/폐기 상태 표시
   * 폐기 후 같은 key로 Bot API 호출 시 `401 Unauthorized`
- * [[CB]] 2. Codex에서 실제 API 호출 테스트를 수행한다.
+ * [[CB]] 2. 자동화 도구에서 실제 API 호출 테스트를 수행한다.
   * `GET /api/bot/page/*name`으로 페이지 읽기
   * `POST /api/bot/page/*name`으로 페이지 저장
   * revision 충돌 시 `409 Conflict`
@@ -19,7 +19,8 @@ API Key 기반 Bot API 구현은 완료했다.
   * 현재 Bot 저장 API는 page 저장, cache invalidate, page calculation enqueue까지만 수행한다.
   * 웹 편집과 동일한 알림을 보낼 경우 payload에 `viaApi`를 포함해야 한다.
 
-== 완료 문서
+== 완료/기준 문서
 
  * [[CB(x)]] 구현 설계와 완료 내역: [Dev ApiKey]
  * [[CB(x)]] Bot API 호출 명세: [BotApi]
+ * [[CB(x)]] Account Settings API Key UI의 light/dark theme 적용과 자동화 도구 placeholder 정리
