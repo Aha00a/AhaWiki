@@ -25,6 +25,13 @@ Documents under `docs/ahawiki.net/` must use AhaMark format. Pay special attenti
 code block
 multiple lines
 ]]]
+
+Tables should use `InterpreterTable` blocks with TSV by default. Set the heading row count when the table has a header row, and omit it when the table has no header:
+
+[[[#!Table tsv 1
+Column A	Column B
+Value A	Value B
+]]]
 ```
 
 TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. When working on an item from a TODO document, update the relevant checkbox state as part of the same change:

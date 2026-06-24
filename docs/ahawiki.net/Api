@@ -305,12 +305,14 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 
 == 에러 코드
 
-|| 코드 || 의미 ||
-|| `400 Bad Request` || JSON body 없음, `revision` 누락, `text` 누락, 본문 변경 없음 ||
-|| `401 Unauthorized` || API Key 없음 또는 유효하지 않음 ||
-|| `403 Forbidden` || API Key 소유자에게 읽기/쓰기 권한 없음 ||
-|| `404 Not Found` || 읽으려는 페이지가 없음 ||
-|| `409 Conflict` || 요청 revision이 최신 revision과 다름 ||
+[[[#!Table tsv 1
+코드	의미
+`400 Bad Request`	JSON body 없음, `revision` 누락, `text` 누락, 본문 변경 없음
+`401 Unauthorized`	API Key 없음 또는 유효하지 않음
+`403 Forbidden`	API Key 소유자에게 읽기/쓰기 권한 없음
+`404 Not Found`	읽으려는 페이지가 없음
+`409 Conflict`	요청 revision이 최신 revision과 다름
+]]]
 
 == 관련
 
