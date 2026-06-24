@@ -291,6 +291,7 @@ CREATE TABLE `Page` (
   `remoteAddress` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `isMinorEdit` tinyint(1) NOT NULL DEFAULT '0',
+  `viaApi` tinyint(1) NOT NULL DEFAULT '0',
   `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   PRIMARY KEY (`site`,`name`,`revision`),
   KEY `Page_User_seq_fk` (`user`),
@@ -416,6 +417,29 @@ CREATE TABLE `User` (
   `dateNicknameChanged` datetime DEFAULT NULL,
   PRIMARY KEY (`seq`),
   UNIQUE KEY `User_nickname_lower_uindex` (`nickname`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `UserApiKey`
+--
+
+DROP TABLE IF EXISTS `UserApiKey`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `UserApiKey` (
+  `seq` bigint NOT NULL AUTO_INCREMENT,
+  `user` int NOT NULL,
+  `keyHash` varchar(64) COLLATE utf8mb4_bin NOT NULL,
+  `keyPrefix` varchar(32) COLLATE utf8mb4_bin NOT NULL,
+  `label` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `dateInserted` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `dateLastUsed` datetime DEFAULT NULL,
+  `dateRevoked` datetime DEFAULT NULL,
+  PRIMARY KEY (`seq`),
+  UNIQUE KEY `UserApiKey_keyHash_uindex` (`keyHash`),
+  KEY `UserApiKey_user_dateRevoked_index` (`user`,`dateRevoked`),
+  CONSTRAINT `UserApiKey_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
