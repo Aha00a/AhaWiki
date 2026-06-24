@@ -2299,6 +2299,35 @@
 .AhaWiki .wikiTableSimple tr:hover td {
   background: var(--color-table-row-hover-bg);
 }
+.AhaWiki .revisionFlagColumn {
+  width: 34px;
+  min-width: 34px;
+  text-align: center !important;
+  white-space: nowrap;
+}
+.AhaWiki .revisionFlagIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  color: var(--color-text);
+}
+.AhaWiki .revisionFlagIcon.is-partial {
+  opacity: 0.45;
+}
+.AhaWiki .revisionFlagLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 8px 0;
+  color: var(--color-muted);
+  font-size: 0.9em;
+}
+.AhaWiki .revisionFlagLegend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
 .AhaWiki .wikiTableSimpleScroll {
   max-width: 100%;
   overflow-x: auto;

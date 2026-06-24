@@ -337,11 +337,11 @@ query parameter:
 
 API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 
- * History 화면에는 Bot 컬럼과 `Show BotEdit` 필터가 있습니다.
- * `RecentChanges` 매크로에는 `Include bot edits` 토글과 BotEdit 컬럼이 있습니다.
- * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `1`입니다.
- * Admin Recent Changes 화면에는 Bot edit 포함/제외 토글과 Bot 컬럼이 있습니다.
- * Admin Dashboard의 Recent Changes 요약 표에도 Bot 컬럼이 표시됩니다.
+ * History 화면에는 minor edit, Via API 이모지 컬럼과 `Show ViaApi` 필터가 있습니다.
+ * `RecentChanges` 매크로에는 `Include via API edits` 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
+ * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `0`입니다.
+ * Admin Recent Changes 화면에는 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
+ * Admin Dashboard의 Recent Changes 요약 표에도 minor edit, Via API 이모지 컬럼이 표시됩니다.
 
 == 저장 Flow
 

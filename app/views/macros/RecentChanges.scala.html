@@ -21,8 +21,8 @@
                     <span>Include minor edits</span>
                 </label>
                 <label class="macro-recent-changes-form-control is-checkbox">
-                    <input type="checkbox" name="includeViaApi" checked>
-                    <span>Include bot edits</span>
+                    <input type="checkbox" name="includeViaApi">
+                    <span>Include via API edits</span>
                 </label>
                 <button type="submit">Load</button>
             </div>
@@ -39,12 +39,16 @@
                             <th>User</th>
                             <th>RemoteAddress</th>
                             <th>Comment</th>
-                            <th>MinorEdit</th>
-                            <th>BotEdit</th>
+                            <th class="revisionFlagColumn" title="Minor edit" aria-label="Minor edit"><span aria-hidden="true">✏️</span></th>
+                            <th class="revisionFlagColumn" title="Via API" aria-label="Via API"><span aria-hidden="true">🔌</span></th>
                         </tr>
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+            <div class="revisionFlagLegend" aria-label="Revision flag legend">
+                <span><span aria-hidden="true">✏️</span> Minor edit</span>
+                <span><span aria-hidden="true">🔌</span> Via API</span>
             </div>
         </div>
         <script>
@@ -77,6 +81,13 @@
                     }, []);
                 }
 
+                function flagIcon(symbol, label, partial) {
+                    var fullLabel = partial ? label + " (some grouped revisions)" : label;
+                    return "<span class='revisionFlagIcon" + (partial ? " is-partial" : "") + "' title='" + esc(fullLabel) + "' aria-label='" + esc(fullLabel) + "'>" +
+                        esc(symbol) +
+                        "</span>";
+                }
+
                 function revisionRangeText(rows) {
                     if (!rows || rows.length === 0) return "";
                     var revisions = rows.map(function (row) { return Number(row.revision) || 0; });
@@ -105,10 +116,10 @@
                         var firstRow = group.rows[0];
                         var hasMinorEdit = group.rows.some(function (row) { return !!row.isMinorEdit; });
                         var allMinorEdit = group.rows.length > 0 && group.rows.every(function (row) { return !!row.isMinorEdit; });
-                        var minorEditMark = allMinorEdit ? "○" : (hasMinorEdit ? "△" : "");
-                        var hasBotEdit = group.rows.some(function (row) { return !!row.viaApi; });
-                        var allBotEdit = group.rows.length > 0 && group.rows.every(function (row) { return !!row.viaApi; });
-                        var botEditMark = allBotEdit ? "○" : (hasBotEdit ? "△" : "");
+                        var minorEditMark = allMinorEdit ? flagIcon("✏️", "Minor edit", false) : (hasMinorEdit ? flagIcon("✏️", "Minor edit", true) : "");
+                        var hasViaApi = group.rows.some(function (row) { return !!row.viaApi; });
+                        var allViaApi = group.rows.length > 0 && group.rows.every(function (row) { return !!row.viaApi; });
+                        var viaApiMark = allViaApi ? flagIcon("🔌", "Via API", false) : (hasViaApi ? flagIcon("🔌", "Via API", true) : "");
                         var authorHtml = firstRow.nickname
                             ? "<span class='userInlineProfile'>" +
                                 (firstRow.profileImageUrl ? "<img src='" + esc(firstRow.profileImageUrl) + "' alt='" + esc(firstRow.nickname) + "' class='userInlineProfileImage'/>" : "") +
@@ -117,9 +128,9 @@
                             : esc(firstRow.remoteAddressMasked);
                         var commentsHtml = "<ol>" + group.rows.map(function (row) {
                             var rowMinorPrefix = row.isMinorEdit ? "[minor] " : "";
-                            var rowBotPrefix = row.viaApi ? "[bot] " : "";
+                            var rowViaApiPrefix = row.viaApi ? "[viaApi] " : "";
                             var commentInlineHtml = row.commentInlineHtml || esc(row.comment || "");
-                            return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + rowBotPrefix + commentInlineHtml + "</li>";
+                            return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + rowViaApiPrefix + commentInlineHtml + "</li>";
                         }).join("") + "</ol>";
                         var dateTimeText = group.rows.length === 1
                             ? esc(firstRow.dateTime)
@@ -134,8 +145,8 @@
                                 "<td>" + authorHtml + "</td>" +
                                 "<td>" + esc(firstRow.remoteAddressMasked || "") + "</td>" +
                                 "<td>" + commentsHtml + "</td>" +
-                                "<td>" + esc(minorEditMark) + "</td>" +
-                                "<td>" + esc(botEditMark) + "</td>" +
+                                "<td class='revisionFlagColumn'>" + minorEditMark + "</td>" +
+                                "<td class='revisionFlagColumn'>" + viaApiMark + "</td>" +
                                 "</tr>";
                     }).join("");
 

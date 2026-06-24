@@ -6,10 +6,15 @@ export function useRecentChangesData() {
     const [recentChanges, setRecentChanges] = useState([]);
     const [sites, setSites] = useState([]);
 
-    const loadRecentChanges = useCallback(async (n = 50) => {
+    const loadRecentChanges = useCallback(async (n = 50, includeMinorEdit = false, includeViaApi = false) => {
         setLoading(true);
         try {
-            const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
+            const params = new URLSearchParams({
+                n: String(n),
+                includeMinorEdit: includeMinorEdit ? "1" : "0",
+                includeViaApi: includeViaApi ? "1" : "0",
+            });
+            const data = await fetchJson(`/api/Admin/RecentChanges?${params.toString()}`);
             setRecentChanges(data);
         } catch (err) {
             logError("recent-changes:load:error", err);

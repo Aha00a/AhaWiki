@@ -5,8 +5,13 @@ import {useAdminContext} from "../context/AdminContext.jsx";
 import {useDashboardData} from "../hooks/useDashboardData.js";
 import {SiteListCard} from "../../site/siteWidgets.jsx";
 import {DailyStatTable, MultiTrendChart, StatTrendCard} from "../mainWidgets.jsx";
-import {makeTable} from "../../component/commonWidgets.jsx";
+import {makeFlagCell, makeFlagHeader, makeFlagLegend, makeTable} from "../../component/commonWidgets.jsx";
 import {resolveSiteUrl} from "../utils.js";
+
+const recentChangeFlagLegend = [
+    {label: "Minor edit", symbol: "✏️"},
+    {label: "Via API", symbol: "🔌"},
+];
 
 export default function DashboardPage() {
     const {me} = useAdminContext();
@@ -90,11 +95,12 @@ export default function DashboardPage() {
             </Card>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md"><Title order={3}>Recent Changes (All Sites)</Title><Badge color="violet" variant="light">{recentChanges.length}</Badge></Group>
-                {makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment"], recentChanges.map((row) => {
+                {makeFlagLegend(recentChangeFlagLegend)}
+                {makeTable(["When", "Site", "Page", "Revision", "Editor", makeFlagHeader("Minor edit", "✏️"), makeFlagHeader("Via API", "🔌"), "Comment"], recentChanges.map((row) => {
                     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
                     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-"];
+                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "✏️"), makeFlagCell(row.viaApi, "Via API", "🔌"), row.comment || "-"];
                 }))}
             </Card>
         </Stack>

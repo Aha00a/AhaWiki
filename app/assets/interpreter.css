@@ -192,6 +192,9 @@
 .AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-table th {
   white-space: nowrap;
 }
+.AhaWiki .Macro.RecentChanges .macroRecentChanges .macro-recent-changes .macro-recent-changes-table .revisionFlagColumn {
+  text-align: center;
+}
 .AhaWiki .Macro.WikiStatistics .statsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));

@@ -1062,6 +1062,12 @@ class Api @Inject()(
           .flatMap(raw => scala.util.Try(raw.toInt).toOption)
           .map(_.max(1).min(500))
           .getOrElse(50)
+        val includeMinorEdit = request.getQueryString("includeMinorEdit")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .contains(1)
+        val includeViaApi = request.getQueryString("includeViaApi")
+          .flatMap(raw => scala.util.Try(raw.toInt).toOption)
+          .contains(1)
 
         val rows = SQL"""
           SELECT
@@ -1084,6 +1090,8 @@ class Api @Inject()(
             GROUP BY site
           ) SD ON SD.site = P.site
           LEFT JOIN User U ON U.seq = P.user
+          WHERE (${includeMinorEdit} OR P.isMinorEdit = false)
+            AND (${includeViaApi} OR P.viaApi = false)
           ORDER BY P.dateTime DESC
           LIMIT $limit
         """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {

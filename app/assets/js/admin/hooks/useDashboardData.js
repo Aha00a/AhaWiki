@@ -20,7 +20,7 @@ export function useDashboardData() {
                 fetchJson("/api/Admin/Sites"),
                 fetchJson("/api/Admin/Users"),
                 fetchJson("/api/Admin/DailyStats"),
-                fetchJson("/api/Admin/RecentChanges?n=30"),
+                fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=0&includeViaApi=0"),
                 fetchJson("/api/Admin/TopViewedPages?n=30"),
             ]);
             const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : (Array.isArray(allUserData) ? allUserData : []);

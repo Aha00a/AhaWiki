@@ -226,7 +226,7 @@ function useDashboardData() {
         fetchJson("/api/Admin/Sites"),
         fetchJson("/api/Admin/Users"),
         fetchJson("/api/Admin/DailyStats"),
-        fetchJson("/api/Admin/RecentChanges?n=30"),
+        fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=0&includeViaApi=0"),
         fetchJson("/api/Admin/TopViewedPages?n=30")
       ]);
       const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
@@ -286,20 +286,37 @@ function SiteListCard({ sites, onNavigate }) {
 
 // app/assets/js/admin/mainWidgets.jsx
 import React7 from "react";
-import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip as Tooltip2, XAxis, YAxis } from "recharts";
 import { Badge as Badge4, Card as Card2, Group as Group4, Progress, Stack as Stack3, Text as Text4, Title as Title3 } from "@mantine/core";
 
 // app/assets/js/component/commonWidgets.jsx
 import React6 from "react";
-import { Table as Table2 } from "@mantine/core";
+import { Table as Table2, Tooltip } from "@mantine/core";
 function IconChevronUp({ size = 14 }) {
   return /* @__PURE__ */ React6.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React6.createElement("path", { d: "M18 15l-6-6-6 6" }));
 }
 function IconSelector({ size = 14 }) {
   return /* @__PURE__ */ React6.createElement("svg", { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React6.createElement("path", { d: "M8 9l4-4 4 4" }), /* @__PURE__ */ React6.createElement("path", { d: "M16 15l-4 4-4-4" }));
 }
+var flagIconStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  minWidth: 18
+};
+function makeFlagHeader(label, symbol) {
+  return /* @__PURE__ */ React6.createElement(Tooltip, { label, withArrow: true }, /* @__PURE__ */ React6.createElement("span", { style: flagIconStyle, title: label, "aria-label": label }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, symbol)));
+}
+function makeFlagCell(active, label, symbol) {
+  if (!active) return "";
+  return /* @__PURE__ */ React6.createElement(Tooltip, { label, withArrow: true }, /* @__PURE__ */ React6.createElement("span", { style: flagIconStyle, title: label, "aria-label": label }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, symbol)));
+}
+function makeFlagLegend(items) {
+  return /* @__PURE__ */ React6.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12, color: "var(--mantine-color-dimmed)", marginBottom: 8 } }, items.map((item) => /* @__PURE__ */ React6.createElement("span", { key: item.label, style: { display: "inline-flex", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, item.symbol), item.label)));
+}
 function makeTable(headers, rows) {
-  return /* @__PURE__ */ React6.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React6.createElement(Table2.Thead, null, /* @__PURE__ */ React6.createElement(Table2.Tr, null, headers.map((header) => /* @__PURE__ */ React6.createElement(Table2.Th, { key: header }, header)))), /* @__PURE__ */ React6.createElement(Table2.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React6.createElement(Table2.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React6.createElement(Table2.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
+  return /* @__PURE__ */ React6.createElement(Table2, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true, stickyHeader: true, stickyHeaderOffset: 0 }, /* @__PURE__ */ React6.createElement(Table2.Thead, null, /* @__PURE__ */ React6.createElement(Table2.Tr, null, headers.map((header, headerIndex) => /* @__PURE__ */ React6.createElement(Table2.Th, { key: `header-${headerIndex}` }, header)))), /* @__PURE__ */ React6.createElement(Table2.Tbody, null, rows.map((columns, rowIndex) => /* @__PURE__ */ React6.createElement(Table2.Tr, { key: `row-${rowIndex}` }, columns.map((column, colIndex) => /* @__PURE__ */ React6.createElement(Table2.Td, { key: `col-${rowIndex}-${colIndex}` }, column ?? ""))))));
 }
 
 // app/assets/js/admin/mainWidgets.jsx
@@ -312,7 +329,7 @@ function Sparkline({ rows, color }) {
   const latest = data[data.length - 1]?.count ?? 0;
   const previous = data[data.length - 2]?.count ?? latest;
   const delta = latest - previous;
-  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 4 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React7.createElement("defs", null, /* @__PURE__ */ React7.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React7.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React7.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React7.createElement(Tooltip, { cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React7.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between" }, /* @__PURE__ */ React7.createElement(Text4, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React7.createElement(Badge4, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
+  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 4 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React7.createElement("defs", null, /* @__PURE__ */ React7.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React7.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React7.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React7.createElement(Tooltip2, { cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React7.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between" }, /* @__PURE__ */ React7.createElement(Text4, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React7.createElement(Badge4, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
 }
 function StatTrendCard({ title, total, rows, color }) {
   return /* @__PURE__ */ React7.createElement(Card2, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React7.createElement(Text4, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React7.createElement(Badge4, { color, variant: "light" }, "30d")), /* @__PURE__ */ React7.createElement(Title3, { order: 3 }, total), /* @__PURE__ */ React7.createElement(Sparkline, { rows, color })));
@@ -332,7 +349,7 @@ function MultiTrendChart({ series }) {
     });
   });
   const chartData = dates.map((date) => chartDataByDate.get(date));
-  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React7.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React7.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(Tooltip, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React7.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React7.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React7.createElement(Group4, { gap: 8 }, series.map((line) => /* @__PURE__ */ React7.createElement(Badge4, { key: line.name, color: line.color, variant: "light" }, line.name))));
+  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React7.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React7.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(Tooltip2, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React7.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React7.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React7.createElement(Group4, { gap: 8 }, series.map((line) => /* @__PURE__ */ React7.createElement(Badge4, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 
 // app/assets/js/admin/utils.js
@@ -402,6 +419,10 @@ function resolveSiteUrl(row, siteDomainBySeq) {
 }
 
 // app/assets/js/admin/pages/DashboardPage.jsx
+var recentChangeFlagLegend = [
+  { label: "Minor edit", symbol: "\u270F\uFE0F" },
+  { label: "Via API", symbol: "\u{1F50C}" }
+];
 function DashboardPage() {
   const { me } = useAdminContext();
   const navigate = useNavigate3();
@@ -424,11 +445,11 @@ function DashboardPage() {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";
     return [index + 1, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.pageName) : row.pageName, row.viewCount, row.lastViewedAt];
-  }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "violet", variant: "light" }, recentChanges.length)), makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment"], recentChanges.map((row) => {
+  }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "violet", variant: "light" }, recentChanges.length)), makeFlagLegend(recentChangeFlagLegend), makeTable(["When", "Site", "Page", "Revision", "Editor", makeFlagHeader("Minor edit", "\u270F\uFE0F"), makeFlagHeader("Via API", "\u{1F50C}"), "Comment"], recentChanges.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-"];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}"), row.comment || "-"];
   }))));
 }
 
@@ -1223,10 +1244,15 @@ function useRecentChangesData() {
   const [loading, setLoading] = useState19(true);
   const [recentChanges, setRecentChanges] = useState19([]);
   const [sites, setSites] = useState19([]);
-  const loadRecentChanges = useCallback10(async (n = 50) => {
+  const loadRecentChanges = useCallback10(async (n = 50, includeMinorEdit = false, includeViaApi = false) => {
     setLoading(true);
     try {
-      const data = await fetchJson(`/api/Admin/RecentChanges?n=${encodeURIComponent(n)}`);
+      const params = new URLSearchParams({
+        n: String(n),
+        includeMinorEdit: includeMinorEdit ? "1" : "0",
+        includeViaApi: includeViaApi ? "1" : "0"
+      });
+      const data = await fetchJson(`/api/Admin/RecentChanges?${params.toString()}`);
       setRecentChanges(data);
     } catch (err) {
       logError("recent-changes:load:error", err);
@@ -1246,30 +1272,45 @@ function useRecentChangesData() {
 }
 
 // app/assets/js/admin/pages/RecentChangesPage.jsx
+var recentChangeFlagLegend2 = [
+  { label: "Minor edit", symbol: "\u270F\uFE0F" },
+  { label: "Via API", symbol: "\u{1F50C}" }
+];
 function RecentChangesPage() {
   const { loading, recentChanges, sites, loadRecentChanges, loadSites } = useRecentChangesData();
   const [limitInput, setLimitInput] = useState20("50");
-  const [showBotEdits, setShowBotEdits] = useState20(true);
+  const [showMinorEdits, setShowMinorEdits] = useState20(false);
+  const [showViaApiEdits, setShowViaApiEdits] = useState20(false);
   useEffect13(() => {
     loadSites();
-    loadRecentChanges(50);
+    loadRecentChanges(50, false, false);
   }, []);
   const siteDomainBySeq = useMemo5(() => new Map(sites.map((s) => [s.seq, (s.domains ?? []).find((d) => !!d) ?? ""])), [sites]);
-  const visibleRecentChanges = useMemo5(
-    () => recentChanges.filter((row) => showBotEdits || !row.viaApi),
-    [recentChanges, showBotEdits]
-  );
-  return /* @__PURE__ */ React19.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title10, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React19.createElement(Badge14, { color: "violet", variant: "light" }, visibleRecentChanges.length, " rows")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React19.createElement(Switch, { label: "Bot edit \uD3EC\uD568", checked: showBotEdits, onChange: (e) => setShowBotEdits(e.currentTarget.checked) }), /* @__PURE__ */ React19.createElement(Button10, { variant: "filled", onClick: () => {
+  const normalizeLimit = () => {
     const parsed = Number.parseInt(limitInput, 10);
     const n = Number.isFinite(parsed) ? Math.min(500, Math.max(1, parsed)) : 50;
     setLimitInput(String(n));
-    loadRecentChanges(n);
-  } }, "\uC870\uD68C")), makeTable(["When", "Site", "Page", "Revision", "Editor", "Bot", "Comment", "IP"], visibleRecentChanges.map((row) => {
+    return n;
+  };
+  const reloadRecentChanges = (includeMinorEdit = showMinorEdits, includeViaApi = showViaApiEdits) => {
+    loadRecentChanges(normalizeLimit(), includeMinorEdit, includeViaApi);
+  };
+  return /* @__PURE__ */ React19.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React19.createElement(Group15, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React19.createElement(Title10, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React19.createElement(Badge14, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React19.createElement(Group15, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React19.createElement(Switch, { label: "Minor edit \uD3EC\uD568", checked: showMinorEdits, onChange: (e) => {
+    const next = e.currentTarget.checked;
+    setShowMinorEdits(next);
+    reloadRecentChanges(next, showViaApiEdits);
+  } }), /* @__PURE__ */ React19.createElement(Switch, { label: "viaApi \uD3EC\uD568", checked: showViaApiEdits, onChange: (e) => {
+    const next = e.currentTarget.checked;
+    setShowViaApiEdits(next);
+    reloadRecentChanges(showMinorEdits, next);
+  } }), /* @__PURE__ */ React19.createElement(Button10, { variant: "filled", onClick: () => {
+    reloadRecentChanges();
+  } }, "\uC870\uD68C")), makeFlagLegend(recentChangeFlagLegend2), makeTable(["When", "Site", "Page", "Revision", "Editor", makeFlagHeader("Minor edit", "\u270F\uFE0F"), makeFlagHeader("Via API", "\u{1F50C}"), "Comment", "IP"], recentChanges.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
     const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", row.viaApi ? "Y" : "N", row.comment || "-", row.remoteAddress];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}"), row.comment || "-", row.remoteAddress];
   })));
 }
 

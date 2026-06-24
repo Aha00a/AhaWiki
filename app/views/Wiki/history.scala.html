@@ -6,15 +6,15 @@
             $('[name=after]').eq(0).click();
             var updateHistoryRows = function () {
                 var showMinorEdit = $('#showMinorEdit').is(':checked');
-                var showBotEdit = $('#showBotEdit').is(':checked');
+                var showViaApi = $('#showViaApi').is(':checked');
                 $('.historyRow').each(function () {
                     var $row = $(this);
                     var isMinorEdit = $row.data('minor-edit') === true;
-                    var isBotEdit = $row.data('via-api') === true;
-                    $row.toggle((showMinorEdit || !isMinorEdit) && (showBotEdit || !isBotEdit));
+                    var isViaApi = $row.data('via-api') === true;
+                    $row.toggle((showMinorEdit || !isMinorEdit) && (showViaApi || !isViaApi));
                 });
             };
-            $('#showMinorEdit, #showBotEdit').change(updateHistoryRows);
+            $('#showMinorEdit, #showViaApi').change(updateHistoryRows);
             updateHistoryRows();
             $('.buttonDeleteLastRevision').click(function () {
                 if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
@@ -51,8 +51,12 @@
             <h1>History of <a href="@title">@title</a></h1>
             <button class="buttonDeleteLastRevision">Delete Last Revision</button>
             <form rel="nofollow">
-                <label><input type="checkbox" id="showMinorEdit"/> Show MinorEdit</label>
-                <label><input type="checkbox" id="showBotEdit" checked/> Show BotEdit</label>
+                <label><input type="checkbox" id="showMinorEdit" checked/> Show MinorEdit</label>
+                <label><input type="checkbox" id="showViaApi" checked/> Show ViaApi</label>
+                <div class="revisionFlagLegend" aria-label="Revision flag legend">
+                    <span><span aria-hidden="true">✏️</span> Minor edit</span>
+                    <span><span aria-hidden="true">🔌</span> Via API</span>
+                </div>
                 <input type="hidden" name="action" value="diff"/>
                 <table class="wikiTableSimple">
                     <tr>
@@ -61,8 +65,8 @@
                         <th>Date</th>
                         <th>Nickname</th>
                         <th>IP</th>
-                        <th>Minor</th>
-                        <th>Bot</th>
+                        <th class="revisionFlagColumn" title="Minor edit" aria-label="Minor edit"><span aria-hidden="true">✏️</span></th>
+                        <th class="revisionFlagColumn" title="Via API" aria-label="Via API"><span aria-hidden="true">🔌</span></th>
                         <th>Comment</th>
                     </tr>
                     @for(history <- listHistory) {
@@ -75,8 +79,8 @@
                             <td>@(history.toIsoLocalDateTimeString)</td>
                             <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
-                            <td>@if(history.isMinorEdit){Y}else{N}</td>
-                            <td>@if(history.viaApi){Y}else{N}</td>
+                            <td class="revisionFlagColumn">@if(history.isMinorEdit){<span class="revisionFlagIcon" title="Minor edit" aria-label="Minor edit">✏️</span>}</td>
+                            <td class="revisionFlagColumn">@if(history.viaApi){<span class="revisionFlagIcon" title="Via API" aria-label="Via API">🔌</span>}</td>
                             <td>@Html(logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(history.comment))</td>
                         </tr>
                     }

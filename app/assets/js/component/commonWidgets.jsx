@@ -1,5 +1,5 @@
 import React from "react";
-import {Table} from "@mantine/core";
+import {Table, Tooltip} from "@mantine/core";
 
 export function IconChevronUp({size = 14}) {
     return (
@@ -18,13 +18,55 @@ export function IconSelector({size = 14}) {
     );
 }
 
+const flagIconStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    minWidth: 18,
+};
+
+export function makeFlagHeader(label, symbol) {
+    return (
+        <Tooltip label={label} withArrow>
+            <span style={flagIconStyle} title={label} aria-label={label}>
+                <span aria-hidden="true">{symbol}</span>
+            </span>
+        </Tooltip>
+    );
+}
+
+export function makeFlagCell(active, label, symbol) {
+    if (!active) return "";
+    return (
+        <Tooltip label={label} withArrow>
+            <span style={flagIconStyle} title={label} aria-label={label}>
+                <span aria-hidden="true">{symbol}</span>
+            </span>
+        </Tooltip>
+    );
+}
+
+export function makeFlagLegend(items) {
+    return (
+        <div style={{display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12, color: "var(--mantine-color-dimmed)", marginBottom: 8}}>
+            {items.map((item) => (
+                <span key={item.label} style={{display: "inline-flex", alignItems: "center", gap: 4}}>
+                    <span aria-hidden="true">{item.symbol}</span>
+                    {item.label}
+                </span>
+            ))}
+        </div>
+    );
+}
+
 export function makeTable(headers, rows) {
     return (
         <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader stickyHeaderOffset={0}>
             <Table.Thead>
                 <Table.Tr>
-                    {headers.map((header) => (
-                        <Table.Th key={header}>{header}</Table.Th>
+                    {headers.map((header, headerIndex) => (
+                        <Table.Th key={`header-${headerIndex}`}>{header}</Table.Th>
                     ))}
                 </Table.Tr>
             </Table.Thead>

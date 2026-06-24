@@ -112,11 +112,11 @@ Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
 
  * `Api.change` 응답에 `viaApi` 포함
  * `Api.adminRecentChanges` 응답에 `viaApi` 포함
- * Wiki history 화면에 Bot 컬럼과 `Show BotEdit` 필터 추가
- * `RecentChanges` 매크로에 `Include bot edits` 토글과 BotEdit 컬럼 추가
+ * Wiki history 화면에 minor edit, Via API 이모지 컬럼과 `Show ViaApi` 필터 추가
+ * `RecentChanges` 매크로에 `Include via API edits` 토글과 minor edit, Via API 이모지 컬럼 추가
  * `/api/change`에 `includeViaApi` 파라미터 추가
- * Admin Recent Changes 페이지에 Bot edit 포함/제외 토글과 Bot 컬럼 추가
- * Admin Dashboard의 Recent Changes 요약 표에 Bot 컬럼 추가
+ * Admin Recent Changes 페이지에 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼 추가
+ * Admin Dashboard의 Recent Changes 요약 표에 minor edit, Via API 이모지 컬럼 추가
 
 == Security
 
