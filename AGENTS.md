@@ -15,7 +15,7 @@ Documents under `docs/ahawiki.net/` must use AhaMark format. Pay special attenti
 
  * Bullet item
   * Nested bullet item
- * [[CB]] Open checkbox item
+ * [ ] Open checkbox item
  * [[CB(x)]] Checked checkbox item
  * Link to another wiki page: [PageName]
  * Link with label: [PageName Label Text]
@@ -27,14 +27,22 @@ multiple lines
 }}}
 ```
 
-When the user asks for `AhaWikiDoc sync`, sync changed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not limit this to uncommitted working-tree changes; compare remote pages with local files even when the local changes are already committed.
+TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. When working on an item from a TODO document, update the relevant checkbox state as part of the same change:
+
+ * Use `[ ]` for open work.
+ * Use `[[CB(x)]]` for completed work.
+ * Do not use `[x]`; only the empty checkbox form uses square brackets.
+ * Keep newly discovered follow-up work as new `[ ]` items.
+ * Do not leave the TODO document stale when the implementation status changes.
+
+When the user asks for `AhaWikiDoc sync`, sync committed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.
 
 Use the existing `download:ahawiki.net` script in `package.json` and `scripts/download.ahawiki.net.mjs` as background for the page-list/download behavior, but prefer the Bot API for sync work. Do not use `?action=raw` for this workflow when the Bot API can provide the page metadata and content.
 
 For sync, use remote `dateTime` and `revision` from `GET /api/bot/page/<url-encoded-page-name>` to compare local and remote state:
 
 1. Treat the filename as the page name.
-2. Include both uncommitted local files and committed local files in the comparison set when they are under `docs/ahawiki.net/`.
+2. Compare remote pages against the committed local content under `docs/ahawiki.net/`, not against in-progress working-tree edits unless explicitly requested.
 3. Read the current remote page with `GET /api/bot/page/<url-encoded-page-name>`.
 4. Compare the remote `content` with the local file content.
 5. If only the local file changed, save the full local file content with `POST /api/bot/page/<url-encoded-page-name>`.
