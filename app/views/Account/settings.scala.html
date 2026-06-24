@@ -4,16 +4,25 @@
 @primaryEmail = @{ emails.find(_.isPrimary).orElse(user.loginEmail.flatMap(loginEmail => emails.find(_.email == loginEmail))).orElse(emails.headOption) }
 @_base("Account Settings", "Manage account login emails") {
     <style>
+        .AhaWiki .wikiContent.accountSettings h1 {
+            margin-top: 0;
+            margin-left: 0;
+            padding-left: 0;
+        }
+        .AhaWiki .wikiContent.accountSettings h2 {
+            margin-left: 0;
+            padding-left: 0;
+        }
         .accountSettings .accountHero {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-columns: minmax(220px, auto) minmax(0, 1fr);
             gap: 20px;
-            align-items: center;
-            margin: 18px 0 24px;
-            padding: 18px;
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            background: var(--color-surface-alt);
+            align-items: start;
+            margin: 0 0 24px;
+            padding: 14px 0;
+            border-top: 1px solid var(--color-border-subtle);
+            border-bottom: 1px solid var(--color-border-subtle);
+            font-size: 14px;
         }
         .accountSettings .accountIdentity {
             display: flex;
@@ -32,79 +41,41 @@
             flex: 0 0 auto;
             background: var(--color-muted);
             color: var(--color-surface);
-            font-size: 24px;
+            font-size: 20px;
         }
-        .accountSettings .accountIdentity h1 {
-            margin: 0 0 6px;
-            padding: 0;
-            border: 0;
-            font-size: 1.8em;
-            text-shadow: none;
-        }
-        .accountSettings .accountMeta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 14px;
-            color: var(--color-muted-strong);
-            font-size: 0.95em;
-        }
-        .accountSettings .accountMetrics {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(120px, 1fr));
-            gap: 10px;
-        }
-        .accountSettings .accountMetric {
-            min-width: 120px;
-            padding: 10px 12px;
-            border: 1px solid var(--color-border-subtle);
-            border-radius: 6px;
-            background: var(--color-surface);
-        }
-        .accountSettings .accountMetricLabel {
+        .accountSettings .accountName {
             display: block;
-            color: var(--color-muted);
-            font-size: 0.82em;
-        }
-        .accountSettings .accountMetricValue {
-            display: block;
-            margin-top: 4px;
             color: var(--color-text);
-            font-size: 1.25em;
+            font-size: 1em;
             font-weight: 700;
         }
-        .accountSettings .accountGrid {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr);
-            gap: 18px;
-            align-items: start;
+        .accountSettings .accountMeta {
+            margin-top: 4px;
+            color: var(--color-muted);
+            font-size: 0.95em;
         }
-        .accountSettings .accountPanel {
-            border: 1px solid var(--color-border);
-            border-radius: 8px;
-            background: var(--color-surface);
-            color: var(--color-text);
-            padding: 16px;
+        .accountSettings .accountSummaryWrap {
+            width: 100%;
+            overflow-x: auto;
         }
-        .accountSettings .accountPanel h2 {
+        .accountSettings .accountSummaryTable {
+            width: min(100%, 620px);
+            margin: 0;
+            box-shadow: none;
+        }
+        .accountSettings .accountSummaryTable th {
+            width: 150px;
+            text-align: left;
+        }
+        .accountSettings .accountSection {
+            margin: 22px 0 0;
+            font-size: 14px;
+        }
+        .accountSettings .accountSection h2 {
             margin-top: 0;
             margin-left: 0;
             padding-left: 0;
             text-shadow: none;
-        }
-        .accountSettings .accountEmailList {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .accountSettings .accountEmailList li {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 8px 14px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--color-border-subtle);
-        }
-        .accountSettings .accountEmailList li:last-child {
-            border-bottom: 0;
         }
         .accountSettings .accountEmailAddress {
             overflow-wrap: anywhere;
@@ -122,68 +93,76 @@
             font-weight: 700;
         }
         .accountSettings .accountEmailDate {
-            grid-column: 1 / -1;
             color: var(--color-muted);
             font-size: 0.9em;
         }
         .accountSettings .accountActionRow {
-            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
         }
         .accountSettings .accountActionPrimary {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border: 1px solid var(--color-input-border);
-            border-radius: 6px;
-            background: var(--color-input-bg);
+            border-radius: 5px;
+            background: var(--color-surface-alt);
             color: var(--color-text);
             text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
         }
         .accountSettings .accountActionPrimary:hover {
             background: var(--color-link-hover-bg);
+            color: var(--color-text);
         }
         .accountSettings .apiKeyForm {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
             gap: 10px;
-            align-items: end;
-            margin-bottom: 14px;
+            margin: 0 0 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 5px;
+            background: var(--color-surface-panel);
+            box-shadow: inset 0 1px 0 var(--color-shadow-soft);
         }
         .accountSettings .apiKeyForm label {
-            display: grid;
-            gap: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
             color: var(--color-muted-strong);
             font-size: 0.92em;
+            font-weight: 600;
         }
         .accountSettings .apiKeyForm input {
-            min-height: 36px;
-            padding: 7px 9px;
+            min-height: 32px;
+            padding: 5px 8px;
             border: 1px solid var(--color-input-border);
-            border-radius: 6px;
+            border-radius: 5px;
             background: var(--color-input-bg);
             color: var(--color-text);
             font: inherit;
         }
-        .accountSettings .apiKeyTableWrap {
-            overflow-x: auto;
-        }
-        .accountSettings .apiKeyTable {
+        .AhaWiki .wikiContent.accountSettings .accountTable {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.92em;
+            margin-left: 0;
+            font-size: 14px;
         }
-        .accountSettings .apiKeyTable th,
-        .accountSettings .apiKeyTable td {
-            padding: 9px 8px;
-            border-bottom: 1px solid var(--color-border-subtle);
+        .AhaWiki .wikiContent.accountSettings .accountTable th,
+        .AhaWiki .wikiContent.accountSettings .accountTable td {
+            padding: 7px 10px;
             text-align: left;
-            vertical-align: middle;
+            word-break: break-word;
         }
-        .accountSettings .apiKeyTable th {
-            color: var(--color-muted-strong);
-            font-size: 0.82em;
-            text-transform: uppercase;
+        .AhaWiki .wikiContent.accountSettings .accountSummaryTable th,
+        .AhaWiki .wikiContent.accountSettings .accountSummaryTable td {
+            padding: 7px 10px;
         }
         .accountSettings .apiKeySecret {
             display: none;
@@ -214,34 +193,46 @@
         }
         .accountSettings .accountDangerButton,
         .accountSettings .accountPlainButton {
-            min-height: 32px;
-            padding: 6px 10px;
+            min-height: 30px;
+            padding: 5px 10px;
             border: 1px solid var(--color-input-border);
-            border-radius: 6px;
-            background: var(--color-input-bg);
+            border-radius: 5px;
+            background: var(--color-surface-alt);
             color: var(--color-text);
             cursor: pointer;
             font: inherit;
+            font-weight: 600;
         }
         .accountSettings .accountPlainButton:hover {
             background: var(--color-link-hover-bg);
         }
+        .accountSettings .apiKeyForm .accountPlainButton {
+            min-height: 32px;
+            padding: 8px 14px;
+            border: 0;
+            background: var(--color-adjacent-hud-action-active-bg);
+            color: var(--color-adjacent-hud-action-active-text);
+        }
+        .accountSettings .apiKeyForm .accountPlainButton:hover {
+            filter: brightness(0.95);
+            background: var(--color-adjacent-hud-action-active-bg);
+            color: var(--color-adjacent-hud-action-active-text);
+        }
         .accountSettings .accountDangerButton {
-            border-color: var(--color-flash-error-border);
+            border: 1px solid var(--color-flash-error-border);
             color: var(--color-flash-error-text);
             background: var(--color-flash-error-bg);
         }
         @@media (max-width: 767px) {
-            .accountSettings .accountHero,
-            .accountSettings .accountGrid,
-            .accountSettings .accountMetrics {
-                grid-template-columns: 1fr;
-            }
-            .accountSettings .accountEmailList li {
+            .accountSettings .accountHero {
                 grid-template-columns: 1fr;
             }
             .accountSettings .apiKeyForm {
-                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+            .accountSettings .apiKeyForm label {
+                display: grid;
+                width: 100%;
             }
         }
     </style>
@@ -379,6 +370,7 @@
 } {
     <div class="wikiContent accountSettings">
         <div class="limitWidth">
+            <h1>Account Settings</h1>
             <div class="accountHero">
                 <div class="accountIdentity">
                     @profileImageUrl.map { imageUrl =>
@@ -387,57 +379,66 @@
                         <span class="accountAvatar"><i class="fas fa-user-gear"></i></span>
                     }
                     <div>
-                        <h1>Account Settings</h1>
-                        <div class="accountMeta">
-                            <span>Nickname: <strong>@user.nickname</strong></span>
-                            <span>User #@user.seq</span>
-                            <span>Primary email: <strong>@primaryEmail.map(_.email).orElse(user.loginEmail).getOrElse("None")</strong></span>
-                        </div>
+                        <span class="accountName">@user.nickname</span>
+                        <div class="accountMeta">User #@user.seq</div>
                     </div>
                 </div>
-                <div class="accountMetrics">
-                    <div class="accountMetric">
-                        <span class="accountMetricLabel">Login emails</span>
-                        <span class="accountMetricValue">@emails.size</span>
-                    </div>
-                    <div class="accountMetric">
-                        <span class="accountMetricLabel">Primary</span>
-                        <span class="accountMetricValue">@primaryEmail.map(_ => "Set").getOrElse("None")</span>
-                    </div>
+                <div class="accountSummaryWrap">
+                    <table class="wikiTableSimple accountSummaryTable">
+                        <tbody>
+                            <tr>
+                                <th>Primary email</th>
+                                <td>@primaryEmail.map(_.email).orElse(user.loginEmail).getOrElse("None")</td>
+                            </tr>
+                            <tr>
+                                <th>Login emails</th>
+                                <td>@emails.size</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
             <div class="accountGrid">
-                <section class="accountPanel">
+                <section class="accountSection">
                     <h2>Login Emails</h2>
                     @if(emails.nonEmpty) {
-                        <ul class="accountEmailList">
-                        @emails.map { email =>
-                            <li>
-                                <div class="accountEmailAddress">
-                                    <code>@email.email</code>
-                                </div>
-                                @if(email.isPrimary) {
-                                    <span class="accountBadge">Primary</span>
+                        <div class="wikiTableSimpleScroll">
+                            <table class="wikiTableSimple accountTable">
+                                <thead>
+                                    <tr>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Connected</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                @emails.map { email =>
+                                    <tr>
+                                        <td class="accountEmailAddress"><code>@email.email</code></td>
+                                        <td>
+                                            @if(email.isPrimary) {
+                                                <span class="accountBadge">Primary</span>
+                                            }
+                                        </td>
+                                        <td class="accountEmailDate">@email.created.toIsoLocalDateString</td>
+                                    </tr>
                                 }
-                                <div class="accountEmailDate">
-                                    Connected @email.created.toIsoLocalDateString
-                                </div>
-                            </li>
-                        }
-                        </ul>
+                                </tbody>
+                            </table>
+                        </div>
                     } else {
                         <p>No login email is connected.</p>
                     }
-                    <p class="accountActionRow">
+                    <div class="accountActionRow">
                         <a class="accountActionPrimary" href="@routes.GoogleOAuth.connect" rel="nofollow">
                             <i class="fab fa-google"></i>
                             Connect Google Account
                         </a>
-                    </p>
+                    </div>
                 </section>
 
-                <section class="accountPanel accountApiKeys">
+                <section class="accountSection accountApiKeys">
                     <h2>API Keys</h2>
                     <form class="apiKeyForm" data-api-key-form>
                         <label>
@@ -451,8 +452,8 @@
                         <button type="button" class="accountPlainButton" data-api-key-copy style="float: right;">Copy</button>
                         <code data-api-key-secret-code></code>
                     </div>
-                    <div class="apiKeyTableWrap">
-                        <table class="apiKeyTable">
+                    <div class="wikiTableSimpleScroll">
+                        <table class="wikiTableSimple accountTable apiKeyTable">
                             <thead>
                                 <tr>
                                     <th>Label</th>

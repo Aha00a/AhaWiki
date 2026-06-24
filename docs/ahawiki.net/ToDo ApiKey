@@ -24,3 +24,5 @@ API Key 기반 Bot API 구현은 완료했다.
  * [[CB(x)]] 구현 설계와 완료 내역: [Dev ApiKey]
  * [[CB(x)]] Bot API 호출 명세: [BotApi]
  * [[CB(x)]] Account Settings API Key UI의 light/dark theme 적용과 자동화 도구 placeholder 정리
+ * [[CB(x)]] Account Settings를 위키 문서형 레이아웃과 `wikiTableSimple` 테이블 스타일로 정리
+ * [[CB(x)]] Account Settings와 권한 없음 Login 버튼의 색상/글꼴 크기를 사이트 기본 톤에 맞춤
