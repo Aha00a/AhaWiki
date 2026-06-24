@@ -1,6 +1,10 @@
 package controllers
 
+import actors.ActorPageCalculator.Calculate
+import anorm.SqlParser._
+import anorm._
 import com.aha00a.play.Implicits.RichRequest
+import com.aha00a.play.AnormSqlParser.localDateTime
 import io.circe.Json
 import io.circe.syntax._
 import logics.AhaWikiCache
@@ -19,12 +23,13 @@ import models.tables.Site
 import models.tables.User
 import play.api.Logging
 import play.api.db.Database
-import play.api.libs.json.{Json => PlayJson}
 import play.api.mvc._
 
 import java.net.URLDecoder
+import java.security.MessageDigest
 import java.time.LocalDateTime
 import javax.inject._
+import scala.util.Try
 
 class BotApi @Inject()(
   implicit val
@@ -40,11 +45,169 @@ class BotApi @Inject()(
   private def decodePageName(nameEncoded: String): String =
     URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
 
+  private def sha256Hex(text: String): String =
+    MessageDigest.getInstance("SHA-256")
+      .digest(text.getBytes("UTF-8"))
+      .map(byte => f"${byte & 0xff}%02x")
+      .mkString
+
   private def unauthorized: Result =
     Unauthorized(Json.obj("error" -> Json.fromString("API key is required or invalid.")).toString()).as(JSON)
 
   private def withApiUser(request: RequestHeader)(f: User.SessionUser => Result): Result =
     SessionLogic.getApiKeyUser(request)(database).map(f).getOrElse(unauthorized)
+
+  private def pageMetadataJson(page: Page): Json =
+    Json.obj(
+      "name" -> Json.fromString(page.name),
+      "revision" -> Json.fromLong(page.revision),
+      "dateTime" -> Json.fromString(page.dateTime.toString),
+      "isMinorEdit" -> Json.fromBoolean(page.isMinorEdit),
+      "viaApi" -> Json.fromBoolean(page.viaApi),
+      "size" -> Json.fromInt(page.content.length),
+      "contentHash" -> Json.fromString("sha256:" + sha256Hex(page.content)),
+    )
+
+  private def selectLatestPages(prefix: String, limit: Int)(implicit connection: java.sql.Connection, site: Site): Seq[Page] = {
+    val prefixTrimmed = prefix.trim
+    val prefixLike = s"$prefixTrimmed%"
+    val boundedLimit = limit.max(1).min(5000)
+    SQL"""
+      SELECT P.name, P.revision, P.dateTime, U.nickname AS nickname, P.`user` AS `user`, P.remoteAddress, P.comment, P.isMinorEdit, P.content, P.viaApi
+      FROM Page P
+      LEFT JOIN User U ON U.seq = P.user
+      INNER JOIN (
+        SELECT site, name, MAX(revision) AS revision
+        FROM Page
+        WHERE site = ${site.seq}
+        GROUP BY site, name
+      ) Latest
+        ON Latest.site = P.site
+        AND Latest.name = P.name
+        AND Latest.revision = P.revision
+      WHERE P.site = ${site.seq}
+        AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
+      ORDER BY P.name ASC
+      LIMIT $boundedLimit
+    """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ get[Option[Long]]("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi")).map {
+      case name ~ revision ~ dateTime ~ nickname ~ user ~ remoteAddress ~ comment ~ isMinorEdit ~ content ~ viaApi =>
+        Page(name, revision, dateTime, nickname, user, remoteAddress, comment, isMinorEdit, content, viaApi)
+    }.*)
+  }
+
+  def listPages(prefix: String, limit: Int): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+        val wikiPermission = WikiPermission()
+
+        val pages = selectLatestPages(prefix, limit)
+          .filter(page => wikiPermission.isReadable(page.name, Some(PageContent(page.content))))
+          .map(pageMetadataJson)
+
+        Ok(Json.obj("pages" -> Json.fromValues(pages)))
+      }
+    }
+  }
+
+  def pageMetadata(): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      request.body.asJson match {
+        case None =>
+          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+        case Some(body) =>
+          val names = (body \ "names").asOpt[Seq[String]].getOrElse(Seq.empty).map(_.trim).filter(_.nonEmpty).distinct.take(500)
+          database.withConnection { implicit connection =>
+            implicit val site: Site = SiteLogic.get(request.host)
+            implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+            val wikiPermission = WikiPermission()
+            val pages = if (names.isEmpty) Seq.empty else Page.selectLastRevision(names)
+            val pageByName = pages.map(page => page.name -> page).toMap
+            val readablePages = names.flatMap(name => pageByName.get(name))
+              .filter(page => wikiPermission.isReadable(page.name, Some(PageContent(page.content))))
+            val readableNames = readablePages.map(_.name).toSet
+            val existingNames = pages.map(_.name).toSet
+            val forbiddenNames = names.filter(name => existingNames.contains(name) && !readableNames.contains(name))
+            val missingNames = names.filterNot(existingNames.contains)
+
+            Ok(Json.obj(
+              "pages" -> Json.fromValues(readablePages.map(pageMetadataJson)),
+              "missing" -> missingNames.asJson,
+              "forbidden" -> forbiddenNames.asJson,
+            ))
+          }
+      }
+    }
+  }
+
+  def changes(prefix: String, since: String, afterRevision: Long, includeMinorEdit: Int, includeViaApi: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+        val wikiPermission = WikiPermission()
+        val prefixTrimmed = prefix.trim
+        val prefixLike = s"$prefixTrimmed%"
+        val sinceOptEither = if (since.trim.isEmpty) Right(None) else Try(LocalDateTime.parse(since.trim)).toEither.map(Some(_))
+        if (sinceOptEither.isLeft) {
+          BadRequest(Json.obj("error" -> Json.fromString("since must be an ISO-8601 local date-time.")).toString()).as(JSON)
+        } else {
+          val sinceOpt = sinceOptEither.toOption.flatten
+          val sinceValue = sinceOpt.getOrElse(LocalDateTime.of(1970, 1, 1, 0, 0))
+          val boundedLimit = limit.max(1).min(1000)
+          val batchSize = boundedLimit.max(100).min(1000)
+
+          case class ChangeSourceRow(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, viaApi: Boolean)
+
+          def selectRows(offset: Int): List[ChangeSourceRow] =
+            SQL"""
+              SELECT P.name, P.revision, P.dateTime, P.comment, P.isMinorEdit, P.viaApi
+              FROM Page P
+              WHERE P.site = ${site.seq}
+                AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
+                AND (${sinceOpt.isEmpty} OR P.dateTime >= $sinceValue)
+                AND ($afterRevision <= 0 OR P.revision > $afterRevision)
+                AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
+                AND (${includeViaApi == 1} OR P.viaApi = false)
+              ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
+              LIMIT $batchSize OFFSET $offset
+            """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
+              case name ~ revision ~ dateTime ~ comment ~ isMinorEdit ~ viaApi =>
+                ChangeSourceRow(name, revision, dateTime, comment, isMinorEdit, viaApi)
+            }.*)
+
+          @scala.annotation.tailrec
+          def collectReadableRows(offset: Int, acc: List[ChangeSourceRow]): List[ChangeSourceRow] = {
+            if (acc.size >= boundedLimit) {
+              acc.take(boundedLimit)
+            } else {
+              val rows = selectRows(offset)
+              val readableRows = rows.filter(row => wikiPermission.isReadable(row.name))
+              val next = acc ++ readableRows
+              if (rows.size < batchSize) next.take(boundedLimit) else collectReadableRows(offset + rows.size, next)
+            }
+          }
+
+          val rows = collectReadableRows(0, List.empty).map { row =>
+            Json.obj(
+              "name" -> Json.fromString(row.name),
+              "revision" -> Json.fromLong(row.revision),
+              "dateTime" -> Json.fromString(row.dateTime.toString),
+              "comment" -> Json.fromString(row.comment),
+              "isMinorEdit" -> Json.fromBoolean(row.isMinorEdit),
+              "viaApi" -> Json.fromBoolean(row.viaApi),
+            )
+          }
+
+          Ok(Json.obj("changes" -> Json.fromValues(rows)))
+        }
+      }
+    }
+  }
 
   def getPage(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     withApiUser(request) { user =>
@@ -65,7 +228,9 @@ class BotApi @Inject()(
               "revision" -> Json.fromLong(page.revision),
               "content" -> Json.fromString(page.content),
               "dateTime" -> Json.fromString(page.dateTime.toString),
+              "isMinorEdit" -> Json.fromBoolean(page.isMinorEdit),
               "viaApi" -> Json.fromBoolean(page.viaApi),
+              "contentHash" -> Json.fromString("sha256:" + sha256Hex(page.content)),
             ))
         }
       }
@@ -124,6 +289,108 @@ class BotApi @Inject()(
                   ))
                 }
               }
+          }
+      }
+    }
+  }
+
+  def renamePage(): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      request.body.asJson match {
+        case None =>
+          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+        case Some(body) =>
+          val name = (body \ "name").asOpt[String].getOrElse("").trim
+          val newName = (body \ "newName").asOpt[String].getOrElse("").trim
+          val revisionOpt = (body \ "revision").asOpt[Long]
+          val comment = (body \ "comment").asOpt[String].filter(_.trim.nonEmpty).getOrElse(s"rename to $newName")
+
+          if (name.isEmpty || newName.isEmpty) {
+            BadRequest(Json.obj("error" -> Json.fromString("name and newName are required.")).toString()).as(JSON)
+          } else {
+            database.withTransaction { implicit connection =>
+              implicit val site: Site = SiteLogic.get(request.host)
+              implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+
+              (Page.selectLastRevision(name), Page.selectLastRevision(newName), revisionOpt) match {
+                case (_, _, None) =>
+                  BadRequest(Json.obj("error" -> Json.fromString("revision is required.")).toString()).as(JSON)
+                case (None, _, _) =>
+                  NotFound(Json.obj("error" -> Json.fromString("Page not found.")).toString()).as(JSON)
+                case (Some(page), _, Some(revision)) if revision != page.revision =>
+                  Conflict(Json.obj(
+                    "error" -> Json.fromString("revision != latestRevision"),
+                    "latestRevision" -> Json.fromLong(page.revision),
+                  ).toString()).as(JSON)
+                case (Some(_), Some(_), _) =>
+                  Conflict(Json.obj("error" -> Json.fromString("Target page already exists.")).toString()).as(JSON)
+                case (Some(page), None, Some(_)) if !WikiPermission().isRenamable(name) =>
+                  Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+                case (Some(page), None, Some(_)) =>
+                  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+                  ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+
+                  Page.rename(name, newName)
+                  PageLogic.insert(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, body = s"#!redirect $newName", viaApi = true)
+                  wikiActors.pageCalculation ! Calculate(site, newName)
+
+                  Ok(Json.obj(
+                    "name" -> Json.fromString(name),
+                    "newName" -> Json.fromString(newName),
+                    "revision" -> Json.fromLong(page.revision),
+                    "redirectRevision" -> Json.fromLong(1),
+                  ))
+              }
+            }
+          }
+      }
+    }
+  }
+
+  def deletePage(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      request.body.asJson match {
+        case None =>
+          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+        case Some(body) =>
+          val name = decodePageName(nameEncoded)
+          val revisionOpt = (body \ "revision").asOpt[Long]
+          val confirm = (body \ "confirm").asOpt[Boolean].getOrElse(false)
+
+          if (!confirm) {
+            BadRequest(Json.obj("error" -> Json.fromString("confirm must be true.")).toString()).as(JSON)
+          } else {
+            database.withTransaction { implicit connection =>
+              implicit val site: Site = SiteLogic.get(request.host)
+              implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+
+              (Page.selectLastRevision(name), revisionOpt) match {
+                case (_, None) =>
+                  BadRequest(Json.obj("error" -> Json.fromString("revision is required.")).toString()).as(JSON)
+                case (None, _) =>
+                  NotFound(Json.obj("error" -> Json.fromString("Page not found.")).toString()).as(JSON)
+                case (Some(page), Some(revision)) if revision != page.revision =>
+                  Conflict(Json.obj(
+                    "error" -> Json.fromString("revision != latestRevision"),
+                    "latestRevision" -> Json.fromLong(page.revision),
+                  ).toString()).as(JSON)
+                case (Some(_), Some(_)) if !WikiPermission().isDeletable(name) =>
+                  Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+                case (Some(page), Some(_)) =>
+                  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+                  ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+                  Page.deleteWithRelatedData(name)
+                  wikiActors.pageCalculation ! Calculate(site, name)
+
+                  Ok(Json.obj(
+                    "ok" -> Json.fromBoolean(true),
+                    "name" -> Json.fromString(name),
+                    "deletedRevision" -> Json.fromLong(page.revision),
+                  ))
+              }
+            }
           }
       }
     }
