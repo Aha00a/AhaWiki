@@ -21,10 +21,10 @@ Documents under `docs/ahawiki.net/` must use AhaMark format. Pay special attenti
  * Link with label: [PageName Label Text]
  * Inline code uses backticks like `code`.
 
-{{{
+[[[#!Vim text
 code block
 multiple lines
-}}}
+]]]
 ```
 
 TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. When working on an item from a TODO document, update the relevant checkbox state as part of the same change:
@@ -58,7 +58,7 @@ For sync, use remote `dateTime` and `revision` from `GET /api/bot/page/<url-enco
 7. If both local and remote changed, do not overwrite either side blindly; merge or ask the user.
 8. When saving, use the remote `revision` from the read response. If the page is missing, use `revision: 0`.
 9. On `409 Conflict`, re-read the remote page and resolve the conflict before saving.
-10. Use a clear save `comment` and set `minorEdit` according to the change.
+10. Analyze the local/remote diff before saving, use a clear save `comment` that briefly summarizes the actual content change, and set `minorEdit` according to the change.
 11. Verify by reading the page again and comparing the remote `content` with the local file.
 
 Do not commit or write API keys into this repository. Use a user-provided key for the current session or an environment variable such as `AHAWIKI_API_KEY`.
