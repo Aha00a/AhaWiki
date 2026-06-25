@@ -32,6 +32,12 @@ object Implicits {
 
     def escapeHtml(): String = s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
     def escapeHtmlAttribute(): String = s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll("\"", "&quot;")
+    def escapeXml(): String = s
+      .replace("&", "&amp;")
+      .replace("<", "&lt;")
+      .replace(">", "&gt;")
+      .replace("\"", "&quot;")
+      .replace("'", "&apos;")
 
     def padLeft(len: Int, pad: String = " "): String = s.reverse.padTo(len, pad).reverse.mkString
     def padRight(len: Int, pad: String = " "): String = s.padTo(len, pad).mkString

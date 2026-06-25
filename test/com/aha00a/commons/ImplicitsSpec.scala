@@ -48,5 +48,9 @@ class ImplicitsSpec extends AnyFreeSpec {
       assert("TRUE".toBoolGenerously)
 
     }
+
+    "escapeXml" in {
+      assert("""a&b<c>d"e'f""".escapeXml() === "a&amp;b&lt;c&gt;d&quot;e&apos;f")
+    }
   }
 }

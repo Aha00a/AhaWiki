@@ -30,14 +30,6 @@ class Home @Inject() (
                        wsClient: WSClient,
                        executionContext: ExecutionContext
                       ) extends BaseController {
-  private def xmlEscape(value: String): String =
-    value
-      .replace("&", "&amp;")
-      .replace("<", "&lt;")
-      .replace(">", "&gt;")
-      .replace("\"", "&quot;")
-      .replace("'", "&apos;")
-
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }
@@ -81,7 +73,7 @@ class Home @Inject() (
   def sitemapXml: Action[AnyContent] = Action { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     val contextSite: ContextSite = ContextSite()
-    val host = xmlEscape(request.host)
+    val host = request.host.escapeXml()
     val urls = contextSite.seqPageByPermission.map { page =>
       val loc = s"https://$host/w/${UriUtil.encodeURIComponent(page.name)}"
       val lastmod = page.dateTime.toLocalDate.toString
