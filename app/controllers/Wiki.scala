@@ -9,6 +9,7 @@ import org.apache.pekko.stream.scaladsl.SourceQueueWithComplete
 import org.apache.pekko.stream.scaladsl.Keep
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.BooleanUtil
+import com.aha00a.commons.utils.UriUtil
 import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleSpreadsheetApi
 import com.aha00a.supercsv.SupercsvUtil
@@ -573,7 +574,7 @@ controllerComponents: ControllerComponents,
           val redirectFromEditLink = s"/w/${URLEncoder.encode(page.name, "utf-8").replace("+", "%20")}?action=edit"
           val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
-          Redirect(URLEncoder.encode(directive, "utf-8").replace("+", "%20")).flashing("success" -> newMessage)
+          Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(directive), 0, "")).flashing("success" -> newMessage)
         case None =>
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")

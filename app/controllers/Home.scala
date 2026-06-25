@@ -30,6 +30,13 @@ class Home @Inject() (
                        wsClient: WSClient,
                        executionContext: ExecutionContext
                       ) extends BaseController {
+  private val SitemapMaxUrls = 1000
+  private val SitemapMinPageSize = 300
+  private val DatePageNameRegex = """^\d{4}(?:[-/]\d{2}(?:[-/]\d{2})?)?$""".r
+
+  private def isSitemapCandidatePageName(name: String): Boolean =
+    !name.startsWith(".") && DatePageNameRegex.findFirstIn(name).isEmpty
+
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
   }
@@ -74,14 +81,24 @@ class Home @Inject() (
     implicit val site: Site = SiteLogic.get(request.host)
     val contextSite: ContextSite = ContextSite()
     val host = request.host.escapeXml()
-    val urls = contextSite.seqPageByPermission.map { page =>
-      val loc = s"https://$host/w/${UriUtil.encodeURIComponent(page.name)}"
-      val lastmod = page.dateTime.toLocalDate.toString
-      s"""  <url>
-         |    <loc>$loc</loc>
-         |    <lastmod>$lastmod</lastmod>
-         |  </url>""".stripMargin
-    }.mkString("\n")
+    val urls = contextSite.seqPageByPermission
+      .filter(page => isSitemapCandidatePageName(page.name))
+      .filter(page => page.size >= SitemapMinPageSize)
+      .sortWith { (a, b) =>
+        a.revision > b.revision ||
+          (a.revision == b.revision && a.dateTime.isAfter(b.dateTime)) ||
+          (a.revision == b.revision && a.dateTime == b.dateTime && a.name < b.name)
+      }
+      .take(SitemapMaxUrls)
+      .map { page =>
+        val loc = s"https://$host/w/${UriUtil.encodeURIComponent(page.name)}".escapeXml()
+        val lastmod = page.dateTime.toLocalDate.toString.escapeXml()
+        s"""  <url>
+           |    <loc>$loc</loc>
+           |    <lastmod>$lastmod</lastmod>
+           |  </url>""".stripMargin
+      }.mkString("\n")
+
     val xml =
       s"""<?xml version="1.0" encoding="UTF-8"?>
          |<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -52,6 +52,6 @@ controllerComponents: ControllerComponents,
         .map(_.summarise(q))
     ).getOrElse(Seq.empty)
 
-    Ok(views.html.Search.search(q, seq))
+    Ok(views.html.Search.search(q, seq)).withHeaders("X-Robots-Tag" -> "noindex, follow")
   }}
 }
