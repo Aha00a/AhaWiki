@@ -9,6 +9,7 @@ GET           /w                                     controllers.Home.index
 GET           /w/                                    controllers.Home.index
 
 GET           /robots.txt                            controllers.Home.robotsTxt
+GET           /sitemap.xml                           controllers.Home.sitemapXml
 GET           /ads.txt                               controllers.Home.adsTxt
 GET           /r                                     controllers.Home.random
 
