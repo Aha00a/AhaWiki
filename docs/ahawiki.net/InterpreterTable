@@ -2,11 +2,16 @@
 TSV 또는 CSV 텍스트를 표로 렌더링합니다.
 스프레드시트에서 복사한 표는 보통 `tsv` 형식으로 붙여 넣을 수 있습니다.
 
- * Arguments
-  1. format - required. `tsv` or `csv`.
-  1. row header count - optional.
-  1. column header count - optional.
-  1. CSS classes - optional.
+== Arguments
+
+ 1. format - required. `tsv` or `csv`.
+ 1. row header count - optional.
+ 1. column header count - optional.
+ 1. CSS classes - optional.
+
+== Examples
+
+=== TSV
 
 [[[#!WikiSyntaxPreview Table tsv
 a	b	c	d
@@ -14,6 +19,8 @@ e	f	g	h
 i	j	k	l
 m	n	o	p
 ]]]
+
+=== Row Header
 
 [[[
 #!WikiSyntaxPreview Table tsv 1
@@ -23,12 +30,16 @@ i	j	k	l
 m	n	o	p
 ]]]
 
+=== Row and Column Header
+
 [[[#!WikiSyntaxPreview Table tsv 1 2
 a	b	c	d
 e	f	g	h
 i	j	k	l
 m	n	o	p
 ]]]
+
+=== CSV
 
 [[[
 #!WikiSyntaxPreview Table csv 1 1
@@ -38,17 +49,12 @@ h,i,j,k
 l,m,n,p
 ]]]
 
+=== CSS Class
+
 [[[#!WikiSyntaxPreview Table tsv 1 1 compact
 Name	Score	Comment
 AhaWiki	10	Wiki page
 Macro	8	Function-like markup
-]]]
-
-[[[#!WikiSyntaxPreview Table csv 1 1
-a,b,c,d
-e,f,g,h
-h,i,j,k
-l,m,n,p
 ]]]
 
 == 인쇄 시 동작

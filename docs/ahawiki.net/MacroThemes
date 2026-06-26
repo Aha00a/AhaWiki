@@ -34,7 +34,7 @@ CSS custom properties를 추가하거나 바꿀 때 Light/Dark 값을 한 화면
 
 각 행은 토큰 이름, 용도, AhaWiki Light 값, AhaWiki Dark 값을 보여준다.
 
-== Implementation Notes
+==> Implementation Notes
 
 매크로 구현은 `MacroThemes.scala`에 있고, 등록되는 매크로 이름은 `Themes`다.
 문서 이름은 `MacroThemes`이지만 사용 문법은 `[[Themes]]`다.
