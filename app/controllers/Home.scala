@@ -33,9 +33,12 @@ class Home @Inject() (
   private val SitemapMaxUrls = 1000
   private val SitemapMinPageSize = 300
   private val DatePageNameRegex = """^\d{4}(?:[-/]\d{2}(?:[-/]\d{2})?)?$""".r
+  private val SitemapExcludedPageNameRegex = """(?i)^(?:TODO|ToDo|Dev)(?:$|[-\s/].*)""".r
 
   private def isSitemapCandidatePageName(name: String): Boolean =
-    !name.startsWith(".") && DatePageNameRegex.findFirstIn(name).isEmpty
+    !name.startsWith(".") &&
+      DatePageNameRegex.findFirstIn(name).isEmpty &&
+      SitemapExcludedPageNameRegex.findFirstIn(name).isEmpty
 
   def index: Action[AnyContent] = Action { implicit request =>
     Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
