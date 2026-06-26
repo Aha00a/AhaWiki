@@ -15,36 +15,41 @@ case class PageMeta(
   dateInserted: LocalDateTime,
   dateUpdated: Option[LocalDateTime],
   image: Option[String],
+  description: Option[String],
   size: Long,
 )
 
-case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], size: Long)
+case class AdminPageMetaRow(name: String, revision: Long, dateUpdated: Option[LocalDateTime], image: Option[String], description: Option[String], size: Long)
 
 object PageMeta {
   private val ImageMaxLength = 512
+  private val DescriptionMaxLength = 512
 
   private def truncate(value: String, maxLength: Int): String = {
     if (value.length <= maxLength) value else value.take(maxLength)
   }
 
-  private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ str("image").? ~ long("size")
-  private val rowParserPageLatestSummary = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ long("user").? ~ str("image").? ~ long("size")
+  private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ str("image").? ~ str("description").? ~ long("size")
+  private val rowParserPageLatestSummary = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ long("user").? ~ str("image").? ~ str("description").? ~ long("size")
 
   def upsert(
     pageName: String,
     revision: Long,
     image: Option[String],
+    description: Option[String],
     size: Long,
     dateUpdated: LocalDateTime = LocalDateTime.now(),
   )(implicit connection: Connection, site: Site): Int = {
     val savedImage = image.map(img => truncate(img, ImageMaxLength))
+    val savedDescription = description.map(value => truncate(value, DescriptionMaxLength))
     SQL"""
-      INSERT INTO PageMeta (site, name, revision, dateUpdated, image, size)
-      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $savedImage, $size)
+      INSERT INTO PageMeta (site, name, revision, dateUpdated, image, description, size)
+      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $savedImage, $savedDescription, $size)
       ON DUPLICATE KEY UPDATE
         revision = VALUES(revision),
         dateUpdated = VALUES(dateUpdated),
         image = VALUES(image),
+        description = VALUES(description),
         size = VALUES(size)
     """.executeUpdate()
   }
@@ -88,7 +93,7 @@ object PageMeta {
   def selectSeqPageLatestSummary()(implicit connection: Connection, site: Site): Seq[PageLatestSummary] = {
     StopWatch(s"DB\tSELECT\tAhaWikiCache.PageMeta.SeqPageLatestSummary.selectSeqPageLatestSummary site=${site.seq}") {
       SQL"""
-      SELECT PM.name, PM.revision, P.dateTime, P.user, PM.image, PM.size
+      SELECT PM.name, PM.revision, P.dateTime, P.user, PM.image, PM.description, PM.size
       FROM PageMeta PM
       INNER JOIN Page P
         ON P.site = PM.site
@@ -101,9 +106,9 @@ object PageMeta {
   }
 
 
-  private val adminPageMetaRowParser = str("name") ~ long("revision") ~ localDateTime("dateUpdated").? ~ str("image").? ~ long("size") map {
-    case name ~ revision ~ dateUpdated ~ image ~ size =>
-      AdminPageMetaRow(name, revision, dateUpdated, image, size)
+  private val adminPageMetaRowParser = str("name") ~ long("revision") ~ localDateTime("dateUpdated").? ~ str("image").? ~ str("description").? ~ long("size") map {
+    case name ~ revision ~ dateUpdated ~ image ~ description ~ size =>
+      AdminPageMetaRow(name, revision, dateUpdated, image, description, size)
   }
 
   def selectPagedForAdmin(page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String)(implicit connection: Connection, site: Site): Seq[AdminPageMetaRow] = {
@@ -111,6 +116,7 @@ object PageMeta {
       case "name" => "name"
       case "revision" => "revision"
       case "image" => "image"
+      case "description" => "description"
       case "dateUpdated" => "dateUpdated"
       case "size" => "size"
       case _ => "dateUpdated"
@@ -119,10 +125,10 @@ object PageMeta {
     val offset = (page - 1).max(0) * pageSize
     val searchLike = s"%${search.trim}%"
     SQL(s"""
-      SELECT name, revision, dateUpdated, image, size
+      SELECT name, revision, dateUpdated, image, description, size
       FROM PageMeta
       WHERE site = {siteSeq}
-        AND ({search} = '' OR name LIKE {searchLike} OR IFNULL(image, '') LIKE {searchLike})
+        AND ({search} = '' OR name LIKE {searchLike} OR IFNULL(image, '') LIKE {searchLike} OR IFNULL(description, '') LIKE {searchLike})
       ORDER BY $normalizedSortBy $normalizedSortOrder
       LIMIT {pageSize} OFFSET {offset}
     """).on(
@@ -140,13 +146,13 @@ object PageMeta {
       SELECT COUNT(*) count_value
       FROM PageMeta
       WHERE site = ${site.seq}
-        AND ($search = '' OR name LIKE $searchLike OR IFNULL(image, '') LIKE $searchLike)
+        AND ($search = '' OR name LIKE $searchLike OR IFNULL(image, '') LIKE $searchLike OR IFNULL(description, '') LIKE $searchLike)
     """.as(long("count_value").single)
   }
 
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {
     SQL"""
-      SELECT name, revision, dateInserted, dateUpdated, image, size
+      SELECT name, revision, dateInserted, dateUpdated, image, description, size
       FROM PageMeta
       WHERE site = ${site.seq} AND name = $name
     """.as(rowParser.singleOpt).map(flatten).map(PageMeta.tupled)

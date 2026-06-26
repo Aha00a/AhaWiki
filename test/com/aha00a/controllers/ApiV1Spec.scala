@@ -151,6 +151,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
             dateUpdated DATETIME NULL,
             revision BIGINT NOT NULL,
             image VARCHAR(512) NULL,
+            description VARCHAR(512) NULL,
             size BIGINT NOT NULL DEFAULT 0,
             PRIMARY KEY (site, name)
           )

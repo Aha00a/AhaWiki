@@ -10,6 +10,7 @@ case class PageLatestSummary(
   dateTime: LocalDateTime,
   user: Option[Long],
   image: Option[String],
+  description: Option[String],
   size: Long,
 ) extends WithDateTime
 

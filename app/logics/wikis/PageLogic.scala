@@ -33,11 +33,29 @@ import scala.util.matching.Regex
 
 object PageLogic {
   private val percentEncodedRegex: Regex = """(?:%[0-9A-Fa-f]{2})+""".r
+  private val DescriptionMaxLength = 180
 
   private[wikis] def decodePercentEncodedText(text: String): String =
     percentEncodedRegex.replaceAllIn(text, m =>
       Regex.quoteReplacement(URLDecoder.decode(m.matched, StandardCharsets.UTF_8.name()))
     )
+
+  private def truncateDescription(text: String): String = {
+    if (text.length <= DescriptionMaxLength) text else text.take(DescriptionMaxLength).trim + "..."
+  }
+
+  def extractDescription(content: String)(implicit wikiContext: ContextWikiPage): Option[String] = {
+    val pageContent = PageContent(content)
+    if (pageContent.redirect.nonEmpty) {
+      None
+    } else {
+      val contentWithoutSchemaBlocks = regexSchemaBlock.replaceAllIn(content, "")
+      val text = decodePercentEncodedText(Interpreters.toText(contentWithoutSchemaBlocks))
+        .replaceAll("""\s+""", " ")
+        .trim
+      text.toOption.map(truncateDescription)
+    }
+  }
 
 
   private val regexMacroImage = """(?is)\[\[Image\((.*?)\)]]""".r
@@ -141,6 +159,7 @@ object PageLogic {
         pageName = page.name,
         revision = page.revision,
         image = extractRepresentativeImage(page.content, page.name),
+        description = extractDescription(page.content),
         size = page.content.length,
       )
 

@@ -316,6 +316,7 @@ CREATE TABLE `PageMeta` (
   `dateUpdated` datetime DEFAULT NULL,
   `revision` int NOT NULL,
   `image` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `size` bigint NOT NULL DEFAULT '0',
   PRIMARY KEY (`site`,`name`),
   KEY `PageMeta_Page_site_name_revision_fk` (`site`,`name`,`revision`),
@@ -532,5 +533,4 @@ CREATE TABLE `play_evolutions` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
 

@@ -577,7 +577,11 @@ controllerComponents: ControllerComponents,
           Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(directive), 0, "")).flashing("success" -> newMessage)
         case None =>
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
-          val description = pageContent.content.replaceAll("""[^가-힣\w:/+,.()-]+""", " ").split("\\s+").filter(_.isNotNullOrEmpty).take(50).mkString("", " ", "...")
+          val description = wikiContext.seqPageByPermission
+            .find(_.name == name)
+            .flatMap(_.description)
+            .orElse(PageLogic.extractDescription(page.content))
+            .getOrElse(name)
           Ok(pageContent.interpreter match {
               case None | Some("Wiki") =>
                 val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
