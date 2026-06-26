@@ -113,7 +113,7 @@ https://mottie.github.io/tablesorter/docs/example-widget-filter.html --[2019-12-
 https://en.wikipedia.org/wiki/Comparison_of_wiki_software
 
 항목들은 다음과 같다.
- * File uploading, attachments
+ * ~~File uploading, attachments~~ 지원함
  * ~~Spam prevention~~ 지원함
  * ~~Page access control~~ 지원함
  * ~~Inline HTML~~ 지원함
@@ -125,7 +125,7 @@ https://en.wikipedia.org/wiki/Comparison_of_wiki_software
  * Extensibility
  * ~~Selectable wiki syntax~~ 지원함
  * ~~Wiki farms~~ 지원함
- * Outliner mechanism
+ * ~~Outliner mechanism~~ 지원함
  * ~~Automatic TOC~~ 지원함
  * Other features
 
