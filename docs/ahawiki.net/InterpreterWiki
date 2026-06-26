@@ -3,12 +3,89 @@
 
 블록(`[[[...]]]`) 안에서 Shebang이 없으면 `Text`가 기본으로 적용됩니다.
 
+== 역할
+`InterpreterWiki`는 일반 페이지 본문을 해석하는 기본 인터프리터입니다.
+
+아래 문법을 담당합니다.
+ * 인라인 포매팅
+ * 링크
+ * 목록
+ * 가로선
+ * 헤딩과 목차
+
+간단한 입문 예제는 ["AhaMark Basic"]에 두고, 이 페이지에는 기본 위키 문법의 세부 동작을 둡니다.
+
+== 기본 문법
 [[[#!WikiSyntaxPreview
 = 제목
 == 섹션
  * 목록 항목
  1. 순서 있는 목록
 ]]]
+
+== Headings
+Headings start with `=`. You can add trailing `=` if you want to.
+제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
+
+[[[#!WikiSyntaxPreview
+= Title
+== Section 1
+== Section 2
+== Section 3
+=== Subsection 1
+content
+]]]
+
+=== Anchor
+Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
+
+[[[#!WikiSyntaxPreview
+= h1
+== h2 with closing ==
+=== h3 with closing and id === #h3
+==== h4
+===== h5
+====== h6
+]]]
+
+=== Table of Contents
+제목이 10개가 넘어가면 자동으로 목차가 생성됩니다.
+
+[[[#!WikiSyntaxPreview
+= h1
+== h2 - 1
+== h2 - 2
+== h2 - 3
+== h2 - 4
+== h2 - 5
+== h2 - 6
+== h2 - 7
+=== h3 - 8
+== h2 - 9
+== h2 - 10
+=== h3 - 11
+TOC is automatically generated when heading appears 5 or more.
+제목이 10개가 넘어가면 자동으로 목차가 나타납니다.
+]]]
+
+=== 접힌 헤딩
+헤딩 마커 뒤에 `>`를 붙이면 해당 헤딩 구간이 기본으로 접힌 상태로 렌더링됩니다.
+
+[[[#!WikiSyntaxPreview
+== h2
+=== h3
+내용
+===> 스포일러
+기본으로 접혀서 나옵니다.
+=== 기본
+여긴 그냥 보이죠.
+]]]
+
+=== 해시 링크와 자동 펼침
+접힌 헤딩으로 가는 해시 링크:
+ * URL이 접힌 헤딩이나 그 안의 내용으로 바로 들어오면 필요한 접힌 구간을 자동으로 펼칩니다.
+ * 페이지를 처음 열 때와 목차처럼 페이지 안에서 hash가 바뀔 때 모두 동작합니다.
+ * 링크 대상과 관계없는 접힌 구간은 그대로 접힌 상태를 유지합니다.
 
 == Related Pages
  * [AhaMark]
