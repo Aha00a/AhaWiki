@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 document.addEventListener('DOMContentLoaded', function () {
     var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper');
+    var foldControllers = [];
 
     wrappers.forEach(function (wrapper) {
         var content = wrapper.querySelector('.InterpreterRenderContent');
@@ -346,13 +347,17 @@ document.addEventListener('DOMContentLoaded', function () {
             heading.setAttribute('tabindex', '0');
             heading.setAttribute('aria-expanded', (!isInitiallyCollapsed).toString());
 
+            var setSectionFold = function (isCollapsed) {
+                updateFoldState(isCollapsed);
+                heading.setAttribute('aria-expanded', (!isCollapsed).toString());
+                schedulePositionEditLink();
+            };
+
             var toggleSectionFold = function () {
                 var nextCollapsed = isSchemaHeading
                     ? !schemaContainer.classList.contains('sectionCollapsed')
                     : !section.classList.contains('sectionCollapsed');
-                updateFoldState(nextCollapsed);
-                heading.setAttribute('aria-expanded', (!nextCollapsed).toString());
-                schedulePositionEditLink();
+                setSectionFold(nextCollapsed);
             };
 
             heading.addEventListener('click', function (event) {
@@ -423,5 +428,148 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         setTimeout(schedulePositionEditLink, 100);
+
+        if (heading && foldToggle) {
+            foldControllers.push({
+                heading: heading,
+                section: section,
+                level: headingLevel,
+                isSchemaHeading: isSchemaHeading,
+                foldRoot: isSchemaHeading ? schemaContainer : section,
+                setCollapsed: setSectionFold
+            });
+        }
     });
+
+    var getHashTarget = function () {
+        var rawHash = (window.location.hash || '').replace(/^#/, '');
+        var decodedHash;
+        if (!rawHash) {
+            return null;
+        }
+
+        var target = document.getElementById(rawHash);
+        if (target) {
+            return target;
+        }
+
+        try {
+            decodedHash = decodeURIComponent(rawHash);
+        } catch (e) {
+            decodedHash = rawHash;
+        }
+
+        if (decodedHash && decodedHash !== rawHash) {
+            target = document.getElementById(decodedHash);
+        }
+
+        return target || null;
+    };
+
+    var getControllerForElement = function (element) {
+        var match = null;
+        foldControllers.forEach(function (controller) {
+            if (!controller.isSchemaHeading && controller.section === element) {
+                match = controller;
+                return;
+            }
+
+            if (controller.heading === element || (controller.foldRoot && controller.foldRoot.contains(element))) {
+                match = controller;
+            }
+        });
+        return match;
+    };
+
+    var getClosestHeadingSection = function (element) {
+        var node = element;
+        while (node && node !== document.body) {
+            if (node.classList && Array.prototype.some.call(node.classList, function (className) {
+                return className.indexOf('HeadingWrapper') === 0;
+            })) {
+                return node;
+            }
+            node = node.parentElement;
+        }
+        return null;
+    };
+
+    var getControllerForHashTarget = function (target) {
+        var directController = getControllerForElement(target);
+        if (directController) {
+            return directController;
+        }
+
+        var section = getClosestHeadingSection(target);
+        return section ? getControllerForElement(section) : null;
+    };
+
+    var expandFoldedHashTarget = function () {
+        var target = getHashTarget();
+        if (!target) {
+            return;
+        }
+
+        var targetController = getControllerForHashTarget(target);
+        var controllersToExpand = [];
+        var ancestorControllers = {};
+        var ancestorLevels = [];
+
+        foldControllers.forEach(function (controller) {
+            if (controller === targetController) {
+                ancestorLevels.sort(function (a, b) {
+                    return a - b;
+                });
+                ancestorLevels.forEach(function (level) {
+                    controllersToExpand.push(ancestorControllers[level]);
+                });
+                controllersToExpand.push(controller);
+                return;
+            }
+
+            if (!targetController || controller.isSchemaHeading || targetController.isSchemaHeading) {
+                if (controller.foldRoot && controller.foldRoot.contains(target)) {
+                    controllersToExpand.push(controller);
+                }
+                return;
+            }
+
+            // Heading sections are siblings, so keep the current document-outline
+            // ancestors while walking toward the hash target section.
+            if (controller.level >= targetController.level) {
+                return;
+            }
+
+            Object.keys(ancestorControllers).forEach(function (level) {
+                if (parseInt(level, 10) >= controller.level) {
+                    delete ancestorControllers[level];
+                    ancestorLevels = ancestorLevels.filter(function (storedLevel) {
+                        return storedLevel !== parseInt(level, 10);
+                    });
+                }
+            });
+
+            ancestorControllers[controller.level] = controller;
+            if (ancestorLevels.indexOf(controller.level) === -1) {
+                ancestorLevels.push(controller.level);
+            }
+        });
+
+        controllersToExpand.forEach(function (controller) {
+            controller.setCollapsed(false);
+        });
+
+        if (controllersToExpand.length) {
+            if (window.requestAnimationFrame) {
+                window.requestAnimationFrame(function () {
+                    target.scrollIntoView();
+                });
+            } else {
+                target.scrollIntoView();
+            }
+        }
+    };
+
+    expandFoldedHashTarget();
+    window.addEventListener('hashchange', expandFoldedHashTarget);
 });
