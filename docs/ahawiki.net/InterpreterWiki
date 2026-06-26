@@ -23,6 +23,149 @@
  1. 순서 있는 목록
 ]]]
 
+== Formatting
+Supports various formatting.
+포매팅을 지원합니다.
+
+[[[#!WikiSyntaxPreview
+italic - ''italic''
+bold - '''bold'''
+bold italic - '''''bold italic'''''
+underline - __underline__
+strikeout - ~~strikeout~~
+code - `code`
+copiable - ``copiable``
+
+----
+
+기울임 - ''기울임''
+굵게 - '''굵게'''
+굵은기울임 - '''''굵은기울임'''''
+밑줄 - __밑줄__
+취소선 - ~~취소선~~
+코드 - `코드`
+복사 - ``복사``
+]]]
+
+== 가로선
+Horizontal line is created by 4 or more dashes.
+가로선은 4개 이상의 대시로 만들어집니다.
+
+[[[#!WikiSyntaxPreview
+page1
+----
+page2
+------------------------------------
+page3
+]]]
+
+== List
+Leading space is important.
+맨 앞에 띄어쓰기 한칸을 꼭 넣어주세요.
+
+=== Unordered
+순서 없는 리스트:
+
+[[[#!WikiSyntaxPreview
+ * bullet
+  * bullet
+   * bullet
+  * bullet
+  * bullet
+ * bullet
+]]]
+
+[[[#!WikiSyntaxPreview
+ - bullet
+  - bullet
+   - bullet
+  - bullet
+  - bullet
+ - bullet
+]]]
+
+=== Ordered
+순서 있는 리스트:
+
+[[[#!WikiSyntaxPreview
+ 1. decimal
+ 1. decimal
+  I. ROMAN
+  I. ROMAN
+   A. ALPHA
+   A. ALPHA
+    i. roman
+    i. roman
+     a. alpha
+     a. alpha
+      가. 가나다
+      가. 가나다
+      가. 가나다
+      가. 가나다
+       ㄱ. ㄱㄴㄷ
+       ㄱ. ㄱㄴㄷ
+       ㄱ. ㄱㄴㄷ
+       ㄱ. ㄱㄴㄷ
+]]]
+
+=== Mixed
+섞어서 쓸 수도 있습니다.
+
+[[[#!WikiSyntaxPreview
+ * bullet
+  1. decimal
+  1. decimal
+   * bullet
+    A. Alpha
+    A. Alpha
+]]]
+
+== Link
+The link notation uses `[]` or `[""]`.
+
+링크는 `[]` 또는 `[""]`를 사용합니다.
+
+[[[#!WikiSyntaxPreview
+ * Url
+  1. http://aha00a.com
+  1. [http://aha00a.com]
+  1. [http://aha00a.com aha00a.com Alias]
+ * Page
+  1. [Page1]
+  1. [Page1 Alias For Page1]
+ * Page with space
+  1. ["United States"]
+  1. ["United States" United States of America]
+ * Anchor
+  1. [#Anchor]
+  1. [#Anchor Anchor Alias]
+ * QueryString
+  1. [?q=10]
+  1. [?q=10 q10 Alias]
+]]]
+
+use `\` for escaping
+링크 문법 무효화를 하기 위해서는 `\`를 사용합니다.
+
+[[[#!WikiSyntaxPreview
+ * Url
+  1. \http://aha00a.com
+  1. \[http://aha00a.com]
+  1. \[http://aha00a.com aha00a.com Alias]
+ * Page
+  1. \[Page1]
+  1. \[Page1 Alias For Page1]
+ * Page with space
+  1. \["United States"]
+  1. \["United States" United States of America]
+ * Anchor
+  1. \[#Anchor]
+  1. \[#Anchor Anchor Alias]
+ * QueryString
+  1. \[?q=10]
+  1. \[?q=10 q10 Alias]
+]]]
+
 == Headings
 Headings start with `=`. You can add trailing `=` if you want to.
 제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
