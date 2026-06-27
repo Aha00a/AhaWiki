@@ -9,6 +9,11 @@
 
  * API Key는 기존 사용자 계정에 직접 연결한다. 자동화 전용 계정을 별도로 만들지 않는다.
  * API Key로 저장한 revision은 `Page.viaApi = TRUE`로 기록한다.
+ * 어느 key로 저장했는지는 `Page.userApiKey` nullable FK로 함께 기록한다.
+  * `viaApi`(불변 사실)와 `userApiKey`(삭제/이름변경 가능한 엔티티 참조)는 서로 다른 질문에 답하므로 둘 다 유지한다.
+  * 불변식: `userApiKey IS NOT NULL`이면 `viaApi = TRUE`다. 역은 성립하지 않는다(`viaApi = TRUE && userApiKey = NULL`은 "API로 저장됐지만 그 키는 이후 삭제됨").
+  * key를 hard delete해도 `viaApi` 사실이 보존되도록 `ON DELETE SET NULL`을 쓴다. 현재 key는 soft-delete(`dateRevoked`)만 하므로 평상시 FK는 끊기지 않는다.
+ * `UserApiKey.name`은 사람이 읽을 수 있는 키 이름이다. 화면/응답에는 join으로 현재 이름을 노출하고, key가 없으면 이름 없이 `viaApi`만 표시한다.
  * API Key 원문은 DB에 저장하지 않고 SHA-256 hash만 저장한다. 원문 key는 생성 응답에서 한 번만 보여준다.
  * AhaWiki API는 Bearer 인증을 사용하므로 CSRF token과 reCAPTCHA를 요구하지 않는다.
  * AhaWiki API의 읽기/쓰기 권한은 기존 `WikiPermission` 규칙과 key 소유자 사용자의 권한을 그대로 따른다.
@@ -24,7 +29,7 @@
  * `user INT NOT NULL` — `User.seq` FK
  * `keyHash VARCHAR(64) NOT NULL UNIQUE` — SHA-256 hex
  * `keyPrefix VARCHAR(32) NOT NULL` — 목록에서 key를 식별하기 위한 prefix
- * `label VARCHAR(255) NOT NULL`
+ * `name VARCHAR(255) NOT NULL` — 사람이 읽을 수 있는 키 이름 (이전 `label`에서 rename)
  * `dateInserted DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP`
  * `dateLastUsed DATETIME NULL`
  * `dateRevoked DATETIME NULL`
@@ -41,6 +46,16 @@
  * `Page`, `PageWithoutContent`, row parser, history 조회, insert SQL에 모두 `viaApi`를 포함한다.
  * `PageLogic.insert`는 `viaApi: Boolean = false` 기본값을 받고, API Key 저장 시 `true`를 전달한다.
 
+=== Page.userApiKey
+
+`Page` 테이블에 `userApiKey BIGINT NULL` 컬럼과 `Page_UserApiKey_seq_fk FOREIGN KEY (userApiKey) REFERENCES UserApiKey (seq) ON DELETE SET NULL`을 추가했다.
+
+ * 웹 편집은 `NULL`이고, API Key 저장만 해당 key의 `seq`를 기록한다.
+ * `Page`에는 `userApiKey: Option[Long]` seq만 둔다. `PageWithoutContent`는 history 표시용으로 join한 `userApiKeyName: Option[String]`도 갖는다.
+ * `PageLogic.insert`는 `userApiKey: Option[Long] = None` 파라미터를 받는다.
+ * `ApiV1.savePage` / `renamePage`는 `withApiUserAndKey`로 인증 key를 받아 `userApiKey = Some(apiKey.seq)`를 전달한다.
+ * 키 이름은 `UserApiKey`를 `LEFT JOIN`해 현재 이름을 조회한다. 비정규화 스냅샷은 두지 않는다.
+
 == 인증과 권한
 
 `SessionLogic.getApiKeyUser(request)`가 `Authorization: Bearer <key>` 헤더를 읽고 raw key를 SHA-256으로 hash한 뒤 `UserApiKey`에서 활성 key를 조회한다.
@@ -50,6 +65,9 @@
  * `dateLastUsed`를 갱신한다.
  * key 소유자의 `User.SessionUser`를 만든다.
  * primary email을 함께 담아 기존 email 기반 permission과 호환한다.
+
+`getApiKeyWithUser`는 인증 key(`UserApiKey`)와 `SessionUser`를 함께 반환하고, `getApiKeyUser`는 그중 사용자만 돌려준다.
+저장/이름변경처럼 `userApiKey`를 기록해야 하는 endpoint는 `withApiUserAndKey`로 둘을 함께 받는다.
 
 AhaWiki API에서는 `RequestWrapper.forUser(user)`로 인증 사용자를 `ContextWikiPage`와 `WikiPermission`에 전달한다.
 이 처리가 없으면 인증은 성공해도 권한 계산이 익명 사용자 기준으로 동작할 수 있다.
@@ -79,7 +97,7 @@ Telegram 알림은 `minorEdit`와 `viaApi` 저장을 제외한다.
 
 AhaWikiDoc sync를 위해 AhaWiki API를 보강했다.
 
- * 페이지 목록/메타 API는 `name`, `revision`, `dateTime`, `isMinorEdit`, `viaApi`, `contentHash`를 반환한다.
+ * 페이지 목록/메타 API는 `name`, `revision`, `dateTime`, `isMinorEdit`, `viaApi`, `userApiKeyName`, `contentHash`를 반환한다.
  * Batch metadata API는 여러 page name의 `revision`, `dateTime`, hash를 한 번에 조회한다.
  * 최근 변경 API는 API Key 인증으로 page prefix, timestamp, page별 revision 기준 필터를 지원한다.
  * `afterRevision`은 페이지별 revision이므로 `name`으로 단일 페이지를 지정한 경우에만 허용한다.
@@ -93,7 +111,7 @@ AhaWikiDoc sync를 위해 AhaWiki API를 보강했다.
 Account Settings에 API Key 관리 섹션을 추가했다.
 
  * 내 API Key 목록
- * label 기반 key 생성
+ * name 기반 key 생성
  * 생성 직후 plain text key 1회 표시와 복사 버튼
  * key 폐기 버튼
 
@@ -113,7 +131,7 @@ Account Settings에 API Key 관리 섹션을 추가했다.
 Admin SPA에 `/Admin/ApiKeys` 화면을 추가했다.
 
  * 전체 API Key 목록
- * user nickname, label, key prefix, 생성일, 마지막 사용일, 폐기 상태
+ * user nickname, name, key prefix, 생성일, 마지막 사용일, 폐기 상태
  * Admin 강제 폐기
 
 세션 기반 내부 Admin API:
@@ -135,6 +153,13 @@ Admin 권한과 CSRF token이 필요하다.
  * Admin Recent Changes 페이지에 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼 추가
  * Admin Dashboard의 Recent Changes 요약 표에 minor edit, Via API 이모지 컬럼 추가
 
+`viaApi` 편집은 어느 key였는지도 함께 보여준다. key 이름은 `UserApiKey` join으로 조회하며, key가 삭제됐으면 이름 없이 `viaApi`만 남는다.
+
+ * `Api.change`, `Api.adminRecentChanges`, `ApiV1.changes`, 페이지 목록/메타(`ApiV1.listPages` / `pageMetadata` / `getPage`) 응답에 `userApiKeyName` 포함
+ * Wiki history 화면의 Via API 컬럼에 key 이름을 함께 표시(있을 때)
+ * `RecentChanges` 매크로는 각 revision comment에 `[viaApi:<name>]` prefix로 표시
+ * Admin Recent Changes / Dashboard의 Via API 셀에 key 이름을 함께 표시(`makeFlagCell`의 `detail` 인자)
+
 == Security
 
  * API Key는 `SecureRandom`으로 32 bytes를 생성하고 Base64 URL-safe 문자열로 표시한다. 형식은 `ahawiki_<token>`이다.
@@ -152,7 +177,7 @@ Admin 권한과 CSRF token이 필요하다.
   * 폐기 key와 존재하지 않는 key 인증 실패
   * 읽기/쓰기 권한 403
   * API 읽기
-  * API 저장과 `viaApi = TRUE`
+  * API 저장과 `viaApi = TRUE`, `userApiKey` seq 기록, 읽기 응답의 `userApiKeyName` 노출
   * revision 충돌 `409 Conflict`
   * 페이지 목록/메타 조회
   * 최근 변경의 `since`, `includeMinorEdit`, `includeViaApi`, invalid `since` 검증
@@ -163,7 +188,7 @@ Admin 권한과 CSRF token이 필요하다.
  * `ApiV1FilterSpec`
   * 실제 `Filters` 체인에서 `/api/v1/` POST가 CSRF token 없이 Bearer 인증만으로 저장되는지 검증
  * `UnitTestSuiteSpec`
-  * 테스트용 수동 `Page` schema에 `viaApi` 컬럼 추가
+  * 테스트용 수동 `Page` schema에 `viaApi`, `userApiKey` 컬럼 추가
 
 == 검증
 

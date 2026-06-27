@@ -80,7 +80,7 @@
                             <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td class="revisionFlagColumn">@if(history.isMinorEdit){<span class="revisionFlagIcon" title="Minor edit" aria-label="Minor edit">✏️</span>}</td>
-                            <td class="revisionFlagColumn">@if(history.viaApi){<span class="revisionFlagIcon" title="Via API" aria-label="Via API">🔌</span>}</td>
+                            <td class="revisionFlagColumn">@if(history.viaApi){<span class="revisionFlagIcon" title="@(history.userApiKeyName.fold("Via API")(name => "Via API: " + name))" aria-label="Via API">🔌</span>@history.userApiKeyName.map { name => <span class="revisionFlagApiKeyName">@name</span> }}</td>
                             <td>@Html(logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(history.comment))</td>
                         </tr>
                     }

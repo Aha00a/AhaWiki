@@ -308,9 +308,10 @@ var flagIconStyle = {
 function makeFlagHeader(label, symbol) {
   return /* @__PURE__ */ React6.createElement(Tooltip, { label, withArrow: true }, /* @__PURE__ */ React6.createElement("span", { style: flagIconStyle, title: label, "aria-label": label }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, symbol)));
 }
-function makeFlagCell(active, label, symbol) {
+function makeFlagCell(active, label, symbol, detail = null) {
   if (!active) return "";
-  return /* @__PURE__ */ React6.createElement(Tooltip, { label, withArrow: true }, /* @__PURE__ */ React6.createElement("span", { style: flagIconStyle, title: label, "aria-label": label }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, symbol)));
+  const tooltipLabel = detail ? `${label}: ${detail}` : label;
+  return /* @__PURE__ */ React6.createElement(Tooltip, { label: tooltipLabel, withArrow: true }, /* @__PURE__ */ React6.createElement("span", { style: detail ? { ...flagIconStyle, gap: 4 } : flagIconStyle, title: tooltipLabel, "aria-label": tooltipLabel }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, symbol), detail ? /* @__PURE__ */ React6.createElement("span", { style: { fontSize: 12 } }, detail) : null));
 }
 function makeFlagLegend(items) {
   return /* @__PURE__ */ React6.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap", fontSize: 12, color: "var(--mantine-color-dimmed)", marginBottom: 8 } }, items.map((item) => /* @__PURE__ */ React6.createElement("span", { key: item.label, style: { display: "inline-flex", alignItems: "center", gap: 4 } }, /* @__PURE__ */ React6.createElement("span", { "aria-hidden": "true" }, item.symbol), item.label)));
@@ -449,7 +450,7 @@ function DashboardPage() {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}"), row.comment || "-"];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}", row.userApiKeyName), row.comment || "-"];
   }))));
 }
 
@@ -1310,7 +1311,7 @@ function RecentChangesPage() {
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
     const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}"), row.comment || "-", row.remoteAddress];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React19.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}", row.userApiKeyName), row.comment || "-", row.remoteAddress];
   })));
 }
 

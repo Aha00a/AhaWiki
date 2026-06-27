@@ -36,12 +36,14 @@ export function makeFlagHeader(label, symbol) {
     );
 }
 
-export function makeFlagCell(active, label, symbol) {
+export function makeFlagCell(active, label, symbol, detail = null) {
     if (!active) return "";
+    const tooltipLabel = detail ? `${label}: ${detail}` : label;
     return (
-        <Tooltip label={label} withArrow>
-            <span style={flagIconStyle} title={label} aria-label={label}>
+        <Tooltip label={tooltipLabel} withArrow>
+            <span style={detail ? {...flagIconStyle, gap: 4} : flagIconStyle} title={tooltipLabel} aria-label={tooltipLabel}>
                 <span aria-hidden="true">{symbol}</span>
+                {detail ? <span style={{fontSize: 12}}>{detail}</span> : null}
             </span>
         </Tooltip>
     );

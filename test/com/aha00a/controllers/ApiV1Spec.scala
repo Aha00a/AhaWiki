@@ -471,7 +471,12 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
         page.comment mustBe "bot update"
         page.isMinorEdit mustBe true
         page.viaApi mustBe true
+        page.userApiKey mustBe Some(created.row.seq)
       }
+
+      val readResult = route(app, apiV1Request(GET, "/api/v1/page/ApiSave", created.rawKey)).get
+      status(readResult) mustBe OK
+      (contentAsJson(readResult) \ "userApiKeyName").as[String] mustBe "test key"
     }
 
     "return 409 when request revision is stale" in {

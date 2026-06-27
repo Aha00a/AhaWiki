@@ -4,7 +4,7 @@ import actors.ActorPageCalculator.Calculate
 import anorm.SqlParser._
 import anorm._
 import com.aha00a.play.Implicits.RichRequest
-import com.aha00a.play.AnormSqlParser.{localDateTime, optionLong}
+import com.aha00a.play.AnormSqlParser.{localDateTime, optionLong, optionStr}
 import io.circe.Json
 import io.circe.syntax._
 import logics.AhaWikiCache
@@ -135,13 +135,14 @@ class ApiV1 @Inject()(
   private def withApiUserAndKey(request: RequestHeader)(f: (User.SessionUser, UserApiKey) => Result): Result =
     SessionLogic.getApiKeyWithUser(request)(database).map { case (apiKey, user) => f(user, apiKey) }.getOrElse(unauthorized)
 
-  private def pageMetadataJson(page: Page): Json =
+  private def pageMetadataJson(page: Page, userApiKeyName: Option[String]): Json =
     Json.obj(
       "name" -> Json.fromString(page.name),
       "revision" -> Json.fromLong(page.revision),
       "dateTime" -> Json.fromString(page.dateTime.toString),
       "isMinorEdit" -> Json.fromBoolean(page.isMinorEdit),
       "viaApi" -> Json.fromBoolean(page.viaApi),
+      "userApiKeyName" -> userApiKeyName.map(Json.fromString).getOrElse(Json.Null),
       "size" -> Json.fromInt(page.content.length),
       "contentHash" -> Json.fromString("sha256:" + sha256Hex(page.content)),
     )
@@ -181,9 +182,10 @@ class ApiV1 @Inject()(
         implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
         val wikiPermission = WikiPermission()
 
-        val pages = selectLatestPages(prefix, limit)
+        val readablePages = selectLatestPages(prefix, limit)
           .filter(page => wikiPermission.isReadable(page.name, Some(PageContent(page.content))))
-          .map(pageMetadataJson)
+        val keyNames = UserApiKey.selectNamesBySeqs(readablePages.flatMap(_.userApiKey))
+        val pages = readablePages.map(page => pageMetadataJson(page, page.userApiKey.flatMap(keyNames.get)))
 
         Ok(Json.obj("pages" -> Json.fromValues(pages)))
       }
@@ -210,9 +212,10 @@ class ApiV1 @Inject()(
             val existingNames = pages.map(_.name).toSet
             val forbiddenNames = names.filter(name => existingNames.contains(name) && !readableNames.contains(name))
             val missingNames = names.filterNot(existingNames.contains)
+            val keyNames = UserApiKey.selectNamesBySeqs(readablePages.flatMap(_.userApiKey))
 
             Ok(Json.obj(
-              "pages" -> Json.fromValues(readablePages.map(pageMetadataJson)),
+              "pages" -> Json.fromValues(readablePages.map(page => pageMetadataJson(page, page.userApiKey.flatMap(keyNames.get)))),
               "missing" -> missingNames.asJson,
               "forbidden" -> forbiddenNames.asJson,
             ))
@@ -243,12 +246,13 @@ class ApiV1 @Inject()(
           val boundedLimit = limit.max(1).min(1000)
           val batchSize = boundedLimit.max(100).min(1000)
 
-          case class ChangeSourceRow(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, viaApi: Boolean)
+          case class ChangeSourceRow(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
 
           def selectRows(offset: Int): List[ChangeSourceRow] =
             SQL"""
-              SELECT P.name, P.revision, P.dateTime, P.comment, P.isMinorEdit, P.viaApi
+              SELECT P.name, P.revision, P.dateTime, P.comment, P.isMinorEdit, P.viaApi, AK.name AS userApiKeyName
               FROM Page P
+              LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
               WHERE P.site = ${site.seq}
                 AND ($nameTrimmed = '' OR P.name = $nameTrimmed)
                 AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
@@ -258,9 +262,9 @@ class ApiV1 @Inject()(
                 AND (${includeViaApi == 1} OR P.viaApi = false)
               ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
               LIMIT $batchSize OFFSET $offset
-            """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
-              case name ~ revision ~ dateTime ~ comment ~ isMinorEdit ~ viaApi =>
-                ChangeSourceRow(name, revision, dateTime, comment, isMinorEdit, viaApi)
+            """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ optionStr("userApiKeyName")).map {
+              case name ~ revision ~ dateTime ~ comment ~ isMinorEdit ~ viaApi ~ userApiKeyName =>
+                ChangeSourceRow(name, revision, dateTime, comment, isMinorEdit, viaApi, userApiKeyName)
             }.*)
 
           @scala.annotation.tailrec
@@ -283,6 +287,7 @@ class ApiV1 @Inject()(
               "comment" -> Json.fromString(row.comment),
               "isMinorEdit" -> Json.fromBoolean(row.isMinorEdit),
               "viaApi" -> Json.fromBoolean(row.viaApi),
+              "userApiKeyName" -> row.userApiKeyName.map(Json.fromString).getOrElse(Json.Null),
             )
           }
 
@@ -306,6 +311,7 @@ class ApiV1 @Inject()(
           case Some(page) if !WikiPermission().isReadable(name, Some(PageContent(page.content))) =>
             Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
           case Some(page) =>
+            val userApiKeyName = page.userApiKey.flatMap(seq => UserApiKey.selectNamesBySeqs(Seq(seq)).get(seq))
             Ok(Json.obj(
               "name" -> Json.fromString(page.name),
               "revision" -> Json.fromLong(page.revision),
@@ -313,6 +319,7 @@ class ApiV1 @Inject()(
               "dateTime" -> Json.fromString(page.dateTime.toString),
               "isMinorEdit" -> Json.fromBoolean(page.isMinorEdit),
               "viaApi" -> Json.fromBoolean(page.viaApi),
+              "userApiKeyName" -> userApiKeyName.map(Json.fromString).getOrElse(Json.Null),
               "contentHash" -> Json.fromString("sha256:" + sha256Hex(page.content)),
             ))
         }

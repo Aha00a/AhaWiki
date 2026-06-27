@@ -59,7 +59,7 @@ export default function RecentChangesPage() {
                 const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                 const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
                 const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-                return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, editorUrl ? <Anchor href={editorUrl}>{row.nickname}</Anchor> : (row.nickname ?? "-"), makeFlagCell(row.isMinorEdit, "Minor edit", "✏️"), makeFlagCell(row.viaApi, "Via API", "🔌"), row.comment || "-", row.remoteAddress];
+                return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, editorUrl ? <Anchor href={editorUrl}>{row.nickname}</Anchor> : (row.nickname ?? "-"), makeFlagCell(row.isMinorEdit, "Minor edit", "✏️"), makeFlagCell(row.viaApi, "Via API", "🔌", row.userApiKeyName), row.comment || "-", row.remoteAddress];
             }))}
         </Card>
     );

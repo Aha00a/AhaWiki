@@ -86,6 +86,19 @@ object UserApiKey {
     Created(selectBySeq(seq).get, rawKey)
   }
 
+  def selectNamesBySeqs(seqs: Seq[Long])(implicit connection: Connection): Map[Long, String] = {
+    val distinctSeqs = seqs.distinct
+    if (distinctSeqs.isEmpty) {
+      Map.empty
+    } else {
+      SQL"""
+        SELECT seq, name
+        FROM UserApiKey
+        WHERE seq IN ($distinctSeqs)
+      """.as((long("seq") ~ str("name")).map(flatten).*).toMap
+    }
+  }
+
   def selectBySeq(seq: Long)(implicit connection: Connection): Option[UserApiKey] = {
     SQL"""
       SELECT seq, `user`, keyHash, keyPrefix, name, dateInserted, dateLastUsed, dateRevoked

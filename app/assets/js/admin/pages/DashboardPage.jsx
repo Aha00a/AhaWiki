@@ -100,7 +100,7 @@ export default function DashboardPage() {
                     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
                     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
                     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
-                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "✏️"), makeFlagCell(row.viaApi, "Via API", "🔌"), row.comment || "-"];
+                    return [row.dateTime, siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, pageUrl ? <Anchor href={pageUrl} target="_blank">{row.name}</Anchor> : row.name, revisionUrl ? <Anchor href={revisionUrl} target="_blank">{row.revision}</Anchor> : row.revision, row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "✏️"), makeFlagCell(row.viaApi, "Via API", "🔌", row.userApiKeyName), row.comment || "-"];
                 }))}
             </Card>
         </Stack>

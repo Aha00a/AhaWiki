@@ -2315,6 +2315,11 @@
 .AhaWiki .revisionFlagIcon.is-partial {
   opacity: 0.45;
 }
+.AhaWiki .revisionFlagApiKeyName {
+  margin-left: 4px;
+  color: var(--color-muted);
+  font-size: 0.85em;
+}
 .AhaWiki .revisionFlagLegend {
   display: flex;
   flex-wrap: wrap;

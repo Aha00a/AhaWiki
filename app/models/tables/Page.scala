@@ -19,7 +19,7 @@ import scala.collection.immutable
 import scala.util.matching.Regex
 
 case class Page                        (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, content: String, viaApi: Boolean = false, userApiKey: Option[Long] = None) extends WithDateTime
-case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean = false, userApiKey: Option[Long] = None) extends WithDateTime
+case class PageWithoutContent          (name: String, revision: Long, dateTime: LocalDateTime, nickname: Option[String], user: Option[Long], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean = false, userApiKey: Option[Long] = None, userApiKeyName: Option[String] = None) extends WithDateTime
 
 case class SearchResult(name: String, dateTime: LocalDateTime, content: String) {
 
@@ -49,7 +49,7 @@ object Page {
   def tupled = (apply _).tupled
 
   private val rowParserPage = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi") ~ optionLong("userApiKey")
-  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ optionLong("userApiKey")
+  private val rowParserPageWithoutContent = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ optionStr("nickname") ~ optionLong("user") ~str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ optionLong("userApiKey") ~ optionStr("userApiKeyName")
   private val rowParserSearchResult = str("name") ~ localDateTime("dateTime") ~ str("content")
 
   def selectCount()(implicit connection: Connection, site: Site): Long = {
@@ -125,9 +125,10 @@ SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remote
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi, P.userApiKey
+SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi, P.userApiKey, AK.name AS userApiKeyName
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
+    LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
     WHERE site = ${site.seq} AND name = $name
     ORDER BY revision DESC
     """

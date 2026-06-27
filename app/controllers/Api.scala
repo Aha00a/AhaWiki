@@ -1056,6 +1056,7 @@ class Api @Inject()(
           comment: String,
           isMinorEdit: Boolean,
           viaApi: Boolean,
+          userApiKeyName: Option[String],
         )
 
         val limit = request.getQueryString("n")
@@ -1081,7 +1082,8 @@ class Api @Inject()(
             P.remoteAddress,
             P.comment,
             P.isMinorEdit,
-            P.viaApi
+            P.viaApi,
+            AK.name AS userApiKeyName
           FROM Page P
           INNER JOIN Site S ON S.seq = P.site
           LEFT JOIN (
@@ -1090,12 +1092,13 @@ class Api @Inject()(
             GROUP BY site
           ) SD ON SD.site = P.site
           LEFT JOIN User U ON U.seq = P.user
+          LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
           WHERE (${includeMinorEdit} OR P.isMinorEdit = false)
             AND (${includeViaApi} OR P.viaApi = false)
           ORDER BY P.dateTime DESC
           LIMIT $limit
-        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
-          case siteSeq ~ siteName ~ siteDomain ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi =>
+        """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ str("userApiKeyName").?).map {
+          case siteSeq ~ siteName ~ siteDomain ~ name ~ revision ~ dateTime ~ nickname ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi ~ userApiKeyName =>
             AdminRecentChange(
               siteSeq = siteSeq,
               siteName = siteName,
@@ -1108,6 +1111,7 @@ class Api @Inject()(
               comment = comment,
               isMinorEdit = isMinorEdit,
               viaApi = viaApi,
+              userApiKeyName = userApiKeyName,
             )
         }.*)
 
@@ -1121,8 +1125,8 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
 
-      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean, viaApi: Boolean)
-      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean)
+      case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
+      case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
 
       implicit val provider: RequestWrapper = RequestWrapper()
       val wikiPermission = WikiPermission()
@@ -1140,17 +1144,19 @@ class Api @Inject()(
             P.remoteAddress,
             P.comment,
             P.isMinorEdit,
-            P.viaApi
+            P.viaApi,
+            AK.name AS userApiKeyName
           FROM Page P
           LEFT JOIN User U ON U.seq = P.user
+          LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
           WHERE P.site = ${site.seq}
             AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
             AND (${includeViaApi == 1} OR P.viaApi = false)
           ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
           LIMIT $batchSize OFFSET $offset
-        """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi")).map {
-          case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi =>
-            ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, viaApi)
+        """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ str("userApiKeyName").?).map {
+          case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi ~ userApiKeyName =>
+            ChangeSourceRow(name, revision, dateTime, nickname, profileImageUrl, remoteAddress, comment, isMinorEdit, viaApi, userApiKeyName)
         }.*)
       }
 
@@ -1178,6 +1184,7 @@ class Api @Inject()(
           commentInlineHtml = InterpreterWiki.inlineToHtmlString(row.comment),
           isMinorEdit = row.isMinorEdit,
           viaApi = row.viaApi,
+          userApiKeyName = row.userApiKeyName,
         )
       }
 

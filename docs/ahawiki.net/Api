@@ -13,8 +13,8 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * API Key 인증 사용자로 페이지 목록/메타 조회
  * API Key 인증 사용자로 최근 변경 조회
  * API Key 인증 사용자로 페이지 이름변경/삭제
- * 저장된 revision에 `viaApi = true` 기록
- * History, RecentChanges API 응답에 `viaApi` 포함
+ * 저장된 revision에 `viaApi = true`와 저장에 사용한 API Key(`userApiKey`) 기록
+ * History, RecentChanges API 응답에 `viaApi`와 key 이름(`userApiKeyName`) 포함
 
 == 제한사항
 
@@ -53,6 +53,7 @@ curl https://ahawiki.net/api/v1/page/FrontPage \
   "dateTime": "2026-06-24T10:00:00",
   "isMinorEdit": false,
   "viaApi": false,
+  "userApiKeyName": null,
   "contentHash": "sha256:..."
 }
 ]]]
@@ -78,6 +79,7 @@ curl "https://ahawiki.net/api/v1/pages?prefix=ToDo&limit=100" \
       "dateTime": "2026-06-24T22:00:00",
       "isMinorEdit": false,
       "viaApi": true,
+      "userApiKeyName": "AhaWikiDoc",
       "size": 3223,
       "contentHash": "sha256:..."
     }
@@ -108,6 +110,7 @@ curl -X POST https://ahawiki.net/api/v1/pages/metadata \
       "dateTime": "2026-06-24T22:20:29",
       "isMinorEdit": false,
       "viaApi": true,
+      "userApiKeyName": "AhaWikiDoc",
       "size": 5548,
       "contentHash": "sha256:..."
     }
@@ -217,7 +220,8 @@ query parameter:
       "dateTime": "2026-06-24T22:00:00",
       "comment": "AhaWikiDoc sync Api",
       "isMinorEdit": false,
-      "viaApi": true
+      "viaApi": true,
+      "userApiKeyName": "AhaWikiDoc"
     }
   ]
 }
@@ -237,9 +241,10 @@ query parameter:
 
 == 변경 이력 표시와 필터
 
-API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
+API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사용한 key는 `userApiKey`로 기록됩니다.
+응답의 `userApiKeyName`은 key를 join해 조회한 현재 이름이며, key가 폐기/삭제됐으면 `null`입니다.
 
- * History 화면에는 minor edit, Via API 이모지 컬럼과 `Show ViaApi` 필터가 있습니다.
+ * History 화면에는 minor edit, Via API 이모지 컬럼과 `Show ViaApi` 필터가 있고, Via API 편집에는 key 이름이 함께 표시됩니다.
  * `RecentChanges` 매크로에는 `Include via API edits` 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
  * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `0`입니다.
  * Admin Recent Changes 화면에는 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
@@ -313,36 +318,6 @@ API Key로 저장한 revision은 `viaApi = true`로 기록됩니다.
 `404 Not Found`	읽으려는 페이지가 없음
 `409 Conflict`	요청 revision이 최신 revision과 다름
 ]]]
-
-== TODO: API Key 이름과 편집 키 귀속
-
-`userApiKey`에 사람이 읽을 수 있는 `name`을 부여하고, 각 revision이 어느 API Key로 저장됐는지 기록한다.
-`viaApi` 플래그는 그대로 유지하고 `Page.userApiKey` nullable 참조를 추가하는 방향(2번)으로 진행한다.
-
-=== 설계 결정
-
- * `viaApi`(boolean)와 `userApiKey`(nullable FK)는 서로 다른 질문에 답하므로 둘 다 유지한다.
-  * `viaApi` — "이 revision이 API로 저장됐는가?" → 변하지 않는 역사적 사실
-  * `userApiKey` — "어느 키로 저장됐는가?" → 삭제/이름변경 가능한 엔티티에 대한 참조
- * 불변식: `userApiKey IS NOT NULL` ⟹ `viaApi = true` (역은 성립하지 않음)
-  * `viaApi = true && userApiKey = NULL`은 "API로 저장됐지만 그 키는 이후 삭제됨"을 의미한다.
- * `viaApi`만으로는 키 삭제 시 편집이 웹 편집처럼 보여 역사가 왜곡되므로, `viaApi`를 사실 플래그로 남긴다.
- * 화면 표시는 키 이름에 fallback한다: 키 존재 시 `🔌 via <name>`, 키 삭제 시 `🔌`.
- * 키 이름은 현재 이름을 join으로 표시하면 충분하다. 편집 시점 이름을 스냅샷으로 박는 비정규화는 하지 않는다.
-
-=== 작업 항목
-
- * [[CB(x)]] `UserApiKey` 테이블에 `name` 컬럼 추가 (생성/목록 화면, Account Settings API 반영)
-  * `UserApiKey.label`을 `name`으로 rename: 모델, `Api.scala` 응답/요청 필드, Account Settings 화면, Admin ApiKeys 화면(`admin:build` 재생성), 테스트 schema/단언
- * [[CB(x)]] `Page` 테이블에 `userApiKey` nullable FK 추가 (`ON DELETE SET NULL`)
-  * [[CB(x)]] `Page`, `PageWithoutContent`, row parser, insert SQL에 `userApiKey` 반영
-  * [[CB(x)]] `PageLogic.insert`에 `userApiKey: Option[Long] = None` 파라미터 추가, API 저장 시 현재 키 seq 전달
- * [[CB(x)]] `ApiV1.savePage` / `renamePage`에서 `withApiUserAndKey`로 키 seq를 받아 `userApiKey`를 전달
- * [[CB(x)]] 저장된 revision의 `viaApi = true`는 그대로 유지
- * [ ] History, RecentChanges, Admin Recent Changes/Dashboard에 키 이름 표시(있으면 `via <name>`) 추가
- * [ ] 페이지 메타/최근 변경 API 응답에 키 이름을 노출한다 (join으로 현재 이름 조회)
- * [[CB(x)]] evolution / schema.sql / 테스트용 수동 schema에 두 컬럼 반영
- * [ ] [Dev Api] 문서에 구현 세부사항 정리
 
 == 관련
 

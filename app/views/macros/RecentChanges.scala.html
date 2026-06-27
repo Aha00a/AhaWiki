@@ -128,7 +128,7 @@
                             : esc(firstRow.remoteAddressMasked);
                         var commentsHtml = "<ol>" + group.rows.map(function (row) {
                             var rowMinorPrefix = row.isMinorEdit ? "[minor] " : "";
-                            var rowViaApiPrefix = row.viaApi ? "[viaApi] " : "";
+                            var rowViaApiPrefix = row.viaApi ? ("[viaApi" + (row.userApiKeyName ? ":" + esc(row.userApiKeyName) : "") + "] ") : "";
                             var commentInlineHtml = row.commentInlineHtml || esc(row.comment || "");
                             return "<li value='" + esc(String(row.revision)) + "'>" + rowMinorPrefix + rowViaApiPrefix + commentInlineHtml + "</li>";
                         }).join("") + "</ol>";
