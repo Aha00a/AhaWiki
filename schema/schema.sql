@@ -434,9 +434,9 @@ DROP TABLE IF EXISTS `UserApiKey`;
 CREATE TABLE `UserApiKey` (
   `seq` bigint NOT NULL AUTO_INCREMENT,
   `user` int NOT NULL,
-  `keyHash` varchar(64) COLLATE utf8mb4_bin NOT NULL,
-  `keyPrefix` varchar(32) COLLATE utf8mb4_bin NOT NULL,
-  `name` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `keyHash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `keyPrefix` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `dateInserted` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateLastUsed` datetime DEFAULT NULL,
   `dateRevoked` datetime DEFAULT NULL,
@@ -536,4 +536,5 @@ CREATE TABLE `play_evolutions` (
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
 
