@@ -116,12 +116,12 @@ object PageLogic {
   import models.RequestWrapper
   import models.tables.Site
 
-  def insert(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, body: String, viaApi: Boolean = false)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
+  def insert(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, body: String, viaApi: Boolean = false, userApiKey: Option[Long] = None)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
     import models.tables.Page
     import models.tables.Site
     implicit val site: Site = wikiContext.site
     val user = wikiContext.requestWrapper.getUser
-    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body, viaApi)
+    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body, viaApi, userApiKey)
     Page.insert(page)
     wikiContext.pageCalculationActor ! Calculate(site, name)
   }

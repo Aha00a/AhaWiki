@@ -139,6 +139,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
             comment VARCHAR(255) NOT NULL DEFAULT '',
             isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
             viaApi BOOLEAN NOT NULL DEFAULT FALSE,
+            userApiKey BIGINT NULL,
             content CLOB NOT NULL,
             PRIMARY KEY (site, name, revision)
           )
@@ -203,7 +204,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
             `user` INT NOT NULL,
             keyHash VARCHAR(64) NOT NULL,
             keyPrefix VARCHAR(32) NOT NULL,
-            label VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
             dateInserted DATETIME NOT NULL DEFAULT NOW(),
             dateLastUsed DATETIME NULL,
             dateRevoked DATETIME NULL,
@@ -588,7 +589,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
   "Account API key endpoints" should {
     "require login to create an API key" in {
       val result = route(app, FakeRequest(POST, "/api/account/ApiKeys").withHeaders(HOST -> "localhost").withJsonBody(Json.obj(
-        "label" -> "anonymous key",
+        "name" -> "anonymous key",
       ))).get
 
       status(result) mustBe UNAUTHORIZED
@@ -596,14 +597,14 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
 
     "create, list, and revoke the logged-in user's API key" in {
       val createResult = route(app, loginRequest(POST, "/api/account/ApiKeys").withJsonBody(Json.obj(
-        "label" -> "account key",
+        "name" -> "account key",
       ))).get
 
       status(createResult) mustBe OK
       val createdJson = contentAsJson(createResult)
       val seq = (createdJson \ "seq").as[Long]
       val rawKey = (createdJson \ "key").as[String]
-      (createdJson \ "label").as[String] mustBe "account key"
+      (createdJson \ "name").as[String] mustBe "account key"
 
       val listResult = route(app, loginRequest(GET, "/api/account/ApiKeys")).get
       status(listResult) mustBe OK

@@ -15,7 +15,7 @@ case class UserApiKey(
   user: Long,
   keyHash: String,
   keyPrefix: String,
-  label: String,
+  name: String,
   dateInserted: LocalDateTime,
   dateLastUsed: Option[LocalDateTime],
   dateRevoked: Option[LocalDateTime],
@@ -31,7 +31,7 @@ object UserApiKey {
   def tupled = (apply _).tupled
 
   private val rowParser =
-    long("seq") ~ long("user") ~ str("keyHash") ~ str("keyPrefix") ~ str("label") ~
+    long("seq") ~ long("user") ~ str("keyHash") ~ str("keyPrefix") ~ str("name") ~
       localDateTime("dateInserted") ~ localDateTime("dateLastUsed").? ~ localDateTime("dateRevoked").?
 
   def generateRawKey(): String = {
@@ -50,7 +50,7 @@ object UserApiKey {
 
   def selectByHash(keyHash: String)(implicit connection: Connection): Option[UserApiKey] = {
     SQL"""
-      SELECT seq, `user`, keyHash, keyPrefix, label, dateInserted, dateLastUsed, dateRevoked
+      SELECT seq, `user`, keyHash, keyPrefix, name, dateInserted, dateLastUsed, dateRevoked
       FROM UserApiKey
       WHERE keyHash = $keyHash
         AND dateRevoked IS NULL
@@ -59,7 +59,7 @@ object UserApiKey {
 
   def selectByUser(user: Long)(implicit connection: Connection): Seq[UserApiKey] = {
     SQL"""
-      SELECT seq, `user`, keyHash, keyPrefix, label, dateInserted, dateLastUsed, dateRevoked
+      SELECT seq, `user`, keyHash, keyPrefix, name, dateInserted, dateLastUsed, dateRevoked
       FROM UserApiKey
       WHERE `user` = $user
       ORDER BY dateInserted DESC, seq DESC
@@ -68,19 +68,19 @@ object UserApiKey {
 
   def selectAll()(implicit connection: Connection): Seq[UserApiKey] = {
     SQL"""
-      SELECT seq, `user`, keyHash, keyPrefix, label, dateInserted, dateLastUsed, dateRevoked
+      SELECT seq, `user`, keyHash, keyPrefix, name, dateInserted, dateLastUsed, dateRevoked
       FROM UserApiKey
       ORDER BY dateInserted DESC, seq DESC
     """.as(rowParser.*).map(flatten).map(UserApiKey.tupled)
   }
 
-  def insert(user: Long, label: String)(implicit connection: Connection): Created = {
+  def insert(user: Long, name: String)(implicit connection: Connection): Created = {
     val rawKey = generateRawKey()
     val keyHash = hash(rawKey)
     val keyPrefix = displayPrefix(rawKey)
     val seq = SQL"""
-      INSERT INTO UserApiKey (`user`, keyHash, keyPrefix, label)
-      VALUES ($user, $keyHash, $keyPrefix, $label)
+      INSERT INTO UserApiKey (`user`, keyHash, keyPrefix, name)
+      VALUES ($user, $keyHash, $keyPrefix, $name)
     """.executeInsert(scalar[Long].single)
 
     Created(selectBySeq(seq).get, rawKey)
@@ -88,7 +88,7 @@ object UserApiKey {
 
   def selectBySeq(seq: Long)(implicit connection: Connection): Option[UserApiKey] = {
     SQL"""
-      SELECT seq, `user`, keyHash, keyPrefix, label, dateInserted, dateLastUsed, dateRevoked
+      SELECT seq, `user`, keyHash, keyPrefix, name, dateInserted, dateLastUsed, dateRevoked
       FROM UserApiKey
       WHERE seq = $seq
     """.as(rowParser.singleOpt).map(flatten).map(UserApiKey.tupled)

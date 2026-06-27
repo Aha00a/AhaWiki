@@ -27,7 +27,7 @@ object SessionLogic {
     )
   }
 
-  def getApiKeyUser(request: RequestHeader)(implicit database: Database): Option[User.SessionUser] = {
+  def getApiKeyWithUser(request: RequestHeader)(implicit database: Database): Option[(UserApiKey, User.SessionUser)] = {
     val rawKey = request.headers
       .get("Authorization")
       .map(_.trim)
@@ -42,12 +42,15 @@ object SessionLogic {
         UserApiKey.selectByHash(UserApiKey.hash(key)).flatMap { apiKey =>
           UserApiKey.touchLastUsed(apiKey.seq)
           User.selectBySeq(apiKey.user).map { user =>
-            user.toSessionUser(UserEmail.selectPrimaryEmailByUser(user.seq))
+            (apiKey, user.toSessionUser(UserEmail.selectPrimaryEmailByUser(user.seq)))
           }
         }
       }
     }
   }
+
+  def getApiKeyUser(request: RequestHeader)(implicit database: Database): Option[User.SessionUser] =
+    getApiKeyWithUser(request).map(_._2)
 
   def getUserProfileImageUrl(request: RequestHeader): Option[String] =
     request.session.get(sessionKeyProfileImageUrl).filter(_.nonEmpty)

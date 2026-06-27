@@ -292,13 +292,16 @@ CREATE TABLE `Page` (
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `isMinorEdit` tinyint(1) NOT NULL DEFAULT '0',
   `viaApi` tinyint(1) NOT NULL DEFAULT '0',
+  `userApiKey` bigint DEFAULT NULL,
   `content` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   PRIMARY KEY (`site`,`name`,`revision`),
   KEY `Page_User_seq_fk` (`user`),
   KEY `Page_site_isMinorEdit_name_revision_index` (`site`,`isMinorEdit`,`name`,`revision`),
   KEY `Page_site_name_revision_dateTime_user_index` (`site`,`name`,`revision`,`dateTime`,`user`),
+  KEY `Page_UserApiKey_seq_fk` (`userApiKey`),
   CONSTRAINT `Page_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`) ON DELETE RESTRICT ON UPDATE RESTRICT,
-  CONSTRAINT `Page_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
+  CONSTRAINT `Page_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`),
+  CONSTRAINT `Page_UserApiKey_seq_fk` FOREIGN KEY (`userApiKey`) REFERENCES `UserApiKey` (`seq`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -433,7 +436,7 @@ CREATE TABLE `UserApiKey` (
   `user` int NOT NULL,
   `keyHash` varchar(64) COLLATE utf8mb4_bin NOT NULL,
   `keyPrefix` varchar(32) COLLATE utf8mb4_bin NOT NULL,
-  `label` varchar(255) COLLATE utf8mb4_bin NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_bin NOT NULL,
   `dateInserted` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dateLastUsed` datetime DEFAULT NULL,
   `dateRevoked` datetime DEFAULT NULL,

@@ -72,7 +72,7 @@ export default function ApiKeysPage() {
                 columns={[
                     {accessor: "seq", title: "ID", width: 80},
                     {accessor: "userNickname", title: "User", render: (row) => row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}`},
-                    {accessor: "label", title: "Label"},
+                    {accessor: "name", title: "Name"},
                     {accessor: "keyPrefix", title: "Key", render: (row) => <code>{row.keyPrefix}</code>},
                     {accessor: "dateInserted", title: "Created", render: (row) => formatDateTimeInClientTimezone(row.dateInserted)},
                     {accessor: "dateLastUsed", title: "Last Used", render: (row) => row.dateLastUsed ? formatDateTimeInClientTimezone(row.dateLastUsed) : "-"},

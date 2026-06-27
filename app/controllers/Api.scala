@@ -228,17 +228,17 @@ class Api @Inject()(
     "user" -> Json.fromLong(apiKey.user),
     "userNickname" -> user.map(u => Json.fromString(u.nickname)).getOrElse(Json.Null),
     "keyPrefix" -> Json.fromString(apiKey.keyPrefix),
-    "label" -> Json.fromString(apiKey.label),
+    "name" -> Json.fromString(apiKey.name),
     "dateInserted" -> Json.fromString(apiKey.dateInserted.toString),
     "dateLastUsed" -> apiKey.dateLastUsed.map(v => Json.fromString(v.toString)).getOrElse(Json.Null),
     "dateRevoked" -> apiKey.dateRevoked.map(v => Json.fromString(v.toString)).getOrElse(Json.Null),
     "revoked" -> Json.fromBoolean(apiKey.dateRevoked.nonEmpty),
   )
 
-  private def apiKeyLabelFromRequest(request: Request[AnyContent]): String = {
+  private def apiKeyNameFromRequest(request: Request[AnyContent]): String = {
     request.body.asJson
-      .flatMap(json => (json \ "label").asOpt[String])
-      .orElse(request.body.asFormUrlEncoded.flatMap(_.get("label").flatMap(_.headOption)))
+      .flatMap(json => (json \ "name").asOpt[String])
+      .orElse(request.body.asFormUrlEncoded.flatMap(_.get("name").flatMap(_.headOption)))
       .map(_.trim)
       .getOrElse("")
   }
@@ -1447,14 +1447,14 @@ class Api @Inject()(
       case None =>
         Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
       case Some(user) =>
-        val label = apiKeyLabelFromRequest(request)
-        if (label.isEmpty) {
-          BadRequest(Json.obj("error" -> Json.fromString("label is required.")).toString()).as(JSON)
-        } else if (label.length > 255) {
-          BadRequest(Json.obj("error" -> Json.fromString("label is too long.")).toString()).as(JSON)
+        val name = apiKeyNameFromRequest(request)
+        if (name.isEmpty) {
+          BadRequest(Json.obj("error" -> Json.fromString("name is required.")).toString()).as(JSON)
+        } else if (name.length > 255) {
+          BadRequest(Json.obj("error" -> Json.fromString("name is too long.")).toString()).as(JSON)
         } else {
           database.withConnection { implicit connection =>
-            val created = UserApiKey.insert(user.seq, label)
+            val created = UserApiKey.insert(user.seq, name)
             Ok(apiKeyJson(created.row).deepMerge(Json.obj("key" -> Json.fromString(created.rawKey))))
           }
         }

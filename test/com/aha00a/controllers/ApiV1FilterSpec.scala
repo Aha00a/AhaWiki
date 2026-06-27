@@ -136,6 +136,7 @@ class ApiV1FilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAf
             comment VARCHAR(255) NOT NULL DEFAULT '',
             isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
             viaApi BOOLEAN NOT NULL DEFAULT FALSE,
+            userApiKey BIGINT NULL,
             content CLOB NOT NULL,
             PRIMARY KEY (site, name, revision)
           )
@@ -146,7 +147,7 @@ class ApiV1FilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAf
             `user` INT NOT NULL,
             keyHash VARCHAR(64) NOT NULL,
             keyPrefix VARCHAR(32) NOT NULL,
-            label VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
             dateInserted DATETIME NOT NULL DEFAULT NOW(),
             dateLastUsed DATETIME NULL,
             dateRevoked DATETIME NULL,

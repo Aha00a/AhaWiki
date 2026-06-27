@@ -22,6 +22,7 @@ import models.tables.Attachment
 import models.tables.Page
 import models.tables.Site
 import models.tables.User
+import models.tables.UserApiKey
 import play.api.Logging
 import play.api.db.Database
 import play.api.mvc._
@@ -130,6 +131,9 @@ class ApiV1 @Inject()(
 
   private def withApiUser(request: RequestHeader)(f: User.SessionUser => Result): Result =
     SessionLogic.getApiKeyUser(request)(database).map(f).getOrElse(unauthorized)
+
+  private def withApiUserAndKey(request: RequestHeader)(f: (User.SessionUser, UserApiKey) => Result): Result =
+    SessionLogic.getApiKeyWithUser(request)(database).map { case (apiKey, user) => f(user, apiKey) }.getOrElse(unauthorized)
 
   private def pageMetadataJson(page: Page): Json =
     Json.obj(
@@ -317,7 +321,7 @@ class ApiV1 @Inject()(
   }
 
   def savePage(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
-    withApiUser(request) { user =>
+    withApiUserAndKey(request) { (user, apiKey) =>
       request.body.asJson match {
         case None =>
           BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
@@ -353,7 +357,7 @@ class ApiV1 @Inject()(
                 } else {
                   val now = LocalDateTime.now()
                   val nextRevision = latestRevision + 1
-                  PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, text, viaApi = true)
+                  PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, text, viaApi = true, userApiKey = Some(apiKey.seq))
                   name match {
                     case ".footer" => ahaWikiCache.Footer.invalidate()
                     case ".config" => ahaWikiCache.Config.invalidate()
@@ -374,7 +378,7 @@ class ApiV1 @Inject()(
   }
 
   def renamePage(): Action[AnyContent] = Action { implicit request =>
-    withApiUser(request) { user =>
+    withApiUserAndKey(request) { (user, apiKey) =>
       request.body.asJson match {
         case None =>
           BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
@@ -411,7 +415,7 @@ class ApiV1 @Inject()(
                   ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
 
                   Page.rename(name, newName)
-                  PageLogic.insert(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, body = s"#!redirect $newName", viaApi = true)
+                  PageLogic.insert(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, body = s"#!redirect $newName", viaApi = true, userApiKey = Some(apiKey.seq))
                   wikiActors.pageCalculation ! Calculate(site, newName)
 
                   Ok(Json.obj(

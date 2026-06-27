@@ -34,10 +34,10 @@ Value A	Value B
 ]]]
 ```
 
-TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. When working on an item from a TODO document, update the relevant checkbox state as part of the same change:
+TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. Always update the relevant checkbox state immediately after finishing the work, as part of the same change — this is required, never optional. Do not end a task with completed work still marked as an open checkbox:
 
  * Use `[ ]` for open work.
- * Use `[[CB(x)]]` for completed work.
+ * Use `[[CB(x)]]` for completed work; flip an item to `[[CB(x)]]` as soon as that item is done and verified.
  * Do not use `[x]`; only the empty checkbox form uses square brackets.
  * Keep newly discovered follow-up work as new `[ ]` items.
  * Do not leave the TODO document stale when the implementation status changes.

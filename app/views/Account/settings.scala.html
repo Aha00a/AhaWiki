@@ -246,7 +246,7 @@
             const secret = root.querySelector("[data-api-key-secret]");
             const secretCode = root.querySelector("[data-api-key-secret-code]");
             const form = root.querySelector("[data-api-key-form]");
-            const labelInput = root.querySelector("[data-api-key-label]");
+            const nameInput = root.querySelector("[data-api-key-name]");
             const copyButton = root.querySelector("[data-api-key-copy]");
             let lastCreatedKey = "";
 
@@ -286,7 +286,7 @@
                     const tr = document.createElement("tr");
                     const revokeCell = row.revoked ? "-" : '<button type="button" class="accountDangerButton" data-revoke="' + row.seq + '">Revoke</button>';
                     tr.innerHTML =
-                        "<td>" + escapeHtml(row.label || "") + "</td>" +
+                        "<td>" + escapeHtml(row.name || "") + "</td>" +
                         "<td><code>" + escapeHtml(row.keyPrefix || "") + "</code></td>" +
                         "<td>" + formatDate(row.dateInserted) + "</td>" +
                         "<td>" + formatDate(row.dateLastUsed) + "</td>" +
@@ -308,9 +308,9 @@
 
             form.addEventListener("submit", async function (event) {
                 event.preventDefault();
-                const label = labelInput.value.trim();
-                if (!label) {
-                    setMessage("Label is required.", true);
+                const name = nameInput.value.trim();
+                if (!name) {
+                    setMessage("Name is required.", true);
                     return;
                 }
                 try {
@@ -319,14 +319,14 @@
                         method: "POST",
                         credentials: "same-origin",
                         headers: {"Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value},
-                        body: JSON.stringify({label})
+                        body: JSON.stringify({name})
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
                     lastCreatedKey = data.key || "";
                     secret.style.display = lastCreatedKey ? "block" : "none";
                     secretCode.textContent = lastCreatedKey;
-                    labelInput.value = "";
+                    nameInput.value = "";
                     setMessage("API key created.");
                     await loadApiKeys();
                 } catch (error) {
@@ -442,8 +442,8 @@
                     <h2>API Keys</h2>
                     <form class="apiKeyForm" data-api-key-form>
                         <label>
-                            Label
-                            <input type="text" data-api-key-label maxlength="255" placeholder="Automation Tool"/>
+                            Name
+                            <input type="text" data-api-key-name maxlength="255" placeholder="Automation Tool"/>
                         </label>
                         <button type="submit" class="accountPlainButton">Create</button>
                     </form>
@@ -456,7 +456,7 @@
                         <table class="wikiTableSimple accountTable apiKeyTable">
                             <thead>
                                 <tr>
-                                    <th>Label</th>
+                                    <th>Name</th>
                                     <th>Key</th>
                                     <th>Created</th>
                                     <th>Last Used</th>
