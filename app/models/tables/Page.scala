@@ -125,11 +125,11 @@ SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remote
   def selectHistory(name: String)(implicit connection: Connection, site: Site): List[PageWithoutContent] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi, P.userApiKey, AK.name AS userApiKeyName
+SELECT P.name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi, P.userApiKey, AK.name AS userApiKeyName
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
     LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
-    WHERE site = ${site.seq} AND name = $name
+    WHERE site = ${site.seq} AND P.name = $name
     ORDER BY revision DESC
     """
       .as(rowParserPageWithoutContent *).map(flatten)
