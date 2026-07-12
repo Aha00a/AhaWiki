@@ -46,7 +46,6 @@ import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.io.ByteArrayInputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
@@ -60,7 +59,6 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
 import scala.util.matching.Regex
-import java.util.Base64
 import java.util.UUID
 import scala.collection.concurrent.TrieMap
 import scala.util.Failure
@@ -1202,14 +1200,16 @@ controllerComponents: ControllerComponents,
     })
   }
 
-  def uploadClipboardImage(): Action[AnyContent] = Action { implicit request =>
+  def uploadClipboardImage(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
     import com.amazonaws.services.s3.model.ObjectMetadata
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
-    val form = Form(tuple("pageName" -> text, "dataUrl" -> text)).bindFromRequest()
-    form.fold(_ => BadRequest("invalid form"), {
-      case (pageName, dataUrl) =>
+    val pageNameOption = request.body.dataParts.get("pageName").flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
+    val fileOption = request.body.file("file")
+
+    (pageNameOption, fileOption) match {
+      case (Some(pageName), Some(filePart)) =>
         database.withConnection { implicit connection =>
           getPageContextFor(pageName)(_.isUploadable(pageName)) match {
             case Left(result) => result
@@ -1217,63 +1217,59 @@ controllerComponents: ControllerComponents,
               implicit val site: Site = site0
               implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
               implicit val provider: RequestWrapper = provider0
-              if (!dataUrl.startsWith("data:image/")) {
-                BadRequest("only image dataUrl is supported")
+              val contentType = filePart.contentType.getOrElse("")
+              if (!contentType.startsWith("image/")) {
+                BadRequest("only image is supported")
               } else {
-                val pattern = """^data:(image/[-+.a-zA-Z0-9]+);base64,(.+)$""".r
-                dataUrl match {
-                  case pattern(contentType, base64Data) =>
-                    val bytes = Base64.getDecoder.decode(base64Data)
-                    val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                    val objectKey = buildAttachmentObjectKey(
-                      site.seq,
-                      pageName,
-                      originalFileName = "clipboard",
-                      extension = extension,
-                    )
+                val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
+                val objectKey = buildAttachmentObjectKey(
+                  site.seq,
+                  pageName,
+                  originalFileName = "clipboard",
+                  extension = extension,
+                )
 
-                    val amazonS3 = buildAmazonS3Client()
-                    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                    val metadata = new ObjectMetadata()
-                    metadata.setContentType(contentType)
-                    metadata.setContentLength(bytes.length)
-                    insertInitiatedAttachment(
-                      siteSeq = site.seq,
-                      pageName = pageName,
-                      originalFilename = "clipboard",
-                      objectKey = objectKey,
-                      contentType = contentType,
-                      fileSize = bytes.length,
-                    )
+                val amazonS3 = buildAmazonS3Client()
+                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
+                val metadata = new ObjectMetadata()
+                metadata.setContentType(contentType)
+                metadata.setContentLength(filePart.fileSize)
+                insertInitiatedAttachment(
+                  siteSeq = site.seq,
+                  pageName = pageName,
+                  originalFilename = "clipboard",
+                  objectKey = objectKey,
+                  contentType = contentType,
+                  fileSize = filePart.fileSize,
+                )
 
-                    try {
-                      val inputStream = new ByteArrayInputStream(bytes)
-                      try {
-                        val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                        Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                      } finally {
-                        inputStream.close()
-                      }
+                try {
+                  val inputStream = Files.newInputStream(filePart.ref.path)
+                  try {
+                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
+                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
+                  } finally {
+                    inputStream.close()
+                  }
 
-                      val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                      telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
-                      Ok(Json.obj(
-                        "objectKey" -> objectKey,
-                        "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                        "imageUrl" -> imageUrl,
-                      ))
-                    } catch {
-                      case error: Throwable =>
-                        logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
-                        Attachment.markFailed(objectKey)
-                        InternalServerError("Image upload failed.")
-                    }
-                  case _ =>
-                    BadRequest("invalid image dataUrl")
+                  val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                  telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
+                  Ok(Json.obj(
+                    "objectKey" -> objectKey,
+                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                    "imageUrl" -> imageUrl,
+                  ))
+                } catch {
+                  case error: Throwable =>
+                    logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
+                    Attachment.markFailed(objectKey)
+                    InternalServerError("Image upload failed.")
                 }
-            }
+              }
           }
         }
-    })
+      case _ =>
+        BadRequest("pageName and file are required")
+    }
   }
 }

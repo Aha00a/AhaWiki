@@ -112,7 +112,7 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
 
  * `GET /api/pageAttachments`로 기존 첨부 목록을 읽는다.
  * file input 또는 drag/drop으로 `POST /api/uploadAttachment`에 multipart upload한다.
- * clipboard image paste는 `POST /api/uploadClipboardImage`를 사용한다.
+ * clipboard image paste는 `POST /api/uploadClipboardImage`에 multipart upload한다.
  * 업로드 중 progress bar를 표시한다.
  * 업로드 성공 시 `[[Attachment(...)]]` macro를 cursor 위치에 삽입한다.
  * image attachment는 thumbnail로 표시하고, 그 외 파일은 icon으로 표시한다.

@@ -113,18 +113,18 @@ Content-Type: application/x-www-form-urlencoded
 === 클립보드 이미지 업로드
 [[[
 POST /api/uploadClipboardImage
-Content-Type: application/x-www-form-urlencoded
+Content-Type: multipart/form-data
 
 파라미터:
   pageName - 페이지 이름
-  dataUrl  - data:image/...;base64,... 형식의 이미지 데이터
+  file     - 이미지 파일 (Content-Type이 image/* 여야 함)
 
 응답 (JSON):
   objectKey
   attachmentMacro
-  fileUrl
-  contentType
+  imageUrl
 ]]]
+ * 과거에는 base64 dataUrl을 urlencoded form으로 받았으나, base64/URL 인코딩으로 요청 크기가 부풀어 `play.http.parser.maxMemoryBuffer`(2MB) 초과 시 413이 발생하여 multipart로 변경
 
 == 페이지 삭제 시 동작
  * 페이지 삭제 시 해당 페이지의 첨부파일도 S3 및 DB에서 함께 삭제 (cascade)

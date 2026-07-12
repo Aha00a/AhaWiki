@@ -1900,11 +1900,17 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             });
 
             $("html").pasteImageReader(function(results) {
-                $.post('/api/uploadClipboardImage', {
-                    csrfToken: $('[name=csrfToken]').val(),
-                    pageName: AhaWikiEditConfig.pageName,
-                    dataUrl: results.dataURL
-                }, function (data) {
+                const formData = new FormData();
+                formData.append('csrfToken', $('[name=csrfToken]').val());
+                formData.append('pageName', AhaWikiEditConfig.pageName);
+                formData.append('file', results.file, results.name || 'clipboard');
+                $.ajax({
+                    url: '/api/uploadClipboardImage',
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                }).done(function (data) {
                     if (data && data.attachmentMacro) {
                         insertTextAtCursor(data.attachmentMacro + '\n');
                         loadAttachments();

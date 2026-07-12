@@ -381,8 +381,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return raw.slice(first + marker.length).trim();
     };
 
-    var requestUploadClipboardImage = function (pageName, dataUrl) {
-        if (!pageName || !dataUrl) {
+    var requestUploadClipboardImage = function (pageName, file) {
+        if (!pageName || !file) {
             return Promise.resolve(null);
         }
 
@@ -394,19 +394,19 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }).then(function (csrfToken) {
             var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
-            var params = new URLSearchParams();
-            params.set('pageName', pageName);
-            params.set('dataUrl', dataUrl);
+            var formData = new FormData();
+            formData.append('csrfToken', tokenValue);
+            formData.append('pageName', pageName);
+            formData.append('file', file, file.name || 'clipboard');
 
             return fetch('/api/uploadClipboardImage', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'Csrf-Token': tokenValue,
                     'X-CSRF-Token': tokenValue
                 },
-                body: params.toString()
+                body: formData
             }).then(function (response) {
                 return response.json().catch(function () {
                     return {};
@@ -4167,40 +4167,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 var pageName = root.getAttribute('data-page-name') || '';
-                var reader = new FileReader();
-                reader.onload = function (loadEvent) {
-                    var dataUrl = loadEvent && loadEvent.target ? loadEvent.target.result : '';
-                    if (!dataUrl) {
-                        return;
+                requestUploadClipboardImage(pageName, file).then(function (payload) {
+                    var macro = payload && payload.attachmentMacro ? payload.attachmentMacro : '';
+                    if (!macro) {
+                        throw new Error('Missing attachment macro.');
                     }
-
-                    requestUploadClipboardImage(pageName, dataUrl).then(function (payload) {
-                        var macro = payload && payload.attachmentMacro ? payload.attachmentMacro : '';
-                        if (!macro) {
-                            throw new Error('Missing attachment macro.');
-                        }
-                        var commentText = macro;
-                        card.properties = card.properties || {};
-                        card.properties.Attachment = card.properties.Attachment || [];
-                        card.properties.Attachment.push(commentText);
-                        var commentEntry = buildCommentEntry([commentText]);
-                        card.comments = card.comments || [];
-                        card.comments.unshift(commentEntry);
-                        updateCardCommentCount(card);
-                        renderComments();
-                        renderProperties();
-                        renderColumns();
-                        enqueueMutation(function () {
-                            return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: commentText }).catch(function (error) {
-                                console.error('[Kanban] failed to save clipboard image comment', error);
-                            });
+                    var commentText = macro;
+                    card.properties = card.properties || {};
+                    card.properties.Attachment = card.properties.Attachment || [];
+                    card.properties.Attachment.push(commentText);
+                    var commentEntry = buildCommentEntry([commentText]);
+                    card.comments = card.comments || [];
+                    card.comments.unshift(commentEntry);
+                    updateCardCommentCount(card);
+                    renderComments();
+                    renderProperties();
+                    renderColumns();
+                    enqueueMutation(function () {
+                        return persistColumns('card:comment:add', { eventPrefix: 'User:' + getCurrentAuthor(), cardId: card.id || '', cardTitle: card.text || '', comment: commentText }).catch(function (error) {
+                            console.error('[Kanban] failed to save clipboard image comment', error);
                         });
-                    }).catch(function (error) {
-                        console.error('[Kanban] failed to upload clipboard image', error);
-                        alert('Image upload failed. ' + (error && error.message ? error.message : ''));
                     });
-                };
-                reader.readAsDataURL(file);
+                }).catch(function (error) {
+                    console.error('[Kanban] failed to upload clipboard image', error);
+                    alert('Image upload failed. ' + (error && error.message ? error.message : ''));
+                });
             };
 
             if (isWritable) {
