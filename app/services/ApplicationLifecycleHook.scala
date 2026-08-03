@@ -57,6 +57,13 @@ class ApplicationLifecycleHook @Inject()(
   }
 
   // 만료된 데이터 삭제 스케쥴러: 10~30분 간격으로 AccessLog, IpDeny, UserViewHistory 테이블에서 만료된 레코드를 삭제합니다.
+  //
+  // 보관 기간은 각 테이블의 deleteExpired 안에 있다. 한눈에 보라고 여기 옮겨 적는다:
+  //   AccessLog       1개월   (180일 → 1년 → 6개월 → 3개월 → 1개월 로 계속 조여왔다)
+  //   IpDeny          90일    ← 이 값이 곧 차단 기간이다. 2026-08-03 에 5년에서 줄였다
+  //   UserViewHistory 3개월
+  // 세 쿼리 모두 오래된 순으로 limit 개만 보고 배치로 지우므로, 기간을 줄여도 한 번에
+  // 몰아서 지우지 않는다. 수렴까지 몇 번의 실행이 걸린다.
   scheduleWithDynamicDelay("deleteExpired", random(10.minutes, 30.minutes), () => random(10.minutes, 30.minutes), () => {
     database.withConnection { implicit connection =>
       models.tables.AccessLog.deleteExpired()
