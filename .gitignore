@@ -7,6 +7,16 @@
 /RUNNING_PID
 /conf/application.local.dev.conf
 /conf/wiki.aha00a.com.conf
+
+# 위 두 파일의 사본·백업도 함께 막는다. 위 규칙은 경로가 정확히 일치할 때만 걸려서
+# application.local.dev.conf.bak-premigrate 같은 접미사가 그대로 빠져나간다.
+# 이 저장소는 public 이고 저 파일들에는 DB 비밀번호와 play.http.secret.key 가 평문으로
+# 들어 있으므로, git add -A 한 번이면 그대로 공개된다 (2026-08-03 실제로 그런 파일이 있었다).
+/conf/application.local.dev.conf.*
+/conf/wiki.aha00a.com.conf.*
+*.bak
+*.bak-*
+*.orig
 cache
 logs
 node_modules
