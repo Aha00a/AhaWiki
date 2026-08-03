@@ -6,13 +6,25 @@ import models.ContextWikiPage
 import scalaz.LazyOption._
 import scalaz._
 
-import java.io.File
 import java.sql.Connection
 import scala.util.matching.Regex
 
 object DefaultPageLogic {
 
   private val regexSchemaColon: Regex = """^schema:(.+)$""".r
+
+  // 기본 문서는 conf/Page/ 에 있고 클래스패스 루트의 Page/ 로 패키징된다.
+  // 파일시스템 경로(app/assets/Page)로 읽으면 sbt stage/dist 배포본에서 동작하지 않는다.
+  // conf/ 에 둔 이유는 app/assets/ 아래에 있으면 sbt-web 이 웹 에셋으로 패키징해
+  // /assets/Page/FrontPage 로 원본이 그대로 노출되기 때문이다.
+  private def defaultPageResource(title: String): String = s"Page/$title"
+
+  private def defaultPageExists(title: String): Boolean =
+    getClass.getClassLoader.getResource(defaultPageResource(title)) != null
+
+  private def readDefaultPage(title: String): Option[String] =
+    Option(getClass.getClassLoader.getResourceAsStream(defaultPageResource(title)))
+      .map(is => com.aha00a.commons.utils.Using(scala.io.Source.fromInputStream(is)(scala.io.Codec.UTF8))(_.mkString))
 
   def isDefined(title: String): Boolean = {
     import com.aha00a.commons.utils.DateTimeUtil
@@ -25,7 +37,7 @@ object DefaultPageLogic {
       case DateTimeUtil.regexDashDashMonth(_) => true
       case "schema:Schema" => true
       case regexSchemaColon(schema) => CalculatedSchemaOrg.mapAll.isDefinedAt(schema)
-      case _ => new File("app/assets/Page", title).exists()
+      case _ => defaultPageExists(title)
     }
   }
 
@@ -84,11 +96,9 @@ object DefaultPageLogic {
         }
 
       case _ =>
-        val file = new File("app/assets/Page", title)
-        if(file.exists()) {
-          lazySome(file.readAllString())
-        } else {
-          lazyNone
+        readDefaultPage(title) match {
+          case Some(content) => lazySome(content)
+          case None => lazyNone
         }
     }
   }

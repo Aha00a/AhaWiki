@@ -1,7 +1,5 @@
 package logics
 
-import java.io.File
-
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.EnglishCaseConverter
 import com.aha00a.commons.utils.Using
@@ -45,7 +43,16 @@ object CalculatedSchemaOrg {
 
   def withNameSpace(s: String): String = s"schema:$s"
 
-  lazy val jsonTree: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/26.0/tree.pruned.jsonld"))(Codec.UTF8))(_.mkString))
+  // 클래스패스에서 읽는다. 파일시스템 경로로 읽으면 sbt stage/dist 배포본에서 동작하지 않는다
+  // (작업 디렉터리가 소스 체크아웃일 때만 우연히 동작한다).
+  // public/** 는 sbt-web 이 assets JAR 안 public/ 으로 그대로 패키징하므로 경로가 동일하다.
+  private def readResourceString(path: String): String = {
+    val is = getClass.getClassLoader.getResourceAsStream(path)
+    require(is != null, s"resource not found on classpath: $path")
+    Using(scala.io.Source.fromInputStream(is)(Codec.UTF8))(_.mkString)
+  }
+
+  lazy val jsonTree: JsValue = Json.parse(readResourceString("public/schema.org/26.0/tree.pruned.jsonld"))
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -124,7 +131,7 @@ object CalculatedSchemaOrg {
 
 
 
-  lazy val jsonAllLayers: JsValue = Json.parse(Using(scala.io.Source.fromFile(new File("public/schema.org/26.0/schemaorg-current-https.jsonld"))(Codec.UTF8))(_.mkString))
+  lazy val jsonAllLayers: JsValue = Json.parse(readResourceString("public/schema.org/26.0/schemaorg-current-https.jsonld"))
   lazy val seqAll:Seq[SchemaType] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
     values.map(v =>{
