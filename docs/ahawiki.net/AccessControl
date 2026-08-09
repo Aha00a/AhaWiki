@@ -37,6 +37,7 @@
  * `RegularExpression`
   * page name 전체가 정규식에 매칭될 때 허용됩니다.
   * 예: `^Private/(Team|Project)/.*$`
+  * 항상 full match로 판정하므로 `^`와 `$`를 직접 붙일 필요가 없습니다. 패턴 `Private`는 `Private` 페이지에만 매칭되고 `MyPrivate`나 `PrivatePage`에는 매칭되지 않습니다.
 
 == Actor
 
@@ -289,10 +290,120 @@ site	target	targetType	actor	actorType	action
 
 현재 실제 접근 제어에서는 위 값들을 사용하지 않습니다.
 
-기존 문서 호환성을 위해 `#!read`, `#!write` directive가 렌더링에서 특별 취급될 수는 있지만, 권한 소스로는 사용되지 않습니다.
+코드 상태:
 
-== Notes
+ * `PageContent`는 `read` / `write` directive를 권한 값으로 추출하지 않습니다.
+ * `PageContent`는 기존 문서 렌더링 호환성을 위해 `read` / `write` directive를 interpreter shebang에서 계속 제외합니다.
+ * `Page` / `PageMeta` 모델에서 `permRead` 필드가 제거되었습니다.
+ * evolution 51에서 `Page.permRead`, `PageMeta.permRead` 컬럼을 제거합니다.
 
- * 목록, 검색 결과, include macro, raw, history, blame, diff도 `Permission` 테이블 기준의 읽기 권한 필터링을 적용합니다.
- * signed read URL은 별도 예외 경로입니다. 유효한 `sr_exp`, `sr_sig` query parameter가 있으면 읽기가 허용될 수 있습니다.
- * 관리자 판정 중 일부는 아직 role 테이블이 아니라 hard-coded 조건을 사용합니다.
+즉 legacy 데이터는 권한 소스가 아니며 schema에서도 제거 대상입니다.
+
+== 구현
+
+실제 읽기/쓰기 권한 판정은 `logics.wikis.WikiPermission`이 담당합니다.
+
+판정 순서:
+
+ 1. 현재 사이트의 `Permission` row를 조회합니다.
+ 2. 요청한 page name과 actor email에 매칭되는 row를 찾습니다.
+ 3. 가장 구체적인 row 하나를 고릅니다.
+ 4. `row.action >= requiredAction`이면 허용합니다.
+ 5. 매칭되는 row가 없으면 거부합니다.
+
+=== 로그인 사용자
+
+로그인은 Google OAuth 기반입니다.
+
+ 1. `GoogleOAuth.callback`에서 Google profile을 조회합니다.
+ 2. `User.selectOrInsert(email, profileImageUrl)`로 사용자를 찾거나 생성합니다.
+ 3. `SessionLogic.login`이 session에 `seq`, `email`, `nickname`과 optional `profileImageUrl`을 저장합니다.
+
+요청 중 현재 사용자는 `RequestWrapper.getUser`로 접근하며, 이는 `SessionLogic.getUser(request)` 결과입니다. session에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급합니다.
+
+관리자 판정은 아직 별도 role 테이블이 아니라 코드 조건으로 남아 있습니다.
+
+[[[#!Vim scala
+SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
+]]]
+
+=== Permission 테이블
+
+`Permission` 테이블은 evolution 18에서 추가되었고, evolution 50에서 `targetType`, `actorType`, `dateInserted`, `dateUpdated`가 추가되었습니다.
+
+컬럼은 `site`, `target`, `targetType`, `actor`, `actorType`, `action`, `dateInserted`, `dateUpdated`입니다.
+
+primary key:
+
+[[[#!Vim text
+(site, targetType, target, actorType, actor)
+]]]
+
+신규 코드는 SQL에서도 `targetType`을 명시해야 합니다.
+
+=== 읽기 권한 적용 지점
+
+읽기는 `WikiPermission.isReadable` / `isReadableByAnonymous`로 판정합니다.
+
+ * `Wiki.view`
+ * raw
+ * history
+ * blame
+ * diff
+ * 검색 결과 필터링
+ * page list 필터링
+ * include macro
+ * WebSocket watch
+ * API 일부 응답 필터링
+
+읽기가 거부되면 보통 `Permission denied.`를 반환합니다.
+
+signed read URL은 예외 경로입니다. 유효한 서명이 있으면 페이지를 읽을 수 있으며, `sr_exp` · `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증합니다.
+
+=== 쓰기 권한 적용 지점
+
+쓰기는 `WikiPermission.isWritable`로 판정합니다. 기존 페이지는 `Edit`, 없는 페이지는 `Create`가 필요합니다.
+
+ * 없는 페이지의 `edit`
+ * 기존 페이지의 `edit`
+ * save
+ * `rename`
+ * `delete`
+ * attachment upload/delete 관련 일부 경로
+ * diary write
+ * Google Spreadsheet sync
+
+save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기준으로 페이지 존재 여부를 판단해 required action을 계산합니다.
+
+=== 목록·검색 필터링
+
+페이지 목록 권한 필터링은 `PageLogic.getListPageByPermission`에서 수행합니다.
+
+ 1. `PageMeta` 기반 최신 페이지 목록을 가져옵니다.
+ 2. 각 page name에 `WikiPermission.isReadable`을 호출합니다.
+ 3. `Permission` 테이블 기준으로 허용된 페이지만 남깁니다.
+
+결과는 다음 필드로 노출됩니다.
+
+ * `ContextSite.seqPageByPermission`
+ * `ContextSite.seqPageNameByPermission`
+ * `ContextSite.setPageNameByPermission`
+
+검색 결과도 각 결과의 page name에 `WikiPermission.isReadable`을 다시 적용합니다.
+
+=== Flash 표시
+
+읽기 제한이 있는 페이지에서는 상단 flash에 `Permission` 테이블 기준 상세가 표시됩니다.
+
+ * 현재 사용자
+ * 현재 사용자 read 허용 여부와 매칭 row
+ * anonymous read 허용 여부와 매칭 row
+ * 현재 사용자 write 허용 여부와 매칭 row
+
+이 flash도 shebang/default 기준 설명은 표시하지 않습니다.
+
+== 남은 과제
+
+ * [ ] hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 옮길지 결정한다.
+ * [ ] signed read URL을 일반 permission 모델 안에 넣을지, 예외 경로로 유지할지 결정한다.
+ * [ ] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다.
