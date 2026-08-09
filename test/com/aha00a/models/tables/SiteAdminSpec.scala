@@ -1,5 +1,6 @@
 package com.aha00a.models.tables
 
+import com.aha00a.tests.TestSchema
 import anorm.SQL
 import models.tables.SiteAdmin
 import org.scalatest.freespec.AnyFreeSpec
@@ -21,33 +22,8 @@ class SiteAdminSpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
+    TestSchema.create("Site", "User", "SiteAdmin")(connection)
     Seq(
-      """
-        CREATE TABLE Site (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          created DATETIME DEFAULT NOW() NOT NULL,
-          updated DATETIME DEFAULT NOW() NOT NULL,
-          name VARCHAR(200) NOT NULL
-        )
-      """,
-      """
-        CREATE TABLE `User` (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          created DATETIME DEFAULT NOW() NOT NULL,
-          updated DATETIME DEFAULT NOW() NOT NULL,
-          nickname VARCHAR(32) NOT NULL
-        )
-      """,
-      """
-        CREATE TABLE SiteAdmin (
-          site INT NOT NULL,
-          `user` INT NOT NULL,
-          dateInserted DATETIME DEFAULT NOW() NOT NULL,
-          PRIMARY KEY (site, `user`),
-          CONSTRAINT SiteAdmin_Site_seq_fk FOREIGN KEY (site) REFERENCES Site (seq),
-          CONSTRAINT SiteAdmin_User_seq_fk FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
       "INSERT INTO Site (seq, name) VALUES (1, 'SiteA')",
       "INSERT INTO Site (seq, name) VALUES (2, 'SiteB')",
       "INSERT INTO `User` (seq, nickname) VALUES (10, 'alice')",

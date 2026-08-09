@@ -1,6 +1,8 @@
 package com.aha00a.controllers
 
 import anorm.SQL
+import com.aha00a.tests.TestApplication
+import com.aha00a.tests.TestSchema
 import anorm.SqlStringInterpolation
 import logics.AhaWikiCacheMemoryDomainSite
 import logics.AhaWikiCacheMemoryPermission
@@ -23,49 +25,18 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import java.time.LocalDateTime
-import scala.collection.concurrent.TrieMap
-import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
 
 class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
 
-  private val dbName = s"bot_api_${java.util.UUID.randomUUID().toString.replace("-", "")}"
+  private val dbName = TestApplication.randomDbName("bot_api")
   private val actorSystem = ActorSystem(s"$dbName-actors")
 
-  private class TestSyncCacheApi extends SyncCacheApi {
-    private val values = TrieMap.empty[String, Any]
-
-    override def set(key: String, value: Any, expiration: Duration): Unit =
-      values.put(key, value)
-
-    override def remove(key: String): Unit =
-      values.remove(key)
-
-    override def getOrElseUpdate[A](key: String, expiration: Duration)(orElse: => A)(implicit evidence$1: ClassTag[A]): A =
-      values.getOrElseUpdate(key, orElse).asInstanceOf[A]
-
-    override def get[T](key: String)(implicit evidence$2: ClassTag[T]): Option[T] =
-      values.get(key).map(_.asInstanceOf[T])
-  }
 
   override def fakeApplication(): Application = {
     GuiceApplicationBuilder()
-      .configure(
-        "db.default.driver"   -> "org.h2.Driver",
-        "db.default.url"      -> s"jdbc:h2:mem:$dbName;MODE=MySQL;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1",
-        "db.default.username" -> "sa",
-        "db.default.password" -> "",
-        "play.evolutions.db.default.enabled" -> false,
-        "play.modules.disabled" -> Seq(
-          "play.api.cache.redis.RedisCacheModule",
-          "services.ApplicationLifecycleHook",
-        ),
-        "play.http.filters" -> "play.api.http.NoHttpFilters",
-        "play.http.secret.key" -> "test-secret-key-for-testing-only",
-        "AhaWiki.accessLog.sampleRate" -> 0,
-      )
+      .configure(TestApplication.baseConfiguration(dbName))
       .overrides(
-        bind[SyncCacheApi].toInstance(new TestSyncCacheApi),
+        bind[SyncCacheApi].toInstance(new TestApplication.TestSyncCacheApi),
         bind[WikiActors].toInstance(WikiActors(actorSystem.deadLetters, actorSystem.deadLetters)),
       )
       .build()
@@ -77,164 +48,8 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
 
   private def setupSchema(): Unit = {
     db.withConnection { implicit connection =>
+      TestSchema.create("Site", "SiteDomain", "User", "UserEmail", "Permission", "Page", "PageMeta", "CalculatedLink", "CalculatedCosineSimilarity", "CalculatedTermFrequency", "CalculatedTermFrequencyNorm", "CalculatedSchemaOrg", "UserApiKey", "Attachment")
       Seq(
-        """
-          CREATE TABLE Site (
-            seq INT AUTO_INCREMENT PRIMARY KEY,
-            created DATETIME DEFAULT NOW() NOT NULL,
-            updated DATETIME DEFAULT NOW() NOT NULL,
-            name VARCHAR(200) NOT NULL,
-            abbr VARCHAR(200) NOT NULL DEFAULT '',
-            mainDomain VARCHAR(255) NOT NULL DEFAULT '',
-            publicListedOrder DECIMAL(10, 2) NULL
-          )
-        """,
-        """
-          CREATE TABLE SiteDomain (
-            created DATETIME DEFAULT NOW() NOT NULL,
-            site INT NOT NULL,
-            domain VARCHAR(255) NOT NULL,
-            PRIMARY KEY (site, domain)
-          )
-        """,
-        """
-          CREATE TABLE User (
-            seq INT AUTO_INCREMENT PRIMARY KEY,
-            created DATETIME DEFAULT NOW() NOT NULL,
-            updated DATETIME DEFAULT NOW() NOT NULL,
-            nickname VARCHAR(32) NOT NULL,
-            profileImageUrl VARCHAR(255) NULL
-          )
-        """,
-        """
-          CREATE TABLE UserEmail (
-            `user` INT NOT NULL,
-            email VARCHAR(255) NOT NULL,
-            isPrimary BOOLEAN NOT NULL DEFAULT FALSE,
-            created DATETIME DEFAULT NOW() NOT NULL,
-            PRIMARY KEY (`user`, email),
-            UNIQUE (email)
-          )
-        """,
-        """
-          CREATE TABLE Permission (
-            site INT NOT NULL,
-            target VARCHAR(255) NOT NULL,
-            targetType VARCHAR(255) NOT NULL,
-            actor VARCHAR(255) NOT NULL,
-            actorType VARCHAR(255) NOT NULL,
-            action INT NOT NULL,
-            dateUpdated DATETIME DEFAULT NOW() NOT NULL,
-            PRIMARY KEY (site, target, targetType, actor, actorType)
-          )
-        """,
-        """
-          CREATE TABLE Page (
-            site INT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            revision BIGINT NOT NULL,
-            dateTime DATETIME DEFAULT NOW() NOT NULL,
-            `user` INT NULL,
-            remoteAddress VARCHAR(255) NOT NULL DEFAULT '',
-            comment VARCHAR(255) NOT NULL DEFAULT '',
-            isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
-            viaApi BOOLEAN NOT NULL DEFAULT FALSE,
-            userApiKey BIGINT NULL,
-            content CLOB NOT NULL,
-            PRIMARY KEY (site, name, revision)
-          )
-        """,
-        """
-          CREATE TABLE PageMeta (
-            site INT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            dateInserted DATETIME NOT NULL DEFAULT NOW(),
-            dateUpdated DATETIME NULL,
-            revision BIGINT NOT NULL,
-            image VARCHAR(512) NULL,
-            description VARCHAR(512) NULL,
-            size BIGINT NOT NULL DEFAULT 0,
-            PRIMARY KEY (site, name)
-          )
-        """,
-        """
-          CREATE TABLE CalculatedLink (
-            site INT NOT NULL,
-            src VARCHAR(255) NOT NULL,
-            dst VARCHAR(255) NOT NULL,
-            alias VARCHAR(255) NOT NULL DEFAULT ''
-          )
-        """,
-        """
-          CREATE TABLE CalculatedCosineSimilarity (
-            site1 INT NOT NULL,
-            name1 VARCHAR(255) NOT NULL,
-            site2 INT NOT NULL,
-            name2 VARCHAR(255) NOT NULL,
-            similarity DOUBLE NOT NULL DEFAULT 0
-          )
-        """,
-        """
-          CREATE TABLE CalculatedTermFrequency (
-            site INT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            term BIGINT NOT NULL,
-            frequency INT NOT NULL DEFAULT 0
-          )
-        """,
-        """
-          CREATE TABLE CalculatedTermFrequencyNorm (
-            site INT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            norm DOUBLE NOT NULL DEFAULT 0
-          )
-        """,
-        """
-          CREATE TABLE CalculatedSchemaOrg (
-            site INT NOT NULL,
-            page VARCHAR(255) NOT NULL,
-            cls VARCHAR(255) NOT NULL DEFAULT '',
-            prop VARCHAR(255) NOT NULL DEFAULT '',
-            `value` VARCHAR(255) NOT NULL DEFAULT ''
-          )
-        """,
-        """
-          CREATE TABLE UserApiKey (
-            seq BIGINT NOT NULL AUTO_INCREMENT,
-            `user` INT NOT NULL,
-            keyHash VARCHAR(64) NOT NULL,
-            keyPrefix VARCHAR(32) NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            dateInserted DATETIME NOT NULL DEFAULT NOW(),
-            dateLastUsed DATETIME NULL,
-            dateRevoked DATETIME NULL,
-            PRIMARY KEY (seq),
-            UNIQUE (keyHash)
-          )
-        """,
-        """
-          CREATE TABLE Attachment (
-            seq BIGINT NOT NULL AUTO_INCREMENT,
-            site BIGINT NOT NULL,
-            pageName VARCHAR(255) NOT NULL,
-            user BIGINT NULL,
-            uploaderEmail VARCHAR(255) NULL,
-            originalFilename VARCHAR(255) NOT NULL,
-            storedFilename VARCHAR(255) NOT NULL,
-            bucket VARCHAR(255) NOT NULL,
-            objectKey VARCHAR(512) NOT NULL,
-            contentType VARCHAR(255) NOT NULL,
-            fileSize BIGINT NOT NULL,
-            status VARCHAR(32) NOT NULL,
-            etag VARCHAR(255) NULL,
-            dateInserted DATETIME DEFAULT NOW() NOT NULL,
-            dateUpdated DATETIME NULL,
-            dateUploaded DATETIME NULL,
-            dateDeleted DATETIME NULL,
-            PRIMARY KEY (seq)
-          )
-        """,
-        "CREATE INDEX UserApiKey_user_dateRevoked_index ON UserApiKey (`user`, dateRevoked)",
         "INSERT INTO Site (seq, name, abbr, mainDomain) VALUES (1, 'TestWiki', 'TestWiki', 'localhost')",
         "INSERT INTO SiteDomain (site, domain) VALUES (1, 'localhost')",
         "INSERT INTO User (seq, nickname) VALUES (1, 'alice')",

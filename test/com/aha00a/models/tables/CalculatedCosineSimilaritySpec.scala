@@ -1,5 +1,6 @@
 package com.aha00a.models.tables
 
+import com.aha00a.tests.TestSchema
 import anorm.SQL
 import anorm.SqlStringInterpolation
 import models.tables.CalculatedCosineSimilarity
@@ -42,52 +43,7 @@ class CalculatedCosineSimilaritySpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    Seq(
-      """
-        CREATE TABLE PageMeta (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          revision INT NOT NULL,
-          PRIMARY KEY (site, name)
-        )
-      """,
-      """
-        CREATE TABLE CalculatedTerm (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          term VARCHAR(255) NOT NULL UNIQUE
-        )
-      """,
-      """
-        CREATE TABLE CalculatedTermFrequency (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          term INT NOT NULL,
-          frequency INT NOT NULL,
-          PRIMARY KEY (site, name, term)
-        )
-      """,
-      """
-        CREATE TABLE CalculatedTermFrequencyNorm (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          norm DOUBLE NOT NULL,
-          PRIMARY KEY (site, name),
-          FOREIGN KEY (site, name) REFERENCES PageMeta (site, name)
-        )
-      """,
-      """
-        CREATE TABLE CalculatedCosineSimilarity (
-          site1 INT NOT NULL,
-          name1 VARCHAR(255) NOT NULL,
-          site2 INT NOT NULL,
-          name2 VARCHAR(255) NOT NULL,
-          similarity DOUBLE NOT NULL,
-          PRIMARY KEY (site1, name1, site2, name2),
-          FOREIGN KEY (site1, name1) REFERENCES PageMeta (site, name),
-          FOREIGN KEY (site2, name2) REFERENCES PageMeta (site, name)
-        )
-      """,
-    ).foreach(sql => SQL(sql).execute()(connection))
+    TestSchema.create("PageMeta", "CalculatedTerm", "CalculatedTermFrequency", "CalculatedTermFrequencyNorm", "CalculatedCosineSimilarity")(connection)
   }
 
   private def insertFixture(connection: Connection): Unit = {

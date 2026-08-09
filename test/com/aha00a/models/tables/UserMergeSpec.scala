@@ -1,5 +1,6 @@
 package com.aha00a.models.tables
 
+import com.aha00a.tests.TestSchema
 import anorm.SQL
 import anorm.SqlStringInterpolation
 import models.tables.UserMerge
@@ -40,51 +41,20 @@ class UserMergeSpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    Seq(
-      """
-        CREATE TABLE `User` (
-          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          updated DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          nickname VARCHAR(255) NOT NULL,
-          profileImageUrl VARCHAR(512) NULL
-        )
-      """,
-      """
-        CREATE TABLE UserEmail (
-          `user` BIGINT NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          isPrimary BOOLEAN NOT NULL DEFAULT FALSE,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          PRIMARY KEY (`user`, email),
-          UNIQUE (email),
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
+    TestSchema.create("User", "UserEmail", "AccessLog", "UserSite")(connection)
+    // Not the real Page. UserMerge finds what to update by walking the foreign keys exported
+    // from User, and production's Page has no foreign key to User — only to UserApiKey. This
+    // table is a stand-in for "some table that references a user", kept local because
+    // TestSchema mirrors the real schema and the real Page would never be touched here.
+    SQL(
       """
         CREATE TABLE Page (
           seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-          `user` BIGINT NOT NULL,
+          `user` INT NOT NULL,
           FOREIGN KEY (`user`) REFERENCES `User` (seq)
         )
-      """,
       """
-        CREATE TABLE AccessLog (
-          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-          `user` BIGINT NULL,
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-      """
-        CREATE TABLE UserSite (
-          `user` BIGINT NOT NULL,
-          site BIGINT NOT NULL,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          PRIMARY KEY (`user`, site),
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-    ).foreach(sql => SQL(sql).execute()(connection))
+    ).execute()(connection)
   }
 
   private def insertFixture(connection: Connection): Unit = {

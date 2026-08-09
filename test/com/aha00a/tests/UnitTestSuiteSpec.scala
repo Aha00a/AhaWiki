@@ -16,46 +16,15 @@ import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 
 import java.util.Locale
-import scala.collection.concurrent.TrieMap
-import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
 
 class UnitTestSuiteSpec extends AnyFreeSpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
-  private val dbName = s"legacy_unit_${java.util.UUID.randomUUID().toString.replace("-", "")}"
+  private val dbName = TestApplication.randomDbName("unit_suite")
 
-  private class TestSyncCacheApi extends SyncCacheApi {
-    private val values = TrieMap.empty[String, Any]
-
-    override def set(key: String, value: Any, expiration: Duration): Unit =
-      values.put(key, value)
-
-    override def remove(key: String): Unit =
-      values.remove(key)
-
-    override def getOrElseUpdate[A](key: String, expiration: Duration)(orElse: => A)(implicit evidence$1: ClassTag[A]): A =
-      values.getOrElseUpdate(key, orElse).asInstanceOf[A]
-
-    override def get[T](key: String)(implicit evidence$2: ClassTag[T]): Option[T] =
-      values.get(key).map(_.asInstanceOf[T])
-  }
 
   override def fakeApplication(): Application = {
     GuiceApplicationBuilder()
-      .configure(
-        "db.default.driver" -> "org.h2.Driver",
-        "db.default.url" -> s"jdbc:h2:mem:$dbName;MODE=MySQL;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1",
-        "db.default.username" -> "sa",
-        "db.default.password" -> "",
-        "play.evolutions.db.default.enabled" -> false,
-        "play.modules.disabled" -> Seq(
-          "play.api.cache.redis.RedisCacheModule",
-          "services.ApplicationLifecycleHook",
-        ),
-        "play.http.filters" -> "play.api.http.NoHttpFilters",
-        "play.http.secret.key" -> "test-secret-key-for-testing-only",
-        "AhaWiki.accessLog.sampleRate" -> 0,
-      )
-      .overrides(bind[SyncCacheApi].toInstance(new TestSyncCacheApi))
+      .configure(TestApplication.baseConfiguration(dbName))
+      .overrides(bind[SyncCacheApi].toInstance(new TestApplication.TestSyncCacheApi))
       .build()
   }
 
@@ -91,34 +60,7 @@ class UnitTestSuiteSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Before
 
   private def setupSchema(): Unit = {
     database.withConnection { connection =>
-      Seq(
-        """
-          CREATE TABLE IF NOT EXISTS User (
-            seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-            nickname VARCHAR(32) NOT NULL
-          )
-        """,
-        """
-          CREATE TABLE IF NOT EXISTS Page (
-            site BIGINT NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            revision BIGINT NOT NULL,
-            dateTime DATETIME DEFAULT NOW() NOT NULL,
-            user BIGINT NULL,
-            remoteAddress VARCHAR(255) NOT NULL DEFAULT '',
-            comment VARCHAR(255) NOT NULL DEFAULT '',
-            isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
-            viaApi BOOLEAN NOT NULL DEFAULT FALSE,
-            userApiKey BIGINT NULL,
-            content CLOB NOT NULL,
-            PRIMARY KEY (site, name, revision)
-          )
-        """,
-      ).foreach { sql =>
-        val statement = connection.createStatement()
-        try statement.execute(sql)
-        finally statement.close()
-      }
+      TestSchema.create("User", "Page")(connection)
     }
   }
 

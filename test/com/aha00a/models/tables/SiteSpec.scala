@@ -1,6 +1,8 @@
 package com.aha00a.models.tables
 
 import anorm.SQL
+import com.aha00a.tests.TestApplication
+import com.aha00a.tests.TestSchema
 import models.tables.Site
 import org.scalatest.freespec.AnyFreeSpec
 
@@ -11,10 +13,9 @@ class SiteSpec extends AnyFreeSpec {
   "selectPublicListed" - {
     "keeps positive publicListedOrder rows and sorts by order descending then seq ascending" in {
       Class.forName("org.h2.Driver")
-      val databaseName = s"sites_${java.util.UUID.randomUUID().toString.replace("-", "")}"
-      val connection = DriverManager.getConnection(s"jdbc:h2:mem:$databaseName;MODE=MySQL;DB_CLOSE_DELAY=-1")
+      val connection = DriverManager.getConnection(TestApplication.h2Url(TestApplication.randomDbName("sites")))
       try {
-        setupSchema(connection)
+        TestSchema.create("Site")(connection)
         insertFixture(connection)
 
         implicit val implicitConnection: Connection = connection
@@ -29,20 +30,6 @@ class SiteSpec extends AnyFreeSpec {
         connection.close()
       }
     }
-  }
-
-  private def setupSchema(connection: Connection): Unit = {
-    SQL(
-      """
-        CREATE TABLE Site (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          name VARCHAR(200) NOT NULL,
-          abbr VARCHAR(200) NOT NULL,
-          mainDomain VARCHAR(255) NOT NULL,
-          publicListedOrder DECIMAL(10,2) NULL
-        )
-      """
-    ).execute()(connection)
   }
 
   private def insertFixture(connection: Connection): Unit = {
