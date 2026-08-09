@@ -25,7 +25,7 @@ object MacroDayHeader extends TraitMacro {
         s"""
            |<h2>${wikiContext.nameTop} $weekday</h2>
            |""".stripMargin
-      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+      case _ => argumentError(argument)
     }
   }
 

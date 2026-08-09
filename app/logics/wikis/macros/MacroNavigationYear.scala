@@ -18,7 +18,7 @@ object MacroNavigationYear extends TraitMacro {
       case "" | null => toHtmlString(wikiContext.nameTop)
       case DateTimeUtil.regexYear(y) =>
         s"""<div class="rightInfoBox">${RangeUtil.around(y.toInt, 10).map(y => AhaMarkLink(y.toString, "", noFollow = true).toHtmlString()).mkString("<br/>")}</div>"""
-      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+      case _ => argumentError(argument)
     }
   }
 

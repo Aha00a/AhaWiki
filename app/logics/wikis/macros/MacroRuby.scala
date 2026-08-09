@@ -14,7 +14,7 @@ object MacroRuby extends TraitMacro {
         val escapedOriginal = original.trim.escapeHtml()
         val escapedRuby = ruby.trim.escapeHtml()
         s"<ruby><rb>$escapedOriginal</rb><rp>(</rp><rt>$escapedRuby</rt><rp>)</rp></ruby>"
-      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+      case _ => argumentError(argument)
     }
   }
 }

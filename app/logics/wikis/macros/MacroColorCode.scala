@@ -13,7 +13,7 @@ object MacroColorCode extends TraitMacro {
       case regexColorCodeSharpHex(color) =>
         val swatch = s"""<span class="MacroColorCodeSwatch"><span style="background: $color"></span></span>"""
         s"""<span class="MacroColorCode">$swatch${MacroCopyable.doToHtmlString(color)}</span>"""
-      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+      case _ => argumentError(argument)
     }
   }
 }

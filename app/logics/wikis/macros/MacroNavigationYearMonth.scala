@@ -20,7 +20,7 @@ object MacroNavigationYearMonth extends TraitMacro {
       case DateTimeUtil.regexYearDashMonth(y, m) =>
         val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
         s"""<div class="rightInfoBox">${RangeUtil.around(0, 3).map(i => AhaMarkLink(localDate.plusMonths(i).toYearDashMonthString, "", noFollow = true).toHtmlString()).mkString("<br/>")}</div>"""
-      case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+      case _ => argumentError(argument)
     }
   }
 

@@ -44,7 +44,7 @@ object MacroIncludeDays extends TraitMacro {
           Interpreters.toHtmlString(content)
         }
       }
-    case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+    case _ => argumentError(argument)
   }
 
   override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =

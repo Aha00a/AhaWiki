@@ -32,7 +32,7 @@ object MacroLinkDate extends TraitMacro {
          |$links
          |</div>
          |""".stripMargin
-    case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+    case _ => argumentError(argument)
   }
 
   private def getSeqLinkAround(argument: String)(implicit wikiContext: ContextWikiPage): Seq[AhaMarkLink] = {

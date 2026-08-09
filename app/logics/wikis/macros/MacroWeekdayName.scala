@@ -14,6 +14,6 @@ object MacroWeekdayName extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
     case "" | null => toHtmlString(wikiContext.nameTop)
     case regex(ymd) => LocalDate.parse(ymd).getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
-    case _ => MacroError.toHtmlString(s"Argument Error - [[$name($argument)]]")
+    case _ => argumentError(argument)
   }
 }
