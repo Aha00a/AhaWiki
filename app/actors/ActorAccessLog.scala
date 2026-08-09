@@ -54,18 +54,20 @@ class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.acto
       )
       None
     } else {
+      // Named, not positional: method, scheme, host and path are all String and sit next to
+      // each other, so a swap would compile and quietly log the wrong field for weeks.
       AccessLog.insert(
-        insert.site.seq,
-        insert.user,
-        insert.ipDeny,
-        insert.method,
-        insert.scheme,
-        insert.host,
-        insert.path,
-        insert.remoteAddress,
-        insert.userAgent,
-        insert.status,
-        insert.duration,
+        site = insert.site.seq,
+        user = insert.user,
+        ipDeny = insert.ipDeny,
+        method = insert.method,
+        scheme = insert.scheme,
+        host = insert.host,
+        path = insert.path,
+        remoteAddress = insert.remoteAddress,
+        userAgent = insert.userAgent,
+        status = insert.status,
+        durationMilli = insert.duration,
       )
     }
   }

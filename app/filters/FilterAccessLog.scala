@@ -65,13 +65,17 @@ class FilterAccessLog @Inject()(
   private def makeInsert(status: Int, duration: Int, ipDenySeq: Option[Long] = None)
                         (implicit site: Site, rh: RequestHeader): ActorAccessLog.Insert =
     ActorAccessLog.Insert(
-      site,
-      SessionLogic.getUser(rh).map(_.seq),
-      ipDenySeq,
-      rh.method, rh.scheme, rh.host, rh.uri,
-      rh.remoteAddressWithXRealIp,
-      rh.userAgent.getOrElse(""),
-      status, duration,
+      site = site,
+      user = SessionLogic.getUser(rh).map(_.seq),
+      ipDeny = ipDenySeq,
+      method = rh.method,
+      scheme = rh.scheme,
+      host = rh.host,
+      path = rh.uri,
+      remoteAddress = rh.remoteAddressWithXRealIp,
+      userAgent = rh.userAgent.getOrElse(""),
+      status = status,
+      duration = duration,
     )
 
   private def enqueue(insert: ActorAccessLog.Insert): Unit =
