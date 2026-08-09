@@ -82,7 +82,7 @@ controllerComponents: ControllerComponents,
                      executionContext: ExecutionContext,
                      configuration: Configuration,
                      telegramLogic: TelegramLogic,
-) extends BaseController with Logging {
+) extends BaseController with JsonResults with AdminAuth with Logging {
   private def roomKeyForPage(siteId: Long, pageId: String): String = s"wiki:$siteId:$pageId"
 
   private object PageCursorHub {
@@ -132,8 +132,6 @@ controllerComponents: ControllerComponents,
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
 
-  def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
-
   private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
@@ -151,9 +149,6 @@ controllerComponents: ControllerComponents,
     pagePermissionModePrivateRead,
     pagePermissionModePrivateWrite,
   )
-
-  private def isAdmin(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isAdmin(request)
 
   private def normalizePagePermissionMode(value: Option[String], isNewPage: Boolean): String = {
     val mode = value.map(_.trim).filter(pagePermissionModes.contains).getOrElse(pagePermissionModeKeep)

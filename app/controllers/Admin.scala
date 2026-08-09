@@ -20,13 +20,7 @@ class Admin @Inject()(
   wsClient: WSClient,
   applicationConf: ApplicationConf,
   executionContext: ExecutionContext
-) extends BaseController {
-
-  private def isAdmin(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isAdmin(request)
-
-  private def isSiteAdmin(siteSeq: Long)(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isSiteAdmin(siteSeq, request)(database)
+) extends BaseController with AdminAuth {
 
   private def currentSiteSeq(implicit request: RequestHeader): Long =
     logics.SiteLogic.get(request.host).seq
@@ -35,7 +29,7 @@ class Admin @Inject()(
     if (isAdmin || isSiteAdmin(currentSiteSeq)) {
       Ok(views.html.Admin.index())
     } else {
-      Forbidden("Access denied.")
+      AccessDenied
     }
   }
 
@@ -43,7 +37,7 @@ class Admin @Inject()(
     if (isAdmin || isSiteAdmin(seq)) {
       Ok(views.html.Admin.index())
     } else {
-      Forbidden("Access denied.")
+      AccessDenied
     }
   }
 
@@ -51,7 +45,7 @@ class Admin @Inject()(
     if (isAdmin || isSiteAdmin(seq)) {
       Ok(views.html.Admin.index())
     } else {
-      Forbidden("Access denied.")
+      AccessDenied
     }
   }
 
@@ -59,7 +53,7 @@ class Admin @Inject()(
     if (isAdmin || isSiteAdmin(currentSiteSeq)) {
       Ok(views.html.Admin.index())
     } else {
-      Forbidden("Access denied.")
+      AccessDenied
     }
   }
 
@@ -70,7 +64,7 @@ class Admin @Inject()(
         Ok(views.html.Admin.sites(seqSite))
       }
     } else {
-      Forbidden("Access denied.")
+      AccessDenied
     }
   }
 }

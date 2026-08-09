@@ -41,9 +41,7 @@ class ApiV1 @Inject()(
   wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
-) extends BaseController with Logging {
-
-  private def Ok(json: io.circe.Json): Result = Results.Ok(json.toString()).as(JSON)
+) extends BaseController with JsonResults with Logging {
 
   private def decodePageName(nameEncoded: String): String =
     URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
@@ -127,7 +125,7 @@ class ApiV1 @Inject()(
   }
 
   private def unauthorized: Result =
-    Unauthorized(Json.obj("error" -> Json.fromString("API key is required or invalid.")).toString()).as(JSON)
+    JsonError(Unauthorized, "API key is required or invalid.")
 
   private def withApiUser(request: RequestHeader)(f: User.SessionUser => Result): Result =
     SessionLogic.getApiKeyUser(request)(database).map(f).getOrElse(unauthorized)
@@ -196,7 +194,7 @@ class ApiV1 @Inject()(
     withApiUser(request) { user =>
       request.body.asJson match {
         case None =>
-          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+          JsonError(BadRequest, "JSON body is required.")
         case Some(body) =>
           val names = (body \ "names").asOpt[Seq[String]].getOrElse(Seq.empty).map(_.trim).filter(_.nonEmpty).distinct.take(500)
           database.withConnection { implicit connection =>
@@ -237,9 +235,9 @@ class ApiV1 @Inject()(
         val sinceOptEither: Either[Throwable, Option[LocalDateTime]] =
           if (since.trim.isEmpty) Right(None) else Try(LocalDateTime.parse(since.trim)).toEither.map(Some(_))
         if (sinceOptEither.isLeft) {
-          BadRequest(Json.obj("error" -> Json.fromString("since must be an ISO-8601 local date-time.")).toString()).as(JSON)
+          JsonError(BadRequest, "since must be an ISO-8601 local date-time.")
         } else if (afterRevision > 0 && nameTrimmed.isEmpty) {
-          BadRequest(Json.obj("error" -> Json.fromString("afterRevision requires name because revisions are page-local.")).toString()).as(JSON)
+          JsonError(BadRequest, "afterRevision requires name because revisions are page-local.")
         } else {
           val sinceOpt = sinceOptEither.toOption.flatten
           val sinceValue = sinceOpt.getOrElse(LocalDateTime.of(1970, 1, 1, 0, 0))
@@ -307,9 +305,9 @@ class ApiV1 @Inject()(
 
         Page.selectLastRevision(name) match {
           case None =>
-            NotFound(Json.obj("error" -> Json.fromString("Page not found.")).toString()).as(JSON)
+            JsonError(NotFound, "Page not found.")
           case Some(page) if !WikiPermission().isReadable(name, Some(PageContent(page.content))) =>
-            Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+            JsonError(Forbidden, "Permission denied.")
           case Some(page) =>
             val userApiKeyName = page.userApiKey.flatMap(seq => UserApiKey.selectNamesBySeqs(Seq(seq)).get(seq))
             Ok(Json.obj(
@@ -331,7 +329,7 @@ class ApiV1 @Inject()(
     withApiUserAndKey(request) { (user, apiKey) =>
       request.body.asJson match {
         case None =>
-          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+          JsonError(BadRequest, "JSON body is required.")
         case Some(body) =>
           val name = decodePageName(nameEncoded)
           val revisionOpt = (body \ "revision").asOpt[Long]
@@ -341,9 +339,9 @@ class ApiV1 @Inject()(
 
           (revisionOpt, textOpt) match {
             case (None, _) =>
-              BadRequest(Json.obj("error" -> Json.fromString("revision is required.")).toString()).as(JSON)
+              JsonError(BadRequest, "revision is required.")
             case (_, None) =>
-              BadRequest(Json.obj("error" -> Json.fromString("text is required.")).toString()).as(JSON)
+              JsonError(BadRequest, "text is required.")
             case (Some(revision), Some(text)) =>
               database.withConnection { implicit connection =>
                 implicit val site: Site = SiteLogic.get(request.host)
@@ -353,14 +351,14 @@ class ApiV1 @Inject()(
                 val latestPage = Page.selectLastRevision(name)
                 val (latestText, latestRevision) = latestPage.map(page => (page.content, page.revision)).getOrElse(("", 0L))
                 if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
-                  Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+                  JsonError(Forbidden, "Permission denied.")
                 } else if (revision != latestRevision) {
                   Conflict(Json.obj(
                     "error" -> Json.fromString("revision != latestRevision"),
                     "latestRevision" -> Json.fromLong(latestRevision),
                   ).toString()).as(JSON)
                 } else if (text == latestText) {
-                  BadRequest(Json.obj("error" -> Json.fromString("text == latestText")).toString()).as(JSON)
+                  JsonError(BadRequest, "text == latestText")
                 } else {
                   val now = LocalDateTime.now()
                   val nextRevision = latestRevision + 1
@@ -388,7 +386,7 @@ class ApiV1 @Inject()(
     withApiUserAndKey(request) { (user, apiKey) =>
       request.body.asJson match {
         case None =>
-          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+          JsonError(BadRequest, "JSON body is required.")
         case Some(body) =>
           val name = (body \ "name").asOpt[String].getOrElse("").trim
           val newName = (body \ "newName").asOpt[String].getOrElse("").trim
@@ -396,7 +394,7 @@ class ApiV1 @Inject()(
           val comment = (body \ "comment").asOpt[String].filter(_.trim.nonEmpty).getOrElse(s"rename to $newName")
 
           if (name.isEmpty || newName.isEmpty) {
-            BadRequest(Json.obj("error" -> Json.fromString("name and newName are required.")).toString()).as(JSON)
+            JsonError(BadRequest, "name and newName are required.")
           } else {
             database.withTransaction { implicit connection =>
               implicit val site: Site = SiteLogic.get(request.host)
@@ -405,18 +403,18 @@ class ApiV1 @Inject()(
 
               (Page.selectLastRevision(name), Page.selectLastRevision(newName), revisionOpt) match {
                 case (_, _, None) =>
-                  BadRequest(Json.obj("error" -> Json.fromString("revision is required.")).toString()).as(JSON)
+                  JsonError(BadRequest, "revision is required.")
                 case (None, _, _) =>
-                  NotFound(Json.obj("error" -> Json.fromString("Page not found.")).toString()).as(JSON)
+                  JsonError(NotFound, "Page not found.")
                 case (Some(page), _, Some(revision)) if revision != page.revision =>
                   Conflict(Json.obj(
                     "error" -> Json.fromString("revision != latestRevision"),
                     "latestRevision" -> Json.fromLong(page.revision),
                   ).toString()).as(JSON)
                 case (Some(_), Some(_), _) =>
-                  Conflict(Json.obj("error" -> Json.fromString("Target page already exists.")).toString()).as(JSON)
+                  JsonError(Conflict, "Target page already exists.")
                 case (Some(page), None, Some(_)) if !WikiPermission().isRenamable(name) =>
-                  Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+                  JsonError(Forbidden, "Permission denied.")
                 case (Some(page), None, Some(_)) =>
                   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
                   ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
@@ -442,14 +440,14 @@ class ApiV1 @Inject()(
     withApiUser(request) { user =>
       request.body.asJson match {
         case None =>
-          BadRequest(Json.obj("error" -> Json.fromString("JSON body is required.")).toString()).as(JSON)
+          JsonError(BadRequest, "JSON body is required.")
         case Some(body) =>
           val name = decodePageName(nameEncoded)
           val revisionOpt = (body \ "revision").asOpt[Long]
           val confirm = (body \ "confirm").asOpt[Boolean].getOrElse(false)
 
           if (!confirm) {
-            BadRequest(Json.obj("error" -> Json.fromString("confirm must be true.")).toString()).as(JSON)
+            JsonError(BadRequest, "confirm must be true.")
           } else {
             database.withTransaction { implicit connection =>
               implicit val site: Site = SiteLogic.get(request.host)
@@ -458,23 +456,23 @@ class ApiV1 @Inject()(
 
               (Page.selectLastRevision(name), revisionOpt) match {
                 case (_, None) =>
-                  BadRequest(Json.obj("error" -> Json.fromString("revision is required.")).toString()).as(JSON)
+                  JsonError(BadRequest, "revision is required.")
                 case (None, _) =>
-                  NotFound(Json.obj("error" -> Json.fromString("Page not found.")).toString()).as(JSON)
+                  JsonError(NotFound, "Page not found.")
                 case (Some(page), Some(revision)) if revision != page.revision =>
                   Conflict(Json.obj(
                     "error" -> Json.fromString("revision != latestRevision"),
                     "latestRevision" -> Json.fromLong(page.revision),
                   ).toString()).as(JSON)
                 case (Some(_), Some(_)) if !WikiPermission().isDeletable(name) =>
-                  Forbidden(Json.obj("error" -> Json.fromString("Permission denied.")).toString()).as(JSON)
+                  JsonError(Forbidden, "Permission denied.")
                 case (Some(page), Some(_)) =>
                   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
                   ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
                   deletePageAttachments(site.seq, name) match {
                     case Left(error) =>
                       logger.error(error)
-                      InternalServerError(Json.obj("error" -> Json.fromString("Attachment delete failed.")).toString()).as(JSON)
+                      JsonError(InternalServerError, "Attachment delete failed.")
                     case Right(_) =>
                       Page.deleteWithRelatedData(name)
                       wikiActors.pageCalculation ! Calculate(site, name)

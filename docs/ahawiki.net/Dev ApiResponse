@@ -1,0 +1,130 @@
+= [Dev] ApiResponse
+
+컨트롤러가 JSON 응답과 권한 거절 응답을 만드는 방식을 공용 트레이트로 모았다.
+
+== 문제
+
+같은 사실이 여러 파일에 흩어져 적혀 있었다.
+
+[[[#!Table tsv 1
+중복된 것	사본 수	위치
+`def Ok(json: io.circe.Json)`	4	`Api`, `ApiV1`, `ApiCrawler`, `Wiki`
+`isAdmin`	4	`Api`, `Admin`, `ApiCrawler`, `Wiki`
+`isSiteAdmin`	2	`Api`, `Admin`
+`Forbidden("Access denied.")`	36	`Api` 28, `Admin` 5, `ApiCrawler` 3
+에러 봉투 `{"error": ...}`	66	`Api` 43, `ApiV1` 23
+`site not found: $seq` 404	13	`Api`
+권한 확인 → site 조회 → 404 사다리	12	`Api`
+]]]
+
+에러 봉투가 특히 나빴다. 같은 `{"error": "..."}` 를 두 관용구로 적고 있었다. `Json.obj("error" -> Json.fromString(msg))` 와 `Map("error" -> msg).asJson` 은 결과 바이트가 같지만 표기가 달라서, 둘을 맞춰 둘 장치가 없다. 봉투를 바꿔야 할 때 한쪽만 고쳐도 컴파일이 통과한다.
+
+== 공용 코드
+
+=== `JsonResults`
+
+`app/controllers/JsonResults.scala`. JSON 응답을 만드는 컨트롤러가 상속한다.
+
+ * `Ok(json: Json)` — circe `Json` 을 `application/json` 으로 내보낸다.
+ * `JsonResult(status: Status, json: Json)` — `Ok` 이외의 상태 코드용.
+ * `JsonError(status: Status, message: String)` — 에러 봉투를 만드는 유일한 자리.
+
+=== `AdminAuth`
+
+`app/controllers/AdminAuth.scala`. 관리자 권한 판정과 거절 응답을 함께 둔다. 둘은 함께 바뀌기 때문이다.
+
+ * `isAdmin` / `isSiteAdmin(siteSeq)` — `AdminLogic` 위임.
+ * `AccessDenied` — 거절 응답.
+
+`Database` 를 추상 멤버가 아니라 implicit 파라미터로 받는다. 컨트롤러의 `database` 는 `val` 이 아닌 implicit 생성자 파라미터라서 추상 멤버를 구현하지 못한다. 구현하게 하려면 클래스마다 `val` 을 붙여 공개 접근자를 늘려야 하는데, 그 대가로 얻는 것이 없다.
+
+`AccessDenied` 는 `val` 이 아니라 `def` 다. 트레이트의 `val` 은 초기화 순서 경쟁에 걸려도 컴파일은 통과하고 생성 시점 NPE 로만 드러난다. `Result` 생성 비용은 그 위험을 질 만큼이 아니다.
+
+=== `withSiteAdmin` / `withAdminSite`
+
+`Api` 안의 private 헬퍼다. "권한을 확인하고, site 를 읽고, 없으면 404" 순서를 한 곳에 둔다.
+
+[[[#!Vim scala
+private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
+  if (!isSiteAdmin(seq)) AccessDenied
+  else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
+]]]
+
+`Api` 밖으로 올리지 않았다. 호출부가 전부 `Api` 안에 있기 때문이다. 필요한 것보다 멀리 올리는 것은 그 자체로 결합이다.
+
+== 통일하지 않고 남긴 것
+
+이번 변경은 응답 바이트를 바꾸지 않는다. 아래 불일치는 **의도적으로 남겼다.** 클라이언트가 무엇을 파싱하는지 확인하지 않은 채 봉투를 바꾸면 조용히 깨진다.
+
+ * [ ] `ApiCrawler` 는 `{"error": ...}` 가 아니라 `{"message": ...}` 를 쓴다. 봉투가 둘이다.
+ * [ ] `AccessDenied` 는 JSON 이 아니라 `text/plain` 이다. 나머지 에러 응답과 `Content-Type` 이 다르다.
+
+둘 중 하나라도 통일하려면 관리자 UI(`app/assets/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
+
+== 에러 봉투는 compact 가 아니다
+
+circe 의 `Json.toString` 은 compact 가 아니라 `spaces2` 로 찍는다. 실제 바이트는 아래와 같다.
+
+[[[#!Vim text
+{
+  "error" : "site not found: 999"
+}
+]]]
+
+리팩터링 전 두 관용구가 모두 `Json.toString` 을 거쳤으므로 이 형태였고, `JsonError` 도 같다. compact 라고 넘겨짚고 클라이언트에서 문자열을 비교하면 어긋난다.
+
+== 검증 결과
+
+ * `sbt compile` 성공
+ * `sbt test` 성공 — 127개
+ * 중복 표기 137곳을 공용 헬퍼 호출로 치환
+ * 기존 컨트롤러 5개 순 -80줄, 새 트레이트 47줄을 더하면 순 -33줄
+
+응답 바이트는 일회성 스펙으로 실제 앱을 띄워 라우터를 통과시켜 확인한 뒤, 앱을 소켓까지 띄우고 `curl` 로 다시 확인했다.
+
+[[[#!Table tsv 1
+요청	응답
+`GET /api/Admin/Sites`	403 `text/plain` `Access denied.`
+`GET /Admin/Sites`	403 `text/plain` `Access denied.`
+`GET /api/Admin/CrawlerCache`	403 `text/plain` `Access denied.`
+`GET /api/Admin/Site/999/Admins`	403 — site 조회보다 권한 확인이 먼저
+`GET /api/v1/pages`	401 `application/json` `{"error" : ...}`
+`GET /api/crawler?q=http://127.0.0.1/`	403 `application/json` `{"message" : ...}`
+`GET /api/csrf`	200 `application/json`
+`GET /w/FrontPage`	200 `text/html`, 실제 페이지 렌더링
+]]]
+
+모르는 site 를 물어도 외부인에게는 404 가 아니라 403 이 간다. 권한 확인이 먼저라, 응답이 site 의 존재 여부를 알려주지 않는다.
+
+`withAdminSite` 로 접은 endpoint 들의 상태 코드는 기존 `ApiSiteAdminSpec` 이 계속 지킨다. 다만 봉투의 본문까지 보는 검사는 없으므로, 봉투를 바꾸는 변경을 할 때는 위 값을 기준으로 직접 확인해야 한다.
+
+== 로컬 실행
+
+로컬 실행은 `conf/application.local.dev.conf` 로 한다. 이 저장소에 없는 로컬 파일이다. 띄우기 전에 알아 둘 것이 둘 있다.
+
+ * 클래스패스의 캐시 구현은 `play-redis` 뿐이다. caffeine 도 ehcache 도 없어서 Redis 없이는 서비스되지 않는다. Redis 모듈을 아예 켜지 않은 설정으로 띄우면 Guice 가 `SyncCacheApi` 바인딩을 찾지 못해 부팅 자체가 실패하고, 모듈은 켰는데 Redis 에 닿지 못하면 부팅은 되지만 매 요청이 500 이 된다.
+ * `base.conf` 의 `play.evolutions.db.default.autoApply = true` 가 여기에도 적용된다. 뭔가 확인하려고 띄우는 것이라면 꺼서 공유 DB 스키마를 건드리지 않게 한다.
+
+[[[#!Vim sh
+sbt -Dconfig.file=conf/application.local.dev.conf \
+    -Dplay.evolutions.db.default.autoApply=false \
+    -Dhttp.port=9123 run
+]]]
+
+설정된 Redis 에 닿지 못하면 그 부분만 갈아끼우면 된다. 나머지는 설정이 가리키는 곳을 그대로 쓴다.
+
+[[[#!Vim sh
+docker run -d --name ahawiki-local-redis -p 16379:6379 redis:7-alpine
+sbt -Dconfig.file=conf/application.local.dev.conf \
+    -Dplay.evolutions.db.default.autoApply=false \
+    -Dplay.cache.redis.host=localhost -Dplay.cache.redis.port=16379 \
+    -Dhttp.port=9123 run
+]]]
+
+=== Host 헤더가 site 를 고른다
+
+`SiteLogic.get(host)` 가 요청 host 로 site 를 찾고, 못 찾으면 `Site.notFound` 로 떨어진다. `127.0.0.1:9123` 으로 직접 부르면 페이지 목록이 빈 배열로 나오는데, 고장이 아니라 그 host 에 걸린 site 가 없다는 뜻이다. 실제 데이터를 보려면 실제 site 의 host 를 실어야 한다.
+
+[[[#!Vim sh
+curl -H "Host: your.wiki.host" http://127.0.0.1:9123/api/pageNames
+]]]

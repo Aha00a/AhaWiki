@@ -85,16 +85,27 @@ class Api @Inject()(
   configuration: Configuration,
   syncCacheApi: SyncCacheApi,
   ahaWikiCacheMemoryApiLinks: AhaWikiCacheMemoryApiLinks,
-) extends BaseController with Logging {
+) extends BaseController with JsonResults with AdminAuth with Logging {
   private case class MemoryCacheStatsPayload(instancePort: String, stats: Snapshot)
 
-  private def isAdmin(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isAdmin(request)
+  private def siteNotFound(seq: Long): Result = JsonError(NotFound, s"site not found: $seq")
 
-  private def isSiteAdmin(siteSeq: Long)(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isSiteAdmin(siteSeq, request)(database)
+  /**
+   * Checks site admin permission, loads the site, and hands it to the body.
+   *
+   * Repeating the rejection and the site 404 at every endpoint means a later change can fix
+   * one of them and still compile. The order and both responses live here instead. The
+   * permission check runs first, so an unknown site reads as 403 to a stranger rather than
+   * revealing whether it exists.
+   */
+  private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
+    if (!isSiteAdmin(seq)) AccessDenied
+    else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
 
-  def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
+  /** Same as [[withSiteAdmin]], but only a global admin passes, not a site admin. */
+  private def withAdminSite(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
+    if (!isAdmin) AccessDenied
+    else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
 
 
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
@@ -213,13 +224,13 @@ class Api @Inject()(
     siteSeqValue
       .flatMap(parseSiteSeq)
       .flatMap(seq => SiteLogic.get(seq)(database))
-      .toRight(BadRequest(Json.obj("error" -> Json.fromString("Valid siteSeq is required.")).toString()).as(JSON))
+      .toRight(JsonError(BadRequest, "Valid siteSeq is required."))
   }
 
   private def resolveAdminTargetSiteWithAuth(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
     resolveAdminTargetSite(siteSeqValue).flatMap { site =>
       if (isSiteAdmin(site.seq)) Right(site)
-      else Left(Forbidden("Access denied."))
+      else Left(AccessDenied)
     }
   }
 
@@ -246,7 +257,7 @@ class Api @Inject()(
 
   def adminGenerateSignedReadUrl: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       val name = request.getQueryString("name").map(_.trim).getOrElse("")
       val revision = request.getQueryString("revision").flatMap(v => scala.util.Try(v.toInt).toOption).getOrElse(0)
@@ -260,11 +271,11 @@ class Api @Inject()(
       }
 
       if (signedReadUrlSecret.isEmpty) {
-        InternalServerError(Json.obj("error" -> Json.fromString("Signed URL secret is not configured.")).toString()).as(JSON)
+        JsonError(InternalServerError, "Signed URL secret is not configured.")
       } else if (name.isEmpty) {
-        BadRequest(Json.obj("error" -> Json.fromString("Query parameter 'name' is required.")).toString()).as(JSON)
+        JsonError(BadRequest, "Query parameter 'name' is required.")
       } else if (action.isEmpty) {
-        BadRequest(Json.obj("error" -> Json.fromString("action must be one of: view, raw, history, diff")).toString()).as(JSON)
+        JsonError(BadRequest, "action must be one of: view, raw, history, diff")
       } else {
         val expiresAt = java.time.Instant.now().getEpochSecond + SignedReadUrlLogic.ValidDurationSeconds
         val signature = SignedReadUrlLogic.signReadRequest(
@@ -302,7 +313,7 @@ class Api @Inject()(
       }
     }
     if (!isAdmin && siteAdminSeqsOpt.forall(_.isEmpty)) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminSite(seq: Long, name: String, abbr: String, mainDomain: String, publicListedOrder: Option[BigDecimal], domains: Seq[String], pageCount: Long)
@@ -358,33 +369,33 @@ class Api @Inject()(
 
   def adminUpdateSite(seq: Long): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
       val abbr = form.get("abbr").flatMap(_.headOption).map(_.trim).getOrElse("")
       val mainDomain = form.get("mainDomain").flatMap(_.headOption).map(_.trim).getOrElse("")
       if (abbr.isEmpty) {
-        BadRequest(Map("error" -> "abbr is required").asJson.toString()).as(JSON)
+        JsonError(BadRequest, "abbr is required")
       } else {
         parsePublicListedOrder(form.get("publicListedOrder").flatMap(_.headOption)) match {
           case Left(errorMessage) =>
-            BadRequest(Map("error" -> errorMessage).asJson.toString()).as(JSON)
+            JsonError(BadRequest, errorMessage)
           case Right(publicListedOrder) =>
             database.withConnection { implicit connection =>
               try {
                 val updated = Site.updateAbbrAndMainDomain(seq, abbr, mainDomain, publicListedOrder)
                 if (updated == 0) {
-                  NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
+                  siteNotFound(seq)
                 } else {
                   AhaWikiCacheMemoryDomainSite.invalidate()
                   SiteLogic.get(seq)(database) match {
                     case Some(site) => Ok(site.asJson)
-                    case None => NotFound(Map("error" -> s"site not found after update: $seq").asJson.toString()).as(JSON)
+                    case None => JsonError(NotFound, s"site not found after update: $seq")
                   }
                 }
               } catch {
                 case e: java.sql.SQLIntegrityConstraintViolationException =>
-                  BadRequest(Map("error" -> Option(e.getMessage).getOrElse("site update violates constraints")).asJson.toString()).as(JSON)
+                  JsonError(BadRequest, Option(e.getMessage).getOrElse("site update violates constraints"))
               }
             }
         }
@@ -393,156 +404,114 @@ class Api @Inject()(
   }
 
   def adminPermissions(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        val permissions = Permission.select()
+        Ok(Json.obj(
+          "siteSeq" -> Json.fromLong(site.seq),
+          "permissions" -> Json.fromValues(permissions.map(permissionJson)),
+        ))
+      }
+    }
+  }
+
+  def adminUpsertPermission(seq: Long): Action[AnyContent] = Action { implicit request =>
+    withSiteAdmin(seq) { site =>
+      val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+      parsePermissionPayload(form) match {
+        case Left(error) => JsonError(BadRequest, error)
+        case Right(permission) =>
           database.withConnection { implicit connection =>
             implicit val implicitSite: Site = site
-            val permissions = Permission.select()
+            Permission.upsert(permission)
+            AhaWikiCacheMemoryPermission.invalidate(site.seq)
             Ok(Json.obj(
+              "ok" -> Json.fromBoolean(true),
               "siteSeq" -> Json.fromLong(site.seq),
-              "permissions" -> Json.fromValues(permissions.map(permissionJson)),
+              "permission" -> permissionJson(permission),
             ))
           }
       }
     }
   }
 
-  def adminUpsertPermission(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-          parsePermissionPayload(form) match {
-            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
-            case Right(permission) =>
-              database.withConnection { implicit connection =>
-                implicit val implicitSite: Site = site
-                Permission.upsert(permission)
-                AhaWikiCacheMemoryPermission.invalidate(site.seq)
-                Ok(Json.obj(
-                  "ok" -> Json.fromBoolean(true),
-                  "siteSeq" -> Json.fromLong(site.seq),
-                  "permission" -> permissionJson(permission),
-                ))
-              }
-          }
-      }
-    }
-  }
-
   def adminDeletePermission(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          parsePermissionKey(request.getQueryString) match {
-            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
-            case Right(permission) =>
-              database.withConnection { implicit connection =>
-                implicit val implicitSite: Site = site
-                val deletedCount = Permission.delete(permission)
-                AhaWikiCacheMemoryPermission.invalidate(site.seq)
-                Ok(Json.obj(
-                  "ok" -> Json.fromBoolean(true),
-                  "siteSeq" -> Json.fromLong(site.seq),
-                  "deletedCount" -> Json.fromInt(deletedCount),
-                ))
-              }
+    withSiteAdmin(seq) { site =>
+      parsePermissionKey(request.getQueryString) match {
+        case Left(error) => JsonError(BadRequest, error)
+        case Right(permission) =>
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            val deletedCount = Permission.delete(permission)
+            AhaWikiCacheMemoryPermission.invalidate(site.seq)
+            Ok(Json.obj(
+              "ok" -> Json.fromBoolean(true),
+              "siteSeq" -> Json.fromLong(site.seq),
+              "deletedCount" -> Json.fromInt(deletedCount),
+            ))
           }
       }
     }
   }
 
   def adminSiteAdmins(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(_) =>
-          database.withConnection { implicit connection =>
-            val admins = SiteAdmin.selectBySite(seq).map(sa =>
-              Json.obj(
-                "site" -> Json.fromLong(sa.site),
-                "user" -> Json.fromLong(sa.user),
-                "dateInserted" -> Json.fromString(sa.dateInserted.toString),
-              )
-            )
-            Ok(admins.asJson)
-          }
+    withAdminSite(seq) { _ =>
+      database.withConnection { implicit connection =>
+        val admins = SiteAdmin.selectBySite(seq).map(sa =>
+          Json.obj(
+            "site" -> Json.fromLong(sa.site),
+            "user" -> Json.fromLong(sa.user),
+            "dateInserted" -> Json.fromString(sa.dateInserted.toString),
+          )
+        )
+        Ok(admins.asJson)
       }
     }
   }
 
   def adminInsertSiteAdmin(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(_) =>
-          val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-          form.get("user").flatMap(_.headOption).flatMap(s => s.toLongOption) match {
-            case None => BadRequest(Json.obj("error" -> Json.fromString("user is required")).toString()).as(JSON)
-            case Some(userSeq) =>
-              database.withConnection { implicit connection =>
-                SiteAdmin.insert(seq, userSeq)
-                logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
-                Ok(Json.obj("ok" -> Json.fromBoolean(true), "site" -> Json.fromLong(seq), "user" -> Json.fromLong(userSeq)))
-              }
+    withAdminSite(seq) { _ =>
+      val form = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+      form.get("user").flatMap(_.headOption).flatMap(s => s.toLongOption) match {
+        case None => JsonError(BadRequest, "user is required")
+        case Some(userSeq) =>
+          database.withConnection { implicit connection =>
+            SiteAdmin.insert(seq, userSeq)
+            logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
+            Ok(Json.obj("ok" -> Json.fromBoolean(true), "site" -> Json.fromLong(seq), "user" -> Json.fromLong(userSeq)))
           }
       }
     }
   }
 
   def adminDeleteSiteAdmin(seq: Long, userSeq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(_) =>
-          database.withConnection { implicit connection =>
-            val deletedCount = SiteAdmin.delete(seq, userSeq)
-            logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
-            Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(deletedCount)))
-          }
+    withAdminSite(seq) { _ =>
+      database.withConnection { implicit connection =>
+        val deletedCount = SiteAdmin.delete(seq, userSeq)
+        logics.AhaWikiCacheMemorySiteAdmin.invalidate(seq)
+        Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(deletedCount)))
       }
     }
   }
 
   def adminPermissionDiagnose(seq: Long, pageName: String, actor: String, action: String): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          Permission.parseAction(action) match {
-            case Left(error) => BadRequest(Json.obj("error" -> Json.fromString(error)).toString()).as(JSON)
-            case Right(requiredAction) =>
-              database.withConnection { implicit connection =>
-                implicit val implicitSite: Site = site
-                val logic = new PermissionLogic(Permission.select())
-                val matched = logic.matched(pageName, actor)
-                Ok(Json.obj(
-                  "siteSeq" -> Json.fromLong(site.seq),
-                  "pageName" -> Json.fromString(pageName),
-                  "actor" -> Json.fromString(actor),
-                  "requiredAction" -> Json.fromInt(requiredAction),
-                  "permitted" -> Json.fromBoolean(matched.exists(_.permitted(requiredAction))),
-                  "matchedPermission" -> matched.map(permissionJson).getOrElse(Json.Null),
-                ))
-              }
+    withSiteAdmin(seq) { site =>
+      Permission.parseAction(action) match {
+        case Left(error) => JsonError(BadRequest, error)
+        case Right(requiredAction) =>
+          database.withConnection { implicit connection =>
+            implicit val implicitSite: Site = site
+            val logic = new PermissionLogic(Permission.select())
+            val matched = logic.matched(pageName, actor)
+            Ok(Json.obj(
+              "siteSeq" -> Json.fromLong(site.seq),
+              "pageName" -> Json.fromString(pageName),
+              "actor" -> Json.fromString(actor),
+              "requiredAction" -> Json.fromInt(requiredAction),
+              "permitted" -> Json.fromBoolean(matched.exists(_.permitted(requiredAction))),
+              "matchedPermission" -> matched.map(permissionJson).getOrElse(Json.Null),
+            ))
           }
       }
     }
@@ -550,7 +519,7 @@ class Api @Inject()(
 
   def adminPermissionAudit: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         val rows = Permission.auditSites()
@@ -592,11 +561,11 @@ class Api @Inject()(
   def adminUploadSiteFavicon: Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
     request.body.file("file") match {
       case None =>
-        BadRequest(Json.obj("error" -> Json.fromString("file is required")).toString()).as(JSON)
+        JsonError(BadRequest, "file is required")
       case Some(filePart) =>
         val contentType = filePart.contentType.getOrElse("application/octet-stream")
         if (!contentType.startsWith("image/")) {
-          BadRequest(Json.obj("error" -> Json.fromString("Only image files are allowed.")).toString()).as(JSON)
+          JsonError(BadRequest, "Only image files are allowed.")
         } else {
           database.withConnection { implicit connection =>
             val siteSeqValue = request.body.dataParts.get("siteSeq").flatMap(_.headOption)
@@ -629,7 +598,7 @@ class Api @Inject()(
                   } catch {
                     case error: Throwable =>
                       logger.error(s"adminUploadSiteFavicon failed. objectKey=$objectKey", error)
-                      InternalServerError(Json.obj("error" -> Json.fromString("Favicon upload failed.")).toString()).as(JSON)
+                      JsonError(InternalServerError, "Favicon upload failed.")
                   }
             }
           }
@@ -680,42 +649,30 @@ class Api @Inject()(
   }
 
   def adminSiteTelegram(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          database.withConnection { implicit connection =>
-            implicit val implicitSite: Site = site
-            val chatId = Config.Query.Telegram.chatId().getOrElse("")
-            Ok(Json.obj(
-              "siteSeq" -> Json.fromLong(site.seq),
-              "chatId"  -> Json.fromString(chatId),
-            ))
-          }
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        val chatId = Config.Query.Telegram.chatId().getOrElse("")
+        Ok(Json.obj(
+          "siteSeq" -> Json.fromLong(site.seq),
+          "chatId"  -> Json.fromString(chatId),
+        ))
       }
     }
   }
 
   def adminUpdateSiteTelegram(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          val body   = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-          val chatId = body.get("chatId").flatMap(_.headOption).map(_.trim).getOrElse("")
-          database.withConnection { implicit connection =>
-            implicit val implicitSite: Site = site
-            Config.Query.Telegram.saveChatId(chatId)
-            Ok(Json.obj(
-              "ok"      -> Json.fromBoolean(true),
-              "siteSeq" -> Json.fromLong(site.seq),
-              "chatId"  -> Json.fromString(chatId),
-            ))
-          }
+    withSiteAdmin(seq) { site =>
+      val body   = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+      val chatId = body.get("chatId").flatMap(_.headOption).map(_.trim).getOrElse("")
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        Config.Query.Telegram.saveChatId(chatId)
+        Ok(Json.obj(
+          "ok"      -> Json.fromBoolean(true),
+          "siteSeq" -> Json.fromLong(site.seq),
+          "chatId"  -> Json.fromString(chatId),
+        ))
       }
     }
   }
@@ -751,7 +708,7 @@ class Api @Inject()(
 
   def adminUsers: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminUser(
@@ -878,7 +835,7 @@ class Api @Inject()(
 
   def adminUserViews(userSeq: Long, n: Int = 200): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminUserViewHistory(
@@ -933,7 +890,7 @@ class Api @Inject()(
 
   def adminDailyStats: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class DailyCount(ymd: String, count: Long)
@@ -987,7 +944,7 @@ class Api @Inject()(
 
   def adminTopViewedPages: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminTopViewedPage(
@@ -1041,7 +998,7 @@ class Api @Inject()(
 
   def adminRecentChanges: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminRecentChange(
@@ -1198,7 +1155,7 @@ class Api @Inject()(
       .filter(_ > 0)
     val permitted = isAdmin || requestedSiteSeq.exists(seq => isSiteAdmin(seq))
     if (!permitted) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         case class AdminAccessLog(
@@ -1339,100 +1296,82 @@ class Api @Inject()(
   }
 
   def adminPageMetaList(seq: Long, page: Int, pageSize: Int, search: String, sortBy: String, sortOrder: String): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          database.withConnection { implicit connection =>
-            implicit val implicitSite: Site = site
-            val normalizedPage = page.max(1)
-            val normalizedPageSize = pageSize.max(1).min(200)
-            val rows = models.tables.PageMeta.selectPagedForAdmin(
-              page = normalizedPage,
-              pageSize = normalizedPageSize,
-              search = search,
-              sortBy = sortBy,
-              sortOrder = sortOrder,
-            )
-            val count = models.tables.PageMeta.countPagedForAdmin(search)
-            Ok(Map(
-              "array" -> rows.asJson,
-              "page" -> normalizedPage.asJson,
-              "pageSize" -> normalizedPageSize.asJson,
-              "count" -> count.asJson,
-            ).asJson)
-          }
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        val normalizedPage = page.max(1)
+        val normalizedPageSize = pageSize.max(1).min(200)
+        val rows = models.tables.PageMeta.selectPagedForAdmin(
+          page = normalizedPage,
+          pageSize = normalizedPageSize,
+          search = search,
+          sortBy = sortBy,
+          sortOrder = sortOrder,
+        )
+        val count = models.tables.PageMeta.countPagedForAdmin(search)
+        Ok(Map(
+          "array" -> rows.asJson,
+          "page" -> normalizedPage.asJson,
+          "pageSize" -> normalizedPageSize.asJson,
+          "count" -> count.asJson,
+        ).asJson)
       }
     }
   }
 
   def adminSitePageNames(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
-            .get()
-            .map(_.name)
-            .distinct
-            .sorted
-          Ok(pageNames.asJson)
-      }
+    withSiteAdmin(seq) { site =>
+      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+      val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
+        .get()
+        .map(_.name)
+        .distinct
+        .sorted
+      Ok(pageNames.asJson)
     }
   }
 
   def adminSiteCalculate(seq: Long): Action[AnyContent] = Action { implicit request =>
-    if (!isSiteAdmin(seq)) {
-      Forbidden("Access denied.")
-    } else {
-      SiteLogic.get(seq)(database) match {
-        case None => NotFound(Map("error" -> s"site not found: $seq").asJson.toString()).as(JSON)
-        case Some(site) =>
-          implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-          val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
-            .get()
-            .map(_.name)
-            .distinct
-          val requestedPageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
-          val mode = request.getQueryString("mode").map(_.trim).filter(_.nonEmpty).getOrElse("default")
-          val force = request.getQueryString("force").exists(_.trim.equalsIgnoreCase("true")) || mode == "force"
-          val maybePageName = if (requestedPageName.nonEmpty) {
-            pageNames.find(_ == requestedPageName)
-          } else if (mode == "missingPageMeta") {
-            database.withConnection { implicit connection =>
-              implicit val implicitSite: Site = site
-              models.tables.PageMeta.selectMissingPageNames(limit = 100)
-                .headOption
-            }
-          } else {
-            pageNames match {
-              case Seq() => None
-              case seqPageNames => Some(Random.shuffle(seqPageNames).head)
-            }
-          }
+    withSiteAdmin(seq) { site =>
+      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+      val pageNames = ahaWikiCache.PageMeta.SeqPageLatestSummary
+        .get()
+        .map(_.name)
+        .distinct
+      val requestedPageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
+      val mode = request.getQueryString("mode").map(_.trim).filter(_.nonEmpty).getOrElse("default")
+      val force = request.getQueryString("force").exists(_.trim.equalsIgnoreCase("true")) || mode == "force"
+      val maybePageName = if (requestedPageName.nonEmpty) {
+        pageNames.find(_ == requestedPageName)
+      } else if (mode == "missingPageMeta") {
+        database.withConnection { implicit connection =>
+          implicit val implicitSite: Site = site
+          models.tables.PageMeta.selectMissingPageNames(limit = 100)
+            .headOption
+        }
+      } else {
+        pageNames match {
+          case Seq() => None
+          case seqPageNames => Some(Random.shuffle(seqPageNames).head)
+        }
+      }
 
-          maybePageName match {
-            case Some(pageName) =>
-              wikiActors.pageCalculation ! actors.ActorPageCalculator.Calculate(site, pageName)
-              Ok(Map(
-                "status" -> "queued",
-                "siteSeq" -> site.seq.toString,
-                "pageName" -> pageName,
-                "source" -> (if (force) "forced" else if (requestedPageName.nonEmpty) "selected" else if (mode == "missingPageMeta") "missingPageMeta" else "random"),
-                "mode" -> mode,
-                "force" -> force.toString,
-              ).asJson)
-            case None =>
-              if (requestedPageName.nonEmpty) {
-                BadRequest(Map("error" -> s"page not found in site cache: $requestedPageName").asJson.toString()).as(JSON)
-              } else {
-                NotFound(Map("error" -> "No page exists in site cache.").asJson.toString()).as(JSON)
-              }
+      maybePageName match {
+        case Some(pageName) =>
+          wikiActors.pageCalculation ! actors.ActorPageCalculator.Calculate(site, pageName)
+          Ok(Map(
+            "status" -> "queued",
+            "siteSeq" -> site.seq.toString,
+            "pageName" -> pageName,
+            "source" -> (if (force) "forced" else if (requestedPageName.nonEmpty) "selected" else if (mode == "missingPageMeta") "missingPageMeta" else "random"),
+            "mode" -> mode,
+            "force" -> force.toString,
+          ).asJson)
+        case None =>
+          if (requestedPageName.nonEmpty) {
+            JsonError(BadRequest, s"page not found in site cache: $requestedPageName")
+          } else {
+            JsonError(NotFound, "No page exists in site cache.")
           }
       }
     }
@@ -1441,7 +1380,7 @@ class Api @Inject()(
   def accountApiKeys: Action[AnyContent] = Action { implicit request =>
     SessionLogic.getUser(request) match {
       case None =>
-        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+        JsonError(Unauthorized, "Login required.")
       case Some(user) =>
         database.withConnection { implicit connection =>
           Ok(Json.fromValues(UserApiKey.selectByUser(user.seq).map(apiKey => apiKeyJson(apiKey))))
@@ -1452,13 +1391,13 @@ class Api @Inject()(
   def accountCreateApiKey: Action[AnyContent] = Action { implicit request =>
     SessionLogic.getUser(request) match {
       case None =>
-        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+        JsonError(Unauthorized, "Login required.")
       case Some(user) =>
         val name = apiKeyNameFromRequest(request)
         if (name.isEmpty) {
-          BadRequest(Json.obj("error" -> Json.fromString("name is required.")).toString()).as(JSON)
+          JsonError(BadRequest, "name is required.")
         } else if (name.length > 255) {
-          BadRequest(Json.obj("error" -> Json.fromString("name is too long.")).toString()).as(JSON)
+          JsonError(BadRequest, "name is too long.")
         } else {
           database.withConnection { implicit connection =>
             val created = UserApiKey.insert(user.seq, name)
@@ -1471,11 +1410,11 @@ class Api @Inject()(
   def accountRevokeApiKey(seq: Long): Action[AnyContent] = Action { implicit request =>
     SessionLogic.getUser(request) match {
       case None =>
-        Unauthorized(Json.obj("error" -> Json.fromString("Login required.")).toString()).as(JSON)
+        JsonError(Unauthorized, "Login required.")
       case Some(user) =>
         database.withConnection { implicit connection =>
           val updated = UserApiKey.revokeByUser(seq, user.seq)
-          if (updated == 0) NotFound(Json.obj("error" -> Json.fromString("API key not found.")).toString()).as(JSON)
+          if (updated == 0) JsonError(NotFound, "API key not found.")
           else Ok(Json.obj("ok" -> Json.fromBoolean(true), "seq" -> Json.fromLong(seq)))
         }
     }
@@ -1483,7 +1422,7 @@ class Api @Inject()(
 
   def adminApiKeys: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         val rows = UserApiKey.selectAll().map { apiKey =>
@@ -1496,11 +1435,11 @@ class Api @Inject()(
 
   def adminRevokeApiKey(seq: Long): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       database.withConnection { implicit connection =>
         val updated = UserApiKey.revoke(seq)
-        if (updated == 0) NotFound(Json.obj("error" -> Json.fromString("API key not found.")).toString()).as(JSON)
+        if (updated == 0) JsonError(NotFound, "API key not found.")
         else Ok(Json.obj("ok" -> Json.fromBoolean(true), "seq" -> Json.fromLong(seq)))
       }
     }
@@ -1522,7 +1461,7 @@ class Api @Inject()(
           "nickname"        -> Json.fromString(user.nickname),
           "loginEmail"      -> user.loginEmail.fold(Json.Null)(Json.fromString),
           "profileImageUrl" -> Json.fromString(profileImageUrl),
-          "isAdmin"         -> Json.fromBoolean(logics.AdminLogic.isAdmin(request)),
+          "isAdmin"         -> Json.fromBoolean(isAdmin),
           "siteAdminSeqs"   -> Json.fromValues(siteAdminSeqs.map(Json.fromLong)),
           "currentSiteSeq"  -> Json.fromLong(currentSite.seq),
         ))
@@ -1728,7 +1667,7 @@ class Api @Inject()(
 
   def adminMemoryCacheStats(): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Unauthorized(Map("error" -> "forbidden").asJson.toString()).as(JSON)
+      JsonError(Unauthorized, "forbidden")
     } else {
       val stats = readMemoryCacheSnapshots()
       val normalized = stats.toSeq.sortBy(_._1).map { case (_, payload) =>
@@ -1740,7 +1679,7 @@ class Api @Inject()(
 
   def adminS3Objects(prefix: String = "", maxKeys: Int = 500, recursive: Boolean = false): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       val safeMaxKeys = Math.min(1000, Math.max(1, maxKeys))
       val safePrefix = Option(prefix).map(_.trim).getOrElse("")
@@ -1797,14 +1736,14 @@ class Api @Inject()(
       } catch {
         case error: Throwable =>
           logger.error(s"adminS3Objects failed. prefix=$safePrefix", error)
-          InternalServerError(Json.obj("error" -> Json.fromString("S3 조회에 실패했습니다.")).toString()).as(JSON)
+          JsonError(InternalServerError, "S3 조회에 실패했습니다.")
       }
     }
   }
 
   def adminDeleteS3Objects: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       val keys = request.body.asJson
         .flatMap(json => (json \ "keys").asOpt[Seq[String]])
@@ -1813,7 +1752,7 @@ class Api @Inject()(
         .filter(_.nonEmpty)
         .distinct
       if (keys.isEmpty) {
-        BadRequest(Json.obj("error" -> Json.fromString("keys is required")).toString()).as(JSON)
+        JsonError(BadRequest, "keys is required")
       } else {
         try {
           val amazonS3 = buildAmazonS3Client()
@@ -1824,7 +1763,7 @@ class Api @Inject()(
         } catch {
           case error: Throwable =>
             logger.error(s"adminDeleteS3Objects failed. keys=${keys.take(10).mkString(",")}", error)
-            InternalServerError(Json.obj("error" -> Json.fromString("S3 삭제에 실패했습니다.")).toString()).as(JSON)
+            JsonError(InternalServerError, "S3 삭제에 실패했습니다.")
         }
       }
     }
@@ -1832,17 +1771,17 @@ class Api @Inject()(
 
   def adminS3DownloadUrl(key: String): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
-      Forbidden("Access denied.")
+      AccessDenied
     } else {
       val objectKey = Option(key).map(_.trim).getOrElse("")
       if (objectKey.isEmpty) {
-        BadRequest(Json.obj("error" -> Json.fromString("key is required")).toString()).as(JSON)
+        JsonError(BadRequest, "key is required")
       } else {
         S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey) match {
           case Right(url) => Ok(Json.obj("url" -> Json.fromString(url), "key" -> Json.fromString(objectKey)))
           case Left(errorMessage) =>
             logger.error(s"adminS3DownloadUrl failed. key=$objectKey error=$errorMessage")
-            InternalServerError(Json.obj("error" -> Json.fromString("다운로드 URL 생성 실패")).toString()).as(JSON)
+            JsonError(InternalServerError, "다운로드 URL 생성 실패")
         }
       }
     }

@@ -32,11 +32,7 @@ class ApiCrawler @Inject()(
   configuration: Configuration,
   syncCacheApi: SyncCacheApi,
   ahaWikiCacheMemoryApiLinks: AhaWikiCacheMemoryApiLinks,
-) extends BaseController with Logging {
-  def Ok(json: io.circe.Json): Result = Ok(json.toString()).as(JSON)
-  def Forbidden(json: io.circe.Json): Result = Forbidden(json.toString()).as(JSON)
-  private def isAdmin(implicit request: RequestHeader): Boolean =
-    logics.AdminLogic.isAdmin(request)
+) extends BaseController with JsonResults with AdminAuth with Logging {
 
   private val crawlerExecutionContext: ExecutionContext =
     actorSystem.dispatchers.lookup("ahawiki-blocking-io-dispatcher")
@@ -46,11 +42,11 @@ class ApiCrawler @Inject()(
       logger.info(s"${request.remoteAddressWithXRealIp}\t$q")
       val normalizedUrl = CrawlerUrlNormalizer.normalize(q)
       if (normalizedUrl.length > CacheCrawler.UrlMaxLength) {
-        Future.successful(Forbidden(Json.obj(
+        Future.successful(JsonResult(Forbidden, Json.obj(
           "message" -> Json.fromString(s"URL too long: max ${CacheCrawler.UrlMaxLength} characters")
         )))
       } else CrawlerUrlSafety.validate(normalizedUrl) match {
-        case Left(message) => Future.successful(Forbidden(Json.obj("message" -> Json.fromString(message))))
+        case Left(message) => Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(message))))
         case Right(_) =>
           val cached = database.withConnection { implicit connection =>
             CacheCrawler.selectByUrl(normalizedUrl)
@@ -105,14 +101,14 @@ class ApiCrawler @Inject()(
                 ))
               }(executionContext).recover {
                 case e: Exception =>
-                  Forbidden(Json.obj("message" -> Json.fromString(e.getMessage)))
+                  JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage)))
               }(executionContext)
           }
       }
     }
     catch {
       case e: Exception =>
-        Future.successful(Forbidden(Json.obj(
+        Future.successful(JsonResult(Forbidden, Json.obj(
           "message" -> Json.fromString(e.getMessage)
         )))
     }
@@ -125,7 +121,7 @@ class ApiCrawler @Inject()(
     sortBy: String,
     sortOrder: String,
   ): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) Forbidden("Access denied.")
+    if (!isAdmin) AccessDenied
     else {
       val safePage = math.max(1, page)
       val safePageSize = math.max(1, math.min(pageSize, 100))
@@ -145,7 +141,7 @@ class ApiCrawler @Inject()(
   }
 
   def adminDelete(url: String): Action[AnyContent] = Action { implicit request =>
-    if (!isAdmin) Forbidden("Access denied.")
+    if (!isAdmin) AccessDenied
     else {
       val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
       database.withConnection { implicit connection =>
@@ -155,12 +151,12 @@ class ApiCrawler @Inject()(
   }
 
   def adminRefresh(url: String): Action[AnyContent] = Action.async { implicit request =>
-    if (!isAdmin) Future.successful(Forbidden("Access denied."))
+    if (!isAdmin) Future.successful(AccessDenied)
     else {
       try {
         val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
         CrawlerUrlSafety.validate(normalizedUrl) match {
-          case Left(message) => Future.successful(Forbidden(Json.obj("message" -> Json.fromString(message))))
+          case Left(message) => Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(message))))
           case Right(_) =>
             Future {
               val crawler = Crawler.fromUrl(normalizedUrl)(logger)
@@ -171,12 +167,12 @@ class ApiCrawler @Inject()(
               Ok(Json.obj("success" -> Json.fromBoolean(true), "url" -> Json.fromString(normalizedUrl)))
             }(executionContext).recover {
               case e: Exception =>
-                Forbidden(Json.obj("message" -> Json.fromString(e.getMessage)))
+                JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage)))
             }(executionContext)
         }
       } catch {
         case e: Exception =>
-          Future.successful(Forbidden(Json.obj("message" -> Json.fromString(e.getMessage))))
+          Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage))))
       }
     }
   }
