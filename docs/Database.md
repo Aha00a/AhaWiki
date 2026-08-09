@@ -20,6 +20,23 @@ describe.
 The database is one schema on a shared RDS instance. Other projects live on the same
 instance — **never touch anything outside this schema.**
 
+## Log tables expire their own rows
+
+`AccessLog`, `IpDeny`, and `UserViewHistory` each declare a `Retention` value, with the
+reasoning for that particular period next to it. A scheduled job calls their `deleteExpired`
+every ten to thirty minutes and logs the three periods at startup.
+
+Do not restate a retention period anywhere else. The scheduler used to carry a copy of all
+three "so they can be seen in one place"; a value written twice is a value that will be
+changed once.
+
+`ExpiredRows.deleteInsertedBefore` holds the delete itself, which the three tables had
+written out separately. It looks at only the oldest `limit` rows and deletes up to the newest
+expired one among them, so shortening a period does not produce one enormous delete —
+convergence takes several runs. The threshold is now computed by the application rather than
+by `DATE_ADD(NOW(), ...)` in the database. Both clocks are KST, so the boundary is the same
+to within their skew.
+
 ## Datetime columns hold KST
 
 **Every `datetime` column in this repository holds Korea Standard Time (KST, UTC+9).**

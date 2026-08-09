@@ -3,6 +3,8 @@ package models.tables
 import anorm._
 
 import java.sql.Connection
+import java.time.LocalDateTime
+import java.time.Period
 import java.util.Date
 
 case class UserViewHistory(
@@ -23,19 +25,9 @@ object UserViewHistory {
     """.executeInsert()
   }
 
-  def deleteExpired(limit: Int = 10000)(implicit connection: Connection): Int = {
-    SQL"""
-      DELETE FROM UserViewHistory
-      WHERE seq < (
-        SELECT MAX(seq)
-        FROM (
-          SELECT seq, dateInserted
-          FROM UserViewHistory
-          ORDER BY seq
-          LIMIT $limit
-        ) T
-        WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -3 MONTH)
-      )
-    """.executeUpdate()
-  }
+  // 관리자 화면이 사용자별 조회 이력을 보여주는 기간이다. IpDeny 의 90일과 맞춰져 있다.
+  val Retention: Period = Period.ofMonths(3)
+
+  def deleteExpired(limit: Int = 10000, now: LocalDateTime = LocalDateTime.now())(implicit connection: Connection): Int =
+    ExpiredRows.deleteInsertedBefore("UserViewHistory", now.minus(Retention), limit)
 }

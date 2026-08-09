@@ -4,6 +4,8 @@ import anorm._
 import play.api.Logging
 
 import java.sql.Connection
+import java.time.LocalDateTime
+import java.time.Period
 import java.util.Date
 
 case class AccessLog(
@@ -41,20 +43,9 @@ object AccessLog extends Logging {
     """.executeInsert()
   }
 
-  def deleteExpired(limit: Int = 10000)(implicit connection: Connection): Int = {
-    // language=SQL
-    SQL"""
-        DELETE FROM AccessLog
-            WHERE seq < (
-                SELECT MAX(seq)
-                    FROM (
-                    SELECT seq, dateInserted
-                        FROM AccessLog
-                        ORDER BY seq
-                        LIMIT $limit
-                ) T
-                WHERE T.dateInserted < DATE_ADD(NOW(), INTERVAL -1 MONTH)
-            );
-    """.executeUpdate()
-  }
+  // 180일 → 1년 → 6개월 → 3개월 → 1개월 로 계속 조여왔다. 이 테이블이 가장 빨리 자란다.
+  val Retention: Period = Period.ofMonths(1)
+
+  def deleteExpired(limit: Int = 10000, now: LocalDateTime = LocalDateTime.now())(implicit connection: Connection): Int =
+    ExpiredRows.deleteInsertedBefore("AccessLog", now.minus(Retention), limit)
 }
