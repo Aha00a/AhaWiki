@@ -2,6 +2,53 @@
 
 When creating new files that should be part of the change, remember to stage them with `git add` so they are not omitted from the final commit or PR.
 
+## Duplicated Code — Refactor at Two, Not Three (Absolute Rule)
+
+**The moment the same code exists in two places is the moment to refactor it.** This repository does not use the common "rule of three." Extract while you are writing the second copy, not the third.
+
+Divergence begins at the second copy, not the third. Once there are two, it becomes possible to fix only one of them, and once they differ the code itself no longer tells you which one is correct. Wait for the third and the job stops being "extract the shared part" and becomes "decide which of these three is right" — a decision with no original to check against. The second copy is also the only moment when extraction is cheap, because the two are still identical.
+
+How to apply it:
+
+ * Extract in the same commit that creates the second copy. "Copy it now, clean it up later" is what produces the third copy.
+ * Lift it only as far as the nearest boundary the two call sites share: same file, then same module, then a shared utility. Lifting further than necessary is its own kind of coupling.
+ * Similar is not the same as duplicated. The test is not whether two pieces of code look alike but whether they have a reason to change together. Merging two that merely resemble each other forces you to split them again with a flag at the next change, which is worse than the duplication was.
+ * If you decide not to merge them, leave one line next to the second copy saying why. Without that, the next person redoes the same reasoning from scratch and usually just makes a third copy.
+ * This is not only about code. The same *fact* written in two places — config, scripts, migrations, documentation — is governed by the same rule. Facts recorded in two places always drift apart.
+
+## Documentation — In the Same Commit as the Work (Absolute Rule)
+
+**Documentation is part of the work, not something written after it.** Update every document the change touches **in the same commit**. Do not defer it: no "document it later," no "code first, notes after." A change that lands without its documentation is **incomplete**.
+
+Deferred documentation usually never gets written. When it does, **only what was done survives and why it was done is gone.** The reasoning is only in your hands while you are working — what you measured, what turned out to be false, which alternative you rejected and why. A few days later even you cannot reconstruct it. A record without reasoning tells the next person **to investigate it all over again**.
+
+Splitting the commits is its own problem. If code and documentation land separately, then in the window between them the two describe different moments in time — the last item of the duplication rule above (*facts recorded in two places always drift apart*) applies exactly.
+
+What to leave behind:
+
+ * **Why it was done this way.** The diff already says what was done.
+ * **What turned out to be false.** Ruling out a wrong hypothesis keeps the next person off that path.
+ * **What you decided not to do, and why.** A rejected alternative always comes back.
+ * **How to undo it.** If you changed something irreversible, say so.
+ * **Do not write values that go stale.** A fact that becomes wrong with time belongs in the code that looks it up, not in prose. A stale value is worse than none — it grants false confidence.
+ * The commit message is documentation too: the subject says what, the body says why.
+ * If you decide no documentation is needed, put **that decision** in the commit message.
+ * Do not accumulate separate "docs cleanup" commits. Documentation detached from its change loses track of which change it describes.
+ * Fix stale text the moment you notice it. **Wrong documentation is worse than none.**
+
+## Language — English, Except the Wiki Page Copies
+
+This repository is public. Its readers are not limited to Korean speakers.
+
+ * **Commit messages: English.** They are the most visible text a public repository has, and once pushed they cannot be edited without rewriting history. What a message should contain is covered by the documentation rule above.
+ * **Code, comments, and identifiers: English.**
+ * **Repository documentation: English.** `AGENTS.md`, `README`, and anything under `docs/` that is not a wiki page copy.
+ * **`docs/ahawiki.net/`: Korean.** These are copies of pages on a Korean-language wiki. Translating them would put this repository's convention ahead of the readers those pages exist for. See the AhaWikiDoc Sync section below.
+
+Being public also decides what does not belong in any of them: infrastructure hostnames, schema or service names belonging to other projects, credentials, and facts that go stale such as "service X is currently down." Point at the configuration file that holds the value instead of copying the value into prose.
+
+Assume anything that reaches a public remote is permanent. A force-push moves the branch, but the old commits stay reachable by SHA on the hosting side, and every clone, fork, and cache keeps its own copy. Getting it right before the push is the only reliable control.
+
 ## AhaWikiDoc Sync
 
 Files under `docs/ahawiki.net/` are local copies of pages on `https://ahawiki.net`.
