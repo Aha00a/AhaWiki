@@ -99,15 +99,17 @@ When a TODO-style document is fully completed, do not keep it as a historical ch
 
 When the user asks for `AhaWikiDoc sync`, sync committed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.
 
-Use the existing `download:ahawiki.net` script in `package.json` and `scripts/download.ahawiki.net.mjs` as background for the page-list/download behavior, but prefer the Bot API for sync work. Do not use `?action=raw` for this workflow when the Bot API can provide the page metadata and content.
+Use the existing `download:ahawiki.net` script in `package.json` and `scripts/download.ahawiki.net.mjs` as background for the page-list/download behavior, but prefer the page API for sync work. Do not use `?action=raw` for this workflow when the API can provide the page metadata and content.
 
-For sync, use remote `dateTime` and `revision` from `GET /api/bot/page/<url-encoded-page-name>` to compare local and remote state:
+The routes are in `conf/routes` under `controllers.ApiV1`; read them there rather than trusting the paths written here, which is what an endpoint rename would invalidate first. At the time of writing the page endpoints are `GET` and `POST /api/v1/page/<url-encoded-page-name>`.
+
+For sync, use remote `dateTime` and `revision` from the page `GET` to compare local and remote state:
 
 1. Treat the filename as the page name.
 2. Compare remote pages against the committed local content under `docs/ahawiki.net/`, not against in-progress working-tree edits unless explicitly requested.
-3. Read the current remote page with `GET /api/bot/page/<url-encoded-page-name>`.
-4. Compare the remote `content` with the local file content.
-5. If only the local file changed, save the full local file content with `POST /api/bot/page/<url-encoded-page-name>`.
+3. Read the current remote page.
+4. Compare the remote `content` with the local file content. Strip trailing newlines on both sides before comparing — the wiki stores a trailing newline the local file does not have, and comparing raw makes every page look changed.
+5. If only the local file changed, save the full local file content with the page `POST`, sending `revision`, `text`, `comment`, and `minorEdit`.
 6. If only the remote page changed, update the local file from the remote `content`.
 7. If both local and remote changed, do not overwrite either side blindly; merge or ask the user.
 8. When saving, use the remote `revision` from the read response. If the page is missing, use `revision: 0`.
