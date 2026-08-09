@@ -321,11 +321,14 @@ site	target	targetType	actor	actorType	action
 
 요청 중 현재 사용자는 `RequestWrapper.getUser`로 접근하며, 이는 `SessionLogic.getUser(request)` 결과입니다. session에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급합니다.
 
-관리자 판정은 아직 별도 role 테이블이 아니라 코드 조건으로 남아 있습니다.
+전체 관리자 판정은 아직 별도 role 테이블이 아니라 `AdminLogic`의 코드 조건으로 남아 있습니다. `seq == 1` 하나뿐이고, 특정 email을 관리자로 보던 조건은 코드에서 사라졌습니다.
 
 [[[#!Vim scala
-SessionLogic.getUser(request).exists(u => u.email == "aha00a@gmail.com" || u.seq == 1)
+def isAdmin(request: RequestHeader): Boolean =
+  SessionLogic.getUser(request).exists(_.seq == 1)
 ]]]
+
+사이트 단위 관리자는 `SiteAdmin` 테이블로 판정합니다. `AdminLogic.isSiteAdmin`은 전체 관리자를 모든 사이트의 관리자로 취급합니다. 자세한 내용은 ["Dev SiteAdmin"] 참고.
 
 === Permission 테이블
 
@@ -404,6 +407,6 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 == 남은 과제
 
- * [ ] hard-coded 관리자 판정(`aha00a@gmail.com` 또는 `seq == 1`)을 role/permission 기반으로 옮길지 결정한다.
+ * [ ] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다.
  * [ ] signed read URL을 일반 permission 모델 안에 넣을지, 예외 경로로 유지할지 결정한다.
  * [ ] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다.
