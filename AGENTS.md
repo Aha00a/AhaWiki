@@ -117,4 +117,16 @@ For sync, use remote `dateTime` and `revision` from the page `GET` to compare lo
 10. Analyze the local/remote diff before saving, use a clear save `comment` that briefly summarizes the actual content change, and set `minorEdit` according to the change.
 11. Verify by reading the page again and comparing the remote `content` with the local file.
 
+### Sweep every page, not only the ones the change touched
+
+Syncing only the files a commit touched leaves a page that missed its sync stranded until someone edits it again. Two pages sat that way for months after a commit updated their documentation without syncing, and nothing surfaced it.
+
+So end a sync by comparing **every** page, not just the ones you saved. One request does it: the page list carries a `contentHash` per page, so a local SHA-256 is enough to compare without downloading anything.
+
+1. Read the page list and take `name`, `revision`, and `contentHash` for every page.
+2. For each local file, SHA-256 its content and compare with the page's `contentHash`. Compare with and without a trailing newline — page content and file content differ there.
+3. Report what is out of sync, what exists only locally, and what exists only on the wiki. Resolve each by the rules above rather than assuming the local side is right.
+
+Not every difference is drift. `manifest.json` is a download artifact rather than a page, and a wiki-only page may be a redirect stub someone added in the browser.
+
 Do not commit or write API keys into this repository. Use a user-provided key for the current session or an environment variable such as `AHAWIKI_API_KEY`.
