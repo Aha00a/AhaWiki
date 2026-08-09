@@ -127,6 +127,18 @@ class ApiV1 @Inject()(
   private def unauthorized: Result =
     JsonError(Unauthorized, "API key is required or invalid.")
 
+  /**
+   * The caller sent a revision that is no longer the latest one.
+   *
+   * This carries `latestRevision` alongside the message so the caller can re-read and
+   * retry, which is why it does not go through JsonError.
+   */
+  private def revisionConflict(latestRevision: Long): Result =
+    JsonResult(Conflict, Json.obj(
+      "error" -> Json.fromString("revision != latestRevision"),
+      "latestRevision" -> Json.fromLong(latestRevision),
+    ))
+
   private def withApiUser(request: RequestHeader)(f: User.SessionUser => Result): Result =
     SessionLogic.getApiKeyUser(request)(database).map(f).getOrElse(unauthorized)
 
@@ -353,10 +365,7 @@ class ApiV1 @Inject()(
                 if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
                   JsonError(Forbidden, "Permission denied.")
                 } else if (revision != latestRevision) {
-                  Conflict(Json.obj(
-                    "error" -> Json.fromString("revision != latestRevision"),
-                    "latestRevision" -> Json.fromLong(latestRevision),
-                  ).toString()).as(JSON)
+                  revisionConflict(latestRevision)
                 } else if (text == latestText) {
                   JsonError(BadRequest, "text == latestText")
                 } else {
@@ -407,10 +416,7 @@ class ApiV1 @Inject()(
                 case (None, _, _) =>
                   JsonError(NotFound, "Page not found.")
                 case (Some(page), _, Some(revision)) if revision != page.revision =>
-                  Conflict(Json.obj(
-                    "error" -> Json.fromString("revision != latestRevision"),
-                    "latestRevision" -> Json.fromLong(page.revision),
-                  ).toString()).as(JSON)
+                  revisionConflict(page.revision)
                 case (Some(_), Some(_), _) =>
                   JsonError(Conflict, "Target page already exists.")
                 case (Some(page), None, Some(_)) if !WikiPermission().isRenamable(name) =>
@@ -460,10 +466,7 @@ class ApiV1 @Inject()(
                 case (None, _) =>
                   JsonError(NotFound, "Page not found.")
                 case (Some(page), Some(revision)) if revision != page.revision =>
-                  Conflict(Json.obj(
-                    "error" -> Json.fromString("revision != latestRevision"),
-                    "latestRevision" -> Json.fromLong(page.revision),
-                  ).toString()).as(JSON)
+                  revisionConflict(page.revision)
                 case (Some(_), Some(_)) if !WikiPermission().isDeletable(name) =>
                   JsonError(Forbidden, "Permission denied.")
                 case (Some(page), Some(_)) =>

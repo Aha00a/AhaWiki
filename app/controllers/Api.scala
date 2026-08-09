@@ -298,7 +298,7 @@ class Api @Inject()(
           "expiresAtEpochSeconds" -> Json.fromLong(expiresAt),
           "signedPath" -> Json.fromString(signedPath),
           "signedUrl" -> Json.fromString(s"${request.scheme}://${request.host}$signedPath"),
-        ).toString()).as(JSON)
+        ))
       }
     }
   }
@@ -1591,10 +1591,12 @@ class Api @Inject()(
 
       Page.selectLastRevision(name) match {
         case None =>
-          NotFound(Json.obj(
+          // Neither the {"error": ...} nor the {"message": ...} envelope — this endpoint
+          // has always answered {"success": false, ...} and its callers are unknown.
+          JsonResult(NotFound, Json.obj(
             "success" -> Json.fromBoolean(false),
             "message" -> Json.fromString("Page not found"),
-          ).toString()).as(JSON)
+          ))
 
         case Some(page) =>
           val pageContent = PageContent(page.content)

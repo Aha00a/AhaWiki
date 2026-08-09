@@ -56,10 +56,19 @@ private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: Re
 
 이번 변경은 응답 바이트를 바꾸지 않는다. 아래 불일치는 **의도적으로 남겼다.** 클라이언트가 무엇을 파싱하는지 확인하지 않은 채 봉투를 바꾸면 조용히 깨진다.
 
- * [ ] `ApiCrawler` 는 `{"error": ...}` 가 아니라 `{"message": ...}` 를 쓴다. 봉투가 둘이다.
+ * [ ] `ApiCrawler` 는 `{"error": ...}` 가 아니라 `{"message": ...}` 를 쓴다.
+ * [ ] `Api.pageRevision` 의 404 는 `{"success": false, "message": ...}` 다. 세 번째 봉투다.
  * [ ] `AccessDenied` 는 JSON 이 아니라 `text/plain` 이다. 나머지 에러 응답과 `Content-Type` 이 다르다.
 
-둘 중 하나라도 통일하려면 관리자 UI(`app/assets/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
+하나라도 통일하려면 관리자 UI(`app/assets/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
+
+=== 1차 정리에서 놓친 것
+
+`.toString()).as(JSON)` 로 다시 훑어 손으로 봉투를 만드는 자리를 더 찾았다. 패턴으로 치환할 때는 치환 대상 목록 자체를 의심해야 한다는 뜻이다.
+
+ * `Api.adminGenerateSignedReadUrl` — 트레이트에 `Ok(json)` 이 있는데 같은 식을 손으로 적고 있었다.
+ * `ApiV1` 의 revision 충돌 응답 3벌 — `revisionConflict` 로 뽑았다. `latestRevision` 을 함께 실어야 해서 `JsonError` 로는 표현되지 않고 `JsonResult` 를 쓴다.
+ * `Api.pageRevision` 의 404 — 봉투 모양은 호출부를 모르므로 그대로 두고 `JsonResult` 만 태웠다.
 
 == 에러 봉투는 compact 가 아니다
 
