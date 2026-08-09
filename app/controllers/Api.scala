@@ -1,5 +1,6 @@
 package controllers
 
+import logics.wikis.PageNameUrl
 import org.apache.pekko.actor.ActorSystem
 import anorm.SqlParser.{bool, get, int, long, str}
 import anorm._
@@ -143,7 +144,7 @@ class Api @Inject()(
           secret = signedReadUrlSecret,
         )
 
-        val basePath = routes.Wiki.view(java.net.URLEncoder.encode(name, "UTF-8").replace("+", "%20"), revision, action).url
+        val basePath = routes.Wiki.view(PageNameUrl.encode(name), revision, action).url
         val separator = if (basePath.contains("?")) "&" else "?"
         val signedPath = s"$basePath$separator${SignedReadUrlLogic.QueryParamExpires}=$expiresAt&${SignedReadUrlLogic.QueryParamSignature}=$signature"
 
@@ -369,7 +370,7 @@ class Api @Inject()(
   }
 
   def pagePreview(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    val name = PageNameUrl.decode(nameEncoded)
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
@@ -414,7 +415,7 @@ class Api @Inject()(
   private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, srcImageUrl: String, dstImageUrl: String)
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    val name = PageNameUrl.decode(nameEncoded)
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()

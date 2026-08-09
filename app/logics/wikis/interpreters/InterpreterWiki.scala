@@ -1,5 +1,6 @@
 package logics.wikis.interpreters
 
+import logics.wikis.PageNameUrl
 import com.aha00a.commons.utils.VariableHolder
 import logics.wikis._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
@@ -350,7 +351,7 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   private def getEditUrlForPartialEdit(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String = {
-    val nameEncoded = java.net.URLEncoder.encode(wikiContext.name, "UTF-8").replace("+", "%20")
+    val nameEncoded = PageNameUrl.encode(wikiContext.name)
     s"/w/$nameEncoded?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
   }
 

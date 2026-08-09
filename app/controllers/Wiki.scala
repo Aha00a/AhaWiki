@@ -1,5 +1,6 @@
 package controllers
 
+import logics.wikis.PageNameUrl
 import actors.ActorPageCalculator.Calculate
 import org.apache.pekko.actor._
 import org.apache.pekko.NotUsed
@@ -455,7 +456,7 @@ controllerComponents: ControllerComponents,
   }
 
   private def decodeWikiName(nameEncoded: String): String =
-    URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    PageNameUrl.decode(nameEncoded)
 
   private def buildEditFormState(pageContent: String, request: RequestHeader): (String, Option[(Int, Int)]) = {
     val lineStart = request.getQueryString("lineStart").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
@@ -506,7 +507,7 @@ controllerComponents: ControllerComponents,
       val additionalInfo = getAhaMarkAdditionalInfo(name)
       pageContent.redirect match {
         case Some(directive) =>
-          val redirectFromEditLink = s"/w/${URLEncoder.encode(page.name, "utf-8").replace("+", "%20")}?action=edit"
+          val redirectFromEditLink = s"/w/${PageNameUrl.encode(page.name)}?action=edit"
           val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
           Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(directive), 0, "")).flashing("success" -> newMessage)
@@ -646,7 +647,7 @@ controllerComponents: ControllerComponents,
 
 
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
-    val name = URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    val name = PageNameUrl.decode(nameEncoded)
 
     val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId, pagePermissionModeRaw) = Form(tuple(
       "revision" -> number,

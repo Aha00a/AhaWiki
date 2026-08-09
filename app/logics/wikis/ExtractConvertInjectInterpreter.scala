@@ -141,7 +141,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   }
 
   private def getEditUrl(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String = {
-    val nameEncoded = java.net.URLEncoder.encode(wikiContext.name, "UTF-8").replace("+", "%20")
+    val nameEncoded = PageNameUrl.encode(wikiContext.name)
     s"/w/$nameEncoded?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
   }
 }

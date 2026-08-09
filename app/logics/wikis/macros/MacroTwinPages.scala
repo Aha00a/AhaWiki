@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import logics.wikis.PageNameUrl
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCacheMemoryDomainSite
 import logics.PermissionLogic
@@ -56,5 +57,5 @@ object MacroTwinPages extends TraitMacro {
   }
 
   private def url(site: Site, pageName: String): String =
-    s"https://${site.mainDomain}/w/${java.net.URLEncoder.encode(pageName, "UTF-8").replace("+", "%20")}"
+    s"https://${site.mainDomain}/w/${PageNameUrl.encode(pageName)}"
 }

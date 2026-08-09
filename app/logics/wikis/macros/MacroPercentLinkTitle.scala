@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import logics.wikis.PageNameUrl
 import com.aha00a.commons.Implicits._
 import models.ContextWikiPage
 import models.tables.Site
@@ -58,5 +59,5 @@ object MacroPercentLinkTitle extends TraitMacro {
     if (external) """ target="_blank" rel="noopener"""" else ""
 
   private def encodePageName(pageName: String): String =
-    java.net.URLEncoder.encode(pageName, "UTF-8").replace("+", "%20")
+    PageNameUrl.encode(pageName)
 }

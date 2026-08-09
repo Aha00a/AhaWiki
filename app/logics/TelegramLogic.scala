@@ -1,5 +1,6 @@
 package logics
 
+import logics.wikis.PageNameUrl
 import play.api.Logging
 import play.api.libs.ws.WSClient
 
@@ -16,7 +17,7 @@ class TelegramLogic @Inject()(
   // ── 내부 유틸 ──────────────────────────────────────────────
 
   private def pageUrl(host: String, pageName: String): String =
-    s"https://$host/w/${URLEncoder.encode(pageName, "UTF-8").replace("+", "%20")}"
+    s"https://$host/w/${PageNameUrl.encode(pageName)}"
 
   private def diffUrl(host: String, pageName: String, revision: Long): String =
     s"${pageUrl(host, pageName)}?action=diff&after=$revision"

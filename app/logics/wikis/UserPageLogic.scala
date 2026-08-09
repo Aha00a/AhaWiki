@@ -11,7 +11,7 @@ object UserPageLogic {
   def wikiMarkup(nickname: String): String = s"""["${pageName(nickname)}" $nickname]"""
 
   def href(nickname: String): String =
-    "/w/" + URLEncoder.encode(pageName(nickname), StandardCharsets.UTF_8.toString).replace("+", "%20")
+    "/w/" + PageNameUrl.encode(pageName(nickname))
 
   private def profileImageUrlByNickname(nickname: String)(implicit wikiContext: models.ContextWikiPage): Option[String] = {
     implicit val userProfileImageCacheKey: (play.api.db.Database, models.tables.Site, String) = (wikiContext.database, wikiContext.site, nickname)

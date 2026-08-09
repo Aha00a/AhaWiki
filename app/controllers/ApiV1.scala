@@ -1,5 +1,6 @@
 package controllers
 
+import logics.wikis.PageNameUrl
 import actors.ActorPageCalculator.Calculate
 import anorm.SqlParser._
 import anorm._
@@ -43,7 +44,7 @@ class ApiV1 @Inject()(
 ) extends BaseController with JsonResults with Logging {
 
   private def decodePageName(nameEncoded: String): String =
-    URLDecoder.decode(nameEncoded.replace("+", "%2B"), "UTF-8")
+    PageNameUrl.decode(nameEncoded)
 
   private def sha256Hex(text: String): String =
     MessageDigest.getInstance("SHA-256")
