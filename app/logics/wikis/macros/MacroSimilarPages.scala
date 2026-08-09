@@ -1,13 +1,11 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
-import logics.AhaWikiCacheMemoryPermission
 import logics.PermissionLogic
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
 import models.tables.CalculatedCosineSimilarity
-import models.tables.Permission
 import models.tables.Site
 import play.api.Logging
 
@@ -23,11 +21,6 @@ object MacroSimilarPages extends TraitMacro with Logging {
       implicit val site: Site = wikiContext.site
 
       val siteBySeq: Map[Long, Site] = logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.database).map(site => site.seq -> site).toMap
-      def anonymousCanRead(targetSite: Site, pageName: String): Boolean = {
-        val permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, targetSite))
-        permissionLogic.permitted(pageName, "", Permission.Action.Read.id)
-      }
-
       val sameSiteSimilarities: immutable.Seq[CalculatedCosineSimilarity] = CalculatedCosineSimilarity
         .selectSameSite(name)
         .view
@@ -38,7 +31,7 @@ object MacroSimilarPages extends TraitMacro with Logging {
       val crossSiteSimilarities: immutable.Seq[CalculatedCosineSimilarity] = CalculatedCosineSimilarity
         .selectCrossSite(name)
         .view
-        .filter(c => siteBySeq.get(c.site2).exists(targetSite => anonymousCanRead(targetSite, c.name2)))
+        .filter(c => siteBySeq.get(c.site2).exists(targetSite => PermissionLogic.anonymousCanRead(targetSite, c.name2)))
         .take(20)
         .toSeq
 

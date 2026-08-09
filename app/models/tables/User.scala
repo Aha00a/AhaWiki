@@ -47,25 +47,6 @@ object User {
       .map(User.tupled)
   }
 
-  private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {
-    if (connection.getAutoCommit) {
-      connection.setAutoCommit(false)
-      try {
-        val result = f
-        connection.commit()
-        result
-      } catch {
-        case e: Throwable =>
-          connection.rollback()
-          throw e
-      } finally {
-        connection.setAutoCommit(true)
-      }
-    } else {
-      f
-    }
-  }
-
   def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
     val baseNickname = {
       val localPart = email.takeWhile(_ != '@').toLowerCase
@@ -125,7 +106,7 @@ object User {
       }
       .orElse {
         try {
-          withLocalTransaction {
+          LocalTransaction {
             insert(email, profileImageUrl).map {
               case (id, nickname) =>
                 UserEmail.insert(id, email, isPrimary = true)

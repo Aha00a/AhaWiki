@@ -117,29 +117,10 @@ object UserMerge {
     }
   }
 
-  private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {
-    if (connection.getAutoCommit) {
-      connection.setAutoCommit(false)
-      try {
-        val result = f
-        connection.commit()
-        result
-      } catch {
-        case e: Throwable =>
-          connection.rollback()
-          throw e
-      } finally {
-        connection.setAutoCommit(true)
-      }
-    } else {
-      f
-    }
-  }
-
   def mergeInto(canonicalUser: Long, duplicateUser: Long)(implicit connection: Connection): Unit = {
     if (canonicalUser == duplicateUser) return
 
-    withLocalTransaction {
+    LocalTransaction {
       SQL"UPDATE UserEmail SET isPrimary = false WHERE `user` = $duplicateUser".executeUpdate()
 
       mergeUserSiteIfPresent(canonicalUser, duplicateUser)

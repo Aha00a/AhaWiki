@@ -2,6 +2,21 @@
 
 The schema of record is `conf/evolutions/default/*.sql`. Play applies it at startup.
 
+## Multi-statement writes go through `LocalTransaction`
+
+`models.tables.LocalTransaction` wraps a block so it commits or rolls back as a unit,
+whether or not the connection is already in a transaction. Most callers get their connection
+from `Database.withConnection`, which leaves autocommit on, but the same methods are also
+reached from inside `withTransaction`, so the block has to handle both: it opens a
+transaction when there is none and takes a savepoint when there already is one.
+
+The nested case used to differ per table. `Page` took a savepoint; `User` and `UserMerge`
+ran the block bare and let the exception through with the block's partial writes still
+pending. All three rethrow, so an outer handler that rolls everything back saw no
+difference — an outer handler that catches and continues did. The savepoint version is the
+one kept, because it is the only one that leaves the connection in a state the caller can
+describe.
+
 The database is one schema on a shared RDS instance. Other projects live on the same
 instance — **never touch anything outside this schema.**
 

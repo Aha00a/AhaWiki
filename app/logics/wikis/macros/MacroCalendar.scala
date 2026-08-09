@@ -57,6 +57,9 @@ object MacroCalendar extends TraitMacro {
     toCalculatedLinks(linkDestinations(body))
 
   @scala.annotation.tailrec
+  // MacroIncludeDays and MacroLinkDate carry a function of this name and shape. They are not
+  // merged: each expands a different set of date patterns, so one function would need a flag
+  // saying which macro is asking, and the flag is worse than the resemblance.
   private def linkDestinations(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => linkDestinations(wikiContext.name)
     case "-" => linkDestinations(wikiContext.name + ",-")

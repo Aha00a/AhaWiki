@@ -2,11 +2,9 @@ package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
 import logics.AhaWikiCacheMemoryDomainSite
-import logics.AhaWikiCacheMemoryPermission
 import logics.PermissionLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
-import models.tables.Permission
 import models.tables.Site
 
 object MacroTwinPages extends TraitMacro {
@@ -28,7 +26,7 @@ object MacroTwinPages extends TraitMacro {
             .get()
             .exists(_.name == pageName)
         },
-        anonymousCanRead = targetSite => MacroTwinPages.anonymousCanRead(targetSite, pageName),
+        anonymousCanRead = targetSite => PermissionLogic.anonymousCanRead(targetSite, pageName),
       )
 
       val markup = twinPages.map { twinPage =>
@@ -55,11 +53,6 @@ object MacroTwinPages extends TraitMacro {
         Some(TwinPage(targetSite, pageName))
       }
     }
-  }
-
-  private def anonymousCanRead(targetSite: Site, pageName: String)(implicit connection: java.sql.Connection): Boolean = {
-    val permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, targetSite))
-    permissionLogic.permitted(pageName, "", Permission.Action.Read.id)
   }
 
   private def url(site: Site, pageName: String): String =

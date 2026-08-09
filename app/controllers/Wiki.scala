@@ -628,12 +628,8 @@ controllerComponents: ControllerComponents,
       }
   }
 
-  private def anonymousCanRead(siteSeq: Long, pageName: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean = {
-    AhaWikiCacheMemoryDomainSite.getSite(siteSeq)(wikiContext.database).exists { targetSite =>
-      val permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, targetSite))
-      permissionLogic.permitted(pageName, "", Permission.Action.Read.id)
-    }
-  }
+  private def anonymousCanRead(siteSeq: Long, pageName: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean =
+    PermissionLogic.anonymousCanRead(siteSeq, pageName)(connection, wikiContext.database)
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
     import models.tables.CalculatedSchemaOrg

@@ -45,6 +45,7 @@ object MacroLinkDate extends TraitMacro {
     toCalculatedLinks(linkDestinations(body))
 
   @scala.annotation.tailrec
+  // See the note in MacroCalendar: same name and shape, different expansion, deliberately apart.
   private def linkDestinations(body: String)(implicit wikiContext: ContextWikiPage): Seq[String] = body match {
     case "" | null => linkDestinations(wikiContext.name)
     case DateTimeUtil.regexYear(y) => (1 to 12).map(m => f"$y-${m.toString.padLeft(2, "0")}")

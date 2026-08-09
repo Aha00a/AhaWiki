@@ -2,6 +2,30 @@ package logics
 
 import com.aha00a.commons.Implicits._
 import models.tables.Permission
+import models.tables.Site
+import play.api.db.Database
+
+import java.sql.Connection
+
+object PermissionLogic {
+
+  /**
+   * Whether an anonymous visitor may read a page on another site.
+   *
+   * Cross-site features — similar pages, twin pages, the sister-wiki listing — may only
+   * reveal a page that a logged-out visitor could reach on its own site. Deciding that per
+   * feature is how one of them ends up leaking a page the others hide, so the decision lives
+   * here.
+   */
+  def anonymousCanRead(targetSite: Site, pageName: String)(implicit connection: Connection): Boolean = {
+    val permissionLogic = new PermissionLogic(AhaWikiCacheMemoryPermission.get()(connection, targetSite))
+    permissionLogic.permitted(pageName, "", Permission.Action.Read.id)
+  }
+
+  /** Same, for a caller that has the site's seq rather than the site. Unknown seq reads as no. */
+  def anonymousCanRead(siteSeq: Long, pageName: String)(implicit connection: Connection, database: Database): Boolean =
+    AhaWikiCacheMemoryDomainSite.getSite(siteSeq)(database).exists(anonymousCanRead(_, pageName))
+}
 
 class PermissionLogic(seqPermission: Seq[Permission]) {
   val seq: Seq[Permission] = seqPermission.sortBy(permission => (

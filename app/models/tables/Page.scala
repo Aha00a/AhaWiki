@@ -12,7 +12,6 @@ import models.WithDateTime
 import models.tables
 
 import java.sql.Connection
-import java.sql.Savepoint
 import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDateTime
 import scala.collection.immutable
@@ -167,41 +166,15 @@ INSERT INTO Page
     linkCount + cosineSimilarityCount + termFrequencyCount + schemaOrgCount + pageMetaCount
   }
 
-  private def withLocalTransaction[T](f: => T)(implicit connection: Connection): T = {
-    if (connection.getAutoCommit) {
-      connection.setAutoCommit(false)
-      try {
-        val result = f
-        connection.commit()
-        result
-      } catch {
-        case e: Throwable =>
-          connection.rollback()
-          throw e
-      } finally {
-        connection.setAutoCommit(true)
-      }
-    } else {
-      val savepoint: Savepoint = connection.setSavepoint()
-      try {
-        f
-      } catch {
-        case e: Throwable =>
-          connection.rollback(savepoint)
-          throw e
-      }
-    }
-  }
-
   def deleteWithRelatedData(name:String)(implicit connection: Connection, site: Site): Int = {
-    withLocalTransaction {
+    LocalTransaction {
       deleteLinkCosignSimilarityTermFrequency(name)
       SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name".executeUpdate()
     }
   }
 
   def deleteSpecificRevisionWithRelatedData(name:String, revision:Long)(implicit connection: Connection, site: Site): Int = {
-    withLocalTransaction {
+    LocalTransaction {
       deleteLinkCosignSimilarityTermFrequency(name)
       try {
         SQL"DELETE FROM Page WHERE site = ${site.seq} AND name = $name AND revision = $revision".executeUpdate()
@@ -215,7 +188,7 @@ INSERT INTO Page
   }
 
   def rename(name: String, newName: String)(implicit connection: Connection, site: Site): Int = {
-    withLocalTransaction {
+    LocalTransaction {
       deleteLinkCosignSimilarityTermFrequency(name)
       SQL"UPDATE Page SET name = $newName WHERE site = ${site.seq} AND name = $name".executeUpdate()
     }
