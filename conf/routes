@@ -54,44 +54,44 @@ POST          /api/v1/rename                        controllers.ApiV1.renamePage
 GET           /api/v1/page/*nameEncoded             controllers.ApiV1.getPage(nameEncoded: String)
 POST          /api/v1/page/*nameEncoded             controllers.ApiV1.savePage(nameEncoded: String)
 DELETE        /api/v1/page/*nameEncoded             controllers.ApiV1.deletePage(nameEncoded: String)
-GET           /api/account/ApiKeys                   controllers.Api.accountApiKeys
-POST          /api/account/ApiKeys                   controllers.Api.accountCreateApiKey
-DELETE        /api/account/ApiKeys/:seq              controllers.Api.accountRevokeApiKey(seq: Long)
+GET           /api/account/ApiKeys                   controllers.ApiApiKey.accountApiKeys
+POST          /api/account/ApiKeys                   controllers.ApiApiKey.accountCreateApiKey
+DELETE        /api/account/ApiKeys/:seq              controllers.ApiApiKey.accountRevokeApiKey(seq: Long)
 GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
-GET           /api/Admin/ApiKeys                     controllers.Api.adminApiKeys
-DELETE        /api/Admin/ApiKeys/:seq                controllers.Api.adminRevokeApiKey(seq: Long)
-GET           /api/Admin/Sites                       controllers.Api.adminSites
-PUT           /api/Admin/Site/:seq                   controllers.Api.adminUpdateSite(seq: Long)
-GET           /api/Admin/Users                       controllers.Api.adminUsers
-GET           /api/Admin/UserViews                   controllers.Api.adminUserViews(userSeq: Long, n: Int ?= 200)
-GET           /api/Admin/DailyStats                  controllers.Api.adminDailyStats
-GET           /api/Admin/TopViewedPages              controllers.Api.adminTopViewedPages
-GET           /api/Admin/RecentChanges               controllers.Api.adminRecentChanges
-GET           /api/Admin/AccessLogs                  controllers.Api.adminAccessLogs
+GET           /api/Admin/ApiKeys                     controllers.ApiApiKey.adminApiKeys
+DELETE        /api/Admin/ApiKeys/:seq                controllers.ApiApiKey.adminRevokeApiKey(seq: Long)
+GET           /api/Admin/Sites                       controllers.ApiAdminSite.adminSites
+PUT           /api/Admin/Site/:seq                   controllers.ApiAdminSite.adminUpdateSite(seq: Long)
+GET           /api/Admin/Users                       controllers.ApiAdminReport.adminUsers
+GET           /api/Admin/UserViews                   controllers.ApiAdminReport.adminUserViews(userSeq: Long, n: Int ?= 200)
+GET           /api/Admin/DailyStats                  controllers.ApiAdminReport.adminDailyStats
+GET           /api/Admin/TopViewedPages              controllers.ApiAdminReport.adminTopViewedPages
+GET           /api/Admin/RecentChanges               controllers.ApiAdminReport.adminRecentChanges
+GET           /api/Admin/AccessLogs                  controllers.ApiAdminReport.adminAccessLogs
 GET           /api/Admin/SignedReadUrl               controllers.Api.adminGenerateSignedReadUrl
-GET           /api/Admin/Favicon                     controllers.Api.adminSiteFavicon
-POST          /api/Admin/Favicon                     controllers.Api.adminUploadSiteFavicon
-DELETE        /api/Admin/Favicon                     controllers.Api.adminDeleteSiteFavicon
-GET           /api/Admin/SiteTheme                   controllers.Api.adminSiteTheme
-PUT           /api/Admin/SiteTheme                   controllers.Api.adminUpdateSiteTheme
-GET           /api/Admin/Site/:seq/Telegram          controllers.Api.adminSiteTelegram(seq: Long)
-PUT           /api/Admin/Site/:seq/Telegram          controllers.Api.adminUpdateSiteTelegram(seq: Long)
-GET           /api/Admin/PermissionAudit             controllers.Api.adminPermissionAudit
-GET           /api/Admin/Site/:seq/PageNames         controllers.Api.adminSitePageNames(seq: Long)
-GET           /api/Admin/Site/:seq/PageMetaList      controllers.Api.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
-GET           /api/Admin/Site/:seq/Admins            controllers.Api.adminSiteAdmins(seq: Long)
-POST          /api/Admin/Site/:seq/Admins            controllers.Api.adminInsertSiteAdmin(seq: Long)
-DELETE        /api/Admin/Site/:seq/Admins/:userSeq   controllers.Api.adminDeleteSiteAdmin(seq: Long, userSeq: Long)
-GET           /api/Admin/Site/:seq/Permissions       controllers.Api.adminPermissions(seq: Long)
-POST          /api/Admin/Site/:seq/Permissions       controllers.Api.adminUpsertPermission(seq: Long)
-DELETE        /api/Admin/Site/:seq/Permissions       controllers.Api.adminDeletePermission(seq: Long)
-GET           /api/Admin/Site/:seq/PermissionDiagnose controllers.Api.adminPermissionDiagnose(seq: Long, pageName: String ?= "", actor: String ?= "", action: String ?= "Read")
-POST          /api/Admin/Site/:seq/Calculate         controllers.Api.adminSiteCalculate(seq: Long)
+GET           /api/Admin/Favicon                     controllers.ApiAdminSite.adminSiteFavicon
+POST          /api/Admin/Favicon                     controllers.ApiAdminSite.adminUploadSiteFavicon
+DELETE        /api/Admin/Favicon                     controllers.ApiAdminSite.adminDeleteSiteFavicon
+GET           /api/Admin/SiteTheme                   controllers.ApiAdminSite.adminSiteTheme
+PUT           /api/Admin/SiteTheme                   controllers.ApiAdminSite.adminUpdateSiteTheme
+GET           /api/Admin/Site/:seq/Telegram          controllers.ApiAdminSite.adminSiteTelegram(seq: Long)
+PUT           /api/Admin/Site/:seq/Telegram          controllers.ApiAdminSite.adminUpdateSiteTelegram(seq: Long)
+GET           /api/Admin/PermissionAudit             controllers.ApiAdminSite.adminPermissionAudit
+GET           /api/Admin/Site/:seq/PageNames         controllers.ApiAdminSite.adminSitePageNames(seq: Long)
+GET           /api/Admin/Site/:seq/PageMetaList      controllers.ApiAdminSite.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
+GET           /api/Admin/Site/:seq/Admins            controllers.ApiAdminSite.adminSiteAdmins(seq: Long)
+POST          /api/Admin/Site/:seq/Admins            controllers.ApiAdminSite.adminInsertSiteAdmin(seq: Long)
+DELETE        /api/Admin/Site/:seq/Admins/:userSeq   controllers.ApiAdminSite.adminDeleteSiteAdmin(seq: Long, userSeq: Long)
+GET           /api/Admin/Site/:seq/Permissions       controllers.ApiAdminSite.adminPermissions(seq: Long)
+POST          /api/Admin/Site/:seq/Permissions       controllers.ApiAdminSite.adminUpsertPermission(seq: Long)
+DELETE        /api/Admin/Site/:seq/Permissions       controllers.ApiAdminSite.adminDeletePermission(seq: Long)
+GET           /api/Admin/Site/:seq/PermissionDiagnose controllers.ApiAdminSite.adminPermissionDiagnose(seq: Long, pageName: String ?= "", actor: String ?= "", action: String ?= "Read")
+POST          /api/Admin/Site/:seq/Calculate         controllers.ApiAdminSite.adminSiteCalculate(seq: Long)
 GET           /api/Admin/MemoryCacheStats            controllers.Api.adminMemoryCacheStats()
-GET           /api/Admin/S3Objects                   controllers.Api.adminS3Objects(prefix: String ?= "", maxKeys: Int ?= 500, recursive: Boolean ?= false)
-DELETE        /api/Admin/S3Objects                   controllers.Api.adminDeleteS3Objects
-GET           /api/Admin/S3DownloadUrl               controllers.Api.adminS3DownloadUrl(key: String)
+GET           /api/Admin/S3Objects                   controllers.ApiAdminS3.adminS3Objects(prefix: String ?= "", maxKeys: Int ?= 500, recursive: Boolean ?= false)
+DELETE        /api/Admin/S3Objects                   controllers.ApiAdminS3.adminDeleteS3Objects
+GET           /api/Admin/S3DownloadUrl               controllers.ApiAdminS3.adminS3DownloadUrl(key: String)
 GET           /api/pageMap                           controllers.Api.pageMap
 GET           /api/pageNames                         controllers.Api.pageNames
 GET           /api/macroNames                        controllers.Api.macroNames
