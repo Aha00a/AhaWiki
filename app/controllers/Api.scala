@@ -3,10 +3,6 @@ package controllers
 import org.apache.pekko.actor.ActorSystem
 import anorm.SqlParser.{bool, get, int, long, str}
 import anorm._
-import com.amazonaws.auth.AWSStaticCredentialsProvider
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.services.s3.AmazonS3
-import com.amazonaws.services.s3.AmazonS3ClientBuilder
 import com.amazonaws.services.s3.model.DeleteObjectsRequest
 import com.amazonaws.services.s3.model.ListObjectsV2Request
 import com.amazonaws.services.s3.model.ObjectMetadata
@@ -23,8 +19,10 @@ import logics.AhaWikiCacheMemoryDomainSite
 import logics.AhaWikiCacheMemoryPermission
 import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
+import logics.AttachmentLogic
 import logics.PermissionLogic
 import logics.SessionLogic
+import logics.S3Logic
 import logics.SiteLogic
 import logics.SiteThemeLogic
 import logics.wikis.PageLogic
@@ -136,11 +134,6 @@ class Api @Inject()(
   private val adminFaviconConfigKey: String = "site.favicon.objectKey"
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
-  private def sanitizeAttachmentPathSegment(v: String): String = {
-    val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
-    if (sanitized.nonEmpty) sanitized else "_"
-  }
-
   private def buildAdminFaviconObjectKey(siteSeq: Long, originalFileName: String, now: LocalDateTime = LocalDateTime.now()): String = {
     val extension = originalFileName
       .split('.')
@@ -148,20 +141,9 @@ class Api @Inject()(
       .map(_.replaceAll("[^a-zA-Z0-9]", "").toLowerCase)
       .filter(_.nonEmpty)
       .getOrElse("png")
-    val sanitizedFilename = sanitizeAttachmentPathSegment(originalFileName)
+    val sanitizedFilename = AttachmentLogic.sanitizePathSegment(originalFileName)
     val formattedDateTime = now.format(adminFaviconTimestampFormatter)
     s"Favicon/$siteSeq/${sanitizedFilename}.$formattedDateTime.$extension"
-  }
-
-  private def buildAmazonS3Client(): AmazonS3 = {
-    val credentials = new BasicAWSCredentials(
-      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
-      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
-    )
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
-      .build()
   }
 
   private def parseSiteSeq(v: String): Option[Long] = scala.util.Try(v.trim.toLong).toOption.filter(_ > 0)
@@ -574,7 +556,7 @@ class Api @Inject()(
                 case Right(siteValue) =>
                   implicit val site: Site = siteValue
                   val objectKey = buildAdminFaviconObjectKey(site.seq, filePart.filename.trim)
-                  val amazonS3 = buildAmazonS3Client()
+                  val amazonS3 = S3Logic.client(applicationConf)
                   val bucket = applicationConf.AhaWiki.aws.s3.bucket()
                   val metadata = new ObjectMetadata()
                   metadata.setContentType(contentType)
@@ -615,7 +597,7 @@ class Api @Inject()(
             val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
             objectKeyOption.foreach { objectKey =>
               try {
-                val amazonS3 = buildAmazonS3Client()
+                val amazonS3 = S3Logic.client(applicationConf)
                 val bucket = applicationConf.AhaWiki.aws.s3.bucket()
                 amazonS3.deleteObject(bucket, objectKey)
               } catch {
@@ -1686,7 +1668,7 @@ class Api @Inject()(
       val safeMaxKeys = Math.min(1000, Math.max(1, maxKeys))
       val safePrefix = Option(prefix).map(_.trim).getOrElse("")
       try {
-        val amazonS3 = buildAmazonS3Client()
+        val amazonS3 = S3Logic.client(applicationConf)
         val bucket = applicationConf.AhaWiki.aws.s3.bucket()
         val requestBuilder = new ListObjectsV2Request()
           .withBucketName(bucket)
@@ -1757,7 +1739,7 @@ class Api @Inject()(
         JsonError(BadRequest, "keys is required")
       } else {
         try {
-          val amazonS3 = buildAmazonS3Client()
+          val amazonS3 = S3Logic.client(applicationConf)
           val bucket = applicationConf.AhaWiki.aws.s3.bucket()
           val deleteRequest = new DeleteObjectsRequest(bucket).withKeys(keys: _*)
           amazonS3.deleteObjects(deleteRequest)

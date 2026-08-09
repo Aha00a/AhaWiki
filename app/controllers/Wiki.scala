@@ -211,26 +211,21 @@ controllerComponents: ControllerComponents,
     }
   }
 
-  private def sanitizeAttachmentPathSegment(v: String): String = {
-    val sanitized = v.replaceAll("[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]", "_")
-    if (sanitized.nonEmpty) sanitized else "_"
-  }
-
   private def buildAttachmentObjectKey(siteSeq: Long, pageName: String, originalFileName: String, extension: String, now: LocalDateTime = LocalDateTime.now()): String = {
-    val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
-    val sanitizedOriginalFileName = sanitizeAttachmentPathSegment(originalFileName)
-    val sanitizedExtension = sanitizeAttachmentPathSegment(extension).toLowerCase
+    val sanitizedPageName = AttachmentLogic.sanitizePathSegment(pageName)
+    val sanitizedOriginalFileName = AttachmentLogic.sanitizePathSegment(originalFileName)
+    val sanitizedExtension = AttachmentLogic.sanitizePathSegment(extension).toLowerCase
     val sanitizedOriginalFileNameWithoutExtension = {
       val stripped = sanitizedOriginalFileName.stripSuffix(s".$sanitizedExtension")
       if (stripped.nonEmpty) stripped else sanitizedOriginalFileName
     }
     val formattedDateTime = now.format(attachmentTimestampFormatter)
-    s"Attachment/$siteSeq/$sanitizedPageName/$sanitizedOriginalFileName/${sanitizedOriginalFileNameWithoutExtension}.$formattedDateTime.$sanitizedExtension"
+    s"${AttachmentLogic.sitePrefix(siteSeq)}$sanitizedPageName/$sanitizedOriginalFileName/${sanitizedOriginalFileNameWithoutExtension}.$formattedDateTime.$sanitizedExtension"
   }
 
   private def toAttachmentMacroArgument(objectKey: String, siteSeq: Long, pageName: String): String = {
-    val sitePrefix = s"Attachment/$siteSeq/"
-    val pagePrefix = s"$sitePrefix${sanitizeAttachmentPathSegment(pageName)}/"
+    val sitePrefix = AttachmentLogic.sitePrefix(siteSeq)
+    val pagePrefix = AttachmentLogic.pagePrefix(siteSeq, pageName)
     if (objectKey.startsWith(pagePrefix)) {
       objectKey.stripPrefix(pagePrefix)
     } else if (objectKey.startsWith(sitePrefix)) {
@@ -244,48 +239,10 @@ controllerComponents: ControllerComponents,
     val trimmed = Option(rawObjectKey).map(_.trim).getOrElse("")
     if (trimmed.isEmpty) {
       ""
-    } else if (trimmed.startsWith("Attachment/")) {
+    } else if (trimmed.startsWith(s"${AttachmentLogic.Root}/")) {
       trimmed
     } else {
-      s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/$trimmed"
-    }
-  }
-
-  private def listPageAttachmentObjectKeysFromS3(siteSeq: Long, pageName: String): Seq[String] = {
-    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-    val prefix = s"Attachment/$siteSeq/${sanitizeAttachmentPathSegment(pageName)}/"
-    val amazonS3 = buildAmazonS3Client()
-    val request = new com.amazonaws.services.s3.model.ListObjectsV2Request()
-      .withBucketName(bucket)
-      .withPrefix(prefix)
-      .withMaxKeys(200)
-    val result = amazonS3.listObjectsV2(request)
-    result.getObjectSummaries.asScala.toSeq
-      .map(_.getKey)
-      .filter(key => key != null && key.nonEmpty && !key.endsWith("/"))
-  }
-
-  private def deletePageAttachments(siteSeq: Long, pageName: String)
-                                   (implicit connection: Connection): Either[String, Unit] = {
-    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-    val amazonS3 = buildAmazonS3Client()
-    val objectKeysFromDb = Attachment.selectObjectKeysByPage(siteSeq, pageName)
-    val objectKeysFromS3 = listPageAttachmentObjectKeysFromS3(siteSeq, pageName)
-    val objectKeys = (objectKeysFromDb ++ objectKeysFromS3).map(_.trim).filter(_.nonEmpty).distinct
-
-    val failedObjectKeys = objectKeys.flatMap { objectKey =>
-      Try(amazonS3.deleteObject(bucket, objectKey)) match {
-        case Success(_) => None
-        case Failure(error) =>
-          logger.error(s"deletePageAttachments failed. pageName=$pageName objectKey=$objectKey", error)
-          Some(objectKey)
-      }
-    }
-    if (failedObjectKeys.nonEmpty) {
-      Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
-    } else {
-      objectKeys.foreach(Attachment.markDeleted)
-      Right(())
+      s"${AttachmentLogic.pagePrefix(siteSeq, pageName)}$trimmed"
     }
   }
 
@@ -298,21 +255,6 @@ controllerComponents: ControllerComponents,
     else Right((site, contextWikiPage, provider))
   }
 
-
-  private def buildAmazonS3Client(): com.amazonaws.services.s3.AmazonS3 = {
-    import com.amazonaws.auth.AWSStaticCredentialsProvider
-    import com.amazonaws.auth.BasicAWSCredentials
-    import com.amazonaws.services.s3.AmazonS3
-    import com.amazonaws.services.s3.AmazonS3ClientBuilder
-    val credentials = new BasicAWSCredentials(
-      applicationConf.AhaWiki.aws.AWS_ACCESS_KEY_ID(),
-      applicationConf.AhaWiki.aws.AWS_SECRET_ACCESS_KEY(),
-    )
-    AmazonS3ClientBuilder.standard
-      .withCredentials(new AWSStaticCredentialsProvider(credentials))
-      .withRegion(applicationConf.AhaWiki.aws.AWS_REGION())
-      .build()
-  }
 
   private def insertInitiatedAttachment(
                                          siteSeq: Long,
@@ -861,7 +803,7 @@ controllerComponents: ControllerComponents,
           if (WikiPermission().isDeletable(name)) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-            deletePageAttachments(site.seq, name) match {
+            AttachmentLogic.deletePageAttachments(site.seq, name) match {
               case Left(error) =>
                 logger.error(error)
                 throw new RuntimeException(error)
@@ -1061,7 +1003,7 @@ controllerComponents: ControllerComponents,
                 metadata.setContentLength(contentLength)
 
                 val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val amazonS3 = buildAmazonS3Client()
+                val amazonS3 = S3Logic.client(applicationConf)
                 insertInitiatedAttachment(
                   siteSeq = site.seq,
                   pageName = pageName,
@@ -1121,7 +1063,7 @@ controllerComponents: ControllerComponents,
               (attachment, presignedUrlOption)
             }
             val dbObjectKeys = dbAttachments.map(_._1.objectKey).toSet
-            val s3OnlyObjects = listPageAttachmentObjectKeysFromS3(site.seq, pageName).filterNot(dbObjectKeys.contains)
+            val s3OnlyObjects = AttachmentLogic.listPageObjectKeys(site.seq, pageName).filterNot(dbObjectKeys.contains)
             val s3OnlyJson = s3OnlyObjects.map { objectKey =>
               val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption
               val inferredFilename = objectKey.split("/").toSeq.lastOption.getOrElse(objectKey)
@@ -1174,7 +1116,7 @@ controllerComponents: ControllerComponents,
                   case None =>
                     NotFound("Attachment not found")
                   case Some(_) =>
-                    val amazonS3 = buildAmazonS3Client()
+                    val amazonS3 = S3Logic.client(applicationConf)
                     val bucket = applicationConf.AhaWiki.aws.s3.bucket()
 
                     try {
@@ -1224,7 +1166,7 @@ controllerComponents: ControllerComponents,
                   extension = extension,
                 )
 
-                val amazonS3 = buildAmazonS3Client()
+                val amazonS3 = S3Logic.client(applicationConf)
                 val bucket = applicationConf.AhaWiki.aws.s3.bucket()
                 val metadata = new ObjectMetadata()
                 metadata.setContentType(contentType)

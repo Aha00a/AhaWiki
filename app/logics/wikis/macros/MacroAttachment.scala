@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
+import logics.AttachmentLogic
 import models.ContextWikiPage
 
 import scala.util.matching.Regex
@@ -8,8 +9,7 @@ import scala.util.matching.Regex
 object MacroAttachment extends TraitMacro {
   private val fallbackImagePath: String = "/assets/img/attachmentFallback.svg"
   private val regexWidth: Regex = """(.+),\s*(\d+(px|%)?)$""".r
-  private val attachmentRoot: String = "Attachment"
-  private val attachmentPathSanitizerRegex: String = "[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]"
+  private val attachmentRoot: String = AttachmentLogic.Root
   private val imageExtensions: Set[String] = Set(
     "png",
     "jpg",
@@ -24,11 +24,6 @@ object MacroAttachment extends TraitMacro {
     "ico",
   )
 
-  private def sanitizeAttachmentPathSegment(v: String): String = {
-    val sanitized = v.replaceAll(attachmentPathSanitizerRegex, "_")
-    if (sanitized.nonEmpty) sanitized else "_"
-  }
-
   private def normalizeObjectKey(rawObjectKey: String, siteSeq: Long, pageName: String): String = {
     val trimmed = rawObjectKey.trim.stripPrefix("/")
     if (trimmed.startsWith(s"$attachmentRoot/")) {
@@ -37,14 +32,14 @@ object MacroAttachment extends TraitMacro {
       val segments = trimmed.split("/").toSeq.filter(_.nonEmpty)
       segments match {
         case Seq("clipboard", _*) =>
-          val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
+          val sanitizedPageName = AttachmentLogic.sanitizePathSegment(pageName)
           s"$attachmentRoot/$siteSeq/$sanitizedPageName/$trimmed"
         case Seq(pn, "clipboard", rest @ _*) =>
-          val normalizedPagePath = (Seq(sanitizeAttachmentPathSegment(pn), "clipboard") ++ rest).mkString("/")
+          val normalizedPagePath = (Seq(AttachmentLogic.sanitizePathSegment(pn), "clipboard") ++ rest).mkString("/")
           s"$attachmentRoot/$siteSeq/$normalizedPagePath"
         case Seq(fileName, rest @ _*) =>
-          val sanitizedPageName = sanitizeAttachmentPathSegment(pageName)
-          val normalizedPagePath = (Seq(sanitizedPageName, sanitizeAttachmentPathSegment(fileName)) ++ rest.map(sanitizeAttachmentPathSegment)).mkString("/")
+          val sanitizedPageName = AttachmentLogic.sanitizePathSegment(pageName)
+          val normalizedPagePath = (Seq(sanitizedPageName, AttachmentLogic.sanitizePathSegment(fileName)) ++ rest.map(AttachmentLogic.sanitizePathSegment)).mkString("/")
           s"$attachmentRoot/$siteSeq/$normalizedPagePath"
         case _ =>
           trimmed

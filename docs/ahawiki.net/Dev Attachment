@@ -26,6 +26,10 @@ Attachment/1/MyPage/clipboard/clipboard.20240101120000000.png
  * `pageName`과 파일명의 특수문자는 `[^\p{IsHangul}\p{IsHan}\p{IsHiragana}\p{IsKatakana}a-zA-Z0-9._-]` 패턴으로 `_` 치환
  * 클립보드 이미지는 `{pageName}/clipboard/` 하위에 저장
 
+이 레이아웃은 `logics.AttachmentLogic` 한 곳에서만 조립한다. `Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment` 가 그 자리다.
+
+키를 쓰는 쪽과 읽는 쪽이 프리픽스를 각자 조립하면, 어긋나도 컴파일은 통과하고 **첨부가 사라진 뒤에야** 드러난다. 실제로 치환 함수가 `Api`·`ApiV1`·`Wiki`·`MacroAttachment` 에 네 벌 있었다.
+
 == presigned URL
  * 오브젝트에 접근 시 AWS S3 presigned URL 생성 (유효기간 24시간)
  * 매크로 렌더링마다 URL이 새로 생성됨
@@ -129,6 +133,20 @@ Content-Type: multipart/form-data
 == 페이지 삭제 시 동작
  * 페이지 삭제 시 해당 페이지의 첨부파일도 S3 및 DB에서 함께 삭제 (cascade)
  * S3는 `Attachment/{siteSeq}/{pageName}/` 프리픽스로 최대 200개 조회하여 삭제
+ * S3 오브젝트를 모두 지운 뒤에야 DB 행을 삭제 표시한다. 순서를 뒤집으면 삭제가 실패했을 때 아무도 가리키지 않는 오브젝트가 남는다.
+ * 구현은 `AttachmentLogic.deletePageAttachments` 하나다.
+
+=== S3 미설정일 때
+
+`AWS_REGION`·`AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY`·`bucket` 중 하나라도 비어 있으면 S3 작업을 건너뛴다. 첨부는 "없음"으로 취급하고 DB 정리는 그대로 진행한다.
+
+이 가드는 원래 `ApiV1` 에만 있었다. 같은 함수가 `Wiki` 에도 한 벌 더 있었고 그쪽에는 가드가 없어서, S3 미설정 상태에서는 빈 자격증명·빈 리전으로 클라이언트를 만들어 호출했다. 사본이 둘이면 한쪽만 고쳐도 컴파일이 통과한다는 것의 실례다. 합치면서 가드 있는 쪽으로 통일했다.
+
+== S3 클라이언트
+
+`logics.S3Logic` 이 자격증명별로 캐시해 돌려준다.
+
+`AmazonS3` 는 커넥션 풀을 들고 있고 공유하도록 만들어진 객체다. 컨트롤러 3곳이 각자 `buildAmazonS3Client()` 를 갖고 **요청마다 새로 만들고 있었다**(호출부 11곳). 만든 클라이언트를 닫는 곳은 없었으므로 풀이 요청마다 쌓였다. 어디서도 클라이언트를 닫거나 상태를 바꾸지 않으므로 자격증명당 한 개를 공유해도 안전하다.
 
 == 설계 결정사항
  * 저장소: [S3] presigned URL 방식 (직접 S3 URL 노출 없음)
