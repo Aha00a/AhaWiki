@@ -65,7 +65,7 @@
                                         var csrfValue = data.value;
                                         AhaWiki.Loader.open();
                                         $.ajax({
-                                            url: '@routes.Wiki.syncGoogleSpreadsheet()',
+                                            url: '@routes.WikiSpreadsheet.syncGoogleSpreadsheet()',
                                             method: 'post',
                                             headers: {
                                                 'Csrf-Token': csrfValue

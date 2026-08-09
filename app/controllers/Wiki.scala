@@ -3,21 +3,15 @@ package controllers
 import logics.wikis.PageNameUrl
 import actors.ActorPageCalculator.Calculate
 import org.apache.pekko.actor._
-import org.apache.pekko.NotUsed
 import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.stream.{Materializer, OverflowStrategy}
-import org.apache.pekko.stream.scaladsl.SourceQueueWithComplete
-import org.apache.pekko.stream.scaladsl.Keep
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.BooleanUtil
 import com.aha00a.commons.utils.UriUtil
 import com.aha00a.play.Implicits._
-import com.aha00a.play.utils.GoogleSpreadsheetApi
-import com.aha00a.supercsv.SupercsvUtil
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
 import logics._
-import logics.wikis.ExtractConvertInject
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import logics.wikis.WikiPermissionDetail
@@ -28,7 +22,7 @@ import models.RequestWrapper
 import models._
 import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedLink
-import models.tables.Attachment
+import models.tables.Config
 import models.tables.Page
 import models.tables.Permission
 import models.tables.Site
@@ -43,27 +37,17 @@ import play.api.data.Forms._
 import play.api.db.Database
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
-import play.api.libs.Files.TemporaryFile
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.net.URLDecoder
 import java.net.URLEncoder
-import java.nio.file.Files
 import java.sql.Connection
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject._
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.jdk.CollectionConverters._
-import scala.util.matching.Regex
-import java.util.UUID
-import scala.collection.concurrent.TrieMap
-import scala.util.Failure
-import scala.util.Success
 import scala.util.Try
 
 object Wiki {
@@ -71,6 +55,19 @@ object Wiki {
     !isMinorEdit && !viaApi
 }
 
+/**
+ * Reading and writing a wiki page: view, save, delete, rename, and the preview the editor
+ * asks for while typing.
+ *
+ * What used to sit alongside moved out by concern — [[WikiAttachment]] puts bytes in S3,
+ * [[WikiRealtime]] holds the page WebSocket, and [[WikiSpreadsheet]] pulls in someone else's
+ * service. The rendering helpers stayed because view and preview render the same way, and
+ * the page-permission helpers stayed because view shows the summary and save applies it.
+ *
+ * `save` still reaches [[logics.PageCursorHub]] to announce the change. That is deliberate:
+ * the hub is shared with the WebSocket rather than owned by it, so the two can live apart
+ * without each keeping half the watchers.
+ */
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
                      actorSystem: ActorSystem,
@@ -84,61 +81,11 @@ controllerComponents: ControllerComponents,
                      configuration: Configuration,
                      telegramLogic: TelegramLogic,
 ) extends BaseController with JsonResults with AdminAuth with Logging {
-  private def roomKeyForPage(siteId: Long, pageId: String): String = s"wiki:$siteId:$pageId"
-
-  private object PageCursorHub {
-    private case class PageSubscriber(
-      queue: SourceQueueWithComplete[String],
-      var saveSenderId: Option[String],
-    )
-    private val subscribers = TrieMap.empty[String, TrieMap[String, PageSubscriber]]
-
-    def subscribe(page: String, id: String, queue: SourceQueueWithComplete[String]): Unit = {
-      val pageMap = subscribers.getOrElseUpdate(page, TrieMap.empty[String, PageSubscriber])
-      pageMap.put(id, PageSubscriber(queue, None))
-    }
-
-    def unsubscribe(page: String, id: String): Unit = {
-      subscribers.get(page).foreach { pageMap =>
-        pageMap.remove(id).foreach(_.queue.complete())
-        if (pageMap.isEmpty) subscribers.remove(page)
-      }
-    }
-
-    def broadcast(page: String, senderId: String, payload: String): Unit = {
-      subscribers.get(page).foreach { pageMap =>
-        pageMap.foreach { case (id, subscriber) =>
-          if (id != senderId) subscriber.queue.offer(payload)
-        }
-      }
-    }
-
-    def setSaveSenderId(page: String, id: String, saveSenderId: Option[String]): Unit = {
-      subscribers.get(page).flatMap(_.get(id)).foreach { subscriber =>
-        subscriber.saveSenderId = saveSenderId.filter(_.nonEmpty)
-      }
-    }
-
-    def broadcastPageUpdated(page: String, saveSenderId: Option[String], payload: String): Unit = {
-      subscribers.get(page).foreach { pageMap =>
-        pageMap.foreach { case (_, subscriber) =>
-          val shouldExclude = saveSenderId.nonEmpty && subscriber.saveSenderId == saveSenderId
-          if (!shouldExclude) subscriber.queue.offer(payload)
-        }
-      }
-    }
-  }
-
   implicit class RichResult(result: Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
 
-  private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
-
   private lazy val signedReadUrlSecret: String = configuration.getOptional[String]("play.http.secret.key").getOrElse("")
-
-  private def siteTelegramChatId(implicit connection: java.sql.Connection, site: models.tables.Site): Option[String] =
-    models.tables.Config.Query.Telegram.chatId()
 
   private val pagePermissionModeKeep = "keep"
   private val pagePermissionModeGeneral = "general"
@@ -212,81 +159,11 @@ controllerComponents: ControllerComponents,
     }
   }
 
-  private def buildAttachmentObjectKey(siteSeq: Long, pageName: String, originalFileName: String, extension: String, now: LocalDateTime = LocalDateTime.now()): String = {
-    val sanitizedPageName = AttachmentLogic.sanitizePathSegment(pageName)
-    val sanitizedOriginalFileName = AttachmentLogic.sanitizePathSegment(originalFileName)
-    val sanitizedExtension = AttachmentLogic.sanitizePathSegment(extension).toLowerCase
-    val sanitizedOriginalFileNameWithoutExtension = {
-      val stripped = sanitizedOriginalFileName.stripSuffix(s".$sanitizedExtension")
-      if (stripped.nonEmpty) stripped else sanitizedOriginalFileName
-    }
-    val formattedDateTime = now.format(attachmentTimestampFormatter)
-    s"${AttachmentLogic.sitePrefix(siteSeq)}$sanitizedPageName/$sanitizedOriginalFileName/${sanitizedOriginalFileNameWithoutExtension}.$formattedDateTime.$sanitizedExtension"
-  }
-
-  private def toAttachmentMacroArgument(objectKey: String, siteSeq: Long, pageName: String): String = {
-    val sitePrefix = AttachmentLogic.sitePrefix(siteSeq)
-    val pagePrefix = AttachmentLogic.pagePrefix(siteSeq, pageName)
-    if (objectKey.startsWith(pagePrefix)) {
-      objectKey.stripPrefix(pagePrefix)
-    } else if (objectKey.startsWith(sitePrefix)) {
-      objectKey.stripPrefix(sitePrefix)
-    } else {
-      objectKey
-    }
-  }
-
-  private def resolveAttachmentObjectKey(siteSeq: Long, pageName: String, rawObjectKey: String): String = {
-    val trimmed = Option(rawObjectKey).map(_.trim).getOrElse("")
-    if (trimmed.isEmpty) {
-      ""
-    } else if (trimmed.startsWith(s"${AttachmentLogic.Root}/")) {
-      trimmed
-    } else {
-      s"${AttachmentLogic.pagePrefix(siteSeq, pageName)}$trimmed"
-    }
-  }
-
-  private def getPageContextFor(pageName: String)(permitted: WikiPermission => Boolean)
-                               (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
-    implicit val site: Site = SiteLogic.get(request.host)
-    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-    implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-    if (!permitted(WikiPermission())) Left(Forbidden("Permission denied."))
-    else Right((site, contextWikiPage, provider))
-  }
-
-
-  private def insertInitiatedAttachment(
-                                         siteSeq: Long,
-                                         pageName: String,
-                                         originalFilename: String,
-                                         objectKey: String,
-                                         contentType: String,
-                                         fileSize: Long,
-                                       )(implicit request: RequestHeader, connection: Connection): Unit = {
-    val currentUser = SessionLogic.getUser(request)
-    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-    val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
-    Attachment.insertInitiated(
-      site = siteSeq,
-      pageName = pageName,
-      user = currentUser.map(_.seq),
-      uploaderEmail = currentUser.flatMap(_.loginEmail),
-      originalFilename = originalFilename,
-      storedFilename = storedFilename,
-      bucket = bucket,
-      objectKey = objectKey,
-      contentType = contentType,
-      fileSize = fileSize,
-    )
-  }
-
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
 
-      val name = decodeWikiName(nameEncoded)
+      val name = PageNameUrl.decode(nameEncoded)
 
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -375,88 +252,6 @@ controllerComponents: ControllerComponents,
       }
     }
   }
-
-  def watch(nameEncoded: String): WebSocket = WebSocket.acceptOrResult[String, String] { request =>
-    Future {
-      val name = decodeWikiName(nameEncoded)
-      implicit val provider: RequestWrapper = RequestWrapper()(request)
-
-      def latestRevisionAndContent(): (Long, Option[PageContent]) = {
-        database.withConnection { implicit connection =>
-          implicit val site: Site = SiteLogic.get(request.host)
-          val latest = Page.selectLastRevision(name)
-          (latest.map(_.revision).getOrElse(0L), latest.map(v => PageContent(v.content)))
-        }
-      }
-
-      val siteForWs = database.withConnection { implicit connection =>
-        SiteLogic.get(request.host)
-      }
-      val (_, pageLastRevisionContent) = latestRevisionAndContent()
-      val isReadable = database.withConnection { implicit connection =>
-        implicit val site: Site = siteForWs
-        val ctxSite = ContextSite.empty()(database, wikiActors, applicationConf, ahaWikiCache, site)
-        val permission = WikiPermission()(provider, connection, ctxSite)
-        permission.isReadable(name, pageLastRevisionContent)
-      }
-      if (!isReadable) {
-        logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")
-        Left(Forbidden("Permission denied."))
-      } else {
-        val connectionId = UUID.randomUUID().toString
-        val currentUser = SessionLogic.getUser(request)
-        val nickname = currentUser.map(_.nickname).filter(_.nonEmpty).getOrElse("")
-        val profileImageUrl = currentUser.flatMap { user =>
-          database.withConnection { implicit connection =>
-            User.selectBySeq(user.seq).flatMap(_.profileImageUrl).filter(_.nonEmpty)
-          }
-        }.getOrElse("")
-        val source = Source.queue[String](32, OverflowStrategy.dropHead)
-        val sink = Sink.foreach[String] { incoming =>
-          val payload = Try(Json.parse(incoming).asOpt[play.api.libs.json.JsObject].getOrElse(Json.obj())).getOrElse(Json.obj())
-          (payload \ "type").asOpt[String] match {
-            case Some("cursor.move") =>
-              val x = (payload \ "x").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
-              val y = (payload \ "y").asOpt[play.api.libs.json.JsNumber].map(_.value.toDouble).getOrElse(0d).max(0d).min(1d)
-              val outgoing = Json.obj(
-                "type" -> "cursor.move",
-                "siteId" -> siteForWs.seq,
-                "pageId" -> name,
-                "senderId" -> connectionId,
-                "x" -> x,
-                "y" -> y,
-                "ts" -> System.currentTimeMillis()
-              ).toString()
-              PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, outgoing)
-
-            case Some("cursor.hello") =>
-              val saveSenderId = (payload \ "saveSenderId").asOpt[String].map(_.trim).filter(_.nonEmpty)
-              PageCursorHub.setSaveSenderId(roomKeyForPage(siteForWs.seq, name), connectionId, saveSenderId)
-              val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
-              PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
-
-            case Some("cursor.ping") => ()
-
-            case _ =>
-          }
-        }
-        val flow = Flow.fromSinkAndSourceCoupledMat(sink, source)(Keep.right).mapMaterializedValue { queue =>
-          PageCursorHub.subscribe(roomKeyForPage(siteForWs.seq, name), connectionId, queue)
-          val hello = Json.obj("type" -> "cursor.hello", "senderId" -> connectionId, "nickname" -> nickname, "profileImageUrl" -> profileImageUrl).toString()
-          queue.offer(hello)
-          PageCursorHub.broadcast(roomKeyForPage(siteForWs.seq, name), connectionId, hello)
-          NotUsed
-        }.watchTermination() { (_, done) =>
-          done.onComplete(_ => PageCursorHub.unsubscribe(roomKeyForPage(siteForWs.seq, name), connectionId))(executionContext)
-          NotUsed
-        }
-        Right(flow)
-      }
-    }
-  }
-
-  private def decodeWikiName(nameEncoded: String): String =
-    PageNameUrl.decode(nameEncoded)
 
   private def buildEditFormState(pageContent: String, request: RequestHeader): (String, Option[(Int, Int)]) = {
     val lineStart = request.getQueryString("lineStart").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
@@ -716,9 +511,9 @@ controllerComponents: ControllerComponents,
               val shouldNotifyTelegram = bodyChanged && Wiki.shouldNotifyTelegramForPageSave(isMinorEdit = isMinorEdit, viaApi = false)
               if (shouldNotifyTelegram) {
                 if (latestPage.isEmpty)
-                  telegramLogic.notifyPageCreated(request.host, name, editorNickname, comment, siteTelegramChatId)
+                  telegramLogic.notifyPageCreated(request.host, name, editorNickname, comment, Config.Query.Telegram.chatId())
                 else
-                  telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, comment, siteTelegramChatId)
+                  telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, comment, Config.Query.Telegram.chatId())
               }
               val pageUpdatedPayload = Json.obj(
                 "type" -> "page.updated",
@@ -727,7 +522,7 @@ controllerComponents: ControllerComponents,
                 "editorNickname" -> editorNickname,
                 "dateInserted" -> now.toString
               ).toString()
-              PageCursorHub.broadcastPageUpdated(roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
+              PageCursorHub.broadcastPageUpdated(PageCursorHub.roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
 
               name match {
                 case ".footer" => ahaWikiCache.Footer.invalidate()
@@ -806,7 +601,7 @@ controllerComponents: ControllerComponents,
                 throw new RuntimeException(error)
               case Right(_) =>
                 Page.deleteWithRelatedData(name)
-                telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
+                telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
                 Ok("")
             }
           } else {
@@ -832,7 +627,7 @@ controllerComponents: ControllerComponents,
 
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
             wikiActors.pageCalculation ! Calculate(site, name)
-            telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
+            telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
             Ok("")
           } else {
             logger.warn(s"deleteLastRevision forbidden: host=${request.host}, name=$name, user=${provider.getUser.map(u => s"${u.nickname}(${u.loginEmail.getOrElse("no-email")})").getOrElse("anonymous")}, remote=${request.remoteAddress}")
@@ -843,76 +638,6 @@ controllerComponents: ControllerComponents,
       }
     }
   }
-
-  val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
-
-  def padColumns[T](matrix: Seq[Seq[T]], default: T): Seq[Seq[T]] = {
-    val maxLength = matrix.map(_.length).max
-    matrix.map(_.padTo(maxLength, default))
-  }
-
-  def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      implicit val site: Site = SiteLogic.get(request.host)
-      val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest().get
-      Page.selectLastRevision(pageName) match {
-        case Some(page) =>
-          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
-          implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-          val pageContent = PageContent(page.content)
-          if (WikiPermission().isWritable(pageName, pageContent)) {
-            def fetchTsv(id: String): String = {
-              val googleSheetsApiKey = applicationConf.AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
-              val spreadsheet = Await.result(GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName), 5 seconds)
-              SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))
-            }
-            // Case 1: embedded [[[#!Map url sheetName\ncontent]]] form
-            val extractor = ExtractConvertInject.markedBlocks(s => {
-              val chunk = PageContent(s)
-              if (url == chunk.argument.getOrElse(0, "") && sheetName == chunk.argument.getOrElse(1, "")) {
-                url match {
-                  case regexGoogleSpreadsheetUrl(id) =>
-                  val mapHeader = if (sheetName.nonEmpty) s"#!Map $url $sheetName" else s"#!Map $url"
-                  s"[[[$mapHeader\n${fetchTsv(id)}]]]"
-                  case _ => s
-                }
-              } else {
-                s
-              }
-            })
-            val updatedBodyContent = extractor.inject(extractor.extract(pageContent.content))
-            val newPageBody = if (updatedBodyContent != pageContent.content) {
-              // embedded form updated — reconstruct full page preserving page-level directives
-              if (pageContent.directives.isEmpty) updatedBodyContent
-              else pageContent.directives.map("#!" + _).mkString("\n") + "\n" + updatedBodyContent
-            } else if (pageContent.interpreter.contains("Map") &&
-                       url == pageContent.argument.getOrElse(0, "") &&
-                       sheetName == pageContent.argument.getOrElse(1, "")) {
-              // Case 2: page-level #!Map directive form
-              url match {
-                case regexGoogleSpreadsheetUrl(id) =>
-                  pageContent.directives.map("#!" + _).mkString("\n") + "\n" + fetchTsv(id)
-                case _ => page.content
-              }
-            } else {
-              page.content
-            }
-            if (page.content != newPageBody) {
-              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, newPageBody)
-              telegramLogic.notifySpreadsheetSynced(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
-              Ok("")
-            } else {
-              Ok("NotChanged")
-            }
-          } else {
-            Forbidden("")
-          }
-        case None =>
-          NotFound("")
-      }
-    }
-  }
-
 
   def rename(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
@@ -929,7 +654,7 @@ controllerComponents: ControllerComponents,
             Page.rename(name, newName)
             PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
             wikiActors.pageCalculation ! Calculate(site, newName)
-            telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
+            telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
             Ok("")
           } else {
             Forbidden("")
@@ -964,246 +689,4 @@ controllerComponents: ControllerComponents,
     }
   }
 
-  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    import com.amazonaws.services.s3.model.ObjectMetadata
-    import logics.wikis.macros.S3AttachmentUrlLogic
-    import play.api.libs.json.Json
-
-    val pageNameOption = request.body.dataParts.get("pageName").flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
-    val fileOption = request.body.file("file")
-
-    (pageNameOption, fileOption) match {
-      case (Some(pageName), Some(filePart)) =>
-        database.withConnection { implicit connection =>
-          getPageContextFor(pageName)(_.isUploadable(pageName)) match {
-            case Left(result) => result
-            case Right((site0, contextWikiPage0, provider0)) =>
-              implicit val site: Site = site0
-              implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
-              implicit val provider: RequestWrapper = provider0
-              val originalFileName = filePart.filename.trim
-              if (originalFileName.isEmpty) {
-                BadRequest("invalid file name")
-              } else {
-                val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = buildAttachmentObjectKey(
-                  site.seq,
-                  pageName,
-                  originalFileName = originalFileName,
-                  extension = if (extension.nonEmpty) extension else "bin",
-                )
-
-                val contentType = filePart.contentType.getOrElse("application/octet-stream")
-                val contentLength = filePart.fileSize
-                val metadata = new ObjectMetadata()
-                metadata.setContentType(contentType)
-                metadata.setContentLength(contentLength)
-
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val amazonS3 = S3Logic.client(applicationConf)
-                insertInitiatedAttachment(
-                  siteSeq = site.seq,
-                  pageName = pageName,
-                  originalFilename = originalFileName,
-                  objectKey = objectKey,
-                  contentType = contentType,
-                  fileSize = contentLength,
-                )
-
-                try {
-                  val inputStream = Files.newInputStream(filePart.ref.path)
-                  try {
-                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                  } finally {
-                    inputStream.close()
-                  }
-
-                  val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
-                  Ok(Json.obj(
-                    "objectKey" -> objectKey,
-                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                    "fileUrl" -> fileUrl,
-                    "contentType" -> contentType,
-                  ))
-                } catch {
-                  case error: Throwable =>
-                    logger.error(s"uploadAttachment failed. objectKey=$objectKey", error)
-                    Attachment.markFailed(objectKey)
-                    InternalServerError("File upload failed.")
-                }
-              }
-          }
-        }
-      case _ =>
-        BadRequest("pageName and file are required")
-    }
-  }
-
-  def pageAttachments(): Action[AnyContent] = Action { implicit request =>
-    import play.api.libs.json.Json
-
-    val pageName = request.getQueryString("pageName").map(_.trim).getOrElse("")
-    if (pageName.isEmpty) {
-        BadRequest("pageName is required")
-    } else {
-      database.withConnection { implicit connection =>
-        getPageContextFor(pageName)(_.isReadable(pageName)) match {
-          case Left(result) => result
-          case Right((site0, contextWikiPage0, provider0)) =>
-            implicit val site: Site = site0
-            implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
-            implicit val provider: RequestWrapper = provider0
-            val dbAttachments = Attachment.selectUploadedByPage(site.seq, pageName).map { attachment =>
-              val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(attachment.objectKey).toOption
-              (attachment, presignedUrlOption)
-            }
-            val dbObjectKeys = dbAttachments.map(_._1.objectKey).toSet
-            val s3OnlyObjects = AttachmentLogic.listPageObjectKeys(site.seq, pageName).filterNot(dbObjectKeys.contains)
-            val s3OnlyJson = s3OnlyObjects.map { objectKey =>
-              val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption
-              val inferredFilename = objectKey.split("/").toSeq.lastOption.getOrElse(objectKey)
-              Json.obj(
-                "objectKey" -> objectKey,
-                "originalFilename" -> inferredFilename,
-                "contentType" -> "unknown",
-                "fileSize" -> 0,
-                "fileUrl" -> presignedUrlOption,
-                "integrityStatus" -> "S3_ONLY",
-                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-              )
-            }
-            Ok(Json.obj(
-              "attachments" -> (dbAttachments.map { case (attachment, presignedUrlOption) => Json.obj(
-                "objectKey" -> attachment.objectKey,
-                "originalFilename" -> attachment.originalFilename,
-                "contentType" -> attachment.contentType,
-                "fileSize" -> attachment.fileSize,
-                "fileUrl" -> presignedUrlOption,
-                "integrityStatus" -> (if (presignedUrlOption.isDefined) "OK" else "DB_ONLY"),
-                "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
-              )} ++ s3OnlyJson)
-            ))
-        }
-      }
-    }
-  }
-
-  def deleteAttachment(): Action[AnyContent] = Action { implicit request =>
-    import play.api.libs.json.Json
-
-    val form = Form(tuple("pageName" -> text, "objectKey" -> text)).bindFromRequest()
-    form.fold(_ => BadRequest("invalid form"), {
-      case (pageNameRaw, objectKeyRaw) =>
-        val pageName = pageNameRaw.trim
-        val objectKey = objectKeyRaw.trim
-        if (pageName.isEmpty || objectKey.isEmpty) {
-          BadRequest("pageName and objectKey are required")
-        } else {
-          database.withConnection { implicit connection =>
-            getPageContextFor(pageName)(_.isDeletable(pageName)) match {
-              case Left(result) => result
-              case Right((site0, contextWikiPage0, provider0)) =>
-                implicit val site: Site = site0
-                implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
-                implicit val provider: RequestWrapper = provider0
-                val resolvedObjectKey = resolveAttachmentObjectKey(site.seq, pageName, objectKey)
-                Attachment.selectByObjectKey(site.seq, pageName, resolvedObjectKey) match {
-                  case None =>
-                    NotFound("Attachment not found")
-                  case Some(_) =>
-                    val amazonS3 = S3Logic.client(applicationConf)
-                    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-
-                    try {
-                      amazonS3.deleteObject(bucket, resolvedObjectKey)
-                      Attachment.markDeleted(resolvedObjectKey)
-                      val attachFilename = resolvedObjectKey.split("/").lastOption.getOrElse(resolvedObjectKey)
-                      telegramLogic.notifyAttachmentDeleted(request.host, pageName, attachFilename, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
-                      Ok(Json.obj("ok" -> true, "objectKey" -> resolvedObjectKey))
-                    } catch {
-                      case error: Throwable =>
-                        logger.error(s"deleteAttachment failed. objectKey=$resolvedObjectKey", error)
-                        InternalServerError("Attachment delete failed.")
-                    }
-                }
-            }
-          }
-        }
-    })
-  }
-
-  def uploadClipboardImage(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    import com.amazonaws.services.s3.model.ObjectMetadata
-    import logics.wikis.macros.S3AttachmentUrlLogic
-    import play.api.libs.json.Json
-
-    val pageNameOption = request.body.dataParts.get("pageName").flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
-    val fileOption = request.body.file("file")
-
-    (pageNameOption, fileOption) match {
-      case (Some(pageName), Some(filePart)) =>
-        database.withConnection { implicit connection =>
-          getPageContextFor(pageName)(_.isUploadable(pageName)) match {
-            case Left(result) => result
-            case Right((site0, contextWikiPage0, provider0)) =>
-              implicit val site: Site = site0
-              implicit val contextWikiPage: ContextWikiPage = contextWikiPage0
-              implicit val provider: RequestWrapper = provider0
-              val contentType = filePart.contentType.getOrElse("")
-              if (!contentType.startsWith("image/")) {
-                BadRequest("only image is supported")
-              } else {
-                val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = buildAttachmentObjectKey(
-                  site.seq,
-                  pageName,
-                  originalFileName = "clipboard",
-                  extension = extension,
-                )
-
-                val amazonS3 = S3Logic.client(applicationConf)
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val metadata = new ObjectMetadata()
-                metadata.setContentType(contentType)
-                metadata.setContentLength(filePart.fileSize)
-                insertInitiatedAttachment(
-                  siteSeq = site.seq,
-                  pageName = pageName,
-                  originalFilename = "clipboard",
-                  objectKey = objectKey,
-                  contentType = contentType,
-                  fileSize = filePart.fileSize,
-                )
-
-                try {
-                  val inputStream = Files.newInputStream(filePart.ref.path)
-                  try {
-                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                  } finally {
-                    inputStream.close()
-                  }
-
-                  val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), siteTelegramChatId)
-                  Ok(Json.obj(
-                    "objectKey" -> objectKey,
-                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                    "imageUrl" -> imageUrl,
-                  ))
-                } catch {
-                  case error: Throwable =>
-                    logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
-                    Attachment.markFailed(objectKey)
-                    InternalServerError("Image upload failed.")
-                }
-              }
-          }
-        }
-      case _ =>
-        BadRequest("pageName and file are required")
-    }
-  }
 }
