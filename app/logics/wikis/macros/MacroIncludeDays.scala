@@ -3,6 +3,7 @@ package logics.wikis.macros
 import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
+import models.PageContent
 import models.tables.CalculatedLink
 import models.tables.Site
 import play.api.db.Database
@@ -35,9 +36,7 @@ object MacroIncludeDays extends TraitMacro {
           val content = models.tables.Page.selectLastRevision(seq).map { p =>
             val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
             val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
-            s"== [${p.name}] $weekday\n" + p.content
-              .split("\n")
-              .tail
+            s"== [${p.name}] $weekday\n" + bodyWithoutOwnHeading(p.content)
               .map(_.replaceAll("^(=+ )", "=$1"))
               .mkString("\n")
           }.mkString("\n")
@@ -45,6 +44,24 @@ object MacroIncludeDays extends TraitMacro {
         }
       }
     case _ => argumentError(argument)
+  }
+
+  /**
+   * A day page's body, without the heading it carries for when it is read on its own.
+   *
+   * Every day page opens with its own title — `[[DayHeader]]`, or the same thing written by
+   * hand as `= [2020-01]-04 Sat` — and the month page supplies that heading itself, so keeping
+   * the page's own would print it twice.
+   *
+   * Only a heading is dropped. This used to take the first line whatever it happened to be,
+   * which was safe only because no day page has ever opened with prose, and would have eaten
+   * the first sentence of the one that did. Directives go through `PageContent`, which knows a
+   * page may carry more than one of them.
+   */
+  private def bodyWithoutOwnHeading(raw: String): Seq[String] = {
+    val lines = PageContent(raw).content.split("\n").toSeq
+    val ownHeading = lines.headOption.exists(l => l.startsWith("=") || l.contains(s"[[${MacroDayHeader.name}"))
+    if (ownHeading) lines.tail else lines
   }
 
   override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =

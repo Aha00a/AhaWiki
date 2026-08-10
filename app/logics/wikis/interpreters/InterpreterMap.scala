@@ -110,7 +110,7 @@ object InterpreterMap extends TraitInterpreter {
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     val (_, seqLocation) = parse(pageContent)
-    val links = seqLocation.filter(l => wikiContext.setPageNameByPermission.contains(l.name)).map(l => CalculatedLink(wikiContext.nameTop, l.name, ""))
+    val links = seqLocation.filter(l => wikiContext.setPageNameByPermission.contains(l.name)).map(l => CalculatedLink(wikiContext.name, l.name, ""))
     links
   }
 }

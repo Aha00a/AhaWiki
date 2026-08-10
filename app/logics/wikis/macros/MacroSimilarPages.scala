@@ -13,7 +13,7 @@ import scala.collection.immutable
 
 object MacroSimilarPages extends TraitMacro with Logging {
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    InterpreterWiki.toHtmlString(getMarkupSimilarPages(argument.getOrElse(wikiContext.nameTop)))
+    InterpreterWiki.toHtmlString(getMarkupSimilarPages(argument.getOrElse(wikiContext.name)))
   }
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: ContextWikiPage): String = {

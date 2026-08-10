@@ -424,7 +424,7 @@ object InterpreterWiki extends TraitInterpreter {
   override def toSeqLink(content:String)(implicit wikiContext: ContextWikiPage):Seq[CalculatedLink] = {
     val pageContent: PageContent = PageContent(content)
     pageContent.redirect match {
-      case Some(v) => Seq(CalculatedLink(wikiContext.nameTop, v, "redirect"))
+      case Some(v) => Seq(CalculatedLink(wikiContext.name, v, "redirect"))
       case None =>
         val pageContent: PageContent = PageContent(content)
         val handler = new HandlerToSeqLink(pageContent)

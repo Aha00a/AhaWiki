@@ -12,7 +12,7 @@ object MacroWeekdayName extends TraitMacro {
 
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = argument match {
-    case "" | null => toHtmlString(wikiContext.nameTop)
+    case "" | null => toHtmlString(wikiContext.name)
     case regex(ymd) => LocalDate.parse(ymd).getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
     case _ => argumentError(argument)
   }

@@ -15,7 +15,7 @@ object MacroNavigationYear extends TraitMacro {
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {
-      case "" | null => toHtmlString(wikiContext.nameTop)
+      case "" | null => toHtmlString(wikiContext.name)
       case DateTimeUtil.regexYear(y) =>
         s"""<div class="rightInfoBox">${RangeUtil.around(y.toInt, 10).map(y => AhaMarkLink(y.toString, "", noFollow = true).toHtmlString()).mkString("<br/>")}</div>"""
       case _ => argumentError(argument)

@@ -14,7 +14,7 @@ object MacroTwinPages extends TraitMacro {
   override def isBlock: Boolean = true
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
-    val pageName = argument.getOrElse(wikiContext.nameTop)
+    val pageName = argument.getOrElse(wikiContext.name)
     val sites = AhaWikiCacheMemoryDomainSite
       .getSites()(wikiContext.database)
       .filter(_.seq != wikiContext.site.seq)

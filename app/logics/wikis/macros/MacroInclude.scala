@@ -18,14 +18,30 @@ object MacroInclude extends TraitMacro {
     }
   }
 
+  /**
+   * Renders another page here, under a context that knows it is being included.
+   *
+   * The included page renders under `wikiContext.push(argument)` rather than under the caller's
+   * own context. Two things follow from that. A macro can tell where it is — `DayHeader` renders
+   * a day page as a section when it is included and as a page when it is not — and a page that
+   * includes an ancestor of itself is caught here rather than by the stack running out.
+   *
+   * The context is passed explicitly. Making it an `implicit val` puts two of them in scope,
+   * which is ambiguous rather than nearest-wins.
+   */
   def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
     implicit val provider: RequestWrapper = wikiContext.requestWrapper
     implicit val site: Site = wikiContext.site
-    val pageLastRevision = models.tables.Page.selectLastRevision(argument)
-    if (WikiPermission().isReadable(argument, pageLastRevision.map(s => PageContent(s.content)))) {
-      pageLastRevision.map(w => Interpreters.toHtmlString(preprocessor(w.content))).getOrElse("Error: " + argument)
+    if (wikiContext.seqName.contains(argument)) {
+      MacroError.toHtmlString(s"Circular Include - ${macroCall(argument)}")
     } else {
-      MacroError.toHtmlString(s"Permission Denied - ${macroCall(argument)}")
+      val pageLastRevision = models.tables.Page.selectLastRevision(argument)
+      if (WikiPermission().isReadable(argument, pageLastRevision.map(s => PageContent(s.content)))) {
+        val included: ContextWikiPage = wikiContext.push(argument)
+        pageLastRevision.map(w => Interpreters.toHtmlString(preprocessor(w.content))(included)).getOrElse("Error: " + argument)
+      } else {
+        MacroError.toHtmlString(s"Permission Denied - ${macroCall(argument)}")
+      }
     }
   }
 

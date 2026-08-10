@@ -18,13 +18,13 @@ object InterpreterMarkdown extends TraitInterpreter {
     val inlineLinks = regexMarkdownInlineLink
       .findAllMatchIn(content)
       .flatMap { m =>
-        parseDestination(m.group(2)).map(dst => CalculatedLink(wikiContext.nameTop, dst, m.group(1)))
+        parseDestination(m.group(2)).map(dst => CalculatedLink(wikiContext.name, dst, m.group(1)))
       }
       .toSeq
 
     val autoLinks = regexMarkdownAutoLink
       .findAllMatchIn(content)
-      .map(m => CalculatedLink(wikiContext.nameTop, m.group(1), ""))
+      .map(m => CalculatedLink(wikiContext.name, m.group(1), ""))
       .toSeq
 
     inlineLinks ++ autoLinks

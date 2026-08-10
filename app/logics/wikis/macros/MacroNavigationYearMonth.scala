@@ -16,7 +16,7 @@ object MacroNavigationYearMonth extends TraitMacro {
   @scala.annotation.tailrec
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     argument match {
-      case "" | null => toHtmlString(wikiContext.nameTop)
+      case "" | null => toHtmlString(wikiContext.name)
       case DateTimeUtil.regexYearDashMonth(y, m) =>
         val localDate = LocalDate.of(y.toIntOrZero, Month.of(m.toIntOrZero), 1)
         s"""<div class="rightInfoBox">${RangeUtil.around(0, 3).map(i => AhaMarkLink(localDate.plusMonths(i).toYearDashMonthString, "", noFollow = true).toHtmlString()).mkString("<br/>")}</div>"""
