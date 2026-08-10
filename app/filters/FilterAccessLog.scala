@@ -115,12 +115,17 @@ class FilterAccessLog @Inject()(
     val uri                    = rh.uri
     val url                    = s"${rh.scheme}://${rh.host}$uri"
 
-    val isBannedInMemory = ipRateLimiter.isKnownBanned(remoteAddress)
+    // 운영자가 명시한 주소는 자동 차단보다 앞선다. 예전에는 IpDeny 검사가 화이트리스트보다
+    // 먼저였고, IpDeny 는 행이 남아 있는 한 계속 403 이라 한 번 걸린 주소는 화이트리스트에
+    // 넣어도 풀 방법이 없었다. 서버 자신의 EIP 가 두 달 막혀 있던 것이 그 결과다
+    // (models.tables.IpDeny.Retention 주석 참고).
+    val isWhitelisted    = applicationConf.AhaWiki.ipWhitelist().contains(remoteAddress)
+    val isBannedInMemory = !isWhitelisted && ipRateLimiter.isKnownBanned(remoteAddress)
     val isCleanInMemory  = !isBannedInMemory && ipRateLimiter.isKnownClean(remoteAddress)
     // SiteLogic.get은 AhaWikiCacheMemoryDomainSite(메모리)만 사용하므로 connection 불필요
     implicit val site: Site = SiteLogic.get(rh.host)
     val optionIpDeny: Option[IpDeny] =
-      if (isBannedInMemory || isCleanInMemory) None
+      if (isWhitelisted || isBannedInMemory || isCleanInMemory) None
       else database.withConnection { implicit connection =>
         val found = models.tables.IpDeny.selectLatest(remoteAddress)
         if (found.isDefined) ipRateLimiter.ban(remoteAddress)
@@ -133,12 +138,12 @@ class FilterAccessLog @Inject()(
       rejectWithTarpit(label, maxExtraMin = 5, startTime) { duration =>
         enqueue(makeInsert(FORBIDDEN, duration, optionIpDeny.map(_.seq)))
       }
-    } else if (UriAttackDetector.isAttack(uri)) {
+    } else if (!isWhitelisted && UriAttackDetector.isAttack(uri)) {
       ipRateLimiter.ban(remoteAddress)
       rejectWithTarpit("UriAttack", maxExtraMin = 10, startTime) { duration =>
         enqueueAndDeny(makeInsert(FORBIDDEN, duration), url)
       }
-    } else if (!applicationConf.AhaWiki.ipWhitelist().contains(remoteAddress) && ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
+    } else if (!isWhitelisted && ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
       rejectImmediately("RateLimit", startTime) { duration =>
         enqueueAndDeny(makeInsert(FORBIDDEN, duration), s"RateLimit:$remoteAddress")
       }
