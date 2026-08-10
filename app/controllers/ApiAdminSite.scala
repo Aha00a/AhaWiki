@@ -574,12 +574,7 @@ class ApiAdminSite @Inject()(
           sortOrder = sortOrder,
         )
         val count = models.tables.PageMeta.countPagedForAdmin(search)
-        Ok(Map(
-          "array" -> rows.asJson,
-          "page" -> normalizedPage.asJson,
-          "pageSize" -> normalizedPageSize.asJson,
-          "count" -> count.asJson,
-        ).asJson)
+        Ok(pagedJson(rows.asJson, normalizedPage, normalizedPageSize, count))
       }
     }
   }

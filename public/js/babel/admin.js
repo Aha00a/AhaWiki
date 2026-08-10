@@ -36,6 +36,19 @@ async function fetchCsrfToken() {
   const token = await response.json();
   return { name: token?.name ?? "csrfToken", value: token?.value ?? "" };
 }
+function unwrapPaged(data) {
+  const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+  return { rows, count: Number(data?.count ?? rows.length) };
+}
+function pagedParams({ page, pageSize, search = "", sortBy, sortOrder }) {
+  return new URLSearchParams({
+    page: String(page),
+    pageSize: String(pageSize),
+    search,
+    sortBy,
+    sortOrder
+  });
+}
 
 // app/assets/js/admin/navigation.jsx
 function parseSiteSeqFromPathname(pathname) {
@@ -483,11 +496,11 @@ function useAllUsersData() {
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const params = pagedParams({ page, pageSize, search, sortBy, sortOrder });
       const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
-      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      const { rows, count } = unwrapPaged(data);
       setAllUsers(rows);
-      setAllUserCount(Number(data?.count ?? rows.length));
+      setAllUserCount(count);
     } catch (err) {
       logError("all-users:load:error", err);
       setError(err.message || String(err));
@@ -602,8 +615,7 @@ function UserViewsPage() {
   const selectedUser = useMemo3(() => allUsers.find((u) => u.seq === userSeq) ?? null, [allUsers, userSeq]);
   useEffect7(() => {
     fetchJson("/api/Admin/Users").then((data) => {
-      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-      setAllUsers(rows);
+      setAllUsers(unwrapPaged(data).rows);
     }).catch((err) => logError("user-views:users:error", err));
   }, []);
   useEffect7(() => {
@@ -646,11 +658,11 @@ function useAdminPageMetaData(siteSeq) {
       return;
     }
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const params = pagedParams({ page, pageSize, search, sortBy, sortOrder });
       const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PageMetaList?${params.toString()}`);
-      const result = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
-      setRows(result);
-      setCount(Number(data?.count ?? result.length));
+      const paged = unwrapPaged(data);
+      setRows(paged.rows);
+      setCount(paged.count);
     } catch (err) {
       logError("page-meta:load:error", err);
     }
@@ -1333,12 +1345,12 @@ function useAccessLogData() {
     setLoading(true);
     setError("");
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const params = pagedParams({ page, pageSize, search, sortBy, sortOrder });
       if (siteSeq) params.set("siteSeq", String(siteSeq));
       const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
-      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      const { rows, count } = unwrapPaged(data);
       setAccessLogs(rows);
-      setAccessLogCount(Number(data?.count ?? rows.length));
+      setAccessLogCount(count);
     } catch (err) {
       logError("access-logs:load:error", err);
       setError(err.message || String(err));
@@ -1664,11 +1676,11 @@ function useCrawlerCacheData() {
   const loadCrawlerCaches = useCallback13(async ({ page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc" } = {}) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder });
+      const params = pagedParams({ page, pageSize, search, sortBy, sortOrder });
       const data = await fetchJson(`/api/Admin/CrawlerCache?${params.toString()}`);
-      const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
+      const { rows, count } = unwrapPaged(data);
       setCrawlerCaches(rows);
-      setCrawlerCacheCount(Number(data?.count ?? rows.length));
+      setCrawlerCacheCount(count);
     } catch (err) {
       logError("crawler-cache:load:error", err);
     } finally {

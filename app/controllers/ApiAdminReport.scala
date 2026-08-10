@@ -144,12 +144,7 @@ class ApiAdminReport @Inject()(
             )
         }.*)
 
-        Ok(Map(
-          "array" -> users.asJson,
-          "page" -> page.asJson,
-          "pageSize" -> pageSize.asJson,
-          "count" -> count.asJson,
-        ).asJson)
+        Ok(pagedJson(users.asJson, page, pageSize, count))
       }
     }
   }
@@ -534,12 +529,7 @@ class ApiAdminReport @Inject()(
             )
         }.*)
 
-        Ok(Map(
-          "array" -> rows.asJson,
-          "page" -> page.asJson,
-          "pageSize" -> pageSize.asJson,
-          "count" -> count.asJson,
-        ).asJson)
+        Ok(pagedJson(rows.asJson, page, pageSize, count))
       }
     }
   }

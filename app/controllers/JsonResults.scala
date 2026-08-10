@@ -17,4 +17,19 @@ trait JsonResults extends BaseController {
 
   def JsonError(status: Status, message: String): Result =
     JsonResult(status, Json.obj("error" -> Json.fromString(message)))
+
+  /**
+   * The envelope every paged admin list answers with.
+   *
+   * Four endpoints built this by hand and had already drifted: three sent `page` and
+   * `pageSize`, one sent only `array` and `count`. The admin UI tolerated both, so nothing
+   * pointed the difference out — a client that started paging from the fourth endpoint would
+   * have found the fields it needed missing.
+   */
+  def pagedJson(array: Json, page: Int, pageSize: Int, count: Long): Json = Json.obj(
+    "array" -> array,
+    "page" -> Json.fromInt(page),
+    "pageSize" -> Json.fromInt(pageSize),
+    "count" -> Json.fromLong(count),
+  )
 }

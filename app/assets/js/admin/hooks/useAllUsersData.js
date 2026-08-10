@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, logError} from "../api.js";
+import {fetchJson, logError, pagedParams, unwrapPaged} from "../api.js";
 import {ACCESS_LOG_PAGE_SIZE} from "../constants.js";
 
 export function useAllUsersData() {
@@ -12,11 +12,11 @@ export function useAllUsersData() {
         setLoading(true);
         setError("");
         try {
-            const params = new URLSearchParams({page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder});
+            const params = pagedParams({page, pageSize, search, sortBy, sortOrder});
             const data = await fetchJson(`/api/Admin/Users?${params.toString()}`);
-            const rows = Array.isArray(data?.array) ? data.array : (Array.isArray(data) ? data : []);
+            const {rows, count} = unwrapPaged(data);
             setAllUsers(rows);
-            setAllUserCount(Number(data?.count ?? rows.length));
+            setAllUserCount(count);
         } catch (err) {
             logError("all-users:load:error", err);
             setError(err.message || String(err));

@@ -4,7 +4,7 @@ import {Anchor, Badge, Button, Card, Group, Loader, Text, Title} from "@mantine/
 import {useUserViewsData} from "../hooks/useUserViewsData.js";
 import UserProfileCell from "../components/UserProfileCell.jsx";
 import {makeTable} from "../../component/commonWidgets.jsx";
-import {fetchJson, logError} from "../api.js";
+import {fetchJson, logError, unwrapPaged} from "../api.js";
 import {useState} from "react";
 
 export default function UserViewsPage() {
@@ -24,8 +24,7 @@ export default function UserViewsPage() {
 
     useEffect(() => {
         fetchJson("/api/Admin/Users").then((data) => {
-            const rows = Array.isArray(data?.array) ? data.array : (Array.isArray(data) ? data : []);
-            setAllUsers(rows);
+            setAllUsers(unwrapPaged(data).rows);
         }).catch((err) => logError("user-views:users:error", err));
     }, []);
 

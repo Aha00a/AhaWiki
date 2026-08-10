@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, logError} from "../api.js";
+import {fetchJson, logError, pagedParams, unwrapPaged} from "../api.js";
 import {ACCESS_LOG_PAGE_SIZE} from "../constants.js";
 
 export function useAccessLogData() {
@@ -13,12 +13,12 @@ export function useAccessLogData() {
         setLoading(true);
         setError("");
         try {
-            const params = new URLSearchParams({page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder});
+            const params = pagedParams({page, pageSize, search, sortBy, sortOrder});
             if (siteSeq) params.set("siteSeq", String(siteSeq));
             const data = await fetchJson(`/api/Admin/AccessLogs?${params.toString()}`);
-            const rows = Array.isArray(data?.array) ? data.array : (Array.isArray(data) ? data : []);
+            const {rows, count} = unwrapPaged(data);
             setAccessLogs(rows);
-            setAccessLogCount(Number(data?.count ?? rows.length));
+            setAccessLogCount(count);
         } catch (err) {
             logError("access-logs:load:error", err);
             setError(err.message || String(err));

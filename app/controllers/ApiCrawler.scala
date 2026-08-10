@@ -126,15 +126,17 @@ class ApiCrawler @Inject()(
       val safePage = math.max(1, page)
       val safePageSize = math.max(1, math.min(pageSize, 100))
       database.withConnection { implicit connection =>
-        Ok(Json.obj(
-          "array" -> CacheCrawler.selectPaged(
+        Ok(pagedJson(
+          CacheCrawler.selectPaged(
             page = safePage,
             pageSize = safePageSize,
             search = search,
             sortBy = sortBy,
             sortOrder = sortOrder,
           ).asJson,
-          "count" -> Json.fromLong(CacheCrawler.countPaged(search)),
+          safePage,
+          safePageSize,
+          CacheCrawler.countPaged(search),
         ))
       }
     }

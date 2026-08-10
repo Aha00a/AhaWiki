@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, fetchCsrfToken, logError, pagedParams, unwrapPaged} from "../api.js";
 import {CRAWLER_CACHE_PAGE_SIZE} from "../constants.js";
 
 export function useCrawlerCacheData() {
@@ -12,11 +12,11 @@ export function useCrawlerCacheData() {
     const loadCrawlerCaches = useCallback(async ({page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc"} = {}) => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({page: String(page), pageSize: String(pageSize), search, sortBy, sortOrder});
+            const params = pagedParams({page, pageSize, search, sortBy, sortOrder});
             const data = await fetchJson(`/api/Admin/CrawlerCache?${params.toString()}`);
-            const rows = Array.isArray(data?.array) ? data.array : (Array.isArray(data) ? data : []);
+            const {rows, count} = unwrapPaged(data);
             setCrawlerCaches(rows);
-            setCrawlerCacheCount(Number(data?.count ?? rows.length));
+            setCrawlerCacheCount(count);
         } catch (err) {
             logError("crawler-cache:load:error", err);
         } finally {
