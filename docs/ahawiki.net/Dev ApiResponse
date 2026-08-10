@@ -72,11 +72,11 @@ private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: Re
 
 == 목록 봉투
 
-페이지네이션 목록은 `{"array": [...], "page": N, "pageSize": N, "count": N}` 하나로 답합니다. `JsonResults.pagedJson` 이 만드는 유일한 자리입니다.
+페이지네이션 목록은 `{"array": [...], "page": N, "pageSize": N, "count": N}` 하나로 답한다. `JsonResults.pagedJson` 이 만드는 유일한 자리다.
 
-네 endpoint 가 이걸 손으로 만들고 있었고 **이미 갈라져 있었습니다** — 셋은 `page`·`pageSize` 를 보내고 `ApiCrawler` 는 `array`·`count` 만 보냈습니다. 관리자 UI 가 둘 다 받아주게 짜여 있어서 아무도 몰랐습니다. 네 번째 endpoint 로 페이징을 시작하는 클라이언트가 있었다면 필요한 필드가 없다는 걸 그때 발견했을 겁니다.
+네 endpoint 가 이걸 손으로 만들고 있었고 **이미 갈라져 있었다** — 셋은 `page`·`pageSize` 를 보내고 `ApiCrawler` 는 `array`·`count` 만 보냈다. 관리자 UI 가 둘 다 받아주게 짜여 있어서 아무도 몰랐다. 네 번째 endpoint 로 페이징을 시작하는 클라이언트가 있었다면 필요한 필드가 없다는 걸 그때 발견했을 것이다.
 
-푸는 쪽도 하나입니다. `app/assets/js/admin/api.js` 의 `unwrapPaged` 와 `pagedParams` 가 각각 응답 해체와 질의 파라미터 조립을 맡습니다. hook 다섯 곳이 각자 풀고 있었습니다.
+푸는 쪽도 하나다. `app/assets/js/admin/api.js` 의 `unwrapPaged` 와 `pagedParams` 가 각각 응답 해체와 질의 파라미터 조립을 맡는다. hook 다섯 곳이 각자 풀고 있었다.
 
 == 에러 봉투는 compact 가 아니다
 
