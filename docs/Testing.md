@@ -41,9 +41,25 @@ accepts right up until a foreign key has to match.
 ## Known gaps
 
 - `TestSchema` is a hand-written mirror. It drifts from the evolutions under
-  `conf/evolutions/default` silently, and nothing checks the two against each other. Running
-  the evolutions against H2 would remove that whole class of drift; the dialect is what
-  stands in the way.
+  `conf/evolutions/default` silently, and nothing checks the two against each other.
+
+  Running the evolutions against H2 instead would remove that whole class of drift, so it
+  was tried: of the 67 evolution files, **17 fail — 41 statements in all**. The blockers are
+  MySQL grammar H2 does not accept in MySQL mode, and they are structural rather than
+  incidental:
+
+  | Construct | Example |
+  |---|---|
+  | column positioning | `ALTER TABLE Page MODIFY comment TEXT NOT NULL AFTER remoteAddress` |
+  | `... FIRST` | `ALTER TABLE Link ADD site INT DEFAULT 1 NOT NULL FIRST` |
+  | drop and add a key in one statement | `ALTER TABLE Page DROP PRIMARY KEY, ADD PRIMARY KEY (site, name, revision)` |
+  | `TRUNCATE` without `TABLE` | `TRUNCATE TermFrequency` |
+  | MySQL date functions | `DATE_ADD(...)` in an `UPDATE` |
+
+  Rewriting seven years of migrations to a common subset is not worth it, and editing an
+  already-applied migration is not something to do casually. So the mirror stays, and the
+  drift stays possible. What would actually help is a check that compares the two, not a
+  different way of building the schema.
 - `UserMergeSpec` builds its own table named `Page` with a foreign key to `User`.
   `UserMerge` finds what to update by walking the foreign keys exported from `User`, and
   production's `Page` has no foreign key to `User` — only to `UserApiKey`. The table is a
