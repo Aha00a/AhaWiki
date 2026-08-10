@@ -48,7 +48,11 @@ object ContextWikiPage {
  * A macro that needs to know it is inside an include asks [[isIncluded]] — `DayHeader` does,
  * to render a day page as a section of a month page rather than as a page of its own.
  */
-class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode)(
+class ContextWikiPage(
+  val seqName: Seq[String],
+  val renderingMode: RenderingMode,
+  parent: Option[ContextSite] = None,
+)(
   implicit
   database: Database,
   wikiActors: WikiActors,
@@ -57,7 +61,7 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   requestWrapper: RequestWrapper,
   site: Site,
   val localDateNow: LocalDate = LocalDate.now(),
-) extends ContextSite {
+) extends ContextSite(parent) {
 
   /**
    * The page being rendered — inside an include, the included one.
@@ -81,11 +85,15 @@ class ContextWikiPage(val seqName: Seq[String], val renderingMode: RenderingMode
   /**
    * The context an included page renders under.
    *
-   * Innermost first, so [[name]] follows the include down while [[nameRoot]] stays put.
+   * Innermost first, so [[name]] follows the include down while [[nameRoot]] stays put. Built
+   * through [[ContextSite.contextForPage]] so the included page reuses what this one has already
+   * worked out about the site rather than recomputing it per include.
    */
-  def push(name: String) = new ContextWikiPage(name +: seqName, renderingMode)
+  def push(name: String): ContextWikiPage = contextForPage(name +: seqName, renderingMode, localDateNow)
 
-  def at(localDateNow: LocalDate): ContextWikiPage = {
-    new ContextWikiPage(seqName, renderingMode)(database, wikiActors, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow)
-  }
+  /** The same page as of another date. Specs use it to pin "today". */
+  def at(localDateNow: LocalDate): ContextWikiPage =
+    new ContextWikiPage(seqName, renderingMode, parent)(
+      database, wikiActors, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow,
+    )
 }
