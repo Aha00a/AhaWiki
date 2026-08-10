@@ -208,6 +208,14 @@ object PageLogic {
     selectHighScoredTerm(site, name, site, similarPageNames)
   }
 
+  /**
+   * The terms a page shares with each of its similar pages, strongest first.
+   *
+   * The caller keeps the first ten per page, so the ordering has to be total. Ranking by the
+   * summed frequency alone left every tie to the database, which does not answer the same way
+   * twice: `SimilarPages` rendered a different set of terms, in a different order, on two
+   * consecutive requests for a page nobody had edited.
+   */
   def selectHighScoredTerm(
     sourceSite: models.tables.Site,
     name: String,
@@ -226,7 +234,7 @@ SELECT
     WHERE
         CTF1.site = ${sourceSite.seq} AND CTF1.name = $name AND
         CTF2.site = ${targetSite.seq} AND CTF2.name IN ($similarPageNames)
-    ORDER BY frequency1 + frequency2 DESC
+    ORDER BY frequency1 + frequency2 DESC, frequency1 DESC, CT.term ASC
       """
         .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
