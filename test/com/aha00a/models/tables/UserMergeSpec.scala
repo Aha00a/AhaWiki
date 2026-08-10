@@ -31,9 +31,6 @@ class UserMergeSpec extends AnyFreeSpec {
         assert(count("UserEmail", "`user` = 2") === 0L)
         assert(count("UserEmail", "`user` = 1") === 2L)
         assert(count("UserEmail", "`user` = 1 AND isPrimary = true") === 1L)
-        assert(count("UserSite", "`user` = 2") === 0L)
-        assert(count("UserSite", "`user` = 1 AND site = 1") === 1L)
-        assert(count("UserSite", "`user` = 1 AND site = 2") === 1L)
       } finally {
         connection.close()
       }
@@ -41,7 +38,7 @@ class UserMergeSpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    TestSchema.create("User", "UserEmail", "AccessLog", "UserSite")(connection)
+    TestSchema.create("User", "UserEmail", "AccessLog")(connection)
     // Not the real Page. UserMerge finds what to update by walking the foreign keys exported
     // from User, and production's Page has no foreign key to User — only to UserApiKey. This
     // table is a stand-in for "some table that references a user", kept local because
@@ -66,9 +63,6 @@ class UserMergeSpec extends AnyFreeSpec {
       "INSERT INTO Page (`user`) VALUES (2)",
       "INSERT INTO AccessLog (`user`) VALUES (1)",
       "INSERT INTO AccessLog (`user`) VALUES (2)",
-      "INSERT INTO UserSite (`user`, site) VALUES (1, 1)",
-      "INSERT INTO UserSite (`user`, site) VALUES (2, 1)",
-      "INSERT INTO UserSite (`user`, site) VALUES (2, 2)",
     ).foreach(sql => SQL(sql).execute()(connection))
   }
 

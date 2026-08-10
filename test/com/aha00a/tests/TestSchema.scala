@@ -17,6 +17,10 @@ import java.sql.Connection
  * and `remoteAddress` were VARCHAR(255) where production has TEXT, and three ENUM columns
  * were VARCHAR — so a spec could store a `targetType` the real column would have rejected.
  *
+ * A table being here at all is a claim that production has it. `UserSite` was declared here
+ * and dropped by evolution 55, so a spec was exercising merge behaviour for a table nothing
+ * has; the dump is what showed it.
+ *
  * This is still a mirror rather than the schema. Building it from the evolutions instead was
  * tried and does not work: 17 of the 67 files use MySQL grammar H2 rejects. See
  * `docs/Testing.md`. `schema/schema.sql` is the closest thing to an oracle, and comparing
@@ -76,16 +80,6 @@ object TestSchema {
           created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
           PRIMARY KEY (`user`, email),
           UNIQUE (email),
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-    "UserSite" ->
-      """
-        CREATE TABLE IF NOT EXISTS UserSite (
-          `user` INT NOT NULL,
-          site BIGINT NOT NULL,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          PRIMARY KEY (`user`, site),
           FOREIGN KEY (`user`) REFERENCES `User` (seq)
         )
       """,
@@ -258,7 +252,6 @@ object TestSchema {
     "SiteDomain",
     "SiteAdmin",
     "UserEmail",
-    "UserSite",
     "AccessLog",
     "UserApiKey",
     "Permission",
