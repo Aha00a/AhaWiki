@@ -60,7 +60,7 @@ class UnitTestSuiteSpec extends AnyFreeSpec with GuiceOneAppPerSuite with Before
 
   private def setupSchema(): Unit = {
     database.withConnection { connection =>
-      TestSchema.create("User", "Page")(connection)
+      TestSchema.createAll()(connection)
     }
   }
 

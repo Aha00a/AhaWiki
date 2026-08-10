@@ -36,9 +36,9 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
   private def setupSchema(): Unit = {
     Class.forName("org.h2.Driver")
     val connection = DriverManager.getConnection(TestApplication.h2Url(dbName), "sa", "")
-    TestSchema.create("Site", "SiteDomain", "User", "SiteAdmin")(connection)
+    TestSchema.createAll()(connection)
     Seq(
-      "INSERT INTO Site (seq, name) VALUES (1, 'SiteA')",
+      "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
       "INSERT INTO `User` (seq, nickname) VALUES (1, 'superadmin')",
       "INSERT INTO `User` (seq, nickname) VALUES (10, 'alice')",
     ).foreach(sql => SQL(sql).execute()(connection))

@@ -22,10 +22,10 @@ class SiteAdminSpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    TestSchema.create("Site", "User", "SiteAdmin")(connection)
+    TestSchema.createAll()(connection)
     Seq(
-      "INSERT INTO Site (seq, name) VALUES (1, 'SiteA')",
-      "INSERT INTO Site (seq, name) VALUES (2, 'SiteB')",
+      "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
+      "INSERT INTO Site (seq, name, abbr) VALUES (2, 'SiteB', 'SiteB')",
       "INSERT INTO `User` (seq, nickname) VALUES (10, 'alice')",
       "INSERT INTO `User` (seq, nickname) VALUES (20, 'bob')",
       "INSERT INTO `User` (seq, nickname) VALUES (30, 'carol')",

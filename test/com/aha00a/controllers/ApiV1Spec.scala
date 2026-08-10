@@ -48,7 +48,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
 
   private def setupSchema(): Unit = {
     db.withConnection { implicit connection =>
-      TestSchema.create("Site", "SiteDomain", "User", "UserEmail", "Permission", "Page", "PageMeta", "CalculatedLink", "CalculatedCosineSimilarity", "CalculatedTermFrequency", "CalculatedTermFrequencyNorm", "CalculatedSchemaOrg", "UserApiKey", "Attachment")
+      TestSchema.createAll()
       Seq(
         "INSERT INTO Site (seq, name, abbr, mainDomain) VALUES (1, 'TestWiki', 'TestWiki', 'localhost')",
         "INSERT INTO SiteDomain (site, domain) VALUES (1, 'localhost')",

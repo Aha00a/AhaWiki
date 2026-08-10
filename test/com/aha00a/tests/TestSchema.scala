@@ -2,275 +2,101 @@ package com.aha00a.tests
 
 import anorm.SQL
 
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.sql.Connection
+import scala.util.matching.Regex
 
 /**
- * The H2 tables the specs run against, one definition per table.
+ * Builds the specs' H2 schema from `schema/schema.sql`, the committed dump of the real
+ * database.
  *
- * Evolutions are MySQL-flavoured and do not apply to H2, so the specs build their schema by
- * hand. They used to build it each on their own: `User` existed in seven specs under four
- * different definitions, `Site` in six under three. A spec could then pass against a table
- * shape no other spec — and no production database — agreed with.
+ * It used to be a hand-written copy, one `CREATE TABLE` per table maintained here — and
+ * before that, one per spec. Both copies drifted. The last round: nine integer widths
+ * disagreed with production, two TEXT columns were declared VARCHAR(255), three ENUM columns
+ * were declared VARCHAR so a spec could store a `targetType` the real column rejects, and a
+ * `UserSite` table was declared that evolution 55 had dropped.
  *
- * Types follow `schema/schema.sql`, the committed dump of the real database, down to the
- * ENUM value lists. They did not: integer widths disagreed on nine columns, `Page.comment`
- * and `remoteAddress` were VARCHAR(255) where production has TEXT, and three ENUM columns
- * were VARCHAR — so a spec could store a `targetType` the real column would have rejected.
+ * Building from the evolutions was tried first and does not work: 17 of the 67 files use
+ * MySQL grammar H2 rejects, all of it in `ALTER` — `AFTER`, `FIRST`, dropping and adding a
+ * key in one statement — plus `TRUNCATE` and `DATE_ADD`. A dump contains none of that. It is
+ * `CREATE TABLE` and nothing else, which is why this works where that did not.
  *
- * A table being here at all is a claim that production has it. `UserSite` was declared here
- * and dropped by evolution 55, so a spec was exercising merge behaviour for a table nothing
- * has; the dump is what showed it.
+ * Refresh the dump with `schemaDump.sh` when the schema changes. The specs follow
+ * automatically, and a column they depend on going away shows up as a failing spec instead
+ * of as a copy quietly going stale.
  *
- * This is still a mirror rather than the schema. Building it from the evolutions instead was
- * tried and does not work: 17 of the 67 files use MySQL grammar H2 rejects. See
- * `docs/Testing.md`. `schema/schema.sql` is the closest thing to an oracle, and comparing
- * against it is manual today.
+ * Three adjustments happen while loading, each for a MySQL/H2 difference rather than a
+ * difference of opinion about the schema: foreign keys are added afterwards, `tinyint(1)` is
+ * read back as BOOLEAN, and keys onto non-unique columns are dropped. `docs/Testing.md`
+ * explains each and what the third one costs.
  */
 object TestSchema {
-  private val ddl: Map[String, String] = Map(
-    "Site" ->
-      """
-        CREATE TABLE IF NOT EXISTS Site (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          created DATETIME DEFAULT NOW() NOT NULL,
-          updated DATETIME DEFAULT NOW() NOT NULL,
-          name VARCHAR(200) NOT NULL,
-          abbr VARCHAR(200) NOT NULL DEFAULT '',
-          mainDomain VARCHAR(255) NOT NULL DEFAULT '',
-          publicListedOrder DECIMAL(10, 2) NULL
-        )
-      """,
-    "User" ->
-      """
-        CREATE TABLE IF NOT EXISTS `User` (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          updated DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          nickname VARCHAR(255) NOT NULL,
-          profileImageUrl VARCHAR(512) NULL
-        )
-      """,
-    "SiteDomain" ->
-      """
-        CREATE TABLE IF NOT EXISTS SiteDomain (
-          created DATETIME DEFAULT NOW() NOT NULL,
-          site INT NOT NULL,
-          domain VARCHAR(255) NOT NULL,
-          PRIMARY KEY (site, domain),
-          CONSTRAINT SiteDomain_Site_seq_fk FOREIGN KEY (site) REFERENCES Site (seq)
-        )
-      """,
-    "SiteAdmin" ->
-      """
-        CREATE TABLE IF NOT EXISTS SiteAdmin (
-          site INT NOT NULL,
-          `user` INT NOT NULL,
-          dateInserted DATETIME DEFAULT NOW() NOT NULL,
-          PRIMARY KEY (site, `user`),
-          CONSTRAINT SiteAdmin_Site_seq_fk FOREIGN KEY (site) REFERENCES Site (seq),
-          CONSTRAINT SiteAdmin_User_seq_fk FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-    "UserEmail" ->
-      """
-        CREATE TABLE IF NOT EXISTS UserEmail (
-          `user` INT NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          isPrimary BOOLEAN NOT NULL DEFAULT FALSE,
-          created DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-          PRIMARY KEY (`user`, email),
-          UNIQUE (email),
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-    "AccessLog" ->
-      """
-        CREATE TABLE IF NOT EXISTS AccessLog (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
-          `user` INT NULL,
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """,
-    "UserApiKey" ->
-      """
-        CREATE TABLE IF NOT EXISTS UserApiKey (
-          seq BIGINT NOT NULL AUTO_INCREMENT,
-          `user` INT NOT NULL,
-          keyHash VARCHAR(64) NOT NULL,
-          keyPrefix VARCHAR(32) NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          dateInserted DATETIME NOT NULL DEFAULT NOW(),
-          dateLastUsed DATETIME NULL,
-          dateRevoked DATETIME NULL,
-          PRIMARY KEY (seq),
-          UNIQUE (keyHash)
-        )
-      """,
-    "Permission" ->
-      """
-        CREATE TABLE IF NOT EXISTS Permission (
-          site INT NOT NULL,
-          target VARCHAR(255) NOT NULL,
-          targetType ENUM('All','Exact','StartsWith','EndsWith','RegularExpression') NOT NULL,
-          actor VARCHAR(255) NOT NULL,
-          actorType ENUM('All','Login','Exact','Domain') NOT NULL DEFAULT 'Exact',
-          action INT NOT NULL,
-          dateUpdated DATETIME DEFAULT NOW() NOT NULL,
-          PRIMARY KEY (site, target, targetType, actor, actorType)
-        )
-      """,
-    "IpDeny" ->
-      """
-        CREATE TABLE IF NOT EXISTS IpDeny (
-          seq INT NOT NULL AUTO_INCREMENT,
-          accessLog INT NULL,
-          dateInserted DATETIME DEFAULT NOW() NOT NULL,
-          ip VARCHAR(46) NOT NULL,
-          reason VARCHAR(255) NOT NULL DEFAULT '',
-          PRIMARY KEY (seq)
-        )
-      """,
-    "Page" ->
-      """
-        CREATE TABLE IF NOT EXISTS Page (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          revision INT NOT NULL DEFAULT 0,
-          dateTime DATETIME DEFAULT NOW() NOT NULL,
-          user INT NULL,
-          remoteAddress TEXT,
-          comment TEXT NOT NULL,
-          isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
-          viaApi BOOLEAN NOT NULL DEFAULT FALSE,
-          userApiKey BIGINT NULL,
-          content CLOB NOT NULL,
-          PRIMARY KEY (site, name, revision)
-        )
-      """,
-    "PageMeta" ->
-      """
-        CREATE TABLE IF NOT EXISTS PageMeta (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          dateInserted DATETIME NOT NULL DEFAULT NOW(),
-          dateUpdated DATETIME NULL,
-          revision INT NOT NULL,
-          image VARCHAR(512) NULL,
-          description VARCHAR(512) NULL,
-          size BIGINT NOT NULL DEFAULT 0,
-          PRIMARY KEY (site, name)
-        )
-      """,
-    "Attachment" ->
-      """
-        CREATE TABLE IF NOT EXISTS Attachment (
-          seq BIGINT NOT NULL AUTO_INCREMENT,
-          site INT NOT NULL,
-          pageName VARCHAR(255) NOT NULL,
-          user INT NULL,
-          uploaderEmail VARCHAR(255) NULL,
-          originalFilename VARCHAR(255) NOT NULL,
-          storedFilename VARCHAR(255) NOT NULL,
-          bucket VARCHAR(255) NOT NULL,
-          objectKey VARCHAR(512) NOT NULL,
-          contentType VARCHAR(255) NOT NULL,
-          fileSize BIGINT NOT NULL,
-          status ENUM('Initiated','Uploaded','Verified','Deleted','Failed') NOT NULL,
-          etag VARCHAR(255) NULL,
-          dateInserted DATETIME DEFAULT NOW() NOT NULL,
-          dateUpdated DATETIME NULL,
-          dateUploaded DATETIME NULL,
-          dateDeleted DATETIME NULL,
-          PRIMARY KEY (seq)
-        )
-      """,
-    "CalculatedLink" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedLink (
-          site INT NOT NULL,
-          src VARCHAR(255) NOT NULL,
-          dst VARCHAR(255) NOT NULL,
-          alias VARCHAR(255) NOT NULL DEFAULT ''
-        )
-      """,
-    "CalculatedSchemaOrg" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedSchemaOrg (
-          site INT NOT NULL,
-          page VARCHAR(255) NOT NULL,
-          cls VARCHAR(255) NOT NULL DEFAULT '',
-          prop VARCHAR(255) NOT NULL DEFAULT '',
-          `value` VARCHAR(255) NOT NULL DEFAULT ''
-        )
-      """,
-    "CalculatedTerm" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedTerm (
-          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-          term VARCHAR(255) NOT NULL UNIQUE
-        )
-      """,
-    "CalculatedTermFrequency" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedTermFrequency (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          term BIGINT NOT NULL,
-          frequency INT NOT NULL,
-          PRIMARY KEY (site, name, term)
-        )
-      """,
-    "CalculatedTermFrequencyNorm" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedTermFrequencyNorm (
-          site INT NOT NULL,
-          name VARCHAR(255) NOT NULL,
-          norm DOUBLE NOT NULL,
-          PRIMARY KEY (site, name),
-          FOREIGN KEY (site, name) REFERENCES PageMeta (site, name)
-        )
-      """,
-    "CalculatedCosineSimilarity" ->
-      """
-        CREATE TABLE IF NOT EXISTS CalculatedCosineSimilarity (
-          site1 INT NOT NULL,
-          name1 VARCHAR(255) NOT NULL,
-          site2 INT NOT NULL,
-          name2 VARCHAR(255) NOT NULL,
-          similarity DOUBLE NOT NULL,
-          PRIMARY KEY (site1, name1, site2, name2),
-          FOREIGN KEY (site1, name1) REFERENCES PageMeta (site, name),
-          FOREIGN KEY (site2, name2) REFERENCES PageMeta (site, name)
-        )
-      """,
-  )
+  private val createTableName: Regex = """CREATE TABLE `(\w+)`""".r
 
-  /** Referenced tables first, so a foreign key never precedes what it points at. */
-  private val creationOrder: Seq[String] = Seq(
-    "Site",
-    "User",
-    "SiteDomain",
-    "SiteAdmin",
-    "UserEmail",
-    "AccessLog",
-    "UserApiKey",
-    "Permission",
-    "IpDeny",
-    "Page",
-    "PageMeta",
-    "Attachment",
-    "CalculatedLink",
-    "CalculatedSchemaOrg",
-    "CalculatedTerm",
-    "CalculatedTermFrequency",
-    "CalculatedTermFrequencyNorm",
-    "CalculatedCosineSimilarity",
-  )
+  /**
+   * Foreign keys are lifted out of the `CREATE TABLE` and added afterwards.
+   *
+   * Two reasons. A dump is ordered alphabetically, so a table's foreign key routinely points
+   * at one that does not exist yet; and `AccessLog` and `IpDeny` reference each other, which
+   * no ordering can satisfy.
+   */
+  private val foreignKey: Regex =
+    """(?m)^\s*CONSTRAINT `(\w+)` FOREIGN KEY \((.+?)\) REFERENCES `(\w+)` \((.+?)\)(.*?),?$""".r
 
-  def create(tables: String*)(implicit connection: Connection): Unit = {
-    val requested = tables.toSet
-    val unknown = requested -- ddl.keySet
-    require(unknown.isEmpty, s"TestSchema has no definition for: ${unknown.toSeq.sorted.mkString(", ")}")
-    creationOrder.filter(requested).foreach(table => SQL(ddl(table)).execute())
+  private lazy val (createStatements, alterStatements): (Seq[String], Seq[String]) = {
+    val raw = new String(Files.readAllBytes(Paths.get("schema/schema.sql")), "UTF-8")
+    val cleaned = raw
+      .replaceAll("(?s)/\\*!.*?\\*/;?", "") // mysqldump 의 /*!40101 ... */ 조건부 지시문
+      .replaceAll("(?m)^--.*$", "")
+    val statements = cleaned.split(";").map(_.trim).filter(_.nonEmpty).toSeq
+
+    // 대상 테이블별로 유니크한 컬럼 조합(PK, UNIQUE KEY)을 모아 둔다.
+    def columnList(s: String): Seq[String] = s.split(",").map(_.trim.replace("`", "")).toSeq
+    val uniqueKeys: Map[String, Set[Seq[String]]] = statements.flatMap { statement =>
+      createTableName.findFirstMatchIn(statement).map { table =>
+        val pk = """PRIMARY KEY \((.+?)\)""".r.findFirstMatchIn(statement).map(m => columnList(m.group(1)))
+        val uks = """UNIQUE KEY `\w+` \((.+?)\)""".r.findAllMatchIn(statement).map(m => columnList(m.group(1)))
+        table.group(1) -> (pk.toSet ++ uks.toSet)
+      }
+    }.toMap
+
+    val alters = statements.flatMap { statement =>
+      createTableName.findFirstMatchIn(statement).toSeq.flatMap { table =>
+        foreignKey.findAllMatchIn(statement).flatMap { fk =>
+          val referenced = columnList(fk.group(4))
+          // MySQL 은 대상 컬럼이 어떤 인덱스의 접두사이기만 하면 FK 를 허용한다. H2 는
+          // 대상이 유니크해야 하고, 아니면 유니크 인덱스를 만들어 버린다. Page(site, name)
+          // 을 가리키는 FK 가 그런 경우인데, 그대로 두면 H2 가 Page 에 (site, name) 유니크를
+          // 걸어서 같은 페이지의 두 번째 리비전을 넣을 수 없게 된다. 그런 FK 는 건너뛴다.
+          if (uniqueKeys.getOrElse(fk.group(3), Set.empty).contains(referenced)) {
+            Some(s"ALTER TABLE `${table.group(1)}` ADD CONSTRAINT `${fk.group(1)}` " +
+              s"FOREIGN KEY (${fk.group(2)}) REFERENCES `${fk.group(3)}` (${fk.group(4)})")
+          } else {
+            None
+          }
+        }
+      }
+    }
+    val creates = statements.map { statement =>
+      foreignKey.replaceAllIn(statement, "")
+        .replaceAll("""(?m),\s*\n\s*\)""", "\n)")
+        // MySQL 에는 BOOLEAN 이 없어서 tinyint(1) 로 덤프된다. 되돌리지 않으면 H2 가
+        // 그 컬럼을 Integer 로 돌려주고, Boolean 을 기대하는 파서가 깨진다.
+        .replaceAll("""(?i)\btinyint\(1\)""", "BOOLEAN")
+    }
+    (creates, alters)
+  }
+
+  /**
+   * Creates every table the real database has.
+   *
+   * All of them rather than a named subset: the foreign keys tie them together, and a spec
+   * naming only what it believes it needs is how such a list goes stale. An unused table in
+   * an in-memory database costs nothing.
+   */
+  def createAll()(implicit connection: Connection): Unit = {
+    createStatements.foreach(statement => SQL(statement).execute())
+    alterStatements.foreach(statement => SQL(statement).execute())
   }
 }

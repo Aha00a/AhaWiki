@@ -38,20 +38,7 @@ class UserMergeSpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    TestSchema.create("User", "UserEmail", "AccessLog")(connection)
-    // Not the real Page. UserMerge finds what to update by walking the foreign keys exported
-    // from User, and production's Page has no foreign key to User — only to UserApiKey. This
-    // table is a stand-in for "some table that references a user", kept local because
-    // TestSchema mirrors the real schema and the real Page would never be touched here.
-    SQL(
-      """
-        CREATE TABLE Page (
-          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
-          `user` INT NOT NULL,
-          FOREIGN KEY (`user`) REFERENCES `User` (seq)
-        )
-      """
-    ).execute()(connection)
+    TestSchema.createAll()(connection)
   }
 
   private def insertFixture(connection: Connection): Unit = {
@@ -60,9 +47,10 @@ class UserMergeSpec extends AnyFreeSpec {
       "INSERT INTO `User` (seq, nickname) VALUES (2, 'duplicate')",
       "INSERT INTO UserEmail (`user`, email, isPrimary) VALUES (1, 'canonical@example.com', true)",
       "INSERT INTO UserEmail (`user`, email, isPrimary) VALUES (2, 'duplicate@example.com', true)",
-      "INSERT INTO Page (`user`) VALUES (2)",
-      "INSERT INTO AccessLog (`user`) VALUES (1)",
-      "INSERT INTO AccessLog (`user`) VALUES (2)",
+      "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
+      "INSERT INTO Page (site, name, revision, dateTime, `user`, comment) VALUES (1, 'Foo', 1, NOW(), 2, '')",
+      "INSERT INTO AccessLog (site, `user`, method, scheme, host, uri, remoteAddress, userAgent, status, durationMilli) VALUES (1, 1, 'GET', 'https', 'localhost', '/', '127.0.0.1', '', 200, 1)",
+      "INSERT INTO AccessLog (site, `user`, method, scheme, host, uri, remoteAddress, userAgent, status, durationMilli) VALUES (1, 2, 'GET', 'https', 'localhost', '/', '127.0.0.1', '', 200, 1)",
     ).foreach(sql => SQL(sql).execute()(connection))
   }
 

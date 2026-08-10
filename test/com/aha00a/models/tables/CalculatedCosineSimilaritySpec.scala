@@ -43,11 +43,18 @@ class CalculatedCosineSimilaritySpec extends AnyFreeSpec {
   }
 
   private def setupSchema(connection: Connection): Unit = {
-    TestSchema.create("PageMeta", "CalculatedTerm", "CalculatedTermFrequency", "CalculatedTermFrequencyNorm", "CalculatedCosineSimilarity")(connection)
+    TestSchema.createAll()(connection)
   }
 
   private def insertFixture(connection: Connection): Unit = {
     Seq(
+      "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
+      "INSERT INTO Site (seq, name, abbr) VALUES (2, 'SiteB', 'SiteB')",
+      "INSERT INTO `User` (seq, nickname) VALUES (1, 'author')",
+      // PageMeta 는 Page 를 참조한다. 실제 스키마에서는 페이지 없이 메타만 있을 수 없다.
+      "INSERT INTO Page (site, name, revision, dateTime, `user`, comment) VALUES (1, 'Foo', 1, NOW(), 1, '')",
+      "INSERT INTO Page (site, name, revision, dateTime, `user`, comment) VALUES (1, 'Bar', 1, NOW(), 1, '')",
+      "INSERT INTO Page (site, name, revision, dateTime, `user`, comment) VALUES (2, 'Baz', 1, NOW(), 1, '')",
       "INSERT INTO PageMeta (site, name, revision) VALUES (1, 'Foo', 1)",
       "INSERT INTO PageMeta (site, name, revision) VALUES (1, 'Bar', 1)",
       "INSERT INTO PageMeta (site, name, revision) VALUES (2, 'Baz', 1)",

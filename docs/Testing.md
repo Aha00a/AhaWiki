@@ -1,7 +1,7 @@
 # Testing
 
-Specs run against H2 in MySQL mode, not MySQL. Evolutions are MySQL-flavoured and do not
-apply to H2, so the schema the specs run against is written by hand.
+Specs run against H2 in MySQL mode, not MySQL. The schema they run against is built from
+`schema/schema.sql`, the committed dump of the real database.
 
 ## Shared harness
 
@@ -10,9 +10,9 @@ Two files under `test/com/aha00a/tests` hold what every spec needs:
 - `TestApplication` — the in-memory `SyncCacheApi` stand-in (the real cache module is Redis,
   which tests do not run), the H2 URL, a collision-proof database name, and the Guice
   configuration every spec starts from.
-- `TestSchema` — one `CREATE TABLE` per table. A spec asks for the tables it needs:
-  `TestSchema.create("Site", "User", "SiteAdmin")`. Referenced tables are created first, so a
-  foreign key never precedes what it points at.
+- `TestSchema` — `createAll()` builds every table from the dump. Not a named subset: the
+  foreign keys tie the tables together, and a spec listing what it believes it needs is how
+  such a list goes stale. An unused table in an in-memory database costs nothing.
 
 A spec that differs says so by adding to the shared configuration rather than restating it.
 `ApiV1FilterSpec` runs the real filter chain, so it overrides `play.http.filters` and leaves
@@ -23,30 +23,46 @@ must come from the same `TestApplication.h2Url`. Two spellings of the same name 
 different in-memory databases, and the spec fails on a missing table rather than on the
 mismatch.
 
-## Why this is shared
+## Keeping the schema true
 
-It was not. Every spec built its own harness, and the schemas had drifted:
+Refresh the dump with `schemaDump.sh` after a schema change. The specs follow automatically.
+A column they depend on going away then shows up as a failing spec, instead of as a copy
+quietly going stale.
 
-| Table | Copies | Distinct definitions |
-|---|---:|---:|
-| `User` | 7 | 4 |
-| `Site` | 6 | 3 |
-| `Page` | 4 | 3 |
-| `SiteDomain`, `UserEmail`, `PageMeta`, three `Calculated*` | 2 each | 2 each |
+Three adjustments are made while loading, each for a difference between MySQL and H2 rather
+than a difference of opinion about the schema:
 
-A spec could pass against a table shape no other spec — and no production database — agreed
-with. One had grown its user columns to `BIGINT` where production declares `INT`, which H2
-accepts right up until a foreign key has to match.
+| Adjustment | Why |
+|---|---|
+| foreign keys moved out of `CREATE TABLE` into `ALTER TABLE` | a dump is ordered alphabetically, so a key routinely points at a table that does not exist yet — and `AccessLog` and `IpDeny` reference each other, which no ordering satisfies |
+| `tinyint(1)` read as `BOOLEAN` | MySQL has no boolean and dumps one as `tinyint(1)`; left alone, H2 returns Integer and every parser expecting Boolean fails |
+| foreign keys onto non-unique columns dropped | MySQL accepts a key referencing any index prefix. H2 requires the target to be unique and will create a unique index to get there — on `Page (site, name)` that forbids a page having a second revision |
+
+The third one is a real loss of fidelity: three keys onto `Page (site, name)` are not
+enforced under test. Everything else, including every `NOT NULL`, default, and ENUM value
+list, is exactly what production has.
+
+## What building it this way found
+
+The hand-written copy it replaced disagreed with production in sixteen places — nine integer
+widths, two TEXT columns declared VARCHAR(255), three ENUM columns declared VARCHAR so a
+spec could store a `targetType` the real column rejects, and a `UserSite` table evolution 55
+had dropped.
+
+Switching to the dump surfaced more, this time in the fixtures: specs were inserting `Site`
+rows without `abbr` (`NOT NULL`, no default in production), `PageMeta` rows with no `Page`
+behind them, and `AccessLog` rows missing eight required columns. Each had been passing
+against a schema shaped loosely enough to accept them.
+
+`UserMergeSpec` had also built its own minimal table named `Page` with a foreign key to
+`User`, on the belief that production's `Page` has no such key. It does —
+`Page_User_seq_fk` — so the stand-in was unnecessary and the spec now uses the real table.
 
 ## Known gaps
 
-- `TestSchema` is a hand-written mirror. It drifts from the evolutions under
-  `conf/evolutions/default` silently, and nothing checks the two against each other.
-
-  Running the evolutions against H2 instead would remove that whole class of drift, so it
-  was tried: of the 67 evolution files, **17 fail — 41 statements in all**. The blockers are
-  MySQL grammar H2 does not accept in MySQL mode, and they are structural rather than
-  incidental:
+- Building the schema from the evolutions instead would tie the tests to the migrations
+  themselves. It does not work: of the 67 files, **17 fail — 41 statements**, on MySQL
+  grammar H2 rejects in MySQL mode.
 
   | Construct | Example |
   |---|---|
@@ -56,19 +72,10 @@ accepts right up until a foreign key has to match.
   | `TRUNCATE` without `TABLE` | `TRUNCATE TermFrequency` |
   | MySQL date functions | `DATE_ADD(...)` in an `UPDATE` |
 
-  Rewriting seven years of migrations to a common subset is not worth it, and editing an
-  already-applied migration is not something to do casually. So the mirror stays.
+  All of it is `ALTER`. A dump has none — it is `CREATE TABLE` and nothing else — which is
+  why the dump works where the evolutions do not.
 
-  `schema/schema.sql` — the committed `mysqldump --no-data` of the real database, refreshed
-  with `schemaDump.sh` — is the closest thing to an oracle. Comparing `TestSchema` against it by hand found sixteen
-  disagreements: nine integer widths, `Page.comment` and `remoteAddress` declared
-  VARCHAR(255) against production's TEXT, and three ENUM columns declared VARCHAR, which let
-  a spec store a `targetType` the real column would reject. Those are now aligned and the
-  suite still passes. Nothing performs that comparison automatically; a test that does would
-  be worth writing, and its accuracy would depend on the dump being re-taken after schema
-  changes.
-- `UserMergeSpec` builds its own table named `Page` with a foreign key to `User`.
-  `UserMerge` finds what to update by walking the foreign keys exported from `User`, and
-  production's `Page` has no foreign key to `User` — only to `UserApiKey`. The table is a
-  stand-in for "some table that references a user"; the name is misleading and the case it
-  proves is not one production has.
+- Nothing checks that `schema/schema.sql` is current. It is refreshed by hand, and a schema
+  change that nobody dumps leaves the specs testing yesterday's shape. The failure mode is
+  gentler than before — the whole suite runs against one stale schema rather than each spec
+  against its own invention — but it is still a manual step.

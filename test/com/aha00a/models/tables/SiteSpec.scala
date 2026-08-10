@@ -15,7 +15,7 @@ class SiteSpec extends AnyFreeSpec {
       Class.forName("org.h2.Driver")
       val connection = DriverManager.getConnection(TestApplication.h2Url(TestApplication.randomDbName("sites")))
       try {
-        TestSchema.create("Site")(connection)
+        TestSchema.createAll()(connection)
         insertFixture(connection)
 
         implicit val implicitConnection: Connection = connection
