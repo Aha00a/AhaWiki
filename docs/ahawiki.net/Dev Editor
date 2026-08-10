@@ -159,3 +159,13 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * ["Dev WebSocket"]
  * [InterpreterTable]
  * [InterpreterSchema]
+
+== 부분 편집 링크
+
+문단마다 붙는 편집 링크는 `logics.wikis.PartialEdit` 한 곳에서 만듭니다.
+
+ * `revision` — 지금 보고 있는 리비전. 쿼리스트링이 우선입니다. 옛 리비전을 보는 중이라면 편집 링크도 그 리비전을 가리켜야 하기 때문입니다. 링크에 리비전을 실어 두는 덕에, 문단을 열어 둔 사이 페이지가 바뀌면 저장 시점에 알아챌 수 있습니다.
+ * `editUrl` — `/w/{페이지}?action=edit&revision=N&lineStart=N&lineEnd=N`
+
+이 둘이 인터프리터 블록용(`ExtractConvertInjectInterpreter`)과 제목용(`InterpreterWiki`)에 각각 한 벌씩, 글자 하나 다르지 않게 있었습니다. 두 렌더러는 페이지를 나누는 방식이 달라서 따로 있는 게 맞지만, **링크 모양은 달라질 수 없는 것** 입니다.
+

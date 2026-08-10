@@ -1,6 +1,6 @@
 package logics.wikis.interpreters
 
-import logics.wikis.PageNameUrl
+import logics.wikis.PartialEdit
 import com.aha00a.commons.utils.VariableHolder
 import logics.wikis._
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
@@ -94,7 +94,7 @@ object InterpreterWiki extends TraitInterpreter {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
     val headingNumber = new HeadingNumber()
-    private val revision = InterpreterWiki.getRevisionForPartialEdit
+    private val revision = PartialEdit.revision
     private val headingLineRangeByLineStart: Map[Int, Int] = InterpreterWiki.buildHeadingLineRangeByLineStart(variableExtractedContent, regexHeading)
 
     var oldIndent = 0
@@ -194,7 +194,7 @@ object InterpreterWiki extends TraitInterpreter {
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
       val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
       val lineEndExclusive = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber) + 1
-      val editUrl = InterpreterWiki.getEditUrlForPartialEdit(revision, lineNumber, lineEndExclusive)
+      val editUrl = PartialEdit.editUrl(revision, lineNumber, lineEndExclusive)
       val editTitle = s"Edit section (r$revision, L$lineNumber-L${lineEndExclusive - 1})"
       val editDataAttrs = if (isGeneratedHeading) {
         ""
@@ -336,24 +336,6 @@ object InterpreterWiki extends TraitInterpreter {
     }.toMap
   }
 
-  private def getRevisionForPartialEdit(implicit wikiContext: ContextWikiPage): Long = {
-    wikiContext.requestWrapper
-      .getQueryString("revision")
-      .flatMap(v => scala.util.Try(v.toLong).toOption)
-      .filter(_ > 0)
-      .getOrElse {
-        val (database, site) = wikiContext.tupleDatabaseSite
-        database.withConnection { implicit connection =>
-          implicit val implicitSite: models.tables.Site = site
-          models.tables.Page.selectLastRevision(wikiContext.name).map(_.revision).getOrElse(0L)
-        }
-      }
-  }
-
-  private def getEditUrlForPartialEdit(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String = {
-    val nameEncoded = PageNameUrl.encode(wikiContext.name)
-    s"/w/$nameEncoded?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
-  }
 
   class HandlerToSeqLink(override val pageContent: PageContent)(implicit wikiContext:ContextWikiPage) extends Handler[Seq[CalculatedLink]](pageContent) {
     override def process(): Seq[CalculatedLink] = {

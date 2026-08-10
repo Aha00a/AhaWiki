@@ -3,7 +3,6 @@ package logics.wikis
 import com.aha00a.commons.utils.ShebangUtil
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
-import models.tables.Page
 
 class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   private case class InterpreterChunk(lineStart: Int, lineEnd: Int)
@@ -85,7 +84,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
   override def inject(s: String)(implicit wikiContext: ContextWikiPage): String = {
     var result = s
-    val revision = getRevision
+    val revision = PartialEdit.revision
     for ((key, value) <- arrayBuffer) {
       val converted = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(value, "text"))
       val maybeInterpreter = Interpreters.getInterpreter(value)
@@ -93,7 +92,7 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>
           val lineEndExclusive = chunk.lineEnd + 1
-          val editUrl = getEditUrl(revision, chunk.lineStart, lineEndExclusive)
+          val editUrl = PartialEdit.editUrl(revision, chunk.lineStart, lineEndExclusive)
           val editTitle = s"Edit (r$revision, L${chunk.lineStart}-L${lineEndExclusive - 1})"
           s"""<div class="InterpreterRenderMetaWrapper ${maybeInterpreter.map(_.name).getOrElse("")}" style="position: relative;"
              |  data-edit-link="$editUrl"
@@ -126,22 +125,4 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     }
   }
 
-  private def getRevision(implicit wikiContext: ContextWikiPage): Long = {
-    wikiContext.requestWrapper
-      .getQueryString("revision")
-      .flatMap(v => scala.util.Try(v.toLong).toOption)
-      .filter(_ > 0)
-      .getOrElse {
-        val (database, site) = wikiContext.tupleDatabaseSite
-        database.withConnection { implicit connection =>
-          implicit val implicitSite: models.tables.Site = site
-          Page.selectLastRevision(wikiContext.name).map(_.revision).getOrElse(0L)
-        }
-      }
-  }
-
-  private def getEditUrl(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String = {
-    val nameEncoded = PageNameUrl.encode(wikiContext.name)
-    s"/w/$nameEncoded?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
-  }
 }
