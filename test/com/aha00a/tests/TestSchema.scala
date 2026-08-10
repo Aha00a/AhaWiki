@@ -12,14 +12,15 @@ import java.sql.Connection
  * different definitions, `Site` in six under three. A spec could then pass against a table
  * shape no other spec — and no production database — agreed with.
  *
- * Columns that reference `User.seq` are `INT` here because production declares them that
- * way. One spec had grown them to `BIGINT`, which H2 accepts until a foreign key has to
- * match.
+ * Types follow `schema/schema.sql`, the committed dump of the real database, down to the
+ * ENUM value lists. They did not: integer widths disagreed on nine columns, `Page.comment`
+ * and `remoteAddress` were VARCHAR(255) where production has TEXT, and three ENUM columns
+ * were VARCHAR — so a spec could store a `targetType` the real column would have rejected.
  *
- * This is still a hand-written mirror of the real schema, not the real schema. It drifts
- * from the evolutions under `conf/evolutions/default` silently. Running the evolutions
- * themselves against H2 would remove that whole class of drift and is worth doing if the
- * dialect ever allows.
+ * This is still a mirror rather than the schema. Building it from the evolutions instead was
+ * tried and does not work: 17 of the 67 files use MySQL grammar H2 rejects. See
+ * `docs/Testing.md`. `schema/schema.sql` is the closest thing to an oracle, and comparing
+ * against it is manual today.
  */
 object TestSchema {
   private val ddl: Map[String, String] = Map(
@@ -91,7 +92,7 @@ object TestSchema {
     "AccessLog" ->
       """
         CREATE TABLE IF NOT EXISTS AccessLog (
-          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
+          seq INT AUTO_INCREMENT PRIMARY KEY,
           `user` INT NULL,
           FOREIGN KEY (`user`) REFERENCES `User` (seq)
         )
@@ -116,9 +117,9 @@ object TestSchema {
         CREATE TABLE IF NOT EXISTS Permission (
           site INT NOT NULL,
           target VARCHAR(255) NOT NULL,
-          targetType VARCHAR(255) NOT NULL,
+          targetType ENUM('All','Exact','StartsWith','EndsWith','RegularExpression') NOT NULL,
           actor VARCHAR(255) NOT NULL,
-          actorType VARCHAR(255) NOT NULL,
+          actorType ENUM('All','Login','Exact','Domain') NOT NULL DEFAULT 'Exact',
           action INT NOT NULL,
           dateUpdated DATETIME DEFAULT NOW() NOT NULL,
           PRIMARY KEY (site, target, targetType, actor, actorType)
@@ -127,8 +128,8 @@ object TestSchema {
     "IpDeny" ->
       """
         CREATE TABLE IF NOT EXISTS IpDeny (
-          seq BIGINT NOT NULL AUTO_INCREMENT,
-          accessLog BIGINT NULL,
+          seq INT NOT NULL AUTO_INCREMENT,
+          accessLog INT NULL,
           dateInserted DATETIME DEFAULT NOW() NOT NULL,
           ip VARCHAR(46) NOT NULL,
           reason VARCHAR(255) NOT NULL DEFAULT '',
@@ -138,13 +139,13 @@ object TestSchema {
     "Page" ->
       """
         CREATE TABLE IF NOT EXISTS Page (
-          site BIGINT NOT NULL,
+          site INT NOT NULL,
           name VARCHAR(255) NOT NULL,
-          revision BIGINT NOT NULL,
+          revision INT NOT NULL DEFAULT 0,
           dateTime DATETIME DEFAULT NOW() NOT NULL,
           user INT NULL,
-          remoteAddress VARCHAR(255) NOT NULL DEFAULT '',
-          comment VARCHAR(255) NOT NULL DEFAULT '',
+          remoteAddress TEXT,
+          comment TEXT NOT NULL,
           isMinorEdit BOOLEAN NOT NULL DEFAULT FALSE,
           viaApi BOOLEAN NOT NULL DEFAULT FALSE,
           userApiKey BIGINT NULL,
@@ -159,7 +160,7 @@ object TestSchema {
           name VARCHAR(255) NOT NULL,
           dateInserted DATETIME NOT NULL DEFAULT NOW(),
           dateUpdated DATETIME NULL,
-          revision BIGINT NOT NULL,
+          revision INT NOT NULL,
           image VARCHAR(512) NULL,
           description VARCHAR(512) NULL,
           size BIGINT NOT NULL DEFAULT 0,
@@ -170,9 +171,9 @@ object TestSchema {
       """
         CREATE TABLE IF NOT EXISTS Attachment (
           seq BIGINT NOT NULL AUTO_INCREMENT,
-          site BIGINT NOT NULL,
+          site INT NOT NULL,
           pageName VARCHAR(255) NOT NULL,
-          user BIGINT NULL,
+          user INT NULL,
           uploaderEmail VARCHAR(255) NULL,
           originalFilename VARCHAR(255) NOT NULL,
           storedFilename VARCHAR(255) NOT NULL,
@@ -180,7 +181,7 @@ object TestSchema {
           objectKey VARCHAR(512) NOT NULL,
           contentType VARCHAR(255) NOT NULL,
           fileSize BIGINT NOT NULL,
-          status VARCHAR(32) NOT NULL,
+          status ENUM('Initiated','Uploaded','Verified','Deleted','Failed') NOT NULL,
           etag VARCHAR(255) NULL,
           dateInserted DATETIME DEFAULT NOW() NOT NULL,
           dateUpdated DATETIME NULL,
@@ -211,7 +212,7 @@ object TestSchema {
     "CalculatedTerm" ->
       """
         CREATE TABLE IF NOT EXISTS CalculatedTerm (
-          seq INT AUTO_INCREMENT PRIMARY KEY,
+          seq BIGINT AUTO_INCREMENT PRIMARY KEY,
           term VARCHAR(255) NOT NULL UNIQUE
         )
       """,
@@ -220,7 +221,7 @@ object TestSchema {
         CREATE TABLE IF NOT EXISTS CalculatedTermFrequency (
           site INT NOT NULL,
           name VARCHAR(255) NOT NULL,
-          term INT NOT NULL,
+          term BIGINT NOT NULL,
           frequency INT NOT NULL,
           PRIMARY KEY (site, name, term)
         )

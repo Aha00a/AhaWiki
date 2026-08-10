@@ -57,9 +57,21 @@ accepts right up until a foreign key has to match.
   | MySQL date functions | `DATE_ADD(...)` in an `UPDATE` |
 
   Rewriting seven years of migrations to a common subset is not worth it, and editing an
-  already-applied migration is not something to do casually. So the mirror stays, and the
-  drift stays possible. What would actually help is a check that compares the two, not a
-  different way of building the schema.
+  already-applied migration is not something to do casually. So the mirror stays.
+
+  `schema/schema.sql` — the committed `mysqldump --no-data` of the real database — is the
+  closest thing to an oracle. Comparing `TestSchema` against it by hand found sixteen
+  disagreements: nine integer widths, `Page.comment` and `remoteAddress` declared
+  VARCHAR(255) against production's TEXT, and three ENUM columns declared VARCHAR, which let
+  a spec store a `targetType` the real column would reject. Those are now aligned and the
+  suite still passes. Nothing performs that comparison automatically; a test that does would
+  be worth writing, and its accuracy would depend on the dump being re-taken after schema
+  changes.
+- `TestSchema` declares a `UserSite` table that `schema/schema.sql` does not contain, even
+  though evolution 55 creates it. `UserMerge` already guards its `UserSite` work with
+  `hasColumn`, so the code was written expecting the table to be possibly absent. Which of
+  the three is right — the evolutions, the dump, or the guard — is not something the
+  repository answers; it needs a look at the real database.
 - `UserMergeSpec` builds its own table named `Page` with a foreign key to `User`.
   `UserMerge` finds what to update by walking the foreign keys exported from `User`, and
   production's `Page` has no foreign key to `User` — only to `UserApiKey`. The table is a
