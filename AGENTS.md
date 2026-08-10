@@ -124,9 +124,11 @@ Syncing only the files a commit touched leaves a page that missed its sync stran
 So end a sync by comparing **every** page, not just the ones you saved. One request does it: the page list carries a `contentHash` per page, so a local SHA-256 is enough to compare without downloading anything.
 
 1. Read the page list and take `name`, `revision`, and `contentHash` for every page.
-2. For each local file, SHA-256 its content and compare with the page's `contentHash`. Compare with and without a trailing newline — page content and file content differ there.
+2. For each local file, SHA-256 its content and compare with the page's `contentHash`. The value is `sha256:` followed by the hex digest, so strip that prefix; comparing against the whole string reports every page as drifted. Compare with and without a trailing newline — page content and file content differ there.
 3. Report what is out of sync, what exists only locally, and what exists only on the wiki. Resolve each by the rules above rather than assuming the local side is right.
 
 Not every difference is drift. `manifest.json` is a download artifact rather than a page, and a wiki-only page may be a redirect stub someone added in the browser.
+
+Neither are line endings. `.gitattributes` normalizes this tree to LF, but a file checked out before that attribute existed keeps its CRLF in the working tree while the committed content is already LF — so hashing the working file reports drift on a page nobody has touched. That is the concrete reason step 2 of the previous list says to compare the committed content. Fix such a file by deleting it and checking it out again, rather than by saving it to the wiki.
 
 Do not commit or write API keys into this repository. Use a user-provided key for the current session or an environment variable such as `AHAWIKI_API_KEY`.
