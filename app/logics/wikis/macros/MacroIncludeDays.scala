@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import com.aha00a.commons.Implicits._
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 import models.PageContent
@@ -7,6 +8,9 @@ import models.tables.CalculatedLink
 import models.tables.Site
 import play.api.db.Database
 
+import java.text.SimpleDateFormat
+import java.time.format.TextStyle
+import java.time.LocalDateTime
 import java.time.YearMonth
 import scala.util.matching.Regex
 
@@ -28,39 +32,36 @@ object MacroIncludeDays extends TraitMacro {
       if (seq.isEmpty) {
         ""
       } else {
-        // One query for the month, then one render per day. The render is what has to be per
-        // day: each one goes through a context pushed onto the include stack, so the day page's
-        // edit links, attachment keys and structured data name the day page rather than the
-        // month page around it.
         wikiContext.database.withConnection { implicit connection =>
-          models.tables.Page
-            .selectLastRevision(seq)
-            .map(p => Interpreters.toHtmlString(withDayHeader(p.content))(wikiContext.push(p.name)))
-            .mkString("\n")
+          val content = models.tables.Page.selectLastRevision(seq).map { p =>
+            val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
+            val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
+            s"== [${p.name}] $weekday\n" + bodyWithoutOwnHeading(p.content)
+              .map(_.replaceAll("^(=+ )", "=$1"))
+              .mkString("\n")
+          }.mkString("\n")
+          Interpreters.toHtmlString(content)
         }
       }
     case _ => argumentError(argument)
   }
 
   /**
-   * A day page's body under a `DayHeader`, whatever heading it happened to carry itself.
+   * A day page's body, without the heading it carries for when it is read on its own.
    *
-   * Day pages are not written the same way. Most call `[[DayHeader]]`; the rest open with the
-   * same thing spelled out, `= [2020-01]-04 Sat`. Both mean "this is the heading for when I am
-   * read on my own", and on a month page both should come out as one section among thirty. So
-   * the first line goes, if it was a heading, and `DayHeader` takes its place — which under a
-   * pushed context knows to render a section heading rather than a page heading.
+   * Every day page opens with its own title — `[[DayHeader]]`, or the same thing written by
+   * hand as `= [2020-01]-04 Sat` — and the month page supplies that heading itself, so keeping
+   * the page's own would print it twice.
    *
-   * Only a heading is dropped. Taking the first line whatever it was, as this did until now,
-   * was safe only because no day page has ever opened with prose, and would have eaten the
-   * first sentence of the one that did. Directives go through `PageContent`, which knows a page
-   * may carry more than one of them.
+   * Only a heading is dropped. This used to take the first line whatever it happened to be,
+   * which was safe only because no day page has ever opened with prose, and would have eaten
+   * the first sentence of the one that did. Directives go through `PageContent`, which knows a
+   * page may carry more than one of them.
    */
-  private def withDayHeader(raw: String): String = {
+  private def bodyWithoutOwnHeading(raw: String): Seq[String] = {
     val lines = PageContent(raw).content.split("\n").toSeq
     val ownHeading = lines.headOption.exists(l => l.startsWith("=") || l.contains(s"[[${MacroDayHeader.name}"))
-    val body = if (ownHeading) lines.tail else lines
-    (s"[[${MacroDayHeader.name}]]" +: body).mkString("\n")
+    if (ownHeading) lines.tail else lines
   }
 
   override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =

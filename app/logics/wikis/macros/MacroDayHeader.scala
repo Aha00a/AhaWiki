@@ -1,7 +1,6 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.utils.DateTimeUtil
-import logics.wikis.PageNameUrl
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 import models.tables.CalculatedLink
@@ -31,16 +30,9 @@ object MacroDayHeader extends TraitMacro {
            |<h1>${ymLink}-$d $weekday</h1>
            |""".stripMargin
       case DateTimeUtil.regexIsoLocalDate(y, m, d) =>
-        // The heading has to carry its own anchor and link, because a macro's output is opaque
-        // to the document that included it: the interpreter numbers and anchors the headings it
-        // parses, and never sees this one. Hence the empty `headingNumber` — the section is
-        // still addressable and still links to the day page, it just has no ordinal. The month
-        // page's own heading renders the same way, so the shape is not new.
-        val ymd = s"$y-$m-$d"
-        val weekday = MacroWeekdayName.toHtmlString(ymd)
-        val id = s"$ymd-$weekday"
+        val weekday = MacroWeekdayName.toHtmlString(s"$y-$m-$d")
         s"""
-           |<h2 id="$id"><a href="#$id" class="headingNumber"></a> <a href="/w/${PageNameUrl.encode(ymd)}">$ymd</a> $weekday</h2>
+           |<h2>${wikiContext.name} $weekday</h2>
            |""".stripMargin
       case _ => argumentError(argument)
     }
