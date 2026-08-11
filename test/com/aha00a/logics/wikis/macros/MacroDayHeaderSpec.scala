@@ -25,8 +25,25 @@ class MacroDayHeaderSpec extends AnyFreeSpec with EmptyContextWikiPage {
     "renders a section heading rather than the page heading" in {
       val html = MacroDayHeader.toHtmlString("2020-01-04")(dayPage).trim
 
-      assert(html.startsWith("<h2>2020-01-04 "))
+      assert(html.startsWith("<h2 "))
       assert(html.endsWith("</h2>"))
+    }
+
+    /**
+     * The interpreter anchors and numbers the headings it parses, and a macro's output is not
+     * one of them. The anchor has to come from here or the section is unreachable by link.
+     */
+    "carries its own anchor, so the section can be linked to" in {
+      val html = MacroDayHeader.toHtmlString("2020-01-04")(dayPage)
+
+      assert(html.contains("""<h2 id="2020-01-04-"""))
+      assert(html.contains("""<a href="#2020-01-04-"""))
+    }
+
+    "links to the day page it is standing in for" in {
+      val html = MacroDayHeader.toHtmlString("2020-01-04")(dayPage)
+
+      assert(html.contains("""<a href="/w/2020-01-04">2020-01-04</a>"""))
     }
 
     "names the day it is rendering, not the month that included it" in {
