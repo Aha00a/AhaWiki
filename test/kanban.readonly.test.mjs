@@ -569,7 +569,11 @@ test('relation card select groups options by list and shows card names only', ()
 
   card.dispatchEvent({ type: 'click' });
 
-  const relationSelect = body.querySelector('.kanban-property-select');
+  // kanban-property-select is a styling class, shared by the relation, assignee and list
+  // selects. It was unique when this test was written; the popup redesign added the list one
+  // ahead of the relation one, and an unscoped query has picked the wrong select ever since.
+  const relationEditor = body.querySelector('.kanban-relation-editor');
+  const relationSelect = relationEditor.querySelector('.kanban-property-select');
   const groups = relationSelect.children.slice(1);
 
   assert.equal(relationSelect.children[0].tagName, 'OPTION');
