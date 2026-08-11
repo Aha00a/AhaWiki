@@ -20,6 +20,8 @@ How to apply it:
 
 **Documentation is part of the work, not something written after it.** Update every document the change touches **in the same commit**. Do not defer it: no "document it later," no "code first, notes after." A change that lands without its documentation is **incomplete**.
 
+> **Never split a change into a code commit and a documentation commit.** One change is one commit — landing the code first and the documentation after, or batching documentation into a later cleanup, are the same violation. The commit is the unit a reviewer and the next reader open, so *what changed and why* has to close inside it.
+
 Deferred documentation usually never gets written. When it does, **only what was done survives and why it was done is gone.** The reasoning is only in your hands while you are working — what you measured, what turned out to be false, which alternative you rejected and why. A few days later even you cannot reconstruct it. A record without reasoning tells the next person **to investigate it all over again**.
 
 Splitting the commits is its own problem. If code and documentation land separately, then in the window between them the two describe different moments in time — the last item of the duplication rule above (*facts recorded in two places always drift apart*) applies exactly.
