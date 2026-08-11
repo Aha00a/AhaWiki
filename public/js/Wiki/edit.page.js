@@ -1952,7 +1952,6 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 }
             });
 
-            AhaWiki.Editor.addEventListener('textarea[name=text]');
 
             if (window.CodeMirror && window.AhaWikiCodeMirrorAhaMarkMode) {
                 const modeName = window.AhaWikiCodeMirrorAhaMarkMode();
@@ -1969,7 +1968,11 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     $textarea.trigger('input');
                     updateMacroAutocompleteForCodeMirror(cm);
                 });
-                AhaWiki.Editor.addCodeMirrorEventListener(editor);
+                // 자동완성이 떠 있으면 Tab·Enter·화살표는 자동완성 것이다. CodeMirror는 등록
+                // 순서대로 keydown 핸들러를 부르므로 이 핸들러가 AhaWiki.Editor보다 먼저 등록돼야
+                // 한다. 반대 순서였을 때는 ` * [JIH|]`에서 Tab을 누르면 AhaWiki.Editor의 리스트
+                // 들여쓰기가 먼저 줄 앞에 한 칸을 넣어 뒤 글자를 전부 한 칸씩 밀어 놓고, 그 다음
+                // 자동완성이 밀리기 전 좌표로 치환해서 `  * JIH0H]`가 됐다.
                 editor.on('keydown', function (cm, e) {
                     if (!$macroAutocomplete.is(':visible'))
                         return;
@@ -1997,6 +2000,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         hideMacroAutocomplete();
                     }
                 });
+                AhaWiki.Editor.addCodeMirrorEventListener(editor);
                 editor.on('blur', function () {
                     setTimeout(hideMacroAutocomplete, 120);
                 });
@@ -2040,6 +2044,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     hideMacroAutocomplete();
                 }
             });
+            // CodeMirror가 없을 때의 경로. 위와 같은 이유로 자동완성 뒤에 등록한다.
+            AhaWiki.Editor.addEventListener('textarea[name=text]');
             $textarea.on('blur', function () {
                 setTimeout(hideMacroAutocomplete, 120);
             });

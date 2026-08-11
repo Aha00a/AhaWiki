@@ -230,7 +230,20 @@
         return true;
     }
 
+    // 이미 다른 핸들러가 처리한 키에는 손대지 않는다. 자동완성처럼 떠 있는 동안 Tab·Enter를
+    // 가져가는 UI가 있고, 그때 여기서 한 번 더 편집하면 두 편집이 같은 좌표를 놓고 겹친다.
+    // 등록 순서로만 막으면 순서를 바꾸는 순간 조용히 되살아나는 종류의 버그다.
+    function alreadyHandled(e) {
+        if (!e)
+            return false;
+        if (typeof e.isDefaultPrevented === 'function' && e.isDefaultPrevented())
+            return true;
+        return !!e.defaultPrevented;
+    }
+
     function applyToCodeMirrorInstance(cm, e) {
+        if (alreadyHandled(e))
+            return;
         const doc = cm.getDoc();
         const from = doc.getCursor('from');
         const to = doc.getCursor('to');
@@ -275,6 +288,8 @@
             el.addEventListener('keyup',   updateSavedSel);
 
             $(el).on('keydown', function (e) {
+                if (alreadyHandled(e))
+                    return;
                 let override = null;
                 if (
                     e.key === 'Process' &&
