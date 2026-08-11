@@ -356,6 +356,12 @@ class ApiV1 @Inject()(
                   Page.rename(name, newName)
                   PageLogic.insert(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, body = s"#!redirect $newName", viaApi = true, userApiKey = Some(apiKey.seq))
                   wikiActors.pageCalculation ! Calculate(site, newName)
+                  // The old name is a page too now — it holds the redirect. Without this it has no
+                  // PageMeta row, and everything reading the page list off that table cannot see
+                  // it: PageList, and with it the script that mirrors the wiki into docs/. The
+                  // scheduled repair in ApplicationLifecycleHook picks it up within the hour, but
+                  // there is no reason to leave a page the rename itself created for it to find.
+                  wikiActors.pageCalculation ! Calculate(site, name)
 
                   Ok(Json.obj(
                     "name" -> Json.fromString(name),
