@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>editor key harness</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/lib/codemirror.min.css"/>
+<script>
+// edit.page.js reads this. Only the candidate list is faked, and only because fetching the real
+// one needs a login; everything the keys actually go through is the real script.
+window.AhaWikiEditConfig = {
+    pageName: 'HarnessPage',
+    api: {
+        macroNames: './empty.json',
+        interpreterNames: './empty.json',
+        schemaClassNames: './empty.json',
+        schemaPropertyNames: './empty.json',
+        pageNames: './pageNames.json'
+    }
+};
+</script>
+</head>
+<body>
+<!-- edit.page.js measures these on load. Empty is fine; missing throws. -->
+<div class="flash"></div>
+<div class="left"><div class="toolbar"></div>
+    <form id="form">
+        <textarea name="text" id="text"></textarea>
+        <input type="text" name="comment"/>
+    </form>
+</div>
+<div class="right"><div class="toolbar"></div><div class="previewPane"></div></div>
+
+<h1>Editor key harness</h1>
+<p>Read <code>README.md</code> next to this file.</p>
+<pre id="result">running…</pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.20/lib/codemirror.min.js"></script>
+
+<!-- The code under test, straight off disk. Serve this from the repository root. -->
+<script src="/public/js/jquery.hotkeys.js"></script>
+<script src="/public/js/jquery.paste_image_reader.js"></script>
+<script src="/public/js/AhaWiki.Editor.js"></script>
+<script src="/public/js/AhaWiki.CodeMirror.AhaMark.js"></script>
+<script src="/public/js/Wiki/edit.page.js"></script>
+
+<script>
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const out = [];
+function say(s) {
+    out.push(s);
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(s);
+}
+
+// ' * [JIH' with JIH0 offered, then the key. The completion should take it and nothing else
+// should touch the line. Both keys used to go wrong, and differently:
+//   Tab   ->  "  * JIH0H]"     the list indent shifted the line, the completion then replaced
+//   Enter ->  " * [JIH0\n * ]" the list continuation split it inside the brackets
+const EXPECTED = { value: ' * [JIH0]', ch: 8 };
+
+(async () => {
+    await sleep(1200);
+    const cm = window.AhaWikiCodeMirrorEditor;
+    if (!cm) { say('FAIL: no CodeMirror instance — check the console for a script that threw'); document.title = 'done'; return; }
+    const popup = document.getElementById('macroAutocomplete');
+    let bad = 0;
+
+    for (const key of ['Enter', 'Tab']) {
+        cm.setValue(' * [JI]');
+        cm.setCursor({ line: 0, ch: 6 });
+        cm.replaceSelection('H');   // last character through a real edit, so the popup updates
+        await sleep(350);
+
+        const visible = !!(popup && popup.offsetParent !== null);
+        say('--- ' + key + ' | popup ' + (visible ? 'visible ' + JSON.stringify(popup.innerText.trim().split('\n')[0]) : 'HIDDEN'));
+        if (!visible) { say('    SKIP: no popup, so this key proves nothing'); bad++; continue; }
+        say('    before ' + JSON.stringify(cm.getValue()) + ' ch=' + cm.getCursor().ch);
+
+        cm.getInputField().dispatchEvent(new KeyboardEvent('keydown', {
+            key, code: key, bubbles: true, cancelable: true
+        }));
+        await sleep(250);
+
+        const value = cm.getValue();
+        const ch = cm.getCursor().ch;
+        const ok = value === EXPECTED.value && ch === EXPECTED.ch;
+        if (!ok) bad++;
+        say('    after  ' + JSON.stringify(value) + ' ch=' + ch + '  ' + (ok ? 'OK' : 'MISMATCH'));
+    }
+
+    say(bad === 0
+        ? 'PASS — both keys give ' + JSON.stringify(EXPECTED.value) + ' ch=' + EXPECTED.ch
+        : 'FAIL — ' + bad + ' of 2');
+    document.title = 'done';
+})();
+</script>
+</body>
+</html>
