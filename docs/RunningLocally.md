@@ -1,23 +1,39 @@
 # Running the app locally
 
-`sbt run` alone does not get you a working server. Three things have to be arranged first, and
-each fails in a way that does not name itself.
+Start from `conf/application.local.dev.conf`. It is gitignored and not in this repository, and
+it already names the database, the Redis and its database number — one per environment, so a
+local run does not share a cache with production.
+
+```bash
+sbt -Dconfig.file=conf/application.local.dev.conf -Dhttp.port=9999 -Duser.timezone=Asia/Seoul run
+```
+
+The rest of this page is what goes wrong around that, each in a way that does not name itself.
 
 ## A Redis has to be reachable
 
 `build.sbt` pulls in `cacheApi` and `play-redis`, and no cache implementation besides. There is
-no in-process fallback: without a reachable Redis, Guice fails to build the injector and every
-request answers `500`. The specs do not hit this because `TestApplication` binds its own
-in-memory `SyncCacheApi` — see `docs/Testing.md`.
+no in-process fallback: if the configured Redis does not answer, Guice fails to build the
+injector and every request answers `500`, with the connection error buried in the stack trace.
+The specs do not hit this because `TestApplication` binds its own in-memory `SyncCacheApi` — see
+`docs/Testing.md`.
 
-Anything speaking the protocol will do:
+`Connection refused` from the configured host means nothing is listening there rather than
+something turning you away: the packet arrived. A Redis listening on loopback only looks exactly
+like this, and the app running beside it stays fine because it connects locally.
 
-```bash
-docker run -d --rm --name ahawiki-redis -p 6379:6379 redis:7-alpine
-```
+That state comes back on its own. Opening it with `redis-cli CONFIG SET bind ...` changes the
+running server and not `redis.conf`, so the next restart — a reboot, a package upgrade, an OOM
+kill — reads the old file and closes it again. `CONFIG REWRITE` afterwards writes the running
+configuration back to the file and makes it stick.
 
-Then point the app at it. Overriding `play.cache.redis.host` with `-D` on the sbt command line
-does not take — write a config that includes yours and overrides after it:
+A firewall refusing you looks different: the connection hangs for twenty seconds rather than
+failing in two, because a dropped packet is answered by nothing at all. Timing tells the two
+apart before you go looking in the wrong place.
+
+If you have to stand one up while that is sorted out, anything speaking the protocol will do,
+but then the host has to be overridden as well. `-Dplay.cache.redis.host` on the sbt command
+line does not take; write a config that includes yours and overrides after it:
 
 ```hocon
 include file("/path/to/AhaWiki/conf/application.local.dev.conf")
@@ -26,8 +42,7 @@ play.cache.redis.host = "localhost"
 play.cache.redis.database = 15
 ```
 
-Picking a database number keeps a local run from writing over cache entries a shared Redis is
-holding for someone else.
+Choosing a spare database number keeps the local run off the entries the configured one holds.
 
 ## Evolutions must not run
 
