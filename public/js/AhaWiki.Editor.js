@@ -270,7 +270,8 @@
         cm.focus();
     }
 
-    function addEventListener(selector) {
+    function addEventListener(selector, options) {
+        const skipWhen = skipper(options);
         $(selector).each(function () {
             const el = this;
             // 한글 IME는 keydown 전에 선택 범위를 강제 해제하는 경우가 있음.
@@ -288,6 +289,8 @@
             el.addEventListener('keyup',   updateSavedSel);
 
             $(el).on('keydown', function (e) {
+                if (skipWhen && skipWhen(e))
+                    return;
                 if (alreadyHandled(e))
                     return;
                 let override = null;
@@ -317,10 +320,22 @@
         });
     }
 
-    function addCodeMirrorEventListener(cm) {
+    // 페이지가 "이 키는 지금 내 것"이라고 말할 수 있게 하는 통로.
+    //
+    // 자동완성 목록이 떠 있는 동안 Tab·Enter는 목록의 것이지 편집기의 것이 아니다. 등록 순서로
+    // 정하면 두 줄의 위치가 곧 동작이 되어, 순서를 바꾸는 사람에게 아무 신호도 남지 않는다.
+    // 물어보는 방식이면 누가 먼저 등록됐든 답이 같다.
+    function skipper(options) {
+        return options && typeof options.skipWhen === 'function' ? options.skipWhen : null;
+    }
+
+    function addCodeMirrorEventListener(cm, options) {
         if (!cm || typeof cm.on !== 'function')
             return;
+        const skipWhen = skipper(options);
         cm.on('keydown', function (instance, e) {
+            if (skipWhen && skipWhen(e))
+                return;
             applyToCodeMirrorInstance(instance, e);
         });
     }

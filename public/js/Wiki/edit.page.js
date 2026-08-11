@@ -1413,6 +1413,16 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 autocompleteSuggestionType = null;
             }
 
+            // 자동완성이 떠 있는 동안 이 키들은 자동완성의 것이고, 편집기는 손대면 안 된다.
+            // AhaWiki.Editor 에 이 함수를 넘겨 두면 두 핸들러의 등록 순서와 무관하게 답이 같다.
+            //
+            // 자동완성이 키를 사양하는 경우(이미 정확히 다 친 경우)에는 먼저 팝업을 닫으므로,
+            // 그 뒤 편집기가 물어보면 false 가 되어 원래대로 들여쓰기·리스트 이어쓰기가 된다.
+            const autocompleteOwnedKeys = ['Tab', 'Enter', 'ArrowUp', 'ArrowDown', 'Escape'];
+            function autocompleteOwnsKey(e) {
+                return !!e && autocompleteOwnedKeys.indexOf(e.key) !== -1 && $macroAutocomplete.is(':visible');
+            }
+
             function renderMacroAutocomplete() {
                 $macroAutocomplete.empty();
                 macroSuggestions.forEach(function (name, index) {
@@ -1440,6 +1450,19 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
                 const selectionStart = macroAutocompleteContext.start;
                 const selectionEnd = macroAutocompleteContext.cursor;
+
+                // 좌표는 목록이 떠오를 때 재둔 것이라, 그 사이 누가 문서를 건드렸으면 이미 다른
+                // 곳을 가리킨다. 그 자리에 그때 그 글자가 아직 있는지 확인하고, 아니면 아무것도
+                // 하지 않는다. 잘못된 자리를 덮어쓰는 것보다 완성이 한 번 불발되는 편이 낫다.
+                const liveEditor = macroAutocompleteContext.type === 'codemirror' ? getEditor() : $textarea.get(0);
+                const liveValue = liveEditor
+                    ? (macroAutocompleteContext.type === 'codemirror' ? liveEditor.getValue() : liveEditor.value)
+                    : null;
+                if (liveValue === null || liveValue.slice(selectionStart, selectionEnd) !== macroAutocompleteContext.prefix) {
+                    hideMacroAutocomplete();
+                    return;
+                }
+
                 const isMacroAutocomplete = autocompleteSuggestionType === 'macro';
                 const insertText = isMacroAutocomplete ? (selected + '()') : selected;
                 const cursorOffset = isMacroAutocomplete ? (selected.length + 1) : selected.length;
@@ -1562,7 +1585,9 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 macroAutocompleteContext = {
                     type: context.type,
                     start: prefixInfo.start,
-                    cursor: context.cursor
+                    cursor: context.cursor,
+                    // 무엇을 완성하려던 것인지. 적용 시점에 문서가 그대로인지 확인하는 데 쓴다.
+                    prefix: prefixInfo.prefix
                 };
                 autocompleteSuggestionType = autocompleteType;
                 renderMacroAutocomplete();
@@ -2000,7 +2025,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         hideMacroAutocomplete();
                     }
                 });
-                AhaWiki.Editor.addCodeMirrorEventListener(editor);
+                AhaWiki.Editor.addCodeMirrorEventListener(editor, { skipWhen: autocompleteOwnsKey });
                 editor.on('blur', function () {
                     setTimeout(hideMacroAutocomplete, 120);
                 });
@@ -2044,8 +2069,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     hideMacroAutocomplete();
                 }
             });
-            // CodeMirror가 없을 때의 경로. 위와 같은 이유로 자동완성 뒤에 등록한다.
-            AhaWiki.Editor.addEventListener('textarea[name=text]');
+            // CodeMirror가 없을 때의 경로.
+            AhaWiki.Editor.addEventListener('textarea[name=text]', { skipWhen: autocompleteOwnsKey });
             $textarea.on('blur', function () {
                 setTimeout(hideMacroAutocomplete, 120);
             });
