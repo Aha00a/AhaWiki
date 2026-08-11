@@ -2,6 +2,19 @@
 
 When creating new files that should be part of the change, remember to stage them with `git add` so they are not omitted from the final commit or PR.
 
+## What is written down, and where
+
+Nothing links to `docs/` from anywhere a newcomer looks, so each of these has been rediscovered
+at least once by someone who could have read it instead. Add a line here when you add a document.
+
+| | |
+|---|---|
+| [docs/RunningLocally.md](docs/RunningLocally.md) | What has to be arranged before `sbt run` produces a working server. Three things, each of which fails without naming itself. |
+| [docs/Testing.md](docs/Testing.md) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
+| [docs/Database.md](docs/Database.md) | The database itself: what the columns mean and which timezone they are in. |
+| [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. Deleting them does not fail a build; it leaves `test/kanban.roundtrip-fixtures.test.mjs` reading files that are not there, which is how they spent two months gone. |
+| `docs/ahawiki.net/` | Copies of pages on the live wiki. Korean, and kept in step with it — see **AhaWikiDoc Sync** below. |
+
 ## Duplicated Code — Refactor at Two, Not Three (Absolute Rule)
 
 **The moment the same code exists in two places is the moment to refactor it.** This repository does not use the common "rule of three." Extract while you are writing the second copy, not the third.

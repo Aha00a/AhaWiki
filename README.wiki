@@ -1,3 +1,10 @@
 = AhaWiki =
 * [https://ahawiki.net]
 
+A wiki engine, written in Scala on Play. Several wikis run on one instance, told apart by the host they are asked for.
+
+== Documents ==
+* '''AGENTS.md''' — how to work in this repository, and an index of everything below.
+* '''docs/RunningLocally.md''' — what to arrange before <code>sbt run</code> gives you a working server.
+* '''docs/Testing.md''' — how the tests get a database schema.
+* '''docs/Database.md''' — what the columns mean.
