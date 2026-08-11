@@ -42,5 +42,15 @@ object PartialEdit {
 
   /** The link a section's edit control points at. */
   def editUrl(revision: Long, lineStart: Int, lineEnd: Int)(implicit wikiContext: ContextWikiPage): String =
-    s"/w/${PageNameUrl.encode(wikiContext.name)}?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
+    editUrl(wikiContext.name, revision, lineStart, lineEnd)
+
+  /**
+   * The same link, for a section that came from somewhere else.
+   *
+   * A document assembled out of other pages — see [[InlinedSource]] — has sections that belong
+   * to those pages rather than to the one being read, and an edit control naming the page being
+   * read would open the wrong thing, or nothing.
+   */
+  def editUrl(page: String, revision: Long, lineStart: Int, lineEnd: Int): String =
+    s"/w/${PageNameUrl.encode(page)}?action=edit&revision=$revision&lineStart=$lineStart&lineEnd=$lineEnd"
 }

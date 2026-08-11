@@ -89,7 +89,8 @@ object InterpreterWiki extends TraitInterpreter {
 
   class HandlerToHtmlString(
                              override val pageContent: PageContent,
-                             suppressToc: Boolean = false
+                             suppressToc: Boolean = false,
+                             sourceAt: Int => Option[InlinedSource] = InlinedSource.nowhere
                            )(implicit wikiContext:ContextWikiPage) extends HandlerContentIterateBase[String](pageContent) {
     val arrayBuffer: ArrayBuffer[String] = ArrayBuffer[String]()
     val arrayBufferHeading: ArrayBuffer[String] = ArrayBuffer[String]()
@@ -171,6 +172,25 @@ object InterpreterWiki extends TraitInterpreter {
       arrayBuffer += s"""<hr class="hr${s.length} pageBreakAfterAlways"/>"""
     }
 
+    /**
+     * Where a section's edit control should point: which page, at which lines of it.
+     *
+     * The page being rendered, normally. In a document assembled out of others — a month page
+     * built by `InlineDays` — the page the section was spliced in from. A section whose end
+     * falls outside what was spliced in, or inside the next page, stops at the end of its own
+     * page rather than running on into a page it does not belong to.
+     */
+    private def editTarget(lineStart: Int, lineEndExclusive: Int): (String, Long, Int, Int) =
+      sourceAt(lineStart) match {
+        case None => (wikiContext.name, revision, lineStart, lineEndExclusive)
+        case Some(source) =>
+          val end = sourceAt(lineEndExclusive) match {
+            case Some(atEnd) if atEnd.page == source.page => atEnd.line
+            case _ => source.lineCount + 1
+          }
+          (source.page, source.revision, source.line, end)
+      }
+
     override def heading(heading: String, title: String, id: String, lineNumber: Int, isInitiallyCollapsed: Boolean): Unit = {
       variableHolderState := State.Heading
       val headingLength = heading.length
@@ -194,8 +214,11 @@ object InterpreterWiki extends TraitInterpreter {
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses
       val headingClassAttribute = normalizedHeadingClasses.distinct.mkString(" ")
       val lineEndExclusive = headingLineRangeByLineStart.getOrElse(lineNumber, lineNumber) + 1
-      val editUrl = PartialEdit.editUrl(revision, lineNumber, lineEndExclusive)
-      val editTitle = s"Edit section (r$revision, L$lineNumber-L${lineEndExclusive - 1})"
+      val (editPage, editRevision, editLineStart, editLineEnd) = editTarget(lineNumber, lineEndExclusive)
+      val editUrl = PartialEdit.editUrl(editPage, editRevision, editLineStart, editLineEnd)
+      val editTitle =
+        if (editPage == wikiContext.name) s"Edit section (r$editRevision, L$editLineStart-L${editLineEnd - 1})"
+        else s"Edit $editPage (r$editRevision, L$editLineStart-L${editLineEnd - 1})"
       val editDataAttrs = if (isGeneratedHeading) {
         ""
       } else {
@@ -418,6 +441,22 @@ object InterpreterWiki extends TraitInterpreter {
   override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage):String = {
     val pageContent: PageContent = PageContent(content)
     val handler = new HandlerToHtmlString(pageContent)
+    handler.process()
+  }
+
+  /**
+   * Renders a document assembled out of other pages, knowing where each line came from.
+   *
+   * Only the edit controls change. `sourceAt` answers, for a line of `content`, which page that
+   * line was taken from and where it sits in it; a line it has no answer for is treated as
+   * belonging to the page being rendered, exactly as [[toHtmlString]] treats every line.
+   *
+   * Separate from [[toHtmlString]] rather than an extra parameter on it, because that name is
+   * passed around as a function value and an overload would make those call sites ambiguous.
+   */
+  def toHtmlStringInlined(content: String, sourceAt: Int => Option[InlinedSource])(implicit wikiContext: ContextWikiPage): String = {
+    val pageContent: PageContent = PageContent(content)
+    val handler = new HandlerToHtmlString(pageContent, sourceAt = sourceAt)
     handler.process()
   }
 
