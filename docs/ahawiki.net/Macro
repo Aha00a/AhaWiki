@@ -33,7 +33,7 @@
 
 == 페이지 삽입
  1. [MacroInclude] - 다른 페이지 포함
- 1. [MacroIncludeDays] - 특정 월의 일별 페이지 포함
+ 1. [MacroInlineDays] - 특정 월의 일별 페이지를 한 문서로 끌어오기
 
 == 날짜/시간
  1. [MacroPeriod] - 날짜 간격 계산

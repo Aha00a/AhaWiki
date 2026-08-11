@@ -47,7 +47,7 @@ object ExtractConvertInjectMacro {
     MacroInclude,
 
     MacroCalendar,
-    MacroIncludeDays,
+    MacroInlineDays,
 
     MacroDayHeader,
     MacroLinkDate,

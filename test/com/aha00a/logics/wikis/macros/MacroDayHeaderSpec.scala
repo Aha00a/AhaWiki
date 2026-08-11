@@ -10,9 +10,11 @@ import org.scalatest.freespec.AnyFreeSpec
 /**
  * The half of `DayHeader` that only runs inside an include.
  *
- * It was written in 2020 and stopped being reached in 2025, when a refactor of `IncludeDays`
- * dropped the `push` that put a day page's own name on top of the stack. Nothing failed — the
- * branch simply went quiet.
+ * It was written in 2020 and stopped being reached in 2025, when a refactor of the macro that
+ * gathers a month's day pages — `InlineDays`, called `IncludeDays` at the time — dropped the
+ * `push` that put a day page's own name on top of the stack. Nothing failed; the branch simply
+ * went quiet. `Include` reaches it again, which is the only caller that should: gathering a
+ * month is an inline, and an inline has no stack to push onto.
  *
  * Only the included half is covered here. The standalone half renders date navigation, which
  * needs the page-name cache and therefore a database.

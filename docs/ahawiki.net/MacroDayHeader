@@ -9,11 +9,11 @@
 독립 날짜 페이지(`2024-01-15`)에서는 연월 링크와 요일이 포함된 h1 제목을 출력합니다.
 [MacroInclude]로 다른 문서 안에 포함된 경우에는 그 문서의 한 절이므로 h2 제목만 출력합니다.
 
-[MacroIncludeDays]로 월간 페이지에 모일 때는 이 매크로가 아니라 [MacroIncludeDays]가 직접
+[MacroInlineDays]로 월간 페이지에 모일 때는 이 매크로가 아니라 [MacroInlineDays]가 직접
 절 제목을 붙입니다. 이 매크로가 첫 줄에 있으면 그 줄이 그 제목으로 대체됩니다.
 
 == 관련
  * [MacroLinkDate]
  * [MacroInclude]
- * [MacroIncludeDays]
+ * [MacroInlineDays]
  * [MacroWeekdayName]

@@ -55,7 +55,7 @@ object DefaultPageLogic {
         lazySome(
           s"""= [$y]-$m
              |[[NavigationYearMonth]]
-             |[[IncludeDays]]
+             |[[InlineDays]]
              |""".stripMargin
         )
 

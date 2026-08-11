@@ -1,6 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
+import logics.wikis.ExtractConvertInject
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 import models.PageContent
@@ -14,7 +15,23 @@ import java.time.LocalDateTime
 import java.time.YearMonth
 import scala.util.matching.Regex
 
-object MacroIncludeDays extends TraitMacro {
+/**
+ * The day pages of a month, spliced into this page and rendered with it as one document.
+ *
+ * Inline, not include, and the distinction is load-bearing. [[MacroInclude]] renders another
+ * page as that page: it pushes onto the include stack, so the included content's edit links,
+ * attachment keys and structured data name the page it came from. This does the opposite — it
+ * takes the day pages' markup and makes it part of the month page, which is what puts the day
+ * headings in the month page's own heading tree, and is where its numbering, its contents list
+ * and its collapsible sections come from. Rendering each day separately would produce a page
+ * that reads the same and has none of those.
+ *
+ * The cost of being an inline is that macros in the spliced markup see the month page rather
+ * than the day they were written on. That follows from the choice rather than being a defect of
+ * it: after splicing there is one document, and it is the month page. Anything that has to
+ * belong to the day page — an attachment, a backlink — belongs in a page read on its own.
+ */
+object MacroInlineDays extends TraitMacro {
   override def isBlock: Boolean = true
   val regex: Regex = """^(\d{4})-(\d{2})$""".r
 
@@ -36,9 +53,7 @@ object MacroIncludeDays extends TraitMacro {
           val content = models.tables.Page.selectLastRevision(seq).map { p =>
             val ldt: LocalDateTime = new SimpleDateFormat("yyyy-MM-dd").parse(p.name).toLocalDateTime
             val weekday = ldt.getDayOfWeek.getDisplayName(TextStyle.SHORT, wikiContext.requestWrapper.locale)
-            s"== [${p.name}] $weekday\n" + bodyWithoutOwnHeading(p.content)
-              .map(_.replaceAll("^(=+ )", "=$1"))
-              .mkString("\n")
+            s"== [${p.name}] $weekday\n" + oneLevelDeeper(bodyWithoutOwnHeading(p.content))
           }.mkString("\n")
           Interpreters.toHtmlString(content)
         }
@@ -58,10 +73,26 @@ object MacroIncludeDays extends TraitMacro {
    * the first sentence of the one that did. Directives go through `PageContent`, which knows a
    * page may carry more than one of them.
    */
-  private def bodyWithoutOwnHeading(raw: String): Seq[String] = {
+  private def bodyWithoutOwnHeading(raw: String): String = {
     val lines = PageContent(raw).content.split("\n").toSeq
     val ownHeading = lines.headOption.exists(l => l.startsWith("=") || l.contains(s"[[${MacroDayHeader.name}"))
-    if (ownHeading) lines.tail else lines
+    (if (ownHeading) lines.tail else lines).mkString("\n")
+  }
+
+  /**
+   * The page's own headings, pushed one level down so they sit under the day's heading.
+   *
+   * The shift runs with interpreter blocks lifted out, because `== ` at the start of a line
+   * inside a `[[[ ... ]]]` block is text the author wrote, not a heading. Shifting it corrupts
+   * the block: a shell transcript or a diff gains an `=` it never had. No day page has such a
+   * line today — this is a trap rather than a bug — but the raw version was one line of regex
+   * away from silently editing quoted text, and the lifting already exists.
+   */
+  def oneLevelDeeper(markup: String)(implicit wikiContext: ContextWikiPage): String = {
+    // extractByMarkers keeps only what is between the delimiters, so putting them back is the
+    // restoring half of the round trip rather than an addition.
+    val blocks = ExtractConvertInject.markedBlocks(body => s"[[[$body]]]")
+    blocks.inject(blocks.extract(markup).replaceAll("(?m)^(=+ )", "=$1"))
   }
 
   override def toSeqLink(body: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
