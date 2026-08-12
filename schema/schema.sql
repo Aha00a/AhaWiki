@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib #.#.#, for OS
 --
--- Host: db.aharise.com    Database: wiki_aha00a_com_dev
+-- Host: (from .env)    Database: (from .env)
 -- ------------------------------------------------------
 -- Server version	11.4.12-MariaDB-log
 

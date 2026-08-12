@@ -9,6 +9,12 @@ source "$(dirname "$0")/.env"
 tmp="$(dirname "$0")/schema/.schema.sql.tmp"
 out="$(dirname "$0")/schema/schema.sql"
 
+# The header mysqldump writes is scrubbed on the way in, for two separate reasons, and
+# removing either sed puts something back that does not belong in the file.
+#   - Host and database name are infrastructure names, and this repository is public
+#     (AGENTS.md). The replacement points at where the real values live instead.
+#   - Server version, completion time, and AUTO_INCREMENT counters change on every run,
+#     so leaving them makes an unchanged schema show up as a change.
 mysqldump \
     --default-character-set=utf8mb4 \
     -h "$DB_HOST" \
@@ -20,6 +26,7 @@ mysqldump \
     | sed 's/ AUTO_INCREMENT=[0-9]*//g' \
     | sed 's/^-- Dump completed on .*//g' \
     | sed 's/Distrib [0-9]*.[0-9]*.[0-9]*, for .*/Distrib #.#.#, for OS/g' \
+    | sed 's/^-- Host: .*/-- Host: (from .env)    Database: (from .env)/' \
     > "$tmp"
 
 # 빈 결과를 성공으로 착각하지 않는다.

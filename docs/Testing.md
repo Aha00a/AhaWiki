@@ -29,6 +29,13 @@ Refresh the dump with `schemaDump.sh` after a schema change. The specs follow au
 A column they depend on going away then shows up as a failing spec, instead of as a copy
 quietly going stale.
 
+The script scrubs the header `mysqldump` writes, and the two reasons it does are easy to
+mistake for one. The host and database name are infrastructure names that do not belong in a
+public repository, so they are replaced by a pointer to `.env`. The server version, the
+completion timestamp, and `AUTO_INCREMENT` counters are merely noise that changes on every
+run, and left in they make an unchanged schema arrive as a diff. Removing a `sed` to get the
+"real" header back reintroduces whichever of the two that line was holding down.
+
 Three adjustments are made while loading, each for a difference between MySQL and H2 rather
 than a difference of opinion about the schema:
 
