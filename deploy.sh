@@ -90,9 +90,20 @@ say "6/7 Verify from outside"
 verify_failed=0
 for u in "${VERIFY_URLS[@]}"; do
   [ -n "$u" ] || continue
+  code=000
+  # Retried, because the instances answering does not mean the proxy has noticed yet. A proxy
+  # that drops a failing upstream for a fixed interval keeps dropping it for the rest of that
+  # interval after it recovers, so a check run the moment the last restart passes its health
+  # check reads 502 from a deploy that worked. Give it longer than that interval before
+  # believing it.
+  #
   # Follow the redirects. A front page that answers 303 says nothing about what it redirects to,
   # and a deploy once passed this check while every page behind it was a 500.
-  code=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 25 "$u" || echo 000)
+  for attempt in 1 2 3 4 5 6; do
+    code=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 25 "$u" || echo 000)
+    [ "$code" = "200" ] && break
+    sleep 5
+  done
   printf '  %-40s HTTP %s\n' "$u" "$code"
   [ "$code" = "200" ] || verify_failed=1
 done

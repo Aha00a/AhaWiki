@@ -59,6 +59,10 @@ Each of these cost a broken deploy once.
   A request without one matches no site and answers 404 no matter how healthy the instance is.
 - **The external check follows redirects.** A front page answering 303 says nothing about what
   it redirects to. A deploy once passed on the 303 while every page behind it was a 500.
+- **The external check retries.** The instances answering does not mean the proxy has noticed.
+  A proxy that drops a failing upstream for a fixed interval keeps dropping it for the rest of
+  that interval after it recovers, so checking the moment the last restart goes healthy reads
+  502 from a deploy that worked — which happened, and cost a tag on a good release.
 - **Upload is `tar` over ssh, not rsync.** Calling an MSYS2 rsync from Git Bash crosses two MSYS
   runtimes; the arguments arrive mangled and it dies before copying anything.
 - **The tag is written last.** After verification, so it means "this reached the server and
