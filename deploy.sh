@@ -84,6 +84,22 @@ for p in "${PORTS[@]}"; do
     if [ "$code" = "200" ]; then echo "    healthy after $i"; ok=1; break; fi
   done
   [ "$ok" = "1" ] || { echo "    $p never became healthy — stopping here, the other instance is still up" >&2; exit 1; }
+
+  # An instance answering is not the same as the proxy knowing it. A proxy that drops a failing
+  # upstream holds it out for a fixed interval, so restarting the next one while this is still
+  # serving its penalty leaves none in rotation and readers get a 502 — which happened, for about
+  # a second, on a deploy that was otherwise fine.
+  #
+  # Waiting a number tuned to that interval would put the interval in two places. Wait for the
+  # condition instead: keep going once a request through the proxy comes back.
+  if [ -n "${VERIFY_URLS[0]:-}" ]; then
+    back=0
+    for i in $(seq 1 20); do
+      [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 15 "${VERIFY_URLS[0]}" || echo 000)" = "200" ] && { back=1; break; }
+      sleep 3
+    done
+    [ "$back" = "1" ] || { echo "    the proxy is still not serving after $p came back — stopping before touching the rest" >&2; exit 1; }
+  fi
 done
 
 say "6/7 Verify from outside"

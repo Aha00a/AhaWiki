@@ -52,9 +52,16 @@ any one of them. Two systemd instances, `ahawiki@<port>`, sit behind a reverse p
 
 Each of these cost a broken deploy once.
 
-- **One instance at a time.** Restarting both empties the proxy's pool of healthy upstreams for
-  a moment and readers get a 502. Each instance has to answer before the next goes down, and if
-  one never does the script stops with the other still serving.
+- **One instance at a time, and the proxy has to agree.** Restarting both empties the pool of
+  healthy upstreams and readers get a 502. Each instance has to answer before the next goes
+  down, and if one never does the script stops with the other still serving.
+
+  Its own answer is not enough. A proxy that drops a failing upstream holds it out for a fixed
+  interval, so an instance can be serving on loopback while the proxy still refuses to send it
+  anything — and taking the other one down in that gap leaves nothing in rotation. It cost about
+  a second of 502 on a deploy that was otherwise fine. So between instances the script waits for
+  a request *through the proxy* to come back, rather than sleeping a number tuned to the
+  interval, which would put that interval in two places at once.
 - **The health check sends a `Host` header.** One instance serves many wikis and picks by host.
   A request without one matches no site and answers 404 no matter how healthy the instance is.
 - **The external check follows redirects.** A front page answering 303 says nothing about what
