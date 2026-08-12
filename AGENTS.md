@@ -10,6 +10,7 @@ at least once by someone who could have read it instead. Add a line here when yo
 | | |
 |---|---|
 | [docs/RunningLocally.md](docs/RunningLocally.md) | What has to be arranged before `sbt run` produces a working server. Three things, each of which fails without naming itself. |
+| [docs/Deploying.md](docs/Deploying.md) | `deploy.sh`, what it does, and why each of its awkward steps is there. Where it deploys comes from the environment — this repository names no machine. |
 | [docs/Testing.md](docs/Testing.md) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
 | [docs/Database.md](docs/Database.md) | The database itself: what the columns mean and which timezone they are in. |
 | [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. Deleting them does not fail a build; it leaves `test/kanban.roundtrip-fixtures.test.mjs` reading files that are not there, which is how they spent two months gone. |
