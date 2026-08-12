@@ -13,6 +13,11 @@ packages everything under `conf/` and gitignore has no say in that, so a file fu
 went out with every deploy. The build now refuses untracked files there, but the config has no
 reason to be inside the repository at all — nothing reads it by a relative path.
 
+An IDE run configuration takes that same absolute path. A relative `conf/...` left in one is a
+leftover from when the file was there, and the move cannot fix it: an IDE's run configurations
+are its own state, outside the repository, so nothing here can see them to tell you they now
+point at a file that is gone.
+
 The rest of this page is what goes wrong around that, each in a way that does not name itself.
 
 ## A Redis has to be reachable
