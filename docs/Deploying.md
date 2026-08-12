@@ -75,10 +75,19 @@ three releases, world readable, in files the app never opened: it is started wit
 `-Dconfig.file` pointing outside the release. They had been going out with every deploy since the
 current layout began.
 
-`build.sbt` now drops `conf/*.local.*` and editor or migration backups from the package, so the
-common shapes cannot ride along. A file with no such marker in its name still can. Nothing forces
-a deployment config to live in `conf/` — the server is told where its config is — so keep it
-somewhere else, or name it `*.local.*` and let the build refuse it.
+`build.sbt` now asks git what it tracks under `conf/` and packages only that, so an ignored file
+does not ship — which is what everyone assumed was already true. It names what it leaves out:
+
+```
+[info] conf/: not packaged (untracked): conf/application.local.dev.conf
+```
+
+Filename patterns were tried first and are kept only as a fallback for a build with no git
+available. A pattern catches the shapes someone thought of, and the file that started this had
+none of them: it was named after a hostname.
+
+Nothing requires a deployment config to live in `conf/` — the server is told where its config is
+with an absolute path — so the safest place for one is still somewhere else entirely.
 
 ## What used to be here
 

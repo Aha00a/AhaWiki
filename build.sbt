@@ -63,13 +63,36 @@ Test / doc / sources := Seq.empty
 // database password and a `play.http.secret.key` landed on the production server, world readable,
 // in a file the app never even opens (it is started with an absolute `-Dconfig.file`).
 //
-// Keep such files outside conf/ if you can. If they must live there, this catches the shapes
-// they take — `*.local.*`, editor and migration backups — and the deploy stops carrying them.
-Universal / mappings := (Universal / mappings).value.filterNot { case (_, path) =>
-  val name = path.split('/').last
-  path.startsWith("conf/") && (
-    name.contains(".local.") ||
-      name.endsWith(".bak") || name.contains(".bak-") ||
+// Everyone already believes "an ignored file does not ship". This makes that true for conf/ by
+// asking git what it tracks, rather than guessing from filenames — a name-based rule only catches
+// the shapes someone thought of, and the file that started this had none of them.
+//
+// Without git, it falls back to those shapes and says so. Quietly shipping the lot is what this
+// exists to prevent; quietly shipping nothing would be worse.
+Universal / mappings := {
+  import scala.sys.process._
+  val log = streams.value.log
+  val root = baseDirectory.value
+  val tracked: Option[Set[String]] =
+    try Some(Process(Seq("git", "ls-files", "conf"), root).!!(ProcessLogger(_ => (), _ => ()))
+      .linesIterator.map(_.trim.replace(java.io.File.separatorChar, '/')).filter(_.nonEmpty).toSet)
+    catch { case _: Throwable => None }
+
+  val looksLocal = (name: String) =>
+    name.contains(".local.") || name.endsWith(".bak") || name.contains(".bak-") ||
       name.endsWith(".orig") || name.endsWith("~")
-  )
+
+  if (tracked.isEmpty)
+    log.warn("conf/: git unavailable, falling back to name patterns. Check the release for local configs.")
+
+  val (kept, dropped) = (Universal / mappings).value.partition { case (_, path) =>
+    val p = path.replace(java.io.File.separatorChar, '/')
+    if (!p.startsWith("conf/")) true
+    else tracked match {
+      case Some(files) => files.contains(p)
+      case None => !looksLocal(p.split('/').last)
+    }
+  }
+  dropped.foreach { case (_, path) => log.info(s"conf/: not packaged (untracked): $path") }
+  kept
 }
