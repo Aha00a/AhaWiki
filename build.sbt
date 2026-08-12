@@ -55,3 +55,21 @@ Test / doc / sources := Seq.empty
 
 //includeFilter in (Assets, LessKeys.less) := "*.less"
 //excludeFilter in (Assets, LessKeys.less) := "_*.less"
+
+// The packaged conf/ carries only what the repository tracks.
+//
+// `sbt stage` copies every file under conf/, and gitignore has no say in that — it governs git.
+// Local and per-deployment configs kept there therefore rode along into every release: a dev
+// database password and a `play.http.secret.key` landed on the production server, world readable,
+// in a file the app never even opens (it is started with an absolute `-Dconfig.file`).
+//
+// Keep such files outside conf/ if you can. If they must live there, this catches the shapes
+// they take — `*.local.*`, editor and migration backups — and the deploy stops carrying them.
+Universal / mappings := (Universal / mappings).value.filterNot { case (_, path) =>
+  val name = path.split('/').last
+  path.startsWith("conf/") && (
+    name.contains(".local.") ||
+      name.endsWith(".bak") || name.contains(".bak-") ||
+      name.endsWith(".orig") || name.endsWith("~")
+  )
+}

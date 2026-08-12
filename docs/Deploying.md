@@ -64,6 +64,22 @@ Each of these cost a broken deploy once.
 - **The tag is written last.** After verification, so it means "this reached the server and
   answered" rather than "this built".
 
+## Keep configuration with secrets out of `conf/`
+
+`sbt stage` copies every file under `conf/` into the release. Gitignore has no say in that — it
+governs what git tracks, not what the build packages — so a local config kept there rides along
+to the server on every deploy.
+
+That is not hypothetical. A development database password and a `play.http.secret.key` sat in
+three releases, world readable, in files the app never opened: it is started with an absolute
+`-Dconfig.file` pointing outside the release. They had been going out with every deploy since the
+current layout began.
+
+`build.sbt` now drops `conf/*.local.*` and editor or migration backups from the package, so the
+common shapes cannot ride along. A file with no such marker in its name still can. Nothing forces
+a deployment config to live in `conf/` — the server is told where its config is — so keep it
+somewhere else, or name it `*.local.*` and let the build refuse it.
+
 ## What used to be here
 
 Two other mechanisms shipped in this repository until 2026-08-12 and neither matched the server
