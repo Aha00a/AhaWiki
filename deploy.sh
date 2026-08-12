@@ -19,7 +19,10 @@ ROOT="${AHAWIKI_REMOTE_ROOT:-/opt/ahawiki}"
 SERVICE_USER="${AHAWIKI_SERVICE_USER:-ahawiki}"
 KEEP_RELEASES="${AHAWIKI_KEEP_RELEASES:-3}"
 read -r -a PORTS <<< "${AHAWIKI_PORTS:-10001 10000}"
-read -r -a VERIFY_URLS <<< "${AHAWIKI_VERIFY_URLS:-}"
+# Falls back to the host the health check already uses, so forgetting the variable costs
+# coverage rather than the check itself. Left empty this loop runs zero times, reports nothing,
+# and the deploy goes on to prune and tag as if it had passed.
+read -r -a VERIFY_URLS <<< "${AHAWIKI_VERIFY_URLS:-https://${AHAWIKI_HEALTH_HOST:-}/}"
 
 for required in AHAWIKI_DEPLOY_HOST AHAWIKI_HEALTH_HOST; do
   if [ -z "${!required}" ]; then

@@ -8,7 +8,21 @@ AHAWIKI_DEPLOY_HOST=<ssh host>  AHAWIKI_HEALTH_HOST=<a site's domain>  bash depl
 ```
 
 Everything about where it deploys comes from the environment. This repository is public and
-names no machine of its own; keep the values wherever you keep the rest of your operations.
+names no machine of its own.
+
+That is the whole boundary, and it is worth stating as one: **this repository owns how a deploy
+works, and whatever holds your operations owns which machine it happens to.** Steps, ordering,
+health checks, the tag format and the rollback all belong here, next to the code whose shape
+decides them. Hostnames, accounts and the reverse proxy in front belong there, and calling this
+needs no more than the values and one line:
+
+```bash
+AHAWIKI_DEPLOY_HOST=… AHAWIKI_HEALTH_HOST=… AHAWIKI_VERIFY_URLS="… …" bash /path/to/AhaWiki/deploy.sh
+```
+
+Keeping a second copy of the procedure on that side would put the same facts in two places, and
+they always drift — the copy this replaced had gone stale enough to write to a directory nobody
+read.
 
 | | |
 |---|---|
