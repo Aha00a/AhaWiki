@@ -1,12 +1,17 @@
 # Running the app locally
 
-Start from `conf/application.local.dev.conf`. It is gitignored and not in this repository, and
-it already names the database, the Redis and its database number — one per environment, so a
-local run does not share a cache with production.
+Start from your local config. It is not in this repository and should not be: keep it somewhere
+like `~/.config/ahawiki/application.local.dev.conf`. It already names the database, the Redis and
+its database number — one per environment, so a local run does not share a cache with production.
 
 ```bash
-sbt -Dconfig.file=conf/application.local.dev.conf -Dhttp.port=9999 -Duser.timezone=Asia/Seoul run
+sbt -Dconfig.file="$HOME/.config/ahawiki/application.local.dev.conf" -Dhttp.port=9999 -Duser.timezone=Asia/Seoul run
 ```
+
+It lived in `conf/` until 2026-08-12, which was a mistake worth not repeating: `sbt stage`
+packages everything under `conf/` and gitignore has no say in that, so a file full of credentials
+went out with every deploy. The build now refuses untracked files there, but the config has no
+reason to be inside the repository at all — nothing reads it by a relative path.
 
 The rest of this page is what goes wrong around that, each in a way that does not name itself.
 
@@ -36,7 +41,7 @@ but then the host has to be overridden as well. `-Dplay.cache.redis.host` on the
 line does not take; write a config that includes yours and overrides after it:
 
 ```hocon
-include file("/path/to/AhaWiki/conf/application.local.dev.conf")
+include file("/path/to/application.local.dev.conf")
 
 play.cache.redis.host = "localhost"
 play.cache.redis.database = 15
@@ -70,8 +75,8 @@ curl -H "Host: ahawiki.net" http://localhost:9999/w/FrontPage
 
 `localhost` with no `Host` header reaches no site.
 
-Config lives in `conf/`; the local file is gitignored and is not in this repository. Read
-`conf/base.conf` for the defaults it overrides.
+`conf/base.conf` holds the defaults your local config overrides. Your local config itself lives
+outside the repository — see the top of this page.
 
 ## Loopback is whitelisted, and why that matters
 

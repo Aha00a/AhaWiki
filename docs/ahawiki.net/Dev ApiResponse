@@ -117,13 +117,13 @@ circe 의 `Json.toString` 은 compact 가 아니라 `spaces2` 로 찍는다. 실
 
 == 로컬 실행
 
-로컬 실행은 `conf/application.local.dev.conf` 로 한다. 이 저장소에 없는 로컬 파일이다. 띄우기 전에 알아 둘 것이 둘 있다.
+로컬 실행은 `~/.config/ahawiki/application.local.dev.conf` 로 한다. 이 저장소에 없는 로컬 파일이다. 띄우기 전에 알아 둘 것이 둘 있다.
 
  * 클래스패스의 캐시 구현은 `play-redis` 뿐이다. caffeine 도 ehcache 도 없어서 Redis 없이는 서비스되지 않는다. Redis 모듈을 아예 켜지 않은 설정으로 띄우면 Guice 가 `SyncCacheApi` 바인딩을 찾지 못해 부팅 자체가 실패하고, 모듈은 켰는데 Redis 에 닿지 못하면 부팅은 되지만 매 요청이 500 이 된다.
  * `base.conf` 의 `play.evolutions.db.default.autoApply = true` 가 여기에도 적용된다. 뭔가 확인하려고 띄우는 것이라면 꺼서 공유 DB 스키마를 건드리지 않게 한다.
 
 [[[#!Vim sh
-sbt -Dconfig.file=conf/application.local.dev.conf \
+sbt -Dconfig.file="$HOME/.config/ahawiki/application.local.dev.conf" \
     -Dplay.evolutions.db.default.autoApply=false \
     -Dhttp.port=9123 run
 ]]]
@@ -132,7 +132,7 @@ sbt -Dconfig.file=conf/application.local.dev.conf \
 
 [[[#!Vim sh
 docker run -d --name ahawiki-local-redis -p 16379:6379 redis:7-alpine
-sbt -Dconfig.file=conf/application.local.dev.conf \
+sbt -Dconfig.file="$HOME/.config/ahawiki/application.local.dev.conf" \
     -Dplay.evolutions.db.default.autoApply=false \
     -Dplay.cache.redis.host=localhost -Dplay.cache.redis.port=16379 \
     -Dhttp.port=9123 run

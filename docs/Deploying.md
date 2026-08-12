@@ -79,7 +79,7 @@ current layout began.
 does not ship — which is what everyone assumed was already true. It names what it leaves out:
 
 ```
-[info] conf/: not packaged (untracked): conf/application.local.dev.conf
+[info] conf/: not packaged (untracked): conf/something.local.conf
 ```
 
 Filename patterns were tried first and are kept only as a fallback for a build with no git

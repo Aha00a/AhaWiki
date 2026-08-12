@@ -5,6 +5,13 @@
 /.settings
 /.bsp
 /RUNNING_PID
+# 2026-08-12 부로 이 파일들은 저장소 밖(`~/.config/ahawiki/`)에 둔다. 아래 규칙은 누가
+# 다시 conf/ 에 두었을 때를 위한 그물이다. docs/RunningLocally.md 참조.
+#
+# 옮긴 이유는 ignore 만으로는 부족했기 때문이다. `sbt stage` 는 conf/ 아래를 전부 담고
+# gitignore 는 거기에 힘이 없어서, 이 파일들이 배포마다 운영 서버로 실려 나갔다.
+# 빌드도 막도록 고쳤지만(build.sbt), 애초에 저장소 안에 둘 이유가 없다 — 서버도 로컬도
+# 절대경로로 설정을 지정해 띄운다.
 /conf/application.local.dev.conf
 /conf/wiki.aha00a.com.conf
 
