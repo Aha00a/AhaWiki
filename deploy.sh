@@ -130,6 +130,10 @@ fi
 
 echo "  pruning old releases:"
 ssh "$HOST" "
+  # The other remote block sets this and so must the one that runs \`rm -rf\`. Without it a
+  # failed \`cd\` does not stop anything: the loop keeps going in the login user's home, where
+  # nothing matches the 'is this the current release' test, and prunes whatever it lists there.
+  set -e
   cd '$ROOT/releases'
   ls -1t | tail -n +$((KEEP_RELEASES+1)) | while read d; do
     [ \"$ROOT/releases/\$d\" = \"\$(readlink -f '$ROOT/current')\" ] && continue

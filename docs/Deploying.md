@@ -48,6 +48,14 @@ ssh <host> "sudo -n -u ahawiki ln -sfn /opt/ahawiki/releases/<previous> /opt/aha
 `cache/` and `logs/` live in `shared/` and are linked into each release, because they outlive
 any one of them. Two systemd instances, `ahawiki@<port>`, sit behind a reverse proxy.
 
+Old releases beyond `AHAWIKI_KEEP_RELEASES` are pruned at the end, skipping whatever `current`
+points at. **Every remote block in the script begins with `set -e`, and the pruning one is the
+reason to check that it still does.** Without it a failed `cd` into `releases/` does not stop
+anything: the loop goes on listing the login user's home directory instead, nothing there
+matches the "is this the current release?" test, and it runs `sudo rm -rf` over the oldest
+entries it finds. The deploy reports success either way, because the failure is inside a
+command whose exit status nobody was reading.
+
 ## Why it is shaped the way it is
 
 Each of these cost a broken deploy once.
