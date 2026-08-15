@@ -82,7 +82,22 @@ against a schema shaped loosely enough to accept them.
   All of it is `ALTER`. A dump has none — it is `CREATE TABLE` and nothing else — which is
   why the dump works where the evolutions do not.
 
-- Nothing checks that `schema/schema.sql` is current. It is refreshed by hand, and a schema
-  change that nobody dumps leaves the specs testing yesterday's shape. The failure mode is
-  gentler than before — the whole suite runs against one stale schema rather than each spec
-  against its own invention — but it is still a manual step.
+- Refreshing `schema/schema.sql` is still a manual step, and a schema change that nobody dumps
+  leaves the specs testing yesterday's shape. The failure mode is gentler than before — the
+  whole suite runs against one stale schema rather than each spec against its own invention —
+  but nothing makes it happen.
+
+  What there is now is a way to ask, which is cheap enough to run before trusting a green
+  suite:
+
+  ```bash
+  sh ./schemaDump.sh --check
+  ```
+
+  It dumps the live schema through the same scrubs, diffs it against the committed file, and
+  exits non-zero with the difference. It writes nothing. Both paths come from one function on
+  purpose: two copies of that pipeline would drift a `sed` apart and the check would start
+  reporting differences that are not there.
+
+  It is not wired into the build, because it needs `.env` and a reachable database, and a test
+  run that fails on a machine with no credentials fails for the wrong reason.
