@@ -34,14 +34,31 @@ the surrounding page elements that `edit.page.js` measures on load.
 ## Trusting it
 
 A harness that cannot fail is worth nothing. Before believing a `PASS`, check that it still
-reproduces the bug it was built for:
+reproduces the bug it was built for. Take both scripts from **`e7d28758`**, the last commit
+before any of the fix:
 
 ```bash
-mkdir -p /tmp/old && git show 461313f7^ -- public/js/AhaWiki.Editor.js > /tmp/old/AhaWiki.Editor.js
+d=test/manual/editor-keys/_old && mkdir -p $d
+for f in AhaWiki.Editor.js AhaWiki.CodeMirror.AhaMark.js; do
+  git show e7d28758:public/js/$f > $d/$f
+done
 ```
 
-Point the two script tags at copies from a commit before the fix and reload. It should print the
-two lines at the top of this file. If it prints `PASS` against the broken scripts, the harness is
-lying and the result means nothing.
+Point those two script tags at `./_old/…`, reload, and it should say:
 
-`461313f7` is the fix; `e7d28758` is the last commit before any of it.
+```
+--- Enter | popup visible "JIH0"
+    after  " * [JIH0\n * ]" ch=3  MISMATCH
+--- Tab | popup visible "JIH0"
+    after  "  * [JIH0]" ch=9  MISMATCH
+FAIL — 2 of 2
+```
+
+Then `git checkout` the harness and delete `_old`. If it prints `PASS` against those scripts,
+the harness is lying and the result means nothing.
+
+**Use `e7d28758`, not `461313f7^`.** The fix is two commits — `f688ca83` stops Tab indenting
+the line, `461313f7` labels the popup's keys — so `461313f7^` already contains the part that
+matters and passes. This paragraph said to use it until 2026-08-16, when following its own
+instructions produced a `PASS` and made a working harness look like a broken one. A check
+whose failure mode is "everything looks fine" is the kind this file exists to warn about.
