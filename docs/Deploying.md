@@ -105,6 +105,24 @@ Filename patterns were tried first and are kept only as a fallback for a build w
 available. A pattern catches the shapes someone thought of, and the file that started this had
 none of them: it was named after a hostname.
 
+That fallback went unexercised until 2026-08-15, when it was run for real by building with git
+off the `PATH`, against two planted files — one named `*.local.*` and one named after a host.
+It behaves as designed and the design's limit is the one described above: the first was left
+out, the **second shipped**. So the fallback warns, and now also lists the top level of `conf/`
+it is about to package, because "check the release" is not answerable from a list of what was
+*dropped* — the file to worry about is by definition the one the patterns did not recognise.
+
+```
+[warn] conf/: git unavailable, falling back to name patterns. Check the release for local configs.
+[warn] conf/: packaged on the name rule alone: conf/application.conf
+[warn] conf/: packaged on the name rule alone: conf/base.conf
+...
+```
+
+Six or so lines, and a stray config is the one that does not belong. Subdirectories are left
+out of that list — every default page and every evolution is long enough to hide one in. None
+of this appears when git is available, which is every normal build.
+
 Nothing requires a deployment config to live in `conf/` — the server is told where its config is
 with an absolute path — so the safest place for one is still somewhere else entirely.
 

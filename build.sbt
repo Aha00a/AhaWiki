@@ -94,5 +94,18 @@ Universal / mappings := {
     }
   }
   dropped.foreach { case (_, path) => log.info(s"conf/: not packaged (untracked): $path") }
+
+  // In fallback the warning above asks whoever is deploying to check the release, so list what
+  // there is to check. Naming only what was dropped is no help here: the danger is a file the
+  // patterns did not recognise, which by definition is not in that list. Exercised 2026-08-15 by
+  // building with git off the PATH — a `*.local.*` bait was dropped and a hostname-named one
+  // shipped, which is the documented limit of the fallback rather than a fault in it.
+  // Only the top level of conf/, because that is where a stray config lands and the whole list —
+  // every default page, every evolution — is long enough to hide one in.
+  if (tracked.isEmpty)
+    kept.map(_._2.replace(java.io.File.separatorChar, '/'))
+      .filter(p => p.startsWith("conf/") && !p.stripPrefix("conf/").contains('/')).sorted
+      .foreach(p => log.warn(s"conf/: packaged on the name rule alone: $p"))
+
   kept
 }
