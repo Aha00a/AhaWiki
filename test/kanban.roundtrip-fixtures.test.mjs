@@ -119,7 +119,27 @@ const serializeColumns = (columns) => columns.map((column) => {
 }).join('\n');
 
 const fixtureRoot = path.join(process.cwd(), 'docs', 'kanban-fixtures');
-const fixtureNames = ['01-basic', '02-properties', '03-comments', '04-multicolumn', '05-outside-text'];
+
+// 무엇을 돌릴지는 디렉터리에서 읽는다. 손으로 적은 목록만 쓰면 **새로 넣은 픽스처가 조용히
+// 안 돌아간다** — 2026-08-17 에 목록에 없는 디렉터리에 일부러 틀린 golden 을 넣었더니
+// 스위트가 그대로 통과했다.
+const fixtureNames = fs.existsSync(fixtureRoot)
+  ? fs.readdirSync(fixtureRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
+  : [];
+
+// 그런데 디렉터리에서만 읽으면 반대쪽이 뚫린다: 지워진 픽스처는 목록에서도 함께 사라져
+// **없어진 줄 아무도 모른다.** 그래서 "있어야 할 것" 을 따로 둔다. 정확히 일치가 아니라
+// 바닥이다 — 새로 추가하는 쪽은 여기 손대지 않아도 되고, 없어지는 쪽만 이름과 함께 걸린다.
+// 픽스처가 두 달간 사라져 있었던 것이 정확히 이 경우였다.
+const expectedFixtures = ['01-basic', '02-properties', '03-comments', '04-multicolumn', '05-outside-text'];
+
+test('kanban fixtures: 있어야 할 것이 다 있다', () => {
+  const missing = expectedFixtures.filter((name) => !fixtureNames.includes(name));
+  assert.deepEqual(missing, [], `사라진 픽스처: ${missing.join(', ')}`);
+});
 
 const extractKanbanBlock = (text) => {
   const lines = text.split(/\r?\n/);

@@ -14,7 +14,7 @@ at least once by someone who could have read it instead. Add a line here when yo
 | [docs/Testing.md](docs/Testing.md) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
 | [docs/Resources.md](docs/Resources.md) | Why the app reads its files off the classpath, where the default pages live and why, and how to check nothing has gone back to relative paths. |
 | [docs/Database.md](docs/Database.md) | The database itself: what the columns mean and which timezone they are in. |
-| [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. Deleting them does not fail a build; it leaves `test/kanban.roundtrip-fixtures.test.mjs` reading files that are not there, which is how they spent two months gone. |
+| [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. They once spent two months gone without a build noticing; `test/kanban.roundtrip-fixtures.test.mjs` now fails by name when one is missing, and runs any new directory without being told about it. |
 | [test/manual/editor-keys/](test/manual/editor-keys/) | Presses Tab and Enter in a real CodeMirror with the real editor scripts, without needing a server or a login. Not part of `npm test` — it needs a browser. |
 | `docs/ahawiki.net/` | Copies of pages on the live wiki. Korean, and kept in step with it — see **AhaWikiDoc Sync** below. |
 
