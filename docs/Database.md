@@ -60,6 +60,29 @@ The test was the difference between `MAX(value)` and `NOW()`. Zero means KST, ni
 Columns filled by a DB default (23 of them) and columns the application writes directly
 (7 of them) are **both KST**. They are not mixed.
 
+### Re-checking it
+
+`MAX(value)` against `NOW()` only answers on a column something wrote in the last few hours.
+The difference it measures is the row's age plus nine if the column is UTC, and on a quiet
+schema the age swamps the nine — run it against the dev schema and every column reads
+somewhere between twenty and seventeen hundred hours, which says nothing at all.
+
+Compare the two mechanisms **within one row** instead. `Attachment` writes `dateInserted` from
+the DB default and `dateUploaded` from the application in the same operation, so if the two
+conventions had ever diverged every row would sit exactly nine hours apart:
+
+```sql
+SELECT COUNT(*), MIN(TIMESTAMPDIFF(MINUTE, dateInserted, dateUploaded)),
+                 MAX(TIMESTAMPDIFF(MINUTE, dateInserted, dateUploaded))
+FROM Attachment WHERE dateUploaded IS NOT NULL;
+```
+
+Zero for both bounds is the answer, and it stays the answer however old the rows are. Re-run
+2026-08-17: zero across all 44 rows in production and all 43 in dev, with `AccessLog` still at
+0.0h from `NOW()` in production for good measure. The same shape works on `PageMeta`
+(`dateInserted` vs `dateUpdated`), where only the minimum means anything — an edit legitimately
+lands hours after the insert, so the maximum is large and says nothing.
+
 ### Rules
 
 - New `datetime` columns are **KST** too. Mix them and there is no longer any way to tell
