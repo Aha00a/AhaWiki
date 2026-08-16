@@ -45,9 +45,17 @@ than a difference of opinion about the schema:
 | `tinyint(1)` read as `BOOLEAN` | MySQL has no boolean and dumps one as `tinyint(1)`; left alone, H2 returns Integer and every parser expecting Boolean fails |
 | foreign keys onto non-unique columns dropped | MySQL accepts a key referencing any index prefix. H2 requires the target to be unique and will create a unique index to get there — on `Page (site, name)` that forbids a page having a second revision |
 
-The third one is a real loss of fidelity: three keys onto `Page (site, name)` are not
-enforced under test. Everything else, including every `NOT NULL`, default, and ENUM value
-list, is exactly what production has.
+The third one is a real loss of fidelity: the keys onto `Page (site, name)` are not enforced
+under test. `TestSchema` decides that by target rather than by name — any key whose target is
+not unique goes — so the count is whatever the dump currently holds and not a number worth
+writing here. It was three on 2026-08-17:
+
+```bash
+grep -c 'REFERENCES `Page` (`site`, `name`)' schema/schema.sql
+```
+
+Everything else, including every `NOT NULL`, default, and ENUM value list, is exactly what
+production has.
 
 That last sentence carries more weight than it looks, because the dump is taken from the
 development schema, not from production. `--check` above compares the committed file against
