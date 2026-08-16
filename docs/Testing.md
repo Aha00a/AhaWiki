@@ -49,6 +49,29 @@ The third one is a real loss of fidelity: three keys onto `Page (site, name)` ar
 enforced under test. Everything else, including every `NOT NULL`, default, and ENUM value
 list, is exactly what production has.
 
+That last sentence carries more weight than it looks, because the dump is taken from the
+development schema, not from production. `--check` above compares the committed file against
+the schema it came from; nothing compares that schema against the one the claim is about. An
+evolution applied to one and not the other would leave the specs testing a shape production
+does not have, and `--check` would still say the file is current.
+
+Checking it is a dump and a `diff`. Run the same scrubs so the headers line up, take the
+production schema through whatever host and admin credentials the operations repository
+records, and compare against the committed file:
+
+```bash
+ssh <host> "mysqldump --defaults-file=<admin cnf> --default-character-set=utf8mb4 \
+  --no-data --no-tablespaces --column-statistics=0 <production schema>" \
+  | sed 's/ AUTO_INCREMENT=[0-9]*//g' \
+  | sed 's/^-- Dump completed on .*//g' \
+  | sed 's/Distrib [0-9]*.[0-9]*.[0-9]*, for .*/Distrib #.#.#, for OS/g' \
+  | sed 's/^-- Host: .*/-- Host: (from .env)    Database: (from .env)/' \
+  | diff schema/schema.sql -
+```
+
+Measured 2026-08-17: identical, 24 tables and 488 lines on both sides. The two schemas have
+not drifted, and this is how to find out when they do.
+
 ## What building it this way found
 
 The hand-written copy it replaced disagreed with production in sixteen places — nine integer
