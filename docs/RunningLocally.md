@@ -78,7 +78,15 @@ The app resolves the site from the `Host` header, so requests need one that matc
 curl -sL -o /dev/null -w '%{http_code} %{url_effective}\n' -H "Host: ahawiki.net" http://localhost:9999/w/FrontPage
 ```
 
-`localhost` with no `Host` header reaches no site.
+A `Host` that matches no row answers `404` however healthy the app is — that is what the header
+is for. But **`localhost:9999` is itself a registered domain**, so plain
+`curl http://localhost:9999/w/FrontPage` does reach a site: curl sends `Host: localhost:9999`
+and `SiteDomain` has a row for exactly that.
+
+Which makes the port in the command above load-bearing rather than a preference. Start it on
+`9000` and the header curl sends becomes `localhost:9000`, which matches nothing, and the app
+answers `404` while being perfectly fine. Either keep to `9999`, or send a `Host` for a site
+that exists.
 
 **`-L` is the part that makes this an answer.** `FrontPage` is a redirect, so a started app
 replies `303` here and a broken one can too — the same 303 that once let a deploy look healthy
