@@ -75,10 +75,16 @@ The app resolves the site from the `Host` header, so requests need one that matc
 `Site`:
 
 ```bash
-curl -H "Host: ahawiki.net" http://localhost:9999/w/FrontPage
+curl -sL -o /dev/null -w '%{http_code} %{url_effective}\n' -H "Host: ahawiki.net" http://localhost:9999/w/FrontPage
 ```
 
 `localhost` with no `Host` header reaches no site.
+
+**`-L` is the part that makes this an answer.** `FrontPage` is a redirect, so a started app
+replies `303` here and a broken one can too — the same 303 that once let a deploy look healthy
+while every page was failing, which is why the external check in `docs/Deploying.md` follows
+redirects as well. What proves the app is up is the `200` at the end of the hop, on
+`/w/AhaWiki`. Play's dev mode compiles on the first request, so allow that first one a while.
 
 `conf/base.conf` holds the defaults your local config overrides. Your local config itself lives
 outside the repository — see the top of this page.
