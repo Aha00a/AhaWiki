@@ -41,9 +41,21 @@ Releases sit side by side under `releases/` and `current` is a symlink to one of
 deploying moves a symlink and rolling back moves it back:
 
 ```bash
-ssh <host> "sudo -n -u ahawiki ln -sfn /opt/ahawiki/releases/<previous> /opt/ahawiki/current \
-  && sudo -n systemctl restart ahawiki@10001 && sleep 20 && sudo -n systemctl restart ahawiki@10000"
+H=<host>; S=<a site's domain>
+ssh $H "sudo -n -u ahawiki ln -sfn /opt/ahawiki/releases/<previous> /opt/ahawiki/current"
+for p in 10001 10000; do
+  ssh $H "sudo -n systemctl restart ahawiki@$p"
+  until [ "$(ssh $H "curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H 'Host: $S' http://127.0.0.1:$p/w/FrontPage")" = 200 ]; do sleep 3; done
+  until [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 15 https://$S/)" = 200 ]; do sleep 3; done
+done
 ```
+
+Longer than "restart one, `sleep 20`, restart the other", and the two `until` lines are why. A
+rollback runs when something is already wrong, which is the worst moment to discover that
+twenty seconds was not enough — or to sit through twenty when the instance came back in four.
+They are the two conditions `deploy.sh` waits on, for the reasons below, and the second is not
+redundant: an instance answering on loopback is not yet one the proxy will send anything to.
+This said `sleep 20` until 2026-08-16, long after the deploy path had stopped counting seconds.
 
 `cache/` and `logs/` live in `shared/` and are linked into each release, because they outlive
 any one of them. Two systemd instances, `ahawiki@<port>`, sit behind a reverse proxy.
