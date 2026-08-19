@@ -91,8 +91,22 @@
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
 
+	// The body-indent list in wiki.less names `>table` and `>.wikiTableSimpleScroll` alike, and
+	// js.js wraps every .wikiTableSimple in this div after load. So the wrapper takes the indent
+	// and the table inside takes it a second time: 60px of left margin, and max-width shaved
+	// twice. At 375px that is a sixth of the screen gone, which is how it was noticed.
+	//
+	// Hand the child the contained indent instead — the idiom .InterpreterRenderMetaWrapper.Table
+	// already uses in interpreter.less. Both properties are written as var(--wiki-indent-body),
+	// so redefining it on the table settles margin-left and max-width in one move. It goes on the
+	// child, not here: set on the wrapper it would cancel the wrapper's own indent too.
+	//
+	// `margin-left: 0` used to sit here and never applied, which is the trap worth naming. At
+	// three classes it loses to the indent selector's three classes plus five elements, and class
+	// count is compared before element count. A redefined custom property has no such fight: the
+	// value is read off the element that declares it closest.
 	> .wikiTableSimple {
-		margin-left: 0;
+		--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 	}
 }
 

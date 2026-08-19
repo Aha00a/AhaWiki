@@ -2339,7 +2339,7 @@
   -webkit-overflow-scrolling: touch;
 }
 .AhaWiki .wikiTableSimpleScroll > .wikiTableSimple {
-  margin-left: 0;
+  --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 }
 .AhaWiki .tablesorter .tablesorter-header {
   position: relative;
