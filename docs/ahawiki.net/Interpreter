@@ -1,11 +1,50 @@
 = Interpreter
 [AhaMark]
 
-모든 페이지의 최상단에 [https://en.wikipedia.org/wiki/Shebang_(Unix) Shebang](`#!`)을 이용하여 Interpreter를 지정할 수 있습니다. `Wiki`가 default입니다.
+인터프리터는 '''본문을 무엇으로 읽을지''' 고르는 장치입니다. 같은 글자라도 어느 인터프리터가 읽느냐에 따라 위키 문법이 되기도 하고, Markdown 이 되기도 하고, 표나 다이어그램이 되기도 합니다.
 
-Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달하여 해석하게 됩니다. 이때는 `Text`가 default입니다.
+[Macro]가 문서 안에서 짧은 기능 하나를 부르는 것이라면, 인터프리터는 '''그 구간의 문법 자체'''를 바꿉니다. 매크로는 문장 사이에 끼워 넣고, 인터프리터는 문서나 구간을 통째로 맡깁니다.
 
-문서 전체에 적용하려면 문서 첫 줄에 `#!Markdown`처럼 적습니다.
+== 문서 전체에 지정하기
+
+문서 첫 줄에 [https://en.wikipedia.org/wiki/Shebang_(Unix) Shebang](`#!`)과 이름을 적습니다. 첫 줄이 `#!Markdown` 이면 그 문서 전체가 Markdown 으로 읽힙니다.
+
+지정하지 않으면 [InterpreterWiki] 입니다.
+
+== 구간만 맡기기
+
+대괄호 3개로 감싼 구간은 그 안의 첫 줄이 가리키는 인터프리터가 읽습니다. 아래는 왼쪽이 쓴 것, 오른쪽이 그려진 것입니다.
+
+[[[#!WikiSyntaxPreview Table tsv 1
+이름	설명
+가	첫째 줄
+나	둘째 줄
+]]]
+
+'''구간 안의 기본값은 [InterpreterText] 입니다.''' 문서 기본값(`Wiki`)과 다릅니다 — 이름 없이 감싸면 위키 문법으로 읽지 않고 쓴 글자 그대로 나옵니다.
+
+구간은 하나씩 따로 편집됩니다. 그려진 구간마다 그 구간의 줄 범위를 가리키는 편집 링크가 붙어서, 긴 문서에서도 표나 차트 하나만 열어 고칠 수 있습니다.
+
+== 이름 뒤에 오는 것은 인자입니다
+
+이름 다음의 낱말들은 그 인터프리터에게 넘어갑니다.
+
+ * `#!Vim scala` - [InterpreterVim] 에게 `scala`
+ * `#!Table tsv 1` - [InterpreterTable] 에게 `tsv` 와 `1`
+
+이름은 대소문자를 가리지 않습니다. `#!table`, `#!Table`, `#!TABLE` 이 모두 같습니다.
+
+== 인터프리터가 아닌 #! 줄
+
+문서 맨 위의 `#!` 줄은 여러 개 이어 쓸 수 있고, 인터프리터 이름이 아닌 것도 섞입니다. `redirect`, `var`, `read`, `write` 는 인터프리터를 찾을 때 건너뜁니다 — 그래서 `#!redirect` 를 적은 문서가 `redirect` 라는 인터프리터를 찾다가 실패하는 일이 없습니다.
+
+`#!read` 와 `#!write` 는 이름만 남아 있고 권한 판정에는 더 이상 쓰이지 않습니다. [AccessControl] 을 보세요.
+
+== 이름을 못 찾으면
+
+`Interpreter not found.` 오류 상자에 '''쓴 그대로'''가 다시 나옵니다. [Macro] 의 인자 오류와 같은 방식이라, 어느 구간의 어느 이름이 문제인지 문서에서 바로 보입니다.
+
+닫는 `]]]` 가 없으면 오류가 나지 않고 '''아무 일도 일어나지 않습니다''' — 여는 괄호부터 문서 끝까지가 통째로 본문 글자가 됩니다. 구간이 날글자로 보이면 닫는 괄호부터 찾으세요.
 
 == List
  1. [InterpreterWiki] - AhaMark 기본 위키 문법 (default)
@@ -25,7 +64,7 @@ Wiki의 경우 대괄호 3개 사이의 내용을 다른 Interpreter로 전달�
  1. [InterpreterTable] - TSV/CSV 표
  1. [InterpreterText] - 일반 텍스트
  1. [InterpreterVim] - 코드 syntax highlight
- 1. [InterpreterWikiSyntaxPreview] - 미리보기용 인터프리터 (내부 사용)
+ 1. [InterpreterWikiSyntaxPreview] - 쓴 것과 그려진 것을 나란히 보여줍니다. 이 문서들의 예시가 전부 이것입니다
 
 == Related Pages
  * ["Interpreter Examples"]
