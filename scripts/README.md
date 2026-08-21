@@ -6,14 +6,13 @@
 
 ```bash
 npm install
-npm run build:admin
+npm run admin:build
 ```
 
 ## Auto rebuild (watch mode)
 
 ```bash
-npm run watch:admin
+npm run admin:watch
 ```
 
-This is a Node.js + esbuild flow, so Bun/TypeScript are not required.
-The old Bun script (`scripts/build-admin.ts`) is still kept for compatibility.
+This is a Node.js + esbuild flow (`scripts/admin.mjs`); Bun and TypeScript are not required.
