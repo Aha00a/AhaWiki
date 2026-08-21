@@ -28,8 +28,8 @@ import scala.util.matching.Regex
  *
  * Three adjustments happen while loading, each for a MySQL/H2 difference rather than a
  * difference of opinion about the schema: foreign keys are added afterwards, `tinyint(1)` is
- * read back as BOOLEAN, and keys onto non-unique columns are dropped. `docs/Testing.md`
- * explains each and what the third one costs.
+ * read back as BOOLEAN, and keys onto non-unique columns are dropped. The wiki page
+ * `docs/ahawiki.net/Dev Testing` explains each and what the third one costs.
  */
 object TestSchema {
   private val createTableName: Regex = """CREATE TABLE `(\w+)`""".r

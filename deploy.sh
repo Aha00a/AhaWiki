@@ -9,7 +9,7 @@
 #   SKIP_TAG=1 ... bash deploy.sh     # skip the deploy tag
 #
 # Everything about where it deploys comes from the environment. This repository is public and
-# says nothing about the machines it runs on; see docs/Deploying.md for the rest.
+# says nothing about the machines it runs on; see docs/ahawiki.net/'Dev Deploying' for the rest.
 
 set -euo pipefail
 
@@ -26,7 +26,7 @@ read -r -a VERIFY_URLS <<< "${AHAWIKI_VERIFY_URLS:-https://${AHAWIKI_HEALTH_HOST
 
 for required in AHAWIKI_DEPLOY_HOST AHAWIKI_HEALTH_HOST; do
   if [ -z "${!required}" ]; then
-    echo "$required is not set. See docs/Deploying.md." >&2
+    echo "$required is not set. See docs/ahawiki.net/'Dev Deploying'." >&2
     exit 2
   fi
 done

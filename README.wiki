@@ -5,6 +5,7 @@ A wiki engine, written in Scala on Play. Several wikis run on one instance, told
 
 == Documents ==
 * '''AGENTS.md''' — how to work in this repository, and an index of everything below.
-* '''docs/RunningLocally.md''' — what to arrange before <code>sbt run</code> gives you a working server.
-* '''docs/Testing.md''' — how the tests get a database schema.
-* '''docs/Database.md''' — what the columns mean.
+* Developer documentation lives on the wiki, under [https://ahawiki.net/w/Dev Dev], mirrored in <code>docs/ahawiki.net/</code>:
+** [https://ahawiki.net/w/Dev%20RunningLocally Dev RunningLocally] — what to arrange before <code>sbt run</code> gives you a working server.
+** [https://ahawiki.net/w/Dev%20Testing Dev Testing] — how the tests get a database schema.
+** [https://ahawiki.net/w/Dev%20Database Dev Database] — what the columns mean.

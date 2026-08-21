@@ -1,0 +1,45 @@
+= [Dev] Resources
+[Dev]
+
+앱이 자기 파일을 찾는 방법: 리소스는 상대 경로가 아니라 classpath 에서 읽는다.
+
+상대 경로 읽기는 작업 디렉터리가 마침 소스 체크아웃일 때만 동작했다. `sbt stage` 빌드에는 바이너리 옆에 `app/` 도 `public/` 도 없어서, 처음 배포된 날 모든 페이지가 500 을 답했다.
+
+[[[#!Table tsv 1
+파일	전	지금
+`app/logics/SchemaOrg.scala`	`Source.fromFile(new File("public/schema.org/…"))`	`getResourceAsStream("public/schema.org/…")`
+`app/logics/DefaultPageLogic.scala`	`new File("app/assets/Page", title)`	`getResourceAsStream(s"Page/$title")`
+]]]
+
+== 기본 페이지가 conf/Page 에 사는 이유
+
+원래 `app/assets/Page` 에 있었고, 두 가지 이유로 옮겼다.
+
+`app/assets/` 아래는 웹 자산으로 패키징되므로, 모든 기본 페이지가 `/assets/Page/<title>` 에서 그대로도 서비스되고 있었다 — 렌더링이 아니라 원문이.
+
+그리고 `conf/` 는 staged 빌드에서 `lib/` 옆에 제 디렉터리로 실리고, 시작 스크립트가 그것을 classpath 맨 앞에 둔다(`app_classpath="$lib_dir/../conf/:…"`). 그래서 `Page/<title>` 은 더 손볼 것 없이 풀린다.
+
+`schema.org` 는 `public/` 에 남았다. 공개 스키마 데이터라 서비스돼도 해가 없고, assets jar 안 경로가 어차피 `public/schema.org/…` 라서 읽는 쪽만 바꾸면 됐다.
+
+`cache` 는 여전히 파일시스템 경로로 읽는데, 그것이 맞다: 런타임에 쓰는 디렉터리다. 배포된 릴리스에서는 릴리스보다 오래 사는 디렉터리로의 심볼릭 링크다.
+
+알아 둘 결과 하나: 배포는 staged 출력만 나르면 된다. 그 옆에 따로 올려야 하는 것이 없다.
+
+== dev 모드에서
+
+[[[#!Vim text
+playMonitoredFiles                    -> public, conf, app
+Compile/unmanagedResourceDirectories  -> conf
+]]]
+
+`conf/` 와 `app/` 둘 다 감시되므로, 기본 페이지를 옮겨도 dev 재시작 방식은 아무것도 안 바뀌었다. 오히려 `conf/` 쪽이 빠르다 — 컴파일할 것이 없다.
+
+재시작을 피하려고 리소스를 감시 밖에 두는 것은 역효과다. classpath 에서 읽으면 dev 는 `target/scala-2.13/classes` 아래 사본을 서비스하므로, 감시 안 되는 파일은 고쳐도 그 수정이 영영 나타나지 않는 파일이다.
+
+== 상대 경로가 돌아오지 않았는지 확인
+
+[[[#!Vim bash
+grep -rnoE '(new File|Paths\.get|Source\.fromFile)\("[^"/][^"]*"' app/
+]]]
+
+`cache` 와 `.` 말고 걸리는 것은 전부 classpath 에서 읽어야 할 것들이다.

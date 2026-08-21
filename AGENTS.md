@@ -4,16 +4,24 @@ When creating new files that should be part of the change, remember to stage the
 
 ## What is written down, and where
 
-Nothing links to `docs/` from anywhere a newcomer looks, so each of these has been rediscovered
-at least once by someone who could have read it instead. Add a line here when you add a document.
+**Documentation lives on the wiki.** The home for this repository's documentation is
+`docs/ahawiki.net/` and the live pages on `ahawiki.net` it mirrors — a new document is a wiki
+page (Korean, AhaMark, synced per **AhaWikiDoc Sync** below), not a new markdown file. The
+developer pages hang off the [`Dev`](docs/ahawiki.net/Dev) hub. What stays in the repository as
+English markdown is this file and the READMEs that sit next to the files they describe; a
+standalone `docs/*.md` was the old shape, and the last five were moved to the wiki on
+2026-08-19.
+
+Nothing links to these from anywhere a newcomer looks, so each has been rediscovered at least
+once by someone who could have read it instead. Add a line here when you add a document.
 
 | | |
 |---|---|
-| [docs/RunningLocally.md](docs/RunningLocally.md) | What has to be arranged before `sbt run` produces a working server. Three things, each of which fails without naming itself. |
-| [docs/Deploying.md](docs/Deploying.md) | `deploy.sh`, what it does, and why each of its awkward steps is there. Where it deploys comes from the environment — this repository names no machine. |
-| [docs/Testing.md](docs/Testing.md) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
-| [docs/Resources.md](docs/Resources.md) | Why the app reads its files off the classpath, where the default pages live and why, and how to check nothing has gone back to relative paths. |
-| [docs/Database.md](docs/Database.md) | The database itself: what the columns mean and which timezone they are in. |
+| [docs/ahawiki.net/Dev RunningLocally](docs/ahawiki.net/Dev%20RunningLocally) | What has to be arranged before `sbt run` produces a working server. Three things, each of which fails without naming itself. |
+| [docs/ahawiki.net/Dev Deploying](docs/ahawiki.net/Dev%20Deploying) | `deploy.sh`, what it does, and why each of its awkward steps is there. Where it deploys comes from the environment — this repository names no machine. |
+| [docs/ahawiki.net/Dev Testing](docs/ahawiki.net/Dev%20Testing) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
+| [docs/ahawiki.net/Dev Resources](docs/ahawiki.net/Dev%20Resources) | Why the app reads its files off the classpath, where the default pages live and why, and how to check nothing has gone back to relative paths. |
+| [docs/ahawiki.net/Dev Database](docs/ahawiki.net/Dev%20Database) | The database itself: what the columns mean and which timezone they are in. |
 | [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. They once spent two months gone without a build noticing; `test/kanban.roundtrip-fixtures.test.mjs` now fails by name when one is missing, and runs any new directory without being told about it. |
 | [test/manual/editor-keys/](test/manual/editor-keys/) | Presses Tab and Enter in a real CodeMirror with the real editor scripts, without needing a server or a login. Not part of `npm test` — it needs a browser. |
 | `docs/ahawiki.net/` | Copies of pages on the live wiki. Korean, and kept in step with it — see **AhaWikiDoc Sync** below. |
@@ -60,7 +68,7 @@ This repository is public. Its readers are not limited to Korean speakers.
 
  * **Commit messages: English.** They are the most visible text a public repository has, and once pushed they cannot be edited without rewriting history. What a message should contain is covered by the documentation rule above.
  * **Code, comments, and identifiers: English.**
- * **Repository documentation: English.** `AGENTS.md`, `README`, and anything under `docs/` that is not a wiki page copy.
+ * **Repository documentation: English.** `AGENTS.md` and the READMEs that sit next to the files they describe. Everything else is a wiki page copy — developer documentation is written on the wiki, in Korean, per the section above.
  * **`docs/ahawiki.net/`: Korean.** These are copies of pages on a Korean-language wiki. Translating them would put this repository's convention ahead of the readers those pages exist for. See the AhaWikiDoc Sync section below.
 
 Being public also decides what does not belong in any of them: infrastructure hostnames, schema or service names belonging to other projects, credentials, and facts that go stale such as "service X is currently down." Point at the configuration file that holds the value instead of copying the value into prose.

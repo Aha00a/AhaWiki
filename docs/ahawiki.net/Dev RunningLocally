@@ -1,0 +1,72 @@
+= [Dev] RunningLocally
+[Dev]
+
+`sbt run` 이 동작하는 서버가 되기까지 미리 갖춰야 하는 것들. 셋 다, 실패할 때 자기 이름을 대지 않는다.
+
+로컬 설정에서 시작한다. 설정은 이 저장소에 없고 있어서도 안 된다: `~/.config/ahawiki/application.local.dev.conf` 같은 자리에 둔다. DB·Redis·Redis 데이터베이스 번호가 그 안에 있다 — 환경마다 하나씩이라, 로컬 실행이 운영과 캐시를 나눠 쓰지 않는다.
+
+[[[#!Vim bash
+sbt -Dconfig.file="$HOME/.config/ahawiki/application.local.dev.conf" -Dhttp.port=9999 -Duser.timezone=Asia/Seoul run
+]]]
+
+2026-08-12 까지는 `conf/` 안에 있었고, 되풀이하지 않을 가치가 있는 실수였다: `sbt stage` 는 `conf/` 아래를 전부 패키징하고 gitignore 는 거기 관여하지 못해서, 자격증명이 든 파일이 배포마다 서버로 나갔다. 지금은 빌드가 추적되지 않는 파일을 거부하지만, 애초에 설정이 저장소 안에 있을 이유가 없다 — 상대 경로로 읽는 곳이 없다.
+
+IDE 실행 구성도 같은 절대 경로를 쓴다. 실행 구성에 남은 상대 경로 `conf/...` 는 파일이 거기 있던 시절의 잔재이고, 파일을 옮겨도 고쳐지지 않는다: IDE 의 실행 구성은 저장소 밖 IDE 자신의 상태라서, 저장소 쪽에서는 그것이 사라진 파일을 가리키게 됐다고 말해 줄 방법이 없다.
+
+이 페이지의 나머지는 그 주변에서 잘못되는 것들이다.
+
+== Redis 가 닿아야 한다
+
+`build.sbt` 는 `cacheApi` 와 `play-redis` 를 넣고 다른 캐시 구현은 넣지 않는다. 인프로세스 폴백이 없다: 설정된 Redis 가 답하지 않으면 Guice 가 인젝터를 만들지 못하고 모든 요청이 500 이다. 연결 오류는 스택트레이스 안에 묻힌다. 스펙이 여기에 안 걸리는 것은 `TestApplication` 이 인메모리 `SyncCacheApi` 를 따로 바인딩해서다 — ["Dev Testing"] 참조.
+
+설정된 호스트의 `Connection refused` 는 무언가가 돌려보냈다는 뜻이 아니라 거기서 아무것도 듣고 있지 않다는 뜻이다: 패킷은 도착했다. loopback 만 듣는 Redis 가 정확히 이렇게 보이고, 그 옆에서 도는 앱은 로컬로 붙으니 멀쩡하다.
+
+그 상태는 저절로 돌아온다. `redis-cli CONFIG SET bind ...` 로 열면 돌고 있는 서버가 바뀔 뿐 `redis.conf` 는 그대로라서, 다음 재시작 — 리부트, 패키지 업그레이드, OOM kill — 이 옛 파일을 읽고 도로 닫는다. 뒤에 `CONFIG REWRITE` 를 하면 돌고 있는 설정이 파일로 내려가 유지된다.
+
+방화벽이 막는 것은 다르게 보인다: 2초 만에 실패하는 대신 20초쯤 매달린다. 버려진 패킷에는 아무 답이 없기 때문이다. 엉뚱한 곳을 뒤지기 전에, 걸린 시간이 둘을 가른다.
+
+그것이 정리될 동안 하나 세워야 한다면 프로토콜만 맞으면 무엇이든 되지만, 호스트도 같이 덮어써야 한다. sbt 명령줄의 `-Dplay.cache.redis.host` 는 듣지 않는다. 네 설정을 include 하고 그 뒤에서 덮는 설정 파일을 쓴다:
+
+[[[#!Vim conf
+include file("/path/to/application.local.dev.conf")
+
+play.cache.redis.host = "localhost"
+play.cache.redis.database = 15
+]]]
+
+빈 데이터베이스 번호를 고르면 로컬 실행이 설정된 쪽 Redis 가 들고 있는 엔트리를 건드리지 않는다.
+
+== evolution 이 돌면 안 된다
+
+로컬 설정은 보통 공유 개발 DB 를 가리킨다. Play 는 주어진 DB 에 evolution 을 적용하므로, 로컬 실행이 다른 사람들이 쓰는 DB 를 마이그레이션할 수 있다. 같은 override 파일에서 끈다:
+
+[[[#!Vim conf
+play.evolutions.db.default.enabled = false
+play.evolutions.db.default.autoApply = false
+]]]
+
+== 그 다음
+
+[[[#!Vim bash
+sbt "-Dconfig.file=/path/to/your-override.conf" -Dhttp.port=9999 -Duser.timezone=Asia/Seoul run
+]]]
+
+앱은 `Host` 헤더로 사이트를 고르므로, 요청에는 `Site` 의 행과 맞는 헤더가 필요하다:
+
+[[[#!Vim bash
+curl -sL -o /dev/null -w '%{http_code} %{url_effective}\n' -H "Host: ahawiki.net" http://localhost:9999/w/FrontPage
+]]]
+
+어느 행과도 맞지 않는 `Host` 는 앱이 아무리 멀쩡해도 404 다 — 헤더가 하는 일이 그것이다. 그런데 '''`localhost:9999` 는 그 자체로 등록된 도메인이다''': 맨 `curl http://localhost:9999/w/FrontPage` 도 사이트에 닿는다. curl 이 `Host: localhost:9999` 를 보내고, `SiteDomain` 에 정확히 그 행이 있다.
+
+그래서 위 명령의 포트는 취향이 아니라 하중을 받는 값이다. `9000` 으로 띄우면 curl 이 보내는 헤더가 `localhost:9000` 이 되어 아무것에도 맞지 않고, 앱은 완전히 멀쩡한 채 404 를 답한다. `9999` 를 지키거나, 존재하는 사이트의 `Host` 를 보낼 것.
+
+'''`-L` 이 이것을 답으로 만드는 부분이다.''' `FrontPage` 는 리다이렉트라서 뜬 앱은 여기서 303 을 답하는데, 죽은 앱도 그럴 수 있다 — 모든 페이지가 죽어 있는 동안 배포를 멀쩡해 보이게 했던 그 303 이다. ["Dev Deploying"] 의 외부 확인이 리다이렉트를 따라가는 것도 같은 이유다. 앱이 떠 있음을 증명하는 것은 홉 끝 `/w/AhaWiki` 의 200 이다. Play dev 모드는 첫 요청에서 컴파일하니, 첫 요청에는 시간을 준다.
+
+`conf/base.conf` 가 로컬 설정이 덮어쓰는 기본값을 들고 있다. 로컬 설정 자체는 저장소 밖이다 — 이 페이지 맨 위 참조.
+
+== loopback 은 화이트리스트에 있고, 그것이 왜 중요한가
+
+`FilterAccessLog` 는 주소별로 rate-limit 을 걸고, 넘으면 `IpDeny` 행을 쓴다. 그 행은 90일 동안 403 을 계속 돌려준다. `conf/base.conf` 의 `AhaWiki.ipWhitelist` 는 loopback 을 두 패밀리 모두 올려 둔다 — `127.0.0.1` 만으로는 부족하다. 요즘 OS 에서 로컬 요청은 IPv6 `0:0:0:0:0:0:0:1` 로 도착한다. 빠른 `curl` 대여섯 번이면 석 달 잠기기에 충분하던 시절이 있었다.
+
+화이트리스트에 있는 주소는 이제 limiter 만이 아니라 deny 조회도 건너뛴다. 화이트리스트에 오르기 전에 거부됐던 주소가, 테이블을 손대지 않고도 다시 닿는다.
