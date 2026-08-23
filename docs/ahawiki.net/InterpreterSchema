@@ -31,12 +31,11 @@ sameAs	https://github.com/Aha00a/AhaWiki	https://ahawiki.net
 일반 값은 위키 링크로 렌더링합니다.
 `url`, `codeRepository`, `sameAs`는 URL로 렌더링하고, scheme이 없으면 `https://`를 붙입니다.
 `image`, `logo`는 이미지로 렌더링합니다.
-`image`, `logo` 값에 `[[Attachment(...)]]`를 사용할 수 있습니다.
+`image`, `logo` 값에 `[[Attachment(...)]]`를 사용할 수 있습니다. 단, 그 페이지에 실제로 올린 첨부여야 합니다 — 없는 파일이면 볼 때마다 깨진 이미지와 S3 조회 실패가 남습니다. 아래 예시에 `logo` 가 없는 이유입니다(이 페이지에는 첨부가 없습니다).
 
 [[[#!WikiSyntaxPreview Schema SoftwareSourceCode
 name	AhaWiki
 codeRepository	github.com/Aha00a/AhaWiki
-logo	[[Attachment(logo.png)]]
 ]]]
 
 == 날짜

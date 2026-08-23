@@ -7,11 +7,13 @@ S3에 업로드된 파일을 페이지에 첨부합니다.
 `[[Attachment(파일명)]]`
 `[[Attachment(파일명, 너비)]]`
 
-[[[#!WikiSyntaxPreview
+[[[
 [[Attachment(example.png)]]
 [[Attachment(example.png, 200px)]]
 [[Attachment(document.pdf)]]
 ]]]
+
+여기에 살아 있는 미리보기(WikiSyntaxPreview)를 두지 않는 이유: 이 매크로는 '''그 페이지에 실제로 올린 첨부'''가 있어야 그려집니다. 없는 파일로 미리보기를 만들면 페이지를 볼 때마다 깨진 이미지가 뜨고, 만료 전의 presigned URL 을 크롤러가 물고 다니며 S3 조회 실패를 계속 남깁니다 — 2026-08-23 CloudTrail 에서 닷새간 그런 실패 395건을 세고 나서 문서 예시들을 이 모양으로 바꿨습니다.
 
 == 경로 규칙
  * `파일명` → `Attachment/{siteSeq}/{페이지명}/{파일명}`
