@@ -60,7 +60,7 @@ private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: Re
  * [ ] `Api.pageRevision` 의 404 는 `{"success": false, "message": ...}` 다. 세 번째 봉투다.
  * [ ] `AccessDenied` 는 JSON 이 아니라 `text/plain` 이다. 나머지 에러 응답과 `Content-Type` 이 다르다.
 
-하나라도 통일하려면 관리자 UI(`app/assets/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
+하나라도 통일하려면 관리자 UI(`app/assets/js/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
 
 === 1차 정리에서 놓친 것
 

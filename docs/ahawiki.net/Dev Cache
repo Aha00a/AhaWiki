@@ -168,7 +168,7 @@ Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 �
 
 == 스케줄 요약
 
-`app/ApplicationLifecycleHook.scala`
+`app/services/ApplicationLifecycleHook.scala`
 
 [[[#!Table tsv 1
 스케줄명	초기 지연	반복 간격	동작
