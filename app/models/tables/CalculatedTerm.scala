@@ -16,8 +16,13 @@ object CalculatedTerm {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
+  // The no-op ON DUPLICATE KEY UPDATE absorbs the ensureSeq race: both instances select, both
+  // see the term missing, both insert, and the loser used to throw on the UNIQUE key `term`.
+  // Callers re-select after inserting, so keeping the winner's row is all that is needed.
+  // Not REPLACE — REPLACE deletes the existing row, which would hand the same term a new seq
+  // and pull it out from under CalculatedTermFrequency rows pointing at the old one.
   def insert(term: String)(implicit connection: Connection): Option[Long] = {
-    SQL"INSERT INTO CalculatedTerm (term) VALUES ($term)".executeInsert()
+    SQL"INSERT INTO CalculatedTerm (term) VALUES ($term) ON DUPLICATE KEY UPDATE seq = seq".executeInsert()
   }
 
 

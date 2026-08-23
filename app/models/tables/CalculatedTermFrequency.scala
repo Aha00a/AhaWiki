@@ -34,8 +34,13 @@ object CalculatedTermFrequency {
           "frequency" -> frequency,
         )
       }
+      // REPLACE, not INSERT: two instances recalculate the same page concurrently (each runs
+      // PageLogic.calculate on its own traffic), and this is a delete-then-insert with no lock
+      // between them. The loser's batch used to die on a duplicate PRIMARY (site, name, term).
+      // A derived row's latest calculation is authoritative, so overwriting is correct —
+      // CalculatedLink and CalculatedSchemaOrg already do the same for the same reason.
       BatchSql(
-        "INSERT INTO CalculatedTermFrequency (site, name, term, frequency) VALUES ({site}, {name}, {term}, {frequency})",
+        "REPLACE INTO CalculatedTermFrequency (site, name, term, frequency) VALUES ({site}, {name}, {term}, {frequency})",
         values.head,
         values.tail: _*
       ).execute()
