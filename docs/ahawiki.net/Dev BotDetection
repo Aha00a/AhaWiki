@@ -36,7 +36,7 @@
 
 === knownBanned
 
-인메모리 `ConcurrentHashSet`. 세 경로에서 추가된다.
+인메모리 셋(`ConcurrentHashMap.newKeySet`). 세 경로에서 추가된다.
 
  * `recordAndCheck` 탐지 시
  * `UriAttackDetector` 탐지 시 (`FilterAccessLog`에서 직접 호출)
