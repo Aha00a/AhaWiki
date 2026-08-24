@@ -178,4 +178,8 @@ PermissionCacheClear	6시간	6시간	권한 캐시 전체 삭제
 SiteAdminCacheClear	6시간	6시간	관리자 캐시 전체 삭제
 CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
 CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
+deleteExpired	10~30분 랜덤	10~30분 랜덤	로그 테이블 만료 행 삭제 — 기간은 ["Dev Database"] 참조
+Calculate	20초~1분 랜덤	1분~1시간 랜덤	페이지 파생값(링크·텀·유사도) 재계산
 ]]]
+
+캐시가 아닌 마지막 두 줄도 같은 `ApplicationLifecycleHook` 에 있어서 함께 적는다 — 이 표만 보고 "스케줄은 이게 전부"라고 읽는 것을 막기 위해서다.

@@ -15,6 +15,7 @@
 == Current Assumption
 
 기존 DB의 타임스탬프성 `DATETIME` 컬럼 값은 KST 의미로 해석한다.
+실측 근거와 이관 전까지 유효한 규칙(새 컬럼도 KST, 세션 타임존 변경 금지)은 ["Dev Database"]가 정본이다.
 
 예:
 

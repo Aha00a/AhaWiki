@@ -15,7 +15,7 @@
   ├─[2] IpDeny DB 조회 ──────────────YES─► ban() 캐시 + tarpit(1~6분) + 403
   │         (1번이 false일 때만 실행)
   │
-  ├─[3] UriAttackDetector.isAttack? ─YES─► ban() + IpDeny 등록(async) + tarpit(1~10분) + 403
+  ├─[3] UriAttackDetector.isAttack? ─YES─► ban() + IpDeny 등록(async) + tarpit(1~11분) + 403
   │
   ├─[4] IpRateLimiter.recordAndCheck? YES─► ban() + IpDeny 등록(async) + 즉시 403
   │

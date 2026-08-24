@@ -55,6 +55,8 @@ FROM Attachment WHERE dateUploaded IS NOT NULL;
 
 === 규칙
 
+장기적으로 UTC 로 옮기는 구상이 ["TODO-Timezone-KST-To-UTC"]에 있다. 그 이관이 실제로 실행되기 전까지는 아래 규칙이 유효하다 — 계획이 있다는 것이 지금 섞어도 된다는 뜻이 아니다.
+
  * 새 `datetime` 컬럼도 '''KST''' 다. 섞는 순간 더는 가려낼 방법이 없다.
  * 애플리케이션이 시각을 쓸 때 UTC 로 바꾸지 말 것. `current_timestamp()` 든 Scala 쪽 `LocalDateTime.now()` 든, 서버 로컬(= KST)이 거기 들어갈 값이다.
  * '''연결의 세션 타임존을 바꾸지 말 것.''' 바꾸면 `current_timestamp()` default 가 조용히 다른 시각을 쓰기 시작해, 바꾸기 전과 후의 행이 9시간 벌어진 채 섞인다.
