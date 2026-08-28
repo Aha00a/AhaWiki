@@ -14,10 +14,14 @@ import play.api.mvc._
  * cannot implement one. Making it able to would mean adding `val` to every controller and
  * widening their public surface for nothing.
  *
- * The rejection is `text/plain`. Changing that envelope without first checking what the
- * clients parse would break them silently, so it is left to a separate change.
+ * The rejection was `text/plain` until 2026-08-29 and is now the shared JSON envelope.
+ * That took checking every first-party consumer first: the admin UI's `fetchJson` throws
+ * `HTTP <status>` on any non-ok response without reading the body, and nothing else parses
+ * a denial. The HTML routes in `Admin` answer with the same JSON — a non-admin navigating
+ * there directly sees an envelope instead of a sentence, which costs nothing measurable
+ * and keeps the denial in one shape. `ApiErrorEnvelopeSpec` pins both.
  */
-trait AdminAuth { self: BaseController =>
+trait AdminAuth extends JsonResults { self: BaseController =>
   protected def isAdmin(implicit request: RequestHeader): Boolean =
     AdminLogic.isAdmin(request)
 
@@ -27,5 +31,5 @@ trait AdminAuth { self: BaseController =>
   // A def, not a val: a val in a trait that loses an initialization-order race still
   // compiles and only surfaces as an NPE at construction. Building a Result costs nothing
   // worth that risk.
-  protected def AccessDenied: Result = Forbidden("Access denied.")
+  protected def AccessDenied: Result = JsonError(Forbidden, "Access denied.")
 }

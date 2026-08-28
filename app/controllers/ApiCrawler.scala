@@ -42,11 +42,9 @@ class ApiCrawler @Inject()(
       logger.info(s"${request.remoteAddressWithXRealIp}\t$q")
       val normalizedUrl = CrawlerUrlNormalizer.normalize(q)
       if (normalizedUrl.length > CacheCrawler.UrlMaxLength) {
-        Future.successful(JsonResult(Forbidden, Json.obj(
-          "message" -> Json.fromString(s"URL too long: max ${CacheCrawler.UrlMaxLength} characters")
-        )))
+        Future.successful(JsonError(Forbidden, s"URL too long: max ${CacheCrawler.UrlMaxLength} characters"))
       } else CrawlerUrlSafety.validate(normalizedUrl) match {
-        case Left(message) => Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(message))))
+        case Left(message) => Future.successful(JsonError(Forbidden, message))
         case Right(_) =>
           val cached = database.withConnection { implicit connection =>
             CacheCrawler.selectByUrl(normalizedUrl)
@@ -101,16 +99,14 @@ class ApiCrawler @Inject()(
                 ))
               }(executionContext).recover {
                 case e: Exception =>
-                  JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage)))
+                  JsonError(Forbidden, e.getMessage)
               }(executionContext)
           }
       }
     }
     catch {
       case e: Exception =>
-        Future.successful(JsonResult(Forbidden, Json.obj(
-          "message" -> Json.fromString(e.getMessage)
-        )))
+        Future.successful(JsonError(Forbidden, e.getMessage))
     }
   }
 
@@ -158,7 +154,7 @@ class ApiCrawler @Inject()(
       try {
         val normalizedUrl = CrawlerUrlNormalizer.normalize(url)
         CrawlerUrlSafety.validate(normalizedUrl) match {
-          case Left(message) => Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(message))))
+          case Left(message) => Future.successful(JsonError(Forbidden, message))
           case Right(_) =>
             Future {
               val crawler = Crawler.fromUrl(normalizedUrl)(logger)
@@ -169,12 +165,12 @@ class ApiCrawler @Inject()(
               Ok(Json.obj("success" -> Json.fromBoolean(true), "url" -> Json.fromString(normalizedUrl)))
             }(executionContext).recover {
               case e: Exception =>
-                JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage)))
+                JsonError(Forbidden, e.getMessage)
             }(executionContext)
         }
       } catch {
         case e: Exception =>
-          Future.successful(JsonResult(Forbidden, Json.obj("message" -> Json.fromString(e.getMessage))))
+          Future.successful(JsonError(Forbidden, e.getMessage))
       }
     }
   }

@@ -43,7 +43,6 @@ import play.api.Configuration
 import play.api.Logging
 import play.api.cache.SyncCacheApi
 import play.api.db.Database
-import play.api.libs.json.{Json => PlayJson}
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 import play.filters.csrf.CSRF
@@ -264,7 +263,10 @@ class Api @Inject()(
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       val revision = Page.selectLastRevision(pageName).map(_.revision).getOrElse(0L)
-      Results.Ok(PlayJson.obj("status" -> "ok", "pageName" -> pageName, "revision" -> revision)).as(JSON)
+      // The only consumer (AhaWiki.Kanban.js fetchLatestRevision) reads `.revision` and
+      // nothing else; the "status"/"pageName" fields and the Play-JSON detour were the
+      // fourth envelope this codebase carried. A missing page is revision 0, not a 404.
+      Ok(Json.obj("revision" -> Json.fromLong(revision)))
     }
   }
 
@@ -275,9 +277,12 @@ class Api @Inject()(
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val wikiContext: ContextWikiPage = ContextWikiPage(pageName)
         val html = InterpreterWiki.toHtmlString(comment)
-        Results.Ok(PlayJson.obj("status" -> "ok", "html" -> html)).as(JSON)
+        // Consumers read `.html` on success and `payload.message || payload.error` on
+        // failure (AhaWiki.Kanban.js renderComment), so both sides of this move fit what
+        // is already parsed. This was the last Play-JSON envelope in the file.
+        Ok(Json.obj("html" -> Json.fromString(html)))
       case None =>
-        Results.BadRequest(PlayJson.obj("status" -> "error", "message" -> "JSON body is required")).as(JSON)
+        JsonError(BadRequest, "JSON body is required")
     }
   }
 

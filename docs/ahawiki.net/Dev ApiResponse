@@ -52,15 +52,17 @@ private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: Re
 
 `Api` 밖으로 올리지 않았다. 호출부가 전부 `Api` 안에 있기 때문이다. 필요한 것보다 멀리 올리는 것은 그 자체로 결합이다.
 
-== 통일하지 않고 남긴 것
+== 통일하지 않고 남겼던 것 — 2026-08-29 에 통일했다
 
-이번 변경은 응답 바이트를 바꾸지 않는다. 아래 불일치는 **의도적으로 남겼다.** 클라이언트가 무엇을 파싱하는지 확인하지 않은 채 봉투를 바꾸면 조용히 깨진다.
+1차 정리는 응답 바이트를 바꾸지 않았고, 아래 불일치를 의도적으로 남겼다. 클라이언트가 무엇을 파싱하는지 확인하지 않은 채 봉투를 바꾸면 조용히 깨지기 때문이다. 이번에 그 확인을 했고, 전부 통일했다.
 
- * [ ] `ApiCrawler` 는 `{"error": ...}` 가 아니라 `{"message": ...}` 를 쓴다.
- * [ ] `Api.pageRevision` 의 404 는 `{"success": false, "message": ...}` 다. 세 번째 봉투다.
- * [ ] `AccessDenied` 는 JSON 이 아니라 `text/plain` 이다. 나머지 에러 응답과 `Content-Type` 이 다르다.
+ * [[CB(x)]] `ApiCrawler` 의 `{"message": ...}` 일곱 곳 → `JsonError`. 소비자는 링크 프리뷰(`view.scala.html` 의 `showPreview`) 하나이고, 오류에서 본문을 읽지 않는다 — `console.log` 후 프리뷰를 지울 뿐이다.
+ * [[CB(x)]] `Api.pageRevision` 의 404 — **체크박스의 전제가 먼저 사라져 있었다.** 세 번째 봉투(`{"success": false, ...}`)를 쓰던 404 분기는 그 사이(`fbc49b09`) 없어졌고, 없는 페이지는 revision `0` 으로 200 을 답한다. 남아 있던 것은 `{"status": "ok", "pageName", "revision"}` 라는 Play-JSON 성공 봉투였고, 유일한 소비자(`AhaWiki.Kanban.js` 의 `fetchLatestRevision`)가 `.revision` 만 읽으므로 `{"revision": N}` 으로 줄였다.
+ * [[CB(x)]] `AccessDenied` → `JsonError(Forbidden, "Access denied.")`. 관리자 UI 의 `fetchJson` 은 `!response.ok` 면 본문을 읽지 않고 `HTTP <status>` 로 던진다 — 거절 본문을 파싱하는 곳이 없다. `Admin` 의 HTML 라우트도 같은 JSON 으로 답하게 됐는데, 그것이 결정이다: 관리자 UI 는 비관리자에게 그 경로를 보여주지 않고, 거절 모양 하나가 둘보다 낫다.
 
-하나라도 통일하려면 관리자 UI(`app/assets/js/admin`)와 위키 스크립트가 이 응답들을 어떻게 읽는지 먼저 확인해야 한다.
+확인하다 **네 번째 봉투**도 나왔다. `Api.renderAhaMark` 가 `{"status": "ok", "html"}` / `{"status": "error", "message"}` 를 쓰고 있었다. 소비자(`AhaWiki.Kanban.js` 의 renderComment)가 성공에서 `.html` 만, 실패에서 `payload.message || payload.error` 를 읽어 **양쪽 봉투를 다 받아주게** 짜여 있어서 함께 통일했다 — 성공은 `{"html": ...}`, 실패는 `JsonError`. 이것으로 `Api.scala` 에서 Play-JSON import 가 사라졌다.
+
+서버와 클라이언트가 같은 릴리스로 나가므로 이 확인 방식이 성립한다 — 외부에 문서화된 소비자가 있는 `/api/v1` 은 이번 범위에 없다.
 
 === 1차 정리에서 놓친 것
 
@@ -101,19 +103,19 @@ circe 의 `Json.toString` 은 compact 가 아니라 `spaces2` 로 찍는다. 실
 
 [[[#!Table tsv 1
 요청	응답
-`GET /api/Admin/Sites`	403 `text/plain` `Access denied.`
-`GET /Admin/Sites`	403 `text/plain` `Access denied.`
-`GET /api/Admin/CrawlerCache`	403 `text/plain` `Access denied.`
+`GET /api/Admin/Sites`	403 `application/json` `{"error" : "Access denied."}`
+`GET /Admin/Sites`	403 `application/json` `{"error" : "Access denied."}`
+`GET /api/Admin/CrawlerCache`	403 `application/json` `{"error" : "Access denied."}`
 `GET /api/Admin/Site/999/Admins`	403 — site 조회보다 권한 확인이 먼저
 `GET /api/v1/pages`	401 `application/json` `{"error" : ...}`
-`GET /api/crawler?q=http://127.0.0.1/`	403 `application/json` `{"message" : ...}`
+`GET /api/crawler?q=http://127.0.0.1/`	403 `application/json` `{"error" : ...}`
 `GET /api/csrf`	200 `application/json`
 `GET /w/FrontPage`	200 `text/html`, 실제 페이지 렌더링
 ]]]
 
 모르는 site 를 물어도 외부인에게는 404 가 아니라 403 이 간다. 권한 확인이 먼저라, 응답이 site 의 존재 여부를 알려주지 않는다.
 
-`withAdminSite` 로 접은 endpoint 들의 상태 코드는 기존 `ApiSiteAdminSpec` 이 계속 지킨다. 다만 봉투의 본문까지 보는 검사는 없으므로, 봉투를 바꾸는 변경을 할 때는 위 값을 기준으로 직접 확인해야 한다.
+`withAdminSite` 로 접은 endpoint 들의 상태 코드는 기존 `ApiSiteAdminSpec` 이 지키고, **봉투의 본문과 `Content-Type` 은 `ApiErrorEnvelopeSpec` 이 지킨다** — 위 표의 거절 봉투 값들이 그 스펙의 단언이다. 1차 정리 때는 본문을 보는 검사가 없어서 일회성 `curl` 로 쟀는데, 검사 없는 모양이 셋 반까지 불어난 경위가 그것이다.
 
 == 로컬 실행
 
