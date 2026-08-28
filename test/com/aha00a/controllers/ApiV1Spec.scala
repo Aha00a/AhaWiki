@@ -4,7 +4,6 @@ import anorm.SQL
 import com.aha00a.tests.TestApplication
 import com.aha00a.tests.TestSchema
 import anorm.SqlStringInterpolation
-import logics.AhaWikiCacheMemoryDomainSite
 import logics.AhaWikiCacheMemoryPermission
 import logics.SessionLogic
 import models.WikiActors
@@ -101,8 +100,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
   override def beforeAll(): Unit = {
     super.beforeAll()
     setupSchema()
-    AhaWikiCacheMemoryDomainSite.invalidate()(db)
-    AhaWikiCacheMemoryPermission.clear()
+    TestApplication.resetMemoryCaches()
   }
 
   override def afterAll(): Unit = {

@@ -417,4 +417,7 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
  * [ ] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다.
  * [ ] signed read URL을 일반 permission 모델 안에 넣을지, 예외 경로로 유지할지 결정한다.
- * [ ] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다.
+ * [[CB(x)]] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다. (2026-08-29)
+  * row 의미론은 `PermissionLogicUnit` — 매칭 row 없음 → 거부, specificity 우선순위, 같은 specificity 에서 target·actor 길이 tie-break, 정규식 full match.
+  * 소비 지점은 `AccessControlFilteringSpec` — 목록(`/api/pageNames`)과 `[[Include(...)]]` 를 라우터로 통과시켜, 익명에게 비공개 페이지가 새지 않고 Exact actor 에게는 보이는 것까지.
+  * '''검색만 자동화 밖이다.''' `Page.pageSearch` 의 `COLLATE utf8mb4_general_ci` 는 테이블이 `utf8mb4_bin` 이라 하중을 받는 절인데 H2 가 그 문법을 거부한다. 필터 자체는 위 둘과 같은 `WikiPermission.isReadable` 호출이고(`Search.scala`), 검사를 위해 COLLATE 를 빼면 운영 검색이 대소문자 구분으로 조용히 바뀐다 — 그 값을 치를 일이 아니다.

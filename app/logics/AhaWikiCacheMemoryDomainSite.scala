@@ -6,7 +6,6 @@ import models.tables.SiteDomain
 import play.api.Logging
 import play.api.db.Database
 
-import scala.annotation.unused
 
 object AhaWikiCacheMemoryDomainSite extends Logging {
   @volatile private var domainToSite: Map[String, Site] = Map.empty
@@ -30,7 +29,7 @@ object AhaWikiCacheMemoryDomainSite extends Logging {
     else refreshIfNeeded()._2.values.toSeq
   }
 
-  def invalidate()(implicit @unused database: Database): Unit = synchronized {
+  def invalidate(): Unit = synchronized {
     domainToSite = Map.empty
     siteBySeq = Map.empty
   }

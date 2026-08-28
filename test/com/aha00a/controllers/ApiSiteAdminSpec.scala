@@ -48,6 +48,7 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
   override def beforeAll(): Unit = {
     super.beforeAll()
     setupSchema()
+    TestApplication.resetMemoryCaches()
   }
 
   private def superAdminSession = Seq(

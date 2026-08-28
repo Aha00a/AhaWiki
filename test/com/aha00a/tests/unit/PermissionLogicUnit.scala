@@ -56,5 +56,23 @@ object PermissionLogicUnit {
     val noRows = new PermissionLogic(Seq.empty)
     assertEquals(noRows.permitted("AnyPage", actorAha00a, Permission.Action.Read.id), false)
     assertEquals(noRows.matched("AnyPage", actorAha00a), None)
+
+    // Equal specificity is broken by length, target first: two StartsWith+All rows both
+    // score 2+1, and the longer target is the one that speaks for the narrower subtree.
+    val targetLength = new PermissionLogic(Seq(
+      Permission("Private", Permission.TargetType.StartsWith, "", Permission.ActorType.All, Permission.Action.None.id),
+      Permission("Private/Team", Permission.TargetType.StartsWith, "", Permission.ActorType.All, Permission.Action.Read.id),
+    ))
+    assertEquals(targetLength.matched("Private/Team/Page", actorEmpty).map(_.action), Some(Permission.Action.Read.id))
+    assertEquals(targetLength.matched("Private/Page", actorEmpty).map(_.action), Some(Permission.Action.None.id))
+
+    // Same for actors: two Domain rows both score 2, and the longer suffix is the narrower
+    // audience, so it wins for the addresses it matches.
+    val actorLength = new PermissionLogic(Seq(
+      Permission("", Permission.TargetType.All, "@example.com", Permission.ActorType.Domain, Permission.Action.Read.id),
+      Permission("", Permission.TargetType.All, "@team.example.com", Permission.ActorType.Domain, Permission.Action.Edit.id),
+    ))
+    assertEquals(actorLength.matched("AnyPage", "a@team.example.com").map(_.action), Some(Permission.Action.Edit.id))
+    assertEquals(actorLength.matched("AnyPage", "a@example.com").map(_.action), Some(Permission.Action.Read.id))
   }
 }

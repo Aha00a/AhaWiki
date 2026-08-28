@@ -38,6 +38,7 @@ class ApiErrorEnvelopeSpec extends PlaySpec with GuiceOneAppPerSuite with Before
     val connection = DriverManager.getConnection(TestApplication.h2Url(dbName), "sa", "")
     TestSchema.createAll()(connection)
     connection.close()
+    TestApplication.resetMemoryCaches()
   }
 
   "AccessDenied" should {

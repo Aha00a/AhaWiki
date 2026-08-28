@@ -68,4 +68,15 @@ object TestApplication {
     "play.http.secret.key" -> "test-secret-key-for-testing-only",
     "AhaWiki.accessLog.sampleRate" -> 0,
   )
+  /**
+   * The JVM-wide memory singletons survive across suites in one test JVM. A suite that
+   * boots an application and serves a request leaves its own sites and permissions in
+   * them, and the next suite silently reads that instead of its own database — sites the
+   * spec inserted answer 404, pages that should be private come back readable. Call this
+   * from `beforeAll` in every suite that boots an application.
+   */
+  def resetMemoryCaches(): Unit = {
+    logics.AhaWikiCacheMemoryDomainSite.invalidate()
+    logics.AhaWikiCacheMemoryPermission.clear()
+  }
 }

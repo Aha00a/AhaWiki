@@ -3,8 +3,6 @@ package com.aha00a.controllers
 import anorm.SQL
 import com.aha00a.tests.TestApplication
 import com.aha00a.tests.TestSchema
-import logics.AhaWikiCacheMemoryDomainSite
-import logics.AhaWikiCacheMemoryPermission
 import models.WikiActors
 import models.tables.Page
 import models.tables.Site
@@ -64,8 +62,7 @@ class ApiV1FilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAf
   override def beforeAll(): Unit = {
     super.beforeAll()
     setupSchema()
-    AhaWikiCacheMemoryDomainSite.invalidate()(db)
-    AhaWikiCacheMemoryPermission.clear()
+    TestApplication.resetMemoryCaches()
   }
 
   override def afterAll(): Unit = {
