@@ -1,18 +1,28 @@
 import {useCallback, useState} from "react";
 import {fetchJson, fetchCsrfToken, logError} from "../api.js";
 
+// Until the rows arrive there is nothing to offer. Never a guessed list: a wrong action
+// number here is the bug this endpoint was changed to remove.
+const emptyVocabulary = {targetTypes: [], actorTypes: [], actions: []};
+
 export function usePermissionData(siteSeq) {
     const [permissionRows, setPermissionRows] = useState([]);
+    const [permissionVocabulary, setPermissionVocabulary] = useState(emptyVocabulary);
     const [permissionDiagnose, setPermissionDiagnose] = useState(null);
     const [saving, setSaving] = useState(false);
     const [deletingKey, setDeletingKey] = useState("");
     const [error, setError] = useState("");
 
     const loadPermissions = useCallback(async () => {
-        if (!siteSeq) { setPermissionRows([]); return; }
+        if (!siteSeq) { setPermissionRows([]); setPermissionVocabulary(emptyVocabulary); return; }
         try {
             const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
             setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
+            setPermissionVocabulary({
+                targetTypes: Array.isArray(data?.targetTypes) ? data.targetTypes : [],
+                actorTypes: Array.isArray(data?.actorTypes) ? data.actorTypes : [],
+                actions: Array.isArray(data?.actions) ? data.actions : [],
+            });
         } catch (err) { logError("permission:load:error", err); }
     }, [siteSeq]);
 
@@ -53,5 +63,5 @@ export function usePermissionData(siteSeq) {
         setPermissionDiagnose(data);
     }, [siteSeq]);
 
-    return {permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission};
+    return {permissionRows, permissionVocabulary, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission};
 }

@@ -105,6 +105,32 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
     }
   }
 
+  "GET /api/Admin/Site/:seq/Permissions" should {
+    "return 403 for anonymous user" in {
+      val result = route(app, anonymousRequest(GET, "/api/Admin/Site/1/Permissions")).get
+      status(result) mustBe FORBIDDEN
+    }
+
+    // The admin screen fills its three dropdowns from this response. It used to carry its own
+    // copy of these lists, and the copy drifted — no Rename at all, Upload at 8 and Delete at
+    // 16 — so the screen offered numbers its own row list contradicted.
+    "serve the permission vocabulary the screen fills its dropdowns from" in {
+      val result = route(app, adminRequest(GET, "/api/Admin/Site/1/Permissions")).get
+      status(result) mustBe OK
+
+      val json = contentAsJson(result)
+      (json \ "targetTypes").as[Seq[String]] mustBe Seq("All", "Exact", "StartsWith", "EndsWith", "RegularExpression")
+      (json \ "actorTypes").as[Seq[String]] mustBe Seq("All", "Login", "Exact", "Domain")
+
+      val actions = (json \ "actions").as[Seq[play.api.libs.json.JsValue]]
+        .map(a => ((a \ "name").as[String], (a \ "action").as[Int]))
+      actions mustBe Seq(
+        ("None", 0), ("Read", 1), ("Edit", 2), ("Create", 4),
+        ("Rename", 8), ("Upload", 16), ("Delete", 32), ("Admin", 255),
+      )
+    }
+  }
+
   "DELETE /api/Admin/Site/:seq/Admins/:userSeq" should {
     "return 403 for anonymous user" in {
       val result = route(app, anonymousRequest(DELETE, "/api/Admin/Site/1/Admins/10")).get

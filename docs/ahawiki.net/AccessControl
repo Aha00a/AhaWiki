@@ -118,6 +118,14 @@ actor level:
 
 `actorType`이 `All` 또는 `Login`이면 `actor`는 빈 값으로 저장됩니다.
 
+=== 선택지는 서버가 준다
+
+화면의 `targetType` · `actorType` · `action` 드롭다운 목록은 `GET /api/Admin/Site/:seq/Permissions` 응답이 row 와 함께 실어 보냅니다. 화면에 목록을 적어 두지 않습니다.
+
+'''전에는 적어 뒀고, 갈라졌습니다.''' admin 번들의 목록에 `Rename` 이 아예 없었고 `Upload` 를 8, `Delete` 를 16 으로 적고 있었습니다(실제는 16 과 32). 저장되는 값 자체는 이름으로 넘어가 무사했지만, 드롭다운이 `16 - Delete` 라고 보여주는 아래에서 row 목록은 같은 것을 `32 - Delete` 로 보여주고 있었습니다. `Rename` 은 화면에서 고를 수 없었습니다 — `Upload` 를 줘야 rename 이 따라오는데, 그건 업로드까지 같이 주는 것입니다.
+
+숫자 자체는 `PermissionSpec` 이 못박습니다. 바꾸려면 그 테스트를 고쳐야 하고, 그러면 이 문서도 같이 보게 됩니다. --[2026-08-31]
+
 == Examples 예시
 
 === Public Wiki 공공 위키

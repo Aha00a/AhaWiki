@@ -257,6 +257,15 @@ class ApiAdminSite @Inject()(
     }
   }
 
+  /**
+   * The site's permission rows, and the vocabulary they are written in.
+   *
+   * The admin screen used to carry its own copy of the three enumerations, and the copy
+   * drifted: it was missing `Rename` entirely and labelled `Upload` as 8 and `Delete` as 16
+   * while [[models.tables.Permission.Action]] had them at 16 and 32. The screen therefore
+   * offered a number for every action that its own row list contradicted one line below.
+   * Serving the vocabulary next to the rows is what keeps the two from disagreeing again.
+   */
   def adminPermissions(seq: Long): Action[AnyContent] = Action { implicit request =>
     withSiteAdmin(seq) { site =>
       database.withConnection { implicit connection =>
@@ -265,6 +274,12 @@ class ApiAdminSite @Inject()(
         Ok(Json.obj(
           "siteSeq" -> Json.fromLong(site.seq),
           "permissions" -> Json.fromValues(permissions.map(permissionJson)),
+          "targetTypes" -> Json.fromValues(Permission.TargetType.values.toSeq.map(v => Json.fromString(v.toString))),
+          "actorTypes" -> Json.fromValues(Permission.ActorType.values.toSeq.map(v => Json.fromString(v.toString))),
+          "actions" -> Json.fromValues(Permission.Action.values.toSeq.map(v => Json.obj(
+            "name" -> Json.fromString(v.toString),
+            "action" -> Json.fromInt(v.id),
+          ))),
         ))
       }
     }

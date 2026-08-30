@@ -1,22 +1,28 @@
 import dayjs from "dayjs";
-import {PERMISSION_ACTION_DEFINITIONS} from "./constants.js";
 
 export function toPascalCase(value) {
     if (!value) return "";
     return String(value).replace(/(^|[-_\s]+)([a-z0-9])/g, (_match, _separator, character) => character.toUpperCase());
 }
 
-export const PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({value, action}) => ({
-    value,
-    label: `${action} - ${toPascalCase(value)}`,
-}));
+/**
+ * Select options for the permission `action` field, from the list the server sent.
+ *
+ * The option value is the action's name, which is what the save and diagnose endpoints
+ * parse; the number is shown only so the label matches the row list, which prints the same
+ * "32 - Delete" shape.
+ */
+export function toPermissionActionOptions(actions) {
+    return (actions ?? []).map(({name, action}) => ({
+        value: name,
+        label: `${action} - ${toPascalCase(name)}`,
+    }));
+}
 
+/** Both halves come from the row itself; nothing here has an opinion about the numbering. */
 export function formatPermissionAction(actionName, action) {
-    const definition = PERMISSION_ACTION_DEFINITIONS.find((item) => item.value === actionName || item.action === action);
-    const resolvedActionName = actionName || definition?.value || String(action ?? "");
-    const resolvedAction = action ?? definition?.action;
-    const label = toPascalCase(resolvedActionName);
-    return resolvedAction === undefined || resolvedAction === null || resolvedAction === "" ? label : `${resolvedAction} - ${label}`;
+    const label = toPascalCase(actionName || String(action ?? ""));
+    return action === undefined || action === null || action === "" ? label : `${action} - ${label}`;
 }
 
 export function compareValuesForSort(leftValue, rightValue, direction) {

@@ -368,38 +368,19 @@ function MultiTrendChart({ series }) {
 
 // app/assets/js/admin/utils.js
 import dayjs from "dayjs";
-
-// app/assets/js/admin/constants.js
-var CRAWLER_CACHE_PAGE_SIZE = 20;
-var ADMIN_PAGE_META_PAGE_SIZE = 20;
-var ACCESS_LOG_PAGE_SIZE = 20;
-var PERMISSION_TARGET_TYPE_OPTIONS = ["All", "Exact", "StartsWith", "EndsWith", "RegularExpression"];
-var PERMISSION_ACTOR_TYPE_OPTIONS = ["All", "Login", "Exact", "Domain"];
-var PERMISSION_ACTION_DEFINITIONS = [
-  { value: "None", action: 0 },
-  { value: "Read", action: 1 },
-  { value: "Edit", action: 2 },
-  { value: "Create", action: 4 },
-  { value: "Upload", action: 8 },
-  { value: "Delete", action: 16 },
-  { value: "Admin", action: 255 }
-];
-
-// app/assets/js/admin/utils.js
 function toPascalCase(value) {
   if (!value) return "";
   return String(value).replace(/(^|[-_\s]+)([a-z0-9])/g, (_match, _separator, character) => character.toUpperCase());
 }
-var PERMISSION_ACTION_OPTIONS = PERMISSION_ACTION_DEFINITIONS.map(({ value, action }) => ({
-  value,
-  label: `${action} - ${toPascalCase(value)}`
-}));
+function toPermissionActionOptions(actions) {
+  return (actions ?? []).map(({ name, action }) => ({
+    value: name,
+    label: `${action} - ${toPascalCase(name)}`
+  }));
+}
 function formatPermissionAction(actionName, action) {
-  const definition = PERMISSION_ACTION_DEFINITIONS.find((item) => item.value === actionName || item.action === action);
-  const resolvedActionName = actionName || definition?.value || String(action ?? "");
-  const resolvedAction = action ?? definition?.action;
-  const label = toPascalCase(resolvedActionName);
-  return resolvedAction === void 0 || resolvedAction === null || resolvedAction === "" ? label : `${resolvedAction} - ${label}`;
+  const label = toPascalCase(actionName || String(action ?? ""));
+  return action === void 0 || action === null || action === "" ? label : `${action} - ${label}`;
 }
 function compareValuesForSort(leftValue, rightValue, direction) {
   const directionMultiplier = direction === "desc" ? -1 : 1;
@@ -487,6 +468,13 @@ import { DataTable } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useAllUsersData.js
 import { useCallback as useCallback3, useState as useState6 } from "react";
+
+// app/assets/js/admin/constants.js
+var CRAWLER_CACHE_PAGE_SIZE = 20;
+var ADMIN_PAGE_META_PAGE_SIZE = 20;
+var ACCESS_LOG_PAGE_SIZE = 20;
+
+// app/assets/js/admin/hooks/useAllUsersData.js
 function useAllUsersData() {
   const [loading, setLoading] = useState6(true);
   const [error, setError] = useState6("");
@@ -1029,8 +1017,10 @@ import { DataTable as DataTable3 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/usePermissionData.js
 import { useCallback as useCallback8, useState as useState15 } from "react";
+var emptyVocabulary = { targetTypes: [], actorTypes: [], actions: [] };
 function usePermissionData(siteSeq) {
   const [permissionRows, setPermissionRows] = useState15([]);
+  const [permissionVocabulary, setPermissionVocabulary] = useState15(emptyVocabulary);
   const [permissionDiagnose, setPermissionDiagnose] = useState15(null);
   const [saving, setSaving] = useState15(false);
   const [deletingKey, setDeletingKey] = useState15("");
@@ -1038,11 +1028,17 @@ function usePermissionData(siteSeq) {
   const loadPermissions = useCallback8(async () => {
     if (!siteSeq) {
       setPermissionRows([]);
+      setPermissionVocabulary(emptyVocabulary);
       return;
     }
     try {
       const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`);
       setPermissionRows(Array.isArray(data?.permissions) ? data.permissions : []);
+      setPermissionVocabulary({
+        targetTypes: Array.isArray(data?.targetTypes) ? data.targetTypes : [],
+        actorTypes: Array.isArray(data?.actorTypes) ? data.actorTypes : [],
+        actions: Array.isArray(data?.actions) ? data.actions : []
+      });
     } catch (err) {
       logError("permission:load:error", err);
     }
@@ -1096,13 +1092,14 @@ function usePermissionData(siteSeq) {
     const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
     setPermissionDiagnose(data);
   }, [siteSeq]);
-  return { permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission };
+  return { permissionRows, permissionVocabulary, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission };
 }
 
 // app/assets/js/admin/pages/SitePermissionPage.jsx
 function SitePermissionPage() {
   const { siteSeq, sitePageNames } = useOutletContext5();
-  const { permissionRows, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission } = usePermissionData(siteSeq);
+  const { permissionRows, permissionVocabulary, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission } = usePermissionData(siteSeq);
+  const actionOptions = useMemo4(() => toPermissionActionOptions(permissionVocabulary.actions), [permissionVocabulary.actions]);
   const [form, setForm] = useState16({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
   const [diagnoseForm, setDiagnoseForm] = useState16({ pageName: "", actor: "", action: "Read" });
   const [sortBy, setSortBy] = useState16("specificity");
@@ -1115,10 +1112,10 @@ function SitePermissionPage() {
     const rightValue = sortBy === "actionLabel" ? formatPermissionAction(b.actionName, b.action) : b[sortBy];
     return compareValuesForSort(leftValue, rightValue, sortOrder);
   }), [permissionRows, sortBy, sortOrder]);
-  return /* @__PURE__ */ React17.createElement(React17.Fragment, null, /* @__PURE__ */ React17.createElement(Group13, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React17.createElement(Badge12, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React17.createElement(Text13, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Select, { label: "targetType", data: PERMISSION_TARGET_TYPE_OPTIONS, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React17.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React17.createElement(Select, { label: "actorType", data: PERMISSION_ACTOR_TYPE_OPTIONS, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React17.createElement(Group13, { mb: "md" }, /* @__PURE__ */ React17.createElement(Button8, { size: "xs", loading: saving, onClick: async () => {
+  return /* @__PURE__ */ React17.createElement(React17.Fragment, null, /* @__PURE__ */ React17.createElement(Group13, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React17.createElement(Badge12, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React17.createElement(Text13, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Select, { label: "targetType", data: permissionVocabulary.targetTypes, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React17.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React17.createElement(Select, { label: "actorType", data: permissionVocabulary.actorTypes, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: actionOptions, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React17.createElement(Group13, { mb: "md" }, /* @__PURE__ */ React17.createElement(Button8, { size: "xs", loading: saving, onClick: async () => {
     const saved = await savePermission(form);
     if (saved) setForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-  } }, "Save")), /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: PERMISSION_ACTION_OPTIONS, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React17.createElement(Button8, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React17.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React17.createElement(Group13, { gap: "xs" }, /* @__PURE__ */ React17.createElement(Badge12, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React17.createElement(Text13, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React17.createElement(
+  } }, "Save")), /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: actionOptions, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React17.createElement(Button8, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React17.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React17.createElement(Group13, { gap: "xs" }, /* @__PURE__ */ React17.createElement(Badge12, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React17.createElement(Text13, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React17.createElement(
     DataTable3,
     {
       withTableBorder: true,

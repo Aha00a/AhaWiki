@@ -67,4 +67,36 @@ class PermissionSpec extends AnyFreeSpec {
       assert(Permission.parseAction("3").isLeft)
     }
   }
+
+  "Action" - {
+    /**
+     * The ladder itself, spelled out rather than derived.
+     *
+     * The AccessControl page publishes these numbers, the admin screen shows them next to
+     * every row, and `action >= requiredAction` means a wrong one silently grants the wrong
+     * thing. The admin screen once kept its own copy of this list and drifted from it —
+     * Rename missing, Upload at 8, Delete at 16 — so renumbering has to be deliberate enough
+     * to come here and update the documentation in the same change.
+     */
+    "is the ladder the documentation and the admin screen publish" in {
+      assert(Permission.Action.values.toSeq.map(a => (a.toString, a.id)) === Seq(
+        ("None", 0),
+        ("Read", 1),
+        ("Edit", 2),
+        ("Create", 4),
+        ("Rename", 8),
+        ("Upload", 16),
+        ("Delete", 32),
+        ("Admin", 255),
+      ))
+    }
+
+    "ranks, so a higher action covers every lower one" in {
+      val upload = Permission("", TargetType.All, "", ActorType.All, Permission.Action.Upload.id)
+
+      assert(upload.permitted(Permission.Action.Rename.id))
+      assert(upload.permitted(Permission.Action.Read.id))
+      assert(!upload.permitted(Permission.Action.Delete.id))
+    }
+  }
 }
