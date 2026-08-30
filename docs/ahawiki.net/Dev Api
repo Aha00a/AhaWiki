@@ -117,6 +117,8 @@ Account Settings에 API Key 관리 섹션을 추가했다.
 
 목록 조회에서는 plain text key를 반환하지 않고 `keyPrefix`만 보여준다.
 
+이 화면은 Admin SPA가 아니라 '''위키 문서와 같은 껍데기'''를 쓴다. `Account/settings.scala.html`이 `_base` 레이아웃 안에서 `wikiContent` · `limitWidth`를 두르고, 표는 `wikiTableSimple`이다. Admin 화면(React · Mantine)과 다른 쪽을 고른 것이므로, 이 화면을 고칠 때 Admin 쪽 컴포넌트를 가져오면 톤이 어긋난다.
+
 세션 기반 내부 API:
 
  * `GET /api/account/ApiKeys`
