@@ -1,13 +1,9 @@
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { baseUrl, docsDir, manifestFileName, rootDir, safeFileName } from "./lib/ahawiki.net.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.resolve(__dirname, "..");
-
-const baseUrl = "https://ahawiki.net";
 const pageListUrl = `${baseUrl}/w/PageList`;
-const outputDir = path.join(rootDir, "docs", "ahawiki.net");
+const outputDir = docsDir;
 const concurrency = Number.parseInt(process.env.AHAWIKI_DOWNLOAD_CONCURRENCY ?? "6", 10);
 
 function decodeHtml(text) {
@@ -23,12 +19,6 @@ function pageNameFromHref(href) {
   const rawPath = decodeHtml(href).split("?")[0];
   const encodedName = rawPath.replace(/^\/w\//, "");
   return decodeURIComponent(encodedName);
-}
-
-function safeFileName(pageName) {
-  return pageName.replace(/[<>:"/\\|?*\x00-\x1F]/g, (char) => {
-    return `%${char.codePointAt(0).toString(16).toUpperCase().padStart(2, "0")}`;
-  });
 }
 
 function rawUrlFromHref(href) {
@@ -142,7 +132,7 @@ async function main() {
   });
 
   await writeFile(
-    path.join(outputDir, "manifest.json"),
+    path.join(outputDir, manifestFileName),
     `${JSON.stringify(
       {
         source: pageListUrl,

@@ -239,6 +239,10 @@ query parameter:
  6. 양쪽이 모두 바뀐 경우 자동 덮어쓰기를 하지 말고 병합하거나 사용자에게 확인합니다.
  7. 저장/가져오기 완료 후 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록합니다.
 
+'''이 저장소의 참조 구현은 7번을 하지 않습니다.''' `scripts/sync.ahawiki.net.mjs`는 별도 manifest 대신 git 히스토리를 마지막 동기화 기록으로 씁니다 — 원격 본문이 그 파일의 '''예전 커밋 버전'''과 같으면 로컬이 앞선 것으로 보고 저장하고, 어느 커밋에도 없던 내용이면 브라우저에서 편집된 것으로 보고 덮어쓰지 않습니다. 문서가 이미 git 으로 관리되므로 같은 사실을 manifest 에 한 번 더 적으면 그 둘이 갈라지기 때문입니다. manifest 방식은 문서가 git 밖에 있는 도구에 유효합니다.
+
+`docs/ahawiki.net/manifest.json`은 sync state가 아니라 `download:ahawiki.net`이 남기는 내려받기 기록입니다.
+
 == 변경 이력 표시와 필터
 
 API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사용한 key는 `userApiKey`로 기록됩니다.

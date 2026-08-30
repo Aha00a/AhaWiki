@@ -24,6 +24,7 @@ once by someone who could have read it instead. Add a line here when you add a d
 | [docs/ahawiki.net/Dev Database](docs/ahawiki.net/Dev%20Database) | The database itself: what the columns mean and which timezone they are in. |
 | [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. They once spent two months gone without a build noticing; `test/kanban.roundtrip-fixtures.test.mjs` now fails by name when one is missing, and runs any new directory without being told about it. |
 | [test/manual/editor-keys/](test/manual/editor-keys/) | Presses Tab and Enter in a real CodeMirror with the real editor scripts, without needing a server or a login. Not part of `npm test` — it needs a browser. |
+| [scripts/README.md](scripts/README.md) | The three scripts and what each is for: the admin bundle, the wiki sync (**AhaWikiDoc Sync** below is its rules), and the bulk download that overwrites local edits without looking. |
 | `docs/ahawiki.net/` | Copies of pages on the live wiki. Korean, and kept in step with it — see **AhaWikiDoc Sync** below. |
 
 ## Duplicated Code — Refactor at Two, Not Three (Absolute Rule)
@@ -125,36 +126,28 @@ When a TODO-style document is fully completed, do not keep it as a historical ch
 
 When the user asks for `AhaWikiDoc sync`, sync committed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.
 
-Use the existing `download:ahawiki.net` script in `package.json` and `scripts/download.ahawiki.net.mjs` as background for the page-list/download behavior, but prefer the page API for sync work. Do not use `?action=raw` for this workflow when the API can provide the page metadata and content.
+**`scripts/sync.ahawiki.net.mjs` does this** — see `scripts/README.md` for its flags. Do not sync by hand. It was prose here for long enough that every sync re-implemented it, and the re-implementations kept dropping the sweep below.
 
-The routes are in `conf/routes` under `controllers.ApiV1`; read them there rather than trusting the paths written here, which is what an endpoint rename would invalidate first. At the time of writing the page endpoints are `GET` and `POST /api/v1/page/<url-encoded-page-name>`.
+```bash
+npm run sync:ahawiki.net                                          # report, changes nothing
+npm run sync:ahawiki.net -- --apply --comment="what changed"      # upload the local-ahead pages
+```
 
-For sync, use remote `dateTime` and `revision` from the page `GET` to compare local and remote state:
+It reads committed content only, compares by the page list's `contentHash` without downloading, re-reads each page immediately before saving so a concurrent browser edit is rejected rather than overwritten, and re-reads again afterwards to confirm the wiki holds what the file holds. The API paths it uses are routes in `conf/routes` under `controllers.ApiV1`; an endpoint rename breaks the script, and `conf/routes` is where the truth is.
 
-1. Treat the filename as the page name.
-2. Compare remote pages against the committed local content under `docs/ahawiki.net/`, not against in-progress working-tree edits unless explicitly requested.
-3. Read the current remote page.
-4. Compare the remote `content` with the local file content. Strip trailing newlines on both sides before comparing — the wiki stores a trailing newline the local file does not have, and comparing raw makes every page look changed.
-5. If only the local file changed, save the full local file content with the page `POST`, sending `revision`, `text`, `comment`, and `minorEdit`.
-6. If only the remote page changed, update the local file from the remote `content`.
-7. If both local and remote changed, do not overwrite either side blindly; merge or ask the user.
-8. When saving, use the remote `revision` from the read response. If the page is missing, use `revision: 0`.
-9. On `409 Conflict`, re-read the remote page and resolve the conflict before saving.
-10. Analyze the local/remote diff before saving, use a clear save `comment` that briefly summarizes the actual content change, and set `minorEdit` according to the change.
-11. Verify by reading the page again and comparing the remote `content` with the local file.
+Two things it will not decide for you:
+
+ * A **diverged** page holds content that was never committed here — someone edited it in the browser. Read it, merge it into the local file, commit, then sync. Never overwrite either side blindly.
+ * The save `comment` is required, and it should say what actually changed. The script only checks that you wrote one.
 
 ### Sweep every page, not only the ones the change touched
 
 Syncing only the files a commit touched leaves a page that missed its sync stranded until someone edits it again. Two pages sat that way for months after a commit updated their documentation without syncing, and nothing surfaced it.
 
-So end a sync by comparing **every** page, not just the ones you saved. One request does it: the page list carries a `contentHash` per page, so a local SHA-256 is enough to compare without downloading anything.
-
-1. Read the page list and take `name`, `revision`, and `contentHash` for every page.
-2. For each local file, SHA-256 its content and compare with the page's `contentHash`. The value is `sha256:` followed by the hex digest, so strip that prefix; comparing against the whole string reports every page as drifted. Compare with and without a trailing newline — page content and file content differ there.
-3. Report what is out of sync, what exists only locally, and what exists only on the wiki. Resolve each by the rules above rather than assuming the local side is right.
+This is why the script always reports on **every** page, including with `--only`, and why the report is worth reading past the lines you expected.
 
 Not every difference is drift. `manifest.json` is a download artifact rather than a page, and a wiki-only page may be a redirect stub someone added in the browser.
 
-Neither are line endings. `.gitattributes` normalizes this tree to LF, but a file checked out before that attribute existed keeps its CRLF in the working tree while the committed content is already LF — so hashing the working file reports drift on a page nobody has touched. That is the concrete reason step 2 of the previous list says to compare the committed content. Fix such a file by deleting it and checking it out again, rather than by saving it to the wiki.
+Neither are line endings. `.gitattributes` normalizes this tree to LF, but a file checked out before that attribute existed keeps its CRLF in the working tree while the committed content is already LF — so hashing the working file reports drift on a page nobody has touched. That is the concrete reason the script hashes the committed content rather than the file on disk. Fix such a file by deleting it and checking it out again, rather than by saving it to the wiki.
 
 Do not commit or write API keys into this repository. Use a user-provided key for the current session or an environment variable such as `AHAWIKI_API_KEY`.

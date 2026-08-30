@@ -6,6 +6,7 @@
     "admin:watch": "node scripts/admin.mjs --watch",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "schemaDump": "sh ./schemaDump.sh",
+    "sync:ahawiki.net": "node scripts/sync.ahawiki.net.mjs",
     "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
