@@ -98,6 +98,7 @@ Source API:
 == Table Editor
 Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline table editor를 사용할 수 있다.
  * `tsv`, `csv`, `tsv 1`, `tsv 1 1`, `tsv 1 1 tablesorter` option 자동완성
+  * '''마지막 항목의 `tablesorter` 는 아무 일도 하지 않는다.''' `InterpreterTable.Shebang.getClasses` 가 모든 표에 `tablesorter` 클래스를 붙이고 `.distinct` 로 중복을 지우므로, 적어도 안 적어도 결과가 같다. 정렬을 켜는 스위치처럼 보이지만 아니다 — 목록에서 뺄지는 정하지 않았다. --[2026-08-31]
  * option input으로 table shebang option 변경
  * row/column add/delete
  * cell focus highlight
