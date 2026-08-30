@@ -62,6 +62,7 @@ What to leave behind:
  * If you decide no documentation is needed, put **that decision** in the commit message.
  * Do not accumulate separate "docs cleanup" commits. Documentation detached from its change loses track of which change it describes.
  * Fix stale text the moment you notice it. **Wrong documentation is worse than none.**
+ * One kind of staleness is checked for you: `test/ahawiki.docs-citations.test.mjs` fails when a wiki page cites a class, method, or file by a name that no longer exists in the source. It reads names, not structure — it cannot tell that a method moved, only that nothing is called that any more, which is what a rename actually leaves behind. A name that is real but lives outside this repository goes in that file's `namedOutsideTheRepository` list with the reason it is not here.
 
 ## Language — English, Except the Wiki Page Copies
 
