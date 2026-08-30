@@ -321,12 +321,16 @@ site	target	targetType	actor	actorType	action
 
 요청 중 현재 사용자는 `RequestWrapper.getUser`로 접근하며, 이는 `SessionLogic.getUser(request)` 결과입니다. session에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급합니다.
 
-전체 관리자 판정은 아직 별도 role 테이블이 아니라 `AdminLogic`의 코드 조건으로 남아 있습니다. `seq == 1` 하나뿐이고, 특정 email을 관리자로 보던 조건은 코드에서 사라졌습니다.
+전체 관리자 판정은 별도 role 테이블이 아니라 `AdminLogic`의 코드 조건입니다. `User` 테이블의 첫 row 하나뿐이고, 특정 email을 관리자로 보던 조건은 코드에서 사라졌습니다. 그 숫자는 `AdminLogic.SuperAdminUserSeq` 한 곳에만 적혀 있습니다 — 이름 없는 `1`이 같은 파일에 세 번 적혀 있던 것을 2026-08-31에 모았습니다. 테스트도 같은 상수를 씁니다.
 
 [[[#!Vim scala
+val SuperAdminUserSeq: Long = 1L
+
 def isAdmin(request: RequestHeader): Boolean =
-  SessionLogic.getUser(request).exists(_.seq == 1)
+  SessionLogic.getUser(request).exists(_.seq == SuperAdminUserSeq)
 ]]]
+
+role 테이블로 옮기지 않기로 한 이유와 그 대가는 아래 '''남은 과제'''에 있습니다.
 
 사이트 단위 관리자는 `SiteAdmin` 테이블로 판정합니다. `AdminLogic.isSiteAdmin`은 전체 관리자를 모든 사이트의 관리자로 취급합니다. 자세한 내용은 ["Dev SiteAdmin"] 참고.
 
@@ -361,7 +365,27 @@ primary key:
 
 읽기가 거부되면 보통 `Permission denied.`를 반환합니다.
 
-signed read URL은 예외 경로입니다. 유효한 서명이 있으면 페이지를 읽을 수 있으며, `sr_exp` · `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC으로 검증합니다.
+signed read URL은 `Permission` 테이블 밖의 예외 경로입니다. 아래 '''signed read URL''' 참고.
+
+=== signed read URL
+
+`Permission`이 막는 페이지를 '''한 장만''' 밖으로 보여주는 경로입니다. 근거가 `Permission` row가 아니라 서명 자체라서, 권한 모델(ACL)이 아니라 capability입니다. 유효한 서명이 있으면 읽을 수 있고, `sr_exp` · `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC-SHA256으로 검증합니다.
+
+발급은 `Api.adminGenerateSignedReadUrl` 하나뿐이고 전체 관리자만 호출할 수 있습니다. 화면에서는 읽기 제한이 걸린 페이지의 특정 revision을 보고 있을 때만 링크가 나타납니다(`Wiki/action.scala.html`).
+
+검증도 `Wiki.view` 한 곳뿐입니다 — `isReadableByPermission || isReadableBySignedUrl`. `view` · `raw` · `history` · `diff` · `blame`이 전부 같은 `Wiki.view` 라우트를 지나므로 다른 action으로 우회할 수 없습니다.
+
+서명이 여는 범위:
+
+ * 페이지 한 장 — 페이지 이름이 payload에 들어갑니다.
+ * revision 하나
+ * action 하나 — `view`, `raw`, `history`, `diff`만 서명할 수 있습니다. `blame`은 같은 라우트가 처리하지만 서명 대상이 아니고, 서명 대상이 아닌 action은 검증이 명시적으로 거절합니다. 목록은 `SignedReadUrlLogic.SignableActions` 한 곳에 있고 발급 · 검증 · 오류 메시지가 모두 그것을 읽습니다.
+ * host 하나 — 다른 도메인에 붙여넣으면 실패합니다.
+ * 24시간 (`SignedReadUrlLogic.ValidDurationSeconds`)
+
+'''권한이 전이되지 않습니다.''' 서명으로 연 페이지 안의 `[[Include(...)]]`, 검색, 목록은 여전히 원래 actor(비로그인이면 익명)로 다시 판정합니다. 서명은 그 페이지 본문 하나만 엽니다.
+
+'''개별 URL을 취소하는 수단은 없습니다.''' 폐기하려면 `play.http.secret.key`를 교체해야 하고, 그러면 전 사용자의 세션 쿠키도 같이 무효가 됩니다 — Play가 세션 쿠키를 같은 키로 서명하기 때문입니다. 유효기간을 24시간으로 둔 이유입니다.
 
 === 쓰기 권한 적용 지점
 
@@ -415,8 +439,15 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 == 남은 과제
 
- * [ ] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다.
- * [ ] signed read URL을 일반 permission 모델 안에 넣을지, 예외 경로로 유지할지 결정한다.
+ * [[CB(x)]] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다. → '''옮기지 않는다.''' (2026-08-31)
+  * 전체 관리자가 둘 이상 필요했던 적이 없고, 사이트 단위 위임은 이미 `SiteAdmin` 테이블이 합니다(["Dev SiteAdmin"]). 지금 role 테이블을 만들면 쓰는 사람 없는 테이블이 하나 늘고, 부트스트랩 row가 빠지면 관리자가 잠기는 위험만 얹힙니다.
+  * 대신 이름 없이 세 번 적혀 있던 `1`을 `AdminLogic.SuperAdminUserSeq` 하나로 모았습니다. 판정 자체는 그대로입니다.
+  * '''알려진 약점''' — `User`의 첫 row가 소유자라는 사실은 스키마 어디에도 적혀 있지 않습니다. 복원 · 병합으로 seq 1이 다른 사람이 되거나 없어진 DB에서는 전체 관리자가 엉뚱한 사람이 되거나 아예 없어집니다. 그때 화면으로 고칠 방법은 없고 DB를 직접 손대야 합니다.
+  * '''다시 볼 조건''' — 전체 관리자가 실제로 둘 이상 필요해지거나, 회수해야 할 때. 그때 만들 것은 `UserRole(user, role)` 테이블과 evolution, `isAdmin`을 그 조회로 바꾸는 일입니다. 부트스트랩 row를 evolution 안에서 넣어야 잠기지 않습니다.
+ * [[CB(x)]] signed read URL을 일반 permission 모델 안에 넣을지, 예외 경로로 유지할지 결정한다. → '''예외로 둔다.''' (2026-08-31)
+  * 권한 판정은 (target, actor) → action 매칭인데 서명에는 actor가 없습니다. 모델에 넣으려면 가짜 actor row를 만들거나(그러면 Admin 권한 진단 화면에 실재하지 않는 row가 보입니다) `PermissionLogic`이 HMAC과 `play.http.secret.key`를 알아야 합니다. ACL과 capability는 다른 것이고, 섞으면 둘 다 읽기 어려워집니다.
+  * 예외를 감당할 수 있는 이유는 범위가 좁기 때문입니다 — 판정 지점 하나, 페이지 한 장, 권한 전이 없음. 범위와 폐기 대가는 위 '''signed read URL'''에 적었습니다.
+  * 같이 정리한 것: 서명 가능한 action 목록이 `Api`와 `SignedReadUrlLogic`에 두 벌 있던 것을 `SignableActions` 하나로 합쳤습니다.
  * [[CB(x)]] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다. (2026-08-29)
   * row 의미론은 `PermissionLogicUnit` — 매칭 row 없음 → 거부, specificity 우선순위, 같은 specificity 에서 target·actor 길이 tie-break, 정규식 full match.
   * 소비 지점은 `AccessControlFilteringSpec` — 목록(`/api/pageNames`)과 `[[Include(...)]]` 를 라우터로 통과시켜, 익명에게 비공개 페이지가 새지 않고 Exact actor 에게는 보이는 것까지.

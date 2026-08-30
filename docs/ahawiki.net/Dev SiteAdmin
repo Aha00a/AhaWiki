@@ -6,7 +6,7 @@ SiteAdmin 기능 구현을 완료했다.
 
  * `SiteAdmin` 테이블을 추가했다. (`site`, `user`, `dateInserted`, `(site, user)` 복합 PK, Site/User FK)
  * `SiteAdmin` 모델/DAO를 추가했다. (`exists`, `selectBySite`, `selectByUser`, `insert`, `delete`)
- * `AdminLogic.isSiteAdmin`을 추가했다. super admin(`user.seq == 1`)은 모든 사이트의 SiteAdmin으로 취급한다.
+ * `AdminLogic.isSiteAdmin`을 추가했다. 전체 관리자(`AdminLogic.SuperAdminUserSeq`)는 모든 사이트의 SiteAdmin으로 취급한다. 그 판정이 무엇이고 왜 role 테이블이 아닌지는 [AccessControl] 참고.
  * 사이트 범위 Admin API는 SiteAdmin도 접근할 수 있도록 `isSiteAdmin` 기준으로 정리했다.
  * SiteAdmin 관리 API와 UI를 추가했다. (`/Admin/Site/:seq/Admins`)
  * SiteAdmin 대시보드는 담당 사이트 목록만 조회하도록 수정했다.

@@ -41,15 +41,15 @@ class AdminLogicSpec extends AnyFreeSpec {
     Seq(
       "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
       "INSERT INTO Site (seq, name, abbr) VALUES (2, 'SiteB', 'SiteB')",
-      "INSERT INTO `User` (seq, nickname) VALUES (1, 'superadmin')",
+      s"INSERT INTO `User` (seq, nickname) VALUES (${AdminLogic.SuperAdminUserSeq}, 'superadmin')",
       "INSERT INTO `User` (seq, nickname) VALUES (10, 'alice')",
       "INSERT INTO `User` (seq, nickname) VALUES (20, 'bob')",
     ).foreach(sql => SQL(sql).execute()(connection))
   }
 
   "isSiteAdmin" - {
-    "super admin (seq == 1) is always site admin regardless of SiteAdmin table" in withDatabase { implicit db =>
-      val superAdminSeq = 1L
+    "super admin is always site admin regardless of SiteAdmin table" in withDatabase { implicit db =>
+      val superAdminSeq = AdminLogic.SuperAdminUserSeq
       assert(AdminLogic.isSiteAdminBySeq(1, superAdminSeq))
       assert(AdminLogic.isSiteAdminBySeq(2, superAdminSeq))
     }

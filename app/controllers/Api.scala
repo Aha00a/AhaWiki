@@ -117,44 +117,39 @@ class Api @Inject()(
     } else {
       val name = request.getQueryString("name").map(_.trim).getOrElse("")
       val revision = request.getQueryString("revision").flatMap(v => scala.util.Try(v.toInt).toOption).getOrElse(0)
-      val actionInput = request.getQueryString("action").getOrElse("")
-      val action = actionInput match {
-        case "" | "view" => "view"
-        case "raw" => "raw"
-        case "history" => "history"
-        case "diff" => "diff"
-        case _ => ""
-      }
+      val actionOption = SignedReadUrlLogic.normalizeAction(request.getQueryString("action").getOrElse(""))
 
       if (signedReadUrlSecret.isEmpty) {
         JsonError(InternalServerError, "Signed URL secret is not configured.")
       } else if (name.isEmpty) {
         JsonError(BadRequest, "Query parameter 'name' is required.")
-      } else if (action.isEmpty) {
-        JsonError(BadRequest, "action must be one of: view, raw, history, diff")
-      } else {
-        val expiresAt = java.time.Instant.now().getEpochSecond + SignedReadUrlLogic.ValidDurationSeconds
-        val signature = SignedReadUrlLogic.signReadRequest(
-          host = request.host,
-          name = name,
-          revision = revision,
-          action = action,
-          expiresAtEpochSeconds = expiresAt,
-          secret = signedReadUrlSecret,
-        )
+      } else actionOption match {
+        case None =>
+          JsonError(BadRequest, s"action must be one of: ${SignedReadUrlLogic.SignableActions.mkString(", ")}")
 
-        val basePath = routes.Wiki.view(PageNameUrl.encode(name), revision, action).url
-        val separator = if (basePath.contains("?")) "&" else "?"
-        val signedPath = s"$basePath$separator${SignedReadUrlLogic.QueryParamExpires}=$expiresAt&${SignedReadUrlLogic.QueryParamSignature}=$signature"
+        case Some(action) =>
+          val expiresAt = java.time.Instant.now().getEpochSecond + SignedReadUrlLogic.ValidDurationSeconds
+          val signature = SignedReadUrlLogic.signReadRequest(
+            host = request.host,
+            name = name,
+            revision = revision,
+            action = action,
+            expiresAtEpochSeconds = expiresAt,
+            secret = signedReadUrlSecret,
+          )
 
-        Ok(Json.obj(
-          "name" -> Json.fromString(name),
-          "revision" -> Json.fromInt(revision),
-          "action" -> Json.fromString(action),
-          "expiresAtEpochSeconds" -> Json.fromLong(expiresAt),
-          "signedPath" -> Json.fromString(signedPath),
-          "signedUrl" -> Json.fromString(s"${request.scheme}://${request.host}$signedPath"),
-        ))
+          val basePath = routes.Wiki.view(PageNameUrl.encode(name), revision, action).url
+          val separator = if (basePath.contains("?")) "&" else "?"
+          val signedPath = s"$basePath$separator${SignedReadUrlLogic.QueryParamExpires}=$expiresAt&${SignedReadUrlLogic.QueryParamSignature}=$signature"
+
+          Ok(Json.obj(
+            "name" -> Json.fromString(name),
+            "revision" -> Json.fromInt(revision),
+            "action" -> Json.fromString(action),
+            "expiresAtEpochSeconds" -> Json.fromLong(expiresAt),
+            "signedPath" -> Json.fromString(signedPath),
+            "signedUrl" -> Json.fromString(s"${request.scheme}://${request.host}$signedPath"),
+          ))
       }
     }
   }
