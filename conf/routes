@@ -57,10 +57,16 @@ DELETE        /api/v1/page/*nameEncoded             controllers.ApiV1.deletePage
 GET           /api/account/ApiKeys                   controllers.ApiApiKey.accountApiKeys
 POST          /api/account/ApiKeys                   controllers.ApiApiKey.accountCreateApiKey
 DELETE        /api/account/ApiKeys/:seq              controllers.ApiApiKey.accountRevokeApiKey(seq: Long)
+GET           /api/account/NicknameRequests          controllers.ApiUserNickname.accountNicknameRequests
+POST          /api/account/NicknameRequests          controllers.ApiUserNickname.accountRequestNickname
+POST          /api/account/NicknameRequests/:seq/cancel  controllers.ApiUserNickname.accountCancelNicknameRequest(seq: Long)
 GET           /api/pageRevision/:pageName            controllers.Api.pageRevision(pageName: String)
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
 GET           /api/Admin/ApiKeys                     controllers.ApiApiKey.adminApiKeys
 DELETE        /api/Admin/ApiKeys/:seq                controllers.ApiApiKey.adminRevokeApiKey(seq: Long)
+GET           /api/Admin/NicknameRequests            controllers.ApiUserNickname.adminNicknameRequests(status: String ?= "Pending")
+POST          /api/Admin/NicknameRequests/:seq/approve  controllers.ApiUserNickname.adminApproveNicknameRequest(seq: Long)
+POST          /api/Admin/NicknameRequests/:seq/reject   controllers.ApiUserNickname.adminRejectNicknameRequest(seq: Long)
 GET           /api/Admin/Sites                       controllers.ApiAdminSite.adminSites
 PUT           /api/Admin/Site/:seq                   controllers.ApiAdminSite.adminUpdateSite(seq: Long)
 GET           /api/Admin/Users                       controllers.ApiAdminReport.adminUsers

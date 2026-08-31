@@ -25,18 +25,21 @@
   * 관리자는 신청자, 현재 닉네임, 요청 닉네임, 신청일을 확인한다.
   * 관리자는 승인 또는 거절을 선택한다.
   * 거절 시 사유를 저장할 수 있게 한다.
- * [ ] 3. 승인 시에만 `User.nickname`을 변경한다.
-  * 승인 transaction 안에서 신청 상태를 lock한다.
-  * 신청 상태가 `Pending`인지 확인한다.
-  * 요청 닉네임 검증을 다시 수행한다.
-  * `User.nickname` 중복 여부를 다시 확인한다.
-  * `User.nickname`과 `User.dateNicknameChanged`를 갱신한다.
-  * `UserNicknameHistory`에 old, new, changedBy를 기록한다.
-  * 신청 상태를 `Approved`로 변경한다.
+ * [[CB(x)]] 3. 승인 시에만 `User.nickname`을 변경한다. — `UserNicknameChangeLogic.approve` (2026-08-31)
+  * [[CB(x)]] 승인 transaction 안에서 신청 상태를 lock한다. (`selectBySeqForUpdate`)
+  * [[CB(x)]] 신청 상태가 `Pending`인지 확인한다.
+  * [[CB(x)]] 요청 닉네임 검증을 다시 수행한다.
+  * [[CB(x)]] `User.nickname` 중복 여부를 다시 확인한다.
+  * [[CB(x)]] `User.nickname`과 `User.dateNicknameChanged`를 갱신한다.
+  * [[CB(x)]] `UserNicknameHistory`에 old, new, changedBy를 기록한다.
+  * [[CB(x)]] 신청 상태를 `Approved`로 변경한다.
+  * '''검사를 전부 끝낸 뒤에 첫 쓰기를 한다.''' `Database.withTransaction` 은 예외가 빠져나가야 롤백한다 — 중간에 `Left` 를 돌려주면 그때까지 쓴 것이 그대로 커밋된다. row 를 `FOR UPDATE` 로 잡고 있으니 "먼저 검사, 나중에 쓰기" 가 안전하다.
 
 == Data Model
 
- * [ ] 1. `UserNicknameChangeRequest` 테이블을 추가한다.
+ * [[CB(x)]] 1. `UserNicknameChangeRequest` 테이블을 추가한다. — evolution 68 (2026-08-31)
+  * `requestedNickname` 은 `User.nickname` 과 같은 `utf8mb4_general_ci` 로 뒀다. "이미 신청됨"과 "이미 사용 중"이 unique index 와 같은 대소문자 기준으로 답해야 한다.
+  * 상태에 `Canceled` 를 하나 더 뒀다. 아래 3번의 취소를 row 삭제로 처리하면 신청했다는 사실 자체가 사라진다.
   * `seq BIGINT AUTO_INCREMENT`
   * `user INT NOT NULL`
   * `requestedNickname VARCHAR(255) NOT NULL`
@@ -46,7 +49,7 @@
   * `rejectReason VARCHAR(1000) NULL`
   * `dateInserted DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL`
   * `dateReviewed DATETIME NULL`
- * [ ] 2. `UserNicknameChangeRequest` 제약 조건을 추가한다.
+ * [[CB(x)]] 2. `UserNicknameChangeRequest` 제약 조건을 추가한다. (2026-08-31)
   * `PRIMARY KEY (seq)`
   * `FOREIGN KEY (user) REFERENCES User(seq)`
   * `FOREIGN KEY (requestedBy) REFERENCES User(seq)`
@@ -54,12 +57,12 @@
   * `INDEX (status, dateInserted)`
   * `INDEX (user, status)`
   * `INDEX (requestedNickname, status)`
- * [ ] 3. 대기 신청 중복은 application transaction에서 막는다.
+ * [[CB(x)]] 3. 대기 신청 중복은 application transaction에서 막는다. (2026-08-31)
   * MySQL partial unique index를 쓰지 않는다.
   * 같은 user의 `Pending` 신청은 하나만 허용한다.
   * 같은 requestedNickname의 `Pending` 신청은 하나만 허용한다.
   * 승인 시점에는 `User.nickname` unique 제약 조건으로 최종 방어한다.
- * [ ] 4. 기존 `UserNicknameHistory`를 실제 변경 이력으로 사용한다.
+ * [[CB(x)]] 4. 기존 `UserNicknameHistory`를 실제 변경 이력으로 사용한다. — evolution 38 이 만들어 두고 아무도 읽지 않던 테이블이 이제 쓰인다 (2026-08-31)
   * 신청 생성은 history에 기록하지 않는다.
   * 관리자 승인으로 실제 닉네임이 바뀐 경우에만 history에 기록한다.
   * `changedBy`에는 승인한 관리자 user seq를 저장한다.
@@ -69,7 +72,7 @@
  * [[CB(x)]] 1. 닉네임 검증 로직을 공통 함수로 분리한다.
   * `logics.UserNicknamePolicy.validate(requestedNickname)`
   * controller, model, test에서 같은 규칙을 사용한다.
-  * '''지금 부르는 곳은 테스트뿐이다.''' 신청 flow 가 없으니 당연하지만, "검증은 이미 붙어 있다"고 오해하지 말 것 — 아래 Scope 를 구현할 때 controller 에서 이 함수를 불러야 한다. --[2026-08-31]
+  * 아침까지는 부르는 곳이 테스트뿐이었다. 이제 `UserNicknameChangeLogic` 이 '''두 번''' 부른다 — 신청할 때 한 번, 승인할 때 다시 한 번. 두 번째가 군더더기가 아닌 이유는 규칙이 그 사이에 바뀔 수 있기 때문이다. 오늘 통과한 이름이 관리자가 일주일 뒤 볼 때도 통과한다는 보장은 없다. --[2026-08-31]
  * [[CB(x)]] 2. 입력 정규화를 정의한다.
   * 앞뒤 공백은 trim한다.
   * trim 후 빈 문자열이면 실패한다.
@@ -82,7 +85,7 @@
   * `Admin`
   * `AhaWiki`
   * `User`
- * [ ] 4. 에러 메시지를 구체적으로 돌려준다.
+ * [[CB(x)]] 4. 에러 메시지를 구체적으로 돌려준다. — `UserNicknameChangeLogic.RequestError` (2026-08-31)
   * 길이 오류
   * 허용 문자 오류
   * 이미 사용 중인 닉네임
@@ -91,11 +94,11 @@
 
 == Session Handling
 
- * [ ] 1. 닉네임의 source of truth는 `User` 테이블로 둔다.
+ * [[CB(x)]] 1. 닉네임의 source of truth는 `User` 테이블로 둔다. (2026-08-31)
   * session의 `nickname`은 표시용 snapshot으로만 취급한다.
   * 권한, 작성자 identity, 변경 승인에는 session nickname을 사용하지 않는다.
   * identity는 계속 `User.seq`를 사용한다.
- * [ ] 2. 세션 자동 갱신은 구현하지 않는다.
+ * [[CB(x)]] 2. 세션 자동 갱신은 구현하지 않는다. — 하지 않기로 한 것을 하지 않았다 (2026-08-31)
   * stale session nickname을 감지해서 cookie를 다시 쓰는 middleware는 만들지 않는다.
   * server-side session store나 session version table도 만들지 않는다.
   * 기존 로그인 세션은 재로그인 전까지 이전 nickname을 표시할 수 있다.
@@ -104,24 +107,26 @@
   * 사용자의 현재 신청 상태와 승인 결과는 session nickname에 기대지 않는다.
   * 관리자 승인 화면의 현재 닉네임도 DB에서 조회한다.
   * stale session nickname은 상단 nav 같은 표시 영역에만 남을 수 있다.
- * [ ] 4. WebSocket 연결은 재연결 전까지 이전 닉네임을 표시할 수 있다.
+ * [[CB(x)]] 4. WebSocket 연결은 재연결 전까지 이전 닉네임을 표시할 수 있다. — `cursor.hello` 는 그대로 두었다 (2026-08-31)
   * 현재 `cursor.hello`는 연결 시점의 nickname을 사용한다.
   * 승인 후 이미 열린 WebSocket은 자동으로 hello를 다시 보내지 않는다.
   * 페이지 reload 또는 WebSocket reconnect 후 새 닉네임을 사용한다.
- * [ ] 5. 강제 로그아웃은 1차 구현에서 하지 않는다.
+ * [[CB(x)]] 5. 강제 로그아웃은 1차 구현에서 하지 않는다. (2026-08-31)
   * 닉네임은 인증 권한의 source of truth가 아니다.
   * 권한 평가는 `User.seq`와 연결된 email 기준으로 유지한다.
   * 운영자가 session signing key를 교체하는 방식은 별도 운영 작업으로 둔다.
 
 == API And Routes
 
- * [ ] 1. 사용자 신청 route를 추가한다.
-  * `POST /account/nickname/request`
-  * `POST /account/nickname/request/cancel`
- * [ ] 2. 관리자 API route를 추가한다.
-  * `GET /api/Admin/UserNicknameChangeRequests`
-  * `POST /api/Admin/UserNicknameChangeRequests/:seq/approve`
-  * `POST /api/Admin/UserNicknameChangeRequests/:seq/reject`
+ * [[CB(x)]] 1. 사용자 신청 route를 추가한다. — `ApiUserNickname` (2026-08-31)
+  * `GET /api/account/NicknameRequests` — 현재 닉네임, 대기 중인 신청, 최근 결과
+  * `POST /api/account/NicknameRequests`
+  * `POST /api/account/NicknameRequests/:seq/cancel`
+ * [[CB(x)]] 2. 관리자 API route를 추가한다. (2026-08-31)
+  * `GET /api/Admin/NicknameRequests?status=Pending`
+  * `POST /api/Admin/NicknameRequests/:seq/approve`
+  * `POST /api/Admin/NicknameRequests/:seq/reject`
+ * '''경로가 위 계획과 다르다.''' 계획은 `POST /account/nickname/request` 와 `/api/Admin/UserNicknameChangeRequests` 였다. 실제로는 옆에 이미 있는 것과 같은 모양을 골랐다 — `/api/account/ApiKeys` 와 `/api/Admin/ApiKeys`. 둘 다 JSON API 이고 `ApiApiKey` 와 같은 컨트롤러 구조라, 한 화면에서 두 가지 경로 규칙을 쓰는 것보다 낫다. 취소도 `:seq` 를 받는다 — 계획의 `/request/cancel` 은 어느 신청인지 말하지 않고, 그러면 "내 대기 신청" 을 서버가 추측해야 한다.
  * [ ] 3. 관리자 권한 확인을 기존 Admin 경로와 같은 방식으로 적용한다.
   * 1차 구현은 현재 hard-coded admin 판정을 따른다.
   * [[CB(x)]] 추후 role 또는 permission 기반 admin 판정으로 이관할 수 있게 한 곳에 모은다. → `AdminLogic.SuperAdminUserSeq` 하나로 모였다. role 기반으로 옮길지도 결정됐다(옮기지 않는다) — 근거와 다시 볼 조건은 [AccessControl] 의 '''남은 과제'''. 즉 이 항목은 `AdminLogic.isAdmin` 을 쓰기만 하면 된다. --[2026-08-31]
@@ -146,11 +151,11 @@
 
 == User Page And Links
 
- * [ ] 1. 닉네임 변경 시 wiki content를 자동으로 대량 수정하지 않는다.
+ * [[CB(x)]] 1. 닉네임 변경 시 wiki content를 자동으로 대량 수정하지 않는다. (2026-08-31)
   * 기존 `[User:oldNickname]` 링크는 그대로 둔다.
   * page history와 blame은 `User.seq` join 결과로 새 닉네임을 표시할 수 있다.
   * 문서 본문 안의 과거 링크까지 자동 수정하면 사용자 작성 내용을 바꾸는 부작용이 크다.
- * [ ] 2. `User:<oldNickname>` profile page 처리는 별도 정책으로 둔다.
+ * [[CB(x)]] 2. `User:<oldNickname>` profile page 처리는 별도 정책으로 둔다. — 자동 rename 하지 않는다 (2026-08-31)
   * 1차 구현은 자동 rename하지 않는다.
   * 승인 후 새 profile link는 `/w/User:<newNickname>`로 이동한다.
   * 기존 profile page가 있으면 관리자가 필요할 때 wiki rename 기능을 사용할 수 있다.
@@ -161,7 +166,9 @@
  * [ ] 1. 닉네임 승인 후 user profile cache를 무효화한다.
   * old nickname 기준 `UserProfileImageUrl` cache를 무효화한다.
   * new nickname 기준 `UserProfileImageUrl` cache를 무효화한다.
- * [ ] 2. Page cache는 기본적으로 무효화하지 않는다.
+  * '''아직 안 했고, 급하지 않다고 봤다.''' 캐시 키가 `클래스:site:nickname` 이라 사이트마다 하나씩이고, 승인 로직이 무효화하려면 사이트 목록과 `AhaWikiCache` 를 승인 transaction 안으로 끌고 들어와야 한다. 그에 비해 실제 피해는 작다 — '''옛''' 이름 키에 남는 값은 아무도 더는 조회하지 않는 이름의 것이고(옛 `[User:이름]` 링크는 그대로 두기로 했다), '''새''' 이름 키는 보통 비어 있어서 처음 조회에 새로 계산된다. 운영 만료가 10분이라 그 사이에 스스로 낫는다.
+  * 그러니 이 항목은 "성능/정합 문제가 실제로 보이면" 한다. 지금 하면 승인 경로가 캐시와 사이트 목록에 묶인다. --[2026-08-31]
+ * [[CB(x)]] 2. Page cache는 기본적으로 무효화하지 않는다. (2026-08-31)
   * page content 자체는 바뀌지 않는다.
   * history, recent changes, blame은 DB join 또는 API 응답 시점의 nickname을 사용한다.
 
@@ -176,23 +183,23 @@
   * emoji 거절
   * 너무 짧은 값 거절
   * 너무 긴 값 거절
- * [ ] 2. 신청 생성 테스트를 추가한다.
+ * [[CB(x)]] 2. 신청 생성 테스트를 추가한다. — `ApiUserNicknameSpec` (2026-08-31)
   * 로그인 사용자만 신청 가능
   * 중복 닉네임 신청 거절
   * 이미 대기 중인 자기 신청이 있으면 거절
   * 같은 요청 닉네임으로 대기 신청이 있으면 거절
- * [ ] 3. 관리자 승인 테스트를 추가한다.
+ * [[CB(x)]] 3. 관리자 승인 테스트를 추가한다. (2026-08-31)
   * 관리자가 아니면 승인 불가
   * 승인 시 `User.nickname` 변경
   * 승인 시 `UserNicknameHistory` 기록
   * 승인 시 신청 상태 `Approved` 변경
   * 승인 직전 중복이 생기면 승인 실패
- * [ ] 4. 관리자 거절 테스트를 추가한다.
+ * [[CB(x)]] 4. 관리자 거절 테스트를 추가한다. (2026-08-31)
   * 관리자가 아니면 거절 불가
   * 거절 시 `User.nickname` 유지
   * 거절 시 신청 상태 `Rejected` 변경
   * 거절 사유 저장
- * [ ] 5. stale session 처리 범위를 테스트한다.
+ * [[CB(x)]] 5. stale session 처리 범위를 테스트한다. (2026-08-31)
   * stale session도 identity는 `seq`로 유지된다.
   * Account 화면은 DB의 최신 nickname을 표시한다.
   * Admin 승인 화면은 DB의 최신 nickname을 표시한다.

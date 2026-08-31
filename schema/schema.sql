@@ -466,6 +466,35 @@ CREATE TABLE `UserEmail` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `UserNicknameChangeRequest`
+--
+
+DROP TABLE IF EXISTS `UserNicknameChangeRequest`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `UserNicknameChangeRequest` (
+  `seq` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user` int(11) NOT NULL,
+  `requestedNickname` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `requestedBy` int(11) NOT NULL,
+  `reviewedBy` int(11) DEFAULT NULL,
+  `rejectReason` varchar(1000) DEFAULT NULL,
+  `dateInserted` datetime NOT NULL DEFAULT current_timestamp(),
+  `dateReviewed` datetime DEFAULT NULL,
+  PRIMARY KEY (`seq`),
+  KEY `UserNicknameChangeRequest_RequestedBy_User_seq_fk` (`requestedBy`),
+  KEY `UserNicknameChangeRequest_ReviewedBy_User_seq_fk` (`reviewedBy`),
+  KEY `UserNicknameChangeRequest_status_dateInserted_index` (`status`,`dateInserted`),
+  KEY `UserNicknameChangeRequest_user_status_index` (`user`,`status`),
+  KEY `UserNicknameChangeRequest_requestedNickname_status_index` (`requestedNickname`,`status`),
+  CONSTRAINT `UserNicknameChangeRequest_RequestedBy_User_seq_fk` FOREIGN KEY (`requestedBy`) REFERENCES `User` (`seq`),
+  CONSTRAINT `UserNicknameChangeRequest_ReviewedBy_User_seq_fk` FOREIGN KEY (`reviewedBy`) REFERENCES `User` (`seq`),
+  CONSTRAINT `UserNicknameChangeRequest_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `UserNicknameHistory`
 --
 

@@ -47,6 +47,20 @@ object User {
       .map(User.tupled)
   }
 
+  /**
+   * Renames a user and stamps when it happened.
+   *
+   * Returns 0 rather than throwing when the name is taken only if the caller checked first;
+   * `User_nickname_lower_uindex` is what actually decides, and a violation surfaces as the
+   * exception it is. The check before this call is for a useful message, not for correctness.
+   */
+  def updateNickname(seq: Long, nickname: String)(implicit connection: Connection): Int =
+    SQL"""
+      UPDATE User
+      SET nickname = $nickname, dateNicknameChanged = ${LocalDateTime.now()}
+      WHERE seq = $seq
+    """.executeUpdate()
+
   def insert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[(Long, String)] = {
     val baseNickname = {
       val localPart = email.takeWhile(_ != '@').toLowerCase
