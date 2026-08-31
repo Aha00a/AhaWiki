@@ -15,7 +15,7 @@
 
 == Scope
 
- * [ ] 1. 닉네임 변경 신청 기능을 추가한다.
+ * [[CB(x)]] 1. 닉네임 변경 신청 기능을 추가한다. (2026-08-31)
   * Account Settings 화면에서 신청 form을 제공한다.
   * 현재 닉네임을 보여준다.
   * 대기 중인 신청이 있으면 새 신청을 막는다.
@@ -103,10 +103,11 @@
   * server-side session store나 session version table도 만들지 않는다.
   * 기존 로그인 세션은 재로그인 전까지 이전 nickname을 표시할 수 있다.
   * 운영자가 Play session signing key를 교체하면 기존 session cookie는 무효화된다.
- * [ ] 3. Account와 Admin 화면은 DB의 최신 닉네임을 직접 조회한다.
-  * 사용자의 현재 신청 상태와 승인 결과는 session nickname에 기대지 않는다.
-  * 관리자 승인 화면의 현재 닉네임도 DB에서 조회한다.
-  * stale session nickname은 상단 nav 같은 표시 영역에만 남을 수 있다.
+ * [[CB(x)]] 3. Account와 Admin 화면은 DB의 최신 닉네임을 직접 조회한다. (2026-08-31)
+  * [[CB(x)]] 사용자의 현재 신청 상태와 승인 결과는 session nickname에 기대지 않는다. — `ApiUserNickname` 은 세션에서 `seq` 만 쓴다.
+  * [[CB(x)]] 관리자 승인 화면의 현재 닉네임도 DB에서 조회한다. — 목록 응답의 `userNickname` 은 `User` 를 다시 읽은 값이다.
+  * [[CB(x)]] stale session nickname은 상단 nav 같은 표시 영역에만 남을 수 있다. — 그대로 두었다.
+  * 오래된 쿠키로 호출해도 Account 화면이 DB 값을 답하는지 `ApiUserNicknameSpec` 이 확인한다.
  * [[CB(x)]] 4. WebSocket 연결은 재연결 전까지 이전 닉네임을 표시할 수 있다. — `cursor.hello` 는 그대로 두었다 (2026-08-31)
   * 현재 `cursor.hello`는 연결 시점의 nickname을 사용한다.
   * 승인 후 이미 열린 WebSocket은 자동으로 hello를 다시 보내지 않는다.
@@ -133,18 +134,19 @@
 
 == UI
 
- * [ ] 1. Account Settings 화면을 변경한다.
-  * 현재 닉네임을 보여준다.
-  * 새 닉네임 신청 form을 보여준다.
-  * 허용 규칙을 짧게 안내한다.
-  * 대기 중인 신청이 있으면 상태와 취소 버튼을 보여준다.
-  * 승인 또는 거절된 최근 신청 결과를 보여준다.
+ * [[CB(x)]] 1. Account Settings 화면을 변경한다. — `Account/settings.scala.html` 의 `accountNickname` 절 (2026-08-31)
+  * [[CB(x)]] 현재 닉네임을 보여준다. — 세션이 아니라 응답이 준 값, 즉 DB 값이다.
+  * [[CB(x)]] 새 닉네임 신청 form을 보여준다.
+  * [[CB(x)]] 허용 규칙을 짧게 안내한다.
+  * [[CB(x)]] 대기 중인 신청이 있으면 상태와 취소 버튼을 보여준다. — 대기 중에는 입력과 버튼을 잠근다. 거절당할 것이 뻔한 입력을 받아 두는 것보다 낫다.
+  * [[CB(x)]] 승인 또는 거절된 최근 신청 결과를 보여준다. — 거절은 사유까지 같은 칸에 보여준다.
+  * '''공용 helper 를 끌어올렸다.''' `escapeHtml` · `formatDate` · `csrfToken` 과 CSRF 헤더를 붙이는 `send` 가 API Key 절 안에 있었는데, 닉네임 절이 넷 다 필요했다. 베끼면 escapeHtml 이 두 개인 페이지가 되고 그중 하나만 고쳐지는 날이 온다. CSS 의 `apiKeyForm` · `apiKeyMessage` 도 같은 이유로 `accountForm` · `accountMessage` 로 바꿔 둘이 같이 쓴다.
  * [ ] 2. Admin UI에 닉네임 변경 신청 목록을 추가한다.
   * `Pending`을 기본 필터로 보여준다.
   * user seq, 현재 닉네임, 요청 닉네임, 신청일을 보여준다.
   * 승인 버튼을 제공한다.
   * 거절 사유 입력과 거절 버튼을 제공한다.
- * [ ] 3. 사용자에게 승인 결과를 보여준다.
+ * [[CB(x)]] 3. 사용자에게 승인 결과를 보여준다. — 최근 신청 표에 결과와 거절 사유가 함께 나온다 (2026-08-31)
   * 승인 후 Account Settings에서 새 닉네임을 보여준다.
   * 거절 후 거절 사유를 보여준다.
   * flash message와 화면 상태가 서로 모순되지 않게 한다.

@@ -120,7 +120,7 @@
             background: var(--color-link-hover-bg);
             color: var(--color-text);
         }
-        .accountSettings .apiKeyForm {
+        .accountSettings .accountForm {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -132,7 +132,7 @@
             background: var(--color-surface-panel);
             box-shadow: inset 0 1px 0 var(--color-shadow-soft);
         }
-        .accountSettings .apiKeyForm label {
+        .accountSettings .accountForm label {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -140,7 +140,7 @@
             font-size: 0.92em;
             font-weight: 600;
         }
-        .accountSettings .apiKeyForm input {
+        .accountSettings .accountForm input {
             min-height: 32px;
             padding: 5px 8px;
             border: 1px solid var(--color-input-border);
@@ -183,12 +183,32 @@
             color: var(--color-code-text);
             overflow-wrap: anywhere;
         }
-        .accountSettings .apiKeyMessage {
+        .accountSettings .accountMessage {
             min-height: 20px;
             color: var(--color-muted);
             font-size: 0.9em;
         }
-        .accountSettings .apiKeyMessage.isError {
+        .accountSettings .accountNicknameCurrent {
+            margin: 0 0 12px;
+        }
+        .accountSettings .accountHint {
+            margin: 0 0 12px;
+            color: var(--color-muted);
+            font-size: 0.9em;
+        }
+        .accountSettings .accountPendingRow {
+            display: none;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 0 0 12px;
+            padding: 10px 16px;
+            border: 1px solid var(--color-border-subtle);
+            border-radius: 5px;
+            background: var(--color-surface-panel);
+        }
+        .accountSettings .accountMessage.isError {
             color: var(--color-flash-error-text);
         }
         .accountSettings .accountDangerButton,
@@ -206,14 +226,14 @@
         .accountSettings .accountPlainButton:hover {
             background: var(--color-link-hover-bg);
         }
-        .accountSettings .apiKeyForm .accountPlainButton {
+        .accountSettings .accountForm .accountPlainButton {
             min-height: 32px;
             padding: 8px 14px;
             border: 0;
             background: var(--color-adjacent-hud-action-active-bg);
             color: var(--color-adjacent-hud-action-active-text);
         }
-        .accountSettings .apiKeyForm .accountPlainButton:hover {
+        .accountSettings .accountForm .accountPlainButton:hover {
             filter: brightness(0.95);
             background: var(--color-adjacent-hud-action-active-bg);
             color: var(--color-adjacent-hud-action-active-text);
@@ -227,16 +247,66 @@
             .accountSettings .accountHero {
                 grid-template-columns: 1fr;
             }
-            .accountSettings .apiKeyForm {
+            .accountSettings .accountForm {
                 align-items: stretch;
             }
-            .accountSettings .apiKeyForm label {
+            .accountSettings .accountForm label {
                 display: grid;
                 width: 100%;
             }
         }
     </style>
     <script>
+    (function () {
+        // Shared by every section on this page. They were written once for API keys and the
+        // nickname section needed all four, which is the moment to lift them rather than
+        // copy them — a page with two escapeHtml is a page with one of them fixed.
+        function setMessageIn(element) {
+            return function (text, isError) {
+                element.textContent = text || "";
+                element.classList.toggle("isError", !!isError);
+            };
+        }
+
+        function formatDate(value) {
+            if (!value) return "-";
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return value;
+            return date.toLocaleString();
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        async function csrfToken() {
+            const response = await fetch("/api/csrf", {credentials: "same-origin"});
+            if (!response.ok) throw new Error("CSRF HTTP " + response.status);
+            const token = await response.json();
+            return {name: token && token.name ? token.name : "csrfToken", value: token && token.value ? token.value : ""};
+        }
+
+        /** Every write on this page: same credentials, same CSRF headers, same error shape. */
+        async function send(url, method, body) {
+            const csrf = await csrfToken();
+            const headers = {"Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value};
+            if (body) headers["Content-Type"] = "application/json";
+            const response = await fetch(url, {
+                method: method,
+                credentials: "same-origin",
+                headers: headers,
+                body: body ? JSON.stringify(body) : undefined
+            });
+            const data = await response.json().catch(function () { return null; });
+            if (!response.ok) throw new Error((data && data.error) || ("HTTP " + response.status));
+            return data;
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
             const root = document.querySelector(".accountApiKeys");
             if (!root) return;
@@ -248,26 +318,8 @@
             const form = root.querySelector("[data-api-key-form]");
             const nameInput = root.querySelector("[data-api-key-name]");
             const copyButton = root.querySelector("[data-api-key-copy]");
+            const setMessage = setMessageIn(message);
             let lastCreatedKey = "";
-
-            function setMessage(text, isError) {
-                message.textContent = text || "";
-                message.classList.toggle("isError", !!isError);
-            }
-
-            function formatDate(value) {
-                if (!value) return "-";
-                const date = new Date(value);
-                if (Number.isNaN(date.getTime())) return value;
-                return date.toLocaleString();
-            }
-
-            async function csrfToken() {
-                const response = await fetch("/api/csrf", {credentials: "same-origin"});
-                if (!response.ok) throw new Error("CSRF HTTP " + response.status);
-                const token = await response.json();
-                return {name: token && token.name ? token.name : "csrfToken", value: token && token.value ? token.value : ""};
-            }
 
             async function loadApiKeys() {
                 setMessage("Loading API keys...");
@@ -297,15 +349,6 @@
                 setMessage("");
             }
 
-            function escapeHtml(value) {
-                return String(value)
-                    .replaceAll("&", "&amp;")
-                    .replaceAll("<", "&lt;")
-                    .replaceAll(">", "&gt;")
-                    .replaceAll('"', "&quot;")
-                    .replaceAll("'", "&#039;");
-            }
-
             form.addEventListener("submit", async function (event) {
                 event.preventDefault();
                 const name = nameInput.value.trim();
@@ -314,15 +357,7 @@
                     return;
                 }
                 try {
-                    const csrf = await csrfToken();
-                    const response = await fetch("/api/account/ApiKeys", {
-                        method: "POST",
-                        credentials: "same-origin",
-                        headers: {"Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value},
-                        body: JSON.stringify({name})
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+                    const data = await send("/api/account/ApiKeys", "POST", {name: name});
                     lastCreatedKey = data.key || "";
                     secret.style.display = lastCreatedKey ? "block" : "none";
                     secretCode.textContent = lastCreatedKey;
@@ -339,14 +374,7 @@
                 if (!button) return;
                 if (!confirm("Revoke this API key?")) return;
                 try {
-                    const csrf = await csrfToken();
-                    const response = await fetch("/api/account/ApiKeys/" + encodeURIComponent(button.getAttribute("data-revoke")), {
-                        method: "DELETE",
-                        credentials: "same-origin",
-                        headers: {"Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value}
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || ("HTTP " + response.status));
+                    await send("/api/account/ApiKeys/" + encodeURIComponent(button.getAttribute("data-revoke")), "DELETE");
                     setMessage("API key revoked.");
                     await loadApiKeys();
                 } catch (error) {
@@ -366,6 +394,97 @@
 
             loadApiKeys().catch(function (error) { setMessage(error.message, true); });
         });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const root = document.querySelector(".accountNickname");
+            if (!root) return;
+
+            const current = root.querySelector("[data-nickname-current]");
+            const pending = root.querySelector("[data-nickname-pending]");
+            const pendingName = root.querySelector("[data-nickname-pending-name]");
+            const historyBody = root.querySelector("[data-nickname-history]");
+            const form = root.querySelector("[data-nickname-form]");
+            const input = root.querySelector("[data-nickname-input]");
+            const submit = root.querySelector("[data-nickname-submit]");
+            const cancelButton = root.querySelector("[data-nickname-cancel]");
+            const setMessage = setMessageIn(root.querySelector("[data-nickname-message]"));
+            let pendingSeq = null;
+
+            function statusLabel(row) {
+                if (row.status === "Rejected" && row.rejectReason) {
+                    return "Rejected — " + escapeHtml(row.rejectReason);
+                }
+                return escapeHtml(row.status || "");
+            }
+
+            function render(data) {
+                // The name comes from the response, which read it from the database. The
+                // session's copy can be a week old and this is the page where that shows.
+                current.textContent = data.currentNickname || "-";
+
+                pendingSeq = data.pending ? data.pending.seq : null;
+                pending.style.display = data.pending ? "flex" : "none";
+                if (data.pending) pendingName.textContent = data.pending.requestedNickname;
+
+                // One request at a time, so the form closes while one is waiting rather than
+                // letting someone submit into a refusal.
+                input.disabled = !!data.pending;
+                submit.disabled = !!data.pending;
+
+                historyBody.innerHTML = "";
+                const rows = Array.isArray(data.recent) ? data.recent : [];
+                if (rows.length === 0) {
+                    historyBody.innerHTML = '<tr><td colspan="3">No nickname requests yet.</td></tr>';
+                    return;
+                }
+                rows.forEach(function (row) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML =
+                        "<td>" + escapeHtml(row.requestedNickname || "") + "</td>" +
+                        "<td>" + statusLabel(row) + "</td>" +
+                        "<td>" + formatDate(row.dateReviewed || row.dateInserted) + "</td>";
+                    historyBody.appendChild(tr);
+                });
+            }
+
+            async function load() {
+                const response = await fetch("/api/account/NicknameRequests", {credentials: "same-origin"});
+                if (!response.ok) throw new Error("HTTP " + response.status);
+                render(await response.json());
+            }
+
+            form.addEventListener("submit", async function (event) {
+                event.preventDefault();
+                const nickname = input.value.trim();
+                if (!nickname) {
+                    setMessage("Enter the nickname you want.", true);
+                    return;
+                }
+                try {
+                    await send("/api/account/NicknameRequests", "POST", {nickname: nickname});
+                    input.value = "";
+                    setMessage("Requested. An admin will review it.");
+                    await load();
+                } catch (error) {
+                    setMessage(error.message, true);
+                }
+            });
+
+            cancelButton.addEventListener("click", async function () {
+                if (pendingSeq === null) return;
+                if (!confirm("Withdraw this nickname request?")) return;
+                try {
+                    await send("/api/account/NicknameRequests/" + encodeURIComponent(pendingSeq) + "/cancel", "POST");
+                    setMessage("Request withdrawn.");
+                    await load();
+                } catch (error) {
+                    setMessage(error.message, true);
+                }
+            });
+
+            load().catch(function (error) { setMessage(error.message, true); });
+        });
+    })();
     </script>
 } {
     <div class="wikiContent accountSettings">
@@ -438,9 +557,46 @@
                     </div>
                 </section>
 
+                <section class="accountSection accountNickname">
+                    <h2>Nickname</h2>
+                    <p class="accountNicknameCurrent">
+                        Current: <strong data-nickname-current>@user.nickname</strong>
+                    </p>
+                    <form class="accountForm" data-nickname-form>
+                        <label>
+                            New nickname
+                            <input type="text" data-nickname-input maxlength="16" placeholder="5-16 characters"/>
+                        </label>
+                        <button type="submit" class="accountPlainButton" data-nickname-submit>Request</button>
+                    </form>
+                    <p class="accountHint">
+                        Korean or English letters and numbers, 5 to 16 characters, at least one letter.
+                        An admin approves the change; your nickname does not change until then.
+                    </p>
+                    <div class="accountPendingRow" data-nickname-pending>
+                        <span>Waiting for review: <strong data-nickname-pending-name></strong></span>
+                        <button type="button" class="accountDangerButton" data-nickname-cancel>Withdraw</button>
+                    </div>
+                    <div class="wikiTableSimpleScroll">
+                        <table class="wikiTableSimple accountTable">
+                            <thead>
+                                <tr>
+                                    <th>Requested</th>
+                                    <th>Result</th>
+                                    <th>When</th>
+                                </tr>
+                            </thead>
+                            <tbody data-nickname-history>
+                                <tr><td colspan="3">Loading nickname requests...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="accountMessage" data-nickname-message></div>
+                </section>
+
                 <section class="accountSection accountApiKeys">
                     <h2>API Keys</h2>
-                    <form class="apiKeyForm" data-api-key-form>
+                    <form class="accountForm" data-api-key-form>
                         <label>
                             Name
                             <input type="text" data-api-key-name maxlength="255" placeholder="Automation Tool"/>
@@ -469,7 +625,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="apiKeyMessage" data-api-key-message></div>
+                    <div class="accountMessage" data-api-key-message></div>
                 </section>
             </div>
         </div>
