@@ -53,6 +53,7 @@ export default function Navigation({me, onNavigate}) {
         {href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider"},
         {href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open"},
         {href: "/Admin/ApiKeys", label: "API Keys", key: "api-keys", iconClassName: "fas fa-key"},
+        {href: "/Admin/NicknameRequests", label: "Nickname Requests", key: "nickname-requests", iconClassName: "fas fa-id-card"},
     ], []);
 
     if (!me) {

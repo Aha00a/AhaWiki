@@ -1,5 +1,5 @@
 // app/assets/js/admin.jsx
-import React24 from "react";
+import React25 from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -35,6 +35,20 @@ async function fetchCsrfToken() {
   if (!response.ok) throw new Error(`CSRF HTTP ${response.status}`);
   const token = await response.json();
   return { name: token?.name ?? "csrfToken", value: token?.value ?? "" };
+}
+async function sendJson(url, method, body) {
+  const csrf = await fetchCsrfToken();
+  const headers = { "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value };
+  if (body !== void 0) headers["Content-Type"] = "application/json";
+  const response = await fetch(url, {
+    method,
+    credentials: "same-origin",
+    headers,
+    body: body === void 0 ? void 0 : JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+  return data;
 }
 function unwrapPaged(data) {
   const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
@@ -90,7 +104,8 @@ function Navigation({ me, onNavigate }) {
     { href: "/Admin/AccessLog", label: "AccessLog", key: "access-logs", iconClassName: "fas fa-network-wired" },
     { href: "/Admin/CrawlerCache", label: "Crawler Cache", key: "crawler-cache", iconClassName: "fas fa-spider" },
     { href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open" },
-    { href: "/Admin/ApiKeys", label: "API Keys", key: "api-keys", iconClassName: "fas fa-key" }
+    { href: "/Admin/ApiKeys", label: "API Keys", key: "api-keys", iconClassName: "fas fa-key" },
+    { href: "/Admin/NicknameRequests", label: "Nickname Requests", key: "nickname-requests", iconClassName: "fas fa-id-card" }
   ], []);
   if (!me) {
     return /* @__PURE__ */ React.createElement(Stack, { gap: 8 }, /* @__PURE__ */ React.createElement(Paper, { withBorder: true, radius: "md", p: 8 }, /* @__PURE__ */ React.createElement(Skeleton, { height: 12, mb: 8, radius: "sm" }), [1, 2, 3].map((i) => /* @__PURE__ */ React.createElement(Skeleton, { key: i, height: 32, mb: 4, radius: "sm" }))));
@@ -1850,42 +1865,123 @@ function ApiKeysPage() {
   ));
 }
 
+// app/assets/js/admin/pages/NicknameRequestsPage.jsx
+import React24, { useCallback as useCallback14, useEffect as useEffect18, useState as useState28 } from "react";
+import { Badge as Badge19, Button as Button15, Card as Card13, Group as Group20, SegmentedControl, Text as Text20, Title as Title14 } from "@mantine/core";
+import { DataTable as DataTable8 } from "mantine-datatable";
+var STATUS_FILTERS = ["Pending", "Approved", "Rejected", "Canceled", "All"];
+function NicknameRequestsPage() {
+  const [status, setStatus] = useState28("Pending");
+  const [rows, setRows] = useState28([]);
+  const [loading, setLoading] = useState28(false);
+  const [busySeq, setBusySeq] = useState28(null);
+  const [error, setError] = useState28("");
+  const load = useCallback14(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await fetchJson(`/api/Admin/NicknameRequests?status=${encodeURIComponent(status)}`);
+      setRows(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || String(err));
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [status]);
+  useEffect18(() => {
+    load();
+  }, [load]);
+  const review = async (row, decision) => {
+    let body;
+    if (decision === "reject") {
+      const reason = window.prompt(`Why is "${row.requestedNickname}" rejected?`, "");
+      if (reason === null || reason.trim() === "") return;
+      body = { rejectReason: reason.trim() };
+    } else if (!window.confirm(`Rename ${row.userNickname ?? `#${row.user}`} to "${row.requestedNickname}"?`)) {
+      return;
+    }
+    setBusySeq(row.seq);
+    setError("");
+    try {
+      await sendJson(`/api/Admin/NicknameRequests/${encodeURIComponent(row.seq)}/${decision}`, "POST", body);
+      await load();
+    } catch (err) {
+      setError(err.message || String(err));
+    } finally {
+      setBusySeq(null);
+    }
+  };
+  const statusBadge = (row) => {
+    const color = { Pending: "yellow", Approved: "green", Rejected: "red", Canceled: "gray" }[row.status] ?? "gray";
+    return /* @__PURE__ */ React24.createElement(Badge19, { color, variant: "light" }, row.status);
+  };
+  return /* @__PURE__ */ React24.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React24.createElement(Group20, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React24.createElement(Title14, { order: 3 }, "Nickname Requests"), /* @__PURE__ */ React24.createElement(Badge19, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React24.createElement(Text20, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React24.createElement(Group20, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React24.createElement(SegmentedControl, { value: status, onChange: setStatus, data: STATUS_FILTERS }), /* @__PURE__ */ React24.createElement(Button15, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React24.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React24.createElement(
+    DataTable8,
+    {
+      withTableBorder: true,
+      striped: true,
+      highlightOnHover: true,
+      fetching: loading,
+      records: rows,
+      minHeight: 360,
+      columns: [
+        { accessor: "seq", title: "ID", width: 80 },
+        // The requester's name as the database has it now, which is what the
+        // response carries — not whatever their session still says.
+        { accessor: "userNickname", title: "User", render: (row) => row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}` },
+        { accessor: "requestedNickname", title: "Requested" },
+        { accessor: "status", title: "Status", render: statusBadge },
+        { accessor: "rejectReason", title: "Reason", render: (row) => row.rejectReason || "-" },
+        { accessor: "dateInserted", title: "Asked", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
+        { accessor: "dateReviewed", title: "Answered", render: (row) => row.dateReviewed ? formatDateTimeInClientTimezone(row.dateReviewed) : "-" },
+        {
+          accessor: "action",
+          title: "Action",
+          render: (row) => row.status !== "Pending" ? "-" : /* @__PURE__ */ React24.createElement(Group20, { gap: 6 }, /* @__PURE__ */ React24.createElement(Button15, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React24.createElement(Button15, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"))
+        }
+      ]
+    }
+  ));
+}
+
 // app/assets/js/admin.jsx
 var router = createBrowserRouter([
   {
     path: "/Admin",
-    element: /* @__PURE__ */ React24.createElement(AdminLayout, null),
+    element: /* @__PURE__ */ React25.createElement(AdminLayout, null),
     children: [
-      { index: true, element: /* @__PURE__ */ React24.createElement(DashboardPage, null) },
-      { path: "Site", element: /* @__PURE__ */ React24.createElement(SitesPage, null) },
-      { path: "Sites", element: /* @__PURE__ */ React24.createElement(SitesPage, null) },
+      { index: true, element: /* @__PURE__ */ React25.createElement(DashboardPage, null) },
+      { path: "Site", element: /* @__PURE__ */ React25.createElement(SitesPage, null) },
+      { path: "Sites", element: /* @__PURE__ */ React25.createElement(SitesPage, null) },
       {
         path: "Site/:siteSeq",
-        element: /* @__PURE__ */ React24.createElement(SiteLayout, null),
+        element: /* @__PURE__ */ React25.createElement(SiteLayout, null),
         children: [
-          { index: true, element: /* @__PURE__ */ React24.createElement(SiteDashboardPage, null) },
-          { path: "Page", element: /* @__PURE__ */ React24.createElement(SiteDetailPage, null) },
-          { path: "Detail", element: /* @__PURE__ */ React24.createElement(SiteDetailPage, null) },
-          { path: "Config", element: /* @__PURE__ */ React24.createElement(SiteConfigPage, null) },
-          { path: "Cache", element: /* @__PURE__ */ React24.createElement(SiteCachePage, null) },
-          { path: "Permission", element: /* @__PURE__ */ React24.createElement(SitePermissionPage, null) },
-          { path: "Admins", element: /* @__PURE__ */ React24.createElement(SiteAdminsPage, null) }
+          { index: true, element: /* @__PURE__ */ React25.createElement(SiteDashboardPage, null) },
+          { path: "Page", element: /* @__PURE__ */ React25.createElement(SiteDetailPage, null) },
+          { path: "Detail", element: /* @__PURE__ */ React25.createElement(SiteDetailPage, null) },
+          { path: "Config", element: /* @__PURE__ */ React25.createElement(SiteConfigPage, null) },
+          { path: "Cache", element: /* @__PURE__ */ React25.createElement(SiteCachePage, null) },
+          { path: "Permission", element: /* @__PURE__ */ React25.createElement(SitePermissionPage, null) },
+          { path: "Admins", element: /* @__PURE__ */ React25.createElement(SiteAdminsPage, null) }
         ]
       },
-      { path: "User", element: /* @__PURE__ */ React24.createElement(AllUsersPage, null) },
-      { path: "AllUsers", element: /* @__PURE__ */ React24.createElement(AllUsersPage, null) },
-      { path: "User/UserViewHistory", element: /* @__PURE__ */ React24.createElement(UserViewsPage, null) },
-      { path: "UserViews", element: /* @__PURE__ */ React24.createElement(UserViewsPage, null) },
-      { path: "AccessLog", element: /* @__PURE__ */ React24.createElement(AccessLogsPage, null) },
-      { path: "AccessLogs", element: /* @__PURE__ */ React24.createElement(AccessLogsPage, null) },
-      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React24.createElement(AccessLogsPage, null) },
-      { path: "RecentChange", element: /* @__PURE__ */ React24.createElement(RecentChangesPage, null) },
-      { path: "RecentChanges", element: /* @__PURE__ */ React24.createElement(RecentChangesPage, null) },
-      { path: "S3", element: /* @__PURE__ */ React24.createElement(S3BrowserPage, null) },
-      { path: "S3Browser", element: /* @__PURE__ */ React24.createElement(S3BrowserPage, null) },
-      { path: "CrawlerCache", element: /* @__PURE__ */ React24.createElement(CrawlerCachePage, null) },
-      { path: "CrawlerCaches", element: /* @__PURE__ */ React24.createElement(CrawlerCachePage, null) },
-      { path: "ApiKeys", element: /* @__PURE__ */ React24.createElement(ApiKeysPage, null) }
+      { path: "User", element: /* @__PURE__ */ React25.createElement(AllUsersPage, null) },
+      { path: "AllUsers", element: /* @__PURE__ */ React25.createElement(AllUsersPage, null) },
+      { path: "User/UserViewHistory", element: /* @__PURE__ */ React25.createElement(UserViewsPage, null) },
+      { path: "UserViews", element: /* @__PURE__ */ React25.createElement(UserViewsPage, null) },
+      { path: "AccessLog", element: /* @__PURE__ */ React25.createElement(AccessLogsPage, null) },
+      { path: "AccessLogs", element: /* @__PURE__ */ React25.createElement(AccessLogsPage, null) },
+      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React25.createElement(AccessLogsPage, null) },
+      { path: "RecentChange", element: /* @__PURE__ */ React25.createElement(RecentChangesPage, null) },
+      { path: "RecentChanges", element: /* @__PURE__ */ React25.createElement(RecentChangesPage, null) },
+      { path: "S3", element: /* @__PURE__ */ React25.createElement(S3BrowserPage, null) },
+      { path: "S3Browser", element: /* @__PURE__ */ React25.createElement(S3BrowserPage, null) },
+      { path: "CrawlerCache", element: /* @__PURE__ */ React25.createElement(CrawlerCachePage, null) },
+      { path: "CrawlerCaches", element: /* @__PURE__ */ React25.createElement(CrawlerCachePage, null) },
+      { path: "ApiKeys", element: /* @__PURE__ */ React25.createElement(ApiKeysPage, null) },
+      { path: "NicknameRequests", element: /* @__PURE__ */ React25.createElement(NicknameRequestsPage, null) }
     ]
   }
 ]);
@@ -1898,6 +1994,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
   createRoot(rootElement).render(
-    /* @__PURE__ */ React24.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React24.createElement(RouterProvider, { router }))
+    /* @__PURE__ */ React25.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React25.createElement(RouterProvider, { router }))
   );
 });

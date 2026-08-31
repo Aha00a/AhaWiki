@@ -19,6 +19,7 @@ import AccessLogsPage from "./admin/pages/AccessLogsPage.jsx";
 import S3BrowserPage from "./admin/pages/S3BrowserPage.jsx";
 import CrawlerCachePage from "./admin/pages/CrawlerCachePage.jsx";
 import ApiKeysPage from "./admin/pages/ApiKeysPage.jsx";
+import NicknameRequestsPage from "./admin/pages/NicknameRequestsPage.jsx";
 
 const router = createBrowserRouter([
     {
@@ -55,6 +56,7 @@ const router = createBrowserRouter([
             {path: "CrawlerCache", element: <CrawlerCachePage/>},
             {path: "CrawlerCaches", element: <CrawlerCachePage/>},
             {path: "ApiKeys", element: <ApiKeysPage/>},
+            {path: "NicknameRequests", element: <NicknameRequestsPage/>},
         ],
     },
 ]);

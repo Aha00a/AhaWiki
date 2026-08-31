@@ -19,6 +19,27 @@ export async function fetchCsrfToken() {
     return {name: token?.name ?? "csrfToken", value: token?.value ?? ""};
 }
 
+/**
+ * 쓰기 요청 하나. CSRF 헤더, credentials, 그리고 실패했을 때 `{error}` 봉투를 푸는 것까지
+ * 같은 자리에 둔다. 읽기가 `fetchJson` 하나로 모여 있는 것과 짝이다.
+ *
+ * body 를 주면 JSON 으로 보내고, 없으면 헤더만 붙인다 — DELETE 와 인자 없는 POST 가 그렇다.
+ */
+export async function sendJson(url, method, body) {
+    const csrf = await fetchCsrfToken();
+    const headers = {"Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value};
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    const response = await fetch(url, {
+        method,
+        credentials: "same-origin",
+        headers,
+        body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+    return data;
+}
+
 // 페이지네이션 목록 응답의 봉투. 서버는 JsonResults.pagedJson 한 곳에서 만들고,
 // 푸는 쪽도 여기 하나다. hook 마다 풀면 한 endpoint 가 모양을 바꿔도 그 hook 만 고쳐진다.
 export function unwrapPaged(data) {
