@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendForm} from "../api.js";
 
 export function useSiteData(siteSeq) {
     const [sites, setSites] = useState([]);
@@ -25,23 +25,11 @@ export function useSiteData(siteSeq) {
         setSavingSiteMeta(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            payload.set("abbr", nextMeta?.abbr ?? "");
-            payload.set("mainDomain", nextMeta?.mainDomain ?? "");
-            payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
-                method: "PUT",
-                credentials: "same-origin",
-                headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
-                body: payload.toString(),
+            const updated = await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, "PUT", {
+                abbr: nextMeta?.abbr,
+                mainDomain: nextMeta?.mainDomain,
+                publicListedOrder: nextMeta?.publicListedOrder,
             });
-            if (!response.ok) {
-                const payloadJson = await response.json().catch(() => null);
-                throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-            }
-            const updated = await response.json();
             setSites((prev) => prev.map((s) => s.seq === updated.seq ? {...s, ...updated} : s));
             return updated;
         } catch (err) {

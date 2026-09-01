@@ -1,5 +1,5 @@
 import {useCallback, useRef, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendJson} from "../api.js";
 
 export function useS3Data() {
     const [loading, setLoading] = useState(false);
@@ -87,14 +87,7 @@ export function useS3Data() {
         if (keys.length === 0) return;
         setDeletingS3(true);
         try {
-            const csrf = await fetchCsrfToken();
-            const response = await fetch("/api/Admin/S3Objects", {
-                method: "DELETE",
-                credentials: "same-origin",
-                headers: {"Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value},
-                body: JSON.stringify({keys}),
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await sendJson("/api/Admin/S3Objects", "DELETE", {keys});
             loadedRef.current = new Set();
             loadingRef.current = new Set();
             itemsByPrefixRef.current = {};

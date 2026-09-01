@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendForm, sendJson} from "../api.js";
 
 export function useSiteAdminsData(siteSeq) {
     const [siteAdmins, setSiteAdmins] = useState([]);
@@ -19,12 +19,7 @@ export function useSiteAdminsData(siteSeq) {
         if (!siteSeq || !userSeq) return false;
         setAdding(true);
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            payload.set("user", String(userSeq));
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
+            await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, "POST", {user: String(userSeq)});
             await loadSiteAdmins();
             return true;
         } catch (err) { logError("site-admin:insert:error", err); setError(err.message); return false; }
@@ -35,9 +30,7 @@ export function useSiteAdminsData(siteSeq) {
         if (!siteSeq || !userSeq) return;
         setDeletingUserSeq(userSeq);
         try {
-            const csrfToken = await fetchCsrfToken();
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, {method: "DELETE", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}});
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await sendJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, "DELETE");
             await loadSiteAdmins();
         } catch (err) { logError("site-admin:delete:error", err); setError(err.message); }
         finally { setDeletingUserSeq(0); }

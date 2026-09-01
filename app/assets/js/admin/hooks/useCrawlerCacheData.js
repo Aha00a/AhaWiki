@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError, pagedParams, unwrapPaged} from "../api.js";
+import {fetchJson, logError, pagedParams, sendForm, sendJson, unwrapPaged} from "../api.js";
 import {CRAWLER_CACHE_PAGE_SIZE} from "../constants.js";
 
 export function useCrawlerCacheData() {
@@ -27,17 +27,7 @@ export function useCrawlerCacheData() {
     const refreshCrawlerCache = useCallback(async (url, currentParams) => {
         setRefreshingUrl(url);
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            payload.set("url", url);
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch("/api/Admin/CrawlerCache/Refresh", {
-                method: "POST",
-                credentials: "same-origin",
-                headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
-                body: payload.toString(),
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await sendForm("/api/Admin/CrawlerCache/Refresh", "POST", {url});
             await loadCrawlerCaches(currentParams);
         } finally {
             setRefreshingUrl("");
@@ -47,13 +37,7 @@ export function useCrawlerCacheData() {
     const deleteCrawlerCache = useCallback(async (url, currentParams) => {
         setDeletingUrl(url);
         try {
-            const csrfToken = await fetchCsrfToken();
-            const response = await fetch(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, {
-                method: "DELETE",
-                credentials: "same-origin",
-                headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value},
-            });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await sendJson(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, "DELETE");
             await loadCrawlerCaches(currentParams);
         } finally {
             setDeletingUrl("");

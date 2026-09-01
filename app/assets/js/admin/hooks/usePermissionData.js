@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendForm, sendJson} from "../api.js";
 
 // Until the rows arrive there is nothing to offer. Never a guessed list: a wrong action
 // number here is the bug this endpoint was changed to remove.
@@ -30,12 +30,12 @@ export function usePermissionData(siteSeq) {
         if (!siteSeq) return false;
         setSaving(true);
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, {method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
+            // Only the five the endpoint parses, so an extra field on the form object cannot
+            // ride along into the request.
+            const fields = Object.fromEntries(
+                ["targetType", "target", "actorType", "actor", "action"].map((key) => [key, permission[key]])
+            );
+            await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, "POST", fields);
             await loadPermissions();
             return true;
         } catch (err) { logError("permission:save:error", err); setError(err.message); return false; }
@@ -47,10 +47,10 @@ export function usePermissionData(siteSeq) {
         const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
         setDeletingKey(key);
         try {
-            const csrfToken = await fetchCsrfToken();
+            // The row's identity is its four key columns, so the delete carries them in the
+            // query string rather than a body.
             const params = new URLSearchParams({targetType: permission.targetType ?? "", target: permission.target ?? "", actorType: permission.actorType ?? "", actor: permission.actor ?? ""});
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, {method: "DELETE", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
+            await sendJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, "DELETE");
             await loadPermissions();
         } catch (err) { logError("permission:delete:error", err); setError(err.message); }
         finally { setDeletingKey(""); }

@@ -6,7 +6,7 @@ import {useAdminPageMetaData} from "../hooks/useAdminPageMetaData.js";
 import {IconChevronUp, IconSelector} from "../../component/commonWidgets.jsx";
 import {ADMIN_PAGE_META_PAGE_SIZE} from "../constants.js";
 import {formatDateTimeInClientTimezone} from "../utils.js";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendForm} from "../api.js";
 import {Anchor, Image} from "@mantine/core";
 
 export default function SiteDetailPage() {
@@ -27,11 +27,8 @@ export default function SiteDetailPage() {
         if (!siteSeq) return;
         setCalculating(true);
         try {
-            const csrfToken = await fetchCsrfToken();
             const suffix = pageName?.trim() ? `?pageName=${encodeURIComponent(pageName.trim())}` : "";
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, {method: "POST", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}, body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}`});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
-            return await response.json();
+            return await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, "POST", {});
         } catch (err) { logError("site:calculate:error", err); return null; }
         finally { setCalculating(false); }
     };

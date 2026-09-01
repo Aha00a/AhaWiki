@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendForm, sendJson, sendMultipart} from "../api.js";
 
 const DEFAULT_THEME = {defaultHue: ""};
 const DEFAULT_TELEGRAM = {chatId: ""};
@@ -29,14 +29,7 @@ export function useSiteConfigData(siteSeq) {
         setUploadingFavicon(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("siteSeq", String(siteSeq));
-            formData.append(csrfToken.name, csrfToken.value);
-            const response = await fetch("/api/Admin/Favicon", {method: "POST", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: formData});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
-            const data = await response.json();
+            const data = await sendMultipart("/api/Admin/Favicon", "POST", {file, siteSeq: String(siteSeq)});
             setFaviconUrl(data?.faviconUrl || "/public/favicon.png");
             setFaviconObjectKey(data?.objectKey || "");
         } catch (err) { logError("favicon:upload:error", err); setError(err.message); }
@@ -48,9 +41,7 @@ export function useSiteConfigData(siteSeq) {
         setDeletingFavicon(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const response = await fetch(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, {method: "DELETE", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
+            await sendJson(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, "DELETE");
             setFaviconUrl("/public/favicon.png");
             setFaviconObjectKey("");
         } catch (err) { logError("favicon:delete:error", err); setError(err.message); }
@@ -70,14 +61,7 @@ export function useSiteConfigData(siteSeq) {
         setSavingTheme(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            payload.set("siteSeq", String(siteSeq));
-            Object.entries(theme).forEach(([k, v]) => payload.set(k, v ?? ""));
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch("/api/Admin/SiteTheme", {method: "PUT", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
-            const data = await response.json();
+            const data = await sendForm("/api/Admin/SiteTheme", "PUT", {siteSeq: String(siteSeq), ...theme});
             setSiteTheme({defaultHue: data?.defaultHue ?? ""});
         } catch (err) { logError("site-theme:save:error", err); setError(err.message); }
         finally { setSavingTheme(false); }
@@ -96,13 +80,7 @@ export function useSiteConfigData(siteSeq) {
         setSavingTelegram(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const payload = new URLSearchParams();
-            payload.set("chatId", telegramData.chatId ?? "");
-            payload.set(csrfToken.name, csrfToken.value);
-            const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, {method: "PUT", credentials: "same-origin", headers: {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}, body: payload.toString()});
-            if (!response.ok) { const p = await response.json().catch(() => null); throw new Error(p?.error || `HTTP ${response.status}`); }
-            const data = await response.json();
+            const data = await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, "PUT", {chatId: telegramData.chatId});
             setTelegram({chatId: data?.chatId ?? ""});
         } catch (err) { logError("telegram:save:error", err); setError(err.message); }
         finally { setSavingTelegram(false); }

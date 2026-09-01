@@ -36,19 +36,40 @@ async function fetchCsrfToken() {
   const token = await response.json();
   return { name: token?.name ?? "csrfToken", value: token?.value ?? "" };
 }
-async function sendJson(url, method, body) {
+async function send(url, method, build) {
   const csrf = await fetchCsrfToken();
-  const headers = { "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value };
-  if (body !== void 0) headers["Content-Type"] = "application/json";
+  const { headers = {}, body } = build(csrf);
   const response = await fetch(url, {
     method,
     credentials: "same-origin",
-    headers,
-    body: body === void 0 ? void 0 : JSON.stringify(body)
+    headers: { "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value, ...headers },
+    body
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
   return data;
+}
+function sendJson(url, method, body) {
+  return send(url, method, () => body === void 0 ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+}
+function sendForm(url, method, fields) {
+  return send(url, method, (csrf) => {
+    const payload = new URLSearchParams();
+    Object.entries(fields ?? {}).forEach(([key, value]) => payload.set(key, value ?? ""));
+    payload.set(csrf.name, csrf.value);
+    return {
+      headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
+      body: payload.toString()
+    };
+  });
+}
+function sendMultipart(url, method, fields) {
+  return send(url, method, (csrf) => {
+    const payload = new FormData();
+    Object.entries(fields ?? {}).forEach(([key, value]) => payload.append(key, value));
+    payload.append(csrf.name, csrf.value);
+    return { body: payload };
+  });
 }
 function unwrapPaged(data) {
   const rows = Array.isArray(data?.array) ? data.array : Array.isArray(data) ? data : [];
@@ -185,23 +206,11 @@ function useSiteData(siteSeq) {
     setSavingSiteMeta(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("abbr", nextMeta?.abbr ?? "");
-      payload.set("mainDomain", nextMeta?.mainDomain ?? "");
-      payload.set("publicListedOrder", nextMeta?.publicListedOrder ?? "");
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
-        body: payload.toString()
+      const updated = await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}`, "PUT", {
+        abbr: nextMeta?.abbr,
+        mainDomain: nextMeta?.mainDomain,
+        publicListedOrder: nextMeta?.publicListedOrder
       });
-      if (!response.ok) {
-        const payloadJson = await response.json().catch(() => null);
-        throw new Error(payloadJson?.error || `HTTP ${response.status}`);
-      }
-      const updated = await response.json();
       setSites((prev) => prev.map((s) => s.seq === updated.seq ? { ...s, ...updated } : s));
       return updated;
     } catch (err) {
@@ -693,14 +702,8 @@ function SiteDetailPage() {
     if (!siteSeq) return;
     setCalculating(true);
     try {
-      const csrfToken = await fetchCsrfToken();
       const suffix = pageName?.trim() ? `?pageName=${encodeURIComponent(pageName.trim())}` : "";
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, { method: "POST", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value, "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }, body: `${encodeURIComponent(csrfToken.name)}=${encodeURIComponent(csrfToken.value)}` });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
-      return await response.json();
+      return await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Calculate${suffix}`, "POST", {});
     } catch (err) {
       logError("site:calculate:error", err);
       return null;
@@ -792,17 +795,7 @@ function useSiteConfigData(siteSeq) {
     setUploadingFavicon(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("siteSeq", String(siteSeq));
-      formData.append(csrfToken.name, csrfToken.value);
-      const response = await fetch("/api/Admin/Favicon", { method: "POST", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: formData });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await sendMultipart("/api/Admin/Favicon", "POST", { file, siteSeq: String(siteSeq) });
       setFaviconUrl(data?.faviconUrl || "/public/favicon.png");
       setFaviconObjectKey(data?.objectKey || "");
     } catch (err) {
@@ -817,12 +810,7 @@ function useSiteConfigData(siteSeq) {
     setDeletingFavicon(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
+      await sendJson(`/api/Admin/Favicon?siteSeq=${encodeURIComponent(siteSeq)}`, "DELETE");
       setFaviconUrl("/public/favicon.png");
       setFaviconObjectKey("");
     } catch (err) {
@@ -850,17 +838,7 @@ function useSiteConfigData(siteSeq) {
     setSavingTheme(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("siteSeq", String(siteSeq));
-      Object.entries(theme).forEach(([k, v]) => payload.set(k, v ?? ""));
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch("/api/Admin/SiteTheme", { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await sendForm("/api/Admin/SiteTheme", "PUT", { siteSeq: String(siteSeq), ...theme });
       setSiteTheme({ defaultHue: data?.defaultHue ?? "" });
     } catch (err) {
       logError("site-theme:save:error", err);
@@ -887,16 +865,7 @@ function useSiteConfigData(siteSeq) {
     setSavingTelegram(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("chatId", telegramData.chatId ?? "");
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, { method: "PUT", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
-      const data = await response.json();
+      const data = await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Telegram`, "PUT", { chatId: telegramData.chatId });
       setTelegram({ chatId: data?.chatId ?? "" });
     } catch (err) {
       logError("telegram:save:error", err);
@@ -993,9 +962,7 @@ function useSiteCacheData(siteSeq) {
     setClearing(true);
     setError("");
     try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/cache/${siteSeq}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await sendJson(`/api/cache/${siteSeq}`, "DELETE");
     } catch (err) {
       logError("cache:clear:error", siteSeq, err);
       setError(err.message || String(err));
@@ -1062,15 +1029,10 @@ function usePermissionData(siteSeq) {
     if (!siteSeq) return false;
     setSaving(true);
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      ["targetType", "target", "actorType", "actor", "action"].forEach((key) => payload.set(key, permission[key] ?? ""));
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
+      const fields = Object.fromEntries(
+        ["targetType", "target", "actorType", "actor", "action"].map((key) => [key, permission[key]])
+      );
+      await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions`, "POST", fields);
       await loadPermissions();
       return true;
     } catch (err) {
@@ -1086,13 +1048,8 @@ function usePermissionData(siteSeq) {
     const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
     setDeletingKey(key);
     try {
-      const csrfToken = await fetchCsrfToken();
       const params = new URLSearchParams({ targetType: permission.targetType ?? "", target: permission.target ?? "", actorType: permission.actorType ?? "", actor: permission.actor ?? "" });
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
+      await sendJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Permissions?${params.toString()}`, "DELETE");
       await loadPermissions();
     } catch (err) {
       logError("permission:delete:error", err);
@@ -1190,15 +1147,7 @@ function useSiteAdminsData(siteSeq) {
     if (!siteSeq || !userSeq) return false;
     setAdding(true);
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("user", String(userSeq));
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }, body: payload.toString() });
-      if (!response.ok) {
-        const p = await response.json().catch(() => null);
-        throw new Error(p?.error || `HTTP ${response.status}`);
-      }
+      await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins`, "POST", { user: String(userSeq) });
       await loadSiteAdmins();
       return true;
     } catch (err) {
@@ -1213,9 +1162,7 @@ function useSiteAdminsData(siteSeq) {
     if (!siteSeq || !userSeq) return;
     setDeletingUserSeq(userSeq);
     try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, { method: "DELETE", credentials: "same-origin", headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value } });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await sendJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/Admins/${encodeURIComponent(userSeq)}`, "DELETE");
       await loadSiteAdmins();
     } catch (err) {
       logError("site-admin:delete:error", err);
@@ -1534,14 +1481,7 @@ function useS3Data() {
     if (keys.length === 0) return;
     setDeletingS3(true);
     try {
-      const csrf = await fetchCsrfToken();
-      const response = await fetch("/api/Admin/S3Objects", {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value },
-        body: JSON.stringify({ keys })
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await sendJson("/api/Admin/S3Objects", "DELETE", { keys });
       loadedRef.current = /* @__PURE__ */ new Set();
       loadingRef.current = /* @__PURE__ */ new Set();
       itemsByPrefixRef.current = {};
@@ -1702,17 +1642,7 @@ function useCrawlerCacheData() {
   const refreshCrawlerCache = useCallback13(async (url, currentParams) => {
     setRefreshingUrl(url);
     try {
-      const csrfToken = await fetchCsrfToken();
-      const payload = new URLSearchParams();
-      payload.set("url", url);
-      payload.set(csrfToken.name, csrfToken.value);
-      const response = await fetch("/api/Admin/CrawlerCache/Refresh", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8", "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value },
-        body: payload.toString()
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await sendForm("/api/Admin/CrawlerCache/Refresh", "POST", { url });
       await loadCrawlerCaches(currentParams);
     } finally {
       setRefreshingUrl("");
@@ -1721,13 +1651,7 @@ function useCrawlerCacheData() {
   const deleteCrawlerCache = useCallback13(async (url, currentParams) => {
     setDeletingUrl(url);
     try {
-      const csrfToken = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value }
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      await sendJson(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, "DELETE");
       await loadCrawlerCaches(currentParams);
     } finally {
       setDeletingUrl("");
@@ -1823,14 +1747,7 @@ function ApiKeysPage() {
     setRevokingSeq(seq);
     setError("");
     try {
-      const csrf = await fetchCsrfToken();
-      const response = await fetch(`/api/Admin/ApiKeys/${encodeURIComponent(seq)}`, {
-        method: "DELETE",
-        credentials: "same-origin",
-        headers: { "Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value }
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+      await sendJson(`/api/Admin/ApiKeys/${encodeURIComponent(seq)}`, "DELETE");
       await loadApiKeys();
     } catch (err) {
       setError(err.message || String(err));

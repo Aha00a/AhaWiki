@@ -1,5 +1,5 @@
 import {useCallback, useState} from "react";
-import {fetchJson, fetchCsrfToken, logError} from "../api.js";
+import {fetchJson, logError, sendJson} from "../api.js";
 
 export function useSiteCacheData(siteSeq) {
     const [clearing, setClearing] = useState(false);
@@ -11,9 +11,7 @@ export function useSiteCacheData(siteSeq) {
         setClearing(true);
         setError("");
         try {
-            const csrfToken = await fetchCsrfToken();
-            const response = await fetch(`/api/cache/${siteSeq}`, {method: "DELETE", credentials: "same-origin", headers: {"Csrf-Token": csrfToken.value, "X-CSRF-Token": csrfToken.value}});
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            await sendJson(`/api/cache/${siteSeq}`, "DELETE");
         } catch (err) {
             logError("cache:clear:error", siteSeq, err);
             setError(err.message || String(err));

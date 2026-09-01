@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Badge, Button, Card, Group, Text, Title} from "@mantine/core";
 import {DataTable} from "mantine-datatable";
-import {fetchCsrfToken, fetchJson} from "../api.js";
+import {fetchJson, sendJson} from "../api.js";
 import {formatDateTimeInClientTimezone} from "../utils.js";
 
 export default function ApiKeysPage() {
@@ -29,14 +29,7 @@ export default function ApiKeysPage() {
         setRevokingSeq(seq);
         setError("");
         try {
-            const csrf = await fetchCsrfToken();
-            const response = await fetch(`/api/Admin/ApiKeys/${encodeURIComponent(seq)}`, {
-                method: "DELETE",
-                credentials: "same-origin",
-                headers: {"Csrf-Token": csrf.value, "X-CSRF-Token": csrf.value},
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+            await sendJson(`/api/Admin/ApiKeys/${encodeURIComponent(seq)}`, "DELETE");
             await loadApiKeys();
         } catch (err) {
             setError(err.message || String(err));
