@@ -73,3 +73,13 @@ FROM Attachment WHERE dateUploaded IS NOT NULL;
 ]]]
 
 여러 스키마를 데이터베이스 브라우저에서 같이 볼 때 특히 조심할 것. 뷰어의 전역 "timezone +9h" 설정은 이 저장소의 값을 9시간짜리 거짓말로 바꾼다.
+
+== 테이블 collation 은 utf8mb4_bin — 적어 줘야 그렇게 된다
+
+데이터베이스의 기본 collation 은 `utf8mb4_unicode_ci` 인데(운영·개발 둘 다, 2026-09-02 실측) 테이블은 전부 `utf8mb4_bin` 이다. 그래서 `CREATE TABLE` 에 테이블 collation 을 안 적으면 다른 테이블과 다른 것을 받는다 — 기본값이 관례가 아니다.
+
+evolution 68 이 그렇게 됐다. `UserNicknameChangeRequest` 가 운영에서 `utf8mb4_unicode_ci` 로 만들어져 25개 중 혼자 달랐고, 운영의 `SHOW CREATE TABLE` 을 커밋된 `schema/schema.sql` 과 대조하다가 드러났다. 배포 후 헬스체크와 `play_evolutions` 는 둘 다 "성공" 이라고 말했다 — 그 둘은 문장이 실행됐다는 것이지 의도한 결과가 나왔다는 것이 아니다. evolution 69 가 bin 으로 되돌린다.
+
+ * 새 테이블은 `) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin` 으로 끝낸다. `EvolutionConventionSpec` 이 69 이후의 evolution 마다 이것을 확인한다 — 68 을 그대로 읽어 "이건 걸린다" 를 못박아 둔 채로.
+ * 컬럼 하나가 다른 collation 을 써야 하면 그 컬럼에 적는다. `UserNicknameChangeRequest.requestedNickname` 이 `User.nickname` 과 같은 `utf8mb4_general_ci` 인 것이 그 예다 — 대소문자를 무시하는 비교가 그 컬럼의 요구라서, 테이블 기본값과 다른 것이 의도다.
+ * 왜 bin 인지는 이 페이지에 근거가 남아 있지 않다. 24개가 이미 그렇고, 하나만 다르면 `=` 비교의 대소문자 규칙이 테이블마다 갈린다는 것으로 지금은 충분하다.

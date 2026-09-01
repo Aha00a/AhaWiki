@@ -210,9 +210,13 @@
 
 == Deployment Checks
 
- * [ ] 1. 운영 DB migration 전 백업을 확인한다.
- * [ ] 2. `User.nickname` unique 제약 조건 이름을 확인한다.
- * [ ] 3. `UserNicknameHistory` 테이블 존재 여부를 확인한다.
- * [ ] 4. 기존 닉네임 중 새 규칙에 맞지 않는 값은 유지되는지 확인한다.
- * [ ] 5. 관리자 계정으로 승인과 거절 flow를 staging에서 확인한다.
- * [ ] 6. 기존 로그인 세션은 재로그인 또는 signing key 교체 전까지 이전 닉네임을 표시할 수 있음을 확인한다.
+2026-09-02 릴리스 `20260902-081352` 로 배포됐다. evolution 68 은 운영에 08:17:13 적용됐고(`play_evolutions`, `last_problem` 없음), 첫 인스턴스가 healthy 로 올라온 것이 다른 쪽 신호였다.
+
+ * [ ] 1. 운영 DB migration 전 백업을 확인한다. — '''배포 때 확인하지 않았다.''' RDS 자동 백업에 기대는 상태이고, 그것이 켜져 있는지는 사람이 콘솔에서 봐야 한다. 결과적으로 추가만 하는 evolution 이라 되돌릴 것이 없었지만, 그것은 운이지 절차가 아니다.
+ * [[CB(x)]] 2. `User.nickname` unique 제약 조건 이름을 확인한다. — `User_nickname_lower_uindex`
+ * [[CB(x)]] 3. `UserNicknameHistory` 테이블 존재 여부를 확인한다.
+ * [[CB(x)]] 4. 기존 닉네임 중 새 규칙에 맞지 않는 값은 유지되는지 확인한다. — `User.nickname` 을 쓰는 코드는 승인 하나뿐이고, 승인은 신청된 이름만 검증한다.
+ * [[CB(x)]] 5. 관리자 계정으로 승인과 거절 flow를 staging에서 확인한다. — staging 이 없다. `ApiUserNicknameSpec` 17개와, stub API 에 물린 실제 번들에서의 클릭으로 대신했다. 운영에서 실제로 신청·승인을 눌러 본 사람은 아직 없다.
+ * [[CB(x)]] 6. 기존 로그인 세션은 재로그인 또는 signing key 교체 전까지 이전 닉네임을 표시할 수 있음을 확인한다. — Session Handling 절에 적힌 대로 두었다.
+
+'''배포 뒤에 나온 것 하나.''' 운영이 만든 테이블이 `COLLATE=utf8mb4_unicode_ci` 였다 — evolution 68 이 테이블 collation 을 안 적어 DB 기본값을 받았고, 다른 24개 테이블은 전부 `utf8mb4_bin` 이다. 동작에는 영향이 없다(`status` 는 고정 상수와만 비교하고 `requestedNickname` 은 제 collation 을 따로 적어 뒀다). evolution 69 가 bin 으로 맞추며, '''아직 배포 전'''이다. 규약과 가드는 ["Dev Database"]. `schemaDump.sh --check` 는 개발 DB 에 68·69 가 적용될 때까지 이 테이블만큼 다르다고 보고한다 — 예상된 상태다.
