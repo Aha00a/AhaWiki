@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "admin:build": "node scripts/admin.mjs",
+    "check:cdn": "node scripts/check-cdn-assets.mjs",
     "admin:watch": "node scripts/admin.mjs --watch",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "schemaDump": "sh ./schemaDump.sh",

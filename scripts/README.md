@@ -22,6 +22,26 @@ npm run admin:watch
 
 This is a Node.js + esbuild flow (`scripts/admin.mjs`); Bun and TypeScript are not required.
 
+## External asset check
+
+`check-cdn-assets.mjs` fetches every external stylesheet, script, and importmap entry the
+templates point at, and fails if any does not answer 200.
+
+```bash
+npm run check:cdn
+```
+
+Run it after changing a pinned version. It is not part of `npm test` — it needs the network.
+
+A 404 stylesheet is silent, which is why this exists: the admin UI pointed at
+`mantine-datatable@9.2.2/styles.css`, the package ships that file under `dist/`, and every
+admin table rendered unstyled for as long as the link was wrong. The most visible symptom was
+the "no records" overlay drawn across real rows, because the rule that hides it lives in the
+file that never arrived.
+
+URLs still holding a template placeholder (`https://${host}/...`) are skipped — the server
+fills those in and there is nothing to fetch.
+
 ## Wiki page sync
 
 `sync.ahawiki.net.mjs` compares the **committed** copies under `docs/ahawiki.net/` against the

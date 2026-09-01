@@ -24,7 +24,7 @@ once by someone who could have read it instead. Add a line here when you add a d
 | [docs/ahawiki.net/Dev Database](docs/ahawiki.net/Dev%20Database) | The database itself: what the columns mean and which timezone they are in. |
 | [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. They once spent two months gone without a build noticing; `test/kanban.roundtrip-fixtures.test.mjs` now fails by name when one is missing, and runs any new directory without being told about it. |
 | [test/manual/editor-keys/](test/manual/editor-keys/) | Presses Tab and Enter in a real CodeMirror with the real editor scripts, without needing a server or a login. Not part of `npm test` — it needs a browser. |
-| [scripts/README.md](scripts/README.md) | The three scripts and what each is for: the admin bundle, the wiki sync (**AhaWikiDoc Sync** below is its rules), and the bulk download that overwrites local edits without looking. |
+| [scripts/README.md](scripts/README.md) | What each script is for: the admin bundle, the external-asset check (`npm run check:cdn` — run it after changing a pinned CDN version; a 404 stylesheet is silent and one went unnoticed for months), the wiki sync (**AhaWikiDoc Sync** below is its rules), and the bulk download that overwrites local edits without looking. |
 | `docs/ahawiki.net/` | Copies of pages on the live wiki. Korean, and kept in step with it — see **AhaWikiDoc Sync** below. |
 
 ## Duplicated Code — Refactor at Two, Not Three (Absolute Rule)

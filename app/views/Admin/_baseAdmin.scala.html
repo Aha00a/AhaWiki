@@ -27,7 +27,11 @@
         <link rel="stylesheet" href="/public/adjacent.css">
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@mantine/core@@9.2.1/styles.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mantine-datatable@@9.2.2/styles.css">
+        @* mantine-datatable ships its stylesheet under dist/; the root path 404s and a 404
+           stylesheet is silent, so every admin table rendered unstyled and drew its "no
+           records" overlay across real rows. The layered variant beside it would order
+           against @@layer, which @@mantine/core above does not use. *@
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mantine-datatable@@9.2.2/dist/styles.css">
         <script type="importmap">
             {
                 "imports": {
