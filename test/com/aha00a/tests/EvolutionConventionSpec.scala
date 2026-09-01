@@ -32,6 +32,17 @@ object EvolutionConvention {
     }
   }
 
+  /**
+   * Comment lines that contain a semicolon.
+   *
+   * Play splits an evolution into statements on every `;` before the database sees any of
+   * it, and it does not know what a comment is. A semicolon inside a comment therefore ends
+   * a statement there, and whatever follows on the next lines runs as SQL of its own —
+   * which is prose, and fails. The first attempt at evolution 69 did this in production.
+   */
+  def commentLinesWithSemicolon(sql: String): Seq[String] =
+    sql.linesIterator.map(_.trim).filter(line => (line.startsWith("#") || line.startsWith("--")) && line.contains(";")).toSeq
+
   def evolutionFiles(directory: Path): Seq[(Int, Path)] =
     Files.list(directory).iterator().asScala.toSeq.flatMap { path =>
       """(\d+)\.sql""".r.findFirstMatchIn(path.getFileName.toString).map(m => (m.group(1).toInt, path))
@@ -59,6 +70,32 @@ class EvolutionConventionSpec extends AnyFreeSpec {
           |ALTER TABLE Fine ADD COLUMN other INT NULL;
           |""".stripMargin
       assert(EvolutionConvention.tablesCreatedWithoutCollation(sql) === Seq.empty)
+    }
+  }
+
+  "commentLinesWithSemicolon" - {
+    "flags the comment that broke the first evolution 69, and nothing else in that script" in {
+      val brokenScript =
+        """# --- !Ups
+          |
+          |# The convert moves the columns without a collation of their own (status, rejectReason) onto
+          |# bin; requestedNickname is then put back to the case-insensitive collation it shares with
+          |# User.nickname, which the convert would otherwise have overwritten.
+          |ALTER TABLE UserNicknameChangeRequest CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+          |""".stripMargin
+      assert(EvolutionConvention.commentLinesWithSemicolon(brokenScript) ===
+        Seq("# bin; requestedNickname is then put back to the case-insensitive collation it shares with"))
+    }
+  }
+
+  "every evolution" - {
+    "keeps semicolons out of its comments" in {
+      val offenders = EvolutionConvention.evolutionFiles(evolutionsDirectory).flatMap { case (id, path) =>
+        EvolutionConvention.commentLinesWithSemicolon(Files.readString(path)).map(line => s"$id.sql: $line")
+      }
+      assert(offenders === Seq.empty,
+        "\nPlay splits the script on every semicolon and does not know what a comment is, so the " +
+        "text after this one runs as SQL. Rephrase the comment.")
     }
   }
 

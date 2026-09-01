@@ -83,3 +83,11 @@ evolution 68 이 그렇게 됐다. `UserNicknameChangeRequest` 가 운영에서 
  * 새 테이블은 `) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin` 으로 끝낸다. `EvolutionConventionSpec` 이 69 이후의 evolution 마다 이것을 확인한다 — 68 을 그대로 읽어 "이건 걸린다" 를 못박아 둔 채로.
  * 컬럼 하나가 다른 collation 을 써야 하면 그 컬럼에 적는다. `UserNicknameChangeRequest.requestedNickname` 이 `User.nickname` 과 같은 `utf8mb4_general_ci` 인 것이 그 예다 — 대소문자를 무시하는 비교가 그 컬럼의 요구라서, 테이블 기본값과 다른 것이 의도다.
  * 왜 bin 인지는 이 페이지에 근거가 남아 있지 않다. 24개가 이미 그렇고, 하나만 다르면 `=` 비교의 대소문자 규칙이 테이블마다 갈린다는 것으로 지금은 충분하다.
+
+== evolution 주석에 세미콜론을 쓰지 말 것
+
+Play 는 evolution 파일을 DB 에 넘기기 전에 '''모든 `;` 에서''' 문장을 자르고, 주석이 무엇인지 모른다. `#` 줄 안의 `;` 는 거기서 문장을 끝내고, 그 다음 줄부터는 `#` 이 없는 산문이 SQL 로 실행된다.
+
+2026-09-02 evolution 69 의 첫 배포가 그렇게 실패했다 — "onto bin; requestedNickname is then put back…" 이라는 주석 한 줄 때문에 `requestedNickname is then put back to …` 가 MariaDB 에 문장으로 들어갔다. 인스턴스 하나가 "inconsistent state" 로 못 떴고, 다른 하나가 옛 릴리스로 버텨 사이트는 멀쩡했다. `play_evolutions` 의 실패 행은 옛 릴리스도 막으므로, 롤백은 `current` 만 되돌리는 것으로 끝나지 않고 그 행을 지우는 것이 먼저다(문장이 하나도 실행되지 않은 것을 `SHOW CREATE TABLE` 로 확인한 뒤).
+
+68 의 주석이 통과한 것은 거기 `;` 가 없었기 때문이지 주석이 안전해서가 아니다. `EvolutionConventionSpec` 이 이제 모든 evolution 의 주석 줄에서 `;` 를 찾아 실패한다.
