@@ -219,4 +219,8 @@
  * [[CB(x)]] 5. 관리자 계정으로 승인과 거절 flow를 staging에서 확인한다. — staging 이 없다. `ApiUserNicknameSpec` 17개와, stub API 에 물린 실제 번들에서의 클릭으로 대신했다. 운영에서 실제로 신청·승인을 눌러 본 사람은 아직 없다.
  * [[CB(x)]] 6. 기존 로그인 세션은 재로그인 또는 signing key 교체 전까지 이전 닉네임을 표시할 수 있음을 확인한다. — Session Handling 절에 적힌 대로 두었다.
 
-'''배포 뒤에 나온 것 하나.''' 운영이 만든 테이블이 `COLLATE=utf8mb4_unicode_ci` 였다 — evolution 68 이 테이블 collation 을 안 적어 DB 기본값을 받았고, 다른 24개 테이블은 전부 `utf8mb4_bin` 이다. 동작에는 영향이 없다(`status` 는 고정 상수와만 비교하고 `requestedNickname` 은 제 collation 을 따로 적어 뒀다). evolution 69 가 bin 으로 맞추며, '''아직 배포 전'''이다. 규약과 가드는 ["Dev Database"]. `schemaDump.sh --check` 는 개발 DB 에 68·69 가 적용될 때까지 이 테이블만큼 다르다고 보고한다 — 예상된 상태다.
+'''배포 뒤에 나온 것 하나.''' 운영이 만든 테이블이 `COLLATE=utf8mb4_unicode_ci` 였다 — evolution 68 이 테이블 collation 을 안 적어 DB 기본값을 받았고, 다른 24개 테이블은 전부 `utf8mb4_bin` 이다. 동작에는 영향이 없다(`status` 는 고정 상수와만 비교하고 `requestedNickname` 은 제 collation 을 따로 적어 뒀다). evolution 69 가 bin 으로 맞춘다. 규약과 가드는 ["Dev Database"].
+
+evolution 69 는 '''두 번째 배포에서''' 들어갔다. 첫 배포(08:43, 릴리스 `20260902-084152`)는 69 의 주석 안 세미콜론 때문에 실패했다 — Play 가 주석을 모른 채 `;` 로 문장을 자른다. 인스턴스 하나가 못 뜨고 다른 하나가 옛 릴리스로 버텨 사이트는 내내 200 이었다. 실패한 `play_evolutions` 행은 옛 릴리스도 막기 때문에 그 행을 지우고(문장이 하나도 실행되지 않은 것을 확인한 뒤) `current` 를 되돌려 복구했다. 경위와 순서는 ["Dev Database"]. 고친 69 는 릴리스 `20260902-085105` 로 08:52:16 에 적용됐고, 운영의 `SHOW CREATE TABLE` 이 `COLLATE=utf8mb4_bin` 에 `requestedNickname` 만 `utf8mb4_general_ci` 인 것 — 커밋된 `schema/schema.sql` 그대로 — 을 확인했다.
+
+`schemaDump.sh --check` 는 개발 DB 에 68·69 가 적용될 때까지 이 테이블만큼 다르다고 보고한다 — 예상된 상태다.
