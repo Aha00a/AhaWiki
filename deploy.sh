@@ -78,9 +78,16 @@ for p in "${PORTS[@]}"; do
   ok=0
   for i in $(seq 1 30); do
     sleep 3
-    # The Host header is not optional: one instance serves many wikis and picks by host, so a
-    # request without one matches no site and answers 404 however healthy the instance is.
-    code=$(ssh "$HOST" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 -H 'Host: $HEALTH_HOST' http://127.0.0.1:$p/w/FrontPage" 2>/dev/null || echo 000)
+    # /hc rather than a wiki page. It runs SELECT 1 and checks free disk, so it answers for the
+    # things a restart can break, and it needs no Host header because it does not match a site.
+    #
+    # It also has to stay off /w/. IpRateLimiter calls anything under /w/ a page view and
+    # everything else a human signal, and bans an IP that asks for 5 pages with fewer than 3
+    # human signals in 30s. Polling /w/FrontPage every 3s is precisely that, so on 2026-09-04
+    # this loop banned itself on the fifth poll: every later poll got 403 and a tarpit, and the
+    # deploy died with "never became healthy" while the instance was serving readers normally.
+    # Whether the site renders is verified through the proxy below, from a whitelisted address.
+    code=$(ssh "$HOST" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:$p/hc" 2>/dev/null || echo 000)
     if [ "$code" = "200" ]; then echo "    healthy after $i"; ok=1; break; fi
   done
   [ "$ok" = "1" ] || { echo "    $p never became healthy — stopping here, the other instance is still up" >&2; exit 1; }
