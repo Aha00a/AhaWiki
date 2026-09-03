@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib #.#.#, for OS
 --
--- Host: (from .env)    Database: (from .env)
+-- Host: (from local config)    Database: (from local config)
 -- ------------------------------------------------------
 -- Server version	11.4.12-MariaDB-log
 

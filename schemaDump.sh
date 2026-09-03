@@ -8,7 +8,34 @@ set -e
 # 바꾸고 갱신을 잊으면 스펙은 낡은 스키마에 대고 통과한다 — 초록불이 거짓이 되는 자리다.
 # 사람이 대조하려면 값이 필요 없으니, 이건 자격증명만 있으면 언제든 돌릴 수 있다.
 
-source "$(dirname "$0")/.env"
+# 자격증명은 앱이 이미 쓰는 설정에서 읽는다. 예전에는 저장소 안 `.env` 에 같은 DB
+# 비밀번호를 한 벌 더 두었는데, 같은 비밀이 두 곳에 있으면 한쪽만 도는 날이 온다 —
+# 그리고 저장소 밖에 있는 쪽이 살아남는다. 2026-09-02 에 이 체크아웃이 통째로 사라졌을 때
+# 설정은 `~/.config/ahawiki/` 에 있어 무사했고, `.env` 만 함께 없어졌다.
+#
+# `AHAWIKI_CONF` 로 다른 환경의 설정을 지정할 수 있다. 설정이 없으면 옛 `.env` 로 물러선다.
+conf="${AHAWIKI_CONF:-$HOME/.config/ahawiki/application.local.dev.conf}"
+if [ -f "$conf" ]; then
+    conf_value() { sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$conf" | tail -1 | tr -d '"'; }
+    url="$(conf_value 'db\.default\.url')"
+    # jdbc:mysql://host:port/dbname?params — 포트가 없으면 3306.
+    hostport="$(echo "$url" | sed -e 's#^jdbc:mysql://##' -e 's#/.*$##')"
+    DB_HOST="$(echo "$hostport" | cut -d: -f1)"
+    DB_PORT="$(echo "$hostport" | sed -n 's/^[^:]*:\([0-9]*\)$/\1/p')"
+    DB_PORT="${DB_PORT:-3306}"
+    DB_NAME="$(echo "$url" | sed -e 's#^jdbc:mysql://[^/]*/##' -e 's#?.*$##')"
+    DB_USER="$(conf_value 'db\.default\.username')"
+    DB_PASS="$(conf_value 'db\.default\.password')"
+elif [ -f "$(dirname "$0")/.env" ]; then
+    . "$(dirname "$0")/.env"
+else
+    echo "schemaDump: 자격증명을 찾지 못했다. $conf 가 없고 .env 도 없다." >&2
+    exit 1
+fi
+
+for v in DB_HOST DB_PORT DB_NAME DB_USER DB_PASS; do
+    eval "test -n \"\$$v\"" || { echo "schemaDump: $v 가 비어 있다 ($conf 를 확인할 것)." >&2; exit 1; }
+done
 
 tmp="$(dirname "$0")/schema/.schema.sql.tmp"
 out="$(dirname "$0")/schema/schema.sql"
@@ -36,7 +63,7 @@ dump_scrubbed() {
         | sed 's/ AUTO_INCREMENT=[0-9]*//g' \
         | sed 's/^-- Dump completed on .*//g' \
         | sed 's/Distrib [0-9]*.[0-9]*.[0-9]*, for .*/Distrib #.#.#, for OS/g' \
-        | sed 's/^-- Host: .*/-- Host: (from .env)    Database: (from .env)/'
+        | sed 's/^-- Host: .*/-- Host: (from local config)    Database: (from local config)/'
 }
 
 # 임시 파일에 받고 성공했을 때만 교체한다. 예전에는 곧바로 schema/schema.sql 로
