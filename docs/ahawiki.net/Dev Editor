@@ -127,6 +127,22 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * 조회 결과는 schema.org property 형태로 변환한다.
  * 변환 결과를 `[[[#!Schema ... ]]]` block으로 삽입한다.
  * `# API URL`과 `sameAs` 값을 함께 넣는다.
+ * 원본 행은 바로 위에 `# 라벨\t값` 주석으로 남는다. 매핑이 값을 줄이더라도 원문은 문서에 남는다.
+
+=== 매핑에서 판단이 필요했던 것들
+'''소유는 매핑하지 않는다.''' schema.org에는 「이 장소를 X가 소유한다」에 해당하는 property가 없다. `owns`는 그 반대로, domain이 Person·Organization이고 range가 Product다. 여기 연결하면 맞아 보이면서 뜻이 뒤집히므로 `Owner`·`소유`·`소유주`·`소유기관`은 라벨 그대로 통과시킨다.
+
+'''`yearBuilt`는 연도만 남는다.''' range가 `Number`라 `1978-04-14`를 담을 수 없다. 어휘 전체에서 range가 Date·DateTime이면서 domain에 Place 계열이 있는 property는 하나도 없다 — 건물의 완공일을 온전히 담을 자리가 schema.org에 없다. 월·일은 위의 `#` 주석에 남는다.
+
+반면 '''조직은 다르다.''' `설립일`은 `foundingDate`(domain Organization, range Date)로 가므로 `1963-01-01`이 그대로 남는다.
+
+'''좌표는 `latitude`·`longitude` 두 줄로 쪼갠다.''' `geo`의 range는 `GeoCoordinates` 객체라 문자열 한 줄로는 맞지 않는다. 읽지 못한 값은 `geo`인 채로 둔다 — 지어내지 않는다.
+
+ * 도분초는 영어(`37°33′36″N`)와 한국어(`북위 37° 34′ 21″`)를 모두 읽는다. 방위가 숫자 뒤·앞 어디에 오든 된다.
+ * 도분초를 못 읽으면 문장 끝에 붙는 십진수 짝(`… / 37.5725; 126.9756`)으로 넘어간다.
+ * 라벨은 `좌표`와 '''`지리 좌표계`'''를 모두 본다. ko.wikipedia 건물 인포박스는 후자를 쓴다.
+
+'''한 칸이 여러 값으로 쪼개져 온다.''' Wikipedia가 `April 11, 1931; 95 years ago (…)`를 쉼표에서 나누므로 값 하나씩 보는 변환은 `yearBuilt`를 `April 11\t1931`로 만든다. 그래서 변환은 행 전체를 본다.
 
 == 저장
  * form은 ajax로 submit한다.
