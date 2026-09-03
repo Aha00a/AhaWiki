@@ -213,6 +213,11 @@
         "도시": "addressLocality",
         "우편번호": "postalCode",
         "좌표": "geo",
+        // ko.wikipedia's building infobox writes this, not 좌표 -- 롯데월드타워 and 63빌딩 both
+        // do, and the row was passing through untouched while the value was already parseable.
+        "지리 좌표계": "geo",
+        // foundingDate's range is Date, so unlike yearBuilt this keeps the month and day.
+        "설립일": "foundingDate",
         "완공": "yearBuilt",
         "준공": "yearBuilt",
         "완공일": "yearBuilt",

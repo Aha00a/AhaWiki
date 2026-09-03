@@ -68,6 +68,20 @@ test('address labels that unambiguously mean a place map to the address parts', 
     assert.equal(convertProperty('Country'), 'countryOfOrigin');
 });
 
+test('the labels ko.wikipedia actually uses are mapped, not the ones I assumed', () => {
+    // Surveying real articles found the building infobox says 지리 좌표계 rather than 좌표, so
+    // 롯데월드타워 and 63빌딩 kept an unsplit coordinate even after the coordinate parser worked.
+    assert.equal(convertProperty('지리 좌표계'), 'geo');
+
+    // foundingDate's range is Date, so an organisation keeps its whole date where a building
+    // mapped to yearBuilt can only keep the year.
+    assert.equal(convertProperty('설립일'), 'foundingDate');
+
+    // Ownership stays out, whichever word the article uses.
+    for (const label of ['소유주', '소유기관'])
+        assert.equal(convertProperty(label), label);
+});
+
 test('parseCoordinates reads the forms Wikipedia writes', () => {
     assert.deepEqual(coordinates('37°33′36″N 126°58′41″E'), {latitude: 37.56, longitude: 126.978056});
     assert.deepEqual(coordinates("37°33'36\"N 126°58'41\"E"), {latitude: 37.56, longitude: 126.978056});
