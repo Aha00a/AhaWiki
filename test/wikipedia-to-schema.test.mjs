@@ -27,7 +27,17 @@ function schemaOrgProperties() {
 }
 
 const wikipediaToSchema = loadWikipediaToSchema();
-const {WikipediaToSchemaProperty, convertProperty, parseCoordinates, convertWikipediaToSchemaOrg} = wikipediaToSchema;
+const {WikipediaToSchemaProperty, SchemaDateProperties, convertProperty, parseCoordinates, convertWikipediaToSchemaOrg} = wikipediaToSchema;
+
+/** Property ids the vocabulary gives a Date range, restricted to what the table maps onto. */
+function datedTargets() {
+    const vocabulary = JSON.parse(fs.readFileSync(path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld'), 'utf8'));
+    const targets = new Set(Object.values(WikipediaToSchemaProperty));
+    const ranges = node => [].concat(node.rangeIncludes || []).map(r => r.id || r);
+    return vocabulary.graph
+        .filter(node => node.type === 'Property' && targets.has(node.id) && ranges(node).some(r => r === 'Date' || r === 'DateTime'))
+        .map(node => node.id);
+}
 
 // The module runs in a vm context, so objects it returns carry that realm's prototype and
 // strict deepEqual rejects them. Spreading brings the fields back into this realm.
@@ -80,6 +90,10 @@ test('the labels ko.wikipedia actually uses are mapped, not the ones I assumed',
     // Ownership stays out, whichever word the article uses.
     for (const label of ['소유주', '소유기관'])
         assert.equal(convertProperty(label), label);
+
+    // Comparing the converter against the GitHub page someone had corrected by hand showed this
+    // one had been added there and never in the table.
+    assert.equal(convertProperty('Parent'), 'parentOrganization');
 });
 
 test('parseCoordinates reads the forms Wikipedia writes', () => {
@@ -131,6 +145,29 @@ test('yearBuilt gets a year, since its range is Number', () => {
     // its comma. Looking at one value at a time produced "yearBuilt<TAB>April 11<TAB>1931".
     const split = convertWikipediaToSchemaOrg([['Completed', 'April 11', '1931; 95 years ago (1931-04-11)']], true);
     assert.match(split, /^yearBuilt\t1931$/m);
+});
+
+test('every Date-ranged target is listed, so none is left with the prose', () => {
+    // The browser has no copy of the vocabulary, so the list is written out in the source. This
+    // derives it from the shipped file instead: add a mapping onto a Date property and forget the
+    // list, and the row keeps Wikipedia's "February 8 <TAB> 2008(18 years ago) (2008-02-08)".
+    assert.deepEqual([...SchemaDateProperties].sort(), datedTargets().sort());
+});
+
+test('a date row collapses to the ISO date Wikipedia puts in brackets', () => {
+    // Both rows below are what en.wikipedia's GitHub infobox actually returns, comma-split. The
+    // page on the wiki had been corrected by hand to exactly these values.
+    const founded = convertWikipediaToSchemaOrg([['Founded', 'February 8', '2008(18 years ago) (2008-02-08) (as Logical Awesome LLC)']], true);
+    assert.match(founded, /^foundingDate\t2008-02-08$/m);
+
+    const launched = convertWikipediaToSchemaOrg([['Launched', 'April 10', '2008; 18 years ago (2008-04-10)']], true);
+    assert.match(launched, /^datePublished\t2008-04-10$/m);
+
+    // Korean articles already normalise to ISO before this point, and must stay untouched.
+    assert.match(convertWikipediaToSchemaOrg([['설립일', '1963년 1월 1일']], true), /^foundingDate\t1963-01-01$/m);
+
+    // No date to find: keep what the article said rather than emit nothing.
+    assert.match(convertWikipediaToSchemaOrg([['Founded', 'the sixties']], true), /^foundingDate\tthe sixties$/m);
 });
 
 test('an unmapped label keeps its own name and its value', () => {

@@ -146,6 +146,8 @@
         "Licence": "license",
         "License": "license",
         "Location": "location",
+        "Parent": "parentOrganization",
+        "Parent company": "parentOrganization",
         "Manufacturer": "manufacturer",
         "Member of": "memberOf",
         "Model": "model",
@@ -485,6 +487,18 @@
     // "April 11, 1931; 95 years ago (1931-04-11)" on its comma, so the day and the year land
     // apart. A transform looking at one value at a time cannot tell that from two separate
     // answers, and yearBuilt came out as "April 11<TAB>1931". These get the whole row.
+    // Mapping targets whose schema.org range is Date. A test derives this list from the shipped
+    // vocabulary and fails if the table gains another one, so it cannot quietly fall behind.
+    const SchemaDateProperties = ['foundingDate', 'birthDate', 'deathDate', 'datePublished', 'startDate'];
+
+    // Wikipedia writes the machine-readable form in brackets after the prose -- "February 8,
+    // 2008(18 years ago) (2008-02-08) (as Logical Awesome LLC)" -- and the comma split scatters
+    // the prose across values. Take the ISO date out of the row and drop the rest.
+    function toSingleDate(values) {
+        const iso = values.join(' ').match(/\b(\d{4}-\d{2}-\d{2})\b/);
+        return iso ? [iso[1]] : values;
+    }
+
     const SchemaPropertyRowTransform = {
         // yearBuilt's range is Number, so the row has to collapse to one year. Note this drops
         // the month and day on purpose -- the property cannot hold them. The original line is
@@ -493,6 +507,7 @@
             const year = values.join(' ').match(/\b(1\d{3}|20\d{2})\b/);
             return year ? [year[1]] : values;
         },
+        ...Object.fromEntries(SchemaDateProperties.map(property => [property, toSingleDate])),
     };
 
     function normalizeValue(text) {
@@ -527,5 +542,6 @@
         normalizeValue,
         parseCoordinates,
         WikipediaToSchemaProperty,
+        SchemaDateProperties,
     };
 })();
