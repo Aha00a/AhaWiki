@@ -268,12 +268,13 @@
      * 두 줄로 나눈다. 못 읽으면 원래대로 `geo` 한 줄을 둔다 — 사람이 보고 고칠 수 있게.
      */
     function toSchemaLines(property, values) {
-        if (property === 'geo' && values.length === 1) {
-            const coordinates = parseCoordinates(values[0]);
+        if (property === 'geo') {
+            const coordinates = parseCoordinates(values.join(' '));
             if (coordinates)
                 return [['latitude', String(coordinates.latitude)], ['longitude', String(coordinates.longitude)]];
         }
-        return [[property, ...values.map(v => transformValueForProperty(property, v))]];
+        const transform = SchemaPropertyRowTransform[property];
+        return [[property, ...(transform ? transform(values) : values)]];
     }
 
     function convertWikipediaToSchemaOrg(arrayArrayValue, removeOriginal) {
@@ -420,14 +421,24 @@
 
     // 위도/경도 한 짝. Wikipedia 좌표는 도분초("37°33′36″N 126°58′41″E"), 도분("37°33′N"),
     // 십진수("37.5665, 126.9780") 가 섞여 나오고 기호도 ′″ 와 '" 가 섞인다.
+    // The hemisphere is written after the number in English ("37°33′36″N") and before it in
+    // Korean ("북위 37° 34′ 21″"), so both ends are optional here and a match with neither is
+    // discarded below. Reading only the trailing letter left every ko.wikipedia coordinate
+    // unparsed, and the row stayed as a single geo line.
     const regexCoordinateDms = new RegExp([
+        '(북위|남위|동경|서경)?\\s*',             // 반구 (한국어, 앞에 온다)
         '(\\d+(?:\\.\\d+)?)\\s*[°º]',            // 도
         '(?:\\s*(\\d+(?:\\.\\d+)?)\\s*[′\'’])?', // 분 (없을 수 있다)
         '(?:\\s*(\\d+(?:\\.\\d+)?)\\s*[″"”])?',  // 초 (없을 수 있다)
-        '\\s*([NSEW])',                          // 반구
+        '\\s*([NSEW])?',                         // 반구 (라틴, 뒤에 온다)
     ].join(''), 'gi');
 
-    const regexCoordinateDecimalPair = /^\s*(-?\d+\.\d+)\s*[,;/]\s*(-?\d+\.\d+)\s*$/;
+    const KoreanHemisphere = {'북위': 'N', '남위': 'S', '동경': 'E', '서경': 'W'};
+
+    // Not anchored: Wikipedia often ends a coordinate cell with a clean decimal pair after the
+    // sexagesimal forms ("... / 37.5725; 126.9756"), and requiring the whole cell to be the pair
+    // threw that away.
+    const regexCoordinateDecimalPair = /(-?\d+\.\d+)\s*[,;/]\s*(-?\d+\.\d+)/;
 
     function dmsToDecimal(degrees, minutes, seconds, hemisphere) {
         const decimal = Number(degrees) + Number(minutes || 0) / 60 + Number(seconds || 0) / 3600;
@@ -437,22 +448,26 @@
     }
 
     /** "37°33′36″N 126°58′41″E" → {latitude, longitude}. 못 읽으면 null. */
+    // Sexagesimal first, decimal second: when a cell carries both, the degrees/minutes/seconds
+    // form is what the article actually states and the decimal tail is its rounding.
     function parseCoordinates(text) {
+        const values = [...String(text).matchAll(regexCoordinateDms)]
+            .map(([, korean, d, m, s, latin]) => ({
+                value: dmsToDecimal(d, m, s, korean ? KoreanHemisphere[korean] : latin),
+                hemisphere: korean ? KoreanHemisphere[korean] : (latin || '').toUpperCase(),
+            }))
+            .filter(v => v.hemisphere);
+
+        const latitude = values.find(v => v.hemisphere === 'N' || v.hemisphere === 'S');
+        const longitude = values.find(v => v.hemisphere === 'E' || v.hemisphere === 'W');
+        if (latitude && longitude)
+            return {latitude: latitude.value, longitude: longitude.value};
+
         const decimalPair = String(text).match(regexCoordinateDecimalPair);
         if (decimalPair)
             return {latitude: Number(decimalPair[1]), longitude: Number(decimalPair[2])};
 
-        const matches = [...String(text).matchAll(regexCoordinateDms)];
-        if (matches.length < 2)
-            return null;
-
-        const values = matches.map(([, d, m, s, h]) => ({value: dmsToDecimal(d, m, s, h), hemisphere: h.toUpperCase()}));
-        const latitude = values.find(v => v.hemisphere === 'N' || v.hemisphere === 'S');
-        const longitude = values.find(v => v.hemisphere === 'E' || v.hemisphere === 'W');
-        if (!latitude || !longitude)
-            return null;
-
-        return {latitude: latitude.value, longitude: longitude.value};
+        return null;
     }
 
     /**
@@ -461,14 +476,19 @@
      * `yearBuilt` 는 range 가 Number(연도)라 "1988-05-10" 을 그대로 두면 타입이 어긋난다.
      * 값에서 4자리 연도만 뽑는다 — 뽑지 못하면 원문을 그대로 두어 사람이 보게 한다.
      */
-    const SchemaPropertyValueTransform = {
-        yearBuilt: value => (String(value).match(/\b(1\d{3}|20\d{2})\b/) || [])[1] ?? value,
+    // A single infobox cell can arrive as several values: Wikipedia splits
+    // "April 11, 1931; 95 years ago (1931-04-11)" on its comma, so the day and the year land
+    // apart. A transform looking at one value at a time cannot tell that from two separate
+    // answers, and yearBuilt came out as "April 11<TAB>1931". These get the whole row.
+    const SchemaPropertyRowTransform = {
+        // yearBuilt's range is Number, so the row has to collapse to one year. Note this drops
+        // the month and day on purpose -- the property cannot hold them. The original line is
+        // kept above as a "# " comment, so the full date stays in the page either way.
+        yearBuilt: values => {
+            const year = values.join(' ').match(/\b(1\d{3}|20\d{2})\b/);
+            return year ? [year[1]] : values;
+        },
     };
-
-    function transformValueForProperty(property, value) {
-        const transform = SchemaPropertyValueTransform[property];
-        return transform ? transform(value) : value;
-    }
 
     function normalizeValue(text) {
         return [

@@ -81,6 +81,21 @@ test('parseCoordinates reads the forms Wikipedia writes', () => {
     assert.equal(parseCoordinates('37°33′36″N'), null, 'one axis alone is not a coordinate');
 });
 
+test('ko.wikipedia writes the hemisphere in front, in Korean', () => {
+    // The real 세종문화회관 cell. Reading only a trailing N/S/E/W left every Korean article's
+    // coordinate unsplit, which is what shipping and then looking at one found.
+    const cell = '북위 37° 34′ 21″ 동경 126° 58′ 32″ / 북위 37.5725° 동경 126.9756° / 37.5725; 126.9756';
+    assert.deepEqual(coordinates(cell), {latitude: 37.5725, longitude: 126.975556});
+
+    assert.deepEqual(coordinates('남위 33° 52′ 서경 151° 12′'), {latitude: -33.866667, longitude: -151.2});
+});
+
+test('a decimal pair is read even when it trails other text', () => {
+    // Wikipedia often ends the cell with a clean pair after the sexagesimal forms. Requiring the
+    // whole cell to be that pair threw it away.
+    assert.deepEqual(coordinates('좌표: 어딘가 / 37.5725; 126.9756'), {latitude: 37.5725, longitude: 126.9756});
+});
+
 test('coordinates become latitude and longitude, because geo wants an object', () => {
     const output = convertWikipediaToSchemaOrg([['Coordinates', '37°33′36″N 126°58′41″E']], true);
     assert.equal(output.split('\n').filter(Boolean).join('|'), 'latitude\t37.56|longitude\t126.978056');
@@ -97,6 +112,11 @@ test('yearBuilt gets a year, since its range is Number', () => {
     assert.match(convertWikipediaToSchemaOrg([['Year built', '1988']], true), /^yearBuilt\t1988$/m);
     // No year in the value: keep what Wikipedia said rather than guess.
     assert.match(convertWikipediaToSchemaOrg([['Completed', 'under construction']], true), /^yearBuilt\tunder construction$/m);
+
+    // The row arrives in pieces because Wikipedia split "April 11, 1931; 95 years ago (...)" on
+    // its comma. Looking at one value at a time produced "yearBuilt<TAB>April 11<TAB>1931".
+    const split = convertWikipediaToSchemaOrg([['Completed', 'April 11', '1931; 95 years ago (1931-04-11)']], true);
+    assert.match(split, /^yearBuilt\t1931$/m);
 });
 
 test('an unmapped label keeps its own name and its value', () => {
