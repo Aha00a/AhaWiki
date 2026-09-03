@@ -73,6 +73,24 @@
         }
     }
 
+    /**
+     * 위키백과 infobox 의 행 이름 → schema.org 속성.
+     *
+     * 여기 없는 이름은 그대로 통과한다(`convertProperty`). 그래서 '''틀린 매핑을 넣는 것이
+     * 안 넣는 것보다 나쁘다''' — 통과한 이름은 사람이 보고 고치지만, 잘못 매핑된 이름은 맞는
+     * 것처럼 보인다.
+     *
+     * ⓘ '''소유(Owner·소유자)는 일부러 비워 두었다.''' schema.org 에 장소의 소유자를 가리키는
+     * 속성이 없다. 가장 가까운 `owns` 는 range 가 Product 이고 domain 이 Person·Organization 이라
+     * "사람/조직이 소유한 물건" — 방향이 반대다. `ownedFrom`·`ownedThrough` 는 OwnershipInfo
+     * 라는 별도 구조의 것이고, `additionalProperty` 는 중첩 객체라 이 평평한 표로는 못 만든다.
+     * 그래서 Owner 는 매핑하지 않고 통과시킨다. 채워 넣지 말 것. (2026-09-04 26.0 어휘 기준)
+     *
+     * ⓘ '''`Country` 는 애매하다.''' 여기서는 `countryOfOrigin`(Product·CreativeWork) 으로 둔다 —
+     * 영화·드라마 infobox 가 압도적으로 많아서다. 건물·장소라면 `addressCountry` 가 맞지만,
+     * 이 표는 행 이름만 보고 페이지의 타입을 모른다. 장소인 것이 확실한 이름들(`소재지` 등)만
+     * 주소 계열로 보낸다.
+     */
     const WikipediaToSchemaProperty = {
         "Abbreviation": "alternateName",
         "Address": "address",
@@ -177,6 +195,28 @@
         "Written by": "author",
         "Written in": "programmingLanguage",
         "Year started": "datePublished",
+        "Street address": "streetAddress",
+        "Postal code": "postalCode",
+        "Postcode": "postalCode",
+        "ZIP code": "postalCode",
+        "Town or city": "addressLocality",
+        "State": "addressRegion",
+        "Province": "addressRegion",
+        "District": "addressRegion",
+        "Completed": "yearBuilt",
+        "Completion": "yearBuilt",
+        "Year built": "yearBuilt",
+        "Built": "yearBuilt",
+        "주소": "address",
+        "소재지": "address",
+        "위치": "address",
+        "도시": "addressLocality",
+        "우편번호": "postalCode",
+        "좌표": "geo",
+        "완공": "yearBuilt",
+        "준공": "yearBuilt",
+        "완공일": "yearBuilt",
+        "준공일": "yearBuilt",
         "각본": "author",
         "감독": "director",
         "개발자": "author",
@@ -220,11 +260,29 @@
         return WikipediaToSchemaProperty[property] ?? property
     }
 
+    /**
+     * 한 줄이 여러 줄이 되기도 한다.
+     *
+     * `geo` 는 range 가 GeoCoordinates·GeoShape 인 '''객체''' 라서, 좌표 문자열을 거기 넣으면
+     * 타입이 맞지 않는다. 읽어낼 수 있으면 `latitude`·`longitude`(둘 다 Place, range Text|Number)
+     * 두 줄로 나눈다. 못 읽으면 원래대로 `geo` 한 줄을 둔다 — 사람이 보고 고칠 수 있게.
+     */
+    function toSchemaLines(property, values) {
+        if (property === 'geo' && values.length === 1) {
+            const coordinates = parseCoordinates(values[0]);
+            if (coordinates)
+                return [['latitude', String(coordinates.latitude)], ['longitude', String(coordinates.longitude)]];
+        }
+        return [[property, ...values.map(v => transformValueForProperty(property, v))]];
+    }
+
     function convertWikipediaToSchemaOrg(arrayArrayValue, removeOriginal) {
         return arrayArrayValue
             .flatMap(([head, ...rest]) => [
-                removeOriginal || ["# " + head, ...rest],
-                [convertProperty(normalizeProp(head)), ...(rest.map(normalizeValue))],
+                // `removeOriginal || [...]` 였는데, true 를 주면 배열이 아니라 true 가 통과해
+                // 아래 join 에서 터졌다. 부르는 곳이 인자를 넘기지 않아 드러나지 않았을 뿐이다.
+                removeOriginal ? null : ["# " + head, ...rest],
+                ...toSchemaLines(convertProperty(normalizeProp(head)), rest.map(normalizeValue)),
                 [],
             ].filter(_ => _))
             .map(l => l.join('\t'))
@@ -360,6 +418,58 @@
         return text.replace(/\s*\[\d+]\s*/g, ' ').replace(/\s+/g, ' ').trim();
     }
 
+    // 위도/경도 한 짝. Wikipedia 좌표는 도분초("37°33′36″N 126°58′41″E"), 도분("37°33′N"),
+    // 십진수("37.5665, 126.9780") 가 섞여 나오고 기호도 ′″ 와 '" 가 섞인다.
+    const regexCoordinateDms = new RegExp([
+        '(\\d+(?:\\.\\d+)?)\\s*[°º]',            // 도
+        '(?:\\s*(\\d+(?:\\.\\d+)?)\\s*[′\'’])?', // 분 (없을 수 있다)
+        '(?:\\s*(\\d+(?:\\.\\d+)?)\\s*[″"”])?',  // 초 (없을 수 있다)
+        '\\s*([NSEW])',                          // 반구
+    ].join(''), 'gi');
+
+    const regexCoordinateDecimalPair = /^\s*(-?\d+\.\d+)\s*[,;/]\s*(-?\d+\.\d+)\s*$/;
+
+    function dmsToDecimal(degrees, minutes, seconds, hemisphere) {
+        const decimal = Number(degrees) + Number(minutes || 0) / 60 + Number(seconds || 0) / 3600;
+        // 소수점 6자리면 약 0.1m 이다. 그 아래는 위키백과 원문에 없는 정밀도다.
+        const rounded = Math.round(decimal * 1e6) / 1e6;
+        return /[SW]/i.test(hemisphere) ? -rounded : rounded;
+    }
+
+    /** "37°33′36″N 126°58′41″E" → {latitude, longitude}. 못 읽으면 null. */
+    function parseCoordinates(text) {
+        const decimalPair = String(text).match(regexCoordinateDecimalPair);
+        if (decimalPair)
+            return {latitude: Number(decimalPair[1]), longitude: Number(decimalPair[2])};
+
+        const matches = [...String(text).matchAll(regexCoordinateDms)];
+        if (matches.length < 2)
+            return null;
+
+        const values = matches.map(([, d, m, s, h]) => ({value: dmsToDecimal(d, m, s, h), hemisphere: h.toUpperCase()}));
+        const latitude = values.find(v => v.hemisphere === 'N' || v.hemisphere === 'S');
+        const longitude = values.find(v => v.hemisphere === 'E' || v.hemisphere === 'W');
+        if (!latitude || !longitude)
+            return null;
+
+        return {latitude: latitude.value, longitude: longitude.value};
+    }
+
+    /**
+     * 속성마다 값의 타입이 다르다. schema.org 의 range 를 따르는 자리.
+     *
+     * `yearBuilt` 는 range 가 Number(연도)라 "1988-05-10" 을 그대로 두면 타입이 어긋난다.
+     * 값에서 4자리 연도만 뽑는다 — 뽑지 못하면 원문을 그대로 두어 사람이 보게 한다.
+     */
+    const SchemaPropertyValueTransform = {
+        yearBuilt: value => (String(value).match(/\b(1\d{3}|20\d{2})\b/) || [])[1] ?? value,
+    };
+
+    function transformValueForProperty(property, value) {
+        const transform = SchemaPropertyValueTransform[property];
+        return transform ? transform(value) : value;
+    }
+
     function normalizeValue(text) {
         return [
             convertEnglishDates,
@@ -390,6 +500,7 @@
         convertLanguageNames,
         convertPeriodsToISO,
         normalizeValue,
+        parseCoordinates,
         WikipediaToSchemaProperty,
     };
 })();
