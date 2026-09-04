@@ -155,5 +155,34 @@ object InterpreterSchemaUnit {
     }
 
     assertEquals(InterpreterSchema.toJsonLdObject(ParseResult("", Seq(Seq("name", "Aha00a")))), None)
+
+    // A block may name more than one class. Six pages -- Git, bash, ncdu and the rest -- describe
+    // a program together with the source it is built from, and only the first name was read, so
+    // codeRepository and programmingLanguage sat on a SoftwareApplication that does not define
+    // them. Both names are kept now.
+    {
+      val parseResult = InterpreterSchema.parse(PageContent("#!Schema SoftwareApplication SoftwareSourceCode\nname\tGit\nprogrammingLanguage\tC"))
+
+      assertEquals(parseResult.schemaClasses, Seq("SoftwareApplication", "SoftwareSourceCode"))
+      assertEquals(parseResult.typeofValue, "SoftwareApplication SoftwareSourceCode")
+
+      // JSON-LD takes @type as an array when there are several.
+      val json = InterpreterSchema.toJsonLdObject(parseResult).get
+      assertEquals((json \ "@type").as[Seq[String]], Seq("SoftwareApplication", "SoftwareSourceCode"))
+      assertEquals((json \ "programmingLanguage").as[String], "C")
+    }
+
+    // One class still writes a bare string, so nothing already published changes shape.
+    {
+      val parseResult = InterpreterSchema.parse(PageContent("#!Schema Person\nname\tAha00a"))
+      assertEquals(parseResult.schemaClasses, Seq("Person"))
+      assertEquals((InterpreterSchema.toJsonLdObject(parseResult).get \ "@type").as[String], "Person")
+    }
+
+    // ParseResult("A B", ...) means the same as naming them separately, so callers holding one
+    // string keep working.
+    assertEquals(ParseResult("Movie TVSeries", Seq.empty).schemaClasses, Seq("Movie", "TVSeries"))
+    assertEquals(ParseResult("", Seq.empty).schemaClasses, Seq.empty)
+    assertEquals(ParseResult("", Seq.empty).hasClass, false)
   }
 }

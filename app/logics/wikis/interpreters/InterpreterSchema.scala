@@ -21,7 +21,22 @@ object InterpreterSchema extends TraitInterpreter {
   import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
-  case class ParseResult(schemaClass: String, seqSeqField: Seq[Seq[String]])
+  // A block may name several classes: `[[[#!Schema SoftwareApplication SoftwareSourceCode` is how
+  // six pages already describe a program together with the code it is built from. Only the first
+  // was read, so the rest were dropped without a word -- which is why those pages looked like they
+  // were carrying properties from the wrong class.
+  case class ParseResult(schemaClasses: Seq[String], seqSeqField: Seq[Seq[String]]) {
+    def hasClass: Boolean = schemaClasses.nonEmpty
+
+    /** RDFa's `typeof` takes the classes separated by spaces, so this is the attribute's value. */
+    def typeofValue: String = schemaClasses.mkString(" ")
+  }
+
+  object ParseResult {
+    /** One class, written as one string. Splits, so a caller may still pass "A B". */
+    def apply(schemaClass: String, seqSeqField: Seq[Seq[String]]): ParseResult =
+      ParseResult(schemaClass.split("""\s+""").toSeq.filter(_.isNotNullOrEmpty), seqSeqField)
+  }
 
   def createPageContent(content: String): PageContent = {
     val pageContent: PageContent = PageContent(content)
@@ -32,10 +47,10 @@ object InterpreterSchema extends TraitInterpreter {
   }
 
   def parse(pageContent: PageContent): ParseResult = {
-    val schemaClass: String = pageContent.argument.headOption.getOrElse("")
+    val schemaClasses: Seq[String] = pageContent.argument.filter(_.isNotNullOrEmpty)
     val contentLines: Seq[String] = pageContent.content.splitLinesSeq().filter(_.isNotNullOrEmpty).filterNot(_.startsWith("#"))
     val seqSeqField: Seq[Seq[String]] = contentLines.map(_.splitTabsSeq().filter(_.isNotNullOrEmpty)).filter(_.nonEmpty)
-    ParseResult(schemaClass, seqSeqField)
+    ParseResult(schemaClasses, seqSeqField)
   }
 
   val mapPair: Map[String, String] = Seq(
@@ -149,7 +164,7 @@ object InterpreterSchema extends TraitInterpreter {
     pageName: Option[String] = None,
     language: Option[String] = None
   ): Option[JsObject] = {
-    if (parseResult.schemaClass.isNullOrEmpty) {
+    if (!parseResult.hasClass) {
       None
     } else {
       val fields = parseResult.seqSeqField
@@ -165,9 +180,16 @@ object InterpreterSchema extends TraitInterpreter {
         language.map("inLanguage" -> JsString(_)),
       ).flatten
 
+      // JSON-LD takes @type as a string or as an array. Keep the string for the ordinary single
+      // class so the output of every existing page is untouched.
+      val jsonType: JsValue = parseResult.schemaClasses match {
+        case Seq(only) => JsString(only)
+        case several   => JsArray(several.map(JsString.apply))
+      }
+
       Some((Json.obj(
         "@context" -> "https://schema.org",
-        "@type" -> parseResult.schemaClass
+        "@type" -> jsonType
       ) ++ JsObject(defaultProperties ++ properties)))
     }
   }
@@ -224,12 +246,15 @@ object InterpreterSchema extends TraitInterpreter {
 //        </h5>
 
     val dl =
-      <dl vocab="https://schema.org/" typeof={parseResult.schemaClass}>
+      <dl vocab="https://schema.org/" typeof={parseResult.typeofValue}>
         <h5 class="schemaClassTitle">
-          {if (parseResult.schemaClass.isNullOrEmpty) {
+          {if (!parseResult.hasClass) {
             <div class="error">Schema class is required.</div>
           } else {
-            scala.xml.XML.loadString(logics.CalculatedSchemaOrg.getSchemaClass(parseResult.schemaClass).toAhaMarkLink.toHtmlString(pageNameSet))}
+            // One link per class, so both are reachable from the page that declares them.
+            parseResult.schemaClasses.map(schemaClass =>
+              scala.xml.XML.loadString(logics.CalculatedSchemaOrg.getSchemaClass(schemaClass).toAhaMarkLink.toHtmlString(pageNameSet)): scala.xml.NodeSeq
+            ).reduce((a, b) => a ++ scala.xml.Text(" ") ++ b)}
           }
         </h5>
         <div class="schemaFields">
@@ -325,12 +350,20 @@ object InterpreterSchema extends TraitInterpreter {
         val r = <div class="schema InterpreterSchema">{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
         r.toString()
       case RenderingMode.Preview =>
-        val recommendedProperties = if (parseResult.schemaClass.isNotNullOrEmpty){
+        // Recommendations come from every declared class, deduplicated: a page typed as both a
+        // program and its source should be offered the properties of both.
+        val recommendedProperties = if (parseResult.hasClass) {
           val listPropCount = wikiContext.database.withConnection { implicit connection =>
             import models.tables.CalculatedSchemaOrg
-            CalculatedSchemaOrg.selectPropCountWhereCls(parseResult.schemaClass)
+            parseResult.schemaClasses.flatMap(CalculatedSchemaOrg.selectPropCountWhereCls)
           }
-          listPropCount.filterNot(pc => seqPropertyUsed.contains(pc.prop)).map(pc => s"${pc.prop}(${pc.cnt})").mkString(", ")
+          listPropCount
+            .filterNot(pc => seqPropertyUsed.contains(pc.prop))
+            .groupMapReduce(_.prop)(_.cnt)(_ + _)
+            .toSeq
+            .sortBy { case (prop, cnt) => (-cnt, prop) }
+            .map { case (prop, cnt) => s"$prop($cnt)" }
+            .mkString(", ")
         } else {
           ""
         }
@@ -342,14 +375,18 @@ object InterpreterSchema extends TraitInterpreter {
               <h6>Recommended Properties</h6>
               {recommendedProperties}
               <h6>Hierarchical Search</h6>
-              {logics.CalculatedSchemaOrg.getHtmlTree(parseResult.schemaClass)}
-              {
-                if(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(parseResult.schemaClass)) {
-                  <div>{logics.CalculatedSchemaOrg.getHtmlProperties(parseResult.schemaClass, seqPropertyUsed)}</div>
-                } else {
+              {parseResult.schemaClasses.map(schemaClass =>
+                <div>
+                  {logics.CalculatedSchemaOrg.getHtmlTree(schemaClass)}
+                  {
+                    if(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(schemaClass)) {
+                      <div>{logics.CalculatedSchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
+                    } else {
 
-                }
-              }
+                    }
+                  }
+                </div>
+              )}
             </div>
           </div>
         r.toString()
@@ -374,7 +411,7 @@ object InterpreterSchema extends TraitInterpreter {
     val pageContent: PageContent = createPageContent(content)
     val parseResult: ParseResult = parse(pageContent)
 
-    val seqLinkProperty: Seq[CalculatedSchemaOrg] = parseResult.seqSeqField
+    val seqKeyValue: Seq[(String, String)] = parseResult.seqSeqField
       .collect { case key +: values if values.nonEmpty => key +: values }
       .filterNot {
         case _ +: value +: _ => value.startsWith("http://") || value.startsWith("https://")
@@ -382,12 +419,18 @@ object InterpreterSchema extends TraitInterpreter {
       }
       .flatMap {
         case key +: tail if locationKeys.contains(key) =>
-          tail.flatMap(toAddressCandidates).map(v => CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, key, v))
+          tail.flatMap(toAddressCandidates).map(v => key -> v)
         case key +: tail =>
-          tail
-            .flatMap(DateTimeUtil.expand_ymd_to_ymd_ym)
-            .map(CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, key, _))
+          tail.flatMap(DateTimeUtil.expand_ymd_to_ymd_ym).map(v => key -> v)
       }
-    CalculatedSchemaOrg(wikiContext.name, parseResult.schemaClass, "", s"schema:${parseResult.schemaClass}") +: seqLinkProperty
+
+    // A row per class, so a page declaring both is listed under both on schema:Schema rather than
+    // only under whichever was written first. cls is part of the key, so the copies do not collide.
+    // A block with no class keeps producing its one empty-class row, as before.
+    val seqSchemaClass: Seq[String] = if (parseResult.hasClass) parseResult.schemaClasses else Seq("")
+    seqSchemaClass.flatMap(schemaClass =>
+      CalculatedSchemaOrg(wikiContext.name, schemaClass, "", s"schema:$schemaClass") +:
+        seqKeyValue.map { case (key, value) => CalculatedSchemaOrg(wikiContext.name, schemaClass, key, value) }
+    )
   }
 }
