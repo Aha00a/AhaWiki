@@ -2255,11 +2255,24 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         return false;
                     }
 
+                    // The class comes from Wikidata when it has a direct schema.org equivalent for
+                    // what the article is; otherwise the argument stays empty for the author to
+                    // fill, as it always was. One item serves every language edition, so the
+                    // first edition that resolves is enough.
+                    let wikidata = {item: null, classes: []};
+                    for (const v of arrayResult) {
+                        wikidata = await wikipediaToSchema.fetchSchemaClassesFromWikidata(v.lang, page);
+                        if (wikidata.item)
+                            break;
+                    }
+                    const classArgument = wikidata.classes.length ? ' ' + wikidata.classes.join(' ') : '';
+                    const wikidataLine = wikidata.item ? `# Wikidata\t${wikipediaToSchema.getUrlWikidata(wikidata.item)}\n` : '';
+
                     const schemaText = arrayResult
                         .map(v => `
-[[[#!Schema
+[[[#!Schema${classArgument}
 ${v.content}
-# API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
+${wikidataLine}# API URL\t${wikipediaToSchema.getApiUrlWikipedia(v.lang, page)}
 sameAs\t${wikipediaToSchema.getUrlWikipedia(v.lang, page)}
 ]]]
                         `.trim() + '\n\n')

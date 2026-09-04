@@ -128,6 +128,20 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * 변환 결과를 `[[[#!Schema ... ]]]` block으로 삽입한다.
  * `# API URL`과 `sameAs` 값을 함께 넣는다.
  * 원본 행은 바로 위에 `# 라벨\t값` 주석으로 남는다. 매핑이 값을 줄이더라도 원문은 문서에 남는다.
+ * 블록 인자(클래스)는 Wikidata 에서 온다. 없으면 비워 둔다 — 아래.
+
+=== 클래스는 Wikidata 가 정한다 (2026-09-05)
+`[[[#!Schema ` 뒤의 인자가 클래스인데, 가져오기는 이 자리를 늘 비워 두었고 `Corporation`·`WebSite`·`SoftwareApplication` 은 사람이 나중에 쳐 넣었다. 그 일을 Wikidata 가 대신한다.
+
+문서의 Wikidata 항목이 무엇의 '''인스턴스'''인지(`P31`) 말하고, 그 클래스 상당수가 schema.org 대응 클래스(`P1709` equivalent class, `P2888` exact match)를 달고 있다. 극장(`Q24354`)은 `PerformingArtsTheater` 를 직접 가리킨다. 그 '''직접 대응만''' 쓴다.
+
+ * 세종문화회관 → `PerformingArtsTheater`, GitHub → `WebApplication WebSite`, 트루먼 쇼 → `Movie`.
+ * 롯데월드타워는 항목(`Q494895`)은 있지만 P31 이 「마천루」라 대응이 없다 → 인자를 비운다.
+ * 상위 클래스(`P279`)로 한 단계 올라가는 것은 '''하지 않는다.''' 문서 열 개로 해 보니 Git 이 `Service`, Python 이 잡음 셋이었다. 틀린 클래스는 맞아 보이면서 틀리므로 빈 것보다 나쁘다.
+
+출처는 `# Wikidata\thttps://www.wikidata.org/wiki/Q…` 주석으로 블록 안에 남는다. 언어판이 달라도 항목은 하나라, 인포박스가 잡힌 첫 언어판으로 한 번만 조회한다.
+
+클래스가 둘 이상이면 인자도 둘 이상이다. `InterpreterSchema` 는 이제 인자를 전부 읽는다(2026-09-04 이전에는 첫 것만 읽었다) — JSON-LD `@type` 은 배열, RDFa `typeof` 는 공백 구분, 색인에는 양쪽에 오른다.
 
 === 매핑에서 판단이 필요했던 것들
 '''소유는 매핑하지 않는다.''' schema.org에는 「이 장소를 X가 소유한다」에 해당하는 property가 없다. `owns`는 그 반대로, domain이 Person·Organization이고 range가 Product다. 여기 연결하면 맞아 보이면서 뜻이 뒤집히므로 `Owner`·`소유`·`소유주`·`소유기관`은 라벨 그대로 통과시킨다.
@@ -143,6 +157,25 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * 라벨은 `좌표`와 '''`지리 좌표계`'''를 모두 본다. ko.wikipedia 건물 인포박스는 후자를 쓴다.
 
 '''한 칸이 여러 값으로 쪼개져 온다.''' Wikipedia가 `April 11, 1931; 95 years ago (…)`를 쉼표에서 나누므로 값 하나씩 보는 변환은 `yearBuilt`를 `April 11\t1931`로 만든다. 그래서 변환은 행 전체를 본다.
+
+=== 수작업 스키마 전수 검토 (2026-09-04 ~ 05)
+`CalculatedSchemaOrg` 의 (클래스, 속성) 조합 전부를 배포된 어휘 파일과 대조했다. 550여 문서.
+
+'''고친 것'''
+ * `writer` 137건 → `author`. schema.org 에 `writer` 는 없다. 가져오기가 만든 게 아니라 `Writer` 라벨이 미매핑으로 통과한 것을 사람이 소문자로 바꾼 것이었다. 라벨은 이제 `author` 로 간다.
+ * `politicalParty` 4건 → `memberOf`(Person → Organization). `정당`·`Political party` 라벨도 같이.
+ * `Cognag` → `Cognac`(Rémy Martin). 커스텀 클래스지만 철자.
+ * `SoftwareSourceCode` ↔ `SoftwareApplication` — 한쪽 속성이 다른 쪽 블록에 있던 것. 클래스를 바꾸거나 속성을 옮기지 않고 '''짝 클래스를 인자에 더했다.''' 라이브러리는 코드이면서 쓰는 물건이고, 여섯 문서(Git·bash·ncdu…)는 이미 그렇게 적혀 있었다. `scripts/add-paired-class.mjs`.
+
+'''두기로 한 것''' — 대안이 없거나, 고치면 더 틀려진다.
+ * `TVSeries.duration` 29건. `duration` 은 에피소드의 속성이라 시리즈에는 안 맞지만, 시리즈 길이를 담을 자리가 schema.org 에 없다. `numberOfEpisodes` 는 다른 사실이다.
+ * `ComputerLanguage.datePublished` 16건, `designer` 15건. `ComputerLanguage` 는 Intangible 이라 CreativeWork 속성이 붙지 않고, `designer` 는 속성 자체가 없다. 언어의 설계자·발표일을 담을 자리가 없다.
+ * `Cinematography` 4건, `volume` 3건 — 촬영감독·권 수에 해당하는 속성이 없다. 라벨 그대로 통과한 정직한 상태다.
+ * `Corporation.industry` 2건 — `industry` 의 domain 은 `JobPosting` 이다. 기업의 업종을 담을 속성이 없다.
+ * `Standard`·`Poem`·`Whiskey`·`Cognac` — 커스텀 클래스. 색인의 「Custom」 절이 이를 위한 자리다.
+ * `logo` 가 소프트웨어 블록에 있는 것 — domain 은 Organization·Brand·Product 이지만 `InterpreterSchema.imageKeys` 가 클래스와 무관하게 그림으로 그린다. 표시 관례다.
+
+검산은 파생 테이블이 아니라 페이지를 다시 읽어서 한다. 테이블은 재계산이 밀려, `writer` 를 전부 바꾼 직후에도 121건이 남았다고 답했다.
 
 == 저장
  * form은 ajax로 submit한다.

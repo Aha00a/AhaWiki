@@ -148,6 +148,10 @@
         "Location": "location",
         "Parent": "parentOrganization",
         "Parent company": "parentOrganization",
+        // schema.org has no politicalParty; membership of an organisation is memberOf. Four
+        // politician pages had the invented name written by hand.
+        "Political party": "memberOf",
+        "Party": "memberOf",
         "Manufacturer": "manufacturer",
         "Member of": "memberOf",
         "Model": "model",
@@ -235,6 +239,8 @@
         "각본": "author",
         "극본": "author",
         "작가": "author",
+        "정당": "memberOf",
+        "소속 정당": "memberOf",
         "감독": "director",
         "개발자": "author",
         "개봉일": "datePublished",
@@ -268,6 +274,75 @@
         "편집": "editor",
         "프로듀서": "producer",
     };
+
+    // The Schema block's argument is its class, and the import left it empty: the author typed
+    // Corporation, WebSite, SoftwareApplication by hand afterwards. Wikidata knows the class. An
+    // article's item says what it is an instance of (P31), and many of those classes carry an
+    // equivalent schema.org class (P1709) or an exact match (P2888) -- 극장 points straight at
+    // PerformingArtsTheater. Only that direct link is used. Walking one step up the subclass tree
+    // (P279) was tried on ten articles and produced Service for Git and three noisy classes for
+    // Python, so a page with no direct link keeps an empty argument, as before. A wrong class reads
+    // as right and is worse than none.
+    function getApiUrlWikidataItem(lang, page) {
+        return `https://www.wikidata.org/w/api.php?action=wbgetentities&sites=${lang}wiki&titles=${encodeURIComponent(page)}&props=claims&format=json&origin=*`;
+    }
+
+    function getApiUrlWikidataEntities(ids) {
+        return `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids.map(encodeURIComponent).join('|')}&props=claims&format=json&origin=*`;
+    }
+
+    function getUrlWikidata(id) {
+        return `https://www.wikidata.org/wiki/${encodeURIComponent(id)}`;
+    }
+
+    function wikidataClaimValues(claims, property) {
+        return ((claims || {})[property] || [])
+            .map(claim => claim.mainsnak && claim.mainsnak.datavalue && claim.mainsnak.datavalue.value)
+            .filter(value => value !== undefined && value !== null);
+    }
+
+    /** schema.org class names a Wikidata class entity is declared equivalent to. */
+    function schemaClassesOfEntity(entity) {
+        return ['P1709', 'P2888']
+            .flatMap(property => wikidataClaimValues((entity || {}).claims, property))
+            .filter(value => typeof value === 'string' && /^https?:\/\/schema\.org\/[A-Z][A-Za-z0-9]*$/.test(value))
+            .map(value => value.split('/').pop());
+    }
+
+    /** From an article's item and the entities its P31 names, the schema.org classes, in P31 order. */
+    function schemaClassesFromWikidata(item, entities) {
+        const seen = new Set();
+        return wikidataClaimValues((item || {}).claims, 'P31')
+            .map(value => value.id)
+            .filter(Boolean)
+            .flatMap(id => schemaClassesOfEntity((entities || {})[id]))
+            .filter(cls => !seen.has(cls) && seen.add(cls));
+    }
+
+    /** Resolves to {item, classes}; item null and classes empty whenever anything is missing. */
+    async function fetchSchemaClassesFromWikidata(lang, page) {
+        const nothing = {item: null, classes: []};
+        try {
+            const first = await fetch(getApiUrlWikidataItem(lang, page));
+            if (!first.ok)
+                return nothing;
+            const item = Object.values((await first.json()).entities || {})[0];
+            if (!item || !item.id || !item.claims)
+                return nothing;
+
+            const ids = wikidataClaimValues(item.claims, 'P31').map(v => v.id).filter(Boolean).slice(0, 50);
+            if (!ids.length)
+                return {item: item.id, classes: []};
+
+            const second = await fetch(getApiUrlWikidataEntities(ids));
+            if (!second.ok)
+                return {item: item.id, classes: []};
+            return {item: item.id, classes: schemaClassesFromWikidata(item, (await second.json()).entities)};
+        } catch (e) {
+            console.warn('Wikidata lookup failed', e);
+            return nothing;
+        }
+    }
 
     function isPropertyDefined(property) {
         return WikipediaToSchemaProperty.hasOwnProperty(property);
@@ -541,6 +616,9 @@
         getApiUrlWikipedia,
         getUrlWikipedia,
         fetchInfoBoxFromWikipedia,
+        fetchSchemaClassesFromWikidata,
+        schemaClassesFromWikidata,
+        getUrlWikidata,
         isPropertyDefined,
         convertProperty,
         convertWikipediaToSchemaOrg,

@@ -94,6 +94,54 @@ test('the labels ko.wikipedia actually uses are mapped, not the ones I assumed',
     // Comparing the converter against the GitHub page someone had corrected by hand showed this
     // one had been added there and never in the table.
     assert.equal(convertProperty('Parent'), 'parentOrganization');
+
+    // schema.org has no politicalParty; four politician pages had it typed by hand. Membership
+    // of an organisation is memberOf, whose range is Organization.
+    for (const label of ['Political party', 'Party', '정당', '소속 정당'])
+        assert.equal(convertProperty(label), 'memberOf', `${label} should map to memberOf`);
+});
+
+test('the class comes from the direct schema.org link on what the article is', () => {
+    // Arrays come back from the vm realm; spread them so strict deepEqual compares contents.
+    const schemaClassesFromWikidata = (item, entities) => [...wikipediaToSchema.schemaClassesFromWikidata(item, entities)];
+    const claim = (property, value) => ({mainsnak: {datavalue: {value}}});
+    const item = ids => ({id: 'Q1', claims: {P31: ids.map(id => claim('P31', {id}))}});
+    const equivalent = url => ({claims: {P1709: [claim('P1709', url)]}});
+    const exact = url => ({claims: {P2888: [claim('P2888', url)]}});
+
+    // 세종문화회관 as Wikidata actually answers: four classes, one with a schema.org link.
+    const sejong = item(['Q2190251', 'Q3469910', 'Q24354', 'Q1060829']);
+    const entities = {
+        Q2190251: {claims: {}},
+        Q3469910: {claims: {P279: [claim('P279', {id: 'Q999'})]}},
+        Q24354: equivalent('https://schema.org/PerformingArtsTheater'),
+        Q1060829: {claims: {}},
+    };
+    assert.deepEqual(schemaClassesFromWikidata(sejong, entities), ['PerformingArtsTheater']);
+
+    // Two direct links give two classes, in P31 order, deduplicated. Exact match counts too.
+    const github = item(['Q7397', 'Q35127', 'Q7397']);
+    assert.deepEqual(
+        schemaClassesFromWikidata(github, {Q7397: exact('https://schema.org/WebApplication'), Q35127: equivalent('http://schema.org/WebSite')}),
+        ['WebApplication', 'WebSite']);
+
+    // A building whose classes carry no link stays without a class -- no guessing up the tree.
+    assert.deepEqual(schemaClassesFromWikidata(item(['Q11303']), {Q11303: {claims: {P279: [claim('P279', {id: 'Q41176'})]}}}), []);
+
+    // A link to something other than a schema.org class is not a class.
+    assert.deepEqual(schemaClassesFromWikidata(item(['Q1']), {Q1: equivalent('https://schema.org/name')}), []);
+    assert.deepEqual(schemaClassesFromWikidata(item(['Q1']), {Q1: equivalent('https://example.org/Thing')}), []);
+
+    // Nothing at all -- a missing article, an item with no claims -- is an empty list, not a throw.
+    assert.deepEqual(schemaClassesFromWikidata({}, {}), []);
+    assert.deepEqual(schemaClassesFromWikidata(null, null), []);
+});
+
+test('every class the fixtures produce exists in the vocabulary the app ships', () => {
+    const vocabulary = JSON.parse(fs.readFileSync(path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld'), 'utf8'));
+    const classes = new Set(vocabulary.graph.filter(node => node.type === 'Class' || (Array.isArray(node.type) && node.type.includes('Class'))).map(node => node.id));
+    for (const cls of ['PerformingArtsTheater', 'WebApplication', 'WebSite', 'Movie', 'City', 'Person', 'TVSeries'])
+        assert.ok(classes.has(cls), `${cls} should be a schema.org class`);
 });
 
 test('parseCoordinates reads the forms Wikipedia writes', () => {
