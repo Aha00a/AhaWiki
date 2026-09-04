@@ -194,7 +194,15 @@
         "Version": "softwareVersion",
         "Website": "url",
         "Weight": "weight",
+        // schema.org has no `writer`, and no screenwriter property either -- `author` is what a
+        // film's or series' writer gets. 137 pages on the wiki had been given a lowercase
+        // `writer` by hand, which looks like a property and is not one; these labels are why.
+        "Writer": "author",
+        "Writers": "author",
         "Written by": "author",
+        "Screenplay": "author",
+        "Screenplay by": "author",
+        "Story by": "author",
         "Written in": "programmingLanguage",
         "Year started": "datePublished",
         "Street address": "streetAddress",
@@ -225,6 +233,8 @@
         "완공일": "yearBuilt",
         "준공일": "yearBuilt",
         "각본": "author",
+        "극본": "author",
+        "작가": "author",
         "감독": "director",
         "개발자": "author",
         "개봉일": "datePublished",

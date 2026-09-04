@@ -147,6 +147,18 @@ test('yearBuilt gets a year, since its range is Number', () => {
     assert.match(split, /^yearBuilt\t1931$/m);
 });
 
+test('writer labels reach author, because schema.org has no writer', () => {
+    // Reviewing the wiki found `writer` on 137 pages -- 112 films, 23 series, 2 comics -- and
+    // schema.org has no such property, nor a screenwriter one. The converter never produced it:
+    // these labels were unmapped, passed through as "Writer", and were lowercased by hand into
+    // something that looks like a property. Mapping them is what stops that recurring.
+    for (const label of ['Writer', 'Writers', 'Written by', 'Screenplay', 'Screenplay by', 'Story by', '각본', '극본', '작가'])
+        assert.equal(convertProperty(label), 'author', `${label} should map to author`);
+
+    // 원작 names the work adapted from, not a person, and keeps its own property.
+    assert.equal(convertProperty('원작'), 'isBasedOn');
+});
+
 test('every Date-ranged target is listed, so none is left with the prose', () => {
     // The browser has no copy of the vocabulary, so the list is written out in the source. This
     // derives it from the shipped file instead: add a mapping onto a Date property and forget the
