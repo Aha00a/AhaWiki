@@ -69,6 +69,8 @@ curl -sL -o /dev/null -w '%{http_code} %{url_effective}\n' -H "Host: ahawiki.net
 
 == loopback 은 화이트리스트에 있고, 그것이 왜 중요한가
 
-`FilterAccessLog` 는 주소별로 rate-limit 을 걸고, 넘으면 `IpDeny` 행을 쓴다. 그 행은 90일 동안 403 을 계속 돌려준다. `conf/base.conf` 의 `AhaWiki.ipWhitelist` 는 loopback 을 두 패밀리 모두 올려 둔다 — `127.0.0.1` 만으로는 부족하다. 요즘 OS 에서 로컬 요청은 IPv6 `0:0:0:0:0:0:0:1` 로 도착한다. 빠른 `curl` 대여섯 번이면 석 달 잠기기에 충분하던 시절이 있었다.
+`FilterAccessLog` 는 주소별로 rate-limit 을 걸고, 넘으면 `IpDeny` 행을 쓴다. 그 행은 90일 동안 403 을 계속 돌려준다. loopback 은 두 패밀리 모두 화이트리스트에 있다 — `127.0.0.1` 만으로는 부족하다. 요즘 OS 에서 로컬 요청은 IPv6 `0:0:0:0:0:0:0:1` 로 도착한다. 빠른 `curl` 대여섯 번이면 석 달 잠기기에 충분하던 시절이 있었다.
+
+'''그 주소들은 conf 가 아니라 코드에 있다''' — `logics.ApplicationConf.AlwaysWhitelisted`. `AhaWiki.ipWhitelist` 는 거기에 '''더해지는''' 목록이고 `base.conf` 에서는 비어 있다. HOCON 은 리스트를 합치지 않고 갈아치우므로, 사이트 conf 에 `ipWhitelist` 를 한 줄 쓰면 conf 에 적힌 loopback 은 통째로 사라진다. 2026-09-04 에 배포 헬스체크가 그렇게 자기를 차단했다. 지울 수 없어야 하는 값은 지울 수 있는 자리에 두지 않는다.
 
 화이트리스트에 있는 주소는 이제 limiter 만이 아니라 deny 조회도 건너뛴다. 화이트리스트에 오르기 전에 거부됐던 주소가, 테이블을 손대지 않고도 다시 닿는다.
