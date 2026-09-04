@@ -93,3 +93,31 @@ npm run download:ahawiki.net
 It scrapes `PageList` and reads pages with `?action=raw`, so it needs no key and sees only what
 a logged-out visitor sees. It is a bulk refresh, not a sync — it overwrites local edits without
 looking. Use the sync script for anything else.
+
+## `writer` → `author` (done 2026-09-04)
+
+`writer-to-author.mjs` was a one-off. Reviewing the hand-written Schema blocks against the
+shipped schema.org vocabulary found `writer` on 137 pages — 112 films, 23 series, 2 comics — and
+schema.org has no such property, nor a screenwriter one. `author` is what a film's writer gets.
+
+It is kept because it says what was changed and how to check it, and because the same shape of
+mistake will happen again: a property that reads like schema.org and is not.
+
+```bash
+WRITER_PAGES_FILE=pages.tsv node scripts/writer-to-author.mjs                    # report only
+WRITER_PAGES_FILE=pages.tsv node scripts/writer-to-author.mjs --apply --comment="..."
+```
+
+`WRITER_PAGES_FILE` is a tsv of `site<TAB>page`, from
+`SELECT DISTINCT site, page FROM CalculatedSchemaOrg WHERE prop = 'writer'`.
+
+Two things it is careful about, both of which it got wrong first:
+
+- It only rewrites a bare `writer<TAB>` field, never a `# Writer` comment holding the original.
+- A page can hold several Schema blocks, so `author` and `writer` clash only inside **one** block.
+  구르미 그린 달빛 types the novel as `Book` and the drama as `TVSeries`, each with its own person;
+  comparing the whole page called that a clash. `test/writer-to-author.test.mjs` pins both.
+
+Verify by reading the pages back rather than by querying `CalculatedSchemaOrg` — that table is
+derived and lags behind the edit. After the run it still reported 121 pages holding `writer`
+while every page had already been rewritten.
