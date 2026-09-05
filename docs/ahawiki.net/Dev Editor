@@ -165,7 +165,8 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * `writer` 137건 → `author`. schema.org 에 `writer` 는 없다. 가져오기가 만든 게 아니라 `Writer` 라벨이 미매핑으로 통과한 것을 사람이 소문자로 바꾼 것이었다. 라벨은 이제 `author` 로 간다.
  * `politicalParty` 4건 → `memberOf`(Person → Organization). `정당`·`Political party` 라벨도 같이.
  * `Cognag` → `Cognac`(Rémy Martin). 커스텀 클래스지만 철자.
- * `SoftwareSourceCode` ↔ `SoftwareApplication` — 한쪽 속성이 다른 쪽 블록에 있던 것. 클래스를 바꾸거나 속성을 옮기지 않고 '''짝 클래스를 인자에 더했다.''' 라이브러리는 코드이면서 쓰는 물건이고, 여섯 문서(Git·bash·ncdu…)는 이미 그렇게 적혀 있었다. `scripts/add-paired-class.mjs`.
+ * `SoftwareSourceCode` ↔ `SoftwareApplication` — 한쪽 속성이 다른 쪽 블록에 있던 것. 클래스를 바꾸거나 속성을 옮기지 않고 '''짝 클래스를 인자에 더했다''' (20건). 라이브러리는 코드이면서 쓰는 물건이고, 여섯 문서(Git·bash·ncdu…)는 이미 그렇게 적혀 있었다. `scripts/add-paired-class.mjs`. 소프트웨어 문서 47개가 전부 정합해졌다.
+ * Graphviz·Homebrew 2건은 '''반대로 처리했다.''' 두 문서는 프로그램용 `SoftwareApplication` 블록과 코드용 `SoftwareSourceCode` 블록을 따로 두고 있었고, 두 번째의 `applicationCategory` 는 첫 번째와 값까지 같은 사본이었다. 클래스를 넓히면 한 문서가 애플리케이션을 두 번 선언한다. 그래서 그 줄을 지웠다.
 
 '''두기로 한 것''' — 대안이 없거나, 고치면 더 틀려진다.
  * `TVSeries.duration` 29건. `duration` 은 에피소드의 속성이라 시리즈에는 안 맞지만, 시리즈 길이를 담을 자리가 schema.org 에 없다. `numberOfEpisodes` 는 다른 사실이다.
@@ -176,6 +177,8 @@ Partial edit에서 `#!table` block을 감지하면 raw editor 대신 inline tabl
  * `logo` 가 소프트웨어 블록에 있는 것 — domain 은 Organization·Brand·Product 이지만 `InterpreterSchema.imageKeys` 가 클래스와 무관하게 그림으로 그린다. 표시 관례다.
 
 검산은 파생 테이블이 아니라 페이지를 다시 읽어서 한다. 테이블은 재계산이 밀려, `writer` 를 전부 바꾼 직후에도 121건이 남았다고 답했다.
+
+'''저장이 재계산을 부른다.''' 그래서 고친 문서는 색인도 따라온다. 반대로 '''고칠 게 없던 문서는 안 따라온다''' — Git·bash·ncdu·ClamAv·Mermaid·uBlock Origin 은 원래 두 클래스를 적고 있어 편집하지 않았고, 색인은 아직 한 클래스로만 보여 준다. 렌더링(`typeof`·JSON-LD `@type`)은 이미 둘 다 맞다. 다음 편집 때 맞춰진다. `POST /api/Admin/Site/:seq/Calculate?pageName=...` 로 한 문서만 재계산할 수 있지만 API 키로는 403 이고 세션 관리자여야 한다.
 
 == 저장
  * form은 ajax로 submit한다.

@@ -77,6 +77,39 @@ test('logo does not hold a page back, because it is drawn whatever the class', (
     assert.equal(fine.kind, 'already-fits');
 });
 
+test('a line copied from a sibling block is not a reason to widen the class', () => {
+    // Graphviz and Homebrew give the program its own SoftwareApplication block and the codebase a
+    // SoftwareSourceCode one, then repeat applicationCategory in the second, value and all. Adding
+    // the class there would make the page declare the same application twice. Three independent
+    // reviewers were asked whether the change was right; one saw this and the planner had not.
+    const page = [
+        block('SoftwareApplication', 'name\tGraphviz', 'operatingSystem\tLinux', 'applicationCategory\tGraph Visualization'),
+        '',
+        block('SoftwareSourceCode', 'programmingLanguage\tC', 'applicationCategory\tGraph Visualization'),
+    ].join('\n');
+    const plan = planFor(page, vocabulary);
+    assert.equal(plan.kind, 'duplicate-of-sibling');
+    assert.deepEqual(plan.duplicates[0].lines.map(l => l.line), ['applicationCategory\tGraph Visualization']);
+});
+
+test('a sibling block with a different value is a real second fact, so the class widens', () => {
+    // Only an identical line is a copy. Two different categories are two claims, and the block
+    // making the second one does need the class that defines the property.
+    const page = [
+        block('SoftwareApplication', 'applicationCategory\tGraph Visualization'),
+        '',
+        block('SoftwareSourceCode', 'programmingLanguage\tC', 'applicationCategory\tDeveloper Tools'),
+    ].join('\n');
+    assert.equal(planFor(page, vocabulary).kind, 'rewrite');
+});
+
+test('a lone block is widened even when the page name mentions the other class', () => {
+    // netcat and npm each have one block. Two of their three reviewers died on a session limit and
+    // the run recorded that as refusal; reading the pages showed one block and no sibling.
+    assert.equal(planFor(block('SoftwareApplication', 'operatingSystem\tPOSIX', 'codeRepository\tx'), vocabulary).kind, 'rewrite');
+    assert.equal(planFor(block('SoftwareSourceCode', 'programmingLanguage\tJS', 'softwareVersion\t1.0', 'applicationCategory\tPackage Manager'), vocabulary).kind, 'rewrite');
+});
+
 test('a page without a Schema block is reported as such', () => {
     assert.equal(planFor('= Title\nsome prose', vocabulary).kind, 'no-schema-block');
 });

@@ -140,6 +140,19 @@ block fit the vocabulary. A block it cannot settle that way is reported as `unre
 alone — `industry` on a Corporation, `duration` on a TVSeries, and anything outside the software
 pair fall there.
 
+**A copied line is not a reason to widen.** Graphviz and Homebrew give the program its own
+`SoftwareApplication` block and the codebase a `SoftwareSourceCode` one, then repeat
+`applicationCategory` in the second, identical down to the value. Adding the class there would
+make the page declare the same application twice; the copy is what is wrong. Those come back as
+`duplicate-of-sibling`, naming the line, and a person deletes it. Only a byte-identical line in a
+sibling block that already declares the class counts — two different values are two facts, and
+the block making the second one does need the class that defines the property.
+
+The first run missed this and would have widened both. It was caught by three reviewers reading
+each page independently, one per lens: what the subject is, what the author meant, what
+schema.org practice is. Two lenses passed both pages; the one reading intent saw the sibling
+block. That is the case for reading the page rather than only the property list.
+
 `logo` is ignored when deciding. Its domain is Organization/Brand/Product, so it fits no software
 class, but `InterpreterSchema.imageKeys` draws it as a picture on any block — a display
 convention, not a claim about the type. Counting it held twelve library pages back for nothing.

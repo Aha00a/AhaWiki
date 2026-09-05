@@ -67,34 +67,51 @@ export function planFor(content, vocabulary) {
     lines.forEach((line, i) => {
         const header = line.match(headerPattern);
         if (header) {
-            current = {headerIndex: i, prefix: header[1], classes: header[2].trim().split(/\s+/).filter(Boolean), properties: []};
+            current = {headerIndex: i, prefix: header[1], classes: header[2].trim().split(/\s+/).filter(Boolean), fields: []};
             blocks.push(current);
         } else if (line.startsWith(']]]')) {
             current = null;
         } else if (current && line.trim() && !line.startsWith('#')) {
-            current.properties.push(line.split('\t')[0]);
+            current.fields.push({key: line.split('\t')[0], line, index: i});
         }
     });
     if (!blocks.length) return {kind: 'no-schema-block'};
 
     const changes = [];
     const unresolved = [];
+    const duplicates = [];
     for (const block of blocks) {
         if (!block.classes.length) continue;
-        const known = block.properties.filter(p => vocabulary.isProperty(p) && !DisplayOnly.has(p));
-        const misfits = known.filter(p => !vocabulary.fits(p, block.classes));
+        const known = block.fields.filter(f => vocabulary.isProperty(f.key) && !DisplayOnly.has(f.key));
+        const misfits = known.filter(f => !vocabulary.fits(f.key, block.classes));
         if (!misfits.length) continue;
 
         const candidates = block.classes.map(c => Paired[c]).filter(c => c && !block.classes.includes(c));
         const widened = [...block.classes, ...candidates];
-        const still = known.filter(p => !vocabulary.fits(p, widened));
+        const still = known.filter(f => !vocabulary.fits(f.key, widened));
         if (!candidates.length || still.length) {
-            unresolved.push({classes: block.classes, misfits: still.length ? still : misfits});
+            unresolved.push({classes: block.classes, misfits: (still.length ? still : misfits).map(f => f.key)});
             continue;
         }
-        changes.push({headerIndex: block.headerIndex, from: block.classes, to: widened, because: misfits});
+
+        // A page may already devote a block to the class we would add -- Graphviz and Homebrew
+        // separate the program from its codebase deliberately -- and the offending line is then a
+        // copy of what that block already states, identical down to the value. Widening here would
+        // make the page declare the same application twice. The line is what is wrong, not the
+        // class, so say so and let a person delete it.
+        const copied = misfits.filter(f => blocks.some(other =>
+            other !== block &&
+            candidates.some(c => other.classes.includes(c)) &&
+            other.fields.some(g => g.line === f.line)));
+        if (copied.length === misfits.length) {
+            duplicates.push({classes: block.classes, siblingClasses: candidates, lines: copied.map(f => ({index: f.index, line: f.line}))});
+            continue;
+        }
+
+        changes.push({headerIndex: block.headerIndex, from: block.classes, to: widened, because: misfits.map(f => f.key)});
     }
 
+    if (duplicates.length) return {kind: 'duplicate-of-sibling', duplicates, changes};
     if (unresolved.length) return {kind: 'unresolved', unresolved, changes};
     if (!changes.length) return {kind: 'already-fits'};
 
@@ -132,13 +149,18 @@ async function main() {
         return {ok: response.ok, status: response.status, text, json};
     }
 
-    const buckets = {rewrite: [], unresolved: [], 'already-fits': [], 'no-schema-block': [], failed: []};
+    const buckets = {rewrite: [], 'duplicate-of-sibling': [], unresolved: [], 'already-fits': [], 'no-schema-block': [], failed: []};
     for (const {host, page} of rows) {
         const apiPath = `/api/v1/page/${encodeURIComponent(page)}`;
         const current = await api(host, 'GET', apiPath);
         if (!current.ok || !current.json) { buckets.failed.push(`${host} ${page}: read ${current.status}`); continue; }
 
         const plan = planFor(current.json.content, vocabulary);
+        if (plan.kind === 'duplicate-of-sibling') {
+            buckets['duplicate-of-sibling'].push(`${host} ${page}: a [${plan.duplicates[0].siblingClasses.join(' ')}] block already states ` +
+                plan.duplicates.flatMap(d => d.lines.map(l => `line ${l.index}: ${l.line.replace(/\t/g, ' -> ')}`)).join('; '));
+            continue;
+        }
         if (plan.kind === 'unresolved') {
             buckets.unresolved.push(`${host} ${page}: ` + plan.unresolved.map(u => `[${u.classes.join(' ')}] cannot place ${u.misfits.join(',')}`).join('; '));
             continue;
