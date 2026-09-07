@@ -54,17 +54,21 @@ Leading space is important.
 
 
 == Link
-The link notation uses `[]` or `[""]`.
+A name without spaces is the page; the first space starts the alias. Use `|` or quotes when the name itself holds a space.
 
-링크는 `[]` 또는 `[""]`를 사용합니다.
+공백 없는 이름은 페이지이고, 첫 공백부터는 별칭입니다. 이름에 공백이 있으면 `|` 나 따옴표를 씁니다.
 
 [[[#!WikiSyntaxPreview
  * [Page1]
  * [Page1 Alias For Page1]
+ * [Page With Space|Alias]
  * ["Page With Space"]
+ * ["Page With Space" Alias]
  * [#Anchor Anchor Alias]
  * [http://aha00a.com aha00a.com Alias]
 ]]]
+
+'''`[Page With Space]` 는 `Page` 로 가는 링크입니다''' — `With Space` 는 이름표일 뿐입니다. 화면에는 맞아 보이니 주의. 자세한 규칙은 ["InterpreterWiki"].
 
 
 

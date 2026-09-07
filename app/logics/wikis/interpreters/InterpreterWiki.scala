@@ -376,17 +376,39 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
+  // The alternatives are tried in order, and the order is the whole grammar: [Page Name] cannot
+  // mean a page whose name has a space, because [Page Alias] claims that shape first. Quoting is
+  // what says "the space is part of the name", and | says "the alias starts here".
   val regexLink: Regex =
     """(?x)
           ((?<!\\)\\)?                                  # 1: Optional escape
           (?:
             ([a-zA-Z][-a-zA-Z0-9+._]+ :// \S+)    |     # 2: URL with scheme (http://...)
             \[" ([^]"]+) "]                       |     # 3: ["Page"]
-            \[ ([^]\s]+) ]                        |     # 4: [FrontPage]
-            \[" ([^]"]+) " \s+ ([^]]+) ]          |     # 5+6: ["Page" Alias]
-            \[ ([^]\s]+) \s+ ([^]]+) ]                  # 7+8: [Page Alias]
+            \[ (?![?"]) ((?:(?!://)[^]|])+) \| ([^]]+) ] | # 4+5: [Page Name|Alias]
+            \[ ([^]\s]+) ]                        |     # 6: [FrontPage]
+            \[" ([^]"]+) " \s+ ([^]]+) ]          |     # 7+8: ["Page" Alias]
+            \[ ([^]\s]+) \s+ ([^]]+) ]                  # 9+10: [Page Alias]
           )
     """.r
+
+  // 4+5 deliberately refuses three shapes, and every one of them is a thing that owns `|` in its
+  // own syntax rather than as a separator. A leading `"` means the quoted forms below should have
+  // it. A leading `?` is a query link, and `[?Tag=술&Address=서교|합정 술집]` is real on this wiki.
+  // A target containing `://` is a URL, where `|` is a legal character. Checked against every page
+  // before the rule was added: of the fifteen brackets holding a `|`, thirteen are URLs, two are
+  // query links, and none changes meaning.
+
+  /** (uri group, alias group) per alternative, in the order the pattern tries them. */
+  private val linkAlternatives: Seq[(Int, Option[Int])] =
+    Seq(2 -> None, 3 -> None, 4 -> Some(5), 6 -> None, 7 -> Some(8), 9 -> Some(10))
+
+  /** The uri and alias a match names. None only if the pattern gains an alternative and not a pair. */
+  def uriAndAlias(m: Regex.Match): Option[(String, String)] =
+    linkAlternatives.collectFirst {
+      case (uriGroup, aliasGroup) if m.group(uriGroup) != null =>
+        (m.group(uriGroup), aliasGroup.map(m.group).getOrElse(""))
+    }
 
   private val regexEmptyCheckbox: Regex = """\[ \]""".r
 
@@ -394,32 +416,29 @@ object InterpreterWiki extends TraitInterpreter {
     val s2 = regexEmptyCheckbox.replaceAllIn(s, Regex.quoteReplacement("""<input type="checkbox" disabled>"""))
     val set: Set[String] = wikiContext.setPageNameByPermission
 
-    regexLink.replaceAllIn(s2, _ match {
-      case regexLink(null, uri , null, null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString())
-      case regexLink(null, null, uri , null, null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
-      case regexLink(null, null, null, uri , null, null, null, null) => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString(set))
-      case regexLink(null, null, null, null, uri, alias, null, null) => Regex.quoteReplacement(AhaMarkLink(uri, alias).toHtmlString(set))
-      case regexLink(null, null, null, null, null, null, uri, alias) => Regex.quoteReplacement(AhaMarkLink(uri, alias).toHtmlString(set))
-
-      case regexLink(_   , uri , null, null, null, null, null, null) => Regex.quoteReplacement(uri)
-      case regexLink(_   , null, uri , null, null, null, null, null) => Regex.quoteReplacement(s"""["$uri"]""")
-      case regexLink(_   , null, null, uri , null, null, null, null) => Regex.quoteReplacement(s"[$uri]")
-      case regexLink(_   , null, null, null, uri , alia, null, null) => Regex.quoteReplacement(s"""["$uri" $alia]""")
-      case regexLink(_   , null, null, null, null, null, uri , alia) => Regex.quoteReplacement(s"""[$uri $alia]""")
-
-      case value => "wrong : " + value
-    })
+    regexLink.replaceAllIn(s2, m =>
+      if (m.group(1) != null) {
+        // Escaped: give back what was written, without the backslash. Rebuilding it from the
+        // groups meant every new alternative needed a branch here too, and one that was forgotten
+        // would have printed "wrong : ..." into the page.
+        Regex.quoteReplacement(m.matched.substring(1))
+      } else {
+        uriAndAlias(m) match {
+          // A bare URL is passed no page set, so it is never marked as a missing page.
+          case Some((uri, _)) if m.group(2) != null => Regex.quoteReplacement(AhaMarkLink(uri).toHtmlString())
+          case Some((uri, alias))                   => Regex.quoteReplacement(AhaMarkLink(uri, alias).toHtmlString(set))
+          case None                                 => "wrong : " + m.matched
+        }
+      }
+    )
   }
 
   def extractLinkMarkup(content:String)(implicit wikiContext:ContextWikiPage):Iterator[AhaMarkLink] = {
-    regexLink.findAllIn(content).map {
-      case regexLink(null, uri , null, null, null, null, null, null) => AhaMarkLink(uri)
-      case regexLink(null, null, uri , null, null, null, null, null) => AhaMarkLink(uri)
-      case regexLink(null, null, null, uri , null, null, null, null) => AhaMarkLink(uri)
-      case regexLink(null, null, null, null, uri, alias, null, null) => AhaMarkLink(uri, alias)
-      case regexLink(null, null, null, null, null, null, uri, alias) => AhaMarkLink(uri, alias)
-      case _ => null
-    }.filter(_ != null).filterNot(_.uri.startsWith("#"))
+    regexLink.findAllMatchIn(content)
+      .filter(_.group(1) == null)   // an escaped link is text, not a link
+      .flatMap(uriAndAlias)
+      .map { case (uri, alias) => AhaMarkLink(uri, alias) }
+      .filterNot(_.uri.startsWith("#"))
   }
 
   def inlineToHtmlString(line: String)(implicit wikiContext:ContextWikiPage): String = {

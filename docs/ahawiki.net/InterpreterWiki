@@ -121,9 +121,9 @@ Leading space is important.
 ]]]
 
 == Link
-The link notation uses `[]` or `[""]`.
+A name without spaces is the page; the first space starts the alias. A page name that holds a space therefore needs `|` or quotes.
 
-링크는 `[]` 또는 `[""]`를 사용합니다.
+공백 없는 이름은 페이지이고, '''첫 공백부터는 별칭'''입니다. 그래서 이름에 공백이 있는 페이지는 `|` 나 따옴표가 필요합니다.
 
 [[[#!WikiSyntaxPreview
  * Url
@@ -134,6 +134,7 @@ The link notation uses `[]` or `[""]`.
   1. [Page1]
   1. [Page1 Alias For Page1]
  * Page with space
+  1. [United States|미국]
   1. ["United States"]
   1. ["United States" United States of America]
  * Anchor
@@ -143,6 +144,22 @@ The link notation uses `[]` or `[""]`.
   1. [?q=10]
   1. [?q=10 q10 Alias]
 ]]]
+
+=== 공백이 있는 이름을 따옴표 없이 쓰면
+'''`[United States]` 는 `United` 로 가는 링크이고 `States` 가 그 이름표입니다.''' 화면에는 `United States` 라고 그대로 찍히므로, 눌러 보기 전에는 틀린 것이 보이지 않습니다. 이 문서와 `["Dev Api"]` 류를 쓰는 문서들이 그래서 따옴표를 씁니다.
+
+=== `|` 규칙 (2026-09-05 추가)
+`|` 앞이 페이지 이름, 뒤가 별칭입니다. 뒤쪽의 `|` 는 별칭의 일부입니다.
+
+'''다음 셋에는 적용하지 않습니다.''' `|` 를 자기 문법으로 쓰는 것들이라, 별칭 구분자로 가로채면 안 됩니다.
+
+ * 대상이 `://` 를 포함할 때 — URL 에서 `|` 는 합법 문자입니다
+ * 대상이 `?` 로 시작할 때 — 쿼리 링크. `[?Tag=술&Address=서교|합정 술집]` 이 실제로 쓰이고 있습니다
+ * `"` 로 시작할 때 — 따옴표가 이미 이름의 끝을 말했습니다
+
+넣기 전에 전체 문서를 대조했습니다: `[...]` 안에 `|` 가 있는 것이 15건이고 그중 13건이 URL, 2건이 쿼리 링크였습니다. 규칙 적용 뒤 4,615개 문서 26,914개 링크의 파싱 결과가 '''하나도 바뀌지 않았습니다.''' 옛 리비전도 그대로 렌더됩니다 — 파서 버전 같은 것이 없어서, 옛 문서는 언제나 오늘의 파서로 읽힙니다.
+
+문법은 `test/com/aha00a/logics/wikis/interpreters/InterpreterWikiLinkSpec.scala` 가 고정합니다.
 
 use `\` for escaping
 링크 문법 무효화를 하기 위해서는 `\`를 사용합니다.

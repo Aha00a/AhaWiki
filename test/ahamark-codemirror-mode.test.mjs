@@ -108,6 +108,11 @@ test('highlights AhaMark Basic block and link syntax', () => {
         { text: '[Page Alias]', style: 'ahamark-link' },
         { text: 'http://aha00a.com', style: 'ahamark-link' },
     ]);
+    // The mode matches anything between brackets, so the | form needed no change -- but narrowing
+    // that pattern later would take the highlighting away without any other test noticing.
+    assert.deepEqual(tokensFor('[Page With Space|Alias]'), [
+        { text: '[Page With Space|Alias]', style: 'ahamark-link' },
+    ]);
     assert.deepEqual(tokensFor('[2026-05-22 2026-05-22T10:20:30]'), [
         { text: '[2026-05-22 2026-05-22T10:20:30]', style: 'ahamark-date' },
     ]);
