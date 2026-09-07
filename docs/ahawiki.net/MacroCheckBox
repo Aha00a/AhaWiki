@@ -30,7 +30,9 @@
  * `` `[x]` `` (백틱): `<code>` 태그로 렌더링되어 체크박스 불가, 코드 표시 용도와 충돌 — 불가
  * `[[CheckBox(x)]]` (매크로): 기존 `[[MacroName(argument)]]` 시스템에 그대로 통합 가능 — 채택
 
-빈 체크박스 `[ ]`는 링크 regex `[^]\s]+` 가 공백을 허용하지 않아 링크로 파싱되지 않으므로, 별도 처리(InterpreterWiki.replaceLink)를 통해 그대로 체크박스 문법으로 지원한다.
+빈 체크박스 `[ ]`는 어느 링크 대안에도 걸리지 않는다. 대상 자리가 `[^]\s]+` 인 것들은 공백을 못 먹고, 공백을 허용하는 `|` 대안(`[^]|]`)은 `|` 를 요구하는데 `[ ]` 에는 없다. 그래서 `[ ]` 를 체크박스로 가져가도 링크에서 빼앗는 것이 없다. 변환은 `InterpreterWiki.replaceLink` 가 링크를 처리하기 전에 먼저 한다.
+
+'''`[x]` 와의 비대칭은 여기서 나온다.''' `[ ]` 는 링크 문법이 비워 둔 자리이고, `[x]` 는 이미 차지한 자리다. 문법 자체는 ["InterpreterWiki"] 의 Link 절과 `test/com/aha00a/logics/wikis/interpreters/InterpreterWikiLinkSpec.scala` 가 고정한다(후자는 `[ ]` 가 어떤 링크도 아님을 명시적으로 검사한다).
 
 === 구현
  * `app/logics/wikis/macros/MacroCheckBox.scala` — 매크로 본체
