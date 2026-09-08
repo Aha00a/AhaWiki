@@ -30,7 +30,7 @@
 
  * '''`[0]` 화이트리스트''': `AhaWiki.ipWhitelist` 에 있는 주소는 `[1]`~`[4]` 를 모두 건너뛴다. '''`IpDeny` 행이 남아 있어도 그렇다''' — 그래서 차단을 푸는 가장 빠른 방법은 행을 지우는 것이 아니라 여기에 넣는 것이다. 예전에는 `[2]` 가 이 검사보다 먼저라 한 번 등록된 주소는 화이트리스트로도 풀 수 없었고, 서버 자신의 EIP 가 두 달 막혀 있었다. 루프백 세 주소는 설정이 아니라 `logics.ApplicationConf.AlwaysWhitelisted` 에 있어서 사이트 conf 가 지울 수 없다.
  * '''`[1]` 인메모리 ban 확인''': `IpRateLimiter.knownBanned` 셋을 조회한다. DB 없음. `[2]`~`[4]`에서 차단된 IP가 재요청하면 여기서 바로 잡힌다.
- * '''`[·]` 인메모리 clean 캐시''': `knownClean` 에 있으면 `[2]` 의 DB 조회를 건너뛴다. TTL 60초. 정상 방문자가 매 요청마다 `IpDeny` 를 조회하지 않게 하는 것이 목적이다.
+ * '''`[·]` 인메모리 clean 캐시''': `knownClean` 에 있으면 `[2]` 의 DB 조회를 건너뛴다. TTL 은 `cleanTtlMs`(현재 60초). 정상 방문자가 매 요청마다 `IpDeny` 를 조회하지 않게 하는 것이 목적이다.
  * '''`[2]` IpDeny DB 조회''': 서버 재시작 전에 등록된 영구 차단 IP를 처리한다. 조회 결과가 있으면 `ban()`을 호출해 이후 요청은 `[1]`에서 처리되도록 캐시한다.
  * '''`[3]` UriAttackDetector''': WordPress·phpinfo 등 알려진 공격 URI를 차단한다. 탐지 즉시 `ban()`을 호출해 actor가 DB에 쓰기 전 같은 IP의 재요청을 `[1]`에서 막는다.
  * '''`[4]` IpRateLimiter.recordAndCheck''': 고속 요청 또는 페이지만 긁는 패턴을 탐지한다. tarpit 없이 즉시 응답한다(고볼륨 봇에 tarpit을 걸면 서버 커넥션이 쌓임).
@@ -60,14 +60,16 @@
 
 === 탐지 패턴
 
- * '''고속 요청''': 30초 내 `/w/*` 30회 이상
- * '''페이지만 긁기''': `/w/*` 5회 이상 && HumanSignal 3회 미만
+임계값 넷은 `IpRateLimiter` 의 상수다. 괄호 안은 현재 값이다.
+
+ * '''고속 요청''': `windowMs` 안에 `/w/*` 가 `rateThreshold` 회 이상 (30초 / 30회)
+ * '''페이지만 긁기''': 같은 창에서 `/w/*` 가 `botPageMin` 회 이상이고 HumanSignal 이 `botHumanSignalMin` 회 미만 (5회 / 3회)
 
 둘째 패턴은 사람이 만든 도구도 문다. 배포 헬스체크가 `/w/FrontPage` 만 3초 간격으로 폴링해서 다섯 번째에 '''자기를 차단'''한 적이 있다 — ["Dev Deploying"] 의 "왜 이런 모양인가" 참고. 자동 요청을 짜는 쪽에서는 `/w/` 밖의 URL 을 쓰거나 화이트리스트에 오르는 편이 낫다.
 
 === cleanup
 
-`recordAndCheck` 호출 1000번에 1번 확률로 `cleanup()`을 실행해 만료된 `windows` 엔트리를 제거한다.
+`recordAndCheck` 가 낮은 확률로 `cleanup()`을 실행해 만료된 `windows` 엔트리를 제거한다. 확률은 그 함수 안의 `Random.nextInt` 인자(현재 1000번에 1번)다.
 
 == UriAttackDetector
 

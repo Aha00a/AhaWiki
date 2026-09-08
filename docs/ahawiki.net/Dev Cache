@@ -135,16 +135,20 @@ TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값
 
 === 상태 및 TTL
 
+경계는 `models.tables.CacheCrawler` 의 세 상수다. 괄호 안은 현재 값이다.
+
 [[[#!Table tsv 1
 상태	조건	처리
-Fresh	갱신 후 90일 이내	즉시 캐시 반환
-Stale	90일 초과 ~ 180일 이내	캐시 반환 후 백그라운드 재검증
-Expired	180일 초과	삭제 대상
+Fresh	갱신 후 `MaxAgeDays` 이내 (90일)	즉시 캐시 반환
+Stale	`MaxAgeDays` 초과 ~ `MaxAgeDays + SwrDays` 이내 (90~180일)	캐시 반환 후 백그라운드 재검증
+Expired	`TtlDays` 초과 (180일)	삭제 대상
 ]]]
+
+'''Stale 의 끝과 Expired 의 시작은 서로 다른 상수다.''' 지금은 `MaxAgeDays + SwrDays` 와 `TtlDays` 가 둘 다 180일이라 맞아떨어지지만, 한쪽만 바꾸면 재검증도 안 되고 삭제도 안 되는 구간이 생긴다.
 
 === 주기적 정리
 
-12시간마다 만료된(`Expired`) 항목을 DB에서 삭제합니다.
+만료된(`Expired`) 항목을 DB에서 삭제합니다. 주기는 `ApplicationLifecycleHook` 의 `CrawlerCacheCleanup`(현재 12시간)입니다.
 
 == InterpreterVim
 

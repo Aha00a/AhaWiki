@@ -100,7 +100,7 @@
 
  * `connect()`에서 `new WebSocket(wsUrl)` 생성
  * `onopen` 시 `saveSenderId`를 생성 후 `cursor.hello` 전송 (`브라우저 쿠키 ID` + `탭별 sessionStorage ID` 조합)
- * `saveSenderId`는 `브라우저 공통 ID(쿠키, 1년)` + `탭 고유 ID(sessionStorage)`를 결합해, 같은 브라우저의 다른 탭은 서로 다른 값이 되도록 합니다.
+ * `saveSenderId`는 `브라우저 공통 ID(쿠키)` + `탭 고유 ID(sessionStorage)`를 결합해, 같은 브라우저의 다른 탭은 서로 다른 값이 되도록 합니다. 쿠키 수명은 `edit.page.js` 의 `cookieMaxAgeSeconds`(현재 1년)입니다.
  * `onclose` 시 `reconnectDelayMs` 후 재연결 시도
  * `onerror`/`onclose`는 console warn 로그 출력
 
@@ -163,7 +163,7 @@
  * 큐 크기는 `Source.queue[String](32, OverflowStrategy.dropHead)`이므로 소비 지연 시 오래된 outbound 메시지가 버려질 수 있습니다.
   * 커서 위치 스트림 특성상 최신 상태 우선 정책으로 해석 가능합니다.
  * 읽기 권한은 소켓 연결 시점에 검사되며, 연결 후 권한 변경에 대한 즉시 강제 종료 로직은 별도로 보이지 않습니다.
- * Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 최신 revision을 재조회 후 최대 3회 자동 재시도하고, 모두 실패 시 non-blocking 토스트를 표시합니다 (페이지 강제 새로고침 없음).
+ * Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 최신 revision을 재조회 후 자동 재시도하고, 모두 실패 시 non-blocking 토스트를 표시합니다 (페이지 강제 새로고침 없음). 재시도 횟수는 `AhaWiki.Kanban.js` 의 `requestSaveKanban` 안 `attempt` 상한(현재 3회)입니다.
  * `page.updated` 이벤트를 칸반 실시간 동기화에 활용합니다 — 자세한 내용은 [[Dev Kanban Realtime]] 참조.
 
 == 페이지 새로고침 알림 상세 (`page.updated`)

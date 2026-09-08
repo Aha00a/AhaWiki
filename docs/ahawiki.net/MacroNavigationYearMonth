@@ -5,7 +5,7 @@
 `[[NavigationYearMonth]]` - 현재 페이지 이름을 YYYY-MM으로 파싱
 `[[NavigationYearMonth(2024-01)]]` - 특정 연월
 
-현재 연월 기준 앞뒤 3개월 링크를 `rightInfoBox` 박스로 출력합니다.
+현재 연월 기준 앞뒤 링크를 `rightInfoBox` 박스로 출력합니다. 범위는 `MacroNavigationYearMonth` 의 `RangeUtil.around` 인자(현재 ±3개월)입니다.
 
 == 관련
  * [MacroNavigationYear]

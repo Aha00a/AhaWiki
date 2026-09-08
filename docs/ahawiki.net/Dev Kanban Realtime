@@ -141,7 +141,7 @@ kanban:card.remoteupdated 수신 시:
 === "Would you like to refresh?" 토스트 억제
 
 Kanban 페이지는 `applyRemoteKanbanUpdate` 성공 후 `wiki:kanban.synced` CustomEvent를 발행한다.
-`view.scala.html`은 `page.updated` 수신 시 `.InterpreterKanban`이 존재하면 토스트를 즉시 표시하지 않고 2초 대기한다.
+`view.scala.html`은 `page.updated` 수신 시 `.InterpreterKanban`이 존재하면 토스트를 즉시 표시하지 않고 기다린다. 대기 시간은 그 파일의 `setTimeout` 인자(현재 2초)다.
 2초 내에 `kanbanSyncedRevisions[revision]`이 set되면 토스트를 억제한다.
 sync 실패 또는 timeout 시에는 기존 토스트를 표시한다.
 

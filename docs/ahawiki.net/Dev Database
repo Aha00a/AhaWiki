@@ -13,7 +13,7 @@
 
 == 로그 테이블은 자기 행을 만료시킨다
 
-`AccessLog`·`IpDeny`·`UserViewHistory` 는 각자 `Retention` 값을 선언하고, 그 기간이어야 하는 이유를 바로 옆에 적어 둔다. 스케줄된 잡이 10~30분마다 각자의 `deleteExpired` 를 부르고, 시작할 때 세 기간을 로그로 찍는다.
+`AccessLog`·`IpDeny`·`UserViewHistory` 는 각자 `Retention` 값을 선언하고, 그 기간이어야 하는 이유를 바로 옆에 적어 둔다. 스케줄된 잡(`ApplicationLifecycleHook` 의 `deleteExpired`, 현재 10~30분 무작위 간격)이 각자의 `deleteExpired` 를 부르고, 시작할 때 세 기간을 로그로 찍는다.
 
 보존 기간을 다른 곳에 다시 적지 말 것. 스케줄러가 "한눈에 보이라고" 셋의 사본을 들고 있던 적이 있다. 두 번 적힌 값은 한 번만 고쳐질 값이다.
 
