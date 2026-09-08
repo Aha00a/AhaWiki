@@ -27,7 +27,8 @@ object InterpreterWiki extends TraitInterpreter {
   abstract class Handler[T](val pageContent: PageContent) {
     val extractConvertInjectVariable = {
       val eciv = new ExtractConvertInjectVariable()
-      // #!var 디렉티브 변수를 먼저 시드 → [[[#!Variable]]] 블록이 나중에 덮어쓸 수 있음
+      // Variables come from the #!var directives and nowhere else. There is no [[[#!Variable]]]
+      // block: no interpreter is registered under that name, and no page uses one.
       eciv.variables ++= pageContent.variables
       eciv
     }
@@ -35,7 +36,8 @@ object InterpreterWiki extends TraitInterpreter {
     val extractConvertInjectMacro = new ExtractConvertInjectMacro()
     val extractConvertInjectBackQuote = new ExtractConvertInjectBackQuote()
 
-    // Step 1: [[[#!Variable]]] 블록 제거 + TSV 파싱 (줄 수 보존 → 원본 줄 번호 유지)
+    // Step 1: nothing. extract returns the content untouched -- the variables were already read
+    // from the #!var directives above. The step is kept so the numbering below still reads.
     val variableExtractedContent: String = extractConvertInjectVariable.extract(pageContent.content)
     // Step 2: 백틱 블록 먼저 추출 → 백틱 안의 {{key}}를 UUID로 보호
     val backQuoteExtracted: String = extractConvertInjectBackQuote.extract(variableExtractedContent)

@@ -5,7 +5,6 @@ import logics.wikis.macros._
 import models.ContextWikiPage
 import models.tables.CalculatedLink
 
-import scala.collection.mutable
 import scala.util.matching.Regex
 
 object ExtractConvertInjectMacro {
@@ -68,8 +67,6 @@ object ExtractConvertInjectMacro {
 }
 
 class ExtractConvertInjectMacro extends ExtractConvertInject {
-  private val mapVariable = new mutable.HashMap[String, String]()
-
   val regex: Regex =
     """(?x)
       \[\[
@@ -95,27 +92,27 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s match {
     case regex(name, argument) =>
       val result = ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
-        name match {
-          case "Set" => MacroSet(argument)
-          case "Get" => MacroGet(argument)
-          case _ =>
-            val macroErrorResult = MacroError.toHtmlString(s"$s - Macro not found.")
-            wikiContext.renderingMode match {
-              case RenderingMode.Normal =>
-                macroErrorResult
-              case RenderingMode.Preview =>
-                val linkAhaWikiSyntaxMacro = InterpreterWiki.inlineToHtmlString("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
-                val macroList = InterpreterWiki.inlineToHtmlString(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
-                val macroInfoResult = MacroInfo.toHtmlString(Seq(
-                  "Available Macros",
-                  macroList,
-                  linkAhaWikiSyntaxMacro
-                ).mkString("<br/>"))
-                macroErrorResult + macroInfoResult
-            }
+        // Set and Get were handled here, outside mapMacros -- which is why neither ever appeared
+        // in the editor's completion list or in the "Available Macros" list below, though both
+        // worked. Removed 2026-09-08 for the #!var directive and {{name}}; see the Variable page.
+        val macroErrorResult = MacroError.toHtmlString(s"$s - Macro not found.")
+        wikiContext.renderingMode match {
+          case RenderingMode.Normal =>
+            macroErrorResult
+          case RenderingMode.Preview =>
+            val linkAhaWikiSyntaxMacro = InterpreterWiki.inlineToHtmlString("[https://wiki.aha00a.com/w/AhaWikiSyntaxMacro AhaWikiSyntaxMacro]")
+            val macroList = InterpreterWiki.inlineToHtmlString(ExtractConvertInjectMacro.mapMacros.keys.toSeq.sorted.mkString(", "))
+            val macroInfoResult = MacroInfo.toHtmlString(Seq(
+              "Available Macros",
+              macroList,
+              linkAhaWikiSyntaxMacro
+            ).mkString("<br/>"))
+            macroErrorResult + macroInfoResult
         }
       }
-      if(name == "Set") result else wrapMacro(name, result)
+      // Set rendered to "" and was left unwrapped so it emitted nothing at all; with it gone,
+      // every macro is wrapped.
+      wrapMacro(name, result)
     case _ => "error"
   }
 
@@ -141,16 +138,6 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
         .getOrElse(Seq())
       case _ => Seq()
     }.toSeq
-  }
-
-  private def MacroSet(argument: String): String = {
-    val a = argument.split(",", 2)
-    mapVariable.put(a(0), a(1))
-    ""
-  }
-
-  private def MacroGet(argument: String): String = {
-    mapVariable.getOrElse(argument, s"Error! $argument")
   }
 
 }

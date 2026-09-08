@@ -63,9 +63,9 @@
  1. [MacroAhaWikiSiteList] - AhaWiki 사이트 목록
 
 == 변수
- 1. [MacroGetMacroSet] - 문서 안 임시 변수
-  a. [MacroGet]
-  a. [MacroSet]
+문서 안 변수는 매크로가 아니라 `#!var` 디렉티브와 `{{이름}}` 입니다 — ["Variable"].
+
+ 1. ["MacroGetMacroSet"] - 2026-09-08에 폐기한 옛 매크로 `Set`/`Get`
 
 == 폼/입력
  1. [MacroCheckBox] - 체크박스
