@@ -43,6 +43,14 @@ const registeredInterpreters = new Set([
 // Read from the page header, never from a block, so a block naming one is still an error.
 const directives = new Set(['read', 'write', 'redirect', 'var']);
 
+// A red link is normal on a wiki -- it is how a page gets asked for. A link that misses an
+// existing page by case or spacing is not: Page.name is utf8mb4_bin, so `[PHP]` never reaches
+// `Php` and never will, and it is spelled the way the reader expects, so nothing looks wrong.
+// What counts as missing is decided by AhaMarkLink.toHtmlString; these are its exclusions.
+const defaultPages = new Set(['AhaWiki', 'FrontPage', 'PageList', 'PageMap', 'RecentChanges', 'TitleIndex', 'WikiStatistics']);
+const dateShapes = [/^\d{4}-\d{2}-\d{2}$/, /^\d{4}-\d{2}$/, /^\d{4}$/, /^---\d{2}$/, /^--\d{2}-\d{2}$/, /^--\d{2}$/];
+const fold = name => name.toLowerCase().replace(/\s+/g, ' ').trim();
+
 const siteHost = {
     '1': 'aha00a.com', '2': 'ahawiki.net', '3': 'wiki.aharise.com', '6': 'fuerinha.ahawiki.net',
     '8': 'cellivery.ahawiki.net', '9': 'oc.ahawiki.net', '11': 'whohow.net',
@@ -69,7 +77,16 @@ function main(file) {
         pagesBySite.get(r.site).add(r.name);
     }
 
-    const unknownMacro = new Map(), unknownBlock = new Map(), silentLink = [];
+    // The names of each site's pages, folded, so a link can be asked whether it is one of them
+    // under a different case or spacing.
+    const foldedBySite = new Map();
+    for (const [site, names] of pagesBySite) {
+        const folded = new Map();
+        for (const name of names) if (!folded.has(fold(name))) folded.set(fold(name), name);
+        foldedBySite.set(site, folded);
+    }
+
+    const unknownMacro = new Map(), unknownBlock = new Map(), silentLink = [], caseMiss = [];
     const note = (map, key, where) => {
         if (!map.has(key)) map.set(key, new Set());
         map.get(key).add(where);
@@ -90,10 +107,28 @@ function main(file) {
 
         const linkable = afterBlocks.replace(/\[\[[^\]]*\]\]/g, ' ');
         const known = pagesBySite.get(r.site);
+        const folded = foldedBySite.get(r.site);
         for (const m of linkable.matchAll(regexLink)) {
-            if (m[1] || m[2] || m[9] === undefined) continue;
-            const whole = `${m[9]} ${m[10]}`.trim();
-            if (known.has(whole)) silentLink.push(`${where}: [${whole}] goes to "${m[9]}"`);
+            if (m[1] || m[2]) continue;                          // escaped, or a bare URL
+
+            if (m[9] !== undefined) {
+                const whole = `${m[9]} ${m[10]}`.trim();
+                if (known.has(whole)) silentLink.push(`${where}: [${whole}] goes to "${m[9]}"`);
+            }
+
+            // Every alternative names a page in its first group; the alias does not matter here.
+            const raw = m[3] ?? m[4] ?? m[6] ?? m[7] ?? m[9];
+            if (raw === undefined) continue;
+            const uri = (raw.startsWith('wiki:') ? raw.slice(5) : raw).trim();
+            if (!uri || uri.startsWith('#') || uri.startsWith('?')) continue;
+            if (/^[a-zA-Z][-a-zA-Z0-9+._]+:\/\//.test(uri)) continue;
+            if (uri.startsWith('schema:') || uri.startsWith('User:')) continue;
+            const target = uri.replace(/[#?].+$/, '');
+            if (!target || known.has(target) || defaultPages.has(target)) continue;
+            if (dateShapes.some(shape => shape.test(target))) continue;
+
+            const real = folded.get(fold(target));
+            if (real !== undefined) caseMiss.push(`${where}: [${target}] -- the page is "${real}"`);
         }
     }
 
@@ -104,14 +139,21 @@ function main(file) {
         if (!map.size) console.log('  (none)');
     };
 
+    const list = (title, lines) => {
+        const unique = [...new Set(lines)].sort();
+        console.log(`\n=== ${title}: ${unique.length} ===`);
+        unique.forEach(l => console.log(`  ${l}`));
+        if (!unique.length) console.log('  (none)');
+        return unique.length;
+    };
+
     console.log(`${rows.length} pages across ${pagesBySite.size} sites`);
-    console.log(`\n=== a link written as target and alias whose whole text names a page: ${silentLink.length} ===`);
-    silentLink.forEach(l => console.log(`  ${l}`));
-    if (!silentLink.length) console.log('  (none)');
+    const silent = list('a link written as target and alias whose whole text names a page', silentLink);
+    const missed = list('a link that misses an existing page by case or spacing', caseMiss);
     report('macro names the app does not register', unknownMacro);
     report('block names the app does not register', unknownBlock);
 
-    return silentLink.length + unknownMacro.size + unknownBlock.size ? 1 : 0;
+    return silent + missed + unknownMacro.size + unknownBlock.size ? 1 : 0;
 }
 
 if (process.argv.length < 3) {

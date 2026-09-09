@@ -162,9 +162,15 @@ The decision is pinned in `test/add-paired-class.test.mjs` against the shipped v
 ## Auditing every page on every site
 
 `audit.wiki.mjs` reports pages that render an error, or render something other than what was
-written: a macro or block naming something the app does not register, and a link written
+written: a macro or block naming something the app does not register, a link written
 `[Page Name]` whose whole text names a page — which renders the words the author meant and goes to
-the first one.
+the first one — and a link that misses an existing page by case or spacing.
+
+That last one needs the whole site to see. `Page.name` is `utf8mb4_bin`, so `[PHP]` and the page
+`Php` are two different names and always will be; the link renders as an invitation to write a page
+that is already written. A red link is normal on a wiki, which is why this reports only the ones
+that name a real page under another casing — 8 out of 6,500. What counts as missing is
+`AhaMarkLink.toHtmlString`, and the exclusions in the script are its exclusions.
 
 The tests under `test/` check the 116 pages committed here. This checks all of them, including the
 sites whose pages exist only on the wiki, so it needs a dump of the database rather than the API —
@@ -188,3 +194,34 @@ required a trailing comma and so missed the last entry.
 The lists of macros and interpreters are written out rather than derived, because deriving them is
 what produced two of those false positives. `test/ahawiki.docs-links.test.mjs` guards the link
 shape for the committed pages on every run; this script is for the rest, run by hand.
+
+**A count that surprises you is a claim about your own script first.** A throwaway written with a
+shell heredoc lost a backslash, so `/\\n/g` became `/\n/g`, stripped none of the base64 wrap
+markers, and reported 4,109 of 4,616 rows as corrupt. The dump was clean. Write scripts to a file
+with an editor, not through the shell.
+
+## Links that miss a page by case (done 2026-09-09)
+
+`fix-case-miss-links.mjs` was a one-off for the eight the audit found: `[PHP]`, `[ASP]`,
+`[ASP.NET]` and `[ffmpeg]` on four aha00a.com pages, where the pages are `Php`, `Asp`, `Asp.Net`
+and `FFmpeg`.
+
+```bash
+node scripts/fix-case-miss-links.mjs                          # report only
+node scripts/fix-case-miss-links.mjs --apply --comment="..."  # rewrite
+node scripts/fix-case-miss-links.mjs --apply --comment="..." --only="Waveform"
+```
+
+It writes `[Php|PHP]`, not `[Php]`. The page names are the odd spelling here — PHP, ASP.NET and
+ffmpeg are what those things are called — and one of the four pages is a CV, where changing
+`ASP.NET` to `Asp.Net` would be a change to how someone presents themselves rather than a repair.
+The pipe form sends the link to the page that exists and leaves the reader seeing what was written.
+Renaming the pages instead would fix more links at once, but a rename is not a script's decision.
+
+It rewrites **by offset**, not by replacing text: `[PHP]` also appears in prose about the markup,
+and a page that documents the syntax shows the very shape being rewritten. The mask blanks blocks,
+backticks and macros to the same length so the offsets stay true — `test/fix-case-miss-links.test.mjs`
+pins that, and pins the four kinds of `[PHP]` that must be left alone.
+
+Verified by reading each page back afterwards, rendered: `<a href="/w/FFmpeg">ffmpeg</a>`, with no
+`missing` class and the text unchanged.
