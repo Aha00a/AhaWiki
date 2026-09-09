@@ -114,6 +114,9 @@ the download", which is the thing that loses the page.
 Only the whole group is skipped in the download; the sync is finer, and still reports whichever
 of the pair the file actually holds as a normal page.
 
+No page collides today — the four that did were deleted, see the ToDo section below — so both
+guards are quiet. They are here for the next rename, not for a state anyone is living with.
+
 ## `writer` → `author` (done 2026-09-04)
 
 `writer-to-author.mjs` was a one-off. Reviewing the hand-written Schema blocks against the
@@ -277,8 +280,20 @@ CamelCase way its siblings left behind years ago.
 settles nothing, so the wiki's own WikiWord naming decides, and that is `ToDo` — which aha00a.com
 already read as. Four ahawiki.net pages were out of step: `TODO NewUserFlow` and three
 `TODO-*` task documents. These are the only ones with committed copies under `docs/ahawiki.net/`,
-so the rename is half the job — `git mv` the files, pull the changed pages back down, and expect
-the redirect stubs the rename leaves behind to be unmirrorable, per the download section above.
+so the rename is half the job — `git mv` the files and pull the changed pages back down.
+
+**The four redirect stubs were then deleted, on the owner's instruction**, so the mirror is 1:1
+again: 117 pages, 117 files, nothing unmirrorable. That is a hard delete —
+`DELETE FROM Page WHERE site = ? AND name = ?`, every revision, no undo — so before it ran, each
+stub was saved whole (one revision, one line each), and **all 121 pages were read to confirm
+nothing linked to any of the four**. Grep over `docs/ahawiki.net/` would not have been enough:
+those were 117 of the wiki's 121, and the four with no local copy were exactly the ones in
+question. The delete script is deliberately not kept — it has no second use, and a committed
+script that hard-deletes wiki pages is a hazard with no upside. What it deleted is recorded here.
+
+The collision guard stays, because the hazard is not specific to these four: any rename to a
+name that differs only by case recreates it, and the download bug it exposed was real
+independently.
 
 Four things a rename leaves behind, and this is most of what the script is:
 
