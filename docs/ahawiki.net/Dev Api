@@ -98,6 +98,7 @@ Telegram 알림은 `minorEdit`와 `viaApi` 저장을 제외한다.
 AhaWikiDoc sync를 위해 AhaWiki API를 보강했다.
 
  * 페이지 목록/메타 API는 `name`, `revision`, `dateTime`, `isMinorEdit`, `viaApi`, `userApiKeyName`, `size`, `contentHash`를 반환한다.
+  * `GET /api/v1/pages` 는 2026-09-10 까지 `userApiKeyName` 을 항상 `null` 로 줬다 — 목록 SQL 이 `userApiKey` 컬럼을 읽지 않아 `Page` 의 기본값 `None` 이 그대로 나갔고, 메타·본문 endpoint 만 이름을 답했다. 지금은 읽고, `ApiV1Spec` 이 목록에서도 이름을 단언한다.
  * Batch metadata API는 여러 page name의 `revision`, `dateTime`, hash를 한 번에 조회한다.
  * 최근 변경 API는 API Key 인증으로 page prefix, timestamp, page별 revision 기준 필터를 지원한다.
  * `afterRevision`은 페이지별 revision이므로 `name`으로 단일 페이지를 지정한 경우에만 허용한다.

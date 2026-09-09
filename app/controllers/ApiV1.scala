@@ -90,7 +90,7 @@ class ApiV1 @Inject()(
     val prefixLike = s"$prefixTrimmed%"
     val boundedLimit = limit.max(1).min(5000)
     SQL"""
-      SELECT P.name, P.revision, P.dateTime, U.nickname AS nickname, P.`user` AS `user`, P.remoteAddress, P.comment, P.isMinorEdit, P.content, P.viaApi
+      SELECT P.name, P.revision, P.dateTime, U.nickname AS nickname, P.`user` AS `user`, P.remoteAddress, P.comment, P.isMinorEdit, P.content, P.viaApi, P.userApiKey
       FROM Page P
       LEFT JOIN User U ON U.seq = P.user
       INNER JOIN (
@@ -106,9 +106,12 @@ class ApiV1 @Inject()(
         AND ($prefixTrimmed = '' OR P.name LIKE $prefixLike)
       ORDER BY P.name ASC
       LIMIT $boundedLimit
-    """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi")).map {
-      case name ~ revision ~ dateTime ~ nickname ~ user ~ remoteAddress ~ comment ~ isMinorEdit ~ content ~ viaApi =>
-        Page(name, revision, dateTime, nickname, user, remoteAddress, comment, isMinorEdit, content, viaApi)
+    """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ get[Option[String]]("nickname") ~ optionLong("user") ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ str("content") ~ bool("viaApi") ~ optionLong("userApiKey")).map {
+      // userApiKey has to be read here: Page defaults it to None, and until 2026-09-10 this
+      // query left it out, so the list answered userApiKeyName: null for every page while the
+      // single-page endpoint named the key.
+      case name ~ revision ~ dateTime ~ nickname ~ user ~ remoteAddress ~ comment ~ isMinorEdit ~ content ~ viaApi ~ userApiKey =>
+        Page(name, revision, dateTime, nickname, user, remoteAddress, comment, isMinorEdit, content, viaApi, userApiKey)
     }.*)
   }
 

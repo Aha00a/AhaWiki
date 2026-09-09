@@ -178,6 +178,25 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
         (page \ "revision").as[Long] mustBe 1
       }
     }
+
+    "name the API key that saved a page, in the list as well" in {
+      val created = createApiKey()
+      insertPage("ApiListKeyed", 1, "= ApiListKeyed\nold")
+
+      val save = apiV1Request(POST, "/api/v1/page/ApiListKeyed", created.rawKey)
+        .withJsonBody(Json.obj("revision" -> 1, "text" -> "= ApiListKeyed\nnew", "comment" -> "bot update"))
+      status(route(app, save).get) mustBe OK
+
+      // The list query built Page without the userApiKey column until 2026-09-10, so this
+      // field was always null here while GET /api/v1/page/:name answered the name.
+      val result = route(app, apiV1Request(GET, "/api/v1/pages?prefix=ApiListKeyed", created.rawKey)).get
+      status(result) mustBe OK
+      val pages = (contentAsJson(result) \ "pages").as[Seq[play.api.libs.json.JsValue]]
+      val listed = pages.find(page => (page \ "name").as[String] == "ApiListKeyed").get
+      (listed \ "revision").as[Long] mustBe 2
+      (listed \ "viaApi").as[Boolean] mustBe true
+      (listed \ "userApiKeyName").as[String] mustBe "test key"
+    }
   }
 
   "POST /api/v1/pages/metadata" should {
