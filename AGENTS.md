@@ -63,6 +63,7 @@ What to leave behind:
  * Do not accumulate separate "docs cleanup" commits. Documentation detached from its change loses track of which change it describes.
  * Fix stale text the moment you notice it. **Wrong documentation is worse than none.**
  * One kind of staleness is checked for you: `test/ahawiki.docs-citations.test.mjs` fails when a wiki page cites a class, method, or file by a name that no longer exists in the source. It reads names, not structure — it cannot tell that a method moved, only that nothing is called that any more, which is what a rename actually leaves behind. A name that is real but lives outside this repository goes in that file's `namedOutsideTheRepository` list with the reason it is not here.
+ * The same file also checks the endpoints the pages quote — `GET /api/Admin/Site/:seq/Admins` — against `conf/routes`, which is the only thing that decides whether one exists. A page quotes a value where the route holds a parameter, so each route is matched as a pattern. A route quoted for what it once was rather than for what it answers now goes in `routesQuotedAsHistory` with the reason.
 
 ## Language — English, Except the Wiki Page Copies
 

@@ -87,3 +87,76 @@ test('the outside-the-repository list stays a set of decisions', () => {
         assert.ok(reason && reason.length > 20, `${name} needs a reason saying what it actually is`);
     }
 });
+
+// The pages also quote endpoints — `GET /api/Admin/Site/:seq/Admins`. The citation test above
+// does not see those: its shapes are names, and a verb and a path are neither. conf/routes is
+// the only thing that decides whether one exists, so a renamed route leaves the page describing
+// something that answers 404, and nothing says so.
+
+// A route quoted for what it once was, rather than for what it answers now. Same rule as the
+// list above: each needs a reason, so this stays decisions rather than a way to silence a failure.
+const routesQuotedAsHistory = new Map([
+    ['POST /account/nickname/request',
+        'TODO-User-Nickname-Change names the path it planned, in the paragraph explaining why the built one differs'],
+]);
+
+/** Turn a route into what it matches. A page quotes a value where the route holds a parameter. */
+function routePattern(routePath) {
+    const escape = segment => segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('^' + routePath.split('/').map(segment => {
+        if (segment.startsWith('*')) return '.+';        // *nameEncoded -- swallows slashes
+        if (segment.startsWith(':')) return '[^/]+';     // :seq
+        return escape(segment);
+    }).join('/') + '$');
+}
+
+function definedRoutes() {
+    return fs.readFileSync(path.join(rootDir, 'conf', 'routes'), 'utf8').split('\n')
+        .map(line => line.match(/^(GET|POST|PUT|DELETE|PATCH|HEAD)\s+(\S+)/))
+        .filter(Boolean)
+        .map(match => ({verb: match[1], re: routePattern(match[2])}));
+}
+
+test('every API route the wiki pages quote is still in conf/routes', () => {
+    const routes = definedRoutes();
+    const docsDirectory = path.join(rootDir, ...docsGitPath.split('/'));
+    const missing = [];
+
+    for (const page of fs.readdirSync(docsDirectory)) {
+        if (page === manifestFileName) continue;
+        const text = fs.readFileSync(path.join(docsDirectory, page), 'utf8');
+        const seen = new Set();
+
+        for (const match of text.matchAll(/`(GET|POST|PUT|DELETE|PATCH)\s+(\/[^`\n]+)`/g)) {
+            const cited = `${match[1]} ${match[2].trim()}`;
+            if (seen.has(cited) || routesQuotedAsHistory.has(cited)) continue;
+            seen.add(cited);
+
+            // A query string is the caller's, not the route's; conf/routes spells defaults instead.
+            const citedPath = match[2].trim().replace(/\?.*$/, '').replace(/\/+$/, '') || '/';
+            if (!routes.some(route => route.verb === match[1] && route.re.test(citedPath)))
+                missing.push(`${page}: \`${cited}\``);
+        }
+    }
+
+    assert.deepEqual(missing, [], `Wiki pages quote routes that conf/routes no longer defines:\n  ${missing.join('\n  ')}\n\n` +
+        'Update the page, or — if the page quotes the route as history rather than as what it ' +
+        'answers now — add it to routesQuotedAsHistory in this file with the reason.');
+});
+
+test('the route check can tell a real citation from a wrong one', () => {
+    // Without this, the test above passes just as well when nothing matches at all.
+    const routes = definedRoutes();
+    assert.ok(routes.length > 50, 'conf/routes should parse into routes, not an empty list');
+
+    const matches = (verb, citedPath) => routes.some(route => route.verb === verb && route.re.test(citedPath));
+
+    assert.ok(matches('GET', '/api/Admin/Site/999/Admins'), 'a value where the route holds :seq');
+    assert.ok(matches('GET', '/w/FrontPage'), 'a page name where the route holds *nameEncoded');
+    assert.ok(!matches('POST', '/api/Admin/Site/999/Admins/1/2'), 'more segments than the route has');
+    assert.ok(!matches('GET', '/api/Admin/Site'), 'a prefix of a route is not the route');
+
+    for (const [route, reason] of routesQuotedAsHistory) {
+        assert.ok(reason && reason.length > 20, `${route} needs a reason saying why it is quoted`);
+    }
+});
