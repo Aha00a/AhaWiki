@@ -21,6 +21,13 @@ const namedOutsideTheRepository = new Map([
 
 // Deliberately narrow. Prose, SQL fragments and config keys also live in backticks, and a
 // shape that admits them would report noise until someone stopped reading the output.
+//
+// Config keys were surveyed on 2026-09-09 to see whether that was still true. A dotted
+// lowercase name matched 35 things across the pages, and most were prose the shape could not
+// tell from a key: `console.log`, `target.length`, `request.host`, `chat.id`. Of the ones the
+// source did not hold, every real citation was a value a page names as legacy -- AccessControl
+// quotes `permission.default.read` twice to say permission no longer reads it. So the check
+// would report prose and history, and nothing that was actually stale.
 const citationShapes = [
     {name: 'file', re: /^[A-Za-z0-9_.-]+\.(scala|jsx?|mjs|less|html|sql|conf)$/},
     {name: 'path', re: /^[A-Za-z0-9_./-]+\/[A-Za-z0-9_.-]+\.(scala|jsx?|mjs|less|html|sql|conf)$/},
