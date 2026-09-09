@@ -20,6 +20,8 @@
 // markup, and `[PHP]` inside a [[[block]]] or backticks must not be touched. The masking below is
 // the renderer's order, with regions blanked to the same length so offsets stay true.
 
+import { regexLink, maskUnlinkable } from './lib/ahamark.mjs';
+
 const apiKey = process.env.AHAWIKI_API_KEY;
 const apply = process.argv.includes('--apply');
 const comment = (process.argv.find(a => a.startsWith('--comment=')) || '').slice('--comment='.length);
@@ -43,17 +45,9 @@ const RealPage = new Map([
     ['ffmpeg', 'FFmpeg'],
 ]);
 
-/** The alternatives of InterpreterWiki.regexLink, in the order it tries them. */
-const regexLink = /((?<!\\)\\)?(?:([a-zA-Z][-a-zA-Z0-9+._]+:\/\/\S+)|\["([^\]"]+)"\]|\[(?![?"])((?:(?!:\/\/)[^\]|])+)\|([^\]]+)\]|\[([^\]\s]+)\]|\["([^\]"]+)"\s+([^\]]+)\]|\[([^\]\s]+)\s+([^\]]+)\])/g;
-
-/** Blank what the link pattern never sees, keeping every offset where it was. */
-export function maskUnlinkable(content) {
-    const blank = match => ' '.repeat(match.length);
-    return content
-        .replace(/`[^`\n]*`/g, blank)
-        .replace(/\[\[\[[\s\S]*?\]\]\]/g, m => m.replace(/[^\n]/g, ' '))
-        .replace(/\[\[[^\]]*\]\]/g, blank);
-}
+// Re-exported so the test can reach it by the name it checks; the definition lives with the
+// link pattern it has to agree with.
+export { maskUnlinkable };
 
 export function planFor(content) {
     const masked = maskUnlinkable(content);

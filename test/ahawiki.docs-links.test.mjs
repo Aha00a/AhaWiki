@@ -12,17 +12,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { docsGitPath, manifestFileName, rootDir } from '../scripts/lib/ahawiki.net.mjs';
-
-/** The alternatives of InterpreterWiki.regexLink, in the order it tries them. */
-const regexLink = /((?<!\\)\\)?(?:([a-zA-Z][-a-zA-Z0-9+._]+:\/\/\S+)|\["([^\]"]+)"\]|\[(?![?"])((?:(?!:\/\/)[^\]|])+)\|([^\]]+)\]|\[([^\]\s]+)\]|\["([^\]"]+)"\s+([^\]]+)\]|\[([^\]\s]+)\s+([^\]]+)\])/g;
+import { regexLink, maskUnlinkable } from '../scripts/lib/ahamark.mjs';
 
 /** What the link pattern sees. Variables, blocks, macros and backticks are taken out before it. */
-function linkableText(source) {
-    return source
-        .replace(/\[\[\[[\s\S]*?\]\]\]/g, ' ')
-        .replace(/\[\[[^\]]*\]\]/g, ' ')
-        .replace(/`[^`\n]*`/g, ' ');
-}
+const linkableText = maskUnlinkable;
 
 function committedPages() {
     const directory = path.join(rootDir, ...docsGitPath.split('/'));

@@ -3,6 +3,13 @@
 `lib/ahawiki.net.mjs` holds what the two wiki scripts both need — where the wiki is, where the
 local page copies live, and how a page name becomes a filename.
 
+`lib/ahamark.mjs` holds what every script reading AhaMark links needs: the link pattern, and the
+mask for what the renderer takes out of the text before it looks for one. Both had been copied
+into four files, and the copies had drifted — three masked macros with `\[\[[^\]]*\]\]`, which
+stops at the first `]`, so `[[Include(["Aws EC2"])]]` was not masked at all and the link inside
+it counted as real. A test caught it. Anything in that file is a claim about
+`app/logics/wikis/`; change it only alongside that code.
+
 ## Front-end admin build
 
 `app/assets/js/admin.jsx` is bundled to `public/js/babel/admin.js`.
@@ -233,9 +240,57 @@ are `#!redirect` now, which answers 303.
 Verified by fetching each afterwards: `CSS` 200 with `= CSS`, and `Css`, `Jsp`, `Snmp` all 303 to
 the right place.
 
-`AWS`/`Aws` was left for the owner. `Aws` is not one page but the prefix of a family of 21, and
-moving the parent alone would leave nineteen children spelled the old way — while Wikipedia's
-actual title is "Amazon Web Services", which neither name matches.
+`AWS`/`Aws` is here too, but it had to wait for the family: `Aws` is the prefix of 21 pages, and
+moving the parent alone would have left nineteen children spelled the old way. Those went first,
+by rename — see the next section — and the parent came here afterwards because `AWS` was an
+occupied name and rename refuses one.
+
+## Renaming to the Wikipedia spelling (done 2026-09-09)
+
+`wikipedia-case-renames.mjs` is the other half. `POST /api/v1/rename` is the better tool whenever
+the target name is **free**: it moves every revision, leaves `#!redirect <new>` behind, and
+deletes nothing.
+
+```bash
+node scripts/wikipedia-case-renames.mjs acronyms                          # report only
+node scripts/wikipedia-case-renames.mjs aws --apply --comment="..."       # do it
+```
+
+Two plans. `acronyms` moved `Php` → `PHP`, `Asp.Net` → `ASP.NET`, `Asp` → `ASP`. `aws` moved
+sixteen `Aws <thing>` children plus `AwsCli` → `AWS CLI`, the last page still spelled the
+CamelCase way its siblings left behind years ago.
+
+Four things a rename leaves behind, and this is most of what the script is:
+
+* **The heading.** It names the page, so it moves with it. `Asp.Net` opened `= [Asp].Net`, a link
+  inside a heading rather than the plain title the others had.
+* **A redirect that now points at a redirect.** `AwsCodeCommit` said `#!redirect Aws CodeCommit`;
+  rename that target and the reader gets a pointer to a pointer, which the renderer does not
+  follow. Retargeted.
+* **An index listing the old names.** The parent page is a list of its children.
+* **Red links in that index.** Four entries — `Aws IAM`, `Aws Route 53` and two others — are
+  pages nobody has written. There is nothing to rename, so the rename pass never sees them, and
+  left alone the next person to click one writes a page under the name everything else just
+  stopped using.
+
+Links from **elsewhere** are deliberately not rewritten. A redirect is what a wiki leaves behind
+on purpose, and every old link keeps working through it.
+
+It also collapses `[Php|PHP]` back to `[PHP]`. That pipe was written by
+`fix-case-miss-links.mjs` when the page was still called `Php`: it kept the reader seeing PHP
+while the link reached the page. The page is called PHP now, so the pipe says nothing — but only
+that exact case, because `[FFmpeg|ffmpeg]` still earns its keep and an alias that is not the new
+name is a label, not a workaround.
+
+**Both scripts are idempotent**, because they stay in the repository as the record of what was
+changed and running one again has to be safe. A rename whose old name already holds the right
+redirect reports "already done" — and still counts as moved, since the passes after it work from
+that list. Getting that wrong the first time made the run report seventeen failures and skip the
+index it was supposed to fix.
+
+Verified against the wiki's own page list rather than the plan: 26 old names, every one a
+redirect; 26 names under the new spelling; no redirect pointing at a redirect; and no old name
+still holding content.
 
 ## Links that miss a page by case (done 2026-09-09)
 

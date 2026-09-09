@@ -58,8 +58,7 @@ const siteHost = {
 };
 const hostOf = site => siteHost[site] || `site ${site}`;
 
-/** The alternatives of InterpreterWiki.regexLink, in the order it tries them. */
-const regexLink = /((?<!\\)\\)?(?:([a-zA-Z][-a-zA-Z0-9+._]+:\/\/\S+)|\["([^\]"]+)"\]|\[(?![?"])((?:(?!:\/\/)[^\]|])+)\|([^\]]+)\]|\[([^\]\s]+)\]|\["([^\]"]+)"\s+([^\]]+)\]|\[([^\]\s]+)\s+([^\]]+)\])/g;
+import { regexLink, maskUnlinkable, linkTarget } from './lib/ahamark.mjs';
 
 function readDump(file) {
     return fs.readFileSync(file, 'utf8').trim().split('\n').map(line => {
@@ -105,7 +104,7 @@ function main(file) {
         for (const m of afterBlocks.matchAll(/\[\[([A-Za-z][A-Za-z0-9]*)(\([^\]]*\))?\]\]/g))
             if (!registeredMacros.has(m[1])) note(unknownMacro, m[1], where);
 
-        const linkable = afterBlocks.replace(/\[\[[^\]]*\]\]/g, ' ');
+        const linkable = maskUnlinkable(r.content);
         const known = pagesBySite.get(r.site);
         const folded = foldedBySite.get(r.site);
         for (const m of linkable.matchAll(regexLink)) {
@@ -116,10 +115,7 @@ function main(file) {
                 if (known.has(whole)) silentLink.push(`${where}: [${whole}] goes to "${m[9]}"`);
             }
 
-            // Every alternative names a page in its first group; the alias does not matter here.
-            const raw = m[3] ?? m[4] ?? m[6] ?? m[7] ?? m[9];
-            if (raw === undefined) continue;
-            const uri = (raw.startsWith('wiki:') ? raw.slice(5) : raw).trim();
+            const uri = linkTarget(m);
             if (!uri || uri.startsWith('#') || uri.startsWith('?')) continue;
             if (/^[a-zA-Z][-a-zA-Z0-9+._]+:\/\//.test(uri)) continue;
             if (uri.startsWith('schema:') || uri.startsWith('User:')) continue;

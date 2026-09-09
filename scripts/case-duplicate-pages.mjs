@@ -49,6 +49,16 @@ const Moves = [
         // The heading names the page, so it moves with it.
         heading: [/^= Css$/m, '= CSS'],
     },
+    {
+        from: 'Aws', to: 'AWS',
+        // Wikipedia's article is "Amazon Web Services" and AWS redirects to it, so neither name
+        // here matches the title; what Wikipedia never writes is "Aws". The family of eighteen
+        // children moved to the `AWS ` prefix first, by rename -- see wikipedia-case-renames.mjs.
+        // This page could not, because `AWS` was already a redirect and rename refuses a taken
+        // name. Its 56 revisions therefore stay readable under `Aws`.
+        why: 'Wikipedia writes the acronym AWS; the family of children moved first',
+        heading: [/^= Aws$/m, '= AWS'],
+    },
 ];
 
 // A page that is only a pointer, written as prose rather than as a redirect. `see [wiki:JSP]`
@@ -97,6 +107,14 @@ async function moveContent({from, to, why, heading}) {
     if (!source.ok || !source.json) { failures.push(`${from}: read ${source.status}`); return; }
     if (!target.ok || !target.json) { failures.push(`${to}: read ${target.status}`); return; }
 
+    // Already done: the old name points at the new one and the new one holds the text. Say so
+    // rather than reporting the guard below as a failure -- this script stays in the repository
+    // as the record of what was changed, so running it again has to be safe and quiet.
+    if (source.json.content.trim() === redirectTo(to).trim()) {
+        console.log(`\n${from} -> ${to}: already done`);
+        return;
+    }
+
     // Refuse to overwrite anything but a redirect. If the target grew content since this was
     // planned, the two need merging by a person, not clobbering by a script.
     if (!/^#!redirect\s/.test(target.json.content.trim())) {
@@ -124,6 +142,10 @@ async function moveContent({from, to, why, heading}) {
 async function makeRedirect({page, to, was}) {
     const current = await read(page);
     if (!current.ok || !current.json) { failures.push(`${page}: read ${current.status}`); return; }
+    if (current.json.content.trim() === redirectTo(to).trim()) {
+        console.log(`\n${page}: already done`);
+        return;
+    }
     if (current.json.content.trim() !== was) {
         failures.push(`${page}: says ${JSON.stringify(current.json.content.trim())}, expected ${JSON.stringify(was)}`);
         return;
