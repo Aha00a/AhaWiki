@@ -161,6 +161,8 @@ A name without spaces is the page; the first space starts the alias. A page name
 
 문법은 `test/com/aha00a/logics/wikis/interpreters/InterpreterWikiLinkSpec.scala` 가 고정합니다.
 
+그리고 '''이 저장소에 커밋된 문서들은 `test/ahawiki.docs-links.test.mjs` 가 검사합니다''' — 괄호에 공백이 있는데 그 전체가 실재하는 페이지 이름이면 실패합니다. 화면에는 맞아 보이고 다른 곳으로 가는 실수라, 눈으로는 안 걸립니다. 실제로 두 번 걸렸고(`[Dev Editor]`, 그리고 `[Dev Api]`·`[Dev SisterWiki]`) 둘 다 HTML 을 읽어서야 찾았습니다.
+
 use `\` for escaping
 링크 문법 무효화를 하기 위해서는 `\`를 사용합니다.
 
