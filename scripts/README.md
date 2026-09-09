@@ -158,3 +158,33 @@ class, but `InterpreterSchema.imageKeys` draws it as a picture on any block — 
 convention, not a claim about the type. Counting it held twelve library pages back for nothing.
 
 The decision is pinned in `test/add-paired-class.test.mjs` against the shipped vocabulary.
+
+## Auditing every page on every site
+
+`audit.wiki.mjs` reports pages that render an error, or render something other than what was
+written: a macro or block naming something the app does not register, and a link written
+`[Page Name]` whose whole text names a page — which renders the words the author meant and goes to
+the first one.
+
+The tests under `test/` check the 116 pages committed here. This checks all of them, including the
+sites whose pages exist only on the wiki, so it needs a dump of the database rather than the API —
+the API returns only what the key may read.
+
+```bash
+ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -B -N -e "
+  SELECT p.site, TO_BASE64(p.name), TO_BASE64(p.content)
+  FROM Page p JOIN (SELECT site, name, MAX(revision) r FROM Page GROUP BY site, name) m
+    ON m.site=p.site AND m.name=p.name AND m.r=p.revision"' > dump.tsv
+node scripts/audit.wiki.mjs dump.tsv
+```
+
+**Match what the renderer sees, or the report is noise.** Backticks and `[[[blocks]]]` come out of
+the text before macros and links are read, so a scan of the raw source calls every documented
+example a broken one. The first run reported 236 suspect fragments and nine unregistered macros;
+after mirroring that order, four and then one. The header lists the three false-positive classes
+and why each happened, including one that came from deriving the macro list with a regex that
+required a trailing comma and so missed the last entry.
+
+The lists of macros and interpreters are written out rather than derived, because deriving them is
+what produced two of those false positives. `test/ahawiki.docs-links.test.mjs` guards the link
+shape for the committed pages on every run; this script is for the rest, run by hand.
