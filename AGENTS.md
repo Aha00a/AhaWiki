@@ -110,20 +110,20 @@ Value A	Value B
 ]]]
 ```
 
-TODO-style documents under `docs/ahawiki.net/` should be maintained as checkbox lists. Always update the relevant checkbox state immediately after finishing the work, as part of the same change — this is required, never optional. Do not end a task with completed work still marked as an open checkbox:
+Task documents under `docs/ahawiki.net/` are named `ToDo…` — that spelling, which is the wiki's own WikiWord naming. English Wikipedia's `Todo` is a disambiguation page and settles nothing, so the wiki's convention decides. They should be maintained as checkbox lists. Always update the relevant checkbox state immediately after finishing the work, as part of the same change — this is required, never optional. Do not end a task with completed work still marked as an open checkbox:
 
  * Use `[ ]` for open work.
  * Use `[[CB(x)]]` for completed work; flip an item to `[[CB(x)]]` as soon as that item is done and verified.
  * Do not use `[x]`; only the empty checkbox form uses square brackets.
  * Keep newly discovered follow-up work as new `[ ]` items.
- * Do not leave the TODO document stale when the implementation status changes.
+ * Do not leave the ToDo document stale when the implementation status changes.
 
-When a TODO-style document is fully completed, do not keep it as a historical checklist by default:
+When a ToDo document is fully completed, do not keep it as a historical checklist by default:
 
  * Move only the durable result, decisions, API behavior, test outcome, and operational notes into the relevant non-TODO reference documents.
  * Remove transient task-management details such as completed checkbox lists, staging notes, and implementation scratch notes.
- * Remove links or Kanban cards that only point to the completed TODO document.
- * Delete the completed TODO document after its necessary results have been moved.
+ * Remove links or Kanban cards that only point to the completed ToDo document.
+ * Delete the completed ToDo document after its necessary results have been moved.
  * Sync the deletion only after the cleanup commit is reviewed and committed, following the committed-content sync rule below.
 
 When the user asks for `AhaWikiDoc sync`, sync committed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.

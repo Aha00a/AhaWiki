@@ -101,6 +101,19 @@ It scrapes `PageList` and reads pages with `?action=raw`, so it needs no key and
 a logged-out visitor sees. It is a bulk refresh, not a sync — it overwrites local edits without
 looking. Use the sync script for anything else.
 
+**Two page names that differ only by case are one file here, and neither is written.** `Page.name`
+is `utf8mb4_bin`, so the wiki can hold `TODO NewUserFlow` and `ToDo NewUserFlow` at once; Windows
+and macOS cannot hold both files. This script empties the directory and writes every page
+concurrently, so before the guard the two raced for one file, the loser was gone, and the manifest
+still listed both as written — and *which* one lost depended on timing. It happened on 2026-09-09,
+minutes after a rename created the second name. The colliding names are now named on the console
+and in the manifest under `notWrittenFileNameCollision`, and `npm run sync:ahawiki.net` reports
+them as **cannot be mirrored** rather than as diverged or wiki-only — both of which read as "run
+the download", which is the thing that loses the page.
+
+Only the whole group is skipped in the download; the sync is finer, and still reports whichever
+of the pair the file actually holds as a normal page.
+
 ## `writer` → `author` (done 2026-09-04)
 
 `writer-to-author.mjs` was a one-off. Reviewing the hand-written Schema blocks against the
@@ -256,9 +269,16 @@ node scripts/wikipedia-case-renames.mjs acronyms                          # repo
 node scripts/wikipedia-case-renames.mjs aws --apply --comment="..."       # do it
 ```
 
-Two plans. `acronyms` moved `Php` → `PHP`, `Asp.Net` → `ASP.NET`, `Asp` → `ASP`. `aws` moved
+Three plans. `acronyms` moved `Php` → `PHP`, `Asp.Net` → `ASP.NET`, `Asp` → `ASP`. `aws` moved
 sixteen `Aws <thing>` children plus `AwsCli` → `AWS CLI`, the last page still spelled the
 CamelCase way its siblings left behind years ago.
+
+`todo` is the one where **Wikipedia is not the standard**. Its `Todo` is a disambiguation page and
+settles nothing, so the wiki's own WikiWord naming decides, and that is `ToDo` — which aha00a.com
+already read as. Four ahawiki.net pages were out of step: `TODO NewUserFlow` and three
+`TODO-*` task documents. These are the only ones with committed copies under `docs/ahawiki.net/`,
+so the rename is half the job — `git mv` the files, pull the changed pages back down, and expect
+the redirect stubs the rename leaves behind to be unmirrorable, per the download section above.
 
 Four things a rename leaves behind, and this is most of what the script is:
 

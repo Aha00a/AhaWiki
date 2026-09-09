@@ -44,7 +44,7 @@ Google OAuth로 로그인한다.
 
 최초 로그인 직후 닉네임을 직접 입력하는 화면은 '''아직 없다.''' 이메일 앞부분이 그대로 닉네임이 된다.
 
-'''바꿀 수는 있다(2026-09-02 배포).''' Account Settings 에서 새 닉네임을 신청하고 관리자가 승인·거절한다 — 사용자가 스스로 바꾸지는 않는다. 규칙·화면·API 는 [TODO-User-Nickname-Change].
+'''바꿀 수는 있다(2026-09-02 배포).''' Account Settings 에서 새 닉네임을 신청하고 관리자가 승인·거절한다 — 사용자가 스스로 바꾸지는 않는다. 규칙·화면·API 는 [ToDo-User-Nickname-Change].
 
 즉 이 단계에서 남은 것은 '''가입 직후의 안내'''뿐이다. 신청 흐름이 이미 있으므로, 만든다면 새 화면이 아니라 그 흐름으로 보내는 것으로 족하다.
 
@@ -67,7 +67,7 @@ Google OAuth로 로그인한다.
 
 현재는 관리자가 직접 DB에 Site 레코드를 추가하는 방식으로만 생성된다.
 
-관련 TODO: [TODO-User-Acquisition]
+관련 TODO: [ToDo-User-Acquisition]
 
 == 구현 현황
 
@@ -85,5 +85,5 @@ Google OAuth로 로그인한다.
 
  * [GettingStarted]
  * [AccessControl]
- * [TODO-User-Acquisition]
- * [TODO-User-Nickname-Change]
+ * [ToDo-User-Acquisition]
+ * [ToDo-User-Nickname-Change]

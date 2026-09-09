@@ -1,6 +1,6 @@
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { baseUrl, docsDir, manifestFileName, rootDir, safeFileName } from "./lib/ahawiki.net.mjs";
+import { baseUrl, docsDir, fileNameCollisions, manifestFileName, rootDir, safeFileName } from "./lib/ahawiki.net.mjs";
 
 const pageListUrl = `${baseUrl}/w/PageList`;
 const outputDir = docsDir;
@@ -110,11 +110,26 @@ async function main() {
   }
 
   const pageListHtml = await fetchText(pageListUrl, { allowNotOk: true });
-  const pages = extractPages(pageListHtml);
+  const allPages = extractPages(pageListHtml);
+
+  // Two page names that differ only by case are one file here, and this writes concurrently into
+  // a directory it has just emptied: whichever finishes last wins and the other page is gone,
+  // with the manifest still claiming both. Neither is written instead, and both are named.
+  const collisions = fileNameCollisions(allPages.map((page) => page.name));
+  const cannotBeWritten = new Set(collisions.flat());
+  const pages = allPages.filter((page) => !cannotBeWritten.has(page.name));
 
   await cleanDirectory(outputDir);
 
-  console.log(`Found ${pages.length} pages from ${pageListUrl}`);
+  console.log(`Found ${allPages.length} pages from ${pageListUrl}`);
+  if (collisions.length > 0) {
+    console.log(
+      `\nNOT written — these names are one file on a case-insensitive filesystem, so writing ` +
+        `them would lose a page:`
+    );
+    for (const group of collisions) console.log(`  ${group.map((name) => `"${name}"`).join("  ==  ")}`);
+    console.log("");
+  }
   console.log(`Writing raw text files to ${path.relative(rootDir, outputDir)}`);
 
   const downloaded = await mapWithConcurrency(pages, concurrency, async (page, index) => {
@@ -138,6 +153,9 @@ async function main() {
         source: pageListUrl,
         downloadedAt: new Date().toISOString(),
         count: downloaded.length,
+        // Named here as well as on the console, so a manifest read later still says why the
+        // mirror is short of the wiki rather than looking like a download that half finished.
+        notWrittenFileNameCollision: collisions,
         pages: downloaded,
       },
       null,

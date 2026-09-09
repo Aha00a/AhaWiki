@@ -28,7 +28,9 @@ const apiKey = process.env.AHAWIKI_API_KEY;
 const apply = process.argv.includes('--apply');
 const comment = (process.argv.find(a => a.startsWith('--comment=')) || '').slice('--comment='.length);
 const planName = process.argv[2];
-const host = 'aha00a.com';
+// Set from the plan before anything is read or written. Most plans are aha00a.com; the ToDo one
+// is on ahawiki.net, whose pages are also committed under docs/ahawiki.net/.
+let host = 'aha00a.com';
 
 // English Wikipedia, checked through its API on 2026-09-09 with displaytitle and the
 // disambiguation flag: PHP and ASP.NET are articles under exactly these names. `ASP` is a
@@ -89,6 +91,26 @@ const Plans = {
             {from: 'Aws Route 53', to: 'AWS Route 53'},
         ],
     },
+    // Wikipedia's `Todo` is a disambiguation page, so the standard used above has nothing to say
+    // here, and the wiki's own convention decides instead: WikiWord, which is `ToDo`. aha00a.com
+    // already reads that way -- ToDo holds the text and TODO redirects -- and these four are what
+    // is left out of step.
+    todo: {
+        host: 'ahawiki.net',
+        renames: [
+            'NewUserFlow', '-Timezone-KST-To-UTC', '-User-Acquisition', '-User-Nickname-Change',
+        ].map(rest => ({from: `TODO${rest.startsWith('-') ? '' : ' '}${rest}`, to: `ToDo${rest.startsWith('-') ? '' : ' '}${rest}`})),
+        retarget: [],
+        headings: [
+            {page: 'ToDo-Timezone-KST-To-UTC', from: /^= TODO: /m, to: '= ToDo: '},
+            {page: 'ToDo-User-Acquisition', from: /^= TODO: /m, to: '= ToDo: '},
+            {page: 'ToDo-User-Nickname-Change', from: /^= TODO: /m, to: '= ToDo: '},
+        ],
+        // Both are named after the rename: the first one is itself moving.
+        indexes: ['ToDo NewUserFlow', 'Dev Database'],
+        alsoInIndex: [],
+        simplifyIn: [],
+    },
 };
 
 async function api(method, path, body) {
@@ -141,7 +163,11 @@ export function rewriteLinks(content, moved) {
         const target = written.startsWith('wiki:') ? written.slice(5) : written;
         const to = moved.get(target);
         if (!to) continue;
-        edits.push({start: m.index, end: m.index + m[0].length, to: /\s/.test(to) ? `["${to}"]` : `[${to}]`});
+        // Keep the form the author wrote. Quotes are required once the name holds a space, but
+        // dropping them from a name that never needed them is an edit nobody asked for, and it
+        // shows up in the page history as a change to a line that did not change.
+        const quoted = m[1] !== undefined || /\s/.test(to);
+        edits.push({start: m.index, end: m.index + m[0].length, to: quoted ? `["${to}"]` : `[${to}]`});
     }
     if (!edits.length) return {changed: false, content};
     let next = content;
@@ -194,6 +220,8 @@ async function main() {
     if (apply && !comment) { console.error('--apply needs --comment="..."'); return 1; }
     const plan = Plans[planName];
     if (!plan) { console.error(`usage: node scripts/wikipedia-case-renames.mjs <${Object.keys(Plans).join('|')}> [--apply --comment="..."]`); return 2; }
+    if (plan.host) host = plan.host;
+    console.log(`site: ${host}\n`);
 
     console.log(`=== rename: ${plan.renames.length} ===`);
     const moved = new Map();

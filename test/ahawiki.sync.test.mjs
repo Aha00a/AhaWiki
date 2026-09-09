@@ -13,7 +13,7 @@ import {
   readCommittedPages,
   remoteIsOlderLocalVersion,
 } from '../scripts/sync.ahawiki.net.mjs';
-import { docsGitPath, manifestFileName, rootDir } from '../scripts/lib/ahawiki.net.mjs';
+import { docsGitPath, fileNameCollisions, manifestFileName, rootDir } from '../scripts/lib/ahawiki.net.mjs';
 
 const git = (args) => execFileSync('git', args, { cwd: rootDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
 const remoteHash = (content) => `sha256:${createHash('sha256').update(content, 'utf8').digest('hex')}`;
@@ -107,4 +107,40 @@ test('classify separates pages that exist on only one side', () => {
   assert.deepEqual(remoteOnly, ['No Such Page']);
   assert.equal(localOnly.includes(somePage), true, 'every unclaimed local page is reported');
   assert.equal(localOnly.length, localPages.size);
+});
+
+// The wiki can hold two names that this filesystem cannot keep apart. The download empties
+// docs/ahawiki.net/ and writes every page concurrently, so before this the two raced for one
+// file, the loser vanished, and the manifest still listed both as written -- which one lost
+// depended on timing. It happened for real on 2026-09-09, right after a rename.
+test('names that differ only by case are reported as one file', () => {
+  assert.deepEqual(
+    fileNameCollisions(['ToDo NewUserFlow', 'Dev Api', 'TODO NewUserFlow']),
+    [['TODO NewUserFlow', 'ToDo NewUserFlow']],
+  );
+});
+
+test('nothing collides in the ordinary case', () => {
+  assert.deepEqual(fileNameCollisions(['Dev Api', 'Dev ApiKey', 'AhaMark']), []);
+});
+
+test('the collision is judged on the file name, not the page name', () => {
+  // safeFileName percent-escapes what Windows rejects, so two page names can differ while their
+  // files do not. Comparing page names would miss it.
+  assert.deepEqual(fileNameCollisions(['A/B', 'a%2Fb']), [['A/B', 'a%2Fb']]);
+});
+
+test('of a colliding pair, the one the file holds still syncs and the other is stranded', () => {
+  const mirrored = localPages.get(somePage);
+  const remote = [
+    { name: somePage, revision: 1, contentHash: remoteHash(asStoredOnWiki(mirrored)) },
+    { name: somePage.toUpperCase(), revision: 1, contentHash: remoteHash('#!redirect somewhere\n') },
+  ];
+  const { inSync, unmirrorable, diverged, remoteOnly } = classify(remote, localPages);
+
+  assert.deepEqual(inSync.map((entry) => entry.name), [somePage]);
+  assert.deepEqual(unmirrorable, [somePage.toUpperCase()]);
+  // Neither of the two states that would send someone to the download, which is what loses one.
+  assert.equal(diverged.length, 0);
+  assert.equal(remoteOnly.length, 0);
 });

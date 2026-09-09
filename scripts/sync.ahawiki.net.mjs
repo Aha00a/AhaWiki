@@ -15,7 +15,7 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { baseUrl, docsGitPath, manifestFileName, rootDir, safeFileName } from './lib/ahawiki.net.mjs';
+import { baseUrl, docsGitPath, fileNameCollisions, manifestFileName, rootDir, safeFileName } from './lib/ahawiki.net.mjs';
 
 // How far back to look for the remote content among a file's older committed versions. Deep
 // enough to recognise a page last synced many commits ago, bounded so a drifted page cannot
@@ -88,17 +88,43 @@ export function remoteIsOlderLocalVersion(file, remoteContentHash) {
   });
 }
 
-/** Sorts every page into one of the five states a sync can find it in. */
+/** Sorts every page into one of the six states a sync can find it in. */
 export function classify(remotePages, localPages) {
   const inSync = [];
   const localAhead = [];
   const diverged = [];
   const remoteOnly = [];
+  const unmirrorable = [];
   const claimed = new Set();
+
+  // Names that are one file here. The wiki can hold `TODO NewUserFlow` and `ToDo NewUserFlow`
+  // at once because Page.name is utf8mb4_bin; this filesystem cannot hold both files. One of a
+  // group can still be mirrored -- whichever the file actually holds -- and only the rest are
+  // stranded. Reported on their own rather than as diverged or wiki-only, because both of those
+  // read as "run the download", and the download is exactly what loses one of the pair.
+  const byName = new Map(remotePages.map((page) => [page.name, page]));
+  const stranded = new Set();
+  for (const group of fileNameCollisions(remotePages.map((page) => page.name))) {
+    // The map is keyed by the committed file name, which is one particular spelling; the group
+    // holds every spelling. Look the file up the way the filesystem would, not the way a Map does.
+    const folded = safeFileName(group[0]).toLowerCase();
+    const key = [...localPages.keys()].find((name) => name.toLowerCase() === folded);
+    const local = key === undefined ? undefined : localPages.get(key);
+    const mirrored = local === undefined
+      ? undefined
+      : group.find((name) => hashMatches(local, byName.get(name)?.contentHash));
+    for (const name of group) if (name !== mirrored) stranded.add(name);
+  }
 
   for (const page of remotePages) {
     const file = safeFileName(page.name);
     const local = localPages.get(file);
+
+    if (stranded.has(page.name)) {
+      unmirrorable.push(page.name);
+      claimed.add(file);
+      continue;
+    }
 
     if (local === undefined) {
       remoteOnly.push(page.name);
@@ -118,7 +144,7 @@ export function classify(remotePages, localPages) {
   }
 
   const localOnly = [...localPages.keys()].filter((file) => !claimed.has(file));
-  return { inSync, localAhead, diverged, localOnly, remoteOnly };
+  return { inSync, localAhead, diverged, localOnly, remoteOnly, unmirrorable };
 }
 
 function argValue(argv, flag) {
@@ -177,7 +203,7 @@ async function main(argv) {
 
   const remotePages = listed.json.pages;
   const localPages = readCommittedPages();
-  const { inSync, localAhead, diverged, localOnly, remoteOnly } = classify(remotePages, localPages);
+  const { inSync, localAhead, diverged, localOnly, remoteOnly, unmirrorable } = classify(remotePages, localPages);
 
   const report = (label, names) =>
     console.log(`${label}: ${names.length}${names.length > 0 ? ` -> ${names.join(', ')}` : ''}`);
@@ -188,6 +214,13 @@ async function main(argv) {
   report('diverged (resolve by hand)', diverged.map((entry) => entry.name));
   report('local only (never uploaded)', localOnly);
   report('wiki only (never downloaded)', remoteOnly);
+  report('cannot be mirrored (name is one file here)', unmirrorable);
+
+  if (unmirrorable.length > 0) {
+    console.log('\nThose page names differ only by case, so this filesystem cannot hold both');
+    console.log('files. They have no local copy on purpose; the download skips them for the same');
+    console.log('reason. Renaming one on the wiki, or deleting it, is the only way to mirror it.');
+  }
 
   if (diverged.length > 0) {
     console.log('\nA diverged page holds content that was never committed here — someone edited it');
