@@ -31,6 +31,8 @@ Tab B 저장 성공
                                                + setCurrentRevision(revision)
 ]]]
 
+WebSocket 이 다시 열릴 때(`wiki:ws.connected`)도 같은 경로를 탄다. `AhaWiki.Kanban.js` 가 `/api/pageRevision/{pageName}` 으로 최신 revision 을 물어, 로컬보다 크면 `handleRemotePageUpdated(revision)` 을 부른다. 끊긴 동안 놓친 저장을 이렇게 따라잡는다.
+
 == 주요 상태 변수 (`initKanban` 클로저)
 
 [[[#!Table tsv 1
@@ -71,7 +73,8 @@ Step 2 — 서버에 있는 카드별 데이터 필드(제목·설명·속성·c
   ※ comments(Activity)는 이 비교에서 제외 (별도 Step 3에서 처리)
 
   현재 모달에서 열린 카드(activeCardId)
-  → local 데이터 보존 + serverDataChanged이면 __remoteUpdate = true + 모달 배너
+  → 객체 참조 유지 + comments union 병합. 제목·설명·속성은 여기서 비교하지 않고
+    kanban:card.remoteupdated 이벤트로 모달에 넘긴다(편집 중인 필드만 남기고 배너)
 
   localDataChanged && serverDataChanged  (충돌)
   → 서버 데이터 유지 + __remoteConflict = true + conflict 배지
@@ -83,9 +86,9 @@ Step 2 — 서버에 있는 카드별 데이터 필드(제목·설명·속성·c
   → 서버 데이터 그대로
 
 Step 3 — 댓글 병합 (데이터 충돌 여부와 무관하게 항상 실행)
-  localOnlyComments = local.comments - base.comments  (header 기준 집합 차이)
-  merged.comments = localOnlyComments + merged.comments
-  ※ 모달 열린 카드는 server의 새 댓글을 local에 추가
+  merged.comments = server.comments + (local.comments 중 header 가 server 에 없는 것)
+  ※ base 는 보지 않는다. 순서는 server 먼저, local-only 가 뒤
+  ※ 모달 열린 카드도 같은 병합을 거친다(원본 객체의 comments 를 교체)
 ]]]
 
 === 댓글 병합이 중요한 이유
@@ -127,11 +130,12 @@ kanban:card.remoteupdated 수신 시:
     서버 속성 ≠ 로컬  AND  !propFocused   → card.properties 갱신, renderProperties()
     서버 속성 ≠ 로컬  AND  propFocused    → needsBanner = true
 
+  classNames: 항상 서버 값으로 덮어씀
   댓글: renderComments() (comments는 이미 union 병합 완료)
   보드: rerenderColumns()
 
   배너:
-    needsBanner = true  → "다른 사용자가 수정 중 — 충돌 가능" 배너 표시
+    needsBanner = true  → "This card was updated by another user while you are editing. Your unsaved edits may conflict." 배너 표시
     needsBanner = false → 기존 배너 있으면 제거
 ]]]
 
@@ -147,7 +151,7 @@ sync 실패 또는 timeout 시에는 기존 토스트를 표시한다.
 
 == 카드 배지
 
-카드 `__remoteConflict` 또는 `__remoteUpdate` 플래그가 set 된 경우 카드 표면에 배지를 렌더링한다.
+카드 `__remoteConflict` 플래그가 set 된 경우 카드 표면에 배지를 렌더링한다. 렌더러와 CSS 는 `__remoteUpdate` 도 알지만 그 플래그를 set 하는 코드는 없고, 있었던 적도 없다 — 아래 표의 둘째 줄은 나타나지 않는 배지다.
 
 [[[#!Table tsv 1
 클래스	조건	색상	텍스트
@@ -199,7 +203,7 @@ mutationQueue = mutationQueue
 
 == 미해결 과제
 
- * 모달 열린 채 원격에서 카드 삭제 — 배지 표시 없이 닫을 때까지 카드가 유지됨, 저장 시 카드 재추가
+ * 모달 열린 채 원격에서 카드 삭제 — 병합 때 보드에서는 사라지지만 모달은 그대로 열려 있고, 그 뒤 모달에서 한 편집은 저장되지 않는다(카드가 `columns` 에 없다). 카드가 `baseColumns` 에 없을 때(마지막 저장 뒤 원격으로 들어온 카드)만 Step 1 이 다시 넣어 저장 시 재추가된다
  * 대용량 페이지 성능 — `action=raw` 전체 텍스트 fetch. 장기적으로 칸반 블록만 반환하는 API 추가 검토
  * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 

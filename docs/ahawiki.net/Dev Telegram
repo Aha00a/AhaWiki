@@ -1,7 +1,9 @@
 = [Dev] Telegram
 
 == 개요
-페이지 수정·삭제·rename·파일 첨부 등 콘텐츠를 변경하는 모든 액션이 발생하면 지정한 Telegram 채팅방으로 알림을 보내는 기능.
+페이지 수정·삭제·rename·파일 첨부 등 콘텐츠를 변경하는 액션이 발생하면 지정한 Telegram 채팅방으로 알림을 보내는 기능.
+
+예외가 셋 있다. minor edit 저장, 본문이 안 바뀐 저장(권한만 바꾼 경우), 그리고 API 키로 하는 `ApiV1` 의 저장·rename·삭제는 알리지 않는다(`Wiki.shouldNotifyTelegramForPageSave`, `WikiNotificationPolicySpec`).
 
 == 설정
 
@@ -49,7 +51,7 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
  * 페이지명은 HTML bold (`<b>`)로 강조, `parse_mode=HTML` 사용
  * 페이지명·닉네임·파일명 등 동적 값은 HTML 특수문자(`&`, `<`, `>`) 이스케이프 처리
  * 모든 알림은 `disable_notification: true` 로 전송 (무음)
- * 페이지 수정 이벤트의 URL은 해당 리비전의 diff 링크 (`?action=diff&after=r번호`), 나머지는 페이지 직접 링크
+ * 페이지 수정 이벤트의 URL은 해당 리비전의 diff 링크 (`?action=diff&after=리비전번호`, 예 `after=5`), 나머지는 페이지 직접 링크
 
 == 구현
  * `app/logics/ApplicationConf.scala` — `AhaWiki.telegram.botToken()` / `chatId()` 설정 읽기
@@ -62,16 +64,17 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
   * `send(message, siteChatId)` — 전역 chatId + 사이트별 chatId를 deduplicate하여 `sendTo` 호출
   * `pageUrl` / `diffUrl` / `h` / `b` / `commentLine` — 내부 유틸 (`diffUrl`은 `pageUrl + ?action=diff&after=revision`)
   * 이벤트별 public 메서드 — 모두 `siteChatId: Option[String] = None` 파라미터 보유
- * `app/controllers/Wiki.scala`
-  * `TelegramLogic` 주입
-  * `siteTelegramChatId(implicit connection, site)` — `Config.Query.Telegram.chatId()`로 사이트별 chatId 조회
-  * 각 액션 핸들러(`save`, `delete`, `deleteLastRevision`, `rename`, `uploadAttachment`, `deleteAttachment`, `uploadClipboardImage`, `syncGoogleSpreadsheet`)에서 성공 시 `siteTelegramChatId`를 함께 전달
+ * `app/controllers/Wiki.scala` — `save`·`delete`·`deleteLastRevision`·`rename`
+ * `app/controllers/WikiAttachment.scala` — `uploadAttachment`·`deleteAttachment`·`uploadClipboardImage`
+ * `app/controllers/WikiSpreadsheet.scala` — `syncGoogleSpreadsheet`
+  * 세 컨트롤러 모두 `TelegramLogic` 을 주입받는다
+  * 각 핸들러가 성공 시 `Config.Query.Telegram.chatId()` 를 그 자리에서 읽어 넘긴다. 따로 헬퍼는 없다(2026-08-10 컨트롤러 분리 전에는 `Wiki` 하나에 있었다)
  * `app/controllers/Diary.scala`
   * `TelegramLogic` 주입
   * `write` 핸들러: 신규 페이지면 `notifyPageCreated`, 기존 페이지 append면 `notifyPageEdited` 호출
- * `app/controllers/Api.scala`
+ * `app/controllers/ApiAdminSite.scala` (사이트 관리자만, `withSiteAdmin`)
   * `GET /api/Admin/Site/:seq/Telegram` — chatId 조회
-  * `PUT /api/Admin/Site/:seq/Telegram` — chatId 저장 (`Config.Query.Telegram.saveChatId`)
+  * `PUT /api/Admin/Site/:seq/Telegram` — chatId 저장 (form 필드 `chatId`, `Config.Query.Telegram.saveChatId`)
 
 === 비동기 처리
-`wsClient.url(...).post(...).foreach(...)` 방식으로 결과를 기다리지 않으므로, Telegram API 지연·오류가 페이지 저장 응답에 영향을 주지 않는다. 전송 실패 시 `logger.warn` 으로만 기록한다.
+`wsClient.url(...).post(...).foreach(...)` 방식으로 결과를 기다리지 않으므로, Telegram API 지연·오류가 페이지 저장 응답에 영향을 주지 않는다. 응답이 200 이 아니면 `logger.warn` 으로 남긴다. 연결 자체가 실패하면(`Future` 실패) `foreach` 가 돌지 않아 아무 로그도 남지 않는다.

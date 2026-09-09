@@ -47,8 +47,9 @@ out="$(dirname "$0")/schema/schema.sql"
 # removing either sed puts something back that does not belong in the file.
 #   - Host and database name are infrastructure names, and this repository is public
 #     (AGENTS.md). The replacement points at where the real values live instead.
-#   - Server version, completion time, and AUTO_INCREMENT counters change on every run,
-#     so leaving them makes an unchanged schema show up as a change.
+#   - The mysqldump client version (Distrib), completion time, and AUTO_INCREMENT counters
+#     change on every run, so leaving them makes an unchanged schema show up as a change.
+#     The "-- Server version" line is kept: it changes only when the engine is upgraded.
 #
 # 비밀번호는 `-p` 가 아니라 MYSQL_PWD 로 넘긴다. `-p"$DB_PASS"` 는 인자라서 실행되는 동안
 # 프로세스 목록에 그대로 보이고, mysqldump 자신이 매번 그렇다고 경고한다.

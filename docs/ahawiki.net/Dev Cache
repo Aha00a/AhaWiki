@@ -4,26 +4,26 @@ AhaWiki는 성능 최적화를 위해 여러 계층의 캐싱 메커니즘을 �
 
 [[[#!Table tsv 1
 캐싱 메커니즘	유형	저장소	TTL / 주기	비고
-AhaWikiCache	분산 캐시	Redis / Memcached	항목별 상이	SWR + Single-Flight 패턴
-AhaWikiCacheMemoryDomainSite	인-메모리	ConcurrentHashMap	1시간 주기 갱신	도메인-사이트 매핑
+AhaWikiCache	분산 캐시	Redis	항목별 상이	Single-Flight + 예외 시 stale 값
+AhaWikiCacheMemoryDomainSite	인-메모리	@volatile 불변 Map (통째로 교체)	1시간 주기 갱신	도메인-사이트 매핑
 AhaWikiCacheMemoryApiLinks	인-메모리	ConcurrentHashMap	10분 주기 초기화	최대 2,000 항목
 AhaWikiCacheMemoryPermission	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 권한 목록
 AhaWikiCacheMemorySiteAdmin	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 관리자 목록
 CacheCrawler	DB 캐시	MySQL	180일 TTL	외부 URL 메타데이터
-InterpreterVim	파일 캐시	cache/Vim/	7일 주기 초기화	Vim 문법 강조 결과
+InterpreterVim	파일 캐시	cache/Vim/	7일마다, 1년 넘게 안 읽은 파일만 삭제	Vim 문법 강조 결과
 ]]]
 
 == AhaWikiCache
 
 `app/logics/AhaWikiCache.scala`
 
-Play Framework의 `SyncCacheApi`를 사용하는 분산 캐시 계층입니다. Redis 또는 Memcached 백엔드를 지원합니다.
+Play Framework의 `SyncCacheApi`를 사용하는 분산 캐시 계층입니다. 백엔드는 Redis 입니다(`play-redis`, `conf/application.conf` 의 `play.cache.redis`). Memcached 지원은 없습니다.
 
 === 캐시 패턴
 
-==== Stale-While-Revalidate (SWR)
+==== 예외 시 stale 값 반환
 
-TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값을 즉시 반환합니다. 그 사이 백그라운드에서 값을 갱신합니다. SWR 기간도 초과하면 실시간 계산 후 저장합니다.
+TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호출자가 기다립니다). 백그라운드 갱신은 없습니다. 마지막으로 읽거나 계산한 값을 프로세스 메모리(`staleEntries`)에 따로 두었다가, Redis 조회나 계산이 예외를 던질 때만 `TTL × 6`(최소 60초) 안의 값을 대신 돌려줍니다. 그보다 오래됐으면 예외를 그대로 던집니다. 이 문서는 2026-09-10 까지 이것을 Stale-While-Revalidate 라고 적고 있었는데, SWR 의 핵심인 백그라운드 재검증이 없으니 그 이름이 아닙니다.
 
 ==== Single-Flight
 
@@ -31,36 +31,31 @@ TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값
 
 === 캐시 항목
 
-==== Header
-
- * 캐시 키: `logics.AhaWikiCache$Header:{site.seq}`
- * 저장 값: `.header` 페이지 렌더링 결과 (HTML 문자열)
- * TTL: 개발 모드 1분, 프로덕션 1시간
- * 무효화: `invalidateSiteCaches()` 호출 시
+캐시 키는 각 객체의 `key()` 가 만듭니다. 사이트 부분은 `site.seq` 가 아니라 `Site` case class 의 toString 전체라, 사이트 이름이나 도메인을 바꾸면 키도 바뀝니다. `Header` 항목은 2026-05-31 에 사이트 헤더와 함께 없어졌습니다.
 
 ==== Footer
 
- * 캐시 키: `logics.AhaWikiCache$Footer:{site.seq}`
+ * 캐시 키: `Footer$:Site(...)` — `getSimpleName` 과 `Site` 의 toString
  * 저장 값: `.footer` 페이지 렌더링 결과 (HTML 문자열)
  * TTL: 개발 모드 1분, 프로덕션 1시간
  * 무효화: `invalidateSiteCaches()` 호출 시
 
 ==== Config
 
- * 캐시 키: `logics.AhaWikiCache$Config:{site.seq}`
+ * 캐시 키: `Config$:Site(...)`
  * 저장 값: `.config` 페이지 내용 (설정 저장소)
- * TTL: 5분
+ * TTL: 개발 모드 1분, 프로덕션 5분 (`CacheEntity` 기본값)
  * 무효화: `invalidateSiteCaches()` 호출 시
 
 ==== UserProfileImageUrl
 
- * 캐시 키: `logics.AhaWikiCache$UserProfileImageUrl:{site.seq}:{nickname}`
+ * 캐시 키: `logics.AhaWikiCache$UserProfileImageUrl$:Site(...):{nickname}`
  * 저장 값: 사용자 프로필 이미지 URL
  * TTL: 개발 모드 1분, 프로덕션 10분
 
 ==== PageMeta.SeqPageLatestSummary
 
- * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageLatestSummary:{site.seq}`
+ * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageLatestSummary$:Site(...)`
  * 저장 값: 페이지 메타 정보 목록 (최신 요약)
  * TTL: 개발 모드 1~2분(랜덤), 프로덕션 5~30분(랜덤)
  * 랜덤 TTL은 다수 사이트의 캐시가 동시에 만료되는 것을 방지합니다.
@@ -68,9 +63,10 @@ TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값
 
 ==== PageMeta.SeqPageName
 
- * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageName:{site.seq}`
+ * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageName$:Site(...)`
  * 저장 값: 모든 페이지명 목록
- * 무효화: `invalidateSiteCaches()` 호출 시
+ * TTL: 개발 모드 1분, 프로덕션 5분 (`CacheEntity` 기본값)
+ * 무효화: `invalidateSiteCaches()` 호출 시. 페이지 저장·삭제·rename 은 이것을 무효화하지 않는다 — ["Dev Page"] 참고
 
 === invalidateSiteCaches
 
@@ -79,7 +75,6 @@ TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값
  * `AhaWikiCacheMemoryDomainSite`
  * `PageMeta.SeqPageLatestSummary`
  * `PageMeta.SeqPageName`
- * `Header`
  * `Footer`
  * `Config`
 
@@ -103,7 +98,7 @@ TTL이 만료된 뒤에도 `TTL × 6` 또는 최소 60초까지는 만료된 값
  * 저장 값: `Seq[CalculatedLink]`
  * 최대 크기: 2,000 항목 (초과 시 절반 제거)
  * 주기적 초기화: 10분마다 전체 삭제
- * 수동 무효화: 페이지 저장 시 해당 페이지 항목만 삭제
+ * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·삭제·rename 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다
 
 == AhaWikiCacheMemoryPermission
 
@@ -144,7 +139,7 @@ Stale	`MaxAgeDays` 초과 ~ `MaxAgeDays + SwrDays` 이내 (90~180일)	캐시 반
 Expired	`TtlDays` 초과 (180일)	삭제 대상
 ]]]
 
-'''Stale 의 끝과 Expired 의 시작은 서로 다른 상수다.''' 지금은 `MaxAgeDays + SwrDays` 와 `TtlDays` 가 둘 다 180일이라 맞아떨어지지만, 한쪽만 바꾸면 재검증도 안 되고 삭제도 안 되는 구간이 생긴다.
+'''Stale 의 끝과 Expired 의 시작은 서로 다른 상수다.''' 지금은 `MaxAgeDays + SwrDays` 와 `TtlDays` 가 둘 다 180일이라 맞아떨어지지만, 한쪽만 바꾸면 그 사이 구간의 행은 miss 로 처리돼, 요청한 사람이 기다리는 동기 재크롤이 된다 — 잃는 것은 비동기 재검증 경로다.
 
 === 주기적 정리
 
@@ -159,13 +154,13 @@ Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 �
  * 캐시 위치: `cache/Vim/`
  * 캐시 키: `MD5(colorscheme + 원본 코드)`
  * 저장 파일: `{md5}.html` (최종 HTML)
- * 주기적 정리: 7일마다 오래된 파일 삭제
+ * 주기적 정리: 7일마다 한 번, 마지막 접근이 1년 넘은 파일만 최대 1,000개 지운다(`CacheFileCleanupService`). 전체를 비우지 않는다
 
 == AhaWikiCacheMemoryTrieMap
 
 `app/logics/AhaWikiCacheMemoryTrieMap.scala`
 
-위 메모리 캐시들의 기반 구조입니다. `ConcurrentHashMap`을 감싸며 최대 크기를 지원합니다.
+ApiLinks·Permission·SiteAdmin 세 캐시의 기반 구조입니다. DomainSite 는 쓰지 않습니다. `ConcurrentHashMap`을 감싸며 최대 크기를 지원합니다.
 
  * 최대 크기 초과 시 현재 항목의 절반을 제거합니다.
  * 스레드 안전: `ConcurrentHashMap` 위임
@@ -183,7 +178,7 @@ SiteAdminCacheClear	6시간	6시간	관리자 캐시 전체 삭제
 CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
 CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
 deleteExpired	10~30분 랜덤	10~30분 랜덤	로그 테이블 만료 행 삭제 — 기간은 ["Dev Database"] 참조
-Calculate	20초~1분 랜덤	1분~1시간 랜덤	페이지 파생값(링크·텀·유사도) 재계산
+Calculate	20초~1분 랜덤	1분~1시간 랜덤	사이트 하나를 골라 `PageMeta` 행이 없는 페이지 최대 10개를 계산. 이미 계산된 페이지는 다시 돌리지 않는다(그 분기는 `if(false)` 로 꺼져 있다)
 ]]]
 
 캐시가 아닌 마지막 두 줄도 같은 `ApplicationLifecycleHook` 에 있어서 함께 적는다 — 이 표만 보고 "스케줄은 이게 전부"라고 읽는 것을 막기 위해서다.

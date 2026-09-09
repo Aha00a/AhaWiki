@@ -11,7 +11,7 @@
 완료된 작업은 다음 범위다.
 
  * 문서 head에서 테마 class를 조기 적용해 FOUC(Flash of Unstyled Content)를 줄임
- * 내비게이션/계정 메뉴에 AhaWiki Light, AhaWiki Dark 선택 버튼 추가
+ * 내비게이션에 Light/Dark 를 오가는 테마 토글 버튼 추가 (처음엔 계정 메뉴의 선택 버튼 둘이었고, 2026-05-29 에 토글 하나로 바꿨다)
  * 공통 UI 색상을 CSS custom properties로 정리
  * 읽기 화면 공통 UI, 편집 화면, Kanban 상세 UI의 테마 대응
  * JavaScript가 생성하는 UI와 table/structured data 주변 색상 정리
@@ -22,7 +22,7 @@
  * 새 화면이나 컴포넌트는 AhaWiki Light와 AhaWiki Dark에서 모두 확인한다.
  * 새 색상은 하드코딩하지 말고 가능한 한 CSS custom properties를 사용한다.
  * 테마 토큰을 추가하거나 이름을 바꾸면 `[[Themes]]` 매크로와 이 문서를 함께 갱신한다.
- * Admin/Account 테마 대응과 `system` 테마는 별도 후속 범위로 다룬다.
+ * Account 화면은 2026-06-24 에 토큰으로 옮겼다. Admin(Mantine) 테마 대응과 `system` 테마는 아직 후속 범위다.
 
 == Design
 `LocalStorage`에 테마 문자열을 저장한다.
@@ -46,6 +46,8 @@ HTML에는 선택된 테마를 class로 부여한다.
 == Theme Palette
 
 테마 색상은 Less 변수가 아니라 CSS custom properties로 정의한다.
+
+색상 팔레트는 `--hue` 하나로 만든다. 계정 메뉴의 슬라이더가 `ahawiki-hue` 로 `localStorage` 에 저장하고 `<html>` 의 `--hue` 에 넣는다. 없으면 사이트 기본값(`contextSite.defaultHue`, 그것도 없으면 220)이다.
 
 == Scope
 이번 범위에서 제외하는 것:

@@ -14,11 +14,11 @@
 
 == 구현 결과
  * `User` 모델은 이메일을 직접 갖지 않고, `UserEmail` 모델이 이메일 조회, 추가, primary 설정, 중복 확인을 담당한다. 로그인은 `UserEmail.email`로 user를 찾고, 없으면 새 `User`와 첫 `UserEmail`을 만든다.
- * 세션은 `seq`, `nickname`, `loginEmail` 중심으로 정리했다. identity 판단은 `seq`로 하고, `loginEmail`은 표시나 감사 목적의 보조 정보로만 둔다.
+ * 세션은 `seq`, `nickname`, `loginEmail` 중심으로 정리했다. identity 판단은 `seq`로 하고, `loginEmail`은 표시나 감사 목적의 보조 정보다. 다만 `UserEmail` 행이 하나도 없는 사용자에게는 `WikiPermission` 이 `loginEmail` 을 권한 actor 로 대신 쓴다.
  * 계정 설정 화면에 로그인 이메일 목록과 Google 계정 연결 버튼을 추가했다. 연결된 이메일이 다른 user 소유이면 병합 확인 화면으로 이동한다.
  * 병합 로직은 DB 메타데이터에서 `User(seq)` 참조 FK를 읽어 duplicate user의 참조를 canonical user로 옮긴다. `UserEmail`도 canonical user로 이동하고, 이동이 끝나면 duplicate `User` row를 삭제한다.
  * `Permission`은 현재 user의 모든 로그인 이메일을 actor 후보로 사용하도록 변경했다. `Exact`, `Domain`, `Login` 권한이 여러 로그인 이메일 기준으로 동작한다.
- * `UserMergeSpec`를 추가해 FK 이동, `UserEmail` 이동, `UserSite` 충돌 처리, duplicate `User` 삭제를 검증했다.
+ * `UserMergeSpec`가 FK 이동(`Page`, `AccessLog`), `UserEmail` 이동, primary 하나 유지, duplicate `User` 삭제를 검증한다. `UserSite` 충돌 처리도 검증했었지만 evolution 55 가 그 테이블을 지워 2026-08-10 에 스펙에서 뺐다 — `UserMerge.mergeUserSiteIfPresent` 는 테이블이 있을 때만 도는 가드 뒤에 남아 있다.
 
 == 운영 확인
 배포 전에는 DB를 백업하고 staging에서 migration rehearsal을 수행한다. `UserEmail.email` unique 제약, 기존 user 수와 migration된 primary email 수, 현재 DB의 `User(seq)` 참조 FK 목록, Google OAuth Console의 `/google/oauth/callback` redirect URI 등록 여부를 확인한다.

@@ -6,7 +6,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
 `SiteDomain`은 host-to-site 매핑과 도메인 목록 관리 용도로 유지하고, 대표 링크 생성에는 `Site.mainDomain`을 사용한다.
 
 == Site Metadata
- * `Site` 모델은 `seq`, `name`, `abbr`, `mainDomain` 필드를 가진다.
+ * `Site` 모델은 `seq`, `name`, `abbr`, `mainDomain`, `publicListedOrder` 필드를 가진다. `publicListedOrder` 는 공개 site 목록(`AhaWikiSiteList`)의 정렬용이고 sister wiki 와는 무관하다.
  * `Site.abbr`은 cross-site 문서 표시용 약어이며 unique 제약을 가진다.
  * `Site.mainDomain`은 대표 도메인으로, twin page와 cross-site similar page 링크 생성에 사용한다.
  * 기존 site의 `abbr`은 migration 시 `Site.name`으로 채워진다.
@@ -26,15 +26,15 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
 == Similar Pages
  * 기존 `MacroSimilarPages`를 확장해 same-site 유사 문서와 sister wiki 유사 문서를 함께 표시한다.
  * same-site 결과는 기존처럼 먼저 표시한다.
- * cross-site 결과는 same-site 결과 뒤에 이어서 표시한다.
+ * 둘 다 있으면 ` * Same Wiki` / ` * Sister Wikis` 두 묶음으로 나눠 same-site 를 먼저 보여준다. 한쪽만 있으면 묶음 제목 없이 목록만 보여준다.
  * same-site와 cross-site 결과 모두 각각 최대 20개까지 표시한다.
  * cross-site 결과는 대상 문서가 anonymous user에게 읽기 가능한 경우에만 표시한다.
  * cross-site 문서 표시는 `Abbr:PageName` 형식을 사용한다.
  * `MacroPercentLinkTitle`은 현재 site에 같은 이름의 페이지가 있으면 현재 site 링크를 우선 사용한다.
- * 현재 site에 해당 링크가 없고 `Abbr:PageName`의 `Abbr`이 다른 site의 `Site.abbr`과 일치하면 해당 site의 `mainDomain`으로 링크를 생성한다.
+ * 현재 site에 해당 링크가 없고 `Abbr:PageName`의 `Abbr`이 다른 site의 `Site.abbr`과 일치하면 해당 site의 `mainDomain`으로 링크를 생성한다. `mainDomain` 이 비어 있는 site 는 건너뛰고, 현재 site 의 `/w/Abbr:PageName` 링크로 돌아간다.
  * 유사도는 `PercentLinkTitle(similarity, page, "")`로 표시한다.
  * 공통 고득점 단어는 `PageLogic.selectHighScoredTerm`으로 조회해 `Trivial(term(freq1:freq2))` 형식으로 함께 표시한다.
- * 유사 문서 row가 없으면 기존처럼 현재 문서 계산을 actor에 요청하고 빈 문자열을 반환한다.
+ * 유사 문서 row가 없으면 빈 문자열을 반환한다. 계산을 따로 요청하지는 않는다(2026-05-21 에 actor 호출을 뺐다).
 
 == See Also
  * generated `See Also` 영역은 다음 순서로 구성된다.
@@ -70,7 +70,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * 최종 HTML에는 읽을 수 없는 private page 제목이 노출되지 않도록 한다.
 
 == Cache
- * 같은 이름 문서 검색은 기존 `PageMeta.SeqPageLatestSummary` 메모리 캐시를 사용한다.
+ * 같은 이름 문서 검색은 `PageMeta.SeqPageLatestSummary` 캐시를 사용한다. 이것은 Play `SyncCacheApi`(`application.conf` 에서 Redis 모듈)이지 프로세스 메모리가 아니다 — ["Dev Cache"] 참고.
  * 유사 문서 검색은 precomputed `CalculatedCosineSimilarity` row를 조회한다.
  * cross-site 링크 생성은 `Site.mainDomain`을 사용해 렌더링 경로에서 `SiteDomain` 조회를 피한다.
  * site/domain 매핑과 site 목록은 `AhaWikiCacheMemoryDomainSite`가 관리한다.

@@ -18,7 +18,7 @@ lessc --source-map wiki.less wiki.css
 == 파일 구조
 
 === 공용 믹스인 (컴파일 안 함)
- * `app/assets/_mixins.less` - 모든 `.less` 파일이 첫 줄에서 import
+ * `app/assets/_mixins.less` - 컴파일되는 `.less` 파일 열 개가 첫 줄에서 import (`_paper`·`_wiki_table` 은 `wiki.less` 안에서 들어오므로 직접 import 하지 않는다)
  * `app/assets/_paper.less` - `wiki.less` 가 import (인쇄용 paperContent)
  * `app/assets/_wiki_table.less` - `wiki.less` 가 import (wikiTableSimple 표)
 
@@ -32,7 +32,7 @@ lessc --source-map wiki.less wiki.css
 `kanban.less`	`.InterpreterKanban`, `.kanban-modal` 등 칸반 전체	모든 페이지 (위키 본문에 칸반 매크로가 올 수 있음)
 `interpreter.less`	`.Interpreter`, `.Macro`, `.InterpreterRenderMetaWrapper`, `.interpreterMap`	모든 페이지
 `adjacent.less`	`svg.graph`, `.adjacentPagesHud`, `.crawlerPreview` 등 인접 페이지 그래프	모든 페이지
-`gantt.less`	`.InterpreterGantt` 간트차트	모든 페이지 (위키 본문에 간트 블록이 올 수 있음)
+`gantt.less`	`.InterpreterGantt` 간트차트	모든 위키 페이지 (`_baseSkeleton`. Admin 화면의 `_baseAdmin` 은 싣지 않는다)
 -
 `edit.less`	`.AhaWiki .edit`	`edit.scala.html` 에서만
 `blame.less`	`.AhaWiki .blame`	`blame.scala.html` 에서만

@@ -17,7 +17,7 @@
 
 보존 기간을 다른 곳에 다시 적지 말 것. 스케줄러가 "한눈에 보이라고" 셋의 사본을 들고 있던 적이 있다. 두 번 적힌 값은 한 번만 고쳐질 값이다.
 
-삭제 자체는 `ExpiredRows.deleteInsertedBefore` 가 들고 있다. 세 테이블이 제각각 풀어 쓰던 것이다. 가장 오래된 `limit` 개 행만 보고 그중 만료된 가장 새 행까지 지우므로, 기간을 줄여도 거대한 삭제 한 방이 되지 않는다 — 수렴에는 몇 번의 실행이 걸린다. 기준 시각은 이제 데이터베이스의 `DATE_ADD(NOW(), ...)` 가 아니라 애플리케이션이 계산한다. 두 시계 모두 KST 라 경계는 시계 오차 안에서 같다.
+삭제 자체는 `ExpiredRows.deleteInsertedBefore` 가 들고 있다. 세 테이블이 제각각 풀어 쓰던 것이다. 가장 오래된 `limit` 개 행만 보고 그중 만료된 가장 새 행 앞까지 지우므로(`seq <` 라 그 행 자체는 다음 실행에 남는다), 기간을 줄여도 거대한 삭제 한 방이 되지 않는다 — 수렴에는 몇 번의 실행이 걸린다. 기준 시각은 이제 데이터베이스의 `DATE_ADD(NOW(), ...)` 가 아니라 애플리케이션이 계산한다. 두 시계 모두 KST 라 경계는 시계 오차 안에서 같다.
 
 == datetime 컬럼은 KST 를 담는다
 
@@ -43,15 +43,16 @@ DB default 가 채우는 컬럼(23개)과 애플리케이션이 직접 쓰는 �
 
 `NOW()` 대비 `MAX(value)` 는 최근 몇 시간 안에 무언가 쓴 컬럼에서만 답한다. 재는 것은 행의 나이에, UTC 라면 9를 더한 값이라, 조용한 스키마에서는 나이가 9를 삼킨다 — dev 스키마에 돌리면 모든 컬럼이 스무 시간에서 천칠백 시간 사이 어딘가를 읽고, 그것은 아무 말도 아니다.
 
-대신 '''한 행 안에서''' 두 메커니즘을 비교한다. `Attachment` 는 같은 작업에서 `dateInserted` 를 DB default 로, `dateUploaded` 를 애플리케이션으로 쓴다. 두 관례가 갈라진 적이 있다면 모든 행이 정확히 9시간 벌어져 있을 것이다:
+대신 '''한 행 안에서''' 두 메커니즘을 비교한다. `PageMeta` 는 `dateInserted` 를 DB default 로, `dateUpdated` 를 애플리케이션(`LocalDateTime.now()` 를 upsert 에 넘긴다)으로 쓴다. 두 관례가 갈라진 적이 있다면 모든 행이 9시간 이상 벌어져 있을 것이다:
 
 [[[#!Vim sql
-SELECT COUNT(*), MIN(TIMESTAMPDIFF(MINUTE, dateInserted, dateUploaded)),
-                 MAX(TIMESTAMPDIFF(MINUTE, dateInserted, dateUploaded))
-FROM Attachment WHERE dateUploaded IS NOT NULL;
+SELECT COUNT(*), MIN(TIMESTAMPDIFF(MINUTE, dateInserted, dateUpdated))
+FROM PageMeta WHERE dateUpdated IS NOT NULL;
 ]]]
 
-양쪽 경계 다 0 이 답이고, 행이 아무리 오래돼도 답은 그대로다. 2026-08-17 재실행: 운영 44행, dev 43행 전부에서 0. 덤으로 운영의 `AccessLog` 도 `NOW()` 대비 0.0h 그대로였다. 같은 모양이 `PageMeta`(`dateInserted` 대 `dateUpdated`)에도 통하는데, 거기서는 최솟값만 의미가 있다 — 편집은 삽입 몇 시간 뒤에 정당하게 일어나므로 최댓값은 크고 아무 말도 아니다.
+최솟값만 의미가 있다 — 편집은 삽입 몇 시간 뒤에 정당하게 일어나므로 최댓값은 크고 아무 말도 아니다. 최솟값이 0 근처면 두 시계가 같다.
+
+이 문서는 2026-09-10 까지 이 검사를 `Attachment` 의 `dateInserted` 대 `dateUploaded` 로 적고 있었고, 2026-08-17 에 운영 44행·dev 43행 전부 0 이라는 결과까지 남겼다. 그런데 `dateUploaded` 도 `markUploaded` 가 `NOW()` 로 쓰는 값이라 그 비교는 DB 시계끼리의 비교였다 — 0 이 나오는 것이 당연했고, 애플리케이션 시계에 대해서는 아무 말도 아니었다. 그날 함께 본 운영 `AccessLog` 의 `NOW()` 대비 0.0h 는 유효하다(그 컬럼은 DB default 이고 최근 행이 있었다).
 
 === 규칙
 
@@ -80,7 +81,7 @@ FROM Attachment WHERE dateUploaded IS NOT NULL;
 
 evolution 68 이 그렇게 됐다. `UserNicknameChangeRequest` 가 운영에서 `utf8mb4_unicode_ci` 로 만들어져 25개 중 혼자 달랐고, 운영의 `SHOW CREATE TABLE` 을 커밋된 `schema/schema.sql` 과 대조하다가 드러났다. 배포 후 헬스체크와 `play_evolutions` 는 둘 다 "성공" 이라고 말했다 — 그 둘은 문장이 실행됐다는 것이지 의도한 결과가 나왔다는 것이 아니다. evolution 69 가 bin 으로 되돌린다.
 
- * 새 테이블은 `) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin` 으로 끝낸다. `EvolutionConventionSpec` 이 69 이후의 evolution 마다 이것을 확인한다 — 68 을 그대로 읽어 "이건 걸린다" 를 못박아 둔 채로.
+ * 새 테이블은 `) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin` 으로 끝낸다. `EvolutionConventionSpec` 이 69 이후의 evolution 마다 테이블 옵션에 `COLLATE` 가 있는지 확인한다 — 어느 collation 인지는 보지 않는다 — 68 을 그대로 읽어 "이건 걸린다" 를 못박아 둔 채로.
  * 컬럼 하나가 다른 collation 을 써야 하면 그 컬럼에 적는다. `UserNicknameChangeRequest.requestedNickname` 이 `User.nickname` 과 같은 `utf8mb4_general_ci` 인 것이 그 예다 — 대소문자를 무시하는 비교가 그 컬럼의 요구라서, 테이블 기본값과 다른 것이 의도다.
  * 왜 bin 인지는 이 페이지에 근거가 남아 있지 않다. 24개가 이미 그렇고, 하나만 다르면 `=` 비교의 대소문자 규칙이 테이블마다 갈린다는 것으로 지금은 충분하다.
 

@@ -17,7 +17,7 @@ import scala.util.matching.Regex
  * were declared VARCHAR so a spec could store a `targetType` the real column rejects, and a
  * `UserSite` table was declared that evolution 55 had dropped.
  *
- * Building from the evolutions was tried first and does not work: 17 of the 67 files use
+ * Building from the evolutions was tried first and does not work: 17 of the then 67 files (2026-08-10) use
  * MySQL grammar H2 rejects, all of it in `ALTER` — `AFTER`, `FIRST`, dropping and adding a
  * key in one statement — plus `TRUNCATE` and `DATE_ADD`. A dump contains none of that. It is
  * `CREATE TABLE` and nothing else, which is why this works where that did not.

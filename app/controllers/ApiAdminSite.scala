@@ -38,9 +38,12 @@ import scala.util.Random
  * Everything that changes one site: its record, its permissions and admins, its appearance,
  * and the caches derived from its pages.
  *
- * Every endpoint here is scoped to a site seq and goes through withSiteAdmin or
+ * Every endpoint that takes the site seq in its URL goes through withSiteAdmin or
  * withAdminSite, which decide permission before looking the site up. That ordering is the
- * reason they live in one place — see the note on withSiteAdmin.
+ * reason they live in one place — see the note on withSiteAdmin. The favicon and theme
+ * endpoints take siteSeq as a query or form parameter instead and go through
+ * resolveAdminTargetSiteWithAuth, which looks the site up first: an unknown seq answers 400
+ * to anyone.
  */
 class ApiAdminSite @Inject()(
   implicit val

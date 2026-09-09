@@ -5,10 +5,11 @@
 
 == 매크로 사용법
 [[[
-[[Attachment(파일명)]]
-[[Attachment(파일명, 300px)]]
-[[Attachment(파일명, 50%)]]
+[[Attachment(원본파일명/저장파일명)]]
+[[Attachment(원본파일명/저장파일명, 300px)]]
+[[Attachment(원본파일명/저장파일명, 50%)]]
 ]]]
+ * 인자는 `Attachment/{siteSeq}/{pageName}/` 뒤의 상대 키다. 예: `[[Attachment(photo.jpg/photo.2024-01-01T12-00-00.jpg)]]`. 업로드 응답의 `attachmentMacro` 를 그대로 붙이면 된다. 파일명만 적으면 `{pageName}/photo.jpg` 로 해석되는데 그런 키에는 아무것도 저장돼 있지 않아 fallback 이미지가 뜬다.
  * 이미지 확장자(png, jpg, jpeg, gif, webp, svg, bmp, avif, tiff, tif, ico)면 `<img>` 태그로 인라인 표시
  * 그 외 확장자면 `<a>` 다운로드 링크로 표시
  * 두 번째 인자로 너비 지정 가능 (`px` 또는 `%` 단위)
@@ -20,13 +21,14 @@ Attachment/{siteSeq}/{pageName}/{originalFilename}/{basename}.{timestamp}.{ext}
 ]]]
 예시:
 [[[
-Attachment/1/MyPage/photo.jpg/photo.20240101120000000.jpg
-Attachment/1/MyPage/clipboard/clipboard.20240101120000000.png
+Attachment/1/MyPage/photo.jpg/photo.2024-01-01T12-00-00.jpg
+Attachment/1/MyPage/clipboard/clipboard.2024-01-01T12-00-00.png
 ]]]
+ * 타임스탬프 형식은 `yyyy-MM-dd'T'HH-mm-ss` 다(`WikiAttachment` 의 `attachmentTimestampFormatter`). 이 문서는 2026-09-10 까지 있어 본 적 없는 17자리 숫자 형식을 예시로 들고 있었다.
  * `pageName`과 파일명의 특수문자는 `[^\p{IsHangul}\p{IsHan}\p{IsHiragana}\p{IsKatakana}a-zA-Z0-9._-]` 패턴으로 `_` 치환
  * 클립보드 이미지는 `{pageName}/clipboard/` 하위에 저장
 
-이 레이아웃은 `logics.AttachmentLogic` 한 곳에서만 조립한다. `Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment` 가 그 자리다.
+프리픽스 조각(`Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment`)은 `logics.AttachmentLogic` 에 있고, 전체 키는 `WikiAttachment.buildAttachmentObjectKey` 가 만든다. 다 모이지는 않았다 — `Api`(`previewImageUrl`·`links`), `PageLogic.extractAttachmentImage`, `MacroAttachment.normalizeObjectKey` 는 아직 `Attachment/{siteSeq}/` 를 문자열로 직접 붙인다.
 
 키를 쓰는 쪽과 읽는 쪽이 프리픽스를 각자 조립하면, 어긋나도 컴파일은 통과하고 **첨부가 사라진 뒤에야** 드러난다. 실제로 치환 함수가 `Api`·`ApiV1`·`Wiki`·`MacroAttachment` 에 네 벌 있었다.
 
@@ -48,8 +50,10 @@ bucket	S3 버킷 이름
 objectKey	S3 오브젝트 키
 contentType	MIME 타입
 fileSize	파일 크기 (bytes)
-status	Initiated / Uploaded / Failed / Deleted
+sha256	(nullable) 코드가 쓰지 않는다
+status	Initiated / Uploaded / Verified / Failed / Deleted — `Verified` 는 ENUM 과 `selectUploadedByPage` 의 조회 조건에만 있고 쓰는 코드는 없다
 etag	S3 ETag (업로드 후 저장)
+imageWidth / imageHeight	(nullable) 코드가 쓰지 않는다
 dateInserted	레코드 생성 일시
 dateUploaded	S3 업로드 완료 일시
 dateUpdated	최근 변경 일시
@@ -61,6 +65,7 @@ dateDeleted	삭제 일시 (soft delete)
 Initiated → Uploaded (S3 업로드 성공)
           → Failed   (S3 업로드 실패)
 Uploaded  → Deleted  (삭제 처리)
+Initiated / Failed → Deleted  (페이지 삭제 시 — markDeleted 는 상태를 가리지 않는다)
 ]]]
 
 == API 엔드포인트
@@ -75,7 +80,7 @@ Content-Type: multipart/form-data
 
 응답 (JSON):
   objectKey        - S3 오브젝트 키
-  attachmentMacro  - 바로 사용 가능한 매크로 문자열 예: [[Attachment(파일명)]]
+  attachmentMacro  - 바로 사용 가능한 매크로 문자열 예: [[Attachment(photo.jpg/photo.2024-01-01T12-00-00.jpg)]]
   fileUrl          - presigned URL (24시간 유효)
   contentType      - MIME 타입
 ]]]
@@ -97,7 +102,7 @@ GET /api/pageAttachments?pageName={pageName}
     }
   ]
 ]]]
- * DB 레코드와 S3 오브젝트를 함께 조회하여 정합성 상태(`integrityStatus`) 제공
+ * `S3_ONLY` 는 S3 프리픽스 목록(최대 200개)에는 있고 DB 에 없는 오브젝트다. `OK`/`DB_ONLY` 는 presigned URL 서명이 됐는지로만 가른다 — 서명은 로컬 연산이라 S3 에 오브젝트가 실제로 있는지는 보지 않는다. S3 에서만 지워진 오브젝트도 `OK` 로 나온다.
 
 === 첨부파일 삭제
 [[[
