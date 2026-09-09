@@ -6,6 +6,12 @@
       "runtimeExecutable": "sbt",
       "runtimeArgs": ["run 9999"],
       "port": 9999
+    },
+    {
+      "name": "static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "9998"],
+      "port": 9998
     }
   ]
 }

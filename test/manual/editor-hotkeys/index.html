@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>editor hotkey harness</title>
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+    kbd { border: 1px solid #999; border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+    .edit textarea { width: 100%; height: 80px; }
+    pre { background: #f4f4f4; padding: 12px; }
+</style>
+</head>
+<body>
+<!-- What _base.scala.html renders for the navigation bar: single-key hints inside real links.
+     They carry the same data-hotkey-alt attribute the editor uses for its Alt hints. -->
+<nav>
+    <a id="navSearch" href="#nav-search">Search<span class="hotkeyHint"><kbd data-hotkey-alt="S"><kbd>S</kbd></kbd></span></a>
+    <a id="navRandom" href="#nav-random">Random<span class="hotkeyHint"><kbd data-hotkey-alt="R"><kbd>R</kbd></kbd></span></a>
+    <a id="navHistory" href="#nav-history">History<span class="hotkeyHint"><kbd data-hotkey-alt="H"><kbd>H</kbd></kbd></span></a>
+</nav>
+
+<!-- What edit.scala.html renders: the editor's own Alt hints, inside .edit, where
+     edit.hotkeyAlt.js listens. Save is a label around a button, as on the real page. -->
+<div class="edit">
+    <div class="toolbar">
+        <label id="editSave"><input type="button" value="Save"/><span class="hotkeyHint"><kbd data-hotkey-alt="S"><kbd>Alt</kbd><kbd>S</kbd></kbd></span></label>
+        <a id="editRename" href="#edit-rename">Rename<span class="hotkeyHint"><kbd data-hotkey-alt="R"><kbd>Alt</kbd><kbd>R</kbd></kbd></span></a>
+    </div>
+    <textarea id="text"></textarea>
+</div>
+
+<h1>Editor hotkey harness</h1>
+<p>Read <code>README.md</code> next to this file.</p>
+<pre id="result">running…</pre>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>
+// The script under test, by a relative path so the page also works opened straight from disk.
+// ?script=<url> points at another copy -- the pre-fix one, to check that the harness can fail.
+(function () {
+    const src = new URLSearchParams(location.search).get('script') || '../../../public/js/Wiki/edit.hotkeyAlt.js';
+    document.write('<script src="' + src.replace(/"/g, '&quot;') + '"><\/script>');
+})();
+</script>
+<script>
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const out = [];
+function say(s) {
+    out.push(s);
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(s);
+}
+
+// Count clicks instead of letting them navigate. On the real page a click on a nav hint
+// follows the link; here it only records that it happened.
+const clicks = {};
+for (const id of ['navSearch', 'navRandom', 'navHistory', 'editSave', 'editRename']) {
+    clicks[id] = 0;
+    document.getElementById(id).addEventListener('click', (e) => { e.preventDefault(); clicks[id]++; });
+}
+
+// One case per key: what the editor must click, and what it must leave alone.
+const CASES = [
+    { key: 's', must: ['editSave'],   mustNot: ['navSearch'] },
+    { key: 'r', must: ['editRename'], mustNot: ['navRandom'] },
+    { key: 'h', must: [],             mustNot: ['navHistory'] },   // not an editor hotkey at all
+];
+
+(async () => {
+    await sleep(300);
+    if (typeof jQuery === 'undefined') {
+        say('FAIL: jQuery did not load — this page needs the internet');
+        document.title = 'done';
+        return;
+    }
+    const textarea = document.getElementById('text');
+    let bad = 0;
+
+    for (const c of CASES) {
+        for (const k in clicks) clicks[k] = 0;
+        textarea.focus();
+        textarea.dispatchEvent(new KeyboardEvent('keydown', { key: c.key, altKey: true, bubbles: true, cancelable: true }));
+        await sleep(100);
+
+        const wrong = c.must.filter(id => clicks[id] !== 1).concat(c.mustNot.filter(id => clicks[id] !== 0));
+        const clicked = Object.entries(clicks).filter(([, n]) => n).map(([id, n]) => id + '×' + n).join(', ') || '(nothing)';
+        if (wrong.length) bad++;
+        say('--- Alt+' + c.key.toUpperCase() + ' -> ' + clicked + '  ' + (wrong.length ? 'MISMATCH (' + wrong.join(', ') + ')' : 'OK'));
+    }
+
+    say(bad === 0
+        ? 'PASS — the editor hotkeys click only the editor\'s own hints'
+        : 'FAIL — ' + bad + ' of ' + CASES.length);
+    document.title = 'done';
+})();
+</script>
+</body>
+</html>

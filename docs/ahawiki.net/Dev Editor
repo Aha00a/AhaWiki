@@ -197,7 +197,9 @@ Source API:
  * `400 body == latestText` - 변경 없는 저장
 
 == Hotkeys
-편집 화면에서는 `Alt`와 다음 key 조합으로 toolbar action을 실행한다.
+편집 화면에서는 `Alt`와 다음 key 조합으로 toolbar action을 실행한다. `edit.hotkeyAlt.js` 가 `.edit` 안에서 `kbd[data-hotkey-alt=키]` 를 찾아 클릭한다.
+
+2026-09-10 까지는 문서 전체에서 찾았다. 상단 내비게이션(`_base.scala.html`)의 S·R·W·H·B·E 힌트도 같은 속성을 쓰므로, `Alt S` 는 저장과 함께 검색 창을 열고 `Alt R` 은 Rename 과 Random(`/r`) 두 링크를 다 따라갔으며, 아래 목록에 없는 `Alt H`·`Alt B`·`Alt E` 는 History·Blame·Edit 링크로 이동해 편집 중인 내용을 잃었다. `test/manual/editor-hotkeys/` 가 브라우저에서 키를 눌러 이것을 재현하고, 고쳐진 것을 확인한다.
 
  * `Alt W` - Word Wrap
  * `Alt I` - InfoBox
