@@ -200,6 +200,43 @@ shell heredoc lost a backslash, so `/\\n/g` became `/\n/g`, stripped none of the
 markers, and reported 4,109 of 4,616 rows as corrupt. The dump was clean. Write scripts to a file
 with an editor, not through the shell.
 
+## Pages whose names differ only by case (done 2026-09-09)
+
+`case-duplicate-pages.mjs`. `Page.name` is `utf8mb4_bin`, so `Css` and `CSS` are two pages and
+both can hold content. Sixteen such groups on aha00a.com; thirteen were already settled, one page
+holding the text and the other `#!redirect`.
+
+```bash
+node scripts/case-duplicate-pages.mjs                          # report only
+node scripts/case-duplicate-pages.mjs --apply --comment="..."  # write
+```
+
+English Wikipedia decided which name keeps the content, and it was **asked rather than
+remembered** — its API has two traps. It upper-cases the first letter of every title, so `macOS`
+comes back as `MacOS` and `sbt` as `Sbt (software)`; the article's own DISPLAYTITLE is the answer.
+And a short name is often a disambiguation page, which means Wikipedia has no opinion: `JSP`,
+`ASP` and `Todo` are all disambiguations. That is why `ToDo`/`TODO` was left exactly as it was —
+the standard does not answer, and inventing an answer is not what tidying means.
+
+**It swaps content; it does not rename.** `POST /api/v1/rename` is better — it moves every
+revision and leaves a redirect — but it refuses when the target name is taken, and the target was
+taken in every case here. Clearing the way means `DELETE`, which is `DELETE FROM Page WHERE
+name = ?`: every revision of that name, gone. `CSS` held **26 revisions going back to
+2008-09-23**, older than `Css` itself — it was the original page, pointed at `Css` in 2016.
+Deleting it to make room would have destroyed the older history of the pair. Two ordinary writes
+keep both histories; the cost is that the content's own history stays under the old name.
+
+`Jsp` and `Snmp` were pointers written as prose — `see [wiki:JSP]` — so the reader landed on a
+near-empty page and had to click again, and `PageList` counted them as pages with content. They
+are `#!redirect` now, which answers 303.
+
+Verified by fetching each afterwards: `CSS` 200 with `= CSS`, and `Css`, `Jsp`, `Snmp` all 303 to
+the right place.
+
+`AWS`/`Aws` was left for the owner. `Aws` is not one page but the prefix of a family of 21, and
+moving the parent alone would leave nineteen children spelled the old way — while Wikipedia's
+actual title is "Amazon Web Services", which neither name matches.
+
 ## Links that miss a page by case (done 2026-09-09)
 
 `fix-case-miss-links.mjs` was a one-off for the eight the audit found: `[PHP]`, `[ASP]`,
