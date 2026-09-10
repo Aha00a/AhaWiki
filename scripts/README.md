@@ -199,6 +199,13 @@ The tests under `test/` check the 116 pages committed here. This checks all of t
 sites whose pages exist only on the wiki, so it needs a dump of the database rather than the API —
 the API returns only what the key may read.
 
+**What it finds on another user's site is reported, not repaired.** Repairs are made on the
+owner's own sites, aha00a.com and ahawiki.net. The owner decided that on 2026-09-10, when the
+sweep turned up a redirect pointing the other way round on one site, a bare `TODO` page on
+another and an empty page on a third: each of those wikis keeps its own conventions, and a fix
+by this repository's standard would be an edit to someone else's writing. Which site number is
+whose is in the script's `siteHost` map.
+
 ```bash
 ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -B -N -e "
   SELECT p.site, TO_BASE64(p.name), TO_BASE64(p.content)
