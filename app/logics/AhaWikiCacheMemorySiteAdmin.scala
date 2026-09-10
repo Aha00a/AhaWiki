@@ -7,7 +7,9 @@ import play.api.Logging
 import java.sql.Connection
 
 object AhaWikiCacheMemorySiteAdmin extends Logging {
-  private val cache = new AhaWikiCacheMemoryTrieMap[Long, Set[Long]]
+  // Same bound as the permission cache, for the same reason: see
+  // AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge.
+  private val cache = new AhaWikiCacheMemoryTrieMap[Long, Set[Long]](maxAge = Some(AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge))
 
   def getUserSeqs(siteSeq: Long)(implicit connection: Connection): Set[Long] =
     cache.getOrElseUpdate(siteSeq) {

@@ -7,8 +7,8 @@ AhaWiki는 성능 최적화를 위해 여러 계층의 캐싱 메커니즘을 �
 AhaWikiCache	분산 캐시	Redis	항목별 상이	Single-Flight + 예외 시 stale 값
 AhaWikiCacheMemoryDomainSite	인-메모리	@volatile 불변 Map (통째로 교체)	1시간 주기 갱신	도메인-사이트 매핑
 AhaWikiCacheMemoryApiLinks	인-메모리	ConcurrentHashMap	10분 주기 초기화	최대 2,000 항목
-AhaWikiCacheMemoryPermission	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 권한 목록
-AhaWikiCacheMemorySiteAdmin	인-메모리	ConcurrentHashMap	6시간 주기 초기화	사이트별 관리자 목록
+AhaWikiCacheMemoryPermission	인-메모리	ConcurrentHashMap	`AccessDecisionMaxAge` 지나면 다시 읽음	사이트별 권한 목록
+AhaWikiCacheMemorySiteAdmin	인-메모리	ConcurrentHashMap	`AccessDecisionMaxAge` 지나면 다시 읽음	사이트별 관리자 목록
 CacheCrawler	DB 캐시	MySQL	180일 TTL	외부 URL 메타데이터
 InterpreterVim	파일 캐시	cache/Vim/	7일마다, 1년 넘게 안 읽은 파일만 삭제	Vim 문법 강조 결과
 ]]]
@@ -108,8 +108,8 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
 
  * 캐시 키: `siteSeq`
  * 저장 값: `Seq[Permission]`
- * 주기적 초기화: 6시간마다 전체 삭제
- * 수동 무효화: 권한 추가/수정/삭제 시 해당 사이트 항목 삭제
+ * 만료: `AccessDecisionMaxAge` 가 지난 항목은 다음 조회 때 다시 읽는다 — 아래 «인스턴스가 둘이다» 참고
+ * 수동 무효화: 권한 추가/수정/삭제 시 해당 사이트 항목 삭제(그 요청을 처리한 인스턴스에서만)
 
 == AhaWikiCacheMemorySiteAdmin
 
@@ -119,8 +119,8 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
 
  * 캐시 키: `siteSeq`
  * 저장 값: `Set[Long]` (user.seq 집합)
- * 주기적 초기화: 6시간마다 전체 삭제
- * 수동 무효화: 사이트 관리자 추가/삭제 시 해당 사이트 항목 삭제
+ * 만료: 권한 캐시와 같다 — `AccessDecisionMaxAge`
+ * 수동 무효화: 사이트 관리자 추가/삭제 시 해당 사이트 항목 삭제(그 요청을 처리한 인스턴스에서만)
 
 == CacheCrawler
 
@@ -163,7 +163,21 @@ Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 �
 ApiLinks·Permission·SiteAdmin 세 캐시의 기반 구조입니다. DomainSite 는 쓰지 않습니다. `ConcurrentHashMap`을 감싸며 최대 크기를 지원합니다.
 
  * 최대 크기 초과 시 현재 항목의 절반을 제거합니다.
+ * `maxAge` 를 주면 그보다 오래된 항목은 다음 조회 때 다시 읽습니다(Permission·SiteAdmin). 같은 키를 동시에 읽는 요청이 둘이어도 한 번만 읽습니다.
  * 스레드 안전: `ConcurrentHashMap` 위임
+
+== 인스턴스가 둘이다
+
+운영은 인스턴스 둘이 동시에 요청을 받는다(측정은 ["Dev Deploying"]). Redis 에 있는 `AhaWikiCache` 는 둘이 나눠 쓰지만, 인-메모리 캐시는 JVM 마다 따로다. 무효화는 변경을 처리한 인스턴스에서만 돌므로, 다른 인스턴스가 옛 값을 얼마나 오래 쓰는지는 그 캐시의 만료가 정한다.
+
+[[[#!Table tsv 1
+캐시	다른 인스턴스가 옛 값을 쓰는 최대 시간
+AhaWikiCacheMemoryPermission, AhaWikiCacheMemorySiteAdmin	`AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge`(현재 10초)
+AhaWikiCacheMemoryDomainSite	다음 `SiteDomainCacheRefresh` 까지(최대 1시간)
+AhaWikiCacheMemoryApiLinks	다음 `ApiLinksCacheClear` 까지(최대 10분)
+]]]
+
+권한 둘만 짧은 것은 접근을 정하기 때문이다. 2026-09-10 까지는 6시간마다 비우는 것이 전부라, 한 인스턴스에서 «나만 읽기» 로 바꾼 페이지를 다른 인스턴스는 최대 6시간 공개했고, 뺀 사이트 관리자도 그쪽에서는 관리 화면을 계속 썼다. 한 사이트의 권한을 다시 읽는 것은 인덱스를 타는 작은 조회 하나라, 짧게 잡아도 부담이 없다. 나머지 둘은 표시에 쓰이는 값이라 그대로 두었다.
 
 == 스케줄 요약
 
@@ -173,8 +187,6 @@ ApiLinks·Permission·SiteAdmin 세 캐시의 기반 구조입니다. DomainSite
 스케줄명	초기 지연	반복 간격	동작
 SiteDomainCacheRefresh	5초	1시간	도메인-사이트 캐시 전체 갱신
 ApiLinksCacheClear	10분	10분	링크 캐시 전체 삭제
-PermissionCacheClear	6시간	6시간	권한 캐시 전체 삭제
-SiteAdminCacheClear	6시간	6시간	관리자 캐시 전체 삭제
 CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
 CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
 deleteExpired	10~30분 랜덤	10~30분 랜덤	로그 테이블 만료 행 삭제 — 기간은 ["Dev Database"] 참조

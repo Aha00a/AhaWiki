@@ -209,6 +209,7 @@ mutationQueue = mutationQueue
 == 미해결 과제
 
  * 모달 열린 채 원격에서 카드 삭제 — 병합 때 보드에서는 사라지지만 모달은 그대로 열려 있고, 그 뒤 모달에서 한 편집은 저장되지 않는다(카드가 `columns` 에 없다). 카드가 `baseColumns` 에 없을 때(마지막 저장 뒤 원격으로 들어온 카드)만 Step 1 이 다시 넣어 저장 시 재추가된다
+ * 다른 인스턴스에서 한 저장은 `page.updated` 가 오지 않아 자동 동기화가 되지 않는다 — ["Dev WebSocket"] 의 허브 인용 참고
  * 대용량 페이지 성능 — `action=raw` 전체 텍스트 fetch. 장기적으로 칸반 블록만 반환하는 API 추가 검토
  * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 

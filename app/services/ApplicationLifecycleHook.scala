@@ -7,8 +7,6 @@ import com.aha00a.commons.utils.SchedulerUtil
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryApiLinks
 import logics.AhaWikiCacheMemoryDomainSite
-import logics.AhaWikiCacheMemoryPermission
-import logics.AhaWikiCacheMemorySiteAdmin
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.tables.Site
@@ -113,15 +111,10 @@ class ApplicationLifecycleHook @Inject()(
     ahaWikiCacheMemoryApiLinks.clear()
   })
 
-  // Permission 캐시 정리 스케쥴러: 6시간 간격으로 AhaWikiCacheMemoryPermission을 초기화합니다.
-  scheduleWithDynamicDelay("PermissionCacheClear", 6.hours, () => 6.hours, () => {
-    AhaWikiCacheMemoryPermission.clear()
-  })
-
-  // SiteAdmin 캐시 정리 스케쥴러: 6시간 간격으로 AhaWikiCacheMemorySiteAdmin을 초기화합니다.
-  scheduleWithDynamicDelay("SiteAdminCacheClear", 6.hours, () => 6.hours, () => {
-    AhaWikiCacheMemorySiteAdmin.clear()
-  })
+  // The permission and site-admin caches are not cleared on a schedule any more. Their entries
+  // expire after AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge, which is also what carries a
+  // change to the instance that did not handle it; the six-hourly clear that used to be here was
+  // the only thing that did, six hours late.
 
   // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
   scheduleWithDynamicDelay("CacheFileCleanup", 15 seconds, () => 7.days, () => {
