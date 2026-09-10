@@ -7,6 +7,25 @@ import play.api.libs.ws.WSClient
 import java.net.URLEncoder
 import javax.inject._
 import scala.concurrent.ExecutionContext
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+
+object TelegramLogic {
+  /**
+   * What sendTo logs about one send, or None when it went through.
+   *
+   * A transport failure is logged by its class name only. The request URL carries the bot token,
+   * and nothing promises that an exception's message leaves the URL out. Until 2026-09-10 such a
+   * failure -- DNS, a refused connection, a timeout -- logged nothing at all, because the result
+   * was read with foreach, which never runs for a failed Future.
+   */
+  def sendOutcomeWarning(chatId: String, outcome: Try[(Int, String)]): Option[String] = outcome match {
+    case Success((200, _))       => None
+    case Success((status, body)) => Some(s"TelegramLogic.sendTo chatId=$chatId failed: status=$status body=${body.take(200)}")
+    case Failure(error)          => Some(s"TelegramLogic.sendTo chatId=$chatId failed: ${error.getClass.getName}")
+  }
+}
 
 @Singleton
 class TelegramLogic @Inject()(
@@ -42,9 +61,9 @@ class TelegramLogic @Inject()(
         "parse_mode"           -> "HTML",
         "disable_notification" -> "true",
       ))
-      .foreach { response =>
-        if (response.status != 200)
-          logger.warn(s"TelegramLogic.sendTo chatId=$chatId failed: status=${response.status} body=${response.body.take(200)}")
+      .onComplete { outcome =>
+        TelegramLogic.sendOutcomeWarning(chatId, outcome.map(response => (response.status, response.body)))
+          .foreach(message => logger.warn(message))
       }
   }
 
