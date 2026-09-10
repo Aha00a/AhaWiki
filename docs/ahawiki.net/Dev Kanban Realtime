@@ -9,7 +9,7 @@ Trello처럼 다른 탭/사용자의 변경이 페이지 새로고침 없이 칸
 [[[#!Table tsv 1
 파일	변경 내용
 app/views/Wiki/view.scala.html	page.updated 수신 시 wiki:page.updated DOM CustomEvent 발행
-public/js/AhaWiki.Kanban.js	유틸리티 함수 5개 + initKanban 내부 실시간 동기화 로직 전체
+public/js/AhaWiki.Kanban.js	유틸리티 함수 6개 + initKanban 내부 실시간 동기화 로직 전체
 app/assets/kanban.less	conflict 배지·모달 배너 스타일
 ]]]
 
@@ -37,7 +37,7 @@ WebSocket 이 다시 열릴 때(`wiki:ws.connected`)도 같은 경로를 탄다.
 
 [[[#!Table tsv 1
 변수	초기값	역할
-baseColumns	deepCloneColumns(columns)	3-way 병합의 base. 저장 성공마다 갱신
+baseColumns	deepCloneColumns(columns)	3-way 병합의 base. 저장 성공 뒤에는 저장한 상태로, 원격 병합 뒤에는 방금 받은 서버 상태로 갱신
 pendingMutationCount	0	현재 큐에 대기 중인 뮤테이션 수
 pendingRemoteRevision	0	뮤테이션 대기 중 받은 원격 업데이트 revision
 remoteUpdateDebounceTimer	null	500ms debounce 타이머
@@ -54,10 +54,11 @@ currentCardUpdateHandler	null	현재 열린 모달의 kanban:card.remoteupdated 
  * `findKanbanBlockInRaw(rawText, hintLineStart)` — 원문에서 칸반 블록 위치 탐지, `{interpreterLineStart, lineEnd, contentText}` 반환
   ** 전체 페이지 칸반(`#!Kanban` 시작), 임베드 칸반(`[[[#!Kanban...` 블록) 모두 지원
   ** `hintLineStart` 가 포함된 블록 우선 반환, 없으면 가장 가까운 블록 반환
+ * `mergeRemoteKanbanColumns(base, local, server, activeCardId)` — 3-way 병합 본체. `{columns, baseColumns, conflictCardIds, activeCardServerEntry}` 를 돌려주고, `applyRemoteKanbanUpdate` 는 그것을 대입만 한다. `test/kanban.remote-merge.test.mjs` 가 실제 스크립트로 시나리오를 고정한다
 
 == 3-way 병합 로직
 
-`applyRemoteKanbanUpdate(revision)` 내부에서 실행된다.
+`applyRemoteKanbanUpdate(revision)` 이 `mergeRemoteKanbanColumns` 를 부른다.
 
 [[[
 base  = baseColumns     (최근 성공한 저장 시점 스냅샷)
@@ -89,7 +90,11 @@ Step 3 — 댓글 병합 (데이터 충돌 여부와 무관하게 항상 실행)
   merged.comments = server.comments + (local.comments 중 header 가 server 에 없는 것)
   ※ base 는 보지 않는다. 순서는 server 먼저, local-only 가 뒤
   ※ 모달 열린 카드도 같은 병합을 거친다(원본 객체의 comments 를 교체)
+
+병합 뒤 base = server  (방금 받은 서버 상태의 복사본)
 ]]]
+
+'''병합이 끝나면 base 는 방금 받은 서버 상태가 된다.''' local 은 이제 그 서버 상태에 아직 저장 안 한 변경을 얹은 것이라, 다음 병합은 거기서부터 재야 한다. 2026-09-10 까지는 저장 때만 base 를 갱신해서, 서버가 한 번 바꾼 카드는 그 뒤 이 탭에서도 «바뀐 것»으로 읽혔다 — 다음 원격 업데이트마다 그 카드에 충돌 배지가 붙었고, 그 사이 이 탭에서 편집했으면 충돌의 승자인 서버의 옛 사본이 그 편집을 덮었다.
 
 === 댓글 병합이 중요한 이유
 
@@ -186,7 +191,7 @@ mutationQueue = mutationQueue
  * 임베드 칸반: `[[[#!Kanban` 으로 시작하는 줄을 탐지하고, 다음 `]]]` 까지를 블록으로 인식
  * 반환값:
   * `interpreterLineStart`: 칸반 본문 시작 1-indexed 줄 번호 (`#!Kanban` 바로 다음 줄)
-  * `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (전체 페이지 칸반은 `lines.length+1`, 임베드는 `]]]` 줄 번호)
+  * `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (임베드는 `]]]` 줄 번호. 전체 페이지 칸반도 `]]]` 로 시작하는 줄이 있으면 거기서 끝나고, 없으면 `lines.length+1`)
   * `contentText`: 파싱 대상 칸반 본문 텍스트
 
 == `interpreterStartLine` 갱신

@@ -271,6 +271,81 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return null;
     };
+
+    // A remote update is a three-way merge: base is the last state this tab and the server
+    // agreed on, local is what this tab holds now, server is what was just fetched. The result
+    // carries the base the next merge must use -- the server state just merged in, because
+    // local now equals it plus whatever is still unsaved here. Until 2026-09-10 the base was
+    // refreshed only by a save, so after one remote change every card it touched read as
+    // changed locally too: the next remote update flagged it as a conflict, and an edit made
+    // here in between was overwritten by the server's older copy as the conflict winner.
+    // test/kanban.remote-merge.test.mjs pins those scenarios.
+    var mergeRemoteKanbanColumns = function (baseColumns, localColumns, serverColumns, activeCardId) {
+        var baseIdx = buildCardIndex(baseColumns);
+        var localIdx = buildCardIndex(localColumns);
+        var serverIdx = buildCardIndex(serverColumns);
+
+        var merged = deepCloneColumns(serverColumns);
+        var conflictCardIds = [];
+        var activeCardServerEntry = null;
+
+        // Re-insert locally-added cards not yet on server
+        localIdx.cards.forEach(function (entry) {
+            if (!serverIdx.byId[entry.id] && !baseIdx.byId[entry.id]) {
+                if (merged[entry.columnIndex]) {
+                    merged[entry.columnIndex].cards.push(cloneCardData(entry.card));
+                }
+            }
+        });
+
+        // 3-way merge for cards present in server
+        serverIdx.cards.forEach(function (serverEntry) {
+            var id = serverEntry.id;
+            var localEntry = localIdx.byId[id];
+            var baseEntry = baseIdx.byId[id];
+            if (!localEntry) { return; }
+            // comments는 별도 union 병합하므로 데이터 필드(제목·설명·속성)만 비교
+            var localDataChanged = !baseEntry || !cardDataEqual(localEntry.card, baseEntry.card);
+            var serverDataChanged = !baseEntry || !cardDataEqual(serverEntry.card, baseEntry.card);
+            var mergedCol = merged[serverEntry.columnIndex];
+            if (!mergedCol) { return; }
+            var mergedCardIdx = -1;
+            for (var ci = 0; ci < mergedCol.cards.length; ci++) {
+                if (mergedCol.cards[ci].id === id) { mergedCardIdx = ci; break; }
+            }
+            if (mergedCardIdx < 0) { return; }
+
+            if (id === activeCardId) {
+                // 모달에서 열린 카드: 동일 객체 참조 유지
+                // title/description/properties 업데이트는 modal의 handleRemoteCardUpdate가 처리
+                localEntry.card.comments = mergeComments(serverEntry.card.comments, localEntry.card.comments);
+                mergedCol.cards[mergedCardIdx] = localEntry.card;
+                activeCardServerEntry = serverEntry;
+                return;
+            }
+
+            // 데이터 필드 병합
+            if (localDataChanged && serverDataChanged) {
+                mergedCol.cards[mergedCardIdx].__remoteConflict = true;
+                conflictCardIds.push(id);
+            } else if (localDataChanged && !serverDataChanged) {
+                mergedCol.cards[mergedCardIdx] = cloneCardData(localEntry.card);
+            }
+
+            // 댓글 union 병합: server ∪ local (header 기준 중복 제거)
+            mergedCol.cards[mergedCardIdx].comments = mergeComments(
+                mergedCol.cards[mergedCardIdx].comments,
+                localEntry.card.comments
+            );
+        });
+
+        return {
+            columns: merged,
+            baseColumns: deepCloneColumns(serverColumns),
+            conflictCardIds: conflictCardIds,
+            activeCardServerEntry: activeCardServerEntry
+        };
+    };
     var getLineCountForText = function (value) {
         if (!value) {
             return 0;
@@ -369,7 +444,8 @@ document.addEventListener('DOMContentLoaded', function () {
             buildCardUrl: buildCardUrl,
             copyTextToClipboard: copyTextToClipboard,
             isKanbanRootWritable: isKanbanRootWritable,
-            requestSaveKanban: requestSaveKanban
+            requestSaveKanban: requestSaveKanban,
+            mergeRemoteKanbanColumns: mergeRemoteKanbanColumns
         });
     }
 
@@ -2845,65 +2921,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     var serverColumns = parseKanbanText(block.contentText, block.interpreterLineStart);
                     var activeOverlay = getOpenedCardOverlay();
                     var activeCardId = activeOverlay ? (activeOverlay.getAttribute('data-card-id') || '') : '';
-                    var baseIdx = buildCardIndex(baseColumns);
-                    var localIdx = buildCardIndex(columns);
-                    var serverIdx = buildCardIndex(serverColumns);
+                    var result = mergeRemoteKanbanColumns(baseColumns, columns, serverColumns, activeCardId);
+                    var conflictCardIds = result.conflictCardIds;
+                    var activeCardServerEntry = result.activeCardServerEntry;
 
-                    var merged = deepCloneColumns(serverColumns);
-                    var conflictCardIds = [];
-                    var activeCardServerEntry = null;
-
-                    // Re-insert locally-added cards not yet on server
-                    localIdx.cards.forEach(function (entry) {
-                        if (!serverIdx.byId[entry.id] && !baseIdx.byId[entry.id]) {
-                            if (merged[entry.columnIndex]) {
-                                merged[entry.columnIndex].cards.push(cloneCardData(entry.card));
-                            }
-                        }
-                    });
-
-                    // 3-way merge for cards present in server
-                    serverIdx.cards.forEach(function (serverEntry) {
-                        var id = serverEntry.id;
-                        var localEntry = localIdx.byId[id];
-                        var baseEntry = baseIdx.byId[id];
-                        if (!localEntry) { return; }
-                        // comments는 별도 union 병합하므로 데이터 필드(제목·설명·속성)만 비교
-                        var localDataChanged = !baseEntry || !cardDataEqual(localEntry.card, baseEntry.card);
-                        var serverDataChanged = !baseEntry || !cardDataEqual(serverEntry.card, baseEntry.card);
-                        var mergedCol = merged[serverEntry.columnIndex];
-                        if (!mergedCol) { return; }
-                        var mergedCardIdx = -1;
-                        for (var ci = 0; ci < mergedCol.cards.length; ci++) {
-                            if (mergedCol.cards[ci].id === id) { mergedCardIdx = ci; break; }
-                        }
-                        if (mergedCardIdx < 0) { return; }
-
-                        if (id === activeCardId) {
-                            // 모달에서 열린 카드: 동일 객체 참조 유지
-                            // title/description/properties 업데이트는 modal의 handleRemoteCardUpdate가 처리
-                            localEntry.card.comments = mergeComments(serverEntry.card.comments, localEntry.card.comments);
-                            mergedCol.cards[mergedCardIdx] = localEntry.card;
-                            activeCardServerEntry = serverEntry;
-                            return;
-                        }
-
-                        // 데이터 필드 병합
-                        if (localDataChanged && serverDataChanged) {
-                            mergedCol.cards[mergedCardIdx].__remoteConflict = true;
-                            conflictCardIds.push(id);
-                        } else if (localDataChanged && !serverDataChanged) {
-                            mergedCol.cards[mergedCardIdx] = cloneCardData(localEntry.card);
-                        }
-
-                        // 댓글 union 병합: server ∪ local (header 기준 중복 제거)
-                        mergedCol.cards[mergedCardIdx].comments = mergeComments(
-                            mergedCol.cards[mergedCardIdx].comments,
-                            localEntry.card.comments
-                        );
-                    });
-
-                    columns = merged;
+                    columns = result.columns;
+                    baseColumns = result.baseColumns;
                     interpreterStartLine = block.interpreterLineStart;
                     currentKanbanLineCount = getLineCountForText(block.contentText);
                     root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
