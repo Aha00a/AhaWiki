@@ -230,6 +230,29 @@ shell heredoc lost a backslash, so `/\\n/g` became `/\n/g`, stripped none of the
 markers, and reported 4,109 of 4,616 rows as corrupt. The dump was clean. Write scripts to a file
 with an editor, not through the shell.
 
+## Tidying aha00a.com after the audit (done 2026-09-10)
+
+The owner's decisions on what the audit found on aha00a.com, applied by a one-off that is not
+kept: it ends in a hard delete, and the reasoning below about committed delete scripts applies.
+Each page was read, backed up, rewritten by plan, saved against the revision just read, and read
+back to confirm it held the plan.
+
+* `Computer Language` r16: the duplicate `[Php]` on the Perl line is gone; `[PHP], [ASP]` on the
+  next line stays, since `[ASP]` lives only there.
+* `NginxTlsForLocalhost` r3, `Visualization` r7, `curl` r3, `목소리의 형태` r3: `[TODO]` →
+  `[ToDo]`, rewritten by offset through the same mask `fix-case-miss-links.mjs` uses.
+* `Graphviz` r21: the two Trac `#!graphviz` blocks are `#!Graph` now and hold only the edges
+  (`Hello->World`, `GraphvizPlugin->Trac`). The page shows each example's DOT source in a
+  `#!Vim dot` block just above, so nothing is lost and the rendering the page meant to show is
+  back.
+* `AhaImageViewer` r77: the two `#!td` wrappers are gone and the code blocks they held stand on
+  their own. The Trac `||= … =||` header line above them was never a table here and is unchanged.
+* `TODO` deleted. It was a `#!redirect ToDo` stub with three revisions — r1 `= TODO` /
+  `할일들.` / `아래쪽 Backlink참고.`, r2 `#!redirect TODO`, r3 `#!redirect ToDo`. The owner's
+  reason: a redirect stub is still a page name, and the editor offered it in autocomplete
+  whenever a new page was being written. The four links above were rewritten first, and the
+  delete refused to run while any `[TODO]` link remained.
+
 ## Pages whose names differ only by case (done 2026-09-09)
 
 `case-duplicate-pages.mjs`. `Page.name` is `utf8mb4_bin`, so `Css` and `CSS` are two pages and
