@@ -241,10 +241,14 @@ back to confirm it held the plan.
   next line stays, since `[ASP]` lives only there.
 * `NginxTlsForLocalhost` r3, `Visualization` r7, `curl` r3, `목소리의 형태` r3: `[TODO]` →
   `[ToDo]`, rewritten by offset through the same mask `fix-case-miss-links.mjs` uses.
-* `Graphviz` r21: the two Trac `#!graphviz` blocks are `#!Graph` now and hold only the edges
-  (`Hello->World`, `GraphvizPlugin->Trac`). The page shows each example's DOT source in a
-  `#!Vim dot` block just above, so nothing is lost and the rendering the page meant to show is
-  back.
+* `Graphviz` r22: the two Trac `#!graphviz` blocks are `#!Mermaid` now (`graph TD` and
+  `graph LR`, as the DOT said) and hold only the edges. The page shows each example's DOT source
+  in a `#!Vim dot` block just above, so nothing is lost and the rendering the page meant to show
+  is back. r21 tried `#!Graph` first, and it drew nothing visible: that renderer fixes the root
+  node at the screen centre and lets `forceCenter` pull every other node to world `(w/2, h/2)`,
+  which is the canvas's bottom-right corner, under the legend box. Two nodes and one edge vanish
+  there. `adjacentPagesD3Canvas.scala.html` centres the same way; with dozens of nodes the
+  spread hides it. Not fixed here — it is an app change that needs a deploy to look at.
 * `AhaImageViewer` r77: the two `#!td` wrappers are gone and the code blocks they held stand on
   their own. The Trac `||= … =||` header line above them was never a table here and is unchanged.
 * `TODO` deleted. It was a `#!redirect ToDo` stub with three revisions — r1 `= TODO` /
