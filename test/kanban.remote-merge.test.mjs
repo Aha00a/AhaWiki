@@ -18,6 +18,10 @@ const source = fs.readFileSync('public/js/AhaWiki.Kanban.js', 'utf8');
 // other tests carry their own boot, each shaped for what it drives (a fake DOM, the location,
 // the alerts); one boot serving all five shapes was not attempted here.
 function loadMerge() {
+    return loadHooks().mergeRemoteKanbanColumns;
+}
+
+function loadHooks() {
     let onReady = null;
     const sandbox = {
         window: {
@@ -42,7 +46,7 @@ function loadMerge() {
     vm.createContext(sandbox);
     vm.runInContext(source, sandbox);
     onReady();
-    return sandbox.window.__AhaWikiKanbanTestHooks.mergeRemoteKanbanColumns;
+    return sandbox.window.__AhaWikiKanbanTestHooks;
 }
 
 const card = (id, text) => ({ id, text, classNames: [], lineNumber: 0, description: [], comments: [], properties: {} });
@@ -109,4 +113,27 @@ test('the base handed back is the server state, as its own copy', () => {
     assert.deepEqual(plain(result.baseColumns), server);
     assert.notEqual(result.baseColumns[0].cards[0], server[0].cards[0]);
     assert.notEqual(result.baseColumns[0].cards[0], result.columns[0].cards[0]);
+});
+
+// Where the merge's server side comes from. The finder has to end a board where the server does:
+// a whole-page board (#!Kanban on line 1) is the page's own interpreter and runs to the end, and
+// an embedded one ends at the first ]]] after its opener, because the server's block extraction
+// does not count nesting either. Until 2026-09-10 a whole-page board stopped at any ]]] line, so
+// a code block in a card description hid every card after it from the merge.
+test('a whole-page board runs to the end of the page, past a code block in a description', () => {
+    const find = loadHooks().findKanbanBlockInRaw;
+    const raw = ['#!Kanban', '=== Todo', '==== A ==== #a', '===== Description', '[[[#!Vim', 'code', ']]]', '==== B ==== #b'].join('\n');
+    const block = find(raw, 2);
+    assert.equal(block.interpreterLineStart, 2);
+    assert.equal(block.lineEnd, 9, 'one past the last line, as for a board with no ]]] at all');
+    assert.ok(block.contentText.endsWith('==== B ==== #b'), 'card B, after the code block, is part of the board');
+});
+
+test('an embedded board still ends at the first ]]] after its opener, where the server ends it', () => {
+    const find = loadHooks().findKanbanBlockInRaw;
+    const raw = ['= Page', '[[[#!Kanban', '=== Todo', '==== A ==== #a', ']]]', 'after the board'].join('\n');
+    const block = find(raw, 3);
+    assert.equal(block.interpreterLineStart, 3);
+    assert.equal(block.lineEnd, 5);
+    assert.equal(block.contentText, '=== Todo\n==== A ==== #a');
 });

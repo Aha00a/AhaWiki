@@ -245,8 +245,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!isWholePageShebang && !isEmbeddedShebang) { continue; }
             var contentStart1 = i + 2;
             var blockEnd1 = lines.length + 1;
-            for (j = i + 1; j < lines.length; j++) {
-                if (/^\]\]\]/.test(lines[j])) { blockEnd1 = j + 1; break; }
+            // A whole-page board is the page's own interpreter and runs to the end: the server
+            // hands InterpreterKanban every line. Only an embedded board ends at a ]]] line, the
+            // first after its opener, because ExtractConvertInjectInterpreter does not count
+            // nesting either. Until 2026-09-10 a whole-page board stopped at a ]]] line too, so a
+            // code block in a card description cut the board short on every remote update.
+            if (isEmbeddedShebang) {
+                for (j = i + 1; j < lines.length; j++) {
+                    if (/^\]\]\]/.test(lines[j])) { blockEnd1 = j + 1; break; }
+                }
             }
             blocks.push({
                 interpreterLineStart: contentStart1,
@@ -445,7 +452,8 @@ document.addEventListener('DOMContentLoaded', function () {
             copyTextToClipboard: copyTextToClipboard,
             isKanbanRootWritable: isKanbanRootWritable,
             requestSaveKanban: requestSaveKanban,
-            mergeRemoteKanbanColumns: mergeRemoteKanbanColumns
+            mergeRemoteKanbanColumns: mergeRemoteKanbanColumns,
+            findKanbanBlockInRaw: findKanbanBlockInRaw
         });
     }
 

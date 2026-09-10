@@ -191,7 +191,7 @@ mutationQueue = mutationQueue
  * 임베드 칸반: `[[[#!Kanban` 으로 시작하는 줄을 탐지하고, 다음 `]]]` 까지를 블록으로 인식
  * 반환값:
   * `interpreterLineStart`: 칸반 본문 시작 1-indexed 줄 번호 (`#!Kanban` 바로 다음 줄)
-  * `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (임베드는 `]]]` 줄 번호. 전체 페이지 칸반도 `]]]` 로 시작하는 줄이 있으면 거기서 끝나고, 없으면 `lines.length+1`)
+  * `lineEnd`: 칸반 본문 끝 1-indexed 줄 번호 (임베드는 여는 줄 다음 첫 `]]]` 줄 번호 — 서버의 블록 추출도 중첩을 세지 않아 같은 곳에서 끝난다. 전체 페이지 칸반은 페이지 끝까지라 `lines.length+1`. 2026-09-10 까지는 전체 페이지 칸반도 `]]]` 줄에서 멈춰서, 카드 설명에 코드 블록이 있으면 원격 업데이트마다 보드를 짧게 읽었다)
   * `contentText`: 파싱 대상 칸반 본문 텍스트
 
 == `interpreterStartLine` 갱신
@@ -210,6 +210,7 @@ mutationQueue = mutationQueue
 
  * 모달 열린 채 원격에서 카드 삭제 — 병합 때 보드에서는 사라지지만 모달은 그대로 열려 있고, 그 뒤 모달에서 한 편집은 저장되지 않는다(카드가 `columns` 에 없다). 카드가 `baseColumns` 에 없을 때(마지막 저장 뒤 원격으로 들어온 카드)만 Step 1 이 다시 넣어 저장 시 재추가된다
  * 다른 인스턴스에서 한 저장은 `page.updated` 가 오지 않아 자동 동기화가 되지 않는다 — ["Dev WebSocket"] 의 허브 인용 참고
+ * 권한 지시(`#!read` 등)가 앞에 붙은 전체 페이지 칸반은 원격 업데이트 때 블록을 찾지 못해 자동 동기화가 되지 않는다. `findKanbanBlockInRaw` 는 `#!Kanban` 을 첫 줄에서만 보는데, 서버는 그런 지시 줄을 건너뛰고 인터프리터를 고른다(`Interpreters.interpreterName`). 지금 위키에 그런 페이지는 없다(2026-09-09 덤프의 칸반 블록 셋 모두 임베드)
  * 대용량 페이지 성능 — `action=raw` 전체 텍스트 fetch. 장기적으로 칸반 블록만 반환하는 API 추가 검토
  * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 
