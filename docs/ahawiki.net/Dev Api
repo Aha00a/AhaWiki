@@ -156,7 +156,7 @@ Admin 권한과 CSRF token이 필요하다.
  * Admin Recent Changes 페이지에 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼 추가
  * Admin Dashboard의 Recent Changes 요약 표에 minor edit, Via API 이모지 컬럼 추가
 
-`viaApi` 편집은 어느 key였는지도 함께 보여준다. key 이름은 `UserApiKey` join으로 조회하며, key가 삭제됐으면 이름 없이 `viaApi`만 남는다.
+`viaApi` 편집은 어느 key였는지도 함께 보여준다. key 이름은 그때 `UserApiKey` 에서 조회한다(방법은 위 «Data Model» 의 `Page.userApiKey`). 폐기는 `dateRevoked` 를 채울 뿐 행을 지우지 않고 조회도 폐기 여부를 보지 않으므로, 폐기한 key 의 이름도 그대로 나온다. 이름이 빠지는 것은 행을 DB 에서 직접 지웠을 때뿐이다 — `Page.userApiKey` 의 FK 가 `ON DELETE SET NULL` 이라 `viaApi` 만 남는다.
 
  * `Api.change`, `ApiAdminReport.adminRecentChanges`, `ApiV1.changes`, 페이지 목록/메타(`ApiV1.listPages` / `pageMetadata` / `getPage`) 응답에 `userApiKeyName` 포함
  * Wiki history 화면의 Via API 컬럼에 key 이름을 함께 표시(있을 때)
