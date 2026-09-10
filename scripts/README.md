@@ -244,11 +244,13 @@ back to confirm it held the plan.
 * `Graphviz` r22: the two Trac `#!graphviz` blocks are `#!Mermaid` now (`graph TD` and
   `graph LR`, as the DOT said) and hold only the edges. The page shows each example's DOT source
   in a `#!Vim dot` block just above, so nothing is lost and the rendering the page meant to show
-  is back. r21 tried `#!Graph` first, and it drew nothing visible: that renderer fixes the root
-  node at the screen centre and lets `forceCenter` pull every other node to world `(w/2, h/2)`,
-  which is the canvas's bottom-right corner, under the legend box. Two nodes and one edge vanish
-  there. `adjacentPagesD3Canvas.scala.html` centres the same way; with dozens of nodes the
-  spread hides it. Not fixed here — it is an app change that needs a deploy to look at.
+  is back. r21 tried `#!Graph` first, and it drew nothing visible: that renderer pinned the root
+  node at the screen centre and let `forceCenter` pull every other node to world `(w/2, h/2)`,
+  which is the canvas's bottom-right corner, under the legend box. Two nodes and one edge
+  vanished there. `graph.scala.html` aims the force at the root now; it reaches the wiki with the
+  next deploy. `adjacentPagesD3Canvas.scala.html`, which it was copied from, pins its root at
+  `(w/2, h/2)` itself and was never affected — an earlier version of this paragraph said it was,
+  from reading the one line rather than the frame around it.
 * `AhaImageViewer` r77: the two `#!td` wrappers are gone and the code blocks they held stand on
   their own. The Trac `||= … =||` header line above them was never a table here and is unchanged.
 * `TODO` deleted. It was a `#!redirect ToDo` stub with three revisions — r1 `= TODO` /

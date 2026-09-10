@@ -206,10 +206,15 @@
             function createSimulation() {
                 if(state.simulation) state.simulation.stop();
                 var size = syncCanvasSize();
+                // resetView pins the root at world (0, 0) and pans that point to the canvas centre,
+                // so the centring force aims there too. Until 2026-09-10 it aimed at (w/2, h/2), the
+                // frame of adjacentPagesD3Canvas this view was made from, which here is the canvas's
+                // bottom-right corner: every node but the root was pulled off under the legend box,
+                // and a two-node graph showed its root alone.
                 state.simulation = d3.forceSimulation(state.nodes)
                     .force('link', d3.forceLink(state.links).id(function(d) { return d.id; }).distance(state.config.linkDistance))
                     .force('charge', d3.forceManyBody().strength(state.config.chargeStrength))
-                    .force('center', d3.forceCenter(size.width / 2, size.height / 2));
+                    .force('center', d3.forceCenter(0, 0));
                 state.simulation.on('tick', draw);
             }
 
