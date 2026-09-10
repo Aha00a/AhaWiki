@@ -115,7 +115,7 @@ circe 의 `Json.toString` 은 compact 가 아니라 `spaces2` 로 찍는다. 실
 `GET /w/FrontPage`	200 `text/html`, 실제 페이지 렌더링
 ]]]
 
-모르는 site 를 물어도 외부인에게는 404 가 아니라 403 이 간다. 권한 확인이 먼저라, 응답이 site 의 존재 여부를 알려주지 않는다. 단 `siteSeq` 를 파라미터로 받는 favicon·테마 endpoint 다섯은 `resolveAdminTargetSiteWithAuth` 가 site 를 먼저 읽어, 모르는 site 는 누구에게나 400 이다.
+모르는 site 를 물어도 외부인에게는 404 가 아니라 403 이 간다. 권한 확인이 먼저라, 응답이 site 의 존재 여부를 알려주지 않는다. `siteSeq` 를 파라미터로 받는 favicon·테마 endpoint 다섯도 `resolveAdminTargetSiteWithAuth` 에서 같은 순서다. 2026-09-10 까지는 그 다섯만 site 를 먼저 읽어서, 모르는 seq 에는 누구에게나 400 을, 있는 seq 에는 403 을 답했다 — 밖에서 어느 사이트 번호가 있는지 셀 수 있었다. `ApiSiteAdminSpec` 이 이제 둘 다 403 인 것을 지킨다.
 
 `withAdminSite` 로 접은 endpoint 들의 상태 코드는 기존 `ApiSiteAdminSpec` 이 지키고, **봉투의 본문과 `Content-Type` 은 `ApiErrorEnvelopeSpec` 이 지킨다** — 위 표 중 `/api/Admin/Sites`, `/Admin/Sites`, `/api/crawler` 의 거절 봉투가 그 스펙의 단언이다. 나머지 줄은 `curl` 로만 확인했다. 1차 정리 때는 본문을 보는 검사가 없어서 일회성 `curl` 로 쟀는데, 검사 없는 모양이 셋 반까지 불어난 경위가 그것이다.
 

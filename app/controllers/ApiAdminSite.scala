@@ -42,8 +42,7 @@ import scala.util.Random
  * withAdminSite, which decide permission before looking the site up. That ordering is the
  * reason they live in one place — see the note on withSiteAdmin. The favicon and theme
  * endpoints take siteSeq as a query or form parameter instead and go through
- * resolveAdminTargetSiteWithAuth, which looks the site up first: an unknown seq answers 400
- * to anyone.
+ * resolveAdminTargetSiteWithAuth, which keeps the same order.
  */
 class ApiAdminSite @Inject()(
   implicit val
@@ -146,19 +145,18 @@ class ApiAdminSite @Inject()(
     )
   }
 
-  private def resolveAdminTargetSite(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
-    siteSeqValue
-      .flatMap(parseSiteSeq)
-      .flatMap(seq => SiteLogic.get(seq)(database))
-      .toRight(JsonError(BadRequest, "Valid siteSeq is required."))
-  }
-
-  private def resolveAdminTargetSiteWithAuth(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] = {
-    resolveAdminTargetSite(siteSeqValue).flatMap { site =>
-      if (isSiteAdmin(site.seq)) Right(site)
-      else Left(AccessDenied)
+  /**
+   * For the endpoints that take the site as a `siteSeq` parameter rather than in the path. Same
+   * order as withSiteAdmin: permission before the lookup, so the answer says nothing to an
+   * outsider about which seqs exist. Until 2026-09-10 the lookup came first, and an unknown seq
+   * answered 400 to anyone while a real one answered 403.
+   */
+  private def resolveAdminTargetSiteWithAuth(siteSeqValue: Option[String])(implicit request: RequestHeader): Either[Result, Site] =
+    siteSeqValue.flatMap(parseSiteSeq) match {
+      case None                           => Left(JsonError(BadRequest, "Valid siteSeq is required."))
+      case Some(seq) if !isSiteAdmin(seq) => Left(AccessDenied)
+      case Some(seq)                      => SiteLogic.get(seq)(database).toRight(siteNotFound(seq))
     }
-  }
 
   def adminSites: Action[AnyContent] = Action { implicit request =>
     val userOpt = logics.SessionLogic.getUser(request)

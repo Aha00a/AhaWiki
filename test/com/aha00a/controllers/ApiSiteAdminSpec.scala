@@ -131,6 +131,24 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
     }
   }
 
+  "GET /api/Admin/SiteTheme" should {
+    // The site arrives as a parameter here, not in the path. Until 2026-09-10 the lookup came
+    // before the permission check, so an outsider could tell a real seq (403) from an unknown
+    // one (400).
+    "answer an outsider 403 whether or not the site exists" in {
+      status(route(app, anonymousRequest(GET, "/api/Admin/SiteTheme?siteSeq=1")).get) mustBe FORBIDDEN
+      status(route(app, anonymousRequest(GET, "/api/Admin/SiteTheme?siteSeq=999")).get) mustBe FORBIDDEN
+    }
+
+    "tell an admin that an unknown site is not found" in {
+      status(route(app, adminRequest(GET, "/api/Admin/SiteTheme?siteSeq=999")).get) mustBe NOT_FOUND
+    }
+
+    "still reject a siteSeq that is not a number, for anyone" in {
+      status(route(app, anonymousRequest(GET, "/api/Admin/SiteTheme?siteSeq=abc")).get) mustBe BAD_REQUEST
+    }
+  }
+
   "DELETE /api/Admin/Site/:seq/Admins/:userSeq" should {
     "return 403 for anonymous user" in {
       val result = route(app, anonymousRequest(DELETE, "/api/Admin/Site/1/Admins/10")).get
