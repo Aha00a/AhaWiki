@@ -3,8 +3,9 @@
 // repository treats as worse than no document at all. This finds those by checking that every
 // cited name still appears somewhere in the tracked source.
 //
-// It reads names, not structure: it cannot tell that a method moved to another class, only
-// that nothing is called that any more. That is the failure a rename actually produces.
+// The first test reads names, not structure: it cannot tell that a method moved to another
+// class, only that nothing is called that any more. That is the failure a rename produces. A
+// move is the other failure, and the member test further down is for it.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -165,5 +166,96 @@ test('the route check can tell a real citation from a wrong one', () => {
 
     for (const [route, reason] of routesQuotedAsHistory) {
         assert.ok(reason && reason.length > 20, `${route} needs a reason saying why it is quoted`);
+    }
+});
+
+// A name can survive its move. `Api.adminRecentChanges` passed the first test for a month after
+// the method went to ApiAdminReport, because adminRecentChanges still existed -- just not where
+// the page said; `controllers.Wiki.watch` did the same after the realtime code left Wiki. So for
+// a cited `Owner.member`, find where Owner is declared and ask whether member is there. An owner
+// declared nowhere in the source -- Json, Random, ConcurrentHashMap, a schema.org class -- is
+// someone else's, and the citation is skipped rather than guessed at.
+
+// Members quoted for what they were rather than what they are. Same rule as the lists above.
+const membersQuotedAsHistory = new Map([
+    ['Page.permRead', 'AccessControl records that evolution 51 dropped the column, and why'],
+    ['PageMeta.permRead', 'AccessControl and Dev Page record that evolution 51 dropped the column'],
+    ['Config.Query.InterpreterVim', 'InterpreterVim says outright that the setting is no longer read'],
+]);
+
+// `controllers.Wiki.watch(nameEncoded: String)`, `Config.Query.Telegram.chatId()`, `AhaWiki.Editor`.
+// The owner is the segment before the member: Telegram, not Config.
+const memberCitation = /^(?:[a-z][a-z0-9]*\.)*([A-Z][A-Za-z0-9]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)(?:\(.*\))?$/;
+const codeExtensions = /\.(scala|js|mjs|jsx|html)$/;
+const escapeRegExp = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** 'present', 'missing', 'owner-elsewhere' (not declared in this repository), or 'not-a-member'. */
+function memberJudge() {
+    const contents = trackedSourceFiles().filter(file => codeExtensions.test(file))
+        .map(file => fs.readFileSync(path.join(rootDir, file), 'utf8'));
+
+    return raw => {
+        // A file name looks like Owner.member too -- `AhaWiki.Kanban.js` -- and the first test has it.
+        if (citationShapes.some(shape => shape.name !== 'member' && shape.re.test(raw))) return 'not-a-member';
+        const match = raw.match(memberCitation);
+        if (!match) return 'not-a-member';
+        const segments = match[1].split('.');
+        const member = segments.pop();
+        const owner = segments.pop();
+
+        // A browser module hangs itself off a namespace -- `window.AhaWiki.Editor = {` -- and
+        // that assignment is its declaration.
+        const assigned = new RegExp(`\\b${escapeRegExp(owner)}\\.${escapeRegExp(member)}\\s*=(?!=)`);
+        if (contents.some(text => assigned.test(text))) return 'present';
+
+        const declares = new RegExp(`\\b(?:class|object|trait)\\s+${escapeRegExp(owner)}\\b|\\b(?:var|let|const|function)\\s+${escapeRegExp(owner)}\\b`);
+        const owners = contents.filter(text => declares.test(text));
+        if (!owners.length) return 'owner-elsewhere';
+        const mentions = new RegExp(`\\b${escapeRegExp(member)}\\b`);
+        return owners.some(text => mentions.test(text)) ? 'present' : 'missing';
+    };
+}
+
+test('every Owner.member the wiki pages cite is still a member of that owner', () => {
+    const judge = memberJudge();
+    const docsDirectory = path.join(rootDir, ...docsGitPath.split('/'));
+    const moved = [];
+
+    for (const page of fs.readdirSync(docsDirectory)) {
+        if (page === manifestFileName) continue;
+        const text = fs.readFileSync(path.join(docsDirectory, page), 'utf8');
+        const seen = new Set();
+
+        for (const match of text.matchAll(/`([^`\n]{3,120})`/g)) {
+            const raw = match[1].trim();
+            if (seen.has(raw) || membersQuotedAsHistory.has(raw)) continue;
+            seen.add(raw);
+            if (judge(raw) === 'missing') moved.push(`${page}: \`${raw}\``);
+        }
+    }
+
+    assert.deepEqual(moved, [], `Wiki pages cite members their owner no longer has:\n  ${moved.join('\n  ')}\n\n` +
+        'The member probably moved to another class or file -- cite it where it lives now. If the page ' +
+        'quotes it as what it once was, add it to membersQuotedAsHistory in this file with the reason.');
+});
+
+test('the member check can tell a moved member from one still in place', () => {
+    // Without this, the test above passes just as well when the judge finds nothing at all.
+    const judge = memberJudge();
+
+    // Both were on the pages until 2026-09-10, each a month after its method had moved.
+    assert.equal(judge('Api.adminRecentChanges'), 'missing');
+    assert.equal(judge('controllers.Wiki.watch(nameEncoded: String)'), 'missing');
+    assert.equal(judge('ApiAdminReport.adminRecentChanges'), 'present');
+    assert.equal(judge('controllers.WikiRealtime.watch(nameEncoded: String)'), 'present');
+
+    assert.equal(judge('Config.Query.Telegram.chatId()'), 'present', 'a nested object is its own owner');
+    assert.equal(judge('AhaWiki.Editor'), 'present', 'a browser module is declared by assignment');
+    assert.equal(judge('Json.obj("error" -> Json.fromString(msg))'), 'owner-elsewhere');
+    assert.equal(judge('AhaWiki.Kanban.js'), 'not-a-member', 'a file name is the first test\'s');
+
+    for (const [name, reason] of membersQuotedAsHistory) {
+        assert.ok(reason && reason.length > 20, `${name} needs a reason saying why it is quoted`);
+        assert.equal(judge(name), 'missing', `${name} is listed as history, but the source has it again -- take it off the list`);
     }
 });
