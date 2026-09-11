@@ -1,7 +1,7 @@
 = AhaWiki =
 * [https://ahawiki.net]
 
-A wiki engine, written in Scala on Play. Several wikis run on one instance, told apart by the host they are asked for.
+A wiki engine, written in Scala on Play. Several wikis run on one installation, told apart by the host they are asked for.
 
 == Documents ==
 * '''AGENTS.md''' — how to work in this repository, and an index of everything below.
