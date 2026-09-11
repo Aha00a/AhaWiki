@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { docsGitPath, manifestFileName, rootDir } from '../scripts/lib/ahawiki.net.mjs';
-import { regexLink, maskUnlinkable } from '../scripts/lib/ahamark.mjs';
+import { regexLink, maskUnlinkable, linkTarget } from '../scripts/lib/ahamark.mjs';
 
 /** What the link pattern sees. Variables, blocks, macros and backticks are taken out before it. */
 const linkableText = maskUnlinkable;
@@ -60,4 +60,35 @@ test('the check can tell the two shapes apart', () => {
 
     // A macro is not a link, and would otherwise be read as one -- `[` is neither `]` nor space.
     assert.deepEqual([...linkableText('[[Kbd(f)]]').matchAll(regexLink)], []);
+});
+
+// The other shape a page name gets written in by mistake: `[[Dev Kanban Realtime]]`. It is not a
+// macro -- a macro name has no spaces, so the renderer does not take it out -- and the link pattern
+// then starts at the first bracket: the target is "[Dev", a page that cannot exist, and the reader
+// sees a red link labelled with the rest and a stray `]` after it. Two of these sat on
+// Dev WebSocket until 2026-09-12; a scan for links to pages the wiki does not have found them.
+test('a page name is not written in double brackets', () => {
+    const directory = path.join(rootDir, ...docsGitPath.split('/'));
+    const wrong = [];
+
+    for (const page of committedPages()) {
+        const content = fs.readFileSync(path.join(directory, page), 'utf8');
+        for (const match of linkableText(content).matchAll(regexLink)) {
+            const target = linkTarget(match);
+            if (target && target.startsWith('[')) {
+                const line = content.slice(0, match.index).split('\n').length;
+                wrong.push(`${page}:${line}: ${match[0]}]`);
+            }
+        }
+    }
+
+    assert.deepEqual(wrong, [], `A page name in double brackets renders as a red link to "[Name":\n  ${wrong.join('\n  ')}\n\n` +
+        'Write ["Page Name"] instead.');
+});
+
+test('the double-bracket check sees the mistake and nothing else', () => {
+    const targets = text => [...linkableText(text).matchAll(regexLink)].map(linkTarget);
+    assert.deepEqual(targets('see [[Dev Kanban Realtime]] there'), ['[Dev']);
+    assert.deepEqual(targets('see ["Dev Kanban Realtime"] there'), ['Dev Kanban Realtime']);
+    assert.deepEqual(targets('[[Br]] and [[Kbd(Alt W)]]'), [], 'macros are taken out first');
 });

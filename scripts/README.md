@@ -195,7 +195,7 @@ that is already written. A red link is normal on a wiki, which is why this repor
 that name a real page under another casing — 8 out of 6,500. What counts as missing is
 `AhaMarkLink.toHtmlString`, and the exclusions in the script are its exclusions.
 
-The tests under `test/` check the 116 pages committed here. This checks all of them, including the
+The tests under `test/` check the pages committed here. This checks all of them, including the
 sites whose pages exist only on the wiki, so it needs a dump of the database rather than the API —
 the API returns only what the key may read.
 

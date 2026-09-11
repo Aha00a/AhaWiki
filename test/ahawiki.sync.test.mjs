@@ -1,6 +1,6 @@
 // The wiki sync decides whether to overwrite a live page. Getting `diverged` wrong in the
 // permissive direction silently destroys somebody's browser edit, and the trailing-newline
-// comparison is the kind of thing that quietly starts reporting all 116 pages as drifted.
+// comparison is the kind of thing that quietly starts reporting every page as drifted.
 // Both run against this repository's real git history rather than a fixture, because the
 // history is what the script actually reads.
 import test from 'node:test';

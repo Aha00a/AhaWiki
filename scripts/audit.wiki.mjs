@@ -1,5 +1,5 @@
 // Reads every current page on every site and reports the things that render as an error, or as
-// something other than what was written. The tests under test/ cover the 116 pages committed to
+// something other than what was written. The tests under test/ cover the pages committed to
 // this repository; this covers all of them, including the sites whose pages live only on the wiki.
 //
 //   node scripts/audit.wiki.mjs <dump.tsv>

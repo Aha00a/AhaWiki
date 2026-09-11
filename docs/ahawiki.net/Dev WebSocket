@@ -177,7 +177,7 @@
   * 커서 위치 스트림 특성상 최신 상태 우선 정책으로 해석 가능합니다.
  * 읽기 권한은 소켓 연결 시점에 검사되며, 연결 후 권한 변경에 대한 즉시 강제 종료 로직은 별도로 보이지 않습니다.
  * Kanban 인터프리터 저장은 `saveSenderId`를 함께 전송합니다. 서버에서 `409 Conflict`를 반환하면 최신 revision을 재조회 후 자동 재시도하고, 모두 실패 시 non-blocking 토스트를 표시합니다 (페이지 강제 새로고침 없음). 재시도 횟수는 `AhaWiki.Kanban.js` 의 `requestSaveKanban` 안 `attempt` 상한(현재 3회)입니다.
- * `page.updated` 이벤트를 칸반 실시간 동기화에 활용합니다 — 자세한 내용은 [[Dev Kanban Realtime]] 참조.
+ * `page.updated` 이벤트를 칸반 실시간 동기화에 활용합니다 — 자세한 내용은 ["Dev Kanban Realtime"] 참조.
 
 == 페이지 새로고침 알림 상세 (`page.updated`)
 
@@ -217,7 +217,7 @@
  3. 3-way 병합(base / local / server) 적용 → `rerenderColumns`
  4. 사용자 입력 보호: 뮤테이션 대기 중이면 완료 후 재적용. 모달이 열린 카드는 객체 참조를 유지하고, 편집 중이 아닌 필드는 서버 값으로 바꾼다(편집 중인 필드만 로컬 값 유지 + 배너)
 
-자세한 내용: [[Dev Kanban Realtime]]
+자세한 내용: ["Dev Kanban Realtime"]
 
 === 중복 알림 방지
 
