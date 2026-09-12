@@ -1,11 +1,12 @@
 = [Macro]ColorCode
 색상 코드를 작은 미리보기와 함께 표시합니다.
-`#rgb`, `#rgba`, `#rrggbb`, `rrggbbaa` 형식을 사용할 수 있습니다.
+`#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa` 형식을 사용할 수 있습니다. `#` 없는 여덟 자리(`rrggbbaa`)도 받아서 `#`를 붙여 보여줍니다 — 2026-09-12 전에는 여덟 자리를 `#` 없이만 받았고, 그러면 CSS 색이 아니라서 견본이 비어 나왔습니다.
 
 [[[#!WikiSyntaxPreview
  * [[ColorCode(#f00)]]
  * [[ColorCode(#fff)]]
  * [[ColorCode(#00ff00)]]
  * [[ColorCode(#0000ff)]]
+ * [[ColorCode(#000000ff)]]
  * [[ColorCode(000000ff)]]
 ]]]

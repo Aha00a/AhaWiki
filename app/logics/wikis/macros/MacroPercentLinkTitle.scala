@@ -11,20 +11,25 @@ object MacroPercentLinkTitle extends TraitMacro {
   val regex: Regex = """([^,\s]+),\s*([^,]+)(?:,\s*"([^"]*))"""".r
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
-    toHtmlString(argument, link => resolveLink(link))
+    render(argument, link => resolveLink(link)).getOrElse(argumentError(argument))
 
   private[macros] def toHtmlString(argument: String, pageNames: Set[String], sites: Seq[Site]): String =
-    toHtmlString(argument, link => resolveLink(link, pageNames, sites))
+    render(argument, link => resolveLink(link, pageNames, sites)).getOrElse(macroCall(argument))
 
-  private def toHtmlString(argument: String, resolve: String => ResolvedLink): String = argument match {
+  /**
+   * None when the argument is not `ratio, link, "title"`. Until 2026-09-12 that case was missing:
+   * the match threw, nothing caught it, and the whole page answered 500.
+   */
+  private def render(argument: String, resolve: String => ResolvedLink): Option[String] = argument match {
     case regex(percent, link, title) =>
       val resolvedLink = resolve(link)
       val percentString = "%2.2f".format(percent.toDoubleOrZero * 100) + "%"
-      s"""<a href="${resolvedLink.href.escapeHtmlAttribute()}"${targetAttributes(resolvedLink.external)}><span class="percentTotal">
+      Some(s"""<a href="${resolvedLink.href.escapeHtmlAttribute()}"${targetAttributes(resolvedLink.external)}><span class="percentTotal">
          |        <span class="percentBar" style="width: ${percentString.escapeHtmlAttribute()}"></span>
          |        <span class="percentLabel">${percentString.escapeHtml()}</span>
          |    </span>${resolvedLink.displayLink.escapeHtml()}</a>
-         |    <span>${title.escapeHtml()}</span>""".stripMargin
+         |    <span>${title.escapeHtml()}</span>""".stripMargin)
+    case _ => None
   }
 
   private val twinLinkRegex: Regex = """([^:]+):(.+)""".r

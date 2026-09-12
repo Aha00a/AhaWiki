@@ -13,5 +13,8 @@ object MacroMonthName extends TraitMacro {
     case "" | null => toHtmlString(wikiContext.name)
     case DateTimeUtil.regexDashDashMonth(mm) =>
       s"""${Month.of(mm.toInt).getDisplayName(TextStyle.FULL, wikiContext.requestWrapper.locale)}"""
+    // Any other page name or argument. Until 2026-09-12 there was no such case: the match threw,
+    // nothing caught it, and the whole page answered 500 instead of showing an error box.
+    case _ => argumentError(argument)
   }
 }
