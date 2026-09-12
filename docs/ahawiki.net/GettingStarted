@@ -33,7 +33,7 @@ AhaWiki는 페이지를 만들고, 페이지 사이를 링크로 연결하면서
 
 === RecentChanges
 
-[RecentChanges]는 최근 변경된 문서를 보여줍니다.
+[RecentChanges]는 최근 변경된 문서를 보여줍니다. 기본으로 빠지는 변경이 있으니 [MacroRecentChanges]를 보세요.
 
 여러 사람이 함께 쓰는 사이트라면 가장 자주 확인하는 페이지가 됩니다.
 

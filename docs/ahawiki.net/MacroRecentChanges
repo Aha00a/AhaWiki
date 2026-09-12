@@ -2,8 +2,10 @@
 최근 변경된 페이지 목록을 표시합니다.
 
 == 사용법
-`[[RecentChanges]]` - 기본 개수로 표시
+`[[RecentChanges]]` - 기본 100개 표시
 `[[RecentChanges(50)]]` - 최대 50개 표시 (1~1000 범위)
+
+목록 위의 `Include minor edits` · `Include via API edits` 는 처음에 꺼져 있습니다. 그래서 minor edit와 API로 저장한 변경은 기본으로 목록에 나오지 않고, 켜면 함께 보입니다.
 
 == 관련
  * [MacroPageList]

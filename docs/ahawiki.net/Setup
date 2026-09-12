@@ -1,6 +1,6 @@
 = Setup
 새 위키 사이트 개설 체크리스트.
-AhaWiki는 단일 인스턴스가 멀티 도메인을 서비스하므로, DB·앱·conf 파일은 공유하고 아래 항목만 추가한다.
+AhaWiki는 같은 앱과 DB가 여러 도메인을 함께 서비스하므로, 앱·DB·conf 파일은 그대로 두고 아래 항목만 추가한다.
 
 == 신청 접수
  * 사이트 이름
@@ -15,13 +15,15 @@ AhaWiki는 단일 인스턴스가 멀티 도메인을 서비스하므로, DB·�
  * `Site` row 추가
  * `SiteDomain` row 추가
  * 기본 `Permission` row 추가 (공개/비공개 여부에 따라)
+ * 새 `SiteDomain` row는 바로 열리지 않는다. 도메인 목록은 인스턴스마다 캐시에 있어서, 각 인스턴스가 다시 읽은 뒤에 열린다(주기는 ["Dev Cache"]). 기다리지 않으려면 앱을 다시 띄운다.
 
 == nginx 설정
  * nginx 설정 파일에 server block 추가
  * letsencrypt 인증서 발급 [[[#!Vim bash
 sudo certbot --nginx -d something.ahawiki.net
-sudo nginx reload
+sudo nginx -t && sudo nginx -s reload
 ]]]
+`certbot --nginx` 는 인증서를 설치한 뒤 nginx 설정을 스스로 다시 읽는다. 둘째 줄은 설정 파일을 손으로 고친 뒤에만 필요하다.
 
 == Google API 설정
 https://console.cloud.google.com/apis/credentials
