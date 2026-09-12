@@ -44,9 +44,13 @@ class Diary @Inject()(implicit val
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
-      val (latestText: String, latestRevision: Long) = models.tables.Page.selectLastRevision(name).map(w => (w.content, w.revision)).getOrElse(("", 0L))
+      val latestPage = models.tables.Page.selectLastRevision(name)
+      val (latestText: String, latestRevision: Long) = latestPage.map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
-      if (permission.isWritable(name, PageContent(latestText))) {
+      // A missing page is a creation and needs Create, as it does everywhere else. Until
+      // 2026-09-12 the empty text was passed wrapped in Some, which reads as an existing page,
+      // so Edit alone created today's page.
+      if (permission.isWritable(name, latestPage.map(page => PageContent(page.content)))) {
         val body =
           if (latestText == "")
             s"[[DayHeader]]\n * $q"
