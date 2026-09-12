@@ -259,6 +259,31 @@ back to confirm it held the plan.
   whenever a new page was being written. The four links above were rewritten first, and the
   delete refused to run while any `[TODO]` link remained.
 
+## `ToDo ApiKey` deleted (done 2026-09-13)
+
+On the owner's instruction, for the reason given for `TODO` above: a redirect stub is still a page
+name, and the editor offers it in autocomplete. It had been `#!redirect Dev Api` since 2026-08-31,
+when the finished task was folded into `Dev Api`.
+
+This was the hard delete that `DELETE /api/v1/page` performs, every revision and no undo, so two
+things came first. Each of the four revisions was compared with the history of
+`docs/ahawiki.net/ToDo ApiKey`, and each is byte-identical to a committed version, so the text
+outlives the page:
+
+| Revision | Saved on the wiki | Same text as commit |
+|---|---|---|
+| r1 | 2026-05-26 | `b1fd7cfe` |
+| r2 | 2026-06-24 | `b4346b52` |
+| r3 | 2026-06-25 | `c3b60d43` |
+| r4, the redirect | 2026-08-31 | `b8606c1f` |
+
+And nothing linked to it. Unlike the four case stubs below, a search of `docs/ahawiki.net/` could
+answer that here: the mirror held every page of the wiki and matched it, so there was no page
+outside it to miss.
+
+The mirror file went in the same commit. Left behind, the sync reports it as "local only (never
+uploaded)" on every run, which reads as a page waiting to be uploaded.
+
 ## Pages whose names differ only by case (done 2026-09-09)
 
 `case-duplicate-pages.mjs`. `Page.name` is `utf8mb4_bin`, so `Css` and `CSS` are two pages and
