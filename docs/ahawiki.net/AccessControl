@@ -14,7 +14,7 @@
  * `actor`
  * `action`
 
-요청한 페이지 이름과 현재 사용자 email에 매칭되는 `Permission` row를 찾고, 그 row의 `action`이 필요한 action 이상이면 허용합니다.
+요청한 페이지 이름과 현재 사용자의 email(계정에 연결된 email 전부)에 매칭되는 `Permission` row 중 가장 구체적인 row의 `action`이 필요한 action 이상이면 허용합니다.
 
 매칭되는 row가 없으면 기본값은 denied 입니다.
 
@@ -35,13 +35,13 @@
   * page name이 `target`으로 끝날 때 매칭됩니다.
   * 예: `/Secret`
  * `RegularExpression`
-  * page name 전체가 정규식에 매칭될 때 허용됩니다.
+  * page name 전체가 정규식과 맞을 때 매칭됩니다. 허용할지는 그 row의 `action`이 정합니다.
   * 예: `^Private/(Team|Project)/.*$`
   * 항상 full match로 판정하므로 `^`와 `$`를 직접 붙일 필요가 없습니다. 패턴 `Private`는 `Private` 페이지에만 매칭되고 `MyPrivate`나 `PrivatePage`에는 매칭되지 않습니다.
 
 == Actor
 
-`actor`는 현재 사용자 email을 매칭합니다. 비로그인 사용자의 actor 값은 빈 문자열입니다.
+`actor`는 현재 사용자의 email을 매칭합니다. 계정에 연결된 email(`UserEmail`) 중 하나라도 맞으면 매칭되고, 연결된 email이 없으면 로그인 email을 씁니다. 비로그인 사용자의 actor 값은 빈 문자열입니다.
 
  * `All`
   * `actor`는 빈 값입니다.
@@ -74,6 +74,8 @@
 
 페이지 이름 변경(rename)에는 `Rename` 권한이 필요합니다. Rename은 모든 revision의 페이지명을 변경하고 원본 위치에 리다이렉트 페이지를 생성하는 구조적 변경이므로, 단순 편집보다 높은 권한을 요구합니다. `Upload(16)` 이상의 권한을 가진 사용자는 자동으로 rename도 허용됩니다.
 
+`Permission` row는 이름 문자열에 붙어 있어 rename·delete를 따라가지 않습니다. `Exact` row로 막아 둔 페이지를 rename하면 새 이름에는 그 row가 없어 다른 row(보통 `All` target)로 판정되고, 막는 row는 원래 이름(리다이렉트)에 남습니다. 삭제한 뒤 같은 이름으로 다시 만들면 남아 있던 row가 그대로 적용됩니다.
+
 
 == Priority 우선순위
 
@@ -103,7 +105,7 @@ actor level:
 
 == Admin UI
 
-권한 row는 admin 화면에서 관리합니다.
+권한 row는 admin 화면에서 관리합니다. 전체 관리자는 편집 화면에서도 그 페이지의 row를 바꿉니다 — 아래 '''편집 화면의 Page Permission'''.
 
  * `/Admin/Site/{siteSeq}/Permission`
 
@@ -112,7 +114,7 @@ actor level:
  * permission row 조회
  * permission row 추가, 수정, 삭제
  * target page name 자동완성
- * 특정 page/user/action 조합에 어떤 row가 매칭되는지 진단
+ * 특정 page/email/action 조합에 어떤 row가 매칭되는지 진단 (email 하나로만 진단하므로, email이 여럿인 사용자는 실제 판정과 다를 수 있습니다)
 
 `targetType`이 `All`이면 `target`은 빈 값으로 저장됩니다.
 
@@ -125,6 +127,17 @@ actor level:
 '''전에는 적어 뒀고, 갈라졌습니다.''' admin 번들의 목록에 `Rename` 이 아예 없었고 `Upload` 를 8, `Delete` 를 16 으로 적고 있었습니다(실제는 16 과 32). 저장되는 값 자체는 이름으로 넘어가 무사했지만, 드롭다운이 `16 - Delete` 라고 보여주는 아래에서 row 목록은 같은 것을 `32 - Delete` 로 보여주고 있었습니다. `Rename` 은 화면에서 고를 수 없었습니다 — `Upload` 를 줘야 rename 이 따라오는데, 그건 업로드까지 같이 주는 것입니다.
 
 숫자 자체는 `PermissionSpec` 이 못박습니다. 바꾸려면 그 테스트를 고쳐야 하고, 그러면 이 문서도 같이 보게 됩니다. --[2026-08-31]
+
+=== 편집 화면의 Page Permission
+
+편집 화면의 Page Permission 선택은 전체 관리자에게만 보입니다. 사이트 관리자에게는 보이지 않습니다. 고른 값은 저장할 때 그 페이지 이름의 `Exact` target row에 적용됩니다.
+
+ * Keep Current — 아무것도 바꾸지 않습니다. 기존 페이지에만 있고, 기존 페이지의 기본값입니다.
+ * General — 그 이름의 `Exact` target row를 actor와 상관없이 모두 지웁니다.
+ * Only me can read — 그 row들을 지운 뒤 `All` actor 0(None)과 내 email 255(Admin)를 넣습니다.
+ * Only me can edit — 그 row들을 지운 뒤 `All` actor 1(Read)과 내 email 255(Admin)를 넣습니다.
+
+내 email은 계정의 primary email이고, 없으면 로그인 email입니다. 새 페이지에는 Keep Current가 없어 General이 기본값이므로, 전체 관리자가 페이지를 만들면 그 이름으로 미리 만들어 둔 `Exact` row가 지워집니다. 본문을 바꾸지 않고 이 선택만 바꿔 저장해도 적용됩니다.
 
 == Examples 예시
 
@@ -313,8 +326,8 @@ site	target	targetType	actor	actorType	action
 
 판정 순서:
 
- 1. 현재 사이트의 `Permission` row를 조회합니다.
- 2. 요청한 page name과 actor email에 매칭되는 row를 찾습니다.
+ 1. 현재 사이트의 `Permission` row를 가져옵니다. 인스턴스마다 캐시하고 `AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge`가 지나면 다시 읽으므로, 다른 인스턴스에서 바꾼 권한도 그 안에 반영됩니다(값과 이유는 ["Dev Cache"]). 진단 화면과 편집 화면의 권한 요약은 캐시 없이 DB를 읽습니다.
+ 2. 요청한 page name과 사용자 email 중 하나에 매칭되는 row를 찾습니다.
  3. 가장 구체적인 row 하나를 고릅니다.
  4. `row.action >= requiredAction`이면 허용합니다.
  5. 매칭되는 row가 없으면 거부합니다.
@@ -325,9 +338,9 @@ site	target	targetType	actor	actorType	action
 
  1. `GoogleOAuth.callback`에서 Google profile을 조회합니다.
  2. `User.selectOrInsert(email, profileImageUrl)`로 사용자를 찾거나 생성합니다.
- 3. `SessionLogic.login`이 session에 `seq`, `email`, `nickname`과 optional `profileImageUrl`을 저장합니다.
+ 3. `SessionLogic.login`이 session에 `seq`, `nickname`과, 있으면 `loginEmail`·`profileImageUrl`을 저장합니다. 예전 key `email`은 지웁니다.
 
-요청 중 현재 사용자는 `RequestWrapper.getUser`로 접근하며, 이는 `SessionLogic.getUser(request)` 결과입니다. session에 `seq`, `email`, `nickname` 중 하나라도 없으면 비로그인 사용자로 취급합니다.
+요청 중 현재 사용자는 `RequestWrapper.getUser`로 접근합니다. 웹 요청은 `SessionLogic.getUser(request)` 결과이고, API v1 요청은 API key의 주인입니다(`RequestWrapper.forUser`). session에 `seq`나 `nickname`이 없으면 비로그인 사용자로 취급합니다. email은 없어도 됩니다. 권한 판정에 쓰는 email은 위 '''Actor'''에 적은 대로 정합니다.
 
 전체 관리자 판정은 별도 role 테이블이 아니라 `AdminLogic`의 코드 조건입니다. `User` 테이블의 첫 row 하나뿐이고, 특정 email을 관리자로 보던 조건은 코드에서 사라졌습니다. 그 숫자는 `AdminLogic.SuperAdminUserSeq` 한 곳에만 적혀 있습니다 — 이름 없는 `1`이 같은 파일에 세 번 적혀 있던 것을 2026-08-31에 모았습니다. 테스트도 같은 상수를 씁니다.
 
@@ -344,7 +357,7 @@ role 테이블로 옮기지 않기로 한 이유와 그 대가는 아래 '''남�
 
 === Permission 테이블
 
-`Permission` 테이블은 evolution 18에서 추가되었고, evolution 50에서 `targetType`, `actorType`, `dateInserted`, `dateUpdated`가 추가되었습니다.
+`Permission` 테이블은 evolution 18에서 추가되었고, evolution 50에서 `targetType`, `actorType`, `dateInserted`, `dateUpdated`가 추가되었습니다. evolution 52에서 `targetType`에 `RegularExpression`이 추가되었습니다.
 
 컬럼은 `site`, `target`, `targetType`, `actor`, `actorType`, `action`, `dateInserted`, `dateUpdated`입니다.
 
@@ -398,16 +411,19 @@ signed read URL은 `Permission` 테이블 밖의 예외 경로입니다. 아래 
 
 === 쓰기 권한 적용 지점
 
-쓰기는 `WikiPermission.isWritable`로 판정합니다. 기존 페이지는 `Edit`, 없는 페이지는 `Create`가 필요합니다.
+쓰기(편집·생성)는 `WikiPermission.isWritable`로 판정합니다. 기존 페이지는 `Edit`, 없는 페이지는 `Create`가 필요합니다.
 
  * 없는 페이지의 `edit`
  * 기존 페이지의 `edit`
- * save
- * `rename`
- * `delete`
- * attachment upload/delete 관련 일부 경로
+ * save (API v1 저장 포함)
  * diary write
  * Google Spreadsheet sync
+
+나머지 쓰기는 각자의 action으로 판정합니다.
+
+ * rename (API v1 포함) — `WikiPermission.isRenamable`, `Rename`
+ * 페이지 삭제·마지막 revision 삭제·첨부 삭제 (API v1 포함) — `WikiPermission.isDeletable`, `Delete`
+ * 첨부 업로드·클립보드 이미지 업로드 — `WikiPermission.isUploadable`, `Upload`
 
 save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기준으로 페이지 존재 여부를 판단해 required action을 계산합니다.
 
@@ -429,7 +445,7 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 
 === 다른 사이트 페이지를 보여줄 때
 
-유사 문서, 쌍둥이 페이지, 자매 위키 목록처럼 **다른 사이트의 페이지를 노출하는 기능**은, 그 페이지를 비로그인 방문자가 그 사이트에서 직접 읽을 수 있을 때만 보여줍니다.
+유사 문서, 쌍둥이 페이지, 그리고 See Also가 그 두 절을 붙일지 정하는 판정처럼 **다른 사이트의 페이지를 노출하는 기능**은, 그 페이지를 비로그인 방문자가 그 사이트에서 직접 읽을 수 있을 때만 보여줍니다.
 
 판정은 `PermissionLogic.anonymousCanRead` 하나입니다. 대상 사이트의 `Permission` 으로 actor 빈 문자열에 `Read` 가 허용되는지 봅니다.
 

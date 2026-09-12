@@ -12,7 +12,7 @@ object PermissionLogic {
   /**
    * Whether an anonymous visitor may read a page on another site.
    *
-   * Cross-site features — similar pages, twin pages, the sister-wiki listing — may only
+   * Cross-site features — similar pages, twin pages, and See Also deciding whether to add them — may only
    * reveal a page that a logged-out visitor could reach on its own site. Deciding that per
    * feature is how one of them ends up leaking a page the others hide, so the decision lives
    * here.
