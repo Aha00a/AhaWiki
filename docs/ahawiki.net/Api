@@ -14,11 +14,11 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * API Key 인증 사용자로 최근 변경 조회
  * API Key 인증 사용자로 페이지 이름변경/삭제
  * 저장된 revision에 `viaApi = true`와 저장에 사용한 API Key(`userApiKey`) 기록
- * History, RecentChanges API 응답에 `viaApi`와 key 이름(`userApiKeyName`) 포함
+ * `/api/v1/changes` 응답과 History·RecentChanges 화면에 `viaApi`와 key 이름(`userApiKeyName`) 표시 — 아래 '''변경 이력 표시와 필터'''
 
 == 제한사항
 
- * API 저장은 웹 편집과 알림/실시간 반영 동작이 일부 다를 수 있습니다.
+ * API로 저장·이름변경·삭제하면 텔레그램 알림이 가지 않습니다. API 저장은 그 페이지를 열어 둔 브라우저에 실시간 갱신 알림도 보내지 않습니다.
 
 == 인증
 
@@ -151,8 +151,7 @@ curl -X POST https://ahawiki.net/api/v1/page/FrontPage \
 }
 ]]]
 
-저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다.
-알림/실시간 반영 동작은 웹 편집과 일부 다를 수 있습니다.
+저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다. 웹 편집과 달리 알림을 보내지 않습니다(위 '''제한사항''').
 
 == 페이지 이름변경
 
@@ -239,7 +238,7 @@ query parameter:
  6. 양쪽이 모두 바뀐 경우 자동 덮어쓰기를 하지 말고 병합하거나 사용자에게 확인합니다.
  7. 저장/가져오기 완료 후 local manifest에 `lastSyncedAt`, page별 `revision`, `dateTime`, `contentHash`를 기록합니다.
 
-'''이 저장소의 참조 구현은 7번을 하지 않습니다.''' `scripts/sync.ahawiki.net.mjs`는 별도 manifest 대신 git 히스토리를 마지막 동기화 기록으로 씁니다 — 원격 본문이 그 파일의 '''예전 커밋 버전'''과 같으면 로컬이 앞선 것으로 보고 저장하고, 어느 커밋에도 없던 내용이면 브라우저에서 편집된 것으로 보고 덮어쓰지 않습니다. 문서가 이미 git 으로 관리되므로 같은 사실을 manifest 에 한 번 더 적으면 그 둘이 갈라지기 때문입니다. manifest 방식은 문서가 git 밖에 있는 도구에 유효합니다.
+'''이 저장소의 참조 구현은 2·3·5·7번을 하지 않습니다.''' `scripts/sync.ahawiki.net.mjs`는 별도 manifest 대신 git 히스토리를 마지막 동기화 기록으로 쓰고, 본문을 내려받아 비교하지 않고 목록의 `contentHash`만 비교합니다 — 원격 본문이 그 파일의 최근 커밋 40개 중 '''예전 버전'''과 같으면 로컬이 앞선 것으로 보고 `--apply`일 때 저장하고, 그렇지 않으면 브라우저에서 편집된 것으로 보고 diverged로 알리기만 합니다. 로컬 파일은 바꾸지 않습니다 — diverged는 사람이 병합해 커밋하고, 로컬에 없는 페이지는 `download:ahawiki.net`으로 받습니다. 문서가 이미 git 으로 관리되므로 같은 사실을 manifest 에 한 번 더 적으면 그 둘이 갈라지기 때문입니다. manifest 방식은 문서가 git 밖에 있는 도구에 유효합니다.
 
 `docs/ahawiki.net/manifest.json`은 sync state가 아니라 `download:ahawiki.net`이 남기는 내려받기 기록입니다.
 
@@ -252,17 +251,16 @@ API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사�
  * `RecentChanges` 매크로에는 `Include via API edits` 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
  * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `0`입니다.
  * Admin Recent Changes 화면에는 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
- * Admin Dashboard의 Recent Changes 요약 표에도 minor edit, Via API 이모지 컬럼이 표시됩니다.
+ * Admin Dashboard의 Recent Changes 요약 표에도 minor edit, Via API 이모지 컬럼이 있지만, 이 표는 minor edit와 API 편집을 빼고 불러오므로 두 컬럼은 늘 비어 있습니다.
 
 == 저장 Flow
 
 자동화 도구는 아래 순서로 저장합니다.
 
- 1. `GET /api/pageRevision/:pageName`으로 현재 revision을 확인합니다.
- 2. `GET /api/v1/page/*name`으로 현재 본문을 읽습니다.
- 3. 본문을 수정합니다.
- 4. `POST /api/v1/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
- 5. `409 Conflict`가 오면 최신 본문을 다시 읽고 변경 내용을 병합한 뒤 재시도합니다.
+ 1. `GET /api/v1/page/*name`으로 현재 본문과 `revision`을 읽습니다.
+ 2. 본문을 수정합니다.
+ 3. `POST /api/v1/page/*name`에 읽었던 revision과 수정된 전체 text를 함께 보냅니다.
+ 4. `409 Conflict`가 오면 최신 본문을 다시 읽고 변경 내용을 병합한 뒤 재시도합니다.
 
 == AI 자동화 프롬프트 예시
 
@@ -316,11 +314,12 @@ API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사�
 
 [[[#!Table tsv 1
 코드	의미
-`400 Bad Request`	JSON body 없음, `revision` 누락, `text` 누락, 본문 변경 없음
+`400 Bad Request`	JSON body 없음, `revision`·`text` 누락, 본문 변경 없음, 삭제에 `confirm: true` 없음, 이름변경에 `name`·`newName` 없음, `since` 형식 오류, `name` 없이 `afterRevision` 사용
 `401 Unauthorized`	API Key 없음 또는 유효하지 않음
-`403 Forbidden`	API Key 소유자에게 읽기/쓰기 권한 없음
-`404 Not Found`	읽으려는 페이지가 없음
-`409 Conflict`	요청 revision이 최신 revision과 다름
+`403 Forbidden`	API Key 소유자에게 그 작업의 권한 없음
+`404 Not Found`	읽기·이름변경·삭제 대상 페이지가 없음
+`409 Conflict`	요청 revision이 최신 revision과 다름(응답에 `latestRevision` 포함), 또는 이름변경 대상 이름이 이미 있음
+`500 Internal Server Error`	삭제 중 첨부파일 삭제 실패
 ]]]
 
 == 관련

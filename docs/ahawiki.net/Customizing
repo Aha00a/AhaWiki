@@ -1,6 +1,8 @@
 = Customizing
 
-== Header / Footer
-[.header] and [.footer] are special page that are included every top/bottom of the page. You can edit those pages for your site layout.
-[.header]와 [.footer]라는 특수 페이지가 있습니다. 이 페이지는 모든 페이지의 위쪽과 아래쪽에 표시되게 됩니다. 따라서 이 페이지를 수정하면 사이트의 레이아웃을 자유로이 변경하실 수 있습니다.
+== Footer
+[.footer] is a special page included at the bottom of every page. Edit it to change the bottom of your site.
+[.footer]라는 특수 페이지가 있습니다. 이 페이지는 모든 페이지의 아래쪽에 표시됩니다. 따라서 이 페이지를 수정하면 사이트 아래쪽을 원하는 대로 바꿀 수 있습니다.
+
+위쪽에 붙던 `.header` 페이지는 2026-05-31에 없어졌습니다.
 

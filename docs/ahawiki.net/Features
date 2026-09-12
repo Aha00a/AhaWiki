@@ -19,4 +19,4 @@
 == [Interpreter]
 
 == Administration
- * User-customizable interface - by edit [.header], [.footer]
+ * User-customizable interface - by edit [.footer]
