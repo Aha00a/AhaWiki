@@ -16,8 +16,13 @@ object SignedReadUrlLogic {
   /**
    * The read actions a signature may cover. Minting, verifying, and the error message that
    * lists them for the caller all have to agree, so the list exists once.
+   *
+   * Only actions that show the revision the signature names, or no page content at all. `diff`
+   * was here until 2026-09-12 and does neither: it picks both sides from the `after` and
+   * `before` query parameters, which the signature does not cover, so one signed diff URL
+   * opened the text of every revision of its page.
    */
-  val SignableActions: Seq[String] = Seq("view", "raw", "history", "diff")
+  val SignableActions: Seq[String] = Seq("view", "raw", "history")
 
   /** The spelling an action contributes to the payload, or nothing if it cannot be signed. */
   def normalizeAction(action: String): Option[String] = action match {

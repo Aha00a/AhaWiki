@@ -90,6 +90,10 @@ object SignedReadUrlLogicUnit {
     // hand over another.
     assertEquals(SignedReadUrlLogic.normalizeAction("blame"), None)
 
+    // Nor `diff`: it compares the revisions named by `after` and `before`, which the signature
+    // does not cover, so a signed diff URL opened every revision of its page until 2026-09-12.
+    assertEquals(SignedReadUrlLogic.normalizeAction("diff"), None)
+
     {
       val secret = "test-secret"
       val host = "localhost:9000"

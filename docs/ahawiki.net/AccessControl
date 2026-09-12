@@ -379,15 +379,15 @@ signed read URL은 `Permission` 테이블 밖의 예외 경로입니다. 아래 
 
 `Permission`이 막는 페이지를 '''한 장만''' 밖으로 보여주는 경로입니다. 근거가 `Permission` row가 아니라 서명 자체라서, 권한 모델(ACL)이 아니라 capability입니다. 유효한 서명이 있으면 읽을 수 있고, `sr_exp` · `sr_sig` query parameter와 `play.http.secret.key` 기반 HMAC-SHA256으로 검증합니다.
 
-발급은 `Api.adminGenerateSignedReadUrl` 하나뿐이고 전체 관리자만 호출할 수 있습니다. 화면에서는 읽기 제한이 걸린 페이지의 특정 revision을 보고 있을 때만 링크가 나타납니다(`Wiki/action.scala.html`).
+발급은 `Api.adminGenerateSignedReadUrl` 하나뿐이고 전체 관리자만 호출할 수 있습니다. 화면에서는 전체 관리자가 읽기 제한이 걸린 페이지를 볼(`view`) 때 링크가 나타나고, 보고 있는 revision(지정이 없으면 최신)을 `view`로 서명합니다(`Wiki/action.scala.html`).
 
 검증도 `Wiki.view` 한 곳뿐입니다 — `isReadableByPermission || isReadableBySignedUrl`. `view` · `raw` · `history` · `diff` · `blame`이 전부 같은 `Wiki.view` 라우트를 지나므로 다른 action으로 우회할 수 없습니다.
 
 서명이 여는 범위:
 
  * 페이지 한 장 — 페이지 이름이 payload에 들어갑니다.
- * revision 하나
- * action 하나 — `view`, `raw`, `history`, `diff`만 서명할 수 있습니다. `blame`은 같은 라우트가 처리하지만 서명 대상이 아니고, 서명 대상이 아닌 action은 검증이 명시적으로 거절합니다. 목록은 `SignedReadUrlLogic.SignableActions` 한 곳에 있고 발급 · 검증 · 오류 메시지가 모두 그것을 읽습니다.
+ * revision 하나 — `view`·`raw`가 그렇습니다. `revision=0`으로 발급하면 볼 때마다 그때의 최신을 엽니다. `history`는 그 페이지의 revision 목록 전체(본문 제외)를 보여 줍니다.
+ * action 하나 — `view`, `raw`, `history`만 서명할 수 있습니다. `diff`는 2026-09-12에 뺐습니다 — 비교할 revision을 서명 밖의 `after`·`before`로 고르므로, `diff` 서명 하나로 그 페이지의 모든 revision 본문을 볼 수 있었습니다. `blame`은 같은 라우트가 처리하지만 서명 대상이 아니고, 서명 대상이 아닌 action은 검증이 명시적으로 거절합니다. 목록은 `SignedReadUrlLogic.SignableActions` 한 곳에 있고 발급 · 검증 · 오류 메시지가 모두 그것을 읽습니다.
  * host 하나 — 다른 도메인에 붙여넣으면 실패합니다.
  * 24시간 (`SignedReadUrlLogic.ValidDurationSeconds`)
 
