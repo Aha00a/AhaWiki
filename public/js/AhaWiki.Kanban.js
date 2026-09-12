@@ -802,6 +802,20 @@ document.addEventListener('DOMContentLoaded', function () {
         enableInlineImageLightbox(container);
     };
 
+    // Every attempt asks for its own token, the 409 retries included: a token passes one check.
+    // Without AhaWiki.ReCaptcha there is no way to get one; send none and let the server's answer
+    // say whether it wanted one.
+    var getSaveRecaptchaToken = function () {
+        var reCaptcha = typeof window !== 'undefined' && window.AhaWiki && window.AhaWiki.ReCaptcha;
+        if (!reCaptcha) {
+            return Promise.resolve('');
+        }
+        return reCaptcha.token('kanban_save').catch(function (error) {
+            showAlert('Could not get a reCAPTCHA token, so the board was not saved. Something may be blocking reCAPTCHA.');
+            throw error;
+        });
+    };
+
     var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta, retryCount) {
         if (!pageName) {
             return Promise.resolve(null);
@@ -814,9 +828,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt);
             });
         }
-        return fetch('/api/csrf', { credentials: 'same-origin' })
-            .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
-            .then(function (csrfToken) {
+        return Promise.all([
+            fetch('/api/csrf', { credentials: 'same-origin' })
+                .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); }),
+            getSaveRecaptchaToken()
+        ])
+            .then(function (tokens) {
+                var csrfToken = tokens[0];
+                var recaptchaToken = tokens[1];
                 var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
                 var actionMetaWithPageName = Object.assign({ pageName: pageName }, actionMeta || {});
                 var comment = buildKanbanSaveComment(actionType, actionMetaWithPageName);
@@ -825,7 +844,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 params.set('text', content || '');
                 params.set('comment', comment);
                 params.set('minorEdit', isKanbanSaveMinorEdit(actionType, actionMetaWithPageName) ? 'true' : 'false');
-                params.set('recaptcha', '');
+                params.set('recaptcha', recaptchaToken || '');
                 params.set('lineStart', String(lineStart));
                 params.set('lineEnd', String(lineEnd));
                 params.set('saveSenderId', getOrCreateSaveSenderId());

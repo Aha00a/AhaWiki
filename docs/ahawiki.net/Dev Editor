@@ -188,11 +188,17 @@ Source API:
  * submit 직전에 CodeMirror 내용을 textarea로 sync한다.
  * `minorEdit` 체크박스를 지원한다.
  * 관리자에게는 page permission mode control을 표시한다.
- * reCAPTCHA site key가 있으면 token을 주기적으로 갱신해 함께 보낸다.
+ * reCAPTCHA 가 켜져 있으면 저장할 때마다 Google 에 새 token 을 받아 함께 보낸다.
+  ** 켜짐은 site key 와 secret key 가 둘 다 설정된 것이다. 그때만 페이지에 `ahawiki-recaptcha-site-key` meta 가 실리고, 그때만 서버가 token 없는 저장을 거절한다. 키 하나만 있으면 끈 것과 같다 — 하나만으로 켜면 token 을 받을 길 없이 저장이 전부 거절된다.
+  ** token 은 한 번, 2분 동안만 통한다. 그래서 미리 받아 두지 않는다. 2026-09-13 전에는 열 때와 60초마다 받아 두어서, 1분 안의 두 번째 저장은 이미 쓴 token 을, 첫 token 이 오기 전의 저장은 빈 token 을 보냈다.
+  ** token 을 받지 못하면 저장하지 않고 알린다. 광고 차단기가 reCAPTCHA 를 막으면 이렇게 된다.
+  ** token 을 받는 코드는 `AhaWiki.ReCaptcha.js` 하나이고, [InterpreterKanban] 도 이것을 쓴다. Google 의 스크립트는 처음 필요할 때 읽는다(편집 화면은 열 때 미리).
  * `saveSenderId`를 hidden field에 넣어 WebSocket page update broadcast에서 자기 tab의 저장 알림을 제외한다.
 
 오류 처리:
  * `403` - permission denied
+ * `403 reCAPTCHA token is required` - reCAPTCHA 가 켜져 있는데 token 이 없다. 2026-09-13 전에는 빈 token 이면 검사를 건너뛰었다 — 어느 클라이언트든 token 을 빼면 검사 없이 저장할 수 있었고, Kanban 이 그렇게 저장하고 있었다.
+ * `403 reCAPTCHA failed` - Google 이 token 을 받아들이지 않았다. 만료되었거나 이미 쓴 token 도 여기로 온다.
  * `409` - revision conflict
  * `400 body == latestText` - 변경 없는 저장
 

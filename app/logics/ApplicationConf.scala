@@ -55,6 +55,9 @@ class ApplicationConf @Inject()(configuration: Configuration) {
       object reCAPTCHA {
         def siteKey(): String = configuration.getOptional[String](fqn).getOrElse("")
         def secretKey(): String = configuration.getOptional[String](fqn).getOrElse("")
+        // On only with both keys. Pages get the site key only then, and a save without a token is
+        // refused only then. One key alone would refuse every save and give no way to get a token.
+        def enabled(): Boolean = siteKey().nonEmpty && secretKey().nonEmpty
       }
     }
 

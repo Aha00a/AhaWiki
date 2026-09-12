@@ -37,6 +37,7 @@ https://something.ahawiki.net/google/oauth/callback
 == reCAPTCHA 설정
 https://www.google.com/recaptcha/admin/
  * 기존 도메인 추가 (`something.ahawiki.net`)
+ * 도메인을 추가하지 않으면 그 사이트에서는 token 을 받을 수 없어 웹 저장이 전부 `403` 이 된다. 2026-09-13 전에는 빈 token 도 통과시켜서 이것이 드러나지 않았다.
 
 == 관리자 설정
  * 관리자 Google 계정으로 로그인

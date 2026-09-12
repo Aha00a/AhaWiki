@@ -9,6 +9,10 @@
 
         <title>@title - @contextSite.site.name - AhaWiki</title>
         <meta name="viewport" content="width=device-width,initial-scale=1">
+        @if(contextSite.applicationConf.AhaWiki.google.reCAPTCHA.enabled()) {
+            @* Read by AhaWiki.ReCaptcha.js, which asks for a token on each save. Present only when a save needs one. *@
+            <meta name="ahawiki-recaptcha-site-key" content="@(contextSite.applicationConf.AhaWiki.google.reCAPTCHA.siteKey())">
+        }
 
         <meta itemprop="name" content="@(title)">
         <meta property="og:title" content="@(title)" />
@@ -120,6 +124,7 @@
 
         <script type="text/javascript" src="/public/js/js.js"></script>
         <script type="text/javascript" src="/public/js/AhaWiki.Clipboard.js"></script>
+        <script type="text/javascript" src="/public/js/AhaWiki.ReCaptcha.js"></script>
         <script type="text/javascript" src="/public/js/AhaWiki.DomUtil.js"></script>
         <script type="text/javascript" src="/public/js/AhaWiki.Kanban.js"></script>
         <script type="text/javascript" src="/public/js/AhaWiki.Gantt.js"></script>

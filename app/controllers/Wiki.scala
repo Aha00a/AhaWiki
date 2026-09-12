@@ -449,14 +449,14 @@ controllerComponents: ControllerComponents,
       "text" -> text,
       "comment" -> text,
       "minorEdit" -> optional(boolean),
-      "recaptcha" -> text,
+      "recaptcha" -> default(text, ""),
       "lineStart" -> optional(number),
       "lineEnd" -> optional(number),
       "saveSenderId" -> optional(text),
       "pagePermissionMode" -> optional(text),
     )).bindFromRequest().get
     val isMinorEdit = minorEdit.getOrElse(false)
-    val secretKey = applicationConf.AhaWiki.google.reCAPTCHA.secretKey()
+    val reCaptcha = applicationConf.AhaWiki.google.reCAPTCHA
     val remoteAddress = request.remoteAddressWithXRealIp
 
     def doSave() = {
@@ -539,9 +539,20 @@ controllerComponents: ControllerComponents,
       }
     }
 
-    if (secretKey.isNotNullOrEmpty && recaptcha.isNotNullOrEmpty) {
+    // A web save carries a token whenever reCAPTCHA is on. The editor and Kanban ask Google for a
+    // new one on every save (public/js/AhaWiki.ReCaptcha.js); API v1 saves use their own key and
+    // do not come through here. Until 2026-09-13 an empty token skipped the check, so any client
+    // could save unchecked by leaving the token out, and Kanban did: its page had none to send.
+    if (!reCaptcha.enabled()) {
+      Future {
+        doSave()
+      }
+    } else if (recaptcha.trim.isEmpty) {
+      logger.warn(s"reCAPTCHA token missing - host=${request.host}, name=$name, remote=$remoteAddress")
+      Future.successful(Forbidden("reCAPTCHA token is required"))
+    } else {
       wsClient.url("https://www.google.com/recaptcha/api/siteverify").post(Map(
-        "secret" -> Seq(secretKey),
+        "secret" -> Seq(reCaptcha.secretKey()),
         "response" -> Seq(recaptcha),
         "remoteip" -> Seq(remoteAddress)
       )).map(response => {
@@ -555,10 +566,6 @@ controllerComponents: ControllerComponents,
           doSave()
         }
       })
-    } else {
-      Future {
-        doSave()
-      }
     }
   }
 

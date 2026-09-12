@@ -1955,11 +1955,46 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 rules: { comment: "required" },
                 errorPlacement: function () { }
             });
+            // A web save needs a reCAPTCHA token whenever reCAPTCHA is on, and a token passes one
+            // check and lasts two minutes. So every submit stops in beforeSerialize, asks for a new
+            // token, puts it in the form and submits again; see AhaWiki.ReCaptcha.js. The old way,
+            // one token fetched on load and then every 60 seconds, sent a spent token on a second
+            // save within the minute and an empty one on a save made before the first fetch came back.
+            const saveReCaptcha = window.AhaWiki && window.AhaWiki.ReCaptcha;
+            let recaptchaTokenFilled = false;
+            let recaptchaTokenPending = false;
+            if (saveReCaptcha)
+                saveReCaptcha.preload();
             $form.ajaxForm({
+                beforeSerialize: function () {
+                    if (!saveReCaptcha || !saveReCaptcha.isEnabled())
+                        return true;
+                    if (recaptchaTokenFilled) {
+                        recaptchaTokenFilled = false;
+                        return true;
+                    }
+                    if (recaptchaTokenPending)
+                        return false;
+                    recaptchaTokenPending = true;
+                    saveReCaptcha.token('save').then(function (token) {
+                        $form.find('input[name=recaptcha]').val(token);
+                        recaptchaTokenFilled = true;
+                        $form.submit();
+                    }, function () {
+                        alert('Could not get a reCAPTCHA token, so the page was not saved. Something may be blocking reCAPTCHA.');
+                    }).finally(function () {
+                        recaptchaTokenPending = false;
+                    });
+                    return false;
+                },
                 success: function(result) {
                     location.href = location.pathname;
                 },
                 error: function (jqXHR) {
+                    if(jqXHR.status === 403 && /^reCAPTCHA/.test(jqXHR.responseText || '')) {
+                        alert(`Not saved - ${jqXHR.responseText}. Saving again asks for a new token.`);
+                        return;
+                    }
                     if(jqXHR.status === 403) {
                         alert(`Permission denied - ${jqXHR.responseText}`);
                         return;

@@ -45,22 +45,6 @@
     </script>
     <script type="text/javascript" src="/public/js/Wiki/edit.page.js"></script>
 
-    @if(applicationConf.AhaWiki.google.reCAPTCHA.siteKey() && applicationConf.AhaWiki.google.reCAPTCHA.siteKey()) {
-        <script src="https://www.google.com/recaptcha/api.js?render=@(applicationConf.AhaWiki.google.reCAPTCHA.siteKey())"></script>
-        <script>
-            function getReCaptcha() {
-                grecaptcha.ready(function() {
-                    grecaptcha.execute('@(applicationConf.AhaWiki.google.reCAPTCHA.siteKey())', {action: 'homepage'}).then(function(token) {
-                        var element = document.getElementById('recaptcha');
-                        if(element)
-                            element.value = token;
-                    });
-                });
-            }
-            setInterval(getReCaptcha, 60 * 1000);
-            getReCaptcha();
-        </script>
-    }
 } {
     <script type="text/javascript" src="/public/js/Wiki/edit.hotkeyAlt.js"></script>
     <script type="text/javascript" src="/public/js/Wiki/edit.divider.js"></script>
