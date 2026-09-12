@@ -31,7 +31,7 @@ depth는 Indent/Outdent 버튼 또는 [[Kbd(Tab)]] / [[Kbd(Shift Tab)]] 단축�
 Task	나머지	text	`이름` 또는 `이름#라벨` 형식. depth에 따라 들여쓰기 표시.
 Start / Ref	160px	text	날짜(`2026-06-01`) 또는 레이블(`design`, `#design`). `#13` 입력 후 포커스아웃 시 13번 행의 이름으로 자동치환. 비워 두면 생략.
 Est	60px	number	양의 정수. 스핀 버튼 숨김. 비워 두면 생략.
-%	60px	number	진척률 0~100. 스핀 버튼 숨김. 비워 두면 생략.
+%	60px	number	진척률 0~100. 비워 두면 생략. Est 와 달리 스핀 버튼이 보인다.
 ]]]
 
 테이블은 `table-layout: fixed`로 컬럼 너비가 고정되며, 홀수/짝수 행 배경색을 다르게 표시한다.

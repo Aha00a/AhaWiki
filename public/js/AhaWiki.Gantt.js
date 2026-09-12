@@ -595,6 +595,19 @@
     }
 
     // ── 전체 레이아웃 조립 ────────────────────────────────────────────────────
+    // Every draw computes the dates from nothing. calcDates takes a reference only when its target
+    // already has an end, and the same nodes are drawn again on zoom, 100%, Fit and collapse. Until
+    // 2026-09-12 the previous draw's dates were still on them, so a reference to a row further down
+    // started working from the second draw, and a row referring to its own parent moved one
+    // business day later with every click.
+    function clearDates(nodes) {
+        nodes.forEach(function (node) {
+            delete node.start;
+            delete node.end;
+            clearDates(node.children);
+        });
+    }
+
     function buildAll(rootNodes, collapsedIds, dayW, defaultEst) {
         dayW = dayW || DAY_W_DEF;
         if (!rootNodes.length) return { html: '<p class="gantt-empty">데이터가 없습니다.</p>', totalDays: 0 };
@@ -602,6 +615,7 @@
         assignColors(rootNodes, undefined);
         var labelMap = {};
         collectLabels(rootNodes, labelMap);
+        clearDates(rootNodes);
         calcDates(rootNodes, null, null, labelMap, defaultEst);
         var stats = collectStats(rootNodes);
 
@@ -870,6 +884,8 @@
     if (typeof window !== 'undefined') {
         window.AhaWiki = window.AhaWiki || {};
         window.AhaWiki.Gantt = { initAll: initAll };
+        // For test/gantt.redraw.test.mjs, which runs this file as it is rather than a copy.
+        window.__AhaWikiGanttTestHooks = { parseGantt: parseGantt, buildAll: buildAll, fmtDate: fmtDate };
     }
 
     document.addEventListener('DOMContentLoaded', function () { initAll(document); });
