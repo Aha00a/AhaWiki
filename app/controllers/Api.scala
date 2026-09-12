@@ -257,7 +257,14 @@ class Api @Inject()(
   def pageRevision(pageName: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val revision = Page.selectLastRevision(pageName).map(_.revision).getOrElse(0L)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+      // A page the caller cannot read answers as a missing one does. Until 2026-09-12 this
+      // skipped the check, and the number told anyone which private pages exist and how
+      // often they change.
+      val revision = Page.selectLastRevision(pageName)
+        .filter(page => WikiPermission().isReadable(pageName, Some(PageContent(page.content))))
+        .map(_.revision).getOrElse(0L)
       // The only consumer (AhaWiki.Kanban.js fetchLatestRevision) reads `.revision` and
       // nothing else; the "status"/"pageName" fields and the Play-JSON detour were the
       // fourth envelope this codebase carried. A missing page is revision 0, not a 404.

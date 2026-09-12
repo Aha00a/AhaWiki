@@ -89,6 +89,19 @@ class AccessControlFilteringSpec extends PlaySpec with GuiceOneAppPerSuite with 
       SessionLogic.sessionKeyNickname -> "reader",
     )
 
+  "the page revision endpoint" should {
+    // It skipped the read check until 2026-09-12, so its number told anyone that PrivatePage
+    // exists and how many times it has been saved.
+    "answer a page the caller cannot read as a missing one" in {
+      (contentAsJson(route(app, anonymous(GET, "/api/pageRevision/PrivatePage")).get) \ "revision").as[Long] mustBe 0
+      (contentAsJson(route(app, anonymous(GET, "/api/pageRevision/PublicPage")).get) \ "revision").as[Long] mustBe 1
+    }
+
+    "give the revision to the actor the Exact row admits" in {
+      (contentAsJson(route(app, asReader(GET, "/api/pageRevision/PrivatePage")).get) \ "revision").as[Long] mustBe 1
+    }
+  }
+
   "the page list" should {
     "leave an unreadable page out for anonymous" in {
       val result = route(app, anonymous(GET, "/api/pageNames")).get

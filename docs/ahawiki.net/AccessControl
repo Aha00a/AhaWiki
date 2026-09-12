@@ -370,6 +370,7 @@ primary key:
  * include macro
  * WebSocket watch
  * API 일부 응답 필터링
+ * `/api/pageRevision` — 읽을 수 없는 페이지는 없는 페이지처럼 revision 0으로 답합니다. 2026-09-12 전에는 검사가 없어서, 비공개 페이지가 있는지와 몇 번 저장됐는지를 누구나 알 수 있었습니다.
 
 읽기가 거부되면 보통 `Permission denied.`를 반환합니다.
 
