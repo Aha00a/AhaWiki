@@ -247,8 +247,8 @@ back to confirm it held the plan.
   is back. r21 tried `#!Graph` first, and it drew nothing visible: that renderer pinned the root
   node at the screen centre and let `forceCenter` pull every other node to world `(w/2, h/2)`,
   which is the canvas's bottom-right corner, under the legend box. Two nodes and one edge
-  vanished there. `graph.scala.html` aims the force at the root now; it reaches the wiki with the
-  next deploy. `adjacentPagesD3Canvas.scala.html`, which it was copied from, pins its root at
+  vanished there. `graph.scala.html` aims the force at the root now; it reached the wiki with the
+  2026-09-13 deploy. `adjacentPagesD3Canvas.scala.html`, which it was copied from, pins its root at
   `(w/2, h/2)` itself and was never affected — an earlier version of this paragraph said it was,
   from reading the one line rather than the frame around it.
 * `AhaImageViewer` r77: the two `#!td` wrappers are gone and the code blocks they held stand on
