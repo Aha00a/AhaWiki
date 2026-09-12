@@ -20,7 +20,7 @@
   * 현재 닉네임을 보여준다.
   * 대기 중인 신청이 있으면 새 신청을 막는다.
   * 사용자가 자신의 대기 신청을 취소할 수 있게 한다.
- * [ ] 2. 관리자 승인 기능을 추가한다.
+ * [[CB(x)]] 2. 관리자 승인 기능을 추가한다. — Admin UI 의 `NicknameRequestsPage.jsx` 와 `ApiUserNickname` (2026-08-31). 거절은 사유 없이는 보내지지 않는다. 체크는 2026-09-12 에야 했다.
   * Admin UI에서 대기 신청 목록을 보여준다.
   * 관리자는 신청자, 현재 닉네임, 요청 닉네임, 신청일을 확인한다.
   * 관리자는 승인 또는 거절을 선택한다.
@@ -128,7 +128,7 @@
   * `POST /api/Admin/NicknameRequests/:seq/approve`
   * `POST /api/Admin/NicknameRequests/:seq/reject`
  * '''경로가 위 계획과 다르다.''' 계획은 `POST /account/nickname/request` 와 `/api/Admin/UserNicknameChangeRequests` 였다. 실제로는 옆에 이미 있는 것과 같은 모양을 골랐다 — `/api/account/ApiKeys` 와 `/api/Admin/ApiKeys`. 둘 다 JSON API 이고 `ApiApiKey` 와 같은 컨트롤러 구조라, 한 화면에서 두 가지 경로 규칙을 쓰는 것보다 낫다. 취소도 `:seq` 를 받는다 — 계획의 `/request/cancel` 은 어느 신청인지 말하지 않고, 그러면 "내 대기 신청" 을 서버가 추측해야 한다.
- * [ ] 3. 관리자 권한 확인을 기존 Admin 경로와 같은 방식으로 적용한다.
+ * [[CB(x)]] 3. 관리자 권한 확인을 기존 Admin 경로와 같은 방식으로 적용한다. — `ApiUserNickname` 의 관리자 endpoint 는 다른 관리 API 처럼 `AdminAuth` 의 `isAdmin` 으로 막는다 (2026-08-31, 체크는 2026-09-12).
   * 1차 구현은 현재 hard-coded admin 판정을 따른다.
   * [[CB(x)]] 추후 role 또는 permission 기반 admin 판정으로 이관할 수 있게 한 곳에 모은다. → `AdminLogic.SuperAdminUserSeq` 하나로 모였다. role 기반으로 옮길지도 결정됐다(옮기지 않는다) — 근거와 다시 볼 조건은 [AccessControl] 의 '''남은 과제'''. 즉 이 항목은 `AdminLogic.isAdmin` 을 쓰기만 하면 된다. --[2026-08-31]
 

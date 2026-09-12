@@ -56,6 +56,8 @@ Google OAuth로 로그인한다.
  * 편집(Edit): 기존 페이지 수정
  * 생성(Create): 새 페이지 작성
  * 업로드(Upload): 첨부파일 추가
+ * 이름 변경(Rename): 페이지 이름 바꾸기
+ * 삭제(Delete): 페이지 삭제
 
 권한 설정은 [AccessControl] 참고.
 
@@ -77,7 +79,7 @@ Google OAuth로 로그인한다.
 로그인 유도	구현됨	권한 거부 화면이 사유와 Login 버튼을 보여준다 (비로그인일 때만)
 로그인	구현됨	Google OAuth, 신규 사용자 자동 계정 생성
 닉네임 설정	일부 구현	자동 지정은 그대로. 변경은 신청·승인으로 가능(2026-09-02)
-페이지 조회 및 수정	구현됨	권한 기반 Read/Edit/Create/Upload
+페이지 조회 및 수정	구현됨	권한 기반 Read/Edit/Create/Upload/Rename/Delete
 위키 개설 신청	미구현	관리자가 Site 레코드를 직접 넣는다
 ]]]
 
