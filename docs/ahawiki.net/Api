@@ -251,7 +251,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사�
  * `RecentChanges` 매크로에는 `Include via API edits` 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
  * `/api/change`는 `includeViaApi` 파라미터를 받습니다. 기본값은 `0`입니다.
  * Admin Recent Changes 화면에는 viaApi 포함/제외 토글과 minor edit, Via API 이모지 컬럼이 있습니다.
- * Admin Dashboard의 Recent Changes 요약 표에도 minor edit, Via API 이모지 컬럼이 있지만, 이 표는 minor edit와 API 편집을 빼고 불러오므로 두 컬럼은 늘 비어 있습니다.
+ * Admin Dashboard의 Recent Changes 요약 표도 minor edit와 API 편집을 함께 불러와, 같은 이모지 컬럼으로 표시합니다. 2026-09-13 전에는 둘을 빼고 불러와서 두 컬럼이 늘 비어 있었습니다.
 
 == 저장 Flow
 

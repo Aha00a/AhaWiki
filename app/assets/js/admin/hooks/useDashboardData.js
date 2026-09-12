@@ -20,7 +20,10 @@ export function useDashboardData() {
                 fetchJson("/api/Admin/Sites"),
                 fetchJson("/api/Admin/Users"),
                 fetchJson("/api/Admin/DailyStats"),
-                fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=0&includeViaApi=0"),
+                // Minor and API edits included, so the dashboard's Minor edit and Via API columns
+                // have something to show. Until 2026-09-13 both were left out, and the two columns
+                // were always empty.
+                fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=1&includeViaApi=1"),
                 fetchJson("/api/Admin/TopViewedPages?n=30"),
             ]);
             const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : (Array.isArray(allUserData) ? allUserData : []);
