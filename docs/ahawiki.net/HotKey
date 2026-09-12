@@ -43,5 +43,5 @@
  * [[Kbd(Alt c)]] - Comment - 수정 코멘트 입력칸으로 이동합니다.
  * [[Kbd(Alt m)]] - Minor edit - 사소한 편집 여부를 전환합니다.
  * [[Kbd(Alt s)]] - Save - 페이지를 저장합니다.
- * [[Kbd(Alt r)]] - Rename - 페이지 이름을 변경합니다.
- * [[Kbd(Alt t)]] - Delete - 페이지를 삭제합니다.
+ * [[Kbd(Alt r)]] - Rename - 이름 변경 화면으로 갑니다.
+ * [[Kbd(Alt t)]] - Delete - 삭제 확인 화면으로 갑니다.

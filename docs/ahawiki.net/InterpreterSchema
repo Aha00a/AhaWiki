@@ -39,7 +39,7 @@ sameAs	https://github.com/Aha00a/AhaWiki	https://ahawiki.net
 일반 값은 위키 링크로 렌더링합니다.
 `url`, `codeRepository`, `sameAs`는 URL로 렌더링하고, scheme이 없으면 `https://`를 붙입니다.
 `image`, `logo`는 이미지로 렌더링합니다.
-`image`, `logo` 값에 `[[Attachment(...)]]`를 사용할 수 있습니다. 단, 그 페이지에 실제로 올린 첨부여야 합니다 — 없는 파일이면 볼 때마다 깨진 이미지와 S3 조회 실패가 남습니다. 아래 예시에 `logo` 가 없는 이유입니다(이 페이지에는 첨부가 없습니다).
+`image`, `logo` 값에 `[[Attachment(...)]]`를 사용할 수 있습니다. 단, 그 페이지에 실제로 올린 첨부여야 합니다 — 없는 파일이면 볼 때마다 대체 이미지가 뜨고 브라우저의 S3 요청이 실패합니다. 아래 예시에 `logo` 가 없는 이유입니다(이 페이지에는 첨부가 없습니다).
 
 [[[#!WikiSyntaxPreview Schema SoftwareSourceCode
 name	AhaWiki
@@ -61,12 +61,12 @@ endDate	2026-05-26
 
 `address`, `geo`, `location`, `foundingLocation`, `birthPlace`, 그리고 `Location`으로 끝나는 property는 장소로 취급합니다.
 한국어 주소는 단계별 주소 후보도 함께 추출합니다.
-렌더링 시 지도 iframe과 Google/Naver/Kakao Map 링크를 표시합니다.
+렌더링 시 지도 iframe을 표시하고, 값에 한글이 있으면 Google/Naver/Kakao Map 링크도 표시합니다.
 
 [[[#!WikiSyntaxPreview Schema LocalBusiness
 name	Example Cafe
 address	서울특별시 마포구 망원동
-geo	37.556,-126.905
+geo	37.556,126.905
 ]]]
 
 == 쌍으로 표시하는 property

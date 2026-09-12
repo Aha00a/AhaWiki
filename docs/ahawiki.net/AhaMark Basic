@@ -25,6 +25,7 @@ Supports various formatting.
 코드 - `코드`
 복사 가능 코드 - ``복사 가능 코드``
 ]]]
+코드는 백틱 하나(`` `코드` ``), 복사 가능 코드는 백틱 둘로 감쌉니다. 위 표의 왼쪽 칸에서는 이 두 줄도 렌더링되어 보입니다 — [Interpreter] 의 '''구간 안의 백틱'''.
 
 
 
@@ -68,16 +69,16 @@ A name without spaces is the page; the first space starts the alias. Use `|` or 
  * [http://aha00a.com aha00a.com Alias]
 ]]]
 
-'''`[Page With Space]` 는 `Page` 로 가는 링크입니다''' — `With Space` 는 이름표일 뿐입니다. 화면에는 맞아 보이니 주의. 자세한 규칙은 ["InterpreterWiki"].
+'''`[Page With Space]` 는 `Page` 로 가는 링크입니다''' — `With Space` 는 이름표일 뿐이라, 화면에는 `With Space` 만 보입니다. 자세한 규칙은 ["InterpreterWiki"].
 
 
 
 
 
 == Headings
-Headings start with `=`. You can add trailing `=` if you want to. You can assign anchor name manually, use `#`.
-제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
-제목이 10개가 넘어가면 자동으로 목차가 생성됩니다.
+Headings start with `=`. You can close a heading with the same number of `=`. To set its anchor, close it that way and add `#name`.
+제목은 `=`로 시작합니다. 원하면 뒤에도 여는 것과 같은 개수의 `=`를 넣을 수 있고, 그렇게 닫은 뒤 `#이름`을 붙여 anchor를 정합니다.
+제목이 여러 개면 자동으로 목차가 생깁니다 — 기준은 [InterpreterWiki].
 
 [[[#!WikiSyntaxPreview
 = Title

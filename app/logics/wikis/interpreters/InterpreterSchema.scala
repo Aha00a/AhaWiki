@@ -40,8 +40,11 @@ object InterpreterSchema extends TraitInterpreter {
 
   def createPageContent(content: String): PageContent = {
     val pageContent: PageContent = PageContent(content)
-    if (pageContent.interpreter.getOrElse("") != name)
-      throw new Exception("pageContent.interpreter.getOrElse(\"\") != name")
+    // The interpreter lookup ignores case (Interpreters.getInterpreter), so `#!schema` reaches
+    // here too. Until 2026-09-12 this compared case-sensitively, and the exception failed the
+    // whole page with a 500.
+    if (!pageContent.interpreter.exists(_.equalsIgnoreCase(name)))
+      throw new Exception(s"pageContent.interpreter is not $name")
 
     pageContent
   }

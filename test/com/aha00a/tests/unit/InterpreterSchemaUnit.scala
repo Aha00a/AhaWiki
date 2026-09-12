@@ -16,6 +16,8 @@ object InterpreterSchemaUnit {
     import testUtil.assertEquals
 
     assertEquals(InterpreterSchema.name, "Schema")
+    // `#!schema` reaches this interpreter too. It threw, failing the page with a 500, until 2026-09-12.
+    assertEquals(InterpreterSchema.createPageContent("#!schema Person\nname\tAha00a").interpreter, Some("schema"))
 
     assertEquals(
       InterpreterSchema.expandAddress("서울특별시 마포구 망원동 999-999"),

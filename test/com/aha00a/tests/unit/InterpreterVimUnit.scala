@@ -22,5 +22,11 @@ object InterpreterVimUnit {
     test(InterpreterVim.Parser("#!Vim cpp\n"), "cpp", "", false)
     test(InterpreterVim.Parser("#!Vim cpp\n1234"), "cpp", "1234", false)
     test(InterpreterVim.Parser("#!Vim\n#!cpp\n1234"), "cpp", "1234", false)
+    // The name is matched without regard to case, as the interpreter lookup does (2026-09-12).
+    test(InterpreterVim.Parser("#!vim cpp\n1234"), "cpp", "1234", false)
+    test(InterpreterVim.Parser("#!VIM\n#!cpp\n1234"), "cpp", "1234", false)
+    // Without a syntax name the body still shows. It came out empty until 2026-09-12.
+    test(InterpreterVim.Parser("#!Vim\n1234"), "", "1234", false)
+    test(InterpreterVim.Parser("#!Vim  cpp \n1234"), "cpp", "1234", false)
   }
 }

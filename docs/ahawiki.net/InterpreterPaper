@@ -23,12 +23,15 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
 `#!var` 디렉티브는 본문 치환 변수와 Paper 헤더·푸터 위치 값을 설정합니다.
 
-[[[#!WikiSyntaxPreview
+[[[#!Vim text
+#!Paper
 #!var docId  A-EC-20250101-01
 #!var Subject     나
 #!var Object     학교
 {{Subject}}는 {{Object}}에 간다.
 ]]]
+
+결과: 본문은 `나는 학교에 간다.` 가 되고, 헤더 오른쪽에 `A-EC-20250101-01` 이 나옵니다. 이 예시를 [InterpreterWikiSyntaxPreview] 로 보여 주지 않는 까닭은 그 문서에 있습니다.
 
  * `#!var key value` 형식 (첫 번째 공백이 key / value 구분자)
  * `{{key}}` 로 치환
@@ -50,7 +53,7 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
  * `{{pageNo}}` : 현재 페이지 번호 (1부터 시작)
  * `{{pageTotal}}` : 전체 페이지 수
 
-[[[
+[[[#!Vim text
 #!var topLeft    비밀문서
 #!var topCenter  2026년 연간 보고서
 #!var bottomCenter {{pageNo}} / {{pageTotal}}
@@ -62,7 +65,7 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
 `var` `class` 에 `landscape` 를 포함하면 모든 페이지가 가로로 전환됩니다.
 
-[[[
+[[[#!Vim text
 #!var class  landscape
 내용
 ]]]
@@ -87,7 +90,7 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
 가로 문서 내에서 일부 페이지만 세로로:
 
-[[[
+[[[#!Vim text
 #!var class  landscape
 
 1페이지 (가로, 문서 기본)
@@ -100,10 +103,10 @@ wiki 콘텐츠를 A4 용지 형태로 렌더링합니다.
 
  * `#!landscape` — 해당 페이지를 가로(297×210mm)로 출력
  * `#!portrait`  — 해당 페이지를 세로(210×297mm)로 출력
- * 마커는 페이지 어느 위치에나 단독 줄로 넣으면 동작합니다.
+ * 마커는 페이지 어느 위치에나 단독 줄로 넣으면 동작합니다. 단, 첫 페이지 맨 윗줄(`#!` 머리줄 바로 아래)에 둔 `#!landscape` 는 머리줄로 읽혀 문서 전체가 가로가 되고 `#!var class` 는 무시됩니다. 첫 페이지에서는 빈 줄 다음에 둡니다.
  * 인쇄 시 CSS Named Pages 를 사용하므로 Chrome 85+, Firefox 110+, Safari 17+ 에서 실제 인쇄 방향이 전환됩니다.
  * 빈 페이지 방지를 위해 기본 방향 페이지에는 `page:` 속성을 미할당하고, 다른 방향 페이지에만 named page를 적용합니다.
 
 == 인쇄 시 동작
- * TOC 숨김
+ * TOC 는 남습니다. 빠지는 것은 TOC 의 접기 버튼과, See Also 같은 자동 생성 구간을 가리키는 TOC 항목입니다. (`class` 에 `contract` 가 있으면 TOC 는 화면에서도 숨깁니다.)
  * See Also 섹션 제외

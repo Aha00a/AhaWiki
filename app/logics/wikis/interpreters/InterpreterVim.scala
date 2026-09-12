@@ -16,37 +16,27 @@ import scala.sys.process._
 object InterpreterVim extends TraitInterpreter with Logging {
 
   private val ColorScheme = "ron"
+  private val Shebang = "#!Vim"
 
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
-      if (!raw.startsWith("#!Vim")) {
+      // The interpreter lookup ignores case (Interpreters.getInterpreter), so `#!vim` reaches
+      // here too, and this check has to agree with it. It was case-sensitive until 2026-09-12,
+      // and a `#!vim` block showed "Error!".
+      if (!raw.regionMatches(true, 0, Shebang, 0, Shebang.length)) {
         ("", "", true)
       } else {
-        val array: Array[String] = raw.split( """\r\n|\n""")
-        if (array.length == 0) {
-          ("", "", true)
-        }
-        else {
-          val l1 = array.head
-          if (array.length == 1) {
-            if (l1.length <= 6) {
-              ("", "", false)
-            }
-            else if (l1.length > 6) {
-              (l1.substring(6), "", false)
-            }
-          }
-          else {
-            if (l1.length > 6) {
-              (l1.substring(6), array.slice(1, array.length).mkString("\n"), false)
-            } else {
-              val l2: String = array(1)
-              if (l2.startsWith("#!")) {
-                (l2.substring(2), array.slice(2, array.length).mkString("\n"), false)
-              } else {
-                ("", "", false)
-              }
-            }
+        val lines: Array[String] = raw.split( """\r\n|\n""")
+        val syntaxOnFirstLine = lines.head.substring(Shebang.length).trim
+        val rest = lines.drop(1)
+        if (syntaxOnFirstLine.nonEmpty) {
+          (syntaxOnFirstLine, rest.mkString("\n"), false)
+        } else {
+          rest.headOption match {
+            case Some(l2) if l2.startsWith("#!") => (l2.substring(2), rest.drop(1).mkString("\n"), false)
+            // No syntax name: the body shows without highlighting. Until 2026-09-12 it came
+            // out empty.
+            case _ => ("", rest.mkString("\n"), false)
           }
         }
       }

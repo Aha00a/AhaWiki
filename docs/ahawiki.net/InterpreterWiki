@@ -1,7 +1,7 @@
 = [Interpreter]Wiki
 [AhaMark] 기본 위키 문법 인터프리터입니다. `#!` Shebang을 지정하지 않으면 이 인터프리터가 적용됩니다.
 
-블록(`[[[...]]]`) 안에서 Shebang이 없으면 `Text`가 기본으로 적용됩니다.
+블록(`[[[...]]]`) 안에서 Shebang이 없으면 `Text`가 기본으로 적용됩니다. 예외는 [Interpreter].
 
 == 역할
 `InterpreterWiki`는 일반 페이지 본문을 해석하는 기본 인터프리터입니다.
@@ -46,6 +46,7 @@ copiable - ``copiable``
 코드 - `코드`
 복사 - ``복사``
 ]]]
+위 표의 왼쪽 칸에서는 백틱을 쓴 줄도 렌더링되어 보입니다 — [Interpreter] 의 '''구간 안의 백틱'''.
 
 == 가로선
 Horizontal line is created by 4 or more dashes.
@@ -146,9 +147,9 @@ A name without spaces is the page; the first space starts the alias. A page name
 ]]]
 
 === 공백이 있는 이름을 따옴표 없이 쓰면
-'''`[United States]` 는 `United` 로 가는 링크이고 `States` 가 그 이름표입니다.''' 화면에는 `United States` 라고 그대로 찍히므로, 눌러 보기 전에는 틀린 것이 보이지 않습니다. 이 문서와 `["Dev Api"]` 류를 쓰는 문서들이 그래서 따옴표를 씁니다.
+'''`[United States]` 는 `United` 로 가는 링크이고 `States` 가 그 이름표입니다.''' 화면에는 `States` 만 찍히고 링크는 `United` 로 갑니다. 문장 속에서는 그럴듯해 보여서, 눌러 보기 전에는 틀린 것을 알아채기 어렵습니다. 이 문서와 `["Dev Api"]` 류를 쓰는 문서들이 그래서 따옴표를 씁니다.
 
-=== `|` 규칙 (2026-09-05 추가)
+=== `|` 규칙 (2026-09-08 추가)
 `|` 앞이 페이지 이름, 뒤가 별칭입니다. 뒤쪽의 `|` 는 별칭의 일부입니다.
 
 '''다음 셋에는 적용하지 않습니다.''' `|` 를 자기 문법으로 쓰는 것들이라, 별칭 구분자로 가로채면 안 됩니다.
@@ -186,8 +187,8 @@ use `\` for escaping
 ]]]
 
 == Headings
-Headings start with `=`. You can add trailing `=` if you want to.
-제목은 `=`로 시작합니다. 원하면 뒤에도 `=`를 넣을 수 있습니다.
+Headings start with `=`. You can close a heading with the same number of `=`.
+제목은 `=`로 시작합니다. 원하면 뒤에도 여는 것과 같은 개수의 `=`를 넣을 수 있습니다. 개수가 다르면 그 `=`는 제목 글자가 됩니다 — `== 제목 =` 의 제목은 `제목 =` 입니다.
 
 [[[#!WikiSyntaxPreview
 = Title
@@ -199,7 +200,7 @@ content
 ]]]
 
 === Anchor
-Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
+Anchor를 직접 정하려면 같은 개수의 `=`로 닫은 뒤 `#이름`을 붙입니다(`=== 제목 === #이름`). 닫지 않고 붙인 `#이름`은 제목 글자가 됩니다.
 
 [[[#!WikiSyntaxPreview
 = h1
@@ -211,7 +212,7 @@ Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
 ]]]
 
 === Table of Contents
-제목이 10개가 넘어가면 자동으로 목차가 생성됩니다.
+제목이 7개 이상이면 자동으로 목차가 생성됩니다. 문서 맨 위에 `#!var toc false` 를 두면 생기지 않습니다.
 
 [[[#!WikiSyntaxPreview
 = h1
@@ -226,12 +227,12 @@ Anchor를 직접 정하고 싶으면 `#`으로 지정합니다.
 == h2 - 9
 == h2 - 10
 === h3 - 11
-TOC is automatically generated when heading appears 5 or more.
-제목이 10개가 넘어가면 자동으로 목차가 나타납니다.
+TOC is generated automatically.
+목차가 자동으로 나타납니다.
 ]]]
 
 === 접힌 헤딩
-헤딩 마커 뒤에 `>`를 붙이면 해당 헤딩 구간이 기본으로 접힌 상태로 렌더링됩니다.
+헤딩 마커 뒤에 `>`를 붙이면 해당 헤딩 구간이 기본으로 접힌 상태로 렌더링됩니다. `==`~`======` 제목에서만 동작하고, `#!Paper` 안에서는 접히지 않습니다.
 
 [[[#!WikiSyntaxPreview
 == h2
