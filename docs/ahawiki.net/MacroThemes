@@ -1,5 +1,5 @@
 = [Macro]Themes
-`[[Themes]]`는 현재 AhaWiki 테마 팔레트를 미리보기 카드와 토큰 표로 보여준다.
+`[[Themes]]`는 `MacroThemes.scala` 에 적어 둔 Light/Dark 값을 미리보기 카드와 토큰 표로 보여준다. CSS(`less.less`)를 읽지 않으므로, `--hue` 로 계산되는 지금의 실제 색이나 표에 없는 토큰(`--color-surface-panel-frosted` 등)은 반영되지 않는다.
 CSS custom properties를 추가하거나 바꿀 때 Light/Dark 값을 한 화면에서 점검하기 위한 개발용 매크로다.
 
 == Usage
