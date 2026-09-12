@@ -284,6 +284,30 @@ outside it to miss.
 The mirror file went in the same commit. Left behind, the sync reports it as "local only (never
 uploaded)" on every run, which reads as a page waiting to be uploaded.
 
+## Five more unlinked redirect stubs deleted (done 2026-09-13)
+
+The same day, on the owner's instruction, the other redirect pages that nothing linked to went
+the same way, for the same reason. "Nothing linked" was checked twice, two different ways: a
+search of every mirrored page for the name in any form, and the wiki's own `CalculatedLink` rows
+for `site = 2`. Neither found a link. The one hit for the email-named page was that address
+inside the SQL examples on AccessControl, which is text, not a link.
+
+| Page | Pointed at | Revision | Same text as commit |
+|---|---|---|---|
+| `BotApi` | `Api` | r1, 2026-06-25 | `3f1c68db` |
+| `MacroGet` | `MacroGetMacroSet` | r1, 2026-05-21 | `2714a1a9` |
+| `MacroSet` | `MacroGetMacroSet` | r1, 2026-05-21 | `9eff1eee` |
+| | | r2, 2026-06-10 | `62706629` |
+| `MacroIncludeDays` | `MacroInlineDays` | r1, 2026-08-12 | `a1c93643`, apart from a trailing newline |
+| `aha00a@gmail.com` | `Aha00a` | r1, 2021-02-26 | `90127100` |
+
+Every revision is byte-identical to the commit named, except `MacroIncludeDays`: the wiki held the
+one line `#!redirect MacroInlineDays` with no newline at the end, and the mirror added one. The
+deletes went through `DELETE /api/v1/page`, and the mirror files went in the same commit.
+
+Kept, because the search found links to them: `Dev ApiKey`, `FrontPage`, `MacroError`,
+`MacroInfo` and `MacroSuccess`.
+
 ## Pages whose names differ only by case (done 2026-09-09)
 
 `case-duplicate-pages.mjs`. `Page.name` is `utf8mb4_bin`, so `Css` and `CSS` are two pages and
