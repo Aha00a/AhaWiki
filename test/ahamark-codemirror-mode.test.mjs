@@ -113,8 +113,13 @@ test('highlights AhaMark Basic block and link syntax', () => {
     assert.deepEqual(tokensFor('[Page With Space|Alias]'), [
         { text: '[Page With Space|Alias]', style: 'ahamark-link' },
     ]);
+    assert.deepEqual(tokensFor('[2026-05-22|2026-05-22T10:20:30]'), [
+        { text: '[2026-05-22|2026-05-22T10:20:30]', style: 'ahamark-date' },
+    ]);
+    // Since 2026-09-14 a space is part of the name, so the older form links to a page called
+    // "2026-05-22 2026-05-22T10:20:30", and the mode says so rather than colour it as a date.
     assert.deepEqual(tokensFor('[2026-05-22 2026-05-22T10:20:30]'), [
-        { text: '[2026-05-22 2026-05-22T10:20:30]', style: 'ahamark-date' },
+        { text: '[2026-05-22 2026-05-22T10:20:30]', style: 'ahamark-link' },
     ]);
 });
 

@@ -35,7 +35,8 @@ test('an escaped link is text', () => {
 });
 
 test('a link that already says what it means is left to its author', () => {
-    // Both already carry an alias: the author said where it goes and what to call it.
+    // The first carries an alias: the author said where it goes and what to call it. The second
+    // names a page of its own since 2026-09-14, and a case miss there is not this repair's to find.
     assert.equal(planFor('[Php|PHP]').kind, 'nothing-to-do');
     assert.equal(planFor('[Php PHP manual]').kind, 'nothing-to-do');
 });

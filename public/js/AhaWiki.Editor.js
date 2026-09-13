@@ -116,7 +116,8 @@
             if (value.slice(selectionStart - 2, selectionStart) === '--') {
                 const dateStr = dayjs().format('YYYY-MM-DD');
                 const dateTimeStr = dayjs().format('YYYY-MM-DDTHH:mm:ss');
-                const insertText = `[${dateStr} ${dateTimeStr}]`;
+                // The date is the page and the time its label; a space would join them into one name.
+                const insertText = `[${dateStr}|${dateTimeStr}]`;
                 const newValue = replaceRange(value, selectionStart, selectionEnd, insertText);
                 return {
                     handled: true,

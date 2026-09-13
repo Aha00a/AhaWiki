@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import vm from 'node:vm';
+import { regexLink, linkTarget } from '../scripts/lib/ahamark.mjs';
 
 /**
  * Tab in the editor, and who gets it when something else wants it.
@@ -13,8 +14,8 @@ import vm from 'node:vm';
  * ` * [JIH` with `JIH0` offered and pressing Tab produced `  * JIH0H]`.
  */
 
-function loadEditor() {
-    const sandbox = { window: {}, setTimeout, clearTimeout };
+function loadEditor(globals = {}) {
+    const sandbox = { window: {}, setTimeout, clearTimeout, ...globals };
     vm.runInNewContext(fs.readFileSync('public/js/AhaWiki.Editor.js', 'utf8'), sandbox);
     return sandbox.window.AhaWiki.Editor;
 }
@@ -155,4 +156,24 @@ test('other keys are untouched while the popup is up', () => {
     cm.press(keydown({ key: '(', code: 'Digit9' }));
 
     assert.equal(cm.state.value, ' * [JIH()]');
+});
+
+/**
+ * `--[` signs a line: today's date page, labelled with the time. Until 2026-09-14 a space stood
+ * between the two, and the link grammar now reads a space as part of the name, so the signature
+ * would have gone to a page called "2026-09-13 2026-09-13T21:40:00".
+ */
+test('--[ writes a link to the date page, labelled with the time', () => {
+    const format = { 'YYYY-MM-DD': '2026-09-13', 'YYYY-MM-DDTHH:mm:ss': '2026-09-13T21:40:00' };
+    const editor = loadEditor({ dayjs: () => ({ format: (pattern) => format[pattern] }) });
+    const cm = cmFor('--', 2);
+    editor.addCodeMirrorEventListener(cm);
+
+    cm.press(keydown({ key: '[', code: 'BracketLeft' }));
+
+    assert.equal(cm.state.value, '--[2026-09-13|2026-09-13T21:40:00]');
+    assert.equal(cm.state.from, 13);
+    const [link] = cm.state.value.matchAll(regexLink);
+    assert.equal(linkTarget(link), '2026-09-13');
+    assert.equal(link[5], '2026-09-13T21:40:00');
 });

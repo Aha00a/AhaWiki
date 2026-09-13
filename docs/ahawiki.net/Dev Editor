@@ -28,10 +28,10 @@ CodeMirror 5를 사용하며 mode 이름은 `ahamark`이다.
  * list marker: bullet, ordered list marker
  * interpreter block: `[[[#!...]]]`와 블록 내부
  * shebang directive line: `#!...`
- * link: `[Page]`, `[Page Alias]`, URL
+ * link: `[Page]`, `[Page Name]`, `[Page|Alias]`, URL
  * macro: `[[Macro(...)]]`
  * tag/variable: `{{name}}`
- * date link: `[YYYY-MM-DD]`, `[YYYY-MM-DD YYYY-MM-DDTHH:mm:ss]`
+ * date link: `[YYYY-MM-DD]`, `[YYYY-MM-DD|YYYY-MM-DDTHH:mm:ss]`
  * inline style: '''bold''', ''italic'', '''''bold italic''''', __underline__, ~~strikeout~~
  * inline code: `inline` ``copyable code: ``
 
@@ -48,7 +48,7 @@ Style class:
  * `Backspace`는 커서 양쪽의 matching pair 를 지운다(사이에 선택 영역이 있으면 감싼 괄호만 벗긴다). `[[[` 바로 뒤에서 누르면 `\n]]]` wrapper 를 통째로 지운다.
  * `Enter`는 현재 줄이 list이면 list prefix를 다음 줄로 이어준다.
  * `Tab`은 list line에서는 indent/outdent, 일반 위치에서는 tab 문자를 삽입한다.
- * `--[` 입력 흐름에서는 현재 날짜/시간 link를 만든다.
+ * `--[` 입력 흐름에서는 현재 날짜/시간 link를 만든다 — `[YYYY-MM-DD|YYYY-MM-DDTHH:mm:ss]`, 날짜 페이지로 가고 시각이 별칭이다. 2026-09-14 전에는 둘 사이가 공백이었는데, 지금 문법에서 공백은 이름의 일부다.
  * `[[` / `[[[` 주변 입력은 interpreter/block wrapper 작성을 돕는다.
  * IME 조합 중 key 값이 `Process`로 들어오는 경우를 보정한다.
 

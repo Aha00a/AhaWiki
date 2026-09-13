@@ -13,15 +13,17 @@
  * The alternatives of InterpreterWiki.regexLink, in the order it tries them.
  *
  * Groups: 1 escape, 2 URL, 3 ["Page"], 4+5 [Page|alias], 6 [Page], 7+8 ["Page" alias],
- * 9+10 [Page alias].
+ * 9+10 [target label] for a target that is not a page title (URL, #anchor, Page#anchor, ?query,
+ * prefix:), 11 [Page Name], the whole text. Before 2026-09-14, 9+10 was [first rest] for every
+ * target and there was no 11.
  */
 export const regexLink =
-    /((?<!\\)\\)?(?:([a-zA-Z][-a-zA-Z0-9+._]+:\/\/\S+)|\["([^\]"]+)"\]|\[(?![?"])((?:(?!:\/\/)[^\]|])+)\|([^\]]+)\]|\[([^\]\s]+)\]|\["([^\]"]+)"\s+([^\]]+)\]|\[([^\]\s]+)\s+([^\]]+)\])/g;
+    /((?<!\\)\\)?(?:([a-zA-Z][-a-zA-Z0-9+._]+:\/\/\S+)|\["([^\]"]+)"\]|\[(?![?"])((?:(?!:\/\/)[^\]|])+)\|([^\]]+)\]|\[([^\]\s]+)\]|\["([^\]"]+)"\s+([^\]]+)\]|\[((?:[a-zA-Z][-a-zA-Z0-9+._]*:|[#?]|[^\]\s#]*#)[^\]\s]*)\s+([^\]]+)\]|\[([^\]\s](?:[^\]]*[^\]\s])?)\])/g;
 
 /** The page an alternative names, whichever alternative matched, or undefined for a URL. */
 export function linkTarget(match) {
     if (match[1] || match[2]) return undefined;              // escaped, or a bare URL
-    const written = match[3] ?? match[4] ?? match[6] ?? match[7] ?? match[9];
+    const written = match[3] ?? match[4] ?? match[6] ?? match[7] ?? match[9] ?? match[11];
     if (written === undefined) return undefined;
     // AhaMarkLink.uriNormalized drops the prefix, so [wiki:Page] already means the page Page.
     return (written.startsWith('wiki:') ? written.slice(5) : written).trim();

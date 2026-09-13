@@ -185,9 +185,10 @@ The decision is pinned in `test/add-paired-class.test.mjs` against the shipped v
 ## Auditing every page on every site
 
 `audit.wiki.mjs` reports pages that render an error, or render something other than what was
-written: a macro or block naming something the app does not register, a link written
-`[Page Name]` whose whole text names a page — which renders the words the author meant and goes to
-the first one — and a link that misses an existing page by case or spacing.
+written: a macro or block naming something the app does not register, a label written after a
+space, `[CSharp C#]`, whose whole text names no page while its first word does — the words the
+author meant, on a link to a page nobody will write — and a link that misses an existing page by
+case or spacing.
 
 That last one needs the whole site to see. `Page.name` is `utf8mb4_bin`, so `[PHP]` and the page
 `Php` are two different names and always will be; the link renders as an invitation to write a page
@@ -204,7 +205,11 @@ owner's own sites, aha00a.com and ahawiki.net. The owner decided that on 2026-09
 sweep turned up a redirect pointing the other way round on one site, a bare `TODO` page on
 another and an empty page on a third: each of those wikis keeps its own conventions, and a fix
 by this repository's standard would be an edit to someone else's writing. Which site number is
-whose is in the script's `siteHost` map.
+whose is in the `Site` table; the script's `siteHost` map names some of them.
+
+The one exception is the link grammar change below, which the owner ordered for every site. A
+grammar change breaks every site's pages alike, and that repair keeps what each author meant
+rather than applying this repository's conventions.
 
 ```bash
 ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -B -N -e "
@@ -307,6 +312,71 @@ deletes went through `DELETE /api/v1/page`, and the mirror files went in the sam
 
 Kept, because the search found links to them: `Dev ApiKey`, `FrontPage`, `MacroError`,
 `MacroInfo` and `MacroSuccess`.
+
+## A space is part of a link's page name; old links rewritten in the database (done 2026-09-14)
+
+Until then AhaMark read `[first rest]` as the page `first` labelled `rest`, so `[Forrest Gump]`
+went to "Forrest" and showed "Gump". Now the whole bracket is the page name, spaces included, and
+a label follows `|`. A target that is not a page title — a URL, `#anchor`, `Page#anchor`,
+`?query`, or a prefixed one such as `schema:` or `wiki:` — still takes its label after the first
+space. The grammar is `InterpreterWiki.regexLink`, pinned by `InterpreterWikiLinkSpec`; the editor's
+`--[` signature writes `[date|time]` to match.
+
+**Every link written in the old sense was rewritten to `[first|rest]`, which means the same under
+both grammars, in every revision of every site, directly in the database.** That was the owner's
+instruction, other users' wikis included. History had to go with it because there is no parser
+version — an old revision is rendered by today's parser — and the database rather than the API
+because a save adds a revision: the latest would read right and every one before it would not.
+
+`spaced-link-labels.mjs` judges the links and writes the SQL; its header says what counts as a
+link and where, and `test/spaced-link-labels.test.mjs` pins it. A link was rewritten when its
+first word names a page on its site and its whole text does not. When the whole text names a page
+too — `[Font Awesome]` on the page Font Awesome, `[Pachinko (TVSeries)]` — the new reading was
+taken to be what the author meant, and so it was for a link whose first word names nothing, such
+as `[Forrest Gump]` or `[6·25 전쟁]`. Seven links of that last kind read as a label all the same,
+`[la Latin]`, `[Toolkit toolkit]`, `[BR 브라질]` and the like, and were rewritten by name
+(`labelledByReview`).
+
+| Revisions rewritten | Of them current | Comments | Links rewritten | Links left to the new reading |
+|---|---|---|---|---|
+| 411 of 23,093 | 39 | 1 | 1,303 | 806 |
+
+Sites 1, 2, 6, 7, 9 and 15 had revisions rewritten; on sites 4, 8 and 11 every such link was of
+the kind left alone. Every rewrite keeps the text's length, so `PageMeta.size` holds; the script
+refuses to write SQL for one that would not.
+
+**How it ran.** One transaction of UPDATEs as the database's admin account — `.my.rds.cnf` is the
+read-only backup account and was refused. Each UPDATE names one revision and carries the SHA-256 of
+the text it expects, and the transaction counts the rows it changed and raises an error before
+COMMIT if the count is not the plan's. It was rehearsed with ROLLBACK first (411 of 411), applied
+just before the deploy that shipped the grammar, and the same run wrote `undo.sql`, which puts the
+dumped text back under the same guard; the ops notes say where that is kept. RDS point-in-time
+recovery, seven days, is behind it.
+
+```bash
+ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -D wiki_aha00a_com -B -N' > dump.tsv <<'SQL'
+SELECT site, TO_BASE64(name), revision, TO_BASE64(content), TO_BASE64(IFNULL(comment, '')) FROM Page
+SQL
+ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -D wiki_aha00a_com -B -N -e "SELECT seq, name FROM Site"' > sites.tsv
+node scripts/spaced-link-labels.mjs dump.tsv sites.tsv out/
+ssh <host> 'mysql --defaults-file=~/.my.rds-admin.cnf -D wiki_aha00a_com' < out/rehearse.sql
+ssh <host> 'mysql --defaults-file=~/.my.rds-admin.cnf -D wiki_aha00a_com' < out/apply.sql
+ssh <host> 'mysql --defaults-file=~/.my.rds.cnf -D wiki_aha00a_com -B -N' < out/check.sql | sort | uniq -c
+```
+
+**What the second check found.** The hashes and the rehearsal say only that the planned rows were
+found as planned. So each current revision was also rendered before and after the rewrite through
+the deployed renderer, which still read the old grammar, where the two should render alike. Eight
+did not. A heading's anchor and table-of-contents entry were made by a copy of the link grammar,
+six replaceAll calls that knew only the space form, so `== [KR|대한민국] ==` got the anchor
+`KR|대한민국` — which every page already written with a `|` in a heading had been getting. Headings
+read their links through `InterpreterWiki.linksAsText` now, and the rewrite went in with that fix
+rather than ahead of it.
+
+**Left behind.** `CalculatedLink` rows are computed from a page's latest revision when it is saved
+or recalculated, and a deploy recalculates nothing. The current pages whose links now read as whole
+names keep their old rows until then; a page view recalculates one time in ten, and the admin
+API's `Calculate` takes a page name.
 
 ## Pages whose names differ only by case (done 2026-09-09)
 

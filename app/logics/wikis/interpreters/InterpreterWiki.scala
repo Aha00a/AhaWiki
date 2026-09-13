@@ -197,13 +197,7 @@ object InterpreterWiki extends TraitInterpreter {
       variableHolderState := State.Heading
       val headingLength = heading.length
       val listStyle = ",1.,A.,I.,a.,i.".split(",")
-      val titleForToc = title
-        .replaceAll("""(?<!\\)\[wiki:(\S+?)]""", "$1")
-        .replaceAll("""(?<!\\)\[wiki:(\S+?)\s(.+?)]""", """$2""")
-        .replaceAll("""(?<!\\)\["([^"]+?)"]""", "$1")
-        .replaceAll("""(?<!\\)\[("[^"]+?")\s(.+?)]""", "$2")
-        .replaceAll("""(?<!\\)\[(\S+?)]""", "$1")
-        .replaceAll("""(?<!\\)\[(\S+?)\s(.+?)]""", "$2")
+      val titleForToc = linksAsText(title)
       val headingAttributes = Option(id).map(_.trim).filter(_.nonEmpty).map { raw =>
         """([#.])([^#.\s]+)""".r.findAllMatchIn(raw).toSeq
       }.getOrElse(Seq.empty)
@@ -378,9 +372,15 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  // The alternatives are tried in order, and the order is the whole grammar: [Page Name] cannot
-  // mean a page whose name has a space, because [Page Alias] claims that shape first. Quoting is
-  // what says "the space is part of the name", and | says "the alias starts here".
+  // The alternatives are tried in order, and the order is the whole grammar. A space inside the
+  // brackets is part of the page name: [Forrest Gump] is the page "Forrest Gump". Only a target
+  // that is not a page title keeps the older [target label] reading, where the first space starts
+  // the label: a URL, an anchor (#x, Page#x), a query (?x), or a prefixed target (schema:, wiki:,
+  // User:, https:). For a page, | says where the label starts, and quotes still work.
+  //
+  // Until 2026-09-14 the first space started the label for every target, so [Forrest Gump] went to
+  // Forrest and showed Gump. Links written in that sense were rewritten to [first|rest] in the
+  // database the same day, before this shipped; scripts/README.md has the migration.
   val regexLink: Regex =
     """(?x)
           ((?<!\\)\\)?                                  # 1: Optional escape
@@ -390,7 +390,8 @@ object InterpreterWiki extends TraitInterpreter {
             \[ (?![?"]) ((?:(?!://)[^]|])+) \| ([^]]+) ] | # 4+5: [Page Name|Alias]
             \[ ([^]\s]+) ]                        |     # 6: [FrontPage]
             \[" ([^]"]+) " \s+ ([^]]+) ]          |     # 7+8: ["Page" Alias]
-            \[ ([^]\s]+) \s+ ([^]]+) ]                  # 9+10: [Page Alias]
+            \[ ((?:[a-zA-Z][-a-zA-Z0-9+._]*:|[\#?]|[^]\s\#]*\#)[^]\s]*) \s+ ([^]]+) ] |                  # 9+10: [https://x label], [#a label], [?q label], [schema:X label], [Page#a label]
+            \[ ([^]\s](?:[^]]*[^]\s])?) ]               # 11: [Page Name], the whole text
           )
     """.r
 
@@ -403,7 +404,7 @@ object InterpreterWiki extends TraitInterpreter {
 
   /** (uri group, alias group) per alternative, in the order the pattern tries them. */
   private val linkAlternatives: Seq[(Int, Option[Int])] =
-    Seq(2 -> None, 3 -> None, 4 -> Some(5), 6 -> None, 7 -> Some(8), 9 -> Some(10))
+    Seq(2 -> None, 3 -> None, 4 -> Some(5), 6 -> None, 7 -> Some(8), 9 -> Some(10), 11 -> None)
 
   /** The uri and alias a match names. None only if the pattern gains an alternative and not a pair. */
   def uriAndAlias(m: Regex.Match): Option[(String, String)] =
@@ -411,6 +412,19 @@ object InterpreterWiki extends TraitInterpreter {
       case (uriGroup, aliasGroup) if m.group(uriGroup) != null =>
         (m.group(uriGroup), aliasGroup.map(m.group).getOrElse(""))
     }
+
+  /**
+   * `s` with each link replaced by the words a reader sees for it: its alias, or the page it names
+   * when it has none. A heading's anchor and its table-of-contents entry are made of these. Until
+   * 2026-09-14 that was a second copy of the grammar, six replaceAll calls that knew only the
+   * space form, so a heading holding [KR|대한민국] got the anchor "KR|대한민국" and a table of
+   * contents entry that read "대한민국 KR|대한민국". An escaped link stays as written, as it did then.
+   */
+  def linksAsText(s: String)(implicit wikiContext: ContextWikiPage): String =
+    regexLink.replaceAllIn(s, m => Regex.quoteReplacement(
+      if (m.group(1) != null) m.matched
+      else uriAndAlias(m).map { case (uri, alias) => AhaMarkLink(uri, alias).aliasWithDefault }.getOrElse(m.matched)
+    ))
 
   private val regexEmptyCheckbox: Regex = """\[ \]""".r
 

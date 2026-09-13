@@ -122,9 +122,9 @@ Leading space is important.
 ]]]
 
 == Link
-A name without spaces is the page; the first space starts the alias. A page name that holds a space therefore needs `|` or quotes.
+Everything inside the brackets is the page name, spaces included; write the alias after `|`. A target that is not a page title keeps the older reading, where the first space starts the alias: a URL, an anchor (`#x`, `Page#x`), a query (`?x`), or a prefixed target (`schema:`, `wiki:`, `User:`).
 
-공백 없는 이름은 페이지이고, '''첫 공백부터는 별칭'''입니다. 그래서 이름에 공백이 있는 페이지는 `|` 나 따옴표가 필요합니다.
+괄호 안 전체가 페이지 이름입니다 — '''공백도 이름의 일부'''이고, 별칭은 `|` 뒤에 씁니다. 페이지 이름이 아닌 대상만 예전처럼 첫 공백부터가 별칭입니다: URL, 앵커(`#x`, `Page#x`), 쿼리(`?x`), 접두어가 붙은 대상(`schema:`, `wiki:`, `User:`).
 
 [[[#!WikiSyntaxPreview
  * Url
@@ -133,8 +133,9 @@ A name without spaces is the page; the first space starts the alias. A page name
   1. [http://aha00a.com aha00a.com Alias]
  * Page
   1. [Page1]
-  1. [Page1 Alias For Page1]
+  1. [Page1|Alias For Page1]
  * Page with space
+  1. [United States]
   1. [United States|미국]
   1. ["United States"]
   1. ["United States" United States of America]
@@ -146,8 +147,10 @@ A name without spaces is the page; the first space starts the alias. A page name
   1. [?q=10 q10 Alias]
 ]]]
 
-=== 공백이 있는 이름을 따옴표 없이 쓰면
-'''`[United States]` 는 `United` 로 가는 링크이고 `States` 가 그 이름표입니다.''' 화면에는 `States` 만 찍히고 링크는 `United` 로 갑니다. 문장 속에서는 그럴듯해 보여서, 눌러 보기 전에는 틀린 것을 알아채기 어렵습니다. 이 문서와 `["Dev Api"]` 류를 쓰는 문서들이 그래서 따옴표를 씁니다.
+=== 공백이 이름이 된 날 (2026-09-14)
+그 전에는 대상이 무엇이든 '''첫 공백부터가 별칭'''이었습니다. `[United States]` 는 `United` 로 가는 링크에 `States` 가 별칭이라, 화면에는 `States` 만 찍히고 링크는 `United` 로 갔습니다. 문장 속에서는 그럴듯해 보여서 눌러 보기 전에는 틀린 것을 알아채기 어려웠고, 이 문서들이 `["Dev Api"]` 처럼 따옴표를 쓴 것도 그래서입니다. 따옴표는 지금도 됩니다.
+
+바꾸면서 옛 뜻으로 쓴 링크는 '''모든 사이트의 모든 리비전'''에서 `[첫단어|나머지]` 로 고쳤습니다. 아래 `|` 규칙 절에 적은 대로 옛 리비전도 오늘의 파서로 읽히기 때문입니다. 첫 단어는 있는 페이지이고 전체는 없는 페이지인 링크가 대상이었습니다 — `[CSharp C#]` 은 `[CSharp|C#]` 이 되었고, 첫 단어가 없는 페이지인 `[Forrest Gump]` 는 그대로 두어 이제 `Forrest Gump` 로 갑니다. 기준과 수치, 되돌리는 법은 저장소의 `scripts/README.md` 에 있습니다.
 
 === `|` 규칙 (2026-09-08 추가)
 `|` 앞이 페이지 이름, 뒤가 별칭입니다. 뒤쪽의 `|` 는 별칭의 일부입니다.
@@ -162,7 +165,7 @@ A name without spaces is the page; the first space starts the alias. A page name
 
 문법은 `test/com/aha00a/logics/wikis/interpreters/InterpreterWikiLinkSpec.scala` 가 고정합니다.
 
-그리고 '''이 저장소에 커밋된 문서들은 `test/ahawiki.docs-links.test.mjs` 가 검사합니다''' — 괄호에 공백이 있는데 그 전체가 실재하는 페이지 이름이면 실패합니다. 화면에는 맞아 보이고 다른 곳으로 가는 실수라, 눈으로는 안 걸립니다. 실제로 두 번 걸렸고(`[Dev Editor]`, 그리고 `[Dev Api]`·`[Dev SisterWiki]`) 둘 다 HTML 을 읽어서야 찾았습니다.
+그리고 '''이 저장소에 커밋된 문서들은 `test/ahawiki.docs-links.test.mjs` 가 검사합니다''' — 괄호에 공백이 있는데 그 전체는 없는 페이지이고 첫 단어는 있는 페이지면 실패합니다. 옛 습관대로 별칭을 공백 뒤에 쓴 것이니 `|` 로 고칩니다. 2026-09-14 전에는 방향이 반대여서 전체가 실재하는 페이지 이름이면 실패했고, 실제로 두 번 걸렸습니다(`[Dev Editor]`, 그리고 `[Dev Api]`·`[Dev SisterWiki]`). 둘 다 화면에는 맞아 보여서 HTML 을 읽어서야 찾았습니다.
 
 use `\` for escaping
 링크 문법 무효화를 하기 위해서는 `\`를 사용합니다.
@@ -174,8 +177,9 @@ use `\` for escaping
   1. \[http://aha00a.com aha00a.com Alias]
  * Page
   1. \[Page1]
-  1. \[Page1 Alias For Page1]
+  1. \[Page1|Alias For Page1]
  * Page with space
+  1. \[United States]
   1. \["United States"]
   1. \["United States" United States of America]
  * Anchor
@@ -201,6 +205,8 @@ content
 
 === Anchor
 Anchor를 직접 정하려면 같은 개수의 `=`로 닫은 뒤 `#이름`을 붙입니다(`=== 제목 === #이름`). 닫지 않고 붙인 `#이름`은 제목 글자가 됩니다.
+
+정하지 않으면 제목 글자로 만들고, 공백은 `-` 가 됩니다. 제목에 링크가 있으면 그 링크가 화면에 보이는 글자 — 별칭, 없으면 페이지 이름 — 를 씁니다: `== [KR|대한민국] ==` 의 anchor 와 목차 항목은 `대한민국` 입니다. 2026-09-14 전에는 이 계산이 링크 문법을 따로 흉내 내서 `|` 를 몰랐고, 위 제목은 `KR|대한민국` 이라는 anchor 를 받았습니다.
 
 [[[#!WikiSyntaxPreview
 = h1

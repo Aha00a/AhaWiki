@@ -56,7 +56,8 @@ export function planFor(content) {
     for (const m of masked.matchAll(regexLink)) {
         if (m[1] || m[2]) continue;                              // escaped, or a bare URL
         // Only the bare `[Target]` alternative. A link that already carries an alias says what
-        // its author meant, and one written `[Target Alias]` is a different repair.
+        // its author meant, and `[Target Alias]` -- one page name since 2026-09-14 -- is a
+        // different repair.
         if (m[6] === undefined) continue;
         const written = m[6].startsWith('wiki:') ? m[6].slice(5) : m[6];
         const real = RealPage.get(written);

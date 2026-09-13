@@ -110,9 +110,13 @@ function main(file) {
         for (const m of linkable.matchAll(regexLink)) {
             if (m[1] || m[2]) continue;                          // escaped, or a bare URL
 
-            if (m[9] !== undefined) {
-                const whole = `${m[9]} ${m[10]}`.trim();
-                if (known.has(whole)) silentLink.push(`${where}: [${whole}] goes to "${m[9]}"`);
+            // Since 2026-09-14 a space is part of the name. A bracket whose whole text names no
+            // page while its first word does is a label written in the older habit: the reader
+            // sees the words meant, on a red link to a page nobody will write.
+            if (m[11] !== undefined && /\s/.test(m[11])) {
+                const first = m[11].split(/\s+/)[0];
+                const firstIsPage = known.has(first) || defaultPages.has(first) || dateShapes.some(shape => shape.test(first));
+                if (!known.has(m[11]) && firstIsPage) silentLink.push(`${where}: [${m[11]}] goes to "${m[11]}", not to "${first}"`);
             }
 
             const uri = linkTarget(m);
@@ -144,7 +148,7 @@ function main(file) {
     };
 
     console.log(`${rows.length} pages across ${pagesBySite.size} sites`);
-    const silent = list('a link written as target and alias whose whole text names a page', silentLink);
+    const silent = list('a label written after a space: the whole text names no page, its first word does', silentLink);
     const missed = list('a link that misses an existing page by case or spacing', caseMiss);
     report('macro names the app does not register', unknownMacro);
     report('block names the app does not register', unknownBlock);

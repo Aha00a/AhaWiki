@@ -17,6 +17,15 @@ object InterpreterWikiUnit {
     assert(generatedHeadingHtml.contains("""<h2 id="See-Also-Generated" class="Headinggenerated generated">"""))
     assert(!generatedHeadingHtml.contains("""data-edit-link="""))
 
+    // A heading's anchor and table-of-contents entry are the words its links show, read by the link
+    // grammar itself rather than by a copy of it that knew only the space form.
+    assertEquals(
+      InterpreterWiki.linksAsText("""[KR|대한민국] [CSharp C#] [wiki:FrontPage] [wiki:FrontPage 대문] ["Dev Api"] ["Dev Api" API] [https://aha00a.com 홈] [#a 절] \[KR|x] http://aha00a.com"""),
+      """대한민국 CSharp C# FrontPage 대문 Dev Api API 홈 절 \[KR|x] http://aha00a.com""")
+    val pipedHeadingHtml = InterpreterWiki.toHtmlString("== [KR|대한민국] ==")
+    assert(pipedHeadingHtml.contains("""<div class="HeadingWrapper대한민국">"""))
+    assert(pipedHeadingHtml.contains("""<h2 id="대한민국" class="">"""))
+
     val htmlColumns = InterpreterWiki.toHtmlString("""<Columns count=\"3\" gap=\"16\" minWidth=\"220\">\n 1. a\n 1. b\n 1. c\n</Columns>""")
 
     val htmlDiv = InterpreterWiki.toHtmlString("""<div id=\"box\" class=\"card\" style=\"color:red\" onclick=\"evil()\">\n 1. [FrontPage]\n</div>""")

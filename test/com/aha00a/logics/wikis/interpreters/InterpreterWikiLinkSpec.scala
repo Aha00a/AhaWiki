@@ -8,8 +8,10 @@ import org.scalatest.matchers.must.Matchers
   *
   * Its alternatives are tried in order and the order *is* the grammar, so what matters is not that
   * each form parses but that the right one wins. The mistake both times was the same: writing a
-  * multi-word page name without quotes, which the `[Page Alias]` alternative claims first. It reads
-  * correctly on the rendered page -- the alias is the rest of the name -- and links elsewhere.
+  * multi-word page name without quotes, which the `[Page Alias]` alternative used to claim first.
+  * It read correctly on the rendered page -- the alias was the rest of the name -- and linked
+  * elsewhere. Since 2026-09-14 the space is part of the name, and only a target that is not a
+  * page title keeps the label after its first space.
   */
 class InterpreterWikiLinkSpec extends AnyFreeSpec with Matchers {
 
@@ -24,10 +26,29 @@ class InterpreterWikiLinkSpec extends AnyFreeSpec with Matchers {
     parse("[Dev]") mustBe Some(("Dev", ""))
   }
 
-  "an unquoted name with spaces is a page and an alias, not a page with spaces" in {
-    // The trap. Both of these render as their full text and link to the first word.
-    parse("[Dev Api]") mustBe Some(("Dev", "Api"))
-    parse("[Page With Three Words]") mustBe Some(("Page", "With Three Words"))
+  "an unquoted name with spaces is one page name" in {
+    // Until 2026-09-14 these were the trap: they rendered as their full text and linked to the
+    // first word. Links written in that sense were rewritten to [first|rest] before this changed.
+    parse("[Dev Api]") mustBe Some(("Dev Api", ""))
+    parse("[Page With Three Words]") mustBe Some(("Page With Three Words", ""))
+    parse("[Forrest Gump]") mustBe Some(("Forrest Gump", ""))
+  }
+
+  "a target that is not a page title keeps the label after its first space" in {
+    parse("[schema:Person 사람]") mustBe Some(("schema:Person", "사람"))
+    parse("[User:aha00a 아하]") mustBe Some(("User:aha00a", "아하"))
+    parse("[wiki:FrontPage Front]") mustBe Some(("wiki:FrontPage", "Front"))
+    parse("[Page#section 그 절]") mustBe Some(("Page#section", "그 절"))
+    parse("[?q=1 검색]") mustBe Some(("?q=1", "검색"))
+    // A time is not a prefix; a prefix starts with a letter.
+    parse("[12:30 회의]") mustBe Some(("12:30 회의", ""))
+  }
+
+  "a name does not start or end with a space" in {
+    parse("[ a b ]") mustBe None
+    // Not a link. One of this shape written before 2026-09-14 read as the page a labelled "b ";
+    // where a named a page, the migration rewrote it to [a|b ], which still does.
+    parse("[a b ]") mustBe None
   }
 
   "quoting is what makes the space part of the name" in {

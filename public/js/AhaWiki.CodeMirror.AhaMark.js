@@ -61,7 +61,7 @@
                         return 'ahamark-underline';
                     if (stream.match(/~~[^~\n]+~~/))
                         return 'ahamark-strikeout';
-                    if (stream.match(/\[\d{4}-\d{2}-\d{2}(?:\s+\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})?\]/))
+                    if (stream.match(/\[\d{4}-\d{2}-\d{2}(?:\|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})?\]/))
                         return 'ahamark-date';
                     if (stream.match(/\[(?!\[)[^\]\n]+\]/))
                         return 'ahamark-link';
