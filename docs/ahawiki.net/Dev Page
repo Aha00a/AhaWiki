@@ -67,3 +67,5 @@
 전에는 decode 가 4곳, encode 가 8곳에 흩어져 있었고 encode 는 두 형태로 갈라져 있었습니다. 어떤 코드가 링크를 만드느냐에 따라 **같은 페이지의 URL 이 두 가지** 였습니다 — sitemap, 텔레그램 알림, 렌더링된 위키 링크가 서로 달랐습니다.
 
 `encodeURIComponent` 쪽으로 맞춘 이유는 브라우저가 이미 그 함수를 쓰기 때문입니다. 서버가 만든 링크와 클라이언트가 만든 링크가 같아집니다. 두 형태 모두 같은 페이지로 해석되므로 겉모습 차이였지만, 정규 URL 이 두 가지인 상태는 그대로 둘 수 없습니다.
+
+페이지명을 조각으로 쓰는 자리는 이제 모두 `PageNameUrl.encode` 를 부릅니다 — sitemap·랜덤·redirect(`Home`·`Wiki`), PageList, schema.org 페이지 URL(`InterpreterSchema`). `UriUtil.encodeURIComponent` 직접 호출은 페이지명이 아닌 것에만 남습니다 — `InterpreterSchema` 의 지도 검색어(Google·Naver·Kakao)가 그것입니다. 2026-09-15 전에는 페이지 화면의 `<link rel="canonical">` 과 `og:url` 이 `URLEncoder` + `%20` 형태여서 `()` 를 `%28%29` 로 적었고, 렌더된 링크(`()` 그대로)와 정규 URL 이 또 갈라져 있었습니다.

@@ -2,7 +2,7 @@ package controllers
 
 import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.UriUtil
+import logics.wikis.PageNameUrl
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.SiteLogic
@@ -48,7 +48,7 @@ class Home @Inject() (
     implicit val site: Site = SiteLogic.get(request.host)
     val contextSite: ContextSite = ContextSite()
     val name = contextSite.seqPageByPermission.random().name
-    Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(name), 0, "")).flashing(request.flash)
+    Redirect(routes.Wiki.view(PageNameUrl.encode(name), 0, "")).flashing(request.flash)
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
@@ -94,7 +94,7 @@ class Home @Inject() (
       }
       .take(SitemapMaxUrls)
       .map { page =>
-        val loc = s"https://$host/w/${UriUtil.encodeURIComponent(page.name)}".escapeXml()
+        val loc = s"https://$host/w/${PageNameUrl.encode(page.name)}".escapeXml()
         val lastmod = page.dateTime.toLocalDate.toString.escapeXml()
         s"""  <url>
            |    <loc>$loc</loc>

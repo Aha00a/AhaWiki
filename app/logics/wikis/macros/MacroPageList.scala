@@ -1,7 +1,7 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
-import com.aha00a.commons.utils.UriUtil
+import logics.wikis.PageNameUrl
 import models.ContextWikiPage
 
 object MacroPageList extends TraitMacro {
@@ -15,7 +15,7 @@ object MacroPageList extends TraitMacro {
       .append("</tr></thead><tbody>")
 
     wikiContext.seqPageByPermission.foreach { page =>
-      val pageHref = s"/w/${UriUtil.encodeURIComponent(page.name)}"
+      val pageHref = s"/w/${PageNameUrl.encode(page.name)}"
       val diffHref = s"$pageHref?action=diff&after=${page.revision}"
 
       sb.append("<tr><td><strong><a href=\"")

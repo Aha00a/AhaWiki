@@ -232,7 +232,7 @@ object InterpreterSchema extends TraitInterpreter {
 
     val pageNameSet: Set[String] = wikiContext.setPageNameByPermission
     val baseUrl: Option[String] = Option(wikiContext.requestWrapper.host).filter(_.isNotNullOrEmpty).map(host => s"https://$host")
-    val pageUrl: Option[String] = baseUrl.map(base => s"$base/w/${UriUtil.encodeURIComponent(wikiContext.name)}")
+    val pageUrl: Option[String] = baseUrl.map(base => s"$base/w/${logics.wikis.PageNameUrl.encode(wikiContext.name)}")
 
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
 //        <h5>

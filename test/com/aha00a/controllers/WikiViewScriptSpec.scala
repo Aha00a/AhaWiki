@@ -71,5 +71,11 @@ class WikiViewScriptSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
     "show a missing page's name as text, not run it as markup" in {
       view("%5B%5BHtml(%3Cb%3Einjected%3C%2Fb%3E)%5D%5D") must not include "<b>injected</b>"
     }
+
+    "give the canonical URL the same page-name form the wiki's links use" in {
+      val html = view("Foo%20(bar)")
+      html must include ("""<link rel="canonical" href="https://view-script.test/w/Foo%20(bar)" />""")
+      html must not include "%28bar%29"
+    }
   }
 }

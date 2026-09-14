@@ -7,7 +7,7 @@ import org.apache.pekko.stream.scaladsl.{Flow, Sink, Source}
 import org.apache.pekko.stream.{Materializer, OverflowStrategy}
 import com.aha00a.commons.Implicits._
 import com.aha00a.commons.utils.BooleanUtil
-import com.aha00a.commons.utils.UriUtil
+
 import com.aha00a.play.Implicits._
 import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
@@ -305,7 +305,7 @@ controllerComponents: ControllerComponents,
           val redirectFromEditLink = s"/w/${PageNameUrl.encode(page.name)}?action=edit"
           val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name.escapeHtml()}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
-          Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(directive), 0, "")).flashing("success" -> newMessage)
+          Redirect(routes.Wiki.view(PageNameUrl.encode(directive), 0, "")).flashing("success" -> newMessage)
         case None =>
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = wikiContext.seqPageByPermission
