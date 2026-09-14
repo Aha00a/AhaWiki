@@ -37,7 +37,7 @@
  1. `[[Image(...)]]`
  1. `[[Attachment(...)]]`
 
-이미지가 없으면 `NULL`로 저장한다. API(`pagePreview`, `links`)는 빈 문자열을 돌려주고, 화면 쪽 스크립트와 `og:image` 가 `attachmentFallback.svg` 를 대신 쓴다.
+이미지가 없으면 `NULL`로 저장한다. API(`pagePreview`, `links`)는 빈 문자열을 돌려주고, 화면 쪽 스크립트가 `attachmentFallback.svg` 를 대신 쓴다. `og:image`·`twitter:image` 는 대표 이미지와 무관하게 언제나 `attachmentFallback.svg` 다(`_baseSkeleton.scala.html`) — `PageMeta.image` 는 뷰로 넘어가지 않아, 대표 이미지가 있어도 소셜 미리보기에는 쓰이지 않는다.
 
 == Read Paths
 
