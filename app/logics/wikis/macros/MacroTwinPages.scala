@@ -48,7 +48,8 @@ object MacroTwinPages extends TraitMacro {
     anonymousCanRead: Site => Boolean,
   ): Seq[TwinPage] = {
     sites.flatMap { targetSite =>
-      if (targetSite.seq == currentSite.seq || !pageExists(targetSite) || !anonymousCanRead(targetSite)) {
+      // A site with no mainDomain has no address to link to -- url() would build `https:///w/...`.
+      if (targetSite.seq == currentSite.seq || targetSite.mainDomain.isEmpty || !pageExists(targetSite) || !anonymousCanRead(targetSite)) {
         None
       } else {
         Some(TwinPage(targetSite, pageName))

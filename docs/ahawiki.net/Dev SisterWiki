@@ -20,6 +20,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * 현재 site는 후보에서 제외한다.
  * 대상 site에 같은 이름의 최신 문서가 있어야 한다.
  * 대상 문서는 anonymous user가 읽을 수 있는 경우에만 표시한다.
+ * `mainDomain` 이 비어 있는 site 는 링크할 주소가 없으므로 건너뛴다 — 2026-09-15 전에는 `https:///w/...` 로 렌더됐다.
  * 후보가 없으면 아무 HTML도 출력하지 않는다.
  * 출력은 `Site.abbr:PageName` 텍스트와 대상 site의 `mainDomain` 기반 URL을 가진 목록으로 렌더링한다.
 

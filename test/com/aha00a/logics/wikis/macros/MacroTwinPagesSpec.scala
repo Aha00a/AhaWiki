@@ -22,5 +22,21 @@ class MacroTwinPagesSpec extends AnyFreeSpec {
 
       assert(result.map(twinPage => (twinPage.site.seq, twinPage.pageName)) === Seq((publicTwinSite.seq, "Foo")))
     }
+
+    "skips a site with no mainDomain, which has no address to link to" in {
+      val currentSite = Site(1, "Current", "CUR", "current.example")
+      val noDomainSite = Site(2, "NoDomain", "ND", "")
+
+      val result = MacroTwinPages.collectTwinPages(
+        pageName = "Foo",
+        sites = Seq(currentSite, noDomainSite),
+        currentSite = currentSite,
+      )(
+        pageExists = _ => true,
+        anonymousCanRead = _ => true,
+      )
+
+      assert(result.isEmpty)
+    }
   }
 }
