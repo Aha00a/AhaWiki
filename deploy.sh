@@ -18,6 +18,12 @@ HEALTH_HOST="${AHAWIKI_HEALTH_HOST:-}"
 ROOT="${AHAWIKI_REMOTE_ROOT:-/opt/ahawiki}"
 SERVICE_USER="${AHAWIKI_SERVICE_USER:-ahawiki}"
 KEEP_RELEASES="${AHAWIKI_KEEP_RELEASES:-3}"
+# How long to wait for a restarted instance to answer /hc, as a count of 3-second polls. A cold
+# JVM + Play start binds the port only after module init and the first cache warmup, which on a
+# loaded server with the other instance also starting has taken past three minutes; 90s (the old
+# 30) timed out on a start that was fine, and the deploy stopped with one instance still on the
+# old release. 60 -> 180s. Raise it with AHAWIKI_HEALTH_TRIES on a slower box.
+HEALTH_TRIES="${AHAWIKI_HEALTH_TRIES:-60}"
 read -r -a PORTS <<< "${AHAWIKI_PORTS:-10001 10000}"
 # Falls back to the host the health check already uses, so forgetting the variable costs
 # coverage rather than the check itself. Left empty this loop runs zero times, reports nothing,
@@ -76,7 +82,7 @@ for p in "${PORTS[@]}"; do
   echo "  restarting $p"
   ssh "$HOST" "sudo -n systemctl restart ahawiki@$p"
   ok=0
-  for i in $(seq 1 30); do
+  for i in $(seq 1 "$HEALTH_TRIES"); do
     sleep 3
     # /hc rather than a wiki page. It runs SELECT 1 and checks free disk, so it answers for the
     # things a restart can break, and it needs no Host header because it does not match a site.
