@@ -43,9 +43,6 @@ class ApiUserNickname @Inject()(
       .orElse(request.body.asFormUrlEncoded.flatMap(_.get(name).flatMap(_.headOption)))
       .map(_.trim)
 
-  private def withLoginUser(block: User.SessionUser => Result)(implicit request: RequestHeader): Result =
-    SessionLogic.getUser(request).fold(JsonError(Unauthorized, "Login required."))(block)
-
   def accountNicknameRequests: Action[AnyContent] = Action { implicit request =>
     withLoginUser { sessionUser =>
       database.withConnection { implicit connection =>

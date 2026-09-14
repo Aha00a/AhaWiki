@@ -1,6 +1,8 @@
 package controllers
 
 import io.circe.Json
+import logics.SessionLogic
+import models.tables.User
 import play.api.mvc._
 
 /**
@@ -17,6 +19,14 @@ trait JsonResults extends BaseController {
 
   def JsonError(status: Status, message: String): Result =
     JsonResult(status, Json.obj("error" -> Json.fromString(message)))
+
+  /**
+   * Run the block as the logged-in user, or answer 401 with the JSON error envelope.
+   *
+   * `ApiApiKey` and `ApiUserNickname` carried a byte-identical private copy of this.
+   */
+  def withLoginUser(block: User.SessionUser => Result)(implicit request: RequestHeader): Result =
+    SessionLogic.getUser(request).fold(JsonError(Unauthorized, "Login required."))(block)
 
   /**
    * The envelope every paged admin list answers with.

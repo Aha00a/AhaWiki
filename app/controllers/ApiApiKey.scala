@@ -1,7 +1,6 @@
 package controllers
 
 import io.circe.Json
-import logics.SessionLogic
 import models.tables.User
 import models.tables.UserApiKey
 import play.api.db.Database
@@ -44,9 +43,6 @@ class ApiApiKey @Inject()(
       .map(_.trim)
       .getOrElse("")
   }
-
-  private def withLoginUser(block: User.SessionUser => Result)(implicit request: RequestHeader): Result =
-    SessionLogic.getUser(request).fold(JsonError(Unauthorized, "Login required."))(block)
 
   def accountApiKeys: Action[AnyContent] = Action { implicit request =>
     withLoginUser { user =>
