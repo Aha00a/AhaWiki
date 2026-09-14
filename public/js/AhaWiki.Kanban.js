@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             alert(message);
         }
     };
-    var showKanbanConflictToast = function () {
+    var showKanbanConflictToast = function (message) {
         try {
             var body = typeof document !== 'undefined' && document.body;
             if (!body) { return; }
@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
             toast.setAttribute('role', 'alert');
             var msg = document.createElement('span');
             msg.className = 'kanban-conflict-toast-message';
-            msg.textContent = 'Page was modified by another session. Changes could not be saved. Reload to see the latest version.';
+            msg.textContent = message || 'Page was modified by another session. Changes could not be saved. Reload to see the latest version.';
             var closeBtn = document.createElement('button');
             closeBtn.type = 'button';
             closeBtn.className = 'kanban-conflict-toast-close';
@@ -234,26 +234,44 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         return result;
     };
+    // A page's #! lines come off before anything is rendered (PageContent), so the line numbers a
+    // page is drawn with start after them, while a save counts from the top of the text.
+    var countPageHeaderLines = function (lines) {
+        var count = 0;
+        while (count < lines.length && /^#!/.test(lines[count] || '')) { count++; }
+        return count;
+    };
     var findKanbanBlockInRaw = function (rawText, hintLineStart) {
         var lines = (rawText || '').split(/\r?\n/);
         var blocks = [];
         var i, j;
-        for (i = 0; i < lines.length; i++) {
-            var trimmed = (lines[i] || '').trim();
-            var isWholePageShebang = (i === 0) && /^#!kanban(\s|$)/i.test(trimmed);
-            var isEmbeddedShebang = /^\[\[\[#!kanban(\s|$)/i.test(trimmed);
-            if (!isWholePageShebang && !isEmbeddedShebang) { continue; }
+        // A whole-page board is the page's own interpreter: the first #! line that is not read,
+        // write, redirect or var, as Interpreters picks it. It runs from the line after the last
+        // #! line to the end, because the server hands InterpreterKanban every line (until
+        // 2026-09-10 it stopped at a ]]] line, so a code block in a card description cut it short).
+        // Until 2026-09-15 only a first line of #!Kanban counted, and a board page that opened with
+        // #!read was not found at all.
+        var headerLineCount = countPageHeaderLines(lines);
+        for (i = 0; i < headerLineCount; i++) {
+            var directive = lines[i].slice(2).trim();
+            if (/^(read|write|redirect)/.test(directive) || /^var(\s|$)/.test(directive)) { continue; }
+            if (/^kanban(\s|$)/i.test(directive)) {
+                return {
+                    interpreterLineStart: headerLineCount + 1,
+                    lineEnd: lines.length + 1,
+                    contentText: lines.slice(headerLineCount).join('\n')
+                };
+            }
+            break;
+        }
+        for (i = headerLineCount; i < lines.length; i++) {
+            if (!/^\[\[\[#!kanban(\s|$)/i.test((lines[i] || '').trim())) { continue; }
             var contentStart1 = i + 2;
             var blockEnd1 = lines.length + 1;
-            // A whole-page board is the page's own interpreter and runs to the end: the server
-            // hands InterpreterKanban every line. Only an embedded board ends at a ]]] line, the
-            // first after its opener, because ExtractConvertInjectInterpreter does not count
-            // nesting either. Until 2026-09-10 a whole-page board stopped at a ]]] line too, so a
-            // code block in a card description cut the board short on every remote update.
-            if (isEmbeddedShebang) {
-                for (j = i + 1; j < lines.length; j++) {
-                    if (/^\]\]\]/.test(lines[j])) { blockEnd1 = j + 1; break; }
-                }
+            // An embedded board ends at a ]]] line, the first after its opener, because
+            // ExtractConvertInjectInterpreter does not count nesting either.
+            for (j = i + 1; j < lines.length; j++) {
+                if (/^\]\]\]/.test(lines[j])) { blockEnd1 = j + 1; break; }
             }
             blocks.push({
                 interpreterLineStart: contentStart1,
@@ -350,6 +368,247 @@ document.addEventListener('DOMContentLoaded', function () {
             columns: merged,
             baseColumns: deepCloneColumns(serverColumns),
             conflictCardIds: conflictCardIds,
+            activeCardServerEntry: activeCardServerEntry
+        };
+    };
+
+    // A save that met a 409 carries changes the server has not seen, made to a board the server
+    // has moved past. They are replayed onto the server's board kind by kind -- lists renamed,
+    // deleted, added or reordered here, then cards added, deleted, edited or moved here -- and
+    // where both sides changed the same thing the server's copy stays, as in a remote update.
+    // Until 2026-09-15 the retry sent the same text again with a fresh revision number, so what
+    // another session had saved in between was overwritten, and lines outside the block too when
+    // its line count had changed. This board's card objects are kept wherever a card survives,
+    // because an open card modal holds one; the open card itself takes the server's fields through
+    // the modal, as a remote update gives them. test/kanban.rebase.test.mjs pins the cases, and
+    // checks the two with a known answer over random boards: a server that changed nothing gives
+    // back this board, and a board that changed nothing gives back the server's.
+    var rebaseKanbanColumns = function (baseColumns, localColumns, serverColumns, activeCardId) {
+        var baseIdx = buildCardIndex(baseColumns);
+        var localIdx = buildCardIndex(localColumns);
+        var serverIdx = buildCardIndex(serverColumns);
+        var conflictCardIds = [];
+        var dropped = [];
+        var activeCardServerEntry = null;
+        var has = function (list, value) { return list.indexOf(value) >= 0; };
+        var owns = function (object, key) { return Object.prototype.hasOwnProperty.call(object, key); };
+        var titlesOf = function (cols) { return (cols || []).map(function (column) { return column.title || ''; }); };
+        var idsOf = function (column) { return (column.cards || []).map(function (card) { return card.id; }); };
+        var unique = function (titles) { return titles.every(function (title, index) { return titles.indexOf(title) === index; }); };
+        var sameCard = function (a, b) {
+            return cardDataEqual(a, b) && JSON.stringify(a.comments || []) === JSON.stringify(b.comments || []);
+        };
+        var baseTitles = titlesOf(baseColumns);
+        var localTitles = titlesOf(localColumns);
+        var serverTitles = titlesOf(serverColumns);
+
+        var merged = (serverColumns || []).map(function (column) {
+            return { title: column.title || '', lineNumber: column.lineNumber || 0, cards: (column.cards || []).map(cloneCardData).filter(Boolean) };
+        });
+        // The cards of a list deleted here wait here until their own changes are replayed: one
+        // moved out of the list before it went is still wanted.
+        var orphans = { title: '', lineNumber: 0, cards: [] };
+        var findColumn = function (title) {
+            for (var i = 0; i < merged.length; i++) {
+                if (merged[i].title === title) { return merged[i]; }
+            }
+            return null;
+        };
+
+        var renamed = {};
+        var renamedFrom = {};
+        if (!unique(baseTitles) || !unique(localTitles) || !unique(serverTitles)) {
+            // Lists are told apart by title; where one repeats, which is which would be a guess.
+            if (baseTitles.join('\n') !== localTitles.join('\n')) { dropped.push('lists'); }
+        } else {
+            // A list was renamed here when a title base had is gone and a new one holds its cards.
+            var goneHere = baseTitles.filter(function (title) { return !has(localTitles, title); });
+            var newHere = localTitles.filter(function (title) { return !has(baseTitles, title); });
+            goneHere.forEach(function (title) {
+                var baseIds = idsOf(baseColumns[baseTitles.indexOf(title)]);
+                var best = null;
+                var bestOverlap = 0;
+                newHere.forEach(function (candidate) {
+                    if (owns(renamedFrom, candidate)) { return; }
+                    var overlap = idsOf(localColumns[localTitles.indexOf(candidate)]).filter(function (id) { return has(baseIds, id); }).length;
+                    if (overlap > bestOverlap) {
+                        best = candidate;
+                        bestOverlap = overlap;
+                    }
+                });
+                if (!best && goneHere.length === 1 && newHere.length === 1 && baseIds.length === 0) { best = newHere[0]; }
+                if (best) {
+                    renamed[title] = best;
+                    renamedFrom[best] = title;
+                }
+            });
+            Object.keys(renamed).forEach(function (title) {
+                var column = findColumn(title);
+                if (column && !findColumn(renamed[title])) { column.title = renamed[title]; }
+                else { dropped.push('list:rename ' + title); }
+            });
+
+            // A list deleted here goes, unless the server has added or changed a card in it since.
+            goneHere.forEach(function (title) {
+                if (owns(renamed, title)) { return; }
+                var column = findColumn(title);
+                if (!column) { return; }
+                var baseIds = idsOf(baseColumns[baseTitles.indexOf(title)]);
+                var touched = column.cards.some(function (card) {
+                    var baseEntry = baseIdx.byId[card.id];
+                    return !has(baseIds, card.id) || !baseEntry || !sameCard(card, baseEntry.card);
+                });
+                if (touched) {
+                    dropped.push('list:delete ' + title);
+                    return;
+                }
+                merged.splice(merged.indexOf(column), 1);
+                orphans.cards = orphans.cards.concat(column.cards);
+            });
+
+            // A list added here goes after the list before it here, if the server has that one.
+            newHere.forEach(function (title) {
+                if (owns(renamedFrom, title) || findColumn(title)) { return; }
+                var index = localTitles.indexOf(title);
+                var after = null;
+                for (var k = index - 1; k >= 0 && !after; k--) { after = findColumn(localTitles[k]); }
+                merged.splice(after ? merged.indexOf(after) + 1 : 0, 0, { title: title, lineNumber: 0, cards: [] });
+            });
+
+            // Unless the server reordered the lists both sides have, this board's order stands, and a
+            // list only the server has stays after the one it follows there.
+            var nameHere = function (title) { return owns(renamed, title) ? renamed[title] : title; };
+            var both = baseTitles.map(nameHere).filter(function (title) { return has(localTitles, title) && findColumn(title); });
+            var orderOf = function (titles) { return titles.filter(function (title) { return has(both, title); }).join('\n'); };
+            if (orderOf(merged.map(function (column) { return column.title; })) === orderOf(baseTitles.map(nameHere))) {
+                var ordered = localTitles.map(findColumn).filter(Boolean);
+                merged.forEach(function (column, index) {
+                    if (has(ordered, column)) { return; }
+                    var before = index > 0 ? ordered.indexOf(merged[index - 1]) : -1;
+                    ordered.splice(before + 1, 0, column);
+                });
+                merged = ordered;
+            }
+        }
+        var localTitleOf = function (title) { return owns(renamed, title) ? renamed[title] : title; };
+        var sameTitle = function (title) { return title; };
+
+        var locate = function (id) {
+            var places = merged.concat([orphans]);
+            for (var ci = 0; ci < places.length; ci++) {
+                for (var k = 0; k < places[ci].cards.length; k++) {
+                    if (places[ci].cards[k].id === id) { return { column: places[ci], index: k }; }
+                }
+            }
+            return null;
+        };
+        var removeCard = function (id) {
+            var at = locate(id);
+            if (at) { at.column.cards.splice(at.index, 1); }
+            return at;
+        };
+        // After the card that comes before it here, if the list there has that card; first if it
+        // is first here, last otherwise.
+        var placeAsHere = function (card, entry) {
+            var column = findColumn(entry.column.title || '');
+            if (!column) { return false; }
+            for (var k = entry.cardIndex - 1; k >= 0; k--) {
+                var previousId = entry.column.cards[k].id;
+                for (var m = 0; m < column.cards.length; m++) {
+                    if (column.cards[m].id === previousId) {
+                        column.cards.splice(m + 1, 0, card);
+                        return true;
+                    }
+                }
+            }
+            if (entry.cardIndex === 0) { column.cards.unshift(card); } else { column.cards.push(card); }
+            return true;
+        };
+        // Where a card sits, apart from shuffles around it: its list, and the card before it among
+        // the cards the other board has too.
+        var placeOf = function (index, id, other, titleOf) {
+            var entry = index.byId[id];
+            var previous = '';
+            for (var k = entry.cardIndex - 1; k >= 0; k--) {
+                var candidate = entry.column.cards[k].id;
+                if (candidate && other.byId[candidate]) {
+                    previous = candidate;
+                    break;
+                }
+            }
+            return titleOf(entry.column.title || '') + '\n' + previous;
+        };
+        var movedHere = function (id) { return placeOf(baseIdx, id, localIdx, localTitleOf) !== placeOf(localIdx, id, baseIdx, sameTitle); };
+        var movedThere = function (id) { return placeOf(baseIdx, id, serverIdx, sameTitle) !== placeOf(serverIdx, id, baseIdx, sameTitle); };
+
+        var ids = localIdx.cards.map(function (entry) { return entry.id; });
+        baseIdx.cards.forEach(function (entry) {
+            if (!localIdx.byId[entry.id]) { ids.push(entry.id); }
+        });
+        ids.forEach(function (id) {
+            var baseEntry = baseIdx.byId[id];
+            var localEntry = localIdx.byId[id];
+            var serverEntry = serverIdx.byId[id];
+            if (localEntry && !baseEntry && !serverEntry) {
+                if (!placeAsHere(localEntry.card, localEntry)) { dropped.push('card:add ' + id); }
+                return;
+            }
+            if (!localEntry) {
+                if (!serverEntry) { return; }
+                if (sameCard(serverEntry.card, baseEntry.card)) {
+                    removeCard(id);
+                } else {
+                    conflictCardIds.push(id);
+                    dropped.push('card:delete ' + id);
+                }
+                return;
+            }
+            if (!serverEntry) {
+                if (baseEntry && !sameCard(localEntry.card, baseEntry.card)) { dropped.push('card:edit ' + id); }
+                return;
+            }
+            var at = locate(id);
+            if (!at) {
+                dropped.push('card:edit ' + id);
+                return;
+            }
+            var card = localEntry.card;
+            var changedHere = !baseEntry || !cardDataEqual(card, baseEntry.card);
+            var changedThere = !baseEntry || !cardDataEqual(serverEntry.card, baseEntry.card);
+            if (id === activeCardId) {
+                if (changedThere) { activeCardServerEntry = serverEntry; }
+            } else if (changedThere) {
+                if (changedHere) {
+                    conflictCardIds.push(id);
+                    card.__remoteConflict = true;
+                }
+                card.text = serverEntry.card.text || '';
+                card.classNames = (serverEntry.card.classNames || []).slice();
+                card.description = JSON.parse(JSON.stringify(serverEntry.card.description || []));
+                card.properties = JSON.parse(JSON.stringify(serverEntry.card.properties || {}));
+            }
+            card.comments = mergeComments(serverEntry.card.comments, card.comments);
+            at.column.cards[at.index] = card;
+            if (baseEntry && movedHere(id)) {
+                if (movedThere(id)) {
+                    dropped.push('card:move ' + id);
+                } else {
+                    removeCard(id);
+                    if (!placeAsHere(card, localEntry)) {
+                        at.column.cards.splice(at.index, 0, card);
+                        dropped.push('card:move ' + id);
+                    }
+                }
+            }
+        });
+        orphans.cards.forEach(function (card) {
+            if (localIdx.byId[card.id]) { dropped.push('card:move ' + card.id); }
+        });
+
+        return {
+            columns: merged,
+            conflictCardIds: conflictCardIds,
+            dropped: dropped,
             activeCardServerEntry: activeCardServerEntry
         };
     };
@@ -816,7 +1075,11 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta, retryCount) {
+    // A 409 means the page moved on since this board last read it. replayOntoServer reads it
+    // again, replays the unsaved changes onto it and hands back the text to send, or null when
+    // nothing is left to send. Without one there is nothing that is safe to send again, so a
+    // 409 ends the save.
+    var requestSaveKanban = function (pageName, lineStart, lineEnd, content, actionType, actionMeta, retryCount, replayOntoServer) {
         if (!pageName) {
             return Promise.resolve(null);
         }
@@ -825,7 +1088,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if ((!Number.isFinite(knownRevision) || knownRevision <= 0) && attempt < 1) {
             return fetchLatestRevision(pageName).then(function (latestRevision) {
                 setCurrentRevision(latestRevision);
-                return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt);
+                return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt, replayOntoServer);
             });
         }
         return Promise.all([
@@ -860,11 +1123,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }).then(function (response) {
                     if (!response.ok) {
                         if (response.status === 409) {
-                            if (attempt < 3) {
-                                return fetchLatestRevision(pageName).then(function (latestRevision) {
-                                    setCurrentRevision(latestRevision);
-                                    return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt + 1);
-                                });
+                            if (attempt < 3 && typeof replayOntoServer === 'function') {
+                                return fetchLatestRevision(pageName)
+                                    .then(function (latestRevision) {
+                                        setCurrentRevision(latestRevision);
+                                        return replayOntoServer(latestRevision);
+                                    })
+                                    .then(function (next) {
+                                        if (!next) { return { unchanged: true }; }
+                                        return requestSaveKanban(pageName, next.lineStart, next.lineEnd, next.content, actionType, actionMeta, attempt + 1, replayOntoServer);
+                                    });
                             }
                             showKanbanConflictToast();
                             throw new Error('Conflict: save failed after retries.');
@@ -881,6 +1149,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (typeof window !== 'undefined' && window.__AhaWikiKanbanTestHooks) {
         window.__AhaWikiKanbanTestHooks.requestSaveKanban = requestSaveKanban;
+        window.__AhaWikiKanbanTestHooks.rebaseKanbanColumns = rebaseKanbanColumns;
+        window.__AhaWikiKanbanTestHooks.findKanbanBlockInRaw = findKanbanBlockInRaw;
     }
 
     var shiftMetaLineRangeAfterInsert = function (anchorWrapper, insertedLineNumber, delta) {
@@ -2453,26 +2723,124 @@ document.addEventListener('DOMContentLoaded', function () {
                 return lines.join('\n');
             }).join('\n');
         };
+        // True once the board's place comes from a read of the page, which counts lines from the
+        // top of the text as a save does. The numbers the page was drawn with start after its #!
+        // lines instead.
+        var placedOnRaw = false;
+        // This board's block in a read of the page. Until the first read its numbers start after
+        // the page's #! lines, so the hint moves down by that many.
+        var findThisBoard = function (rawText) {
+            var hint = interpreterStartLine + (placedOnRaw ? 0 : countPageHeaderLines((rawText || '').split(/\r?\n/)));
+            return findKanbanBlockInRaw(rawText, hint);
+        };
+        var readServerBoard = function () {
+            return fetch('/w/' + encodeURIComponent(pageName) + '?action=raw', { credentials: 'same-origin' })
+                .then(function (response) {
+                    if (!response.ok) { throw new Error('fetch raw failed: ' + response.status); }
+                    return response.text();
+                })
+                .then(function (rawText) {
+                    var block = findThisBoard(rawText);
+                    if (!block) { return null; }
+                    var activeOverlay = getOpenedCardOverlay();
+                    return {
+                        block: block,
+                        serverColumns: parseKanbanText(block.contentText, block.interpreterLineStart),
+                        activeCardId: activeOverlay ? (activeOverlay.getAttribute('data-card-id') || '') : ''
+                    };
+                });
+        };
+        var adoptServerBlock = function (block, revision) {
+            interpreterStartLine = block.interpreterLineStart;
+            currentKanbanLineCount = getLineCountForText(block.contentText);
+            root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
+            if (metaWrapper) {
+                metaWrapper.setAttribute('data-line-start', String(block.interpreterLineStart - (hasShebang ? 1 : 0)));
+                metaWrapper.setAttribute('data-line-end', String(block.lineEnd));
+            }
+            pre.textContent = block.contentText;
+            setCurrentRevision(revision);
+            placedOnRaw = true;
+        };
+        var tellOpenCard = function (activeCardId, serverEntry) {
+            if (!activeCardId || !serverEntry) { return; }
+            try {
+                root.dispatchEvent(new CustomEvent('kanban:card.remoteupdated', {
+                    detail: { cardId: activeCardId, serverCard: serverEntry.card }
+                }));
+            } catch (e) {}
+        };
+        // Replays this board's unsaved changes onto the board the server holds now
+        // (rebaseKanbanColumns) and takes the block's place and revision from that read.
+        var rebaseOntoServer = function (revision) {
+            return readServerBoard()
+                .then(function (read) {
+                    if (!read) { throw new Error('the board is not on the page any more'); }
+                    var result = rebaseKanbanColumns(baseColumns, columns, read.serverColumns, read.activeCardId);
+                    columns = result.columns;
+                    baseColumns = deepCloneColumns(read.serverColumns);
+                    adoptServerBlock(read.block, revision);
+                    normalizeLineNumbers();
+                    rerenderColumns();
+                    tellOpenCard(read.activeCardId, result.activeCardServerEntry);
+                    return { serverText: read.block.contentText, collisions: result.conflictCardIds.concat(result.dropped) };
+                })
+                .catch(function (error) {
+                    showKanbanConflictToast('The board could not be saved: reading the page for it failed. Reload to see the latest version.');
+                    throw error;
+                });
+        };
+        // The first save of a visit reads the page before it writes, as a 409 does: the numbers the
+        // page was drawn with start after its #! lines, and the board may have moved since. Until
+        // 2026-09-15 it saved at the drawn numbers, which on a page opening with #!var landed that
+        // many lines too high until a remote update came in.
         var persistColumns = function (actionType, actionMeta) {
             if (!isWritable) {
                 return Promise.reject(new Error('Kanban is read-only.'));
             }
-            var content = serializeColumns();
-            var replacementLineCount = getLineCountForText(content);
-            var requestLineEnd = interpreterStartLine + Math.max(0, currentKanbanLineCount);
-            return requestSaveKanban(pageName, interpreterStartLine, requestLineEnd, content, actionType, actionMeta)
+            var request = null;
+            var snapshot = function () {
+                request = {
+                    lineStart: interpreterStartLine,
+                    lineEnd: interpreterStartLine + Math.max(0, currentKanbanLineCount),
+                    content: serializeColumns()
+                };
+                return request;
+            };
+            var collisions = [];
+            var replayOntoServer = function (revision) {
+                return rebaseOntoServer(revision).then(function (rebased) {
+                    collisions = collisions.concat(rebased.collisions);
+                    var next = snapshot();
+                    return next.content === rebased.serverText ? null : next;
+                });
+            };
+            var first = placedOnRaw || !pageName
+                ? Promise.resolve(snapshot())
+                : fetchLatestRevision(pageName).then(replayOntoServer);
+            return first
+                .then(function (next) {
+                    if (!next) { return { unchanged: true }; }
+                    return requestSaveKanban(pageName, next.lineStart, next.lineEnd, next.content, actionType, actionMeta, 0, replayOntoServer);
+                })
                 .then(function (result) {
+                    if (collisions.length > 0) {
+                        showKanbanConflictToast('Another session changed this board at the same time. Where you both changed the same thing, its version was kept.');
+                    }
+                    if (result && result.unchanged) {
+                        return result;
+                    }
                     var nextLineEnd = Number(result && result.lineEnd);
-                    if (metaWrapper && Number.isFinite(nextLineEnd) && nextLineEnd >= interpreterStartLine) {
-                        var delta = nextLineEnd - requestLineEnd;
+                    if (metaWrapper && Number.isFinite(nextLineEnd) && nextLineEnd >= request.lineStart) {
+                        var delta = nextLineEnd - request.lineEnd;
                         if (delta !== 0) {
-                            shiftMetaLineRangeAfterInsert(metaWrapper, requestLineEnd, delta);
+                            shiftMetaLineRangeAfterInsert(metaWrapper, request.lineEnd, delta);
                         }
                         metaWrapper.setAttribute('data-line-end', String(nextLineEnd));
                     }
-                    currentKanbanLineCount = replacementLineCount;
-                    root.setAttribute('data-kanban-line-count', String(replacementLineCount));
-                    pre.textContent = content;
+                    currentKanbanLineCount = getLineCountForText(request.content);
+                    root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
+                    pre.textContent = request.content;
                     columns.forEach(function (column) {
                         (column.cards || []).forEach(function (card) {
                             delete card.__remoteConflict;
@@ -2934,46 +3302,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var applyRemoteKanbanUpdate = function (revision) {
             if (!pageName) { return; }
-            fetch('/w/' + encodeURIComponent(pageName) + '?action=raw', { credentials: 'same-origin' })
-                .then(function (response) {
-                    if (!response.ok) { throw new Error('fetch raw failed: ' + response.status); }
-                    return response.text();
-                })
-                .then(function (rawText) {
-                    var block = findKanbanBlockInRaw(rawText, interpreterStartLine);
-                    if (!block) {
+            readServerBoard()
+                .then(function (read) {
+                    if (!read) {
                         console.warn('[Kanban] remote update: kanban block not found');
                         return;
                     }
-                    var serverColumns = parseKanbanText(block.contentText, block.interpreterLineStart);
-                    var activeOverlay = getOpenedCardOverlay();
-                    var activeCardId = activeOverlay ? (activeOverlay.getAttribute('data-card-id') || '') : '';
-                    var result = mergeRemoteKanbanColumns(baseColumns, columns, serverColumns, activeCardId);
+                    var result = mergeRemoteKanbanColumns(baseColumns, columns, read.serverColumns, read.activeCardId);
                     var conflictCardIds = result.conflictCardIds;
-                    var activeCardServerEntry = result.activeCardServerEntry;
 
                     columns = result.columns;
                     baseColumns = result.baseColumns;
-                    interpreterStartLine = block.interpreterLineStart;
-                    currentKanbanLineCount = getLineCountForText(block.contentText);
-                    root.setAttribute('data-kanban-line-count', String(currentKanbanLineCount));
-                    if (metaWrapper) {
-                        metaWrapper.setAttribute('data-line-start', String(block.interpreterLineStart - (hasShebang ? 1 : 0)));
-                        metaWrapper.setAttribute('data-line-end', String(block.lineEnd));
-                    }
-                    pre.textContent = block.contentText;
-                    setCurrentRevision(revision);
+                    adoptServerBlock(read.block, revision);
                     normalizeLineNumbers();
                     rerenderColumns();
 
                     // 모달에 카드 업데이트 이벤트 전달 (title/description/properties를 모달이 직접 처리)
-                    if (activeCardId && activeCardServerEntry) {
-                        try {
-                            root.dispatchEvent(new CustomEvent('kanban:card.remoteupdated', {
-                                detail: { cardId: activeCardId, serverCard: activeCardServerEntry.card }
-                            }));
-                        } catch (e) {}
-                    }
+                    tellOpenCard(read.activeCardId, result.activeCardServerEntry);
 
                     if (conflictCardIds.length > 0) {
                         console.info('[Kanban] remote update applied with ' + conflictCardIds.length + ' conflict(s) — server wins', conflictCardIds);

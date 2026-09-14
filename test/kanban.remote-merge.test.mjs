@@ -7,46 +7,12 @@
 // with the stale one, so it shows what was wrong and not only what is right now.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import vm from 'node:vm';
+import { loadKanbanHooks } from './lib/kanban-board.mjs';
 
-const source = fs.readFileSync('public/js/AhaWiki.Kanban.js', 'utf8');
-
-// The merge lives inside the script's DOMContentLoaded closure, so the script is run in a
-// sandbox and the function taken from the hooks it publishes for tests. This is the least
-// that lets the script load: no board is built, because querySelectorAll finds none. Four
-// other tests carry their own boot, each shaped for what it drives (a fake DOM, the location,
-// the alerts); one boot serving all five shapes was not attempted here.
+// The merge lives inside the script's DOMContentLoaded closure, so it is taken from the hooks the
+// script publishes for tests, loaded with no board on the page (lib/kanban-board.mjs).
 function loadMerge() {
-    return loadHooks().mergeRemoteKanbanColumns;
-}
-
-function loadHooks() {
-    let onReady = null;
-    const sandbox = {
-        window: {
-            location: { hash: '', pathname: '/w/Test', search: '', reload() {} },
-            history: { pushState() {} },
-            requestAnimationFrame() {},
-            addEventListener() {},
-            alert() {},
-        },
-        document: {
-            addEventListener: (event, callback) => { if (event === 'DOMContentLoaded') onReady = callback; },
-            querySelectorAll: () => [],
-            querySelector: selector => (selector === '.revision a' ? { textContent: '1' } : null),
-        },
-        console,
-        alert() {},
-        fetch: () => Promise.reject(new Error('this test makes no requests')),
-        CustomEvent: class {},
-        CSS: { escape: value => String(value) },
-        URLSearchParams,
-    };
-    vm.createContext(sandbox);
-    vm.runInContext(source, sandbox);
-    onReady();
-    return sandbox.window.__AhaWikiKanbanTestHooks;
+    return loadKanbanHooks().hooks.mergeRemoteKanbanColumns;
 }
 
 const card = (id, text) => ({ id, text, classNames: [], lineNumber: 0, description: [], comments: [], properties: {} });
@@ -121,7 +87,7 @@ test('the base handed back is the server state, as its own copy', () => {
 // does not count nesting either. Until 2026-09-10 a whole-page board stopped at any ]]] line, so
 // a code block in a card description hid every card after it from the merge.
 test('a whole-page board runs to the end of the page, past a code block in a description', () => {
-    const find = loadHooks().findKanbanBlockInRaw;
+    const find = loadKanbanHooks().hooks.findKanbanBlockInRaw;
     const raw = ['#!Kanban', '=== Todo', '==== A ==== #a', '===== Description', '[[[#!Vim', 'code', ']]]', '==== B ==== #b'].join('\n');
     const block = find(raw, 2);
     assert.equal(block.interpreterLineStart, 2);
@@ -130,7 +96,7 @@ test('a whole-page board runs to the end of the page, past a code block in a des
 });
 
 test('an embedded board still ends at the first ]]] after its opener, where the server ends it', () => {
-    const find = loadHooks().findKanbanBlockInRaw;
+    const find = loadKanbanHooks().hooks.findKanbanBlockInRaw;
     const raw = ['= Page', '[[[#!Kanban', '=== Todo', '==== A ==== #a', ']]]', 'after the board'].join('\n');
     const block = find(raw, 3);
     assert.equal(block.interpreterLineStart, 3);
