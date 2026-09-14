@@ -99,19 +99,33 @@ object UserMerge {
       .executeUpdate()
   }
 
-  private def mergeUserSiteIfPresent(canonicalUser: Long, duplicateUser: Long)(implicit connection: Connection): Unit = {
-    if (hasColumn("UserSite", "user") && hasColumn("UserSite", "site")) {
-      val canonicalSites = SQL"SELECT site FROM UserSite WHERE `user` = $canonicalUser"
+  // A table with a unique (user, site) cannot take a plain `SET user = canonical` when the
+  // duplicate and the canonical share a site -- that collides on the key. So move only the sites
+  // the canonical does not already hold, and drop the duplicate's rows for the rest. UserSite and
+  // SiteAdmin both have such a key (SiteAdmin's is its primary key). Until 2026-09-15 only UserSite
+  // was handled this way, and two users who both administered a site failed the whole merge.
+  private val uniqueUserSiteTables: Seq[String] = Seq("UserSite", "SiteAdmin")
+
+  private def mergeUniqueUserSiteRows(table: String, canonicalUser: Long, duplicateUser: Long)(implicit connection: Connection): Unit = {
+    if (hasColumn(table, "user") && hasColumn(table, "site")) {
+      val quoted = quoteIdentifier(table)
+      val canonicalSites = SQL(s"SELECT site FROM $quoted WHERE `user` = {user}")
+        .on("user" -> canonicalUser)
         .as(anorm.SqlParser.long("site").*)
         .toSet
-      val duplicateSites = SQL"SELECT site FROM UserSite WHERE `user` = $duplicateUser"
+      val duplicateSites = SQL(s"SELECT site FROM $quoted WHERE `user` = {user}")
+        .on("user" -> duplicateUser)
         .as(anorm.SqlParser.long("site").*)
 
       duplicateSites.foreach { site =>
         if (canonicalSites.contains(site)) {
-          SQL"DELETE FROM UserSite WHERE `user` = $duplicateUser AND site = $site".executeUpdate()
+          SQL(s"DELETE FROM $quoted WHERE `user` = {user} AND site = {site}")
+            .on("user" -> duplicateUser, "site" -> site)
+            .executeUpdate()
         } else {
-          SQL"UPDATE UserSite SET `user` = $canonicalUser WHERE `user` = $duplicateUser AND site = $site".executeUpdate()
+          SQL(s"UPDATE $quoted SET `user` = {canonicalUser} WHERE `user` = {duplicateUser} AND site = {site}")
+            .on("canonicalUser" -> canonicalUser, "duplicateUser" -> duplicateUser, "site" -> site)
+            .executeUpdate()
         }
       }
     }
@@ -123,9 +137,9 @@ object UserMerge {
     LocalTransaction {
       SQL"UPDATE UserEmail SET isPrimary = false WHERE `user` = $duplicateUser".executeUpdate()
 
-      mergeUserSiteIfPresent(canonicalUser, duplicateUser)
+      uniqueUserSiteTables.foreach(mergeUniqueUserSiteRows(_, canonicalUser, duplicateUser))
       selectUserReferences()
-        .filterNot(_.table == "UserSite")
+        .filterNot(reference => uniqueUserSiteTables.contains(reference.table))
         .foreach(reference => updateUserReference(reference.table, reference.column, canonicalUser, duplicateUser))
 
       if (!UserEmail.hasPrimary(canonicalUser)) {

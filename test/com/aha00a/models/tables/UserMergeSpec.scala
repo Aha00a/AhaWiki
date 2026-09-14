@@ -35,6 +35,35 @@ class UserMergeSpec extends AnyFreeSpec {
         connection.close()
       }
     }
+
+    "keeps one admin row when both users administer the same site" in {
+      Class.forName("org.h2.Driver")
+      val databaseName = s"user_merge_${UUID.randomUUID().toString.replace("-", "")}"
+      val connection = DriverManager.getConnection(s"jdbc:h2:mem:$databaseName;MODE=MySQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1")
+
+      try {
+        setupSchema(connection)
+        implicit val implicitConnection: Connection = connection
+        Seq(
+          "INSERT INTO `User` (seq, nickname) VALUES (1, 'canonical')",
+          "INSERT INTO `User` (seq, nickname) VALUES (2, 'duplicate')",
+          "INSERT INTO Site (seq, name, abbr) VALUES (1, 'SiteA', 'SiteA')",
+          "INSERT INTO Site (seq, name, abbr) VALUES (2, 'SiteB', 'SiteB')",
+          "INSERT INTO SiteAdmin (site, `user`) VALUES (1, 1)",
+          "INSERT INTO SiteAdmin (site, `user`) VALUES (1, 2)",
+          "INSERT INTO SiteAdmin (site, `user`) VALUES (2, 2)",
+        ).foreach(sql => SQL(sql).execute())
+
+        UserMerge.mergeInto(canonicalUser = 1L, duplicateUser = 2L)
+
+        assert(count("`User`", "`seq` = 2") === 0L)
+        assert(count("SiteAdmin", "`user` = 2") === 0L)
+        assert(count("SiteAdmin", "site = 1 AND `user` = 1") === 1L)
+        assert(count("SiteAdmin", "site = 2 AND `user` = 1") === 1L)
+      } finally {
+        connection.close()
+      }
+    }
   }
 
   private def setupSchema(connection: Connection): Unit = {
