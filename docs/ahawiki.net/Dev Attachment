@@ -140,6 +140,7 @@ Content-Type: multipart/form-data
 == 페이지 삭제 시 동작
  * 페이지 삭제 시 해당 페이지의 첨부파일도 S3 및 DB에서 함께 삭제 (cascade)
  * S3는 `Attachment/{siteSeq}/{pageName}/` 프리픽스로 최대 200개 조회하여 삭제
+ * 프리픽스 조회는 이름을 sanitize 한 형태로 돈다. `A B` 와 `A_B` 처럼 sanitize 하면 같아지는 두 이름은 프리픽스가 겹치므로, 지우기 전에 `Attachment.selectObjectKeysHeldByOtherPages` 로 다른 페이지의 살아 있는 행이 아직 쥔 키를 뺀다 — DB 행은 정확한 이름으로 잡혀 겹치지 않으니, 빠지는 것은 프리픽스 조회가 끌어온 남의 키뿐이다. 2026-09-15 전에는 그 키까지 지워, `A B` 를 지우면 `A_B` 의 첨부가 S3 에서 사라졌다. (남의 페이지가 DB 행 없이 S3 에만 남긴 고아 오브젝트가 겹친 프리픽스에 있으면 아직 걸러지지 않는다 — 드문 경우다.)
  * S3 오브젝트를 모두 지운 뒤에야 DB 행을 삭제 표시한다. 순서를 뒤집으면 삭제가 실패했을 때 아무도 가리키지 않는 오브젝트가 남는다.
  * 구현은 `AttachmentLogic.deletePageAttachments` 하나다.
 

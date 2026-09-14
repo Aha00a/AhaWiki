@@ -66,13 +66,20 @@ object AttachmentLogic extends Logging {
     val objectKeysFromS3 = listPageObjectKeys(siteSeq, pageName)
     val objectKeys = (objectKeysFromDb ++ objectKeysFromS3).map(_.trim).filter(_.nonEmpty).distinct
 
+    // listPageObjectKeys lists S3 by the sanitized page prefix, and sanitizing collapses distinct
+    // names onto one prefix -- `A B` and `A_B` both become `A_B/` -- so the listing for one page
+    // catches the other's objects. The DB rows are keyed by the exact page name and never collide,
+    // so this only ever drops a key that came from the S3 listing and belongs to another page.
+    val heldByOtherPages = Attachment.selectObjectKeysHeldByOtherPages(siteSeq, pageName, objectKeys).toSet
+    val objectKeysToDelete = objectKeys.filterNot(heldByOtherPages.contains)
+
     val failedObjectKeys =
       if (!S3Logic.isConfigured(applicationConf)) {
         Seq.empty
       } else {
         val bucket = S3Logic.bucket(applicationConf)
         val amazonS3 = S3Logic.client(applicationConf)
-        objectKeys.flatMap { objectKey =>
+        objectKeysToDelete.flatMap { objectKey =>
           Try(amazonS3.deleteObject(bucket, objectKey)) match {
             case Success(_) => None
             case Failure(error) =>
@@ -84,7 +91,7 @@ object AttachmentLogic extends Logging {
     if (failedObjectKeys.nonEmpty) {
       Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
     } else {
-      objectKeys.foreach(Attachment.markDeleted)
+      objectKeysToDelete.foreach(Attachment.markDeleted)
       Right(())
     }
   }

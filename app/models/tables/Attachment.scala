@@ -152,4 +152,26 @@ object Attachment {
         AND dateDeleted IS NULL
     """.as(str("objectKey").*)
   }
+
+  /**
+   * Of the given keys, the ones a live row of another page on this site still holds.
+   *
+   * A page delete lists S3 by the sanitized page prefix, and sanitizing collapses distinct names
+   * onto one prefix, so `A B`'s listing catches `A_B`'s objects. This is how the caller keeps from
+   * deleting them: a key here belongs to another page and must be left alone.
+   */
+  def selectObjectKeysHeldByOtherPages(siteSeq: Long, pageName: String, objectKeys: Seq[String])(implicit connection: Connection): Seq[String] = {
+    if (objectKeys.isEmpty) {
+      Seq.empty
+    } else {
+      SQL"""
+        SELECT objectKey
+        FROM Attachment
+        WHERE site = $siteSeq
+          AND pageName <> $pageName
+          AND dateDeleted IS NULL
+          AND objectKey IN ($objectKeys)
+      """.as(str("objectKey").*)
+    }
+  }
 }
