@@ -70,8 +70,11 @@ object TestSchema {
           // 을 가리키는 FK 가 그런 경우인데, 그대로 두면 H2 가 Page 에 (site, name) 유니크를
           // 걸어서 같은 페이지의 두 번째 리비전을 넣을 수 없게 된다. 그런 FK 는 건너뛴다.
           if (uniqueKeys.getOrElse(fk.group(3), Set.empty).contains(referenced)) {
+            // group(5) is the referential action (` ON DELETE CASCADE`/`SET NULL`) or empty.
+            // Carried along so the specs' schema deletes the way production does; before
+            // 2026-09-15 it was dropped, and a delete that cascades in production did not here.
             Some(s"ALTER TABLE `${table.group(1)}` ADD CONSTRAINT `${fk.group(1)}` " +
-              s"FOREIGN KEY (${fk.group(2)}) REFERENCES `${fk.group(3)}` (${fk.group(4)})")
+              s"FOREIGN KEY (${fk.group(2)}) REFERENCES `${fk.group(3)}` (${fk.group(4)})${fk.group(5)}")
           } else {
             None
           }

@@ -35,7 +35,7 @@ Guice 애플리케이션이 쓰는 데이터베이스 URL 과 직접 여는 `Dri
 grep -c 'REFERENCES `Page` (`site`, `name`)' schema/schema.sql
 ]]]
 
-그 밖의 모든 것 — 모든 `NOT NULL`, default, ENUM 값 목록 — 은 운영이 가진 그대로다.
+그 밖의 모든 것 — 모든 `NOT NULL`, default, ENUM 값 목록 — 은 운영이 가진 그대로다. 외래 키의 `ON DELETE` 동작(`CASCADE`·`SET NULL`)도 2026-09-15 부터 그렇다 — 전에는 키를 `ALTER` 로 옮기며 그 절을 떨어뜨려서, 운영에서 cascade 되는 삭제가 테스트에서는 부모를 지우려다 걸렸다.
 
 마지막 문장은 보기보다 무겁다. 덤프는 운영이 아니라 개발 스키마에서 뜨기 때문이다. 아래 `--check` 는 커밋된 파일을 그것이 나온 스키마와 비교한다; 그 스키마를 이 주장의 대상인 운영과 비교하는 것은 없다. 한쪽에만 적용된 evolution 은 스펙이 운영에 없는 모양을 테스트하게 만들고, `--check` 는 여전히 파일이 최신이라고 말한다.
 
