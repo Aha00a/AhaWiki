@@ -75,6 +75,11 @@ object MacroAttachment extends TraitMacro {
     if (rawObjectKey.isEmpty) {
       return MacroError.toHtmlString("Attachment object key is empty.")
     }
+    // A full key is signed only for its own site. Until 2026-09-15 any key in the bucket was, so a
+    // page could hand its readers another wiki's attachment by writing out that key.
+    if (!objectKey.startsWith(AttachmentLogic.sitePrefix(wikiContext.site.seq))) {
+      return MacroError.toHtmlString(s"Attachment(${rawObjectKey.escapeHtml()}) - not an attachment of this site.")
+    }
 
     S3AttachmentUrlLogic.generatePresignedUrl(objectKey) match {
       case Left(errorMessage) =>

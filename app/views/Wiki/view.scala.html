@@ -112,10 +112,10 @@
             articleWithDates,
             webPageWithDates
         )
-    ).toString()
+    )
 }
 @_base(title, description, canonicalUrl, "article") {
-    <script type="application/ld+json">@Html(jsonLdWebPage)</script>
+    <script type="application/ld+json">@Html(logics.HtmlJson.stringify(jsonLdWebPage))</script>
     <script type="text/javascript">
         $(function(){
             (function () {
@@ -123,7 +123,7 @@
                 var wikiPath = window.location.pathname;
                 var wsPath = wikiPath.replace(/^\/w\//, '/ws/w/');
                 if (wsPath === wikiPath) {
-                    wsPath = '/ws/w/' + encodeURIComponent('@title').replace(/\+/g, '%20');
+                    wsPath = '/ws/w/' + encodeURIComponent(@Html(logics.HtmlJson.string(title))).replace(/\+/g, '%20');
                 }
                 var wsUrl = wsProtocol + '://' + window.location.host + wsPath;
                 var reconnectDelayMs = 1500;
@@ -308,7 +308,7 @@
                         socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
                         try {
                             document.dispatchEvent(new CustomEvent('wiki:ws.connected', {
-                                detail: { pageName: '@{title}' }
+                                detail: { pageName: @Html(logics.HtmlJson.string(title)) }
                             }));
                         } catch (e) {}
                         heartbeatTimer = setInterval(function () {

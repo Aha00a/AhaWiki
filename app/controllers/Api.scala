@@ -11,6 +11,7 @@ import io.circe.Json
 import io.circe.parser.decode
 import io.circe.generic.auto._
 import io.circe.syntax._
+import logics.AdminLogic
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryApiLinks
 import logics.AhaWikiCacheMemoryPermission
@@ -499,14 +500,20 @@ class Api @Inject()(
     }
   }
 
+  // Emptying a site's caches is its admin's call. Until 2026-09-15 this checked nothing, so anyone
+  // could empty them, and the link and permission caches of every site along with them.
   def cacheDelete(siteSeq: Long): Action[AnyContent] = Action { implicit request =>
-    ahaWikiCacheMemoryApiLinks.clear()
-    AhaWikiCacheMemoryPermission.clear()
-    SiteLogic.get(siteSeq) foreach { implicit site =>
-      implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-      implicit val contextSite: ContextSite = ContextSite()
-      ahaWikiCache.invalidateSiteCaches()
+    if (!AdminLogic.isSiteAdmin(siteSeq, request)(database)) {
+      JsonError(Forbidden, "Access denied.")
+    } else {
+      ahaWikiCacheMemoryApiLinks.clear()
+      AhaWikiCacheMemoryPermission.clear()
+      SiteLogic.get(siteSeq) foreach { implicit site =>
+        implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+        implicit val contextSite: ContextSite = ContextSite()
+        ahaWikiCache.invalidateSiteCaches()
+      }
+      Ok("ok")
     }
-    Ok("ok")
   }
 }

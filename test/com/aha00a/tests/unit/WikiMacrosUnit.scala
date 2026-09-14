@@ -36,6 +36,9 @@ object WikiMacrosUnit {
     assertEquals(MacroAttachment.parseArgument("a.png, 50%"), ("a.png", Some("50%")))
     assertEquals(MacroAttachment.parseArgument("a.png, 200"), ("a.png", Some("200px")))
     assertEquals(MacroAttachment.parseArgument("a.png"), ("a.png", None))
+    // A full key names its site, and a page signs only its own site's. Until 2026-09-15 any key in
+    // the bucket was signed, so a page could show its readers another wiki's attachment.
+    assertEquals(MacroAttachment.toHtmlString("Attachment/987654/Page/a.png").contains("not an attachment of this site"), true)
     // An argument these two cannot read is an error box, not an exception that fails the page.
     assertEquals(MacroMonthName.toHtmlString("Tuesday"), """<div class="error">Argument Error - [[MonthName(Tuesday)]]</div>""")
     assertEquals(MacroPercentLinkTitle.toHtmlString("no commas here"), """<div class="error">Argument Error - [[PercentLinkTitle(no commas here)]]</div>""")

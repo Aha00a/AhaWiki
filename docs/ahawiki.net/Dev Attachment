@@ -10,8 +10,10 @@
 [[Attachment(원본파일명/저장파일명, 50%)]]
 ]]]
  * 인자는 `Attachment/{siteSeq}/{pageName}/` 뒤의 상대 키다. 예: `[[Attachment(photo.jpg/photo.2024-01-01T12-00-00.jpg)]]`. 업로드 응답의 `attachmentMacro` 를 그대로 붙이면 된다. 파일명만 적으면 `{pageName}/photo.jpg` 로 해석되는데 그런 키에는 아무것도 저장돼 있지 않아 fallback 이미지가 뜬다.
+ * `Attachment/` 로 시작하는 인자는 전체 키로 보되, 이 사이트의 것(`Attachment/{siteSeq}/`)만 받는다. 다른 사이트의 키는 오류 상자가 된다 — 2026-09-15 까지는 어느 사이트의 키든 그대로 서명해서, 키만 알면 다른 위키의 첨부를 보여 줄 수 있었다. 두 번째 조각이 `clipboard` 인 인자(`{page}/clipboard/...`)는 `Attachment/{siteSeq}/` 뒤의 상대 키로 읽는다.
+ * 같은 사이트 안에서는 다른 페이지의 첨부도 키로 불러올 수 있고, 그 페이지의 읽기 권한은 보지 않는다. 키는 비밀이 아니다.
  * 이미지 확장자(png, jpg, jpeg, gif, webp, svg, bmp, avif, tiff, tif, ico)면 `<img>` 태그로 인라인 표시
- * 그 외 확장자면 `<a>` 다운로드 링크로 표시
+ * 그 외 확장자면 새 탭으로 여는 `<a target="_blank">` 링크로 표시한다. 다운로드를 강제하지 않아서 브라우저가 저장된 Content-Type 에 따라 열거나 내려받는다
  * 두 번째 인자로 너비 지정 가능 (`px` 또는 `%` 단위)
  * 이미지 로드 실패 시 fallback 이미지(`attachmentFallback.svg`) 표시
 
@@ -28,7 +30,7 @@ Attachment/1/MyPage/clipboard/clipboard.2024-01-01T12-00-00.png
  * `pageName`과 파일명의 특수문자는 `[^\p{IsHangul}\p{IsHan}\p{IsHiragana}\p{IsKatakana}a-zA-Z0-9._-]` 패턴으로 `_` 치환
  * 클립보드 이미지는 `{pageName}/clipboard/` 하위에 저장
 
-프리픽스 조각(`Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment`)은 `logics.AttachmentLogic` 에 있고, 전체 키는 `WikiAttachment.buildAttachmentObjectKey` 가 만든다. 다 모이지는 않았다 — `Api`(`previewImageUrl`·`links`), `PageLogic.extractAttachmentImage`, `MacroAttachment.normalizeObjectKey` 는 아직 `Attachment/{siteSeq}/` 를 문자열로 직접 붙인다.
+프리픽스 조각(`Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment`)은 `logics.AttachmentLogic` 에 있고, 전체 키는 `WikiAttachment.buildAttachmentObjectKey` 가 만든다. 다 모이지는 않았다 — `Api`(`previewImageUrl`·`links`), `PageLogic.extractAttachmentImage`, `MacroAttachment.normalizeObjectKey`·`toAttachmentUri` 는 아직 `Attachment/{siteSeq}/` 를 문자열로 직접 붙이거나 떼어 낸다.
 
 키를 쓰는 쪽과 읽는 쪽이 프리픽스를 각자 조립하면, 어긋나도 컴파일은 통과하고 **첨부가 사라진 뒤에야** 드러난다. 실제로 치환 함수가 `Api`·`ApiV1`·`Wiki`·`MacroAttachment` 에 네 벌 있었다.
 

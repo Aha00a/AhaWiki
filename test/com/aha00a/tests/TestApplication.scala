@@ -43,11 +43,13 @@ object TestApplication {
     s"${prefix}_${java.util.UUID.randomUUID().toString.replace("-", "")}"
 
   /**
-   * `NON_KEYWORDS=USER` matters because `USER` is reserved in H2 but is a table name here.
-   * It is harmless for specs that never touch that table, so every spec gets it.
+   * `NON_KEYWORDS` lists words H2 reserves that are names here: `USER` is a table, and `VALUE`
+   * is a column of `CalculatedSchemaOrg`. Until 2026-09-15 only `USER` was listed, and a spec
+   * that rendered a page view failed on a query of that column before the page was drawn.
+   * Harmless for specs that never touch either, so every spec gets both.
    */
   def h2Url(dbName: String): String =
-    s"jdbc:h2:mem:$dbName;MODE=MySQL;NON_KEYWORDS=USER;DB_CLOSE_DELAY=-1"
+    s"jdbc:h2:mem:$dbName;MODE=MySQL;NON_KEYWORDS=USER,VALUE;DB_CLOSE_DELAY=-1"
 
   /**
    * Configuration shared by every spec: H2 instead of MySQL, no evolutions, and the modules

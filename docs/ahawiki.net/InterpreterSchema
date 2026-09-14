@@ -85,7 +85,7 @@ character	Character A	Character B
 
 == JSON-LD
 
-일반 렌더링에서는 HTML 표시와 함께 `application/ld+json` script를 출력합니다.
+일반 렌더링에서는 HTML 표시와 함께 `application/ld+json` script를 출력합니다. JSON 은 `logics.HtmlJson` 으로 써서 `<`·`>`·`&` 가 유니코드 이스케이프가 됩니다. 2026-09-15 전에는 값에 `</script` 가 있으면 script 요소가 거기서 끝나고 나머지가 마크업으로 돌았습니다.
 JSON-LD에는 다음 기본 값이 자동으로 들어갑니다.
 
  * `@context`: `https://schema.org`

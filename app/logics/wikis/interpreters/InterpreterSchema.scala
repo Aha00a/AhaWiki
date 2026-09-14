@@ -346,7 +346,7 @@ object InterpreterSchema extends TraitInterpreter {
       pageName = Some(wikiContext.name),
       language = Some(wikiContext.requestWrapper.locale.toLanguageTag),
     ).map(json =>
-      <script type="application/ld+json">{scala.xml.Unparsed(Json.stringify(json))}</script>
+      <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>

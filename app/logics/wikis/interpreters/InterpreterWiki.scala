@@ -218,11 +218,16 @@ object InterpreterWiki extends TraitInterpreter {
       val editDataAttrs = if (isGeneratedHeading) {
         ""
       } else {
-        s""" data-edit-link="$editUrl" data-line-start="$lineNumber" data-line-end="$lineEndExclusive" data-edit-title="$editTitle""""
+        s""" data-edit-link="${escapeHtmlAttr(editUrl)}" data-line-start="$lineNumber" data-line-end="$lineEndExclusive" data-edit-title="${escapeHtmlAttr(editTitle)}""""
       }
 
+      // The id comes from the heading title, and the title of a not-found page is the page name,
+      // which is whatever the URL held. Emit it into the id, class and href as an escaped
+      // attribute value; before 2026-09-15 it went in raw, so a name like `</script><b>x</b>`
+      // broke out of the class attribute of a page that does not exist -- a reflected XSS.
+      val idNotEmptyAttr = escapeHtmlAttr(idNotEmpty)
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""</div><div class="$wrapperClass"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmpty" class="$headingClassAttribute"><a href="#$idNotEmpty" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
+      arrayBuffer += s"""</div><div class="${escapeHtmlAttr(wrapperClass)}"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmptyAttr" class="${escapeHtmlAttr(headingClassAttribute)}"><a href="#$idNotEmptyAttr" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
     override def list(indentString: String, style: String, content: String, lineNumber: Int): Unit = {

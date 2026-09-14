@@ -98,7 +98,7 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 저장 값: `Seq[CalculatedLink]`
  * 최대 크기: 2,000 항목 (초과 시 절반 제거)
  * 주기적 초기화: 10분마다 전체 삭제
- * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·삭제·rename 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다
+ * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·rename·마지막 리비전 삭제, API v1 삭제 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다. 웹의 페이지 삭제(`/actions/delete`)는 `Calculate` 를 보내지 않아 그 항목이 다음 `ApiLinksCacheClear` 까지 남는다. 관리 화면의 캐시 삭제(`DELETE /api/cache/:siteSeq`)는 이 인스턴스의 항목을 전부 비운다
 
 == AhaWikiCacheMemoryPermission
 
@@ -109,7 +109,7 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 캐시 키: `siteSeq`
  * 저장 값: `Seq[Permission]`
  * 만료: `AccessDecisionMaxAge` 가 지난 항목은 다음 조회 때 다시 읽는다 — 아래 «인스턴스가 둘이다» 참고
- * 수동 무효화: 권한 추가/수정/삭제 시 해당 사이트 항목 삭제(그 요청을 처리한 인스턴스에서만)
+ * 수동 무효화: 권한 추가/수정/삭제 시 해당 사이트 항목 삭제(그 요청을 처리한 인스턴스에서만). 관리 화면의 캐시 삭제(`DELETE /api/cache/:siteSeq`)는 모든 사이트의 항목을 비운다(역시 그 인스턴스에서만)
 
 == AhaWikiCacheMemorySiteAdmin
 
@@ -153,7 +153,8 @@ Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 �
 
  * 캐시 위치: `cache/Vim/`
  * 캐시 키: `MD5(colorscheme + 원본 코드)`
- * 저장 파일: `{md5}.html` (최종 HTML)
+ * 저장 파일: 블록마다 넷 — `{md5}.txt`·`{md5}.sh`·`{md5}.raw.html`·`{md5}.html`(최종 HTML). 읽는 것은 `.html` 뿐이다
+ * `GET /dev/deleteVimCache?md5=` 는 그 `.html` 하나를 지운다. 캐시가 모든 사이트의 것이라 전역 관리자만 부를 수 있고, md5 는 32자리 16진수여야 한다. 2026-09-15 까지는 누구나 부를 수 있었고 md5 를 그대로 파일 경로에 넣어서, `md5=../..` 로 서비스가 쓸 수 있는 `.html` 파일을 아무거나 지울 수 있었다
  * 주기적 정리: 7일마다 한 번, 마지막 접근이 1년 넘은 파일만 최대 1,000개 지운다(`CacheFileCleanupService`). 전체를 비우지 않는다
 
 == AhaWikiCacheMemoryTrieMap

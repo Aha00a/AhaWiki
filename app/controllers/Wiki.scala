@@ -303,7 +303,7 @@ controllerComponents: ControllerComponents,
       pageContent.redirect match {
         case Some(directive) =>
           val redirectFromEditLink = s"/w/${PageNameUrl.encode(page.name)}?action=edit"
-          val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name}</a>"""
+          val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name.escapeHtml()}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
           Redirect(routes.Wiki.view(UriUtil.encodeURIComponent(directive), 0, "")).flashing("success" -> newMessage)
         case None =>

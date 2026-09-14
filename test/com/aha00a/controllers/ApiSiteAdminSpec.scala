@@ -165,4 +165,38 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
       (contentAsJson(result) \ "ok").as[Boolean] mustBe true
     }
   }
+
+  // Emptying a site's caches is its admin's call. Until 2026-09-15 anyone could.
+  "DELETE /api/cache/:siteSeq" should {
+    "return 403 for anonymous user" in {
+      status(route(app, anonymousRequest(DELETE, "/api/cache/1")).get) mustBe FORBIDDEN
+    }
+
+    "return 403 for a signed-in user who does not administer the site" in {
+      db.withConnection { implicit c =>
+        SQL("INSERT INTO `User` (seq, nickname) VALUES (20, 'bob')").execute()
+      }
+      val bob = FakeRequest(DELETE, "/api/cache/1").withSession(
+        SessionLogic.sessionKeySeq -> "20",
+        SessionLogic.sessionKeyNickname -> "bob",
+      )
+      status(route(app, bob).get) mustBe FORBIDDEN
+    }
+
+    "empty the caches for the super admin" in {
+      status(route(app, adminRequest(DELETE, "/api/cache/1")).get) mustBe OK
+    }
+  }
+
+  // The Vim render cache is shared by every site, and its md5 names a file. Until 2026-09-15 the
+  // endpoint checked neither who asked nor what the md5 was, so md5=../.. reached any .html file.
+  "GET /dev/deleteVimCache" should {
+    "return 403 for anyone but the global admin" in {
+      status(route(app, anonymousRequest(GET, "/dev/deleteVimCache?md5=0123456789abcdef0123456789abcdef")).get) mustBe FORBIDDEN
+    }
+
+    "refuse an md5 that is not one, before it reaches a file path" in {
+      status(route(app, adminRequest(GET, "/dev/deleteVimCache?md5=..%2F..%2Findex")).get) mustBe BAD_REQUEST
+    }
+  }
 }
