@@ -1,6 +1,6 @@
 package com.aha00a.tests
 
-import com.aha00a.tests.unit.{BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, UserNicknamePolicyUnit, WikiMacrosUnit, WikiPermissionUnit}
+import com.aha00a.tests.unit.{BackQuoteBlockUnit, BlameUnit, CrawlerUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, UserNicknamePolicyUnit, WikiMacrosUnit, WikiPermissionUnit}
 import models.ContextWikiPage
 import play.api.mvc.{AnyContent, Request}
 
@@ -13,6 +13,7 @@ object UnitTestSuite {
 
   def cases(testUtil: TestUtil)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage): Seq[UnitTestCase] = Seq(
     UnitTestCase("InterpreterBlockUnit", () => InterpreterBlockUnit.run(testUtil)),
+    UnitTestCase("BackQuoteBlockUnit", () => BackQuoteBlockUnit.run(testUtil)),
     UnitTestCase("HeadingNumberUnit", () => HeadingNumberUnit.run(testUtil)),
     UnitTestCase("InterpreterVimUnit", () => InterpreterVimUnit.run(testUtil)),
     UnitTestCase("WikiMacrosUnit", () => WikiMacrosUnit.run(testUtil)),
