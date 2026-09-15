@@ -8,15 +8,20 @@ import scala.collection.mutable.ArrayBuffer
 
 class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
   // Backticks are pulled before [[[blocks]]] are, so a backtick can shield a [[[ or {{var}} written
-  // inside it. But a backtick written INSIDE a block (#!Text, #!Vim, WikiSyntaxPreview Raw) must be
-  // left as the literal character the block shows -- and left unchanged between renders, so a Vim
-  // block's md5 cache key (built from its body) does not shift every time. So blocks and backticks
-  // are read in one left-to-right pass: whichever of a backtick span or a [[[...]]] opens first owns
-  // its extent, and backticks are pulled only outside the blocks. The blocks themselves are still
-  // pulled afterwards, by ExtractConvertInjectInterpreter; a [[[ hidden inside a pulled backtick is
-  // no longer in the text by then, so it opens no block.
+  // inside it. But a backtick written inside a LITERAL block -- #!Text, #!Vim, or the Raw side of
+  // #!WikiSyntaxPreview, and a bare [[[...]]] which defaults to Text -- must be left as the literal
+  // character the block shows, and left unchanged between renders so a Vim block's md5 cache key
+  // (built from its body) does not shift every time. Wiki-like blocks (#!Quote, #!Table, #!Fold,
+  // #!Paper, #!Wiki, ...) re-render their body as wiki and turn the backtick into a code span either
+  // way, so they are left exactly as before: pulling the backtick here rather than in the nested
+  // render keeps their <p> wrapping and line breaks unchanged.
+  //
+  // So the text is read once, left to right: a literal block's [[[...]]] is set aside untouched,
+  // everything else (plain text and non-literal blocks) keeps having its backticks pulled. Backtick
+  // spans are stepped over while scanning so a [[[ inside a backtick opens no block. The blocks
+  // themselves are still pulled afterwards by ExtractConvertInjectInterpreter.
   override def extract(s: String): String =
-    partitionByBlock(s).map {
+    partitionLiteralBlocks(s).map {
       case (true, block) => block
       case (false, text) => extractBackQuotes(text)
     }.mkString
@@ -42,14 +47,38 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
 
   private val regexDoubleBackquotePrefix = """``.+?``""".r
   private val regexSingleBackquotePrefix = """`.+?`""".r
+  private val literalInterpreters = Set("text", "vim", "wikisyntaxpreview")
 
-  // Split s into (isBlock, text) runs. A [[[...]]] region is one block run, returned verbatim so its
-  // interior (including any backtick) is untouched. A backtick span is stepped over while scanning
-  // -- a [[[ inside it opens no block -- and left in the surrounding non-block text, where
-  // extractBackQuotes pulls it exactly as it did when the whole document was scanned at once. A
-  // backtick span is single-line (the extract regexes forbid a newline), so it is sought only within
-  // the current line; a [[[ pairs with the first following ]]], as ExtractConvertInjectInterpreter does.
-  private def partitionByBlock(s: String): Seq[(Boolean, String)] = {
+  // The interpreter a [[[block]]] body reads as, matching how Interpreters/ShebangUtil resolve it:
+  // a body with no shebang is Text, a body that has only directives (#!read etc.) is Wiki, otherwise
+  // the first shebang word. Only Text / Vim / WikiSyntaxPreview keep their backticks literal.
+  private def keepsBackticksLiteral(body: String): Boolean = {
+    val name =
+      if (!body.trim.startsWith("#!")) "text"
+      else {
+        val normalized = if (body.startsWith("\n#!")) body.substring(1) else body
+        normalized.linesIterator
+          .takeWhile(_.startsWith("#!"))
+          .map(_.substring(2))
+          .filterNot(_.startsWith("read"))
+          .filterNot(_.startsWith("write"))
+          .filterNot(_.startsWith("redirect"))
+          .filterNot(d => d == "var" || d.startsWith("var ") || d.startsWith("var\t"))
+          .flatMap(_.split("""\s+"""))
+          .find(_.nonEmpty)
+          .map(_.toLowerCase)
+          .getOrElse("wiki")
+      }
+    literalInterpreters.contains(name)
+  }
+
+  // Split s into (isLiteralBlock, text) runs. A literal block's [[[...]]] is its own run, verbatim,
+  // so its interior (backticks included) is untouched. Everything else -- plain text and non-literal
+  // blocks -- accumulates into non-block runs where extractBackQuotes pulls backticks exactly as when
+  // the whole document was scanned at once. A backtick span is single-line (the extract regexes
+  // forbid a newline) and is stepped over so a [[[ inside it opens no block; a [[[ pairs with the
+  // first following ]]], as ExtractConvertInjectInterpreter does.
+  private def partitionLiteralBlocks(s: String): Seq[(Boolean, String)] = {
     val out = ArrayBuffer[(Boolean, String)]()
     val sb = new StringBuilder
     var i = 0
@@ -67,8 +96,13 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
       } else if (c == '[' && s.startsWith("[[[", i)) {
         val close = s.indexOf("]]]", i + 3)
         if (close >= 0) {
-          out += ((false, sb.toString)); sb.clear()
-          out += ((true, s.substring(i, close + 3)))
+          val region = s.substring(i, close + 3)
+          if (keepsBackticksLiteral(s.substring(i + 3, close))) {
+            out += ((false, sb.toString)); sb.clear()
+            out += ((true, region))
+          } else {
+            sb.append(region) // non-literal block: pulled as before, backticks and all
+          }
           i = close + 3
         } else {
           sb.append(c); i += 1
