@@ -216,5 +216,5 @@ mutationQueue = mutationQueue
  * 댓글 시간순 정렬 — `mergeComments`는 server 우선 + local-only 추가 순으로 병합하므로 타임스탬프 역순이 어긋날 수 있음. 추후 header의 timestamp 파싱 후 정렬 고려
 
 == 관련 문서
- * ["Dev WebSocket"] — 기존 WebSocket 인프라 (PageCursorHub, saveSenderId, page.updated 상세)
+ * [Dev WebSocket] — 기존 WebSocket 인프라 (PageCursorHub, saveSenderId, page.updated 상세)
  * [InterpreterKanban] — 칸반 문법 및 저장 포맷

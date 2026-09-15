@@ -217,7 +217,7 @@
  3. 3-way 병합(base / local / server) 적용 → `rerenderColumns`
  4. 사용자 입력 보호: 뮤테이션 대기 중이면 완료 후 재적용. 모달이 열린 카드는 객체 참조를 유지하고, 편집 중이 아닌 필드는 서버 값으로 바꾼다(편집 중인 필드만 로컬 값 유지 + 배너)
 
-자세한 내용: ["Dev Kanban Realtime"]
+자세한 내용: [Dev Kanban Realtime]
 
 === 중복 알림 방지
 

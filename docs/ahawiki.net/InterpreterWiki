@@ -13,7 +13,7 @@
  * 가로선
  * 헤딩과 목차
 
-간단한 입문 예제는 ["AhaMark Basic"]에 두고, 이 페이지에는 기본 위키 문법의 세부 동작을 둡니다.
+간단한 입문 예제는 [AhaMark Basic]에 두고, 이 페이지에는 기본 위키 문법의 세부 동작을 둡니다.
 
 == 기본 문법
 [[[#!WikiSyntaxPreview
@@ -265,5 +265,5 @@ TOC is generated automatically.
 
 == Related Pages
  * [AhaMark]
- * ["AhaMark Basic"]
+ * [AhaMark Basic]
  * [Interpreter]

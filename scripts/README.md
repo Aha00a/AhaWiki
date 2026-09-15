@@ -388,28 +388,47 @@ Now that `[a b]` is one page name, `["a b"]` is only needed when the bare form w
 differently: a first word ending in `:` (`[Avengers: Endgame]` reads `Avengers:` as a prefix and
 `Endgame` as the label), a target starting with `?` or `#`, a name containing `|`, or edge
 whitespace. Everywhere else the quotes are redundant. They were removed — `["X"]` → `[X]`,
-`["X" alias]` → `[X|alias]` — in every revision, directly in the database, but **only on the
-owner-managed sites** (aha00a.com, ahawiki.net, Cellivery, Oddconcepts). Unlike the grammar
-migration this fixes nothing — the quotes render fine — so the "every author's intent, every site"
-reasoning did not carry to other people's wikis.
+`["X" alias]` → `[X|alias]` — directly in the database, but **only on the owner-managed sites**
+(aha00a.com, ahawiki.net, Cellivery, Oddconcepts). Unlike the grammar migration this fixes nothing
+— the quotes render fine — so the "every author's intent, every site" reasoning did not carry to
+other people's wikis.
 
-Only quotes whose bare form parses to the same target are touched; the load-bearing ones (colon
-titles and the like) stay. Two contexts are skipped whole: **Kanban** blocks, whose card anchors
-(`["#cardId" title]`) are the Kanban interpreter's own syntax, not wiki; and **WikiSyntaxPreview**
-blocks, which display their own source, so rewriting an example there would silently change what a
-doc demonstrates.
+Only quotes whose bare form parses to the same target are candidates; the load-bearing ones stay.
+"Load-bearing" turned out to be more than the colon/`?`/`#`/`|` cases: a quoted heading
+(`== ["증시 분석"]`) carries the quotes into its generated anchor id, a quote inside a Table cell is
+CSV quoting, a Kanban card anchor (`["#cardId" title]`) is the Kanban interpreter's own syntax, and
+a WikiSyntaxPreview block displays its own source. Rather than enumerate those contexts by parsing
+— a naive `[[[block]]]` pairing never converged, turning up different quotes on each pass — the safe
+set is decided **by rendering**: a quote is dropped only when doing so leaves the page's HTML
+byte-identical through the deployed renderer (`POST /api/renderAhaMark`). So verification is not a
+step after the migration; it *is* the migration, and `CalculatedLink` needs no recompute because the
+link targets never change.
 
-| Revisions changed | Of them current | Comments | Distinct link patterns |
-|---|---|---|---|
-| 705 of 23,116 | 135 | (in the 705) | 329 |
+Two passes:
 
-**Verification.** Every one of the 329 distinct `before → after` link patterns was rendered both
-ways through the deployed renderer (`POST /api/renderAhaMark`) and came out byte-identical; the
-change is render-neutral. `CalculatedLink` is untouched because the targets do not change, so no
-recalculation was needed. `dryrun-quotes.mjs` judges the links and writes `changed.jsonl`;
-`link-migration-sql.mjs` turns that into the same hash-guarded, one-transaction `apply.sql` /
-`undo.sql` / `check.sql` the grammar migration used, rehearsed with ROLLBACK first and applied as
-the admin account. The ahawiki.net docs mirror was brought back in step by the same transform.
+- **All revisions, by link pattern** — `dryrun-quotes.mjs` → `link-migration-sql.mjs`. Every
+  distinct `before → after` pattern (329 of them) is rendered both ways; the render-neutral ones are
+  rewritten in every revision (705 of 23,116) with the same hash-guarded, one-transaction
+  `apply.sql` / `undo.sql` / `check.sql` the grammar migration used, rehearsed with ROLLBACK first
+  and applied as the admin account. This is block-parser based, so on prose that mixes safe and
+  load-bearing quotes it cannot converge and leaves a current-page residue.
+- **Current pages, by whole-page render** — `all-quotes-fix.mjs`, with `perquote-gen.mjs` /
+  `perquote-apply.mjs` for the stragglers. Drop *every* candidate quote on a page and keep the
+  result only if the full-page render is byte-identical; for a page that fails that (a load-bearing
+  quote somewhere on it), drop quotes one at a time and keep only the individually render-neutral
+  ones. No block parsing at all.
+
+Current-page result across the four sites: 660 pages had candidate quotes; 639 were fully
+render-safe and rewritten (627 rows in the database for aha00a.com / Cellivery / Oddconcepts, 12
+files in the ahawiki.net docs mirror). On the remaining 21 pages, 8 more quotes on 5 pages were
+render-neutral one at a time and rewritten; 115 quotes are genuinely load-bearing (mostly quoted
+headings, table cells and preview/kanban blocks) and were kept. The ahawiki.net docs mirror is
+edited in the repo and carried to its database by `sync` — a direct database write there would be
+reverted by the next repo→db sync.
+
+Older historical revisions keep whatever redundant quotes the first (pattern) pass could not reach.
+This is harmless — they render identically — and the naive block parser cannot stably enumerate
+them, so chasing full historical completeness was left undone on purpose rather than churned at.
 
 ## Pages whose names differ only by case (done 2026-09-09)
 
