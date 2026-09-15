@@ -35,6 +35,9 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
 libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
 libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
 libraryDependencies += "com.github.karelcemus" %% "play-redis" % "5.4.0"
+// Redis pub/sub for cross-instance page.updated (CrossInstanceBus). play-redis is the cache and
+// does not expose SUBSCRIBE/PUBLISH, so a dedicated client is used on the same shared Redis.
+libraryDependencies += "redis.clients" % "jedis" % "5.2.0"
 libraryDependencies += "dev.zio" %% "zio-json" % "0.7.3" // DON'T update. Class File version matter
 
 libraryDependencies ++= Seq(

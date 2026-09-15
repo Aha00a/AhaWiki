@@ -80,6 +80,7 @@ controllerComponents: ControllerComponents,
                      executionContext: ExecutionContext,
                      configuration: Configuration,
                      telegramLogic: TelegramLogic,
+                     crossInstanceBus: CrossInstanceBus,
 ) extends BaseController with JsonResults with AdminAuth with Logging {
   implicit class RichResult(result: Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
@@ -522,7 +523,7 @@ controllerComponents: ControllerComponents,
                 "editorNickname" -> editorNickname,
                 "dateInserted" -> now.toString
               ).toString()
-              PageCursorHub.broadcastPageUpdated(PageCursorHub.roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
+              crossInstanceBus.publishPageUpdated(PageCursorHub.roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
 
               name match {
                 case ".footer" => ahaWikiCache.Footer.invalidate()
