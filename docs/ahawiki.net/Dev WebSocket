@@ -35,7 +35,7 @@
   * `broadcastPageUpdated`: 동일 `saveSenderId` 연결은 제외하고 `page.updated` 전송
 
 [[[#!Quote
-이 허브는 프로세스 메모리에 있고 인스턴스 사이에 동기화가 없습니다. '''운영은 인스턴스 둘이 동시에 요청을 받으므로'''([Dev Deploying]), 커서·접속자 표시·`page.updated` 는 저장한 요청과 같은 인스턴스에 소켓이 붙은 사람에게만 갑니다. 다른 쪽에 붙은 사람은 새로고침 토스트도, Kanban 자동 동기화도 받지 못하고, 소켓이 다시 열릴 때의 `wiki:ws.connected` 재동기화로만 따라잡습니다. 고치려면 인스턴스 사이의 발행(예: Redis pub/sub)이 필요하고, 아직 없습니다. 설계안은 아래 '''인스턴스 사이 실시간 이벤트''' 절에 있습니다.
+이 허브는 프로세스 메모리에 있고 인스턴스 사이에 직접 동기화가 없습니다. '''운영은 인스턴스 둘이 동시에 요청을 받으므로'''([Dev Deploying]), 커서·접속자 표시는 저장한 요청과 같은 인스턴스에 소켓이 붙은 사람에게만 갑니다. '''`page.updated` 는 예외로, 2026-09-15 부터 Redis pub/sub 로 인스턴스 사이에 전달됩니다''' — 그래서 새로고침 토스트와 Kanban 자동 동기화는 어느 인스턴스에 붙어 있든 옵니다(아래 '''인스턴스 사이 실시간 이벤트''' 절). 커서는 여전히 인스턴스 안에만 있고(고빈도라 그대로 둠), 놓친 커서·접속자 상태는 소켓이 다시 열릴 때의 `wiki:ws.connected` 재동기화로 따라잡습니다.
 ]]]
 
 === 핸드셰이크/권한 확인 (`watch`)
@@ -248,9 +248,9 @@
  * 토스트 UX(입력 중 방해 최소화, 모바일/데스크톱 가독성) 점검
  * 운영 환경 WebSocket 에러/재연결 로그 모니터링
 
-== 인스턴스 사이 실시간 이벤트 (설계안 — 미구현, 결정 대기)
+== 인스턴스 사이 실시간 이벤트 (구현·배포됨 2026-09-15)
 
-[ToDo] 항목 '''인스턴스 사이 실시간 이벤트''' 의 설계안이다. 아직 구현하지 않았고, 아래 '''열린 결정''' 을 소유자가 정한 뒤 착수한다.
+`page.updated` 를 Redis pub/sub 로 인스턴스 사이에 전달한다. 소유자가 «Redis pub/sub·`page.updated` 만» 으로 정해 구현했고, 2026-09-15 에 양쪽 인스턴스에 배포했다. 코드는 `logics.CrossInstanceBus`(신규) 와 `controllers.Wiki.save` 의 호출부, `Module` 의 eager 바인딩. 아래는 무엇을·왜 그렇게 했는지의 기록이다.
 
 === 문제
 
@@ -286,15 +286,16 @@
  * `saveSenderId` 를 payload 에 실어 상대 인스턴스도 저장자의 다른 탭을 제외하게 한다(현재 로컬 제외 규칙과 동일).
  * 실패 격리: `PUBLISH`/`SUBSCRIBE` 에러는 로그만 남기고 로컬 동작은 그대로.
 
-=== 열린 결정 (소유자)
+=== 정해진 결정 (2026-09-15)
 
- 1. 범위: `page.updated` 만(권장)? 커서·접속자 표시도?
- 1. 브로커: Redis pub/sub 인가 HTTP relay 인가?
- 1. 두 인스턴스가 정말 같은 Redis 를 보는지 prod 설정 확인(캐시가 그렇다면 그대로 재사용).
- 1. pub/sub 전용 클라이언트라는 새 의존성을 허용하는가(선택지 1 일 때).
+ 1. 범위: '''`page.updated` 만.''' 커서는 인스턴스 안에 그대로 둔다(고빈도·편의).
+ 1. 브로커: '''Redis pub/sub.'''
+ 1. Redis 공유: 확인함 — 두 인스턴스가 같은 로컬 Redis(`localhost:6379`, db0)를 쓴다(캐시 Redis 그대로 재사용). 채널은 `ahawiki:0:page.updated`.
+ 1. 새 의존성: '''Jedis''' 를 넣었다(`play-redis` 는 pub/sub 를 노출하지 않음). publish 는 `JedisPooled`, subscribe 는 데몬 스레드에서 blocking `subscribe` + 끊기면 2초 후 재접속.
 
-=== 검증 계획 (착수 시)
+=== 구현 결과 / 검증
 
- * 단위: publish→subscribe 라운드트립, `origin` 자기 무시, `saveSenderId` 제외.
- * 수동: 두 인스턴스에 각각 소켓을 붙여(포트 지정, canary 처럼 10001/10000 직접) A 에서 저장 → B 가 토스트·Kanban 동기화를 받는지.
- * 부하: `page.updated` 만이면 저빈도라 Redis 부하는 무시할 만.
+ * 실패 격리: `PUBLISH`/`SUBSCRIBE` 오류는 로그만 남기고 로컬 동작은 유지 — Redis 가 죽으면 «인스턴스 안» 으로 degrade. 테스트 모드에선 버스를 끈다(Redis 없음).
+ * 단위: `CrossInstanceBusUnit` 가 전송 형식(encode/decode 왕복, `saveSenderId` 유무, 잘못된 입력)을 덮는다. Scala 258 통과.
+ * 수동(canary→양쪽): 두 인스턴스가 채널을 `SUBSCRIBE`(`PUBSUB NUMSUB` = 2) 하고, 채널에 넣은 `page.updated` 하나가 10001·10000 양쪽에 붙은 소켓에 모두 도달함을 확인. publish 는 `Wiki.save` 에 연결되어 있고 로그로 «CrossInstanceBus on» 확인.
+ * 부하: `page.updated` 는 저빈도라 Redis 부하는 무시할 만.
