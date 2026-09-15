@@ -55,7 +55,7 @@
 
 리비전이 없는 이름을 열면 `Wiki.view` 가 `renderNotFoundPage` 로 간다. `DefaultPageLogic.getOption(name)` 이 날짜·`schema:` 처럼 내용을 지어내는 이름이면 그 템플릿을, 아니면 `WikiSnippet.notFound(name)` 을 렌더한다.
 
-이 이름은 URL 이 담고 있던 무엇이든이다. `WikiSnippet.notFound` 는 그 이름으로 위키 마크업(제목과 검색 링크)을 짓기 때문에, 이름을 글자 그대로로 다룬다 — `asLiteralText` 가 `[` 를 `(` 로 바꿔서 링크·매크로(`[[Html(...)]]`)·블록(`[[[#!Html ...]]]`)이 만들어지지 않게 한다. 제목의 `<` 는 렌더러가 이스케이프하고, 제목에서 나오는 anchor 는 `id`·`class` 속성에 속성값으로 이스케이프해 들어간다(["InterpreterWiki"]). 2026-09-15 전에는 이름이 마크업으로 렌더돼서, `[[Html(<b>x</b>)]]` 나 `</script><b>x</b>` 를 URL 에 넣으면 없는 페이지 화면에서 살아 있는 HTML 이 됐다 — 링크 하나로 아무나 터뜨리는 반사형 XSS 였다.
+이 이름은 URL 이 담고 있던 무엇이든이다. `WikiSnippet.notFound` 는 그 이름으로 위키 마크업(제목과 검색 링크)을 짓기 때문에, 이름을 글자 그대로로 다룬다 — `asLiteralText` 가 `[` 를 `(` 로 바꿔서 링크·매크로(`[[Html(...)]]`)·블록(`[[[#!Html ...]]]`)이 만들어지지 않게 한다. 제목의 `<` 는 렌더러가 이스케이프하고, 제목에서 나오는 anchor 는 `id`·`class` 속성에 속성값으로 이스케이프해 들어간다([InterpreterWiki]). 2026-09-15 전에는 이름이 마크업으로 렌더돼서, `[[Html(<b>x</b>)]]` 나 `</script><b>x</b>` 를 URL 에 넣으면 없는 페이지 화면에서 살아 있는 HTML 이 됐다 — 링크 하나로 아무나 터뜨리는 반사형 XSS 였다.
 
 == 페이지명과 URL
 

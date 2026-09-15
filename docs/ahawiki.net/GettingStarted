@@ -65,7 +65,7 @@ AhaWiki는 페이지를 만들고, 페이지 사이를 링크로 연결하면서
 
 == 문법 알아보기
 
-기본 문법은 [AhaMark], ["AhaMark Basic"]을 참고하세요.
+기본 문법은 [AhaMark], [AhaMark Basic]을 참고하세요.
 
 코드, Markdown, 표 같은 인터프리터는 [Interpreter]와 [Interpreter Examples]에 예제가 있습니다.
 

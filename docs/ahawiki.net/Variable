@@ -23,7 +23,7 @@
 
 치환은 '''문서 하나 안'''에서만 일어납니다. 다른 문서의 변수를 꺼내 쓸 수는 없습니다.
 
-`[[[...]]]` 블록 '''안에서도''' 치환됩니다. 다만 ["InterpreterPaper"] 의 `class` · `docId` 와 ["InterpreterGantt"] 의 `defaultEst` 는 치환이 아니라, 그 인터프리터가 받은 본문 맨 위의 `#!var` 줄에서 읽습니다. 블록으로 쓸 때는 `[[[#!Gantt` 바로 아랫줄에 두고, 바깥 문서의 `#!var` 는 블록 안 인터프리터에게 가지 않습니다.
+`[[[...]]]` 블록 '''안에서도''' 치환됩니다. 다만 [InterpreterPaper] 의 `class` · `docId` 와 [InterpreterGantt] 의 `defaultEst` 는 치환이 아니라, 그 인터프리터가 받은 본문 맨 위의 `#!var` 줄에서 읽습니다. 블록으로 쓸 때는 `[[[#!Gantt` 바로 아랫줄에 두고, 바깥 문서의 `#!var` 는 블록 안 인터프리터에게 가지 않습니다.
 
 == 옛 방식
 
@@ -33,6 +33,6 @@
 
 == 관련 문서
 
- * ["InterpreterPaper"]
- * ["InterpreterGantt"]
+ * [InterpreterPaper]
+ * [InterpreterGantt]
  * ["MacroGetMacroSet"]
