@@ -57,6 +57,10 @@ AhaWiki	10	Wiki page
 Macro	8	Function-like markup
 ]]]
 
+== 정렬과 필터
+
+머리글이 있는 표는 열 제목을 눌러 정렬할 수 있습니다. 머리글 바로 아래의 입력 칸에 값을 넣으면 그 열을 기준으로 행을 걸러 냅니다. 정렬과 필터는 [https://mottie.github.io/tablesorter/ tablesorter] 로 동작하며, 머리글이 없는 표에는 붙지 않습니다.
+
 == 인쇄 시 동작
 
 정렬 화살표(▲▼)는 인쇄 시 자동으로 숨겨집니다.

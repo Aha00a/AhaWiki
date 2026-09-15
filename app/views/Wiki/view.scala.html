@@ -586,7 +586,7 @@
                 });
             })();
 
-            $('.tablesorter').tablesorter();
+            $('.tablesorter').not('[id^="mapTable"]').tablesorter({ widgets: ["filter"] });
 
 
             function updateTocToggleLabel($toc, isCollapsed) {

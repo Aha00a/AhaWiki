@@ -105,6 +105,8 @@ https://mottie.github.io/tablesorter/docs/example-widget-filter.html --[2019-12-
 
 '''표에는 없다.''' `InterpreterTable` 이 모든 `#!Table` 에 `tablesorter` 클래스를 붙이므로 정렬은 전부 되지만, `Wiki/view.scala.html` 이 옵션 없이 `.tablesorter()` 로 초기화해 filter widget 이 꺼진 채로 남는다. widget 스크립트는 `_baseSkeleton.scala.html` 에서 이미 전역으로 불러오고 있으니, 표에 켜는 일 자체는 작다. --[2026-08-31]
 
+'''표에도 켰다.''' `Wiki/view.scala.html` 의 초기화에 `widgets: ["filter"]` 를 줬다 — 예상대로 그 한 줄이다. Map 표는 제 초기화가 열마다 다른 필터를 거니 `.not('[id^="mapTable"]')` 로 뺐다. 무엇을 어떻게 하는지는 [InterpreterTable] '''정렬과 필터'''. --[2026-09-15]
+
 === Comparison of wiki software
 위키엔진 비교표
 
