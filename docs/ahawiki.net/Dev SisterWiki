@@ -71,7 +71,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * 최종 HTML에는 읽을 수 없는 private page 제목이 노출되지 않도록 한다.
 
 == Cache
- * 같은 이름 문서 검색은 `PageMeta.SeqPageLatestSummary` 캐시를 사용한다. 이것은 Play `SyncCacheApi`(`application.conf` 에서 Redis 모듈)이지 프로세스 메모리가 아니다 — ["Dev Cache"] 참고.
+ * 같은 이름 문서 검색은 `PageMeta.SeqPageLatestSummary` 캐시를 사용한다. 이것은 Play `SyncCacheApi`(`application.conf` 에서 Redis 모듈)이지 프로세스 메모리가 아니다 — [Dev Cache] 참고.
  * 유사 문서 검색은 precomputed `CalculatedCosineSimilarity` row를 조회한다.
  * cross-site 링크 생성은 `Site.mainDomain`을 사용해 렌더링 경로에서 `SiteDomain` 조회를 피한다.
  * site/domain 매핑과 site 목록은 `AhaWikiCacheMemoryDomainSite`가 관리한다.

@@ -15,7 +15,7 @@ AhaWiki는 같은 앱과 DB가 여러 도메인을 함께 서비스하므로, �
  * `Site` row 추가
  * `SiteDomain` row 추가
  * 기본 `Permission` row 추가 (공개/비공개 여부에 따라)
- * 새 `SiteDomain` row는 바로 열리지 않는다. 도메인 목록은 인스턴스마다 캐시에 있어서, 각 인스턴스가 다시 읽은 뒤에 열린다(주기는 ["Dev Cache"]). 기다리지 않으려면 앱을 다시 띄운다.
+ * 새 `SiteDomain` row는 바로 열리지 않는다. 도메인 목록은 인스턴스마다 캐시에 있어서, 각 인스턴스가 다시 읽은 뒤에 열린다(주기는 [Dev Cache]). 기다리지 않으려면 앱을 다시 띄운다.
 
 == nginx 설정
  * nginx 설정 파일에 server block 추가

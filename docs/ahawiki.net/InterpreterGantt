@@ -158,7 +158,7 @@ depth 0 항목 단위로 색상 그룹을 지정한다. 하위 노드는 같은 
 
 == 편집 (Section Edit)
 
-Gantt 블록 오른쪽 위의 Edit 버튼으로 편집하거나 첫 줄이 `#!Gantt`인 페이지를 편집하면, Gantt 전용 인라인 에디터(["InterpreterGantt Editor"])로 열린다. 제목의 섹션 편집으로 들어가면 원문 에디터로 열린다 — 그 에디터는 첫 줄만 보고 Gantt 인지 정한다.
+Gantt 블록 오른쪽 위의 Edit 버튼으로 편집하거나 첫 줄이 `#!Gantt`인 페이지를 편집하면, Gantt 전용 인라인 에디터([InterpreterGantt Editor])로 열린다. 제목의 섹션 편집으로 들어가면 원문 에디터로 열린다 — 그 에디터는 첫 줄만 보고 Gantt 인지 정한다.
 
  * `#`(행 번호) + Task + Start/Ref + Est + % 그리드로 구성된다.
  * depth는 별도 숫자 컬럼이 아니라 Task 셀 들여쓰기와 row `data-depth`로 표현한다.

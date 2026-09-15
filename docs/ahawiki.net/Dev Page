@@ -7,7 +7,7 @@
 
  * 키: `(site, name, revision)`
  * 본문: `content`
- * revision 메타: `dateTime`, `user`, `remoteAddress`, `comment`, `isMinorEdit`, `viaApi`, `userApiKey`(evolution 65·67, ["Dev Api"])
+ * revision 메타: `dateTime`, `user`, `remoteAddress`, `comment`, `isMinorEdit`, `viaApi`, `userApiKey`(evolution 65·67, [Dev Api])
  * `permRead`는 더 이상 사용하지 않으며 evolution 51에서 제거했다.
 
 최신 본문, history, diff, blame, include, search처럼 revision 원본이 필요한 경로는 `Page`를 직접 읽는다.

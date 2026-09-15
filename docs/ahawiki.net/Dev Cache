@@ -66,7 +66,7 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageName$:Site(...)`
  * 저장 값: 모든 페이지명 목록
  * TTL: 개발 모드 1분, 프로덕션 5분 (`CacheEntity` 기본값)
- * 무효화: `invalidateSiteCaches()` 호출 시. 페이지 저장·삭제·rename 은 이것을 무효화하지 않는다 — ["Dev Page"] 참고
+ * 무효화: `invalidateSiteCaches()` 호출 시. 페이지 저장·삭제·rename 은 이것을 무효화하지 않는다 — [Dev Page] 참고
 
 === invalidateSiteCaches
 
@@ -169,7 +169,7 @@ ApiLinks·Permission·SiteAdmin 세 캐시의 기반 구조입니다. DomainSite
 
 == 인스턴스가 둘이다
 
-운영은 인스턴스 둘이 동시에 요청을 받는다(측정은 ["Dev Deploying"]). Redis 에 있는 `AhaWikiCache` 는 둘이 나눠 쓰지만, 인-메모리 캐시는 JVM 마다 따로다. 무효화는 변경을 처리한 인스턴스에서만 돌므로, 다른 인스턴스가 옛 값을 얼마나 오래 쓰는지는 그 캐시의 만료가 정한다.
+운영은 인스턴스 둘이 동시에 요청을 받는다(측정은 [Dev Deploying]). Redis 에 있는 `AhaWikiCache` 는 둘이 나눠 쓰지만, 인-메모리 캐시는 JVM 마다 따로다. 무효화는 변경을 처리한 인스턴스에서만 돌므로, 다른 인스턴스가 옛 값을 얼마나 오래 쓰는지는 그 캐시의 만료가 정한다.
 
 [[[#!Table tsv 1
 캐시	다른 인스턴스가 옛 값을 쓰는 최대 시간

@@ -373,10 +373,43 @@ six replaceAll calls that knew only the space form, so `== [KR|대한민국] ==`
 read their links through `InterpreterWiki.linksAsText` now, and the rewrite went in with that fix
 rather than ahead of it.
 
-**Left behind.** `CalculatedLink` rows are computed from a page's latest revision when it is saved
-or recalculated, and a deploy recalculates nothing. The current pages whose links now read as whole
-names keep their old rows until then; a page view recalculates one time in ten, and the admin
-API's `Calculate` takes a page name.
+**Left behind, then finished (2026-09-15).** `CalculatedLink` rows are computed from a page's latest
+revision when it is saved or recalculated, and a deploy recalculates nothing, so the current pages
+whose links now read as whole names kept their old rows. Ten pages needed it (aha00a.com 5,
+ahawiki.net 2, Oddconcepts 1, Cellivery 2). The public ones were recalculated by viewing them from
+loopback (whitelisted, so no rate limit; a view recalculates one in ten), the read-restricted ones
+through the admin API's `Calculate` in a logged-in session. An all-sites re-scan then parsed every
+current page's content with the deployed grammar and found no `CalculatedLink` row still holding an
+old first-word target — 0 across all 16 sites.
+
+## Redundant `["quotes"]` dropped where the bare form reads the same (done 2026-09-15)
+
+Now that `[a b]` is one page name, `["a b"]` is only needed when the bare form would read
+differently: a first word ending in `:` (`[Avengers: Endgame]` reads `Avengers:` as a prefix and
+`Endgame` as the label), a target starting with `?` or `#`, a name containing `|`, or edge
+whitespace. Everywhere else the quotes are redundant. They were removed — `["X"]` → `[X]`,
+`["X" alias]` → `[X|alias]` — in every revision, directly in the database, but **only on the
+owner-managed sites** (aha00a.com, ahawiki.net, Cellivery, Oddconcepts). Unlike the grammar
+migration this fixes nothing — the quotes render fine — so the "every author's intent, every site"
+reasoning did not carry to other people's wikis.
+
+Only quotes whose bare form parses to the same target are touched; the load-bearing ones (colon
+titles and the like) stay. Two contexts are skipped whole: **Kanban** blocks, whose card anchors
+(`["#cardId" title]`) are the Kanban interpreter's own syntax, not wiki; and **WikiSyntaxPreview**
+blocks, which display their own source, so rewriting an example there would silently change what a
+doc demonstrates.
+
+| Revisions changed | Of them current | Comments | Distinct link patterns |
+|---|---|---|---|
+| 705 of 23,116 | 135 | (in the 705) | 329 |
+
+**Verification.** Every one of the 329 distinct `before → after` link patterns was rendered both
+ways through the deployed renderer (`POST /api/renderAhaMark`) and came out byte-identical; the
+change is render-neutral. `CalculatedLink` is untouched because the targets do not change, so no
+recalculation was needed. `dryrun-quotes.mjs` judges the links and writes `changed.jsonl`;
+`link-migration-sql.mjs` turns that into the same hash-guarded, one-transaction `apply.sql` /
+`undo.sql` / `check.sql` the grammar migration used, rehearsed with ROLLBACK first and applied as
+the admin account. The ahawiki.net docs mirror was brought back in step by the same transform.
 
 ## Pages whose names differ only by case (done 2026-09-09)
 

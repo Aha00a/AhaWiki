@@ -326,7 +326,7 @@ site	target	targetType	actor	actorType	action
 
 판정 순서:
 
- 1. 현재 사이트의 `Permission` row를 가져옵니다. 인스턴스마다 캐시하고 `AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge`가 지나면 다시 읽으므로, 다른 인스턴스에서 바꾼 권한도 그 안에 반영됩니다(값과 이유는 ["Dev Cache"]). 진단 화면과 편집 화면의 권한 요약은 캐시 없이 DB를 읽습니다.
+ 1. 현재 사이트의 `Permission` row를 가져옵니다. 인스턴스마다 캐시하고 `AhaWikiCacheMemoryTrieMap.AccessDecisionMaxAge`가 지나면 다시 읽으므로, 다른 인스턴스에서 바꾼 권한도 그 안에 반영됩니다(값과 이유는 [Dev Cache]). 진단 화면과 편집 화면의 권한 요약은 캐시 없이 DB를 읽습니다.
  2. 요청한 page name과 사용자 email 중 하나에 매칭되는 row를 찾습니다.
  3. 가장 구체적인 row 하나를 고릅니다.
  4. `row.action >= requiredAction`이면 허용합니다.
@@ -353,7 +353,7 @@ def isAdmin(request: RequestHeader): Boolean =
 
 role 테이블로 옮기지 않기로 한 이유와 그 대가는 아래 '''남은 과제'''에 있습니다.
 
-사이트 단위 관리자는 `SiteAdmin` 테이블로 판정합니다. `AdminLogic.isSiteAdmin`은 전체 관리자를 모든 사이트의 관리자로 취급합니다. 자세한 내용은 ["Dev SiteAdmin"] 참고.
+사이트 단위 관리자는 `SiteAdmin` 테이블로 판정합니다. `AdminLogic.isSiteAdmin`은 전체 관리자를 모든 사이트의 관리자로 취급합니다. 자세한 내용은 [Dev SiteAdmin] 참고.
 
 === Permission 테이블
 
@@ -465,7 +465,7 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 == 남은 과제
 
  * [[CB(x)]] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다. → '''옮기지 않는다.''' (2026-08-31)
-  * 전체 관리자가 둘 이상 필요했던 적이 없고, 사이트 단위 위임은 이미 `SiteAdmin` 테이블이 합니다(["Dev SiteAdmin"]). 지금 role 테이블을 만들면 쓰는 사람 없는 테이블이 하나 늘고, 부트스트랩 row가 빠지면 관리자가 잠기는 위험만 얹힙니다.
+  * 전체 관리자가 둘 이상 필요했던 적이 없고, 사이트 단위 위임은 이미 `SiteAdmin` 테이블이 합니다([Dev SiteAdmin]). 지금 role 테이블을 만들면 쓰는 사람 없는 테이블이 하나 늘고, 부트스트랩 row가 빠지면 관리자가 잠기는 위험만 얹힙니다.
   * 대신 이름 없이 세 번 적혀 있던 `1`을 `AdminLogic.SuperAdminUserSeq` 하나로 모았습니다. 판정 자체는 그대로입니다.
   * '''알려진 약점''' — `User`의 첫 row가 소유자라는 사실은 스키마 어디에도 적혀 있지 않습니다. 복원 · 병합으로 seq 1이 다른 사람이 되거나 없어진 DB에서는 전체 관리자가 엉뚱한 사람이 되거나 아예 없어집니다. 그때 화면으로 고칠 방법은 없고 DB를 직접 손대야 합니다.
   * '''다시 볼 조건''' — 전체 관리자가 실제로 둘 이상 필요해지거나, 회수해야 할 때. 그때 만들 것은 `UserRole(user, role)` 테이블과 evolution, `isAdmin`을 그 조회로 바꾸는 일입니다. 부트스트랩 row를 evolution 안에서 넣어야 잠기지 않습니다.
