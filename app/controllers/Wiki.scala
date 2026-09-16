@@ -248,7 +248,7 @@ controllerComponents: ControllerComponents,
             isDeletable = isDeletable,
           )).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, _) if isRenamable => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
-        case (Some(page), "delete", _, _) if isDeletable => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
+        case (Some(page), "delete", _, _) if isDeletable => Ok(views.html.Wiki.delete(page, Page.selectHistory(name).size)).withHeaderRobotNoIndexNoFollow
         case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
       }
     }
@@ -593,14 +593,21 @@ controllerComponents: ControllerComponents,
 
 
   def delete(): Action[AnyContent] = Action { implicit request =>
-    val name = Form("name" -> text).bindFromRequest().get
+    // `confirm` must equal the page name -- the delete screen makes the user type it. This is a
+    // second guard behind the screen's own check, so a stale or scripted POST cannot delete a page
+    // without naming it. Permission is still the real gate (isDeletable) below.
+    val (name, confirm) = Form(tuple("name" -> text, "confirm" -> default(text, ""))).bindFromRequest().get
     database.withTransaction { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(_) =>
-          if (WikiPermission().isDeletable(name)) {
+          if (!WikiPermission().isDeletable(name)) {
+            Forbidden("")
+          } else if (confirm != name) {
+            BadRequest("Type the page name to confirm.")
+          } else {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)
             ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
             AttachmentLogic.deletePageAttachments(site.seq, name) match {
@@ -612,8 +619,6 @@ controllerComponents: ControllerComponents,
                 telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
                 Ok("")
             }
-          } else {
-            Forbidden("")
           }
         case None =>
           Forbidden("")
